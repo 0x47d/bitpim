@@ -520,7 +520,7 @@ class codegen:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
                     print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
-                    self.makefield(out, i+1, f)
+                    self.makefield(out, i+1, f, isreading=False)
                 print >>out, indent(i)+"sz+=self.__field_"+f[1]+".packetsize()"
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
@@ -532,43 +532,43 @@ class codegen:
         print >>out, "\n"
 
         # Write to a buffer
-        print >>out, indent()+"def writetobuffer(self,buffer):"
+        print >>out, indent()+"def writetobuffer(self,buf):"
         print >>out, indent(2)+"'Writes this packet to the supplied buffer'"
-        print >>out, indent(2)+"self._bufferstartoffset=buffer.getcurrentoffset()"
+        print >>out, indent(2)+"self._bufferstartoffset=buf.getcurrentoffset()"
         i=2
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
                     print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
-                    self.makefield(out, i+1, f)
-                print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buffer)"
+                    self.makefield(out, i+1, f, isreading=False)
+                print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buf)"
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
-        print >>out, indent(2)+"self._bufferendoffset=buffer.getcurrentoffset()"
+        print >>out, indent(2)+"self._bufferendoffset=buf.getcurrentoffset()"
         print >>out, "\n"
                 
         # Read from a buffer
-        print >>out, indent()+"def readfrombuffer(self,buffer):"
+        print >>out, indent()+"def readfrombuffer(self,buf):"
         print >>out, indent(2)+"'Reads this packet from the supplied buffer'"
         i=2
-        print >>out, indent(2)+"self._bufferstartoffset=buffer.getcurrentoffset()"
+        print >>out, indent(2)+"self._bufferstartoffset=buf.getcurrentoffset()"
         for f in fields:
             if f[0]==tokens.FIELD:
                 if f[2]=='P':
                     continue
                 self.makefield(out, i, f)
-                print >>out, indent(i)+"self.__field_%s.readfrombuffer(buffer)" % (f[1],)
+                print >>out, indent(i)+"self.__field_%s.readfrombuffer(buf)" % (f[1],)
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
-        print >>out, indent(2)+"self._bufferendoffset=buffer.getcurrentoffset()"
+        print >>out, indent(2)+"self._bufferendoffset=buf.getcurrentoffset()"
         print >>out, "\n"
 
         # Setup each field as a property
@@ -579,7 +579,7 @@ class codegen:
                 print >>out, indent(2)+"return self.__field_%s.getvalue()\n" % (f[1],)
                 # set
                 print >>out, indent()+"def __setfield_%s(self, value):" % (f[1],)
-                self.makefield(out, 2, f, "value,")
+                self.makefield(out, 2, f, "value,", isreading=False)
                 # del
                 print >>out, indent()+"def __delfield_%s(self): del self.__field_%s\n" % (f[1], f[1])
                 # Make it a property
@@ -605,14 +605,15 @@ class codegen:
 
         print >>out, "\n\n"
 
-    def makefield(self, out, indentamount, field, args="", dictname='dict'):
+    def makefield(self, out, indentamount, field, args="", dictname='dict', isreading=True):
         if field[2]!='P' and field[2]>=0:
             print >>out, indent(indentamount)+dictname+"={'sizeinbytes': "+`field[2]`+"}" 
         else:
             print >>out, indent(indentamount)+"%s={}" % (dictname,)
-        for xx in 4,5:
-            if field[xx] is not None:
-                print >>out, indent(indentamount)+dictname+".update("+field[xx]+")"
+        if not (isreading and '*' in field[7]):
+            for xx in 4,5:
+                if field[xx] is not None:
+                    print >>out, indent(indentamount)+dictname+".update("+field[xx]+")"
         print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dictname)
 
 
