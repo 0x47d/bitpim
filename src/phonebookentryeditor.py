@@ -10,12 +10,261 @@
 import wx
 from  wxPython.lib.grids import wxFlexGridSizer
 import fixedscrolledpanel
+import pubsub
 
+
+class CategoryManager(wx.Dialog):
+
+    def __init__(self, parent, title="Manage Categories"):
+        wx.Dialog.__init__(self, parent, -1, title, style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|
+                           wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+
+        vs=wx.BoxSizer(wx.VERTICAL)
+        hs=wx.BoxSizer(wx.HORIZONTAL)
+        self.delbut=wx.Button(self, wx.NewId(), "Delete")
+        self.addbut=wx.Button(self, wx.NewId(), "Add")
+        self.add=wx.TextCtrl(self, -1)
+        hs.Add(self.delbut,0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(self.addbut,0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(self.add, 1, wx.EXPAND|wx.ALL, 5)
+        vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
+
+        gs=wxFlexGridSizer(2,3,5,5)
+        gs.Add(wx.StaticText(self, -1, "List"))
+        gs.Add(wx.StaticText(self, -1, "Added"))
+        gs.Add(wx.StaticText(self, -1, "Deleted"))
+        self.thelistb=wx.ListBox(self, -1, style=wx.LB_SORT)
+        self.addlistb=wx.ListBox(self, -1, style=wx.LB_SORT)
+        self.dellistb=wx.ListBox(self, -1, style=wx.LB_SORT)
+        gs.Add(self.thelistb)
+        gs.Add(self.addlistb)
+        gs.Add(self.dellistb)
+        gs.AddGrowableRow(1)
+        vs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
+        vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.SetSizer(vs)
+        vs.Fit(self)
+
+        self.curlist=None
+        self.dellist=[]
+        self.addlist=[]
+
+        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnUpdateCategories")
+        pubsub.publish(pubsub.REQUEST_CATEGORIES)
+
+        wx.EVT_BUTTON(self, self.addbut.GetId(), self.OnAdd)
+        wx.EVT_BUTTON(self, self.delbut.GetId(), self.OnDelete)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
+
+    def OnUpdateCategories(self, msg):
+        cats=msg.data
+        if self.curlist is None:
+            self.curlist=cats
+
+        # add in any new entries that may have appeared
+        for i in cats:
+            if i not in self.curlist and i not in self.dellist:
+                self.curlist.append(i)
+                self.addlist.append(i)
+        self.curlist.sort()
+        self.addlist.sort()
+        self.UpdateLBs()
+
+    def UpdateLBs(self):
+        for lb,l in (self.thelistb, self.curlist), (self.addlistb, self.addlist), (self.dellistb, self.dellist):
+            lb.Clear()
+            for i in l:
+                lb.Append(i)
+        
+    def OnOk(self, _):
+        print "onok called"
+        pubsub.publish(pubsub.SET_CATEGORIES, self.curlist)
+        self.Show(False)
+        self.Destroy()
+
+    def OnCancel(self, _):
+        print "oncancel called"
+        self.Show(False)
+        self.Destroy()
+        
+    def OnAdd(self, _):
+        v=self.add.GetValue()
+        self.add.SetValue("")
+        self.add.SetFocus()
+        if len(v)==0:
+            return
+        if v not in self.curlist:
+            self.curlist.append(v)
+            self.curlist.sort()
+        if v not in self.addlist:
+            self.addlist.append(v)
+            self.addlist.sort()
+        if v in self.dellist:
+            i=self.dellist.index(v)
+            del self.dellist[i]
+        self.UpdateLBs()
+
+    def OnDelete(self,_):
+        try:
+            v=self.thelistb.GetStringSelection()
+        except:
+            return
+        i=self.curlist.index(v)
+        del self.curlist[i]
+        if v in self.addlist:
+            i=self.addlist.index(v)
+            del self.addlist[i]
+        self.dellist.append(v)
+        self.dellist.sort()
+        self.UpdateLBs()
+               
+
+class CategoryEditor(wx.Panel):
+
+    # we have to have an entry with a special string for the unnamed string
+
+    unnamed="Select:"
+
+    def __init__(self, parent, pos):
+        wx.Panel.__init__(self, parent, -1)
+        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
+
+        self.categories=[self.unnamed]
+        self.category=wx.ListBox(self, -1, choices=self.categories)
+        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnUpdateCategories")
+        pubsub.publish(pubsub.REQUEST_CATEGORIES)
+        hs.Add(self.category, 1, wx.EXPAND|wx.ALL, 5)
+        
+        if pos==0:
+            self.but=wx.Button(self, wx.NewId(), "Manage Categories")
+            hs.Add(self.but, 2, wx.ALIGN_CENTRE|wx.ALL, 5)
+            wx.EVT_BUTTON(self, self.but.GetId(), self.OnManageCategories)
+        else:
+            hs.Add(wx.StaticText(self, -1, ""), 2, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+    def OnManageCategories(self, _):
+        dlg=CategoryManager(self)
+        dlg.Show()
+
+    def OnUpdateCategories(self, msg):
+        cats=msg.data
+        print "categories updating to",cats
+        cats=[self.unnamed]+cats
+        if self.categories!=cats:
+            self.categories=cats
+            sel=self.category.GetStringSelection()
+            self.category.Clear()
+            for i in cats:
+                self.category.Append(i)
+            try:
+                self.category.SetStringSelection(sel)
+            except:
+                # the above fails if the category we are is deleted
+                self.category.SetStringSelection(self.unnamed)
+
+    def Get(self):
+        v=self.category.GetStringSelection()
+        if len(v) and v!=self.unnamed:
+            return {'category': v}
+        return {}
+
+    def Set(self, data):
+        v=data.get("category", self.unnamed)
+        try:
+            self.category.SetStringSelection(v)
+        except:
+            assert v!=self.unnamed
+            self.category.SetStringSelection(self.unnamed)
+                
+class MemoEditor(wx.Panel):
+
+    def __init__(self, parent, _):
+        wx.Panel.__init__(self, parent, -1)
+
+        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.VERTICAL)
+
+        self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
+        vs.Add(self.memo, 0, wx.EXPAND|wx.ALL, 5)
+
+        self.SetSizer(vs)
+        vs.Fit(self)
+
+    def Set(self, data):
+        self.memo.SetValue(data.get("memo", ""))
+
+    def Get(self):
+        if len(self.memo.GetValue()):
+            return {'memo': self.memo.GetValue()}
+        return {}
+
+class NumberEditor(wx.Panel):
+
+    choices=[ ("None", "none"), ("Home", "home"), ("Office",
+    "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"),
+    ("Data", "data")]
+
+    def __init__(self, parent, _):
+
+        wx.Panel.__init__(self, parent, -1)
+
+        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Number details"), wx.HORIZONTAL)
+        hs.Add(wx.StaticText(self, -1, "Type"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.type=wx.ComboBox(self, -1, "None", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
+        hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
+
+        hs.Add(wx.StaticText(self, -1, "SpeedDial"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.speeddial=wx.TextCtrl(self, -1, "", size=(32,10))
+        hs.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
+
+        hs.Add(wx.StaticText(self, -1, "Number"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.number=wx.TextCtrl(self, -1, "")
+        hs.Add(self.number, 1, wx.EXPAND|wx.ALL, 5)
+
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+    def Set(self, data):
+        sd=data.get("speeddial", "")
+        if isinstance(sd,int):
+            sd=`sd`
+        self.speeddial.SetValue(sd)
+        self.number.SetValue(data.get("number", ""))
+
+        v=data.get("type", "none")
+        for i in range(len(self.choices)):
+            if self.choices[i][1]==v:
+                self.type.SetSelection(i)
+                return
+        self.type.SetSelection(0)
+
+    def Get(self):
+        res={}
+        if len(self.number.GetValue())==0:
+            return res
+        res['number']=self.number.GetValue()
+        if len(self.speeddial.GetValue()):
+            res['speeddial']=self.speeddial.GetValue()
+            try:
+                res['speeddial']=int(res['speeddial'])
+            except:
+                pass
+        res['type']=self.choices[self.type.GetSelection()][1]
+        return res
+        
+                             
+                          
 
 class EmailEditor(wx.Panel):
 
     ID_TYPE=wx.NewId()
-    def __init__(self, parent):
+    def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Email Address"), wx.HORIZONTAL)
@@ -49,10 +298,10 @@ class EmailEditor(wx.Panel):
             res['type']='business'
         return res
 
-class URLsEditor(wx.Panel):
+class URLEditor(wx.Panel):
 
     ID_TYPE=wx.NewId()
-    def __init__(self, parent):
+    def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "URL"), wx.HORIZONTAL)
@@ -95,7 +344,7 @@ class AddressEditor(wx.Panel):
     fieldinfos=("street", "Street"), ("street2", "Street2"), ("city", "City"), \
             ("state", "State"), ("postalcode", "Postal/Zipcode"), ("country", "Country/Region")
 
-    def __init__(self, parent):
+    def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
 
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Address Details"), wx.VERTICAL)
@@ -156,7 +405,7 @@ class AddressEditor(wx.Panel):
 
 class NameEditor(wx.Panel):
 
-    def __init__(self, parent):
+    def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
         
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Name Details "), wx.VERTICAL)
@@ -213,7 +462,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         callsus=False
         while len(data)>len(self.widgets):
             callsus=True
-            self.widgets.append(self.childclass(self))
+            self.widgets.append(self.childclass(self, len(self.widgets)))
             self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
         while len(self.widgets)>len(data):
             callsus=True
@@ -244,7 +493,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             pos=self.GetCurrentWidgetIndex()
         except IndexError:
             pos=None
-        self.widgets.append(self.childclass(self))
+        self.widgets.append(self.childclass(self, len(self.widgets)))
         self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
         self.sizer.Layout()
         self.SetupScrolling()
@@ -349,9 +598,12 @@ class Editor(wx.Dialog):
     # the tabs and classes within them
     tabsfactory=[
         ("Names", "names", NameEditor),
+        ("Numbers", "numbers", NumberEditor),
         ("Emails",  "emails", EmailEditor),
         ("Addresses", "addresses", AddressEditor),
-        ("URLs", "urls", URLsEditor)
+        ("URLs", "urls", URLEditor),
+        ("Memos", "memos", MemoEditor),
+        ("Categories", "categories", CategoryEditor),
         ]
 
     def __init__(self, parent, data, title="Edit PhoneBook entry"):
