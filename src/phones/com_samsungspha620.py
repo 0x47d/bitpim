@@ -15,6 +15,7 @@ import re
 import common
 import commport
 import p_samsungspha620
+import p_brew
 import com_brew
 import com_phone
 import com_samsung_packet
