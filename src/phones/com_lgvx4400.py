@@ -37,13 +37,6 @@ numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
 
         
-class PhoneBookCommandException(Exception):
-    def __init__(self, errnum):
-        Exception.__init__(self, "Phonebook Command Error 0x%02x" % (errnum,))
-        self.errnum=errnum
-
-
-
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
 
@@ -55,8 +48,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         com_lg.LGPhonebook.__init__(self)
         self.log("Attempting to contact phone")
         self.mode=self.MODENONE
-        self.pbseq=0
-        self.retries=2  # how many retries when we get no response
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -99,7 +90,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # this by switching into brew mode which clears that.
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW)
-        self.setmode(self.MODEPHONEBOOK)
         self.log("Reading number of phonebook entries")
         req=p_lgvx4400.pbinforequest()
         res=self.sendpbcommand(req, p_lgvx4400.pbinforesponse)
