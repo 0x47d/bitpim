@@ -657,109 +657,110 @@ class Profile(com_phone.Profile):
 
             if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
                 break
-            e={} # entry out
 
-            entry=data['phonebook'][pbentry]
+            try:
 
-            secret=helper.getflag(entry.get('flags', []), 'secret', False)
-            if secret:
-                secret=1
-            else:
-                secret=0
-            
-            # name
-            e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
+                e={} # entry out
 
-            cat=helper.makeone(helper.getcategory(entry.get('cagetgories',[]),0,1,12), None)
-            if cat is None:
-                e['group']=self.protocolclass.NUMGROUPS # Unassigned group
-            else:
-                key,value=self._getgroup(cat, data['groups'])
-                if key is not None:
-                    e['group']=key
+                entry=data['phonebook'][pbentry]
+
+                secret=helper.getflag(entry.get('flags', []), 'secret', False)
+                if secret:
+                    secret=1
                 else:
-                    # Sorry no space for this category
-                    e['group']=self.protocolclass.NUMGROUPS # Unassigned
+                    secret=0
+            
+                # name
+                e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
 
-            # email addresses
-            e['email']=helper.makeone(helper.getemails(entry.get('emails', []), 0,1,32), "")
-            # url
-            e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,32), "")
+                cat=helper.makeone(helper.getcategory(entry.get('cagetgories',[]),0,1,12), None)
+                if cat is None:
+                    e['group']=self.protocolclass.NUMGROUPS # Unassigned group
+                else:
+                    key,value=self._getgroup(cat, data['groups'])
+                    if key is not None:
+                        e['group']=key
+                    else:
+                        # Sorry no space for this category
+                        e['group']=self.protocolclass.NUMGROUPS # Unassigned
+
+                # email addresses
+                e['email']=helper.makeone(helper.getemails(entry.get('emails', []), 0,1,32), "")
+                # url
+                e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,32), "")
                                          
-            # phone numbers
-            # there must be at least one phone number
-            minnumbers=1
-            numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
-            e['numbertypes']=[]
-            e['numbers']=[]
-            e['secrets']=[]
-            unusednumbers=[] # Hold duplicate types here
-            typesused={}
-            defaulttypenum=0
-            for num in numbers:
-                typename=num['type']
-                if typesused.has_key(typename):
-                    unusednumbers.append(num)
-                    continue
-                typesused[typename]=1
-                for typenum,tnsearch in enumerate(self.numbertypetab):
-                    if typename==tnsearch:
-                        if defaulttypenum==0:
-                            defaulttypenum=typenum
-                        number=self.phonize(num['number'])
-                        if len(number)>self.protocolclass.MAXNUMBERLEN:
-                            # :: TODO:: number is too long and we have to either truncate it or ignore it?
-                            number=number[:self.protocolclass.MAXNUMBERLEN]
-                        e['numbers'].append(number)
-                        if(num.has_key('speeddial')):
-                            # Only one number per name can be a speed dial
-                            # Should make speed dial be the first that
-                            # we come accross
-                            e['speeddial']=typenum
-                            tryuslot = num['speeddial']
-                        e['numbertypes'].append(typenum)
-                        e['secrets'].append(secret)
+                # phone numbers
+                # there must be at least one phone number
+                minnumbers=1
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                e['secrets']=[]
+                unusednumbers=[] # Hold duplicate types here
+                typesused={}
+                defaulttypenum=0
+                for num in numbers:
+                    typename=num['type']
+                    if typesused.has_key(typename):
+                        unusednumbers.append(num)
+                        continue
+                    typesused[typename]=1
+                    for typenum,tnsearch in enumerate(self.numbertypetab):
+                        if typename==tnsearch:
+                            if defaulttypenum==0:
+                                defaulttypenum=typenum
+                            number=self.phonize(num['number'])
+                            if len(number)>self.protocolclass.MAXNUMBERLEN:
+                                # :: TODO:: number is too long and we have to either truncate it or ignore it?
+                                number=number[:self.protocolclass.MAXNUMBERLEN]
+                            e['numbers'].append(number)
+                            if(num.has_key('speeddial')):
+                                # Only one number per name can be a speed dial
+                                # Should make speed dial be the first that
+                                # we come accross
+                                e['speeddial']=typenum
+                                tryuslot = num['speeddial']
+                            e['numbertypes'].append(typenum)
+                            e['secrets'].append(secret)
 
-                        break
+                            break
 
-            # Should print to log when a requested speed dial slot is
-            # not available
-            if e.has_key('speeddial'):
-                if tryuslot>=1 and tryuslot<=self.protocolclass.NUMPHONEBOOKENTRIES and not uslotsused.has_key(tryuslot):
-                    uslotsused[tryuslot]=1
-                    e['uslot']=tryuslot
-            else:
-                e['speeddial']=defaulttypenum
-                
-            # Later deal with phone numbers that didn't get put in
-            # because phone doesn't have that type or there were duplicate
-            # types.  (Take from Sanyo code).
+                # Should print to log when a requested speed dial slot is
+                # not available
+                if e.has_key('speeddial'):
+                    if tryuslot>=1 and tryuslot<=self.protocolclass.NUMPHONEBOOKENTRIES and not uslotsused.has_key(tryuslot):
+                        uslotsused[tryuslot]=1
+                        e['uslot']=tryuslot
+                else:
+                    e['speeddial']=defaulttypenum
 
-            e['ringtone'] = 0
-            e['wallpaper'] = 0
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
-            # find the right slot
-            if slot is None or slot<1 or slot>self.protocolclass.NUMPHONEBOOKENTRIES or slot in results:
-                for i in range(100000):
-                    if i not in results:
-                        slot=i
-                        break
+                # find the right slot
+                if slot is None or slot<1 or slot>self.protocolclass.NUMPHONEBOOKENTRIES or slot in results:
+                    for i in range(1,100000):
+                        if i not in results:
+                            slot=i
+                            break
 
-            e['slot']=slot
+                e['slot']=slot
 
-            results[slot]=e
-            slot=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', 0)
+                e['timestamp']=list(time.localtime(time.time())[0:6])
 
-            results[slot]=e
+                results[slot]=e
+            except helper.ConversionFailed:
+                continue
 
         # Fill in uslot for entries that don't have it.
         
         tryuslot=1
         for slot in results.keys():
+
             e=results[slot]
             if not e.has_key('uslot'):
                 while tryuslot<self.protocolclass.NUMPHONEBOOKENTRIES and uslotsused.has_key(tryuslot):
-                    tryuslot+=1
+                    tryuslot += 1
                 uslotsused[tryuslot]=1
                 e['uslot'] = tryuslot
                 results[slot] = e
