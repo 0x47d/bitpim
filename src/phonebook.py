@@ -970,6 +970,11 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
     def __init__(self):
         wx.grid.PyGridCellRenderer.__init__(self)
 
+    def _gettextcolour(self, grid, attr, isSelected):
+        if isSelected:
+            return grid.GetSelectionForeground()
+        return attr.GetTextColour()
+
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 
         dc.SetClippingRect(rect)
@@ -977,22 +982,18 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
         # clear the background
         dc.SetBackgroundMode(wx.SOLID)
         if isSelected:
-            dc.SetBrush(wx.Brush(wx.BLUE, wx.SOLID))
-            dc.SetPen(wx.Pen(wx.BLUE, 1, wx.SOLID))
+            dc.SetBrush(wx.Brush(grid.GetSelectionBackground(), wx.SOLID))
+            dc.SetPen(wx.Pen(grid.GetSelectionBackground(), 1, wx.SOLID))
         else:
             dc.SetBrush(wx.Brush(attr.GetBackgroundColour(), wx.SOLID))
             dc.SetPen(wx.Pen(attr.GetBackgroundColour(), 1, wx.SOLID))
+
         dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
-        if isSelected:
-            dc.SetPen(wx.Pen(wx.WHITE,1,wx.SOLID))
-        else:
-            dc.SetPen(wx.Pen(wx.BLACK,1,wx.SOLID))
 
         dc.SetBackgroundMode(wx.TRANSPARENT)
         dc.SetFont(attr.GetFont())
 
-        # ::TODO:: pass in colour of text?
-        text = grid.GetTable().GetHtmlCellValue(row, col)
+        text = grid.GetTable().GetHtmlCellValue(row, col, self._gettextcolour(grid, attr, isSelected))
         bphtml.drawhtml(dc,
                         wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
                         text, font=attr.GetFont().GetFaceName(), size=attr.GetFont().GetPointSize())
@@ -1075,7 +1076,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                 return getdata(self.columns[col], ptr[row[i]], "")
         return ""
 
-    def GetHtmlCellValue(self, row, col):
+    def GetHtmlCellValue(self, row, col, colour=None):
         try:
             row=self.main.rowdata[self.rowkeys[row]]
         except:
@@ -1084,6 +1085,11 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
         if self.columns[col]=='Confidence':
             return `row[0]`
+
+        if colour is None:
+            colour="#000000" # black
+        else:
+            colour="#%02X%02X%02X" % (colour.Red(), colour.Green(), colour.Blue())
 
         # as an exercise in madness, try to redo this as a list comprehension
         imported,existing,result=None,None,None
@@ -1105,7 +1111,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
         return self.htmltemplate[idx] % { 'imported': _htmlfixup(imported),
                                           'existing': _htmlfixup(existing),
-                                          'result': _htmlfixup(result) }
+                                          'result': _htmlfixup(result),
+                                          'colour': colour}
 
     def OnDataUpdated(self):
         newkeys=self.main.rowdata.keys()
@@ -1124,8 +1131,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
-        wx.CallAfter(self.GetView().AutoSizeColumns)
-        wx.CallAfter(self.GetView().AutoSizeRows)
+        self.GetView().AutoSize()
 
 def _htmlfixup(txt):
     if txt is None: return ""
@@ -1133,7 +1139,7 @@ def _htmlfixup(txt):
            .replace("\r\n", "<br/>").replace("\r", "<br/>").replace("\n", "<br/>")
 
 ImportDataTable.htmltemplate[0]=""
-ImportDataTable.htmltemplate[7]="%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s"
+ImportDataTable.htmltemplate[7]='<font color="%(colour)s">%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
 
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
@@ -1141,8 +1147,7 @@ class ImportDialog(wx.Dialog):
     def __init__(self, parent, existingdata, importdata):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
              wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
-        self.config = parent.mainwindow.config
-        guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
+
         # the data already in the phonebook
         self.existingdata=existingdata
         # the data we are importing
@@ -1180,8 +1185,6 @@ class ImportDialog(wx.Dialog):
         splitter=wx.SplitterWindow(self,-1, style=splitterstyle)
         splitter.SetMinimumPaneSize(20)
 
-        self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
-
         self.grid=wx.grid.Grid(splitter, -1)
         self.grid.EnableGridLines(False)
         self.table=ImportDataTable(self)
@@ -1191,6 +1194,8 @@ class ImportDialog(wx.Dialog):
         self.grid.EnableDragRowSize(True)
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
+
+        self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
         splitter.SplitVertically(self.grid, self.resultpreview, -250)
 
@@ -1204,6 +1209,10 @@ class ImportDialog(wx.Dialog):
 
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
+
+        vbs.Fit(self)
+        self.config = parent.mainwindow.config
+        guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
 
     def DoMerge(self):
         """Merges all the importdata with existing data
