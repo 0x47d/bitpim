@@ -1197,7 +1197,7 @@ def getext(name):
 class MyFixedScrolledMessageDialog(wx.Dialog):
     """A dialog displaying a readonly text control with a fixed width font"""
     def __init__(self, parent, msg, caption, helpid, pos = wx.DefaultPosition, size = (850,600)):
-        wx.Dialog.__init__(self, parent, -1, caption, pos, size)
+        wx.Dialog.__init__(self, parent, -1, caption, pos, size, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         text=wx.TextCtrl(self, 1,
                         style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 |

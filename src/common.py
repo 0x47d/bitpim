@@ -231,7 +231,7 @@ def formatexception(excinfo=None, lastframes=8):
                     continue
                print >>s,"%15s = " % (key,),
                try:
-                    print >>s,`value`[:60]
+                    print >>s,`value`[:80]
                except:
                     print >>s,"(Exception occurred printing value)"
      return s.getvalue()
