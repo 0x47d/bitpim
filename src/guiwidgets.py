@@ -1360,8 +1360,8 @@ def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
         newHeight = screenSize.y * screenpct / 100
         
     # Retrieve values (if any) from config database for this config object
-    rs_width  = confobj.ReadInt(confname + "/width", newWidth)
-    rs_height = confobj.ReadInt(confname + "/height", newHeight)
+    rs_width  = confobj.ReadInt(confname + "/width", int(newWidth))
+    rs_height = confobj.ReadInt(confname + "/height", int(newHeight))
     rs_x = confobj.ReadInt(confname + "/x", 0)
     rs_y = confobj.ReadInt(confname + "/y", 50)
 
