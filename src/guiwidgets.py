@@ -1037,7 +1037,7 @@ class FileView(wx.Panel):
         # Menus
 
         self.itemmenu=wx.Menu()
-        #self.itemmenu.Append(guihelper.ID_FV_OPEN, "Open")
+        self.itemmenu.Append(guihelper.ID_FV_OPEN, "Open")
         self.itemmenu.Append(guihelper.ID_FV_SAVE, "Save ...")
         self.itemmenu.AppendSeparator()
         self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
@@ -1051,7 +1051,7 @@ class FileView(wx.Panel):
         self.bgmenu.Append(guihelper.ID_FV_ADD, "Add ...")
         self.bgmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        #wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OPEN, self.OnLaunch)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_SAVE, self.OnSave)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
@@ -1060,6 +1060,7 @@ class FileView(wx.Panel):
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh)
 
         wx.EVT_RIGHT_UP(self.aggdisp, self.OnRightClick)
+        aggregatedisplay.EVT_ACTIVATE(self.aggdisp, self.aggdisp.GetId(), self.OnLaunch)
 
         self.droptarget=MyFileDropTarget(self)
         self.SetDropTarget(self.droptarget)
@@ -1073,11 +1074,21 @@ class FileView(wx.Panel):
         """
         if len(self.aggdisp.GetSelection()):
             menu=self.itemmenu
+            item=self.GetSelectedItems()[0]
+            menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
         else:
             menu=self.bgmenu
         if menu is None:
             return
         self.aggdisp.PopupMenu(menu, evt.GetPosition())
+
+    def OnLaunch(self, _):
+        item=self.GetSelectedItems()[0]
+        cmd=guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename)
+        if cmd is None:
+            wx.Bell()
+        else:
+            wx.Execute(cmd, wx.EXEC_ASYNC)
 
     def OnMouseEvent(self, evt):
         self.motionpos=evt.GetPosition()
