@@ -307,16 +307,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def savecalendar(self, dict, merge):
         
-        self.reportinit('Save Calendar', dict)
         if not self.is_online():
             self.log("Failed to talk to phone")
-            self.report('Failed to talk to phone, operation aborted.')
             return dict
         cal=dict['calendar']
         cal_len=len(cal)
         l=len(self.__cal_entries_range)
         if cal_len > l:
-            self.report("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
+            self.log("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
             return dict
         self.setmode(self.MODEPHONEBOOK)
         self.log("Saving calendar entries")
@@ -355,7 +353,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                     e[self.__cal_alarm_type]=i
                     break
             if e[self.__cal_alarm_type] is None:
-                self.report(c['description']+": Alarm value not specified, set to -1.")
+                self.log(c['description']+": Alarm value not specified, set to -1.")
                 e[self.__cal_alarm_type]='0'
                 c['alarm']=self.__cal_alarm_values['0']
 
@@ -365,7 +363,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             # and save it
             self.progress(cal_cnt+1, l, "Updating "+c['description'])
             if not self.save_calendar_entry(join(e, ",")):
-                self.report("Failed to save item: "+c['description'])
+                self.log("Failed to save item: "+c['description'])
             else:
                 cal_cnt += 1
 
