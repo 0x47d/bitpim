@@ -14,6 +14,7 @@ import com_phone
 import p_sanyo
 import prototypes
 import cStringIO
+import time
 
 class SanyoPhonebook:
 
@@ -87,19 +88,22 @@ class SanyoPhonebook:
         return data
 
     def sendsanyobuffer(self, buffer, startcommand, comment):
-        self.log("Writing "+comment+" "+`len(buffer)`+" bytes")
+        self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
         desc="Writing "+comment
         numblocks=len(buffer)/500
         offset=0
         command=startcommand
         for offset in range(0, len(buffer), 500):
+            self.progress(offset/500, numblocks, desc)
             req=p_sanyo.bufferpartupdaterequest()
+            req.header.command=command
             block=buffer[offset:]
             l=min(len(block), 500)
             block=block[:l]
             req.data=block
             command+=1
-            self.sendpbcommand(req, p_sanyobufferpartresponse)
+            self.sendpbcommand(req, p_sanyo.bufferpartresponse)
+            time.sleep(.30)
         
     def sendpbcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
@@ -112,6 +116,7 @@ class SanyoPhonebook:
         firsttwo=data[:2]
         try:
             self.comm.write(data, log=False) # we logged above
+            time.sleep(0.30)
 	    data=self.comm.readuntil(self.pbterminator, logsuccess=False)
         except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
