@@ -391,7 +391,7 @@ class CategoryEditor(wx.Panel):
 
     def OnManageCategories(self, _):
         dlg=CategoryManager(self)
-        dlg.Show()
+        dlg.ShowModal()
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
