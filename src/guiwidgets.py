@@ -907,9 +907,9 @@ class BitFlingSettingsDialog(wx.Dialog):
             dlg=wx.MessageDialog(self, "Succeeded. It is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
-        except:
+        except Exception,ex:
             res="Failed: %s: %s" % sys.exc_info()[:2]
-            print common.formatexception()
+            print common.formatexception( (type(ex), ex, ex.traceback) )
             dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
