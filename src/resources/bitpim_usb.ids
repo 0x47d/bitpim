@@ -8,7 +8,7 @@
 		01  Modem Interface
 		02  Diagnostics Interface
 0474  Sanyo
-	0701  SCP 4900 Phone
+	0701  CDMA Phone
 		01  Modem/Diagnostics Interface
 
 # USB to serial cables
