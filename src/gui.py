@@ -364,7 +364,8 @@ class MainWindow(wxFrame):
 
         ### Double check our size is meaningful, and make bigger
         ### if necessary (especially needed on Mac)
-        if min(self.GetSize())<100:
+        print "XXXXXXXXXXX", self.GetSize()
+        if min(self.GetSize())<250:
             self.SetSize( (640, 480) )
 
         ### Is config set?
