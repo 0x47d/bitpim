@@ -193,6 +193,7 @@ resourcedirectory=os.path.abspath(os.path.join(p, 'resources'))
 # See strorunicode comment in common
 if wx.USE_UNICODE:
     def strorunicode(s):
+        if s is None: return s
         if isinstance(s, unicode): return s
         return str(s)
 
@@ -201,6 +202,7 @@ if wx.USE_UNICODE:
 
 else:
     def strorunicode(s):
+        if s is None: return s
         try:
             return str(s)
         except UnicodeEncodeError:

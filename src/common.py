@@ -358,6 +358,7 @@ def opentextfile(name):
 #     return str(s)
 
 def forceascii(s):
+     if s is None: return s
      try:
           return str(s)
      except UnicodeEncodeError:
