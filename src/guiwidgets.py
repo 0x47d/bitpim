@@ -200,7 +200,7 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wxDialog):
-    phonemodels={ 'LG-VX4400': 'com_lgvx4400', 'LG-TM520': 'com_lgtm520',  'LG-VX10': 'com_lgtm520' }
+    phonemodels={ 'LG-VX4400': 'com_lgvx4400', 'LG-TM520': 'com_lgtm520',  'LG-VX10': 'com_lgtm520', 'SCP-4900': 'com_sanyo4900', 'SCP-8100': 'com_sanyo4900'}
 
     setme="<setme>"
     ID_DIRBROWSE=1
