@@ -367,6 +367,8 @@ PACKET calleridbuffer:
     # This 7000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 50 0F through 0X 5D 0F
     P UINT {'constant': 500} maxentries
+    P UINT {'constant': 0x50} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 7000} bufsize
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     498 UNKNOWN +pad
@@ -376,6 +378,8 @@ PACKET ringerpicbuffer:
     # This 1000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 46 0F through 0X 47 0F
     P UINT {'constant': 300} numpbslots "Number of phone book slots"
+    P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 1000} bufsize
     * LIST {'length': self.numpbslots} +ringtones:
         1 UINT ringtone "ringtone index"
     * LIST {'length': self.numpbslots} +wallpapers:
@@ -391,6 +395,8 @@ PACKET pbsortbuffer:
     P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
     P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
     P UINT {'constant': 30} longphonenumberlen "Definition of a long phone number"
+    P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 4000} bufsize
     * LIST {'length': self.numpbslots, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
