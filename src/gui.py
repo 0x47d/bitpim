@@ -416,8 +416,9 @@ class MainApp(wx.App):
         self.ApplySafeMode()
         self.CheckUpdate()
 
+    update_delta={ 'Daily': 1, 'Weekly': 7, 'Monthly': 30 }
     def CheckUpdate(self):
-        if self.frame is None:
+        if self.frame is None: 
             return
         # tell the frame to do a check-for-update
         update_rate=self.config.Read('updaterate', '')
@@ -427,12 +428,11 @@ class MainApp(wx.App):
         if len(last_update):
             last_date=datetime.date(int(last_update[:4]), int(last_update[4:6]),
                                     int(last_update[6:]))
-            if update_rate=='Biweekly':
-                next_date=last_date+datetime.timedelta(14)
-            else:
-                next_date=last_date+datetime.timedelta(30)
+            next_date=last_date+datetime.timedelta(\
+                self.update_delta.get(update_rate, 7))
         else:
             next_date=last_date=datetime.date.today()
+        print 'Update Rate:', update_rate, ', last update:', last_date, ', next update:', next_date
         if datetime.date.today()<next_date:
             return
         self.frame.AddPendingEvent(\
