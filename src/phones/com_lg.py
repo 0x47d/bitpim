@@ -80,8 +80,7 @@ class LGPhonebook:
         data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
         firsttwo=data[:2]
         try:
-            self.comm.write(data, log=False) # we logged above
-	    data=self.comm.readuntil(self.pbterminator, logsuccess=False)
+            data=self.comm.writethenreaduntil(data, False, self.pbterminator, logreaduntilsuccess=False)
         except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsdnaexception("manipulating the phonebook")

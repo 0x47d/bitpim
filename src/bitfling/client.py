@@ -54,3 +54,6 @@ class client:
 
     def devicereadsome(self, handle):
         return self.server.devicereadsome(handle).data
+
+    def devicewritethenreaduntil(self, handle, data, char, numfailures):
+        return self.server.devicewritethenreaduntil(handle, Binary(data), char, numfailures).data

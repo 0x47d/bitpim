@@ -276,6 +276,12 @@ class CommConnection:
             self.logdata("Read completed", res)
         return res
 
+    # these methods here consolidate calls, which makes the BitFling stuff a lot faster due
+    # to fewer roundtrips
+    def writethenreaduntil(self, data, logwrite, char, logreaduntil=True, logreaduntilsuccess=True, numfailures=0):
+        self.write(data, logwrite)
+        return self.readuntil(char, logreaduntil, logreaduntilsuccess, numfailures)
+
 class SilentException(Exception): pass
         
 class _usbdevicewrapper:

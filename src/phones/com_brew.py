@@ -288,8 +288,8 @@ class BrewProtocol:
         data=escape(data+crcs(data))+self.brewterminator
         firsttwo=data[:2]
         try:
-            self.comm.write(data, log=False) # we logged above
-	    data=self.comm.readuntil(self.brewterminator, logsuccess=False)
+            # we logged above, and below
+            data=self.comm.writethenreaduntil(data, False, self.brewterminator, logreaduntilsuccess=False) 
         except modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsdnaexception("manipulating the filesystem")

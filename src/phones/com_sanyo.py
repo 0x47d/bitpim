@@ -185,8 +185,7 @@ class SanyoPhonebook:
         isendretry=numsendretry
         while isendretry>=0:
             try:
-                self.comm.write(data, log=False) # we logged above
-                rdata=self.comm.readuntil(self.pbterminator, logsuccess=False, numfailures=numretry)
+                rdata=self.comm.writethenreaduntil(data, False, self.pbterminator, logreaduntilsuccess=False, numfailures=numretry)
                 break
             except com_phone.modeignoreerrortypes:
                 if isendretry>0:
