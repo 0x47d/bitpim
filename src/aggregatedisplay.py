@@ -305,17 +305,20 @@ class Display(wx.ScrolledWindow):
                     num+=self.itemsperrow[i]
                     continue
                 item=self.items[i][num]
+                bbox=self.boundingboxes[i][num]
+                if bbox is None:
+                    bbox=(0, 0, self.itemsize[i][0]+extrawidth, self.itemsize[i][1])
                 startx=3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth)
-                startx+=self.boundingboxes[i][num][0]
-                endx=startx+self.boundingboxes[i][num][2]-self.boundingboxes[i][num][0]
-                starty=posy+self.boundingboxes[i][num][1]
-                endy=starty+self.boundingboxes[i][num][3]-self.boundingboxes[i][num][1]
+                startx+=bbox[0]
+                endx=startx+bbox[2]-bbox[0]
+                starty=posy+bbox[1]
+                endy=starty+bbox[3]-bbox[1]
                 if startx<=pointx<=endx and starty<=pointy<=endy:
                     ht=self.HitTestResult(location=self.HitTestResult.IN_ITEM,
                                           sectionnum=i, section=section,
                                           itemnum=num, item=item,
-                                          itemx=pointx-startx+self.boundingboxes[i][num][0],
-                                          itemy=pointy-starty+self.boundingboxes[i][num][1],
+                                          itemx=pointx-startx+bbox[0],
+                                          itemy=pointy-starty+bbox[1],
                                           itemrect=(startx, starty, endx-startx, endy-starty),
                                           itemrectscrolled=(startx, starty-origin, endx-startx, endy-starty),
                                           )
