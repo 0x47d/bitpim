@@ -265,7 +265,7 @@ def converttowav(mp3filename, wavfilename, samplerate=None,
     run(*cmd)
 
 def convertwavtoqcp(wavfile, qcpfile):
-    pvconv=gethelperbinary('pvconv')
+    pvconv=shortfilename(gethelperbinary('pvconv'))
     w_name=shortfilename(wavfile)
     q_name=common.stripext(w_name)+'.qcp'
     try:
@@ -282,7 +282,7 @@ def convertwavtoqcp(wavfile, qcpfile):
     os.rename(q_name, qcpfile)
 
 def convertqcptowav(qcpfile, wavfile):
-    pvconv=gethelperbinary('pvconv')
+    pvconv=shortfilename(gethelperbinary('pvconv'))
     q_name=shortfilename(qcpfile)
     w_name=common.stripext(q_name)+'.wav'
     try:
