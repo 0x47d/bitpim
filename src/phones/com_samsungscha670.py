@@ -2,6 +2,7 @@
 ###
 ### Copyright (C) 2004 Vic Heintz <vheintz@rochester.rr.com>
 ### Copyright (C) 2004 Joe Pham <djpham@netzero.com>
+### Copyright (C) 2004 Stephen Wood <saw@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -72,6 +73,9 @@ class Phone(com_samsung.Phone):
     __cal_write_name=5
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    __cal_end_datetime_value=None
+    __wp_photo_dir="digital_cam"
+    __wp_header_bytes=96
 
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
@@ -116,6 +120,62 @@ class Phone(com_samsung.Phone):
 
         return results
 
+    # digital_cam Remove first 'header_bytes' characters
+    imagelocations=(
+        # offset, index file, files location, type, maximumentries
+        (100, "", "digital_cam", "camera", 100)
+        )
+        
+    def getwallpapers(self, result):
+        self.getwallpaperindices(result)
+        result['rebootphone']=1 # So we end up back in AT mode
+        return self.getmedia(self.imagelocations, result, 'wallpapers')
+
+    
+    def getmedia(self, maps, results, key):
+        """Returns the contents of media as a dicxt where the key is a name
+        returned by getindex, and the value is the contents of the media"""
+        
+        media={}
+        for i in range(10000):
+            try:
+                req=p_brew.listfilerequest()
+                req.entrynumber=i
+                req.dirname=self.__wp_photo_dir
+                res=self.sendbrewcommand(req, p_brew.listfileresponse)
+                filename=res.filename
+                p=filename.rfind("/")
+                basefilename=filename[p+1:]+".jpg"
+                print "Getting ",basefilename
+                contents=self.getfilecontents(filename)
+                media[basefilename]=contents[self.__wp_header_bytes:]
+            except com_brew.BrewNoMoreEntriesException:
+                break
+
+        results[key]=media
+
+    def getwallpaperindices(self, results):
+        """Get the index of camera pictures"""
+        imagemedia={}
+        for i in range(10000):
+            try:
+                req=p_brew.listfilerequest()
+                req.entrynumber=i
+                req.dirname=self.__wp_photo_dir
+                res=self.sendbrewcommand(req, p_brew.listfileresponse)
+                filename=res.filename
+                p=filename.rfind("/")
+                filename=filename[p+1:]+".jpg"
+                # Just a made up index number for now.  Have not studied
+                # what phone is using.
+                imagemedia[100+i]={'name': filename, 'origin': "camera"}
+
+            except com_brew.BrewNoMoreEntriesException:
+                break
+
+        results['wallpaper-index']=imagemedia
+        return
+        
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
@@ -469,12 +529,6 @@ class Phone(com_samsung.Phone):
 
     getringtones=None
 
-    getwallpapers=None
-
-    getmedia=None
-
-
-
 class Profile(com_samsung.Profile):
 
     serialsname='scha670'
@@ -487,6 +541,7 @@ class Profile(com_samsung.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'read', None),  # all wallpaper reading
         )
 
     def convertphonebooktophone(self, helper, data):
