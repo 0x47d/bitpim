@@ -40,7 +40,7 @@ wW   driverdescription  string   some generic description of the driver
   L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
-version="15 September 2003"
+version="7 December 2003"
 
 import sys
 import os
@@ -295,8 +295,12 @@ def _comscanwindows():
                             if val is None:
                                 continue
                             if reskey=="driverdate":
-                                val2=val.split('-')
-                                val=int(val2[2]), int(val2[0]), int(val2[1])
+                                try:
+                                    val2=val.split('-')
+                                    val=int(val2[2]), int(val2[0]), int(val2[1])
+                                except:
+                                    # ignroe wierd dates
+                                    continue
                             res[reskey]=val
 
                     results[resultscount]=res
@@ -345,7 +349,8 @@ def _comscanlinux(maxnum=9):
         ("/dev/cua", "Standard serial port"), 
         ("/dev/ttyUSB", "USB to serial convertor"), 
         ("/dev/usb/ttyUSB", "USB to serial convertor"), 
-        ("/dev/usb/tts/", "USB to serial convertor") 
+        ("/dev/usb/tts/", "USB to serial convertor"),
+        ("/dev/input/ttyACM", "USB modem")
         ):
         for num in range(maxnum+1):
             name=prefix+`num`
