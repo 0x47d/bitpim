@@ -1,3 +1,5 @@
 *.htm
 *.chm
 *.htb
+Thumbs.db
+version.h
