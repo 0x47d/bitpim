@@ -36,13 +36,15 @@ wW   driverdate         tuple    (year, month, day)
  W   driverversion      string   version string
 wW   driverprovider     string   the manufacturer of the device driver
 wW   driverdescription  string   some generic description of the driver
-
+  L  device             tuple    (major, minor) device specification
+  L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
 version="20 August 2003"
 
 import sys
 import os
+import time
 
 def _IsWindows():
     return sys.platform=='win32'
@@ -275,6 +277,23 @@ def _comscanlinux(maxnum=9):
     @param maxnum: The highest numbered device to look for (eg maxnum of 17
                    will look for ttyS0 ... ttys17)
     """
+
+    # track of mapping majors to drivers
+    drivers={}
+
+    # get the list of char drivers from /proc/drivers
+    f=open("/proc/devices", "r")
+    f.readline()  # skip "Character devices:" header
+    for line in f.readlines():
+        line=line.split()
+        if len(line)!=2:
+            break # next section
+        major,driver=line
+        drivers[int(major)]=driver
+    f.close()
+
+    # device nodes we have seen so we don't repeat them in listing
+    devcache=[] 
     
     resultscount=0
     results={}
@@ -295,8 +314,26 @@ def _comscanlinux(maxnum=9):
                 f=open(name, "rw")
                 f.close()
                 res['available']=True
+                # I get a kernel panic without this sleep
+                # Seems like Linux has nasty bugs if you do networking shortly after accessing
+                # usb/serial cable
+                if name.lower().find("usb")>0:
+                    time.sleep(1)
             except:
                 res['available']=False
+            # look into the device stuff
+            dev=os.stat(name).st_rdev
+            if dev in devcache:
+                continue
+            devcache.append(dev)
+            # linux specific, and i think they do funky stuff on kernel 2.6
+            # there is no way to get these 'normally' from the python library
+            major=(dev>>8)&0xff
+            minor=dev&0xff
+            res['device']=(major, minor)
+            if drivers.has_key(major):
+                res['driver']=drivers[major]
+            
             results[resultscount]=res
             resultscount+=1
     return results
