@@ -18,30 +18,35 @@ It invokes BitPim in gui or commandline mode as appropriate
 
 # only gui mode support at the moment
 
+if __debug__:
+    def profile(filename, command):
+        import hotshot, hotshot.stats, os
+        file=os.path.abspath(filename)
+        profile=hotshot.Profile(file)
+        profile.run(command)
+        profile.close()
+        del profile
+        stats=hotshot.stats.load(file)
+        stats.strip_dirs()
+        stats.sort_stats('time', 'calls')
+        stats.print_stats(25)
+        stats.sort_stats('cum', 'calls')
+        stats.print_stats(25)
+        stats.sort_stats('calls', 'time')
+        stats.print_stats(25)
+        sys.exit(0)
+        
+
 if __name__ == '__main__':
     import sys  
     import gui
 
-    if __debug__: # this will be optimised out of optimized builds
-        if False:
-            import hotshot, hotshot.stats, os
-            file=os.path.abspath("bpprof")
-            profile=hotshot.Profile(file)
-            profile.run("gui.run(sys.argv)")
-            profile.close()
-            del profile
-            stats=hotshot.stats.load(file)
-            stats.strip_dirs()
-            stats.sort_stats('time', 'calls')
-            stats.print_stats(25)
-            stats.sort_stats('cum', 'calls')
-            stats.print_stats(25)
-            stats.sort_stats('calls', 'time')
-            stats.print_stats(25)
-            sys.exit(0)
 
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
-        bitfling.bitfling.run(sys.argv)
+        if True:
+            profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")
+        else:
+            bitfling.bitfling.run(sys.argv)
     else:
         gui.run(sys.argv)
