@@ -34,6 +34,8 @@ containerelements method:
     
 """
 
+from __future__ import generators
+
 class ProtogenException(Exception):
     """Base class for exceptions encountered with data marshalling"""
     def __init__(self, *args, **kwargs):
