@@ -1,0 +1,5 @@
+*.o
+bmp2avi.exe
+bmp2avi.lbin
+bmp2avi.mbin
+depend
