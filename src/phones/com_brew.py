@@ -14,6 +14,7 @@ import time
 import cStringIO
 import com_phone
 import prototypes
+import common
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -244,6 +245,7 @@ class BrewProtocol:
             self.mode=self.MODENONE
             self.raisecommsexception("manipulating the filesystem")
         self.comm.success=True
+        origdata=data
         data=unescape(data)
         # sometimes there is junk at the begining, eg if the user
         # turned off the phone and back on again. ::TODO:: if there
@@ -271,8 +273,30 @@ class BrewProtocol:
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
-        res.readfrombuffer(buffer)
+        try:
+            res.readfrombuffer(buffer)
+        except:
+            # we had an exception so log the data even if protocol log
+            # view is not available
+            self.log(formatpacketerrorlog("Error decoding response", origdata, data, responseclass))
+            raise
         return res
+
+def formatpacketerrorlog(str, origdata, data, klass):
+    # copied from guiwidgets.LogWindow.logdata
+    hd=""
+    if data is not None:
+        hd="Data - "+`len(data)`+" bytes\n"
+        if klass is not None:
+            try:
+                hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+            except:
+                klass=klass.__class__
+                hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+        hd+=common.datatohexstring(data)
+    if origdata is not None:
+        hd+="\nOriginal Data - "+`len(data)`+" bytes\n"+common.datatohexstring(origdata)
+    return str+" "+hd
 
 def escape(data):
     if data.find("\x7e")<0 and data.find("\x7d")<0:
