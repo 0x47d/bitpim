@@ -357,6 +357,7 @@
 	0040  Wheel Mouse Optical
 	0059  Wireless IntelliMouse Explorer
 	006e  MN510 802.11b Adapter
+	007d  Notebook Optical Mouse
 	0284  Xbox DVD Playback Kit
 0460  Ace Cad Enterprise Co., Ltd
 0461  Primax Electronics, Ltd
@@ -932,6 +933,7 @@
 	1080  NET1080 USB-USB Bridge
 	a4a0  Linux-USB "Gadget Zero"
 	a4a1  Linux-USB Ethernet Gadget
+	a4a2  Linux-USB Ethernet/RNDIS Gadget
 	a4a3  Linux-USB user-mode isochronous source/sink
 	a4a4  Linux-USB user-mode bulk source/sink
 	a4a5  Linux-USB File Storage Gadget
@@ -1115,21 +1117,24 @@
 	cafe  AccessRunner ADSL Modem
 0573  Zoran Co. Personal Media Division (Nogatech)
 	0003  USBGear USBG-V1
+	0400  D-Link V100
 	2000  X10 va10a Wireless Camera
+	2101  Zoran Co. PMD (Nogatech) AV-grabber Manhattan
 	4100  USB-TV FM (NTSC)
-	4d00  Hauppauge WINTV-USB USA
-	4d01  Hauppauge WINTV-USB
-	4d02  Hauppauge WINTV-USB UK
-	4d03  Hauppauge WINTV-USB France
-	4d10  Hauppauge WINTV-USB with FM USA radio
-	4d11  Hauppauge WINTV-USB (PAL) with FM radio
-	4d12  Hauppauge WINTV-USB UK with FM Radio
-	4d20  Hauppauge WINTV-USB II (PAL) with FM radio
-	4d21  Hauppauge WINTV-USB II (PAL)
-	4d22  Hauppauge WINTV-USB II (PAL) Model 566
-	4d23  Hauppauge WINTV-USB France 4D23
-	4d30  Hauppauge WINTV-USB with FM USA radio Model 602
-	4d31  Hauppauge WINTV-USB III (PAL) with FM radio Model 568
+	4450  PixelView PlayTv-USB PRO (PAL) FM
+	4d00  Hauppauge WinTV-USB USA
+	4d01  Hauppauge WinTV-USB
+	4d02  Hauppauge WinTV-USB UK
+	4d03  Hauppauge WinTV-USB France
+	4d10  Hauppauge WinTV-USB with FM USA radio
+	4d11  Hauppauge WinTV-USB (PAL) with FM radio
+	4d12  Hauppauge WinTV-USB UK with FM Radio
+	4d20  Hauppauge WinTV-USB II (PAL) with FM radio
+	4d21  Hauppauge WinTV-USB II (PAL)
+	4d22  Hauppauge WinTV-USB II (PAL) Model 566
+	4d23  Hauppauge WinTV-USB France 4D23
+	4d30  Hauppauge WinTV-USB with FM USA radio Model 602
+	4d31  Hauppauge WinTV-USB III (PAL) with FM radio Model 568
 0574  City University of Hong Kong
 0575  Philips Creative Display Solutions
 0576  BAFO/Quality Computer Accessories
@@ -1179,6 +1184,7 @@
 058e  Tripath Technology, Inc.
 058f  Alcor Micro Corp.
 	2802  Monterey Keyboard
+	5492  Hub
 	9213  MacAlly Kbd Hub
 	9215  AU9814 Hub
 	9254  Hub
@@ -1212,6 +1218,7 @@
 059d  Advanced Input Devices
 059e  Intelligent Instrumentation
 059f  LaCie, Ltd
+	0212  PocketDrive
 	a601  HardDrive
 05a0  Vetronix Corp.
 05a1  USC Corp.
@@ -1239,11 +1246,13 @@
 05ac  Apple Computer, Inc.
 	0201  iMac Keyboard [ALPS M2452]
 	0202  Apple Keyboard [ALPS]
+	0205  Apple Extended Keyboard [Mitsumi]
 	0206  Apple Extended Keyboard [Mitsumi]
 	0301  iMac Mouse [Mitsumi/Logitech]
 	0302  Apple Optical Mouse [Fujitsu]
 	1001  Apple Keyboard Hub [ALPS]
 	1002  Apple Extended Keyboard Hub [Mitsumi]
+	1101  Speakers
 05ad  Y.C. Cable U.S.A., Inc.
 05ae  Synopsys, Inc.
 05af  Jing-Mold Enterprise Co., Ltd
@@ -1327,6 +1336,7 @@
 	000b  Mouse 
 	0120  Pacific Image Electronics PrimeFilm 1800u slide/negative scanner
 	0300  GLUSB98PT Parallel Port
+	0406  Hub
 	0502  GL620USB GeneLink USB-USB Bridge
 	0700  SIIG US2256 CompactFlash Card Reader
 	0701  Optical Device
@@ -1725,6 +1735,8 @@
 0736  Lorom Industrial Co., Ltd
 0738  Mad Catz, Inc.
 073b  Suncom Technologies
+073d  Eutron S.p.a.
+	0005  Crypto Token
 073e  NEC, Inc.
 	0301  Game Pad
 0745  Syntech Information Co., Ltd
@@ -2503,6 +2515,7 @@
 0bc5  JCN Co., Ltd
 0bc6  ExWAY, Inc.
 0bc7  X10 Wireless Technology, Inc.
+	0004  X10 Receiver
 0bc8  Telmax Communications
 0bc9  ECI Telecom, Ltd
 0bca  Startek Engineering, Inc.
@@ -2733,7 +2746,7 @@
 0d7a  MARX Datentechnik GmbH
 0d7b  Wellco Technology Co., Ltd
 0d7c  Taiwan Line Tek Electronic Co., Ltd
-0d7d  Phison electronics Corp
+0d7d  Phison Electronics Corp.
 	0100  PS1001/1011/1006/1026 Flash Disk
 	0110  Gigabyte FlexDrive
 	0240  I/O Magic Drive
@@ -2741,6 +2754,7 @@
 	1240  Apacer 6-in-1 Card Reader 2.0
 	1300  Flash Disk
 	1320  PS2031 Flash Disk
+	1420  PS2044 Pen Drive
 0d7e  American Computer & Digital Components
 0d7f  Essential Reality LLC
 0d80  H.R. Silvine Electronics, Inc.
@@ -2870,6 +2884,7 @@
 0e9b  ADTEC Corp.
 0e9f  Tamura Corp.
 0ea0  Ours Technology, Inc.
+	2168  Transcend JetFlash 2.0
 	6803  OTI-6803 Flash Disk
 	6808  OTI-6808 Flash Disk
 	6828  OTI-6828 Flash Disk
@@ -3115,6 +3130,7 @@
 10fd  Anubis Electronics, Ltd
 	804d  Typhoon Webshot II Webcam [zc0301]
 1100  VirTouch, Ltd
+	0001  VTPlayer VTP-1 Braille Mouse
 1101  EasyPass Industrial Co., Ltd
 1108  Brightcom Technologies, Ltd
 1110  Analog Devices Canada, Ltd (Allied Telesyn)
@@ -3270,10 +3286,12 @@
 22ba  Technology Innovation Holdings, Ltd
 2304  Pinnacle Systems, Inc. [hex]
 	0109  Pinnacle Studio PCTV USB (SECAM)
+	0110  Pinnacle Studio PCTV USB (PAL)
 	0111  Miro PCTV USB
 	0112  Pinnacle Studio PCTV USB (NTSC) with FM radio
 	0210  Pinnacle Studio PCTV USB (PAL) with FM radio
 	0212  Pinnacle Studio PCTV USB (NTSC)
+	0214  Pinnacle Studio PCTV USB (PAL) with FM radio
 	0300  Pinnacle Studio Linx Video input cable (NTSC)
 2318  Shining Technologies, Inc. [hex]
 	0011  CitiDISK Jr. IDE Enclosure
@@ -4941,41 +4959,41 @@ L 0061  Nepali
 # HID Specification 1.11 (2001-06-27) page 23   
 #
 # Syntax:
-# CC country_code keymap_type
+# HCC country_code keymap_type
 
-CC 00  Not supported
-CC 01  Arabic
-CC 02  Belgian
-CC 03  Canadian-Bilingual
-CC 04  Canadian-French
-CC 05  Czech Republic
-CC 06  Danish
-CC 07  Finnish
-CC 08  French
-CC 09  German
-CC 10  Greek
-CC 11  Hebrew
-CC 12  Hungary
-CC 13  International (ISO)
-CC 14  Italian
-CC 15  Japan (Katakana)
-CC 16  Korean
-CC 17  Latin American
-CC 18  Netherlands/Dutch
-CC 19  Norwegian
-CC 20  Persian (Farsi)
-CC 21  Poland
-CC 22  Portuguese
-CC 23  Russia
-CC 24  Slovakia
-CC 25  Spanish
-CC 26  Swedish
-CC 27  Swiss/French
-CC 28  Swiss/German
-CC 29  Switzerland
-CC 30  Taiwan
-CC 31  Turkish-Q
-CC 32  UK
-CC 33  US
-CC 34  Yugoslavia
-CC 35  Turkish-F
+HCC 00  Not supported
+HCC 01  Arabic
+HCC 02  Belgian
+HCC 03  Canadian-Bilingual
+HCC 04  Canadian-French
+HCC 05  Czech Republic
+HCC 06  Danish
+HCC 07  Finnish
+HCC 08  French
+HCC 09  German
+HCC 10  Greek
+HCC 11  Hebrew
+HCC 12  Hungary
+HCC 13  International (ISO)
+HCC 14  Italian
+HCC 15  Japan (Katakana)
+HCC 16  Korean
+HCC 17  Latin American
+HCC 18  Netherlands/Dutch
+HCC 19  Norwegian
+HCC 20  Persian (Farsi)
+HCC 21  Poland
+HCC 22  Portuguese
+HCC 23  Russia
+HCC 24  Slovakia
+HCC 25  Spanish
+HCC 26  Swedish
+HCC 27  Swiss/French
+HCC 28  Swiss/German
+HCC 29  Switzerland
+HCC 30  Taiwan
+HCC 31  Turkish-Q
+HCC 32  UK
+HCC 33  US
+HCC 34  Yugoslavia
+HCC 35  Turkish-F
