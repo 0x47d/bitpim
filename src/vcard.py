@@ -208,9 +208,17 @@ class VCard:
 
     # fields we ignore
 
-    def _field_LABEL(self, field, value, result):
-        # we use the ADR field instead
+    def _field_ignore(self, field, value, result):
         pass
+
+    _field_LABEL=_field_ignore        # we use the ADR field instead
+    _field_BDAY=_field_ignore         # not stored in bitpim
+    _field_ROLE=_field_ignore         # not stored in bitpim
+    _field_CALURI=_field_ignore       # not stored in bitpim
+    _field_CALADRURI=_field_ignore    # variant of above
+    _field_FBURL=_field_ignore        # not stored in bitpim
+    _field_REV=_field_ignore          # not stored in bitpim
+
 
     # simple fields
     
@@ -219,7 +227,17 @@ class VCard:
 
     def _field_TITLE(self, field, value, result):
         result[self._getfieldname("title", result)]=self.unquote(value)
-    
+
+    def _field_NICKNAME(self, field, value, result):
+        # ::TODO:: technically this is a comma seperated list ..
+        result[self._getfieldname("nickname", result)]=self.unquote(value)
+
+    def _field_NOTE(self, field, value, result):
+        result[self._getfieldname("notes", result)]=self.unquote(value)
+
+    def _field_UID(self, field, value, result):
+        result["uid"]=self.unquote(value) # note that we only store one UID (the "U" does stand for unique)
+
 
     #
     #  Complex fields
@@ -247,12 +265,68 @@ class VCard:
         if honorificsuffixes is not None and len(honorificsuffixes):
             result[self._getfieldname("suffix", result)]=honorificsuffixes
 
+    _field_NAME=_field_N  # early versions of vcard did this
+
     def _field_ORG(self, field, value, result):
         value=self.splitandunquote(value)
         if len(value):
             result[self._getfieldname("organisation", result)]=value[0]
         for f in value[1:]:
             result[self._getfieldname("organisational unit", result)]=f
+
+    _field_O=_field_ORG # early versions of vcard did this
+
+    def _field_EMAIL(self, field, value, result):
+        value=self.unquote(value)
+        # work out the types
+        types=[]
+        for f in field[1:]:
+            if f.startswith("TYPE="):
+                ff=f[len("TYPE=")+1:].split(",")
+            else: ff=[f]
+            types.extend(ff)
+
+        # the standard doesn't specify types of "home" and "work" but
+        # does allow for random user defined types, so we look for them
+        type=None
+        for t in types:
+            if t=="HOME": type="HOME"
+            if t=="WORK": type="WORK"
+            if t=="X400": return # we don't want no steenking X.400
+
+        preferred="PREF" in types
+
+        if type is None:
+            self._setvalue(result, "email", value, preferred)
+        else:
+            addr={'email': value, 'type': type}
+            self._setvalue(result, "email", addr, preferred)
+
+    def _field_URL(self, field, value, result):
+        # the standard doesn't specify url types or a pref type,
+        # but we implement it anyway
+        value=self.unquote(value)
+        # work out the types
+        types=[]
+        for f in field[1:]:
+            if f.startswith("TYPE="):
+                ff=f[len("TYPE=")+1:].split(",")
+            else: ff=[f]
+            types.extend(ff)
+
+        type=None
+        for t in types:
+            if t=="HOME": type="HOME"
+            if t=="WORK": type="WORK"
+
+        preferred="PREF" in types
+
+        if type is None:
+            self._setvalue(result, "url", value, preferred)
+        else:
+            addr={'url': value, 'type': type}
+            self._setvalue(result, "url", addr, preferred)
+        
 
     def _field_TEL(self, field, value, result):
         value=self.unquote(value)
@@ -293,20 +367,20 @@ class VCard:
         if "WORK" in types: iswork=True
         if "HOME" in types: ishome=True
 
-        if iswork and voice: self._setnumber(result, "work", value, preferred)
-        if ishome and voice: self._setnumber(result, "home", value, preferred)
+        if iswork and voice: self._setvalue(result, "work", value, preferred)
+        if ishome and voice: self._setvalue(result, "home", value, preferred)
         if not iswork and not ishome and "FAX" in types:
             # fax without explicit work or home
-            self._setnumber(result, "fax", value, preferred)
+            self._setvalue(result, "fax", value, preferred)
         else:
-            if iswork and "FAX" in types: self._setnumber(result, "work fax", value, preferred)
-            if ishome and "FAX" in types: self._setnumber(result, "home fax", value, preferred)
-        if "CELL" in types: self._setnumber(result, "cell", value, preferred)
-        if "PAGER" in types: self._setnumber(result, "pager", value, preferred)
-        if "DATA" in types: self._setnumber(result, "data", value, preferred)
+            if iswork and "FAX" in types: self._setvalue(result, "work fax", value, preferred)
+            if ishome and "FAX" in types: self._setvalue(result, "home fax", value, preferred)
+        if "CELL" in types: self._setvalue(result, "cell", value, preferred)
+        if "PAGER" in types: self._setvalue(result, "pager", value, preferred)
+        if "DATA" in types: self._setvalue(result, "data", value, preferred)
             
 
-    def _setnumber(self, result, type, value, preferred):
+    def _setvalue(self, result, type, value, preferred=False):
         if type not in result:
             result[type]=value
             return
@@ -314,14 +388,24 @@ class VCard:
             result[self._getfieldname(type, result)]=value
             return
         # we need to insert our value at the begining
-        numbers=[value]
-        for suffix in ("",)+range(2,100):
+        values=[value]
+        for suffix in [""]+range(2,100):
             if type+str(suffix) in result:
-                numbers.append(result[type+str(suffix)])
+                values.append(result[type+str(suffix)])
             else:
                 break
-        for suffix in ("",)+range(2,len(numbers)+1):
-            result[type+str(suffix)]
+        suffixes=[""]+range(2,len(values)+1)
+        for l in range(len(suffixes)):
+            result[type+str(suffixes[l])]=values[l]
+
+    def _field_CATEGORIES(self, field, value, result):
+        # comma seperated just for fun
+        values=self.splitandunquote(value, seperator=",")
+        values=[v.replace(";", "").strip() for v in values]  # semi colon is used as seperator in bitpim text field
+        values=[v for v in values if len(v)]
+        result[self._getfieldname("categories", result)]=";".join(values)
+
+    _field_CATEGORY=_field_CATEGORIES  # apple use "category" which is not in the spec
 
     def _field_ADR(self, field, value, result):
         # work out the type
@@ -365,31 +449,38 @@ class VCard:
         if country is not None and len(country):
             addr["country"]=country
         if len(addr):
-            if preferred:
-                addr["preferred"]=True
-            result[self._getfieldname("address", result)]=addr
+            addr["type"]=type
+            self._setvalue(result, "address", addr, preferred)
 
     def _default_field(self, field, value, result):
         if field[0].startswith("X-"):
-            print "ignoring custom field",field
+            if __debug__:
+                print "ignoring custom field",field
             return
-        print "no idea what do with"
-        print "field",field
-        print "value",value
+        if __debug__:
+            print "no idea what do with"
+            print "field",field
+            print "value",value
 
     def unquote(self, value):
         # ::TODO:: do this properly (deal with all backslashes)
         value=value.replace(r"\;", ";")
+        value=value.replace(r"\,", ",")
         value=value.replace(r"\n", "\n")
+        value=value.replace(r"\r\n", "\r\n")
+        # fixup strings that use Windows EOL
+        value=value.replace("\r\n", "\n")
+        # fixup apple strings
+        value=value.replace("\r", "\n")
         return value
 
-    def splitandunquote(self, value):
+    def splitandunquote(self, value, seperator=";"):
         # also need a splitandsplitandunquote since some ; delimited fields are then comma delimited
         res=[]
         build=""
         v=0
         while v<len(value):
-            if value[v]==";":
+            if value[v]==seperator:
                 res.append(build)
                 build=""
                 v+=1
@@ -417,7 +508,7 @@ class VCard:
         str="Version: %s\n" % (`self.version()`)
         str+="Origin: %s\n" % (`self.origin()`)
         str+=common.prettyprintdict(self._data)
-        str+=`self.lines`
+        # str+=`self.lines`
         return str+"\n"
 
 if __name__=='__main__':
