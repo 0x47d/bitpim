@@ -11,6 +11,7 @@
 
 """Generate opinions on the attached com devices"""
 
+import re
 import comscan
 import usbscan
 import sys
@@ -78,6 +79,12 @@ def diagnose(portlist):
 
     return res
 
+def htmlify(text):
+    text=re.sub("&", "&amp;", text)
+    text=re.sub("<", "&lt;", text)
+    text=re.sub(">", "&gt;", text)
+    return text
+
 def genhtml(port):
     """Returns nice html describing a port dict"""
     sfont='<font size="-1">'
@@ -90,7 +97,7 @@ def genhtml(port):
         if k.startswith('usb-') and not k.endswith('string'):
             # ignore these
             continue
-        res+="<tr><td>"+sfont+k+efont+"</td><td>\n"
+        res+='<tr><td valign="top">'+sfont+k+efont+'</td><td valign="top">\n'
         # value
         if k=='active' or k=='available':
             if port[k]:
@@ -103,10 +110,10 @@ def genhtml(port):
             res+=sfont+`port[k]`+efont # should print it nicer at some point
         else:
             if isinstance(port[k], type("")):
-                res+=sfont+port[k]+efont
+                res+=sfont+htmlify(port[k])+efont
             else:
                 res+=sfont+`port[k]`+efont
-        res+="</td><td>"
+        res+='</td><td valign="top">'
         # description
         if k=='name':
             res+=sfont+"This is the name the port is known to your operating system as"+efont
