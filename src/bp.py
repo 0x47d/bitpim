@@ -39,8 +39,6 @@ if __debug__:
 
 if __name__ == '__main__':
     import sys  
-    import gui
-
 
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
@@ -49,4 +47,5 @@ if __name__ == '__main__':
         else:
             bitfling.bitfling.run(sys.argv)
     else:
+        import gui
         gui.run(sys.argv)
