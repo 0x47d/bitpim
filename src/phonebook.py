@@ -1120,7 +1120,7 @@ class ImportDialog(wx.Dialog):
 
         self.cbunaltered=wx.CheckBox(self, wx.NewId(), "Unaltered")
         self.cbadded=wx.CheckBox(self, wx.NewId(), "Added")
-        self.cbchanged=wx.CheckBox(self, wx.NewId(), "Changed")
+        self.cbchanged=wx.CheckBox(self, wx.NewId(), "Merged")
         self.cbdeleted=wx.CheckBox(self, wx.NewId(), "Deleted")
 
         for i in self.cbunaltered, self.cbadded, self.cbchanged, self.cbdeleted:
