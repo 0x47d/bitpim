@@ -15,6 +15,8 @@ import copy
 import re
 import time
 import cStringIO
+import p_lgvx4400
+import prototypes
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -130,6 +132,8 @@ class Phone:
             self.log("Reading entry "+`i`)
             res=self.sendpbcommand(0x13, "\x01\x00\x00\x00\x00\x00\x00")
             entry=self.extractphonebookentry(res)
+            xx=p_lgvx4400.readphoneentryresponse()
+            xx.readfrombuffer(prototypes.buffer(res))
             pbook[i]=entry 
             self.progress(i, numentries, entry['name'])
             #### Advance to next entry
