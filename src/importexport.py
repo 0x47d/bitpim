@@ -324,7 +324,12 @@ class ImportDialog(wx.Dialog):
             if rec.has_key("Phone"):
                 mapping={"business": "office", "business fax": "fax", "home fax": "fax"}
                 for val in rec["Phone"]:
-                    numbers.append({"type": mapping.get(val["type"], val["type"]), "number": phonenumber.normalise(val["number"])})
+                    number={"type": mapping.get(val["type"], val["type"]),
+                            "number": phonenumber.normalise(val["number"])}
+                    sd=val.get('speeddial', None)
+                    if sd is not None:
+                        number.update({ 'speeddial': sd })
+                    numbers.append(number)
                 del rec["Phone"]
             if len(numbers):
                 entry["numbers"]=numbers
@@ -379,7 +384,28 @@ class ImportDialog(wx.Dialog):
                 del rec['Categories']
             if len(cats):
                 entry["categories"]=cats
-
+            # wallpapers
+            l=[]
+            r=rec.get('Wallpapers', None)
+            if r is not None:
+                if isinstance(r, list):
+                    l=[{'wallpaper': x, 'use': 'call' } for x in r]
+                else:
+                    l=[{'wallpaper': x, 'use': 'call' } for x in r.split(';')]
+                del rec['Wallpapers']
+            if len(l):
+                entry['wallpapers']=l
+            # ringtones
+            l=[]
+            r=rec.get('Ringtones', None)
+            if r is not None:
+                if isinstance(r, list):
+                    l=[{'ringtone': x, 'use': 'call'} for x in r]
+                else:
+                    l=[{'ringtone': x, 'use': 'call'} for x in r.split(';')]
+                del rec['Ringtones']
+            if len(l):
+                entry['ringtones']=l
             # flags
             flags=[]
             if rec.has_key("Private"):
@@ -1065,6 +1091,8 @@ class ImportVCardDialog(ImportDialog):
         "phone": "Phone",
         "address": "Address",
         "organisation": "Company",
+        "wallpapers": "Wallpapers",
+        "ringtones": "Ringtones"
         }
     def __init__(self, filename, parent, id, title):
         self.headerrowiseditable=False

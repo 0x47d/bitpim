@@ -196,6 +196,7 @@ class VCard:
         self._version=(2,0)  # which version of the vcard spec the card conforms to
         self._origin=None    # which program exported the vcard
         self._data={}
+        self._groups={}
         self.lines=[]
         # extract version field
         for f,v in lines:
@@ -222,6 +223,7 @@ class VCard:
             elif f[0]=="WORK.LABEL": f[0:1]=["LABEL", "WORK"]
             self.lines.append( (f,v) )
         self._parse(self.lines, self._data)
+        print self._data
 
     def getdata(self):
         "Returns a dict of the data parsed out of the vcard"
@@ -283,7 +285,6 @@ class VCard:
 
     def _field_UID(self, field, value, result):
         result["uid"]=self.unquote(value) # note that we only store one UID (the "U" does stand for unique)
-
 
     #
     #  Complex fields
@@ -371,11 +372,27 @@ class VCard:
             self._setvalue(result, "url", value, preferred)
         else:
             addr={'url': value, 'type': type}
-            self._setvalue(result, "url", addr, preferred)
-        
+            self._setvalue(result, "url", addr, preferred)        
+
+    def _field_X_SPEEDDIAL(self, field, value, result):
+        if '.' in field[0]:
+            group=field[0][:field[0].find('.')]
+        else:
+            group=None
+        if group is None:
+            # this has to belong to a group!!
+            print 'speedial has no group'
+        else:
+            self._setgroupvalue(result, 'phone', { 'speeddial': int(value) },
+                                group, False)
 
     def _field_TEL(self, field, value, result):
         value=self.unquote(value)
+        # see if this is part of a group
+        if '.' in field[0]:
+            group=field[0][:field[0].find('.')]
+        else:
+            group=None
 
         # work out the types
         types=[]
@@ -388,8 +405,6 @@ class VCard:
         # type munging - we map vcard types to simpler ones
         munge={ "BBS": "DATA", "MODEM": "DATA", "ISDN": "DATA", "CAR": "CELL", "PCS": "CELL" }
         types=[munge.get(t, t) for t in types]
-    
-        
 
         # reduce types to home, work, msg, pref, voice, fax, cell, video, pager, data
         types=[t for t in types if t in ("HOME", "WORK", "MSG", "PREF", "VOICE", "FAX", "CELL", "VIDEO", "PAGER", "DATA")]
@@ -420,26 +435,62 @@ class VCard:
     
         
         value=phonenumber.normalise(value)
-        if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
-        if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
+        if iswork and voice:
+            self._setgroupvalue(result,
+                           "phone", {"type": "business", "number": value},
+                           group, preferred)
+        if ishome and voice:
+            self._setgroupvalue(result,
+                           "phone", {"type": "home", "number": value},
+                           group, preferred)
         if not iswork and not ishome and "FAX" in types:
             # fax without explicit work or home
-            self._setvalue(result, "phone", {"type": "fax", "number": value}, preferred)
+            self._setgroupvalue(result,
+                           "phone", {"type": "fax", "number": value},
+                           group, preferred)
         else:
-            if iswork and "FAX" in types: self._setvalue(result, "phone", {"type": "business fax", "number": value}, preferred)
-            if ishome and "FAX" in types: self._setvalue(result, "phone", {"type": "home fax", "number": value}, preferred)
-        if "CELL" in types: self._setvalue(result, "phone", {"type": "cell", "number": value}, preferred)
-        if "PAGER" in types: self._setvalue(result, "phone", {"type": "pager", "number": value}, preferred)
-        if "DATA" in types: self._setvalue(result, "phone", {"type": "data", "number": value}, preferred)
-            
+            if iswork and "FAX" in types:
+                self._setgroupvalue(result, "phone",
+                               {"type": "business fax", "number": value},
+                               group, preferred)
+            if ishome and "FAX" in types:
+                self._setgroupvalue(result, "phone",
+                               {"type": "home fax", "number": value},
+                               group, preferred)
+        if "CELL" in types:
+            self._setgroupvalue(result,
+                           "phone", {"type": "cell", "number": value},
+                           group, preferred)
+        if "PAGER" in types:
+            self._setgroupvalue(result,
+                           "phone", {"type": "pager", "number": value},
+                           group, preferred)
+        if "DATA" in types:
+            self._setgroupvalue(result,
+                           "phone", {"type": "data", "number": value},
+                           group, preferred)
+
+    def _setgroupvalue(self, result, type, value, group, preferred=False):
+        """ Set value of an item of a group
+        """
+        if group is None:
+            # no groups specified
+            return self._setvalue(result, type, value, preferred)
+        group_type=self._groups.get(group, None)
+        if group_type is None:
+            # 1st one of the group
+            self._groups[group]=self._setvalue(result, type, value, preferred)
+        else:
+            result[group_type].update(value)
 
     def _setvalue(self, result, type, value, preferred=False):
         if type not in result:
             result[type]=value
-            return
+            return type
         if not preferred:
-            result[self._getfieldname(type, result)]=value
-            return
+            t=self._getfieldname(type, result)
+            result[t]=value
+            return t
         # we need to insert our value at the begining
         values=[value]
         for suffix in [""]+range(2,99):
@@ -450,6 +501,7 @@ class VCard:
         suffixes=[""]+range(2,len(values)+1)
         for l in range(len(suffixes)):
             result[type+str(suffixes[l])]=values[l]
+        return type
 
     def _field_CATEGORIES(self, field, value, result):
         # comma seperated just for fun
@@ -458,6 +510,20 @@ class VCard:
         values=[v for v in values if len(v)]
         result[self._getfieldname("categories", result)]=";".join(values)
 
+    def _field_PHOTO(self, field, value, result):
+        # comma seperated just for fun
+        values=self.splitandunquote(value, seperator=",")
+        values=[v.replace(";", "").strip() for v in values]  # semi colon is used as seperator in bitpim text field
+        values=[v for v in values if len(v)]
+        result[self._getfieldname("wallpapers", result)]=";".join(values)
+        
+    def _field_SOUND(self, field, value, result):
+        # comma seperated just for fun
+        values=self.splitandunquote(value, seperator=",")
+        values=[v.replace(";", "").strip() for v in values]  # semi colon is used as seperator in bitpim text field
+        values=[v for v in values if len(v)]
+        result[self._getfieldname("ringtones", result)]=";".join(values)
+        
     _field_CATEGORY=_field_CATEGORIES  # apple use "category" which is not in the spec
 
     def _field_ADR(self, field, value, result):
@@ -732,10 +798,23 @@ _out_tel_mapping={ 'home': 'HOME',
                    }
 def out_tel(vals, formatter):
     # ::TODO:: limit to one type of each number
+    phones=['phone'+str(x) for x in ['']+range(2,len(vals)+1)]
     res=""
     first=True
+    idx=0
     for v in vals:
-        res+=out_line("TEL", ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])], phonenumber.format(v['number']), formatter)
+        sp=v.get('speeddial', None)
+        if sp is None:
+            # no speed dial
+            res+=out_line("TEL",
+                          ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])],
+                          phonenumber.format(v['number']), formatter)
+        else:
+            res+=out_line(phones[idx]+".TEL",
+                          ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])],
+                          phonenumber.format(v['number']), formatter)
+            res+=out_line(phones[idx]+".X-SPEEDDIAL", None, str(sp), formatter)
+            idx+=1
         first=False
     return res
 
@@ -758,6 +837,17 @@ def out_adr(vals, formatter):
 def out_note(vals, formatter, limit=1):
     return "".join([out_line("NOTE", None, v["memo"], formatter) for v in vals[:limit]])
 
+def out_wallpapers(vals, formatter):
+    w=[v.get("wallpaper") for v in vals]
+    if len(w):
+        return out_line('PHOTO', None, w, formatter, join_char=",")
+    return ""
+
+def out_ringtones(vals, formatter):
+    r=[v.get("ringtone") for v in vals]
+    if len(r):
+        return out_line('SOUND', None, r, formatter, join_char=",")
+    return ""
 
 # This is the order we write things out to the vcard.  Although
 # vCard doesn't require an ordering, it looks nicer if it
@@ -805,6 +895,8 @@ profile_vcard2={
     'numbers': out_tel,
     'addresses': out_adr,
     'memos': out_note,
+    'wallpapers': out_wallpapers,
+    'ringtones': out_ringtones
     }
 
 profile_vcard3=profile_vcard2.copy()
