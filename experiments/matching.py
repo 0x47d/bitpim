@@ -16,6 +16,7 @@ def match(s1, s2):
 inp="""
 John Smith
 JohnSmith
+John Smythe
 John Q Smith
 Smith John
 JQ Smith
