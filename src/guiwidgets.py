@@ -397,6 +397,7 @@ class ConfigDialog(wx.Dialog):
             pass
         if os.path.isdir(dir):
             self.EndModal(wx.ID_OK)
+            self.ApplyBitFlingSettings()
             return
         wx.TipWindow(self.diskbox, "No such directory - please correct")
             
@@ -435,13 +436,24 @@ class ConfigDialog(wx.Dialog):
         if res==wx.ID_OK:
             self.commbox.SetValue(v)
 
+    def ApplyBitFlingSettings(self):
+        if self.bitflingenabled is not None:
+            if self.bitflingenabled.GetValue():
+                bitflingscan.flinger.configure(self.mw.config.Read("bitfling/username", "<unconfigured>"),
+                                               bitflingscan.decode(self.mw.config.Read("bitfling/password",
+                                                                                       "<unconfigured>")),
+                                               self.mw.config.Read("bitfling/host", "<unconfigured>"),
+                                               self.mw.config.ReadInt("bitfling/port", 12652))
+            else:
+                bitflingscan.flinger.unconfigure()
+
     def OnBitFlingSettings(self, _):
         dlg=BitFlingSettingsDialog(None, self.mw.config)
         if dlg.ShowModal()==wx.ID_OK:
             dlg.SaveSettings()
         dlg.Destroy()
-
-
+        self.ApplyBitFlingSettings()
+        
     def SetupBitFlingCertVerification(self):
         "Setup all the voodoo needed for certificate verification to happen, not matter which thread wants it"
         EVT_BITFLINGCERTIFICATEVERIFICATION(self, self._wrapVerifyBitFlingCert)
@@ -465,7 +477,7 @@ class ConfigDialog(wx.Dialog):
         print thread.get_ident(), "Got response", res, exc
         if exc is not None:
             ex=exc[1]
-            ex.traceback=exc[2]
+            ex.gui_exc_info=exc[2]
             raise ex
         return res
         
@@ -509,6 +521,7 @@ class ConfigDialog(wx.Dialog):
             self.phonebox.SetValue(self.mw.config.Read("phonetype"))
         if self.bitflingenabled is not None:
             self.bitflingenabled.SetValue(self.mw.config.ReadInt("bitfling/enabled", 0))
+            self.ApplyBitFlingSettings()
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -671,6 +684,8 @@ class CommPortDialog(wx.Dialog):
         self.lb.Clear()
         self.Update()
         ports=comscan.comscan()+usbscan.usbscan()
+        if bitflingscan.IsBitFlingEnabled():
+            ports=ports+bitflingscan.flinger.scan()
         self.portinfo=comdiagnose.diagnose(ports, self.selectedphone)
         if len(self.portinfo):
             self.portinfo=[ ("Automatic", "auto",
@@ -890,15 +905,15 @@ class BitFlingSettingsDialog(wx.Dialog):
 
     def _OnTest(self, _=None):
         try:
-            print "about to call connect"
-            res=bitflingscan.flinger.connect(*self.GetSettings())
-            print "result of connect is",res
-            dlg=wx.MessageDialog(self, "Succeeded. It is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
+            bitflingscan.flinger.configure(*self.GetSettings())
+            res=bitflingscan.flinger.getversion()
+            dlg=wx.MessageDialog(self, "Succeeded. Remote version is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
         except Exception,ex:
             res="Failed: %s: %s" % sys.exc_info()[:2]
-            print common.formatexception( (type(ex), ex, ex.traceback) )
+            if hasattr(ex, "gui_exc_info"):
+                print common.formatexception( ex.gui_exc_info) 
             dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
