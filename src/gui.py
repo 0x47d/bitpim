@@ -545,9 +545,21 @@ class MainWindow(wxFrame):
         # Populate all widgets from disk
         self.OnPopulateEverythingFromDisk()
 
-        # Fake event to update menus/toolbars
-        self.OnNotebookPageChanged()
+        # show the last page we were on
+        pg=self.config.Read("viewnotebookpage", "")
+        sel=0
+        if len(pg):
+            for i in range(self.nb.GetPageCount()):
+                if pg==self.nb.GetPageText(i):
+                    sel=i
+                    break
 
+        if sel==self.nb.GetSelection():
+            # no callback is generated if we change to the page we are already
+            # on, but we need to update toolbar etc so fake it
+            self.OnNotebookPageChanged()
+        else:
+            self.nb.SetSelection(sel)
 
     def OnExit(self,_=None):
         self.Close()
@@ -750,6 +762,10 @@ class MainWindow(wxFrame):
 
     # deal with graying out/in menu items on notebook page changing
     def OnNotebookPageChanged(self, _=None):
+        # remember what we are looking at
+        text=self.nb.GetPageText(self.nb.GetSelection())
+        if text is not None:
+            self.config.Write("viewnotebookpage", text)
         # is ringers or wallpaper viewable?
         widget=self.nb.GetPage(self.nb.GetSelection())
         if widget is self.ringerwidget or \
