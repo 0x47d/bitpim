@@ -31,6 +31,7 @@ def GetPhonebookImports():
     res.append( ("CSV...", "Import a CSV file for the phonebook", OnFileImportCSV) )
     # Outlook
     try:
+        1/0 # disable outlook for this build
         import native.outlook
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
     except:
