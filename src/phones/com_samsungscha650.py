@@ -517,7 +517,7 @@ class Phone(com_samsung.Phone):
             entry['end']=entry['start'][:]
 
             # description
-            entry['description']=strip(r[self.__cal_read_name], '"')
+            entry['description']=r[self.__cal_read_name]
 
             # alarm
             try:
