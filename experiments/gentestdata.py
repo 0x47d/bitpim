@@ -28,18 +28,29 @@ email=letters+digits+"@."
 boolean=[ "0", "1", "true", "True", "false", "False" ]
 categories=words+digits+" ;"
 
+# as a special case to considerably speed up some choices we prebuild a 30,000
+# character string and take random slices of that
+speedups={}
+for item in (letters, words, digits, phonenumber, wordsanddigits, url, email, categories):
+    speedups[id(item)]="".join([random.choice(item) for i in range(30000)])
+
 def gen_string(minlength=0, maxlength=515, choices=letters):
     if type(choices)==type([]): # use only zero or one of a list
-        minlength=0
-        maxlength=2
-    return "".join([random.choice(choices) for i in range(random.randrange(minlength, maxlength))])
+        return random.choice(choices)
+    s=speedups.get(id(choices),None)
+    if s is not None:
+        begin=random.randrange(0,29999-maxlength)
+        return s[begin:begin+random.randrange(maxlength)]
+    buffy=cStringIO.StringIO()
+    map(buffy.write, [random.choice(choices)  for i in range(random.randrange(minlength, maxlength))])
+    return buffy.getvalue()
 
 
 ###
 ### Generate the various bits
 ###
 
-def random_phonebook_csv(minlength=0, maxlength=2000, maxfields=300):
+def random_phonebook_csv(minlength=0, maxlength=2000, maxfields=400):
     """Generate a random phonebook in CSV format
     @param minlength: minimum number of entries
     @param maxlength: maximum number of entries
@@ -253,34 +264,54 @@ def random_calendar(minnumber=0, maxnumber=500):
                       ))
         entry['exceptions']=ex
         res[pos]=entry
+    print "  ... generation complete"
     return res
     
 if __name__=='__main__':
-    if not os.path.isdir(sys.argv[1]):
-        os.mkdir(sys.argv[1])
-    j=os.path.join
 
-    if True:
-        midis=random_midi_files(sys.argv[1])
-    else:
-        midis=[]
+    def gen_all():
+        if not os.path.isdir(sys.argv[1]):
+            os.mkdir(sys.argv[1])
+        j=os.path.join
 
-    if True:
-        wps=random_wallpaper_files(sys.argv[1])
-    else:
-        wps=[]
+        if True:
+            midis=random_midi_files(sys.argv[1])
+        else:
+            midis=[]
 
-    if True:
-        cal=random_calendar()
-        f=open(j(sys.argv[1], "calendar-index.idx"), "wt")
-        f.write("result['calendar']=%s\n" % (`cal`,))
-        f.write("FILEVERSION=2")
-        f.close()
+        if True:
+            wps=random_wallpaper_files(sys.argv[1])
+        else:
+            wps=[]
 
-    if True:
-        pb=random_phonebook_csv()
-        f=open(j(sys.argv[1], "phonebook.csv"), "wt")
-        f.write(pb)
-        f.close()
+        if True:
+            cal=random_calendar()
+            f=open(j(sys.argv[1], "calendar-index.idx"), "wt")
+            f.write("result['calendar']=%s\n" % (`cal`,))
+            f.write("FILEVERSION=2")
+            f.close()
 
+        if True:
+            pb=random_phonebook_csv()
+            f=open(j(sys.argv[1], "phonebook.csv"), "wt")
+            f.write(pb)
+            f.close()
+
+    gen_all()
+    sys.exit(0)
+
+    import hotshot, hotshot.stats, os
+    file=os.path.abspath("bpprof")
+    profile=hotshot.Profile(file)
+    profile.run("gen_all()")
+    profile.close()
+    del profile
+    stats=hotshot.stats.load(file)
+    stats.strip_dirs()
+    stats.sort_stats('time', 'calls')
+    stats.print_stats(25)
+    stats.sort_stats('cum', 'calls')
+    stats.print_stats(25)
+    stats.sort_stats('calls', 'time')
+    stats.print_stats(25)
     
