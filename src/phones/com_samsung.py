@@ -59,12 +59,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         com_brew.BrewProtocol.__init__(self)
         self.mode=self.MODENONE
 
-    def getfilesystem(self, dir="", recurse=0):
-        # switch mode before getting into the file system
-        self.setmode(self.MODEBREW)
-        return com_brew.BrewProtocol.getfilesystem(self, dir, recurse)
-        # should we return to mode modem here ??
-
     def _setmodephonebooktobrew(self):
         self.setmode(self.MODEMODEM)
         self.setmode(self.MODEBREW)
