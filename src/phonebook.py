@@ -85,14 +85,53 @@ import os
 import wx
 import wx.grid
 import wx.html
+import wx.stc
 
 # My imports
 import gui
 import common
 import xyaptu
 
+
+
+
 ###
-### New code
+###  Enhanced HTML Widget
+###
+
+class HTMLWindow(wx.html.HtmlWindow):
+
+    def __init__(self, parent, id):
+        wx.html.HtmlWindow.__init__(self, parent, id)
+        wx.EVT_KEY_UP(self, self.OnKeyUp)
+        self.thetext=""
+
+    def SetPage(self, text):
+        self.thetext=text
+        wx.html.HtmlWindow.SetPage(self,text)
+
+    def OnKeyUp(self, evt):
+        keycode=evt.GetKeyCode()        
+        if keycode==ord('S') and evt.ControlDown() and evt.AltDown():
+            print "got ctrl alt s"
+            vs=ViewSourceFrame(self, self.thetext)
+            vs.Show(True)
+            evt.Skip()
+
+###
+###  View Source Window
+###            
+
+class ViewSourceFrame(wx.Frame):
+    def __init__(self, parent, text, id=-1):
+        wx.Frame.__init__(self, parent, id, "HTML Source")
+        stc=wx.stc.StyledTextCtrl(self, -1)
+        stc.SetLexer(wx.stc.STC_LEX_HTML)
+        stc.SetText(text)
+        stc.Colourise(0,-1)
+        
+###
+### We use a table for speed
 ###
 
 class PhoneDataTable(wx.grid.PyGridTableBase):
@@ -169,6 +208,7 @@ class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
     def __init__(self, mainwindow, parent, id=-1):
+        wx.FileSystem_AddHandler(BPFSHandler())
         wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
@@ -181,7 +221,7 @@ class PhoneWidget(wx.SplitterWindow):
         self.table.SetRowLabelSize(0)
         self.table.EnableEditing(False)
         self.table.SetMargins(1,0)
-        self.preview=wx.html.HtmlWindow(self, 1)
+        self.preview=HTMLWindow(self, -1) 
         self.SplitVertically(self.table, self.preview, -300)
         self.stylesfile=gui.getresourcefile("styles.xy")
         self.stylesfilestat=None
@@ -191,6 +231,7 @@ class PhoneWidget(wx.SplitterWindow):
         self.xcpstyles=None
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
+
 
     def OnIdle(self, _):
         "We save out changed data"
@@ -405,7 +446,18 @@ class PhoneWidget(wx.SplitterWindow):
                 return i[name]
         return default
 
-    
-    
+###
+### Virtual filesystem where the images etc come from for the HTML stuff
+###
 
-    
+class BPFSHandler(wx.FileSystemHandler):
+
+    def __init__(self):
+        wx.FileSystemHandler.__init__(self)
+
+    def CanOpen(self, location):
+        proto=self.GetProtocol(location)
+        if proto=="bpimage" or proto=="bpuserimage":
+            print "handling url",location
+            return True
+        return False
