@@ -918,7 +918,7 @@ class SanyoPhonebook:
         for i in range(0, self.protocolclass._NUMEVENTSLOTS):
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
-            if res.entry.flag and entry.start:
+            if res.entry.flag and res.entry.start:
                 self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
                 entry=bpcalendar.CalendarEntry()
                 #entry.pos=i
@@ -1020,23 +1020,26 @@ class SanyoPhonebook:
             descloc=entry.description
             self.progress(eventslot+callslot, progressmax, "Writing "+descloc)
 
-            repeat=None
             rp=entry.repeat
-            if rp.repeat_type==rp.daily:
-                repeatname='daily'
-            elif rp.repeat_type==rp.weekly:
-                repeatname='weekly'
-            elif rp.repeat_type==rp.monthly:
-                repeatname='monthly'
-            elif rp.repeat_type==rp.yearly:
-                repeatname='yearly'
-            for k,v in self._calrepeatvalues.items():
-                if repeatname==v:
-                    repeat=k
-                    break
-            if repeat is None:
-                self.log(descloc+": Repeat type "+`entry.repeat`+" not valid for this phone")
+            if rp is None:
                 repeat=0
+            else:
+                repeatname=None
+                if rp.repeat_type==rp.daily:
+                    repeatname='daily'
+                elif rp.repeat_type==rp.weekly:
+                    repeatname='weekly'
+                elif rp.repeat_type==rp.monthly:
+                    repeatname='monthly'
+                elif rp.repeat_type==rp.yearly:
+                    repeatname='yearly'
+                for k,v in self._calrepeatvalues.items():
+                    if repeatname==v:
+                        repeat=k
+                        break
+                    if repeatname is None:
+                        self.log(descloc+": Repeat type "+`entry.repeat`+" not valid for this phone")
+                        repeat=0
 
             phonenum=re.sub("\-","",descloc)
             now=time.mktime(time.localtime(time.time()))-zonedif
