@@ -17,6 +17,8 @@ from prototypes import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NUMGROUPS=7
+_ALLGROUP=0
 %}
 
 PACKET pbslotsrequest:
@@ -53,6 +55,19 @@ PACKET readpbentryresponse:
     2 UINT ringtone
     2 UINT msgringtone
     2 UINT wallpaper
+
+PACKET readgroupentryrequest:
+    1 UINT {'constant': 0x81} +cmd
+    1 UINT number
+
+PACKET readgroupentryresponse:
+    1 UINT {'constant': 0x81} cmd
+    1 UINT number
+    1 UINT anothergroupnum
+    2 UINT dunno "first member?"
+    17 STRING name  # always terminated
+    2 UINT nummembers "how many members of the group"
+    
 
 # also available but not used by BitPim
 PACKET readlockcoderequest:

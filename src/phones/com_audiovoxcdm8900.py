@@ -9,6 +9,10 @@
 
 """Communicate with the Audiovox CDM 8900 cell phone"""
 
+# standard modules
+import sha
+
+# our modules
 import com_phone
 import com_brew
 import prototypes
@@ -43,10 +47,26 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         write phonebook data.
         """
         # use a hash of ESN and other stuff (being paranoid)
-        # self.log("Retrieving fundamental phone information")
-        # self.log("Phone serial number")
-        # results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
+        self.log("Retrieving fundamental phone information")
+        self.log("Phone serial number")
+        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
+        
         # now read groups
+        self.log("Reading group information")
+        groups={}
+        for i in range(self.protocolclass._NUMGROUPS):
+            req=self.protocolclass.readgroupentryrequest()
+            req.number=i
+            res=self.sendpbcommand(req, self.protocolclass.readgroupentryresponse)
+            if res.number==self.protocolclass._ALLGROUP:
+                continue  # ignore the "All" group
+            if len(res.name)==0:
+                continue  # must be non-blank name
+            groups[i]={'name': res.name}
+
+        results['groups']=groups
+
+        self.log("Fundamentals retrieved")
         return results
 
     def getcalendar(self, result):
@@ -111,7 +131,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         if entry.secret:
             res['flags']=[{'secret': True}]
         # group
-        res['categories']=[{'category': 'avox '+`entry.group`}]
+        if entry.group in result['groups']:
+            res['categories']=[{'category': result['groups'][entry.group]['name']}]
         # media
         rt=[]
         if entry.ringtone!=0xffff:
