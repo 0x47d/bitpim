@@ -177,8 +177,6 @@ def random_wallpaper_files(directory, minnumber=0, maxnumber=100):
     names=[gen_string(minlength=10, maxlength=50) for i in range(random.randrange(minnumber, maxnumber))]
     print "Generating",len(names),"wallpaper files"
 
-    import wx
-    app=wx.PySimpleApp()
     from wxPython.lib import colourdb
     colourdb.updateColourDB()
     colours=colourdb.getColourList()
@@ -279,6 +277,10 @@ def random_calendar(minnumber=0, maxnumber=500):
     
 if __name__=='__main__':
 
+    # Move wx stuff here
+    import wx
+    app=wx.PySimpleApp()
+    
     def gen_all():
         if not os.path.isdir(sys.argv[1]):
             os.mkdir(sys.argv[1])
