@@ -42,6 +42,15 @@ class Phone(com_sanyonewer.Phone):
     protocolclass=p_sanyo4920
     serialsname='rl4920'
 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
+                       '', '', '', '', '', '', '',
+                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
+                       'Bach Air on the G', 'Beethoven Sym.5', 'Greensleeves',
+                       'Johnny Comes..', 'Foster Ky. Home', 'Asian Jingle',
+                       'Disco', 'Toy Box', 'Rodeo' )
+
     calendar_defaultringtone=4
 
     def __init__(self, logtarget, commport):
@@ -56,10 +65,11 @@ class Profile(com_sanyonewer.Profile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
+        # Make sure reading is working OK before we turn on writes
+        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
     )
 
     def __init__(self):
