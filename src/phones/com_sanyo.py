@@ -186,7 +186,7 @@ class SanyoPhonebook:
         self.comm.success=True
 
         origdata=rdata
-        # sometimes there is junk at the begining, eg if the user
+        # sometimes there is junk at the beginning, eg if the user
         # turned off the phone and back on again.  So if there is more
         # than one 7e in the escaped data we should start after the
         # second to last one
@@ -199,10 +199,10 @@ class SanyoPhonebook:
         # turn it back to normal
         data=com_brew.unescape(rdata)
 
-        # sometimes there is other crap at the begining
+        # sometimes there is other crap at the beginning
         d=data.find(firsttwo)
         if d>0:
-            self.log("Junk at begining of Sanyo packet, data at "+`d`)
+            self.log("Junk at beginning of Sanyo packet, data at "+`d`)
             self.logdata("Original Sanyo data", origdata, None)
             self.logdata("Working on Sanyo data", data, None)
             data=data[d:]
@@ -266,8 +266,11 @@ class SanyoPhonebook:
         1
         return results
 
-    def sanyosort(self, x, y):
+    def sanyosort(self, a, b):
         "Sanyo sort order.  Case insensitive, letters first"
+        x=a[1]
+        y=b[1]
+        # This is right only for first column
         if(x[0:1].isalpha() and not y[0:1].isalpha()):
             return -1
         if(y[0:1].isalpha() and not x[0:1].isalpha()):
@@ -459,9 +462,9 @@ class SanyoPhonebook:
 ###
 ### Initialize mappings
 ###
-        namemap={}
-        emailmap={}
-        urlmap={}
+        namemap=[]
+        emailmap=[]
+        urlmap=[]
 
         callerid.numentries=0
         
@@ -490,7 +493,7 @@ class SanyoPhonebook:
             # Will depend on Profile to keep the serial numbers in range
             progresscur+=1
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            self.log("Writing entry "+`ikey`+" - "+ii['name'])
+            self.log("Writing entry "+`slot`+" - "+ii['name'])
             entry=self.makeentry(ii, data)
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=entry
@@ -538,12 +541,12 @@ class SanyoPhonebook:
                         if(nlongphonenumbers<self.protocolclass._NUMLONGNUMBERS):
                             sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=code
 
-            namemap[ii['name']]=slot
+            namemap.append((slot,ii['name']))
             if(len(ii['email'])):
-                emailmap[ii['email']]=slot
+                emailmap.append((slot,ii['email']))
                 sortstuff.numemail+=1
             if(len(ii['url'])):
-                urlmap[ii['url']]=slot
+                urlmap.append((slot,ii['url']))
                 sortstuff.numurl+=1
             # Add ringtone and wallpaper
             ringpic.ringtones[slot].ringtone=self._findmediaindex(data['ringtone-index'], ii['ringtone'],ii['name'],'ringtone')
@@ -557,30 +560,27 @@ class SanyoPhonebook:
         # letters.
         i=0
         sortstuff.pbfirstletters=""
-        keys=namemap.keys()
-        keys.sort(self.sanyosort)
-        for name in keys:
-            sortstuff.sortorder[i].pbslot=namemap[name]
-            sortstuff.sortorder2[i].pbslot=namemap[name]
-            sortstuff.pbfirstletters+=name[0:1]
+        namemap.sort(self.sanyosort)
+        for (slot, name) in namemap:
+            sortstuff.sortorder[i].pbslot=slot
+            sortstuff.sortorder2[i].pbslot=slot
+            sortstuff.pbfirstletters+=name[0]
             i+=1
 
         i=0
         sortstuff.emailfirstletters=""
-        keys=emailmap.keys()
-        keys.sort(self.sanyosort)
-        for email in keys:
-            sortstuff.emails[i].pbslot=emailmap[email]
-            sortstuff.emailfirstletters+=email[0:1]
+        emailmap.sort(self.sanyosort)
+        for (slot, email) in emailmap:
+            sortstuff.emails[i].pbslot=slot
+            sortstuff.emailfirstletters+=email[0]
             i+=1
 
         i=0
         sortstuff.urlfirstletters=""
-        keys=urlmap.keys()
-        keys.sort(self.sanyosort)
-        for url in keys:
-            sortstuff.urls[i].pbslot=urlmap[url]
-            sortstuff.urlfirstletters+=url[0:1]
+        urlmap.sort(self.sanyosort)
+        for (slot, url) in urlmap:
+            sortstuff.urls[i].pbslot=slot
+            sortstuff.urlfirstletters+=url[0]
             i+=1
 
         # Now write out the 3 buffers
