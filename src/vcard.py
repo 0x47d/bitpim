@@ -13,6 +13,8 @@ VCARD is defined in RFC 2425 and 2426
 """
 
 import sys
+import quopri
+import base64
 
 class VFileException(Exception):
     pass
@@ -42,7 +44,7 @@ class VFile:
                 break
             if len(nextline)==0:
                 break
-            if  nextline[0]!=' ':
+            if  nextline[0]!=' ' and nextline[0]!='\t':
                 break
             line+=self._getnextline()[1:]
 
@@ -52,7 +54,35 @@ class VFile:
 
         b4=line[:colon]
         line=line[colon+1:]
-        return b4,line
+
+        # upper case and split on semicolons
+        items=b4.upper().split(";")
+
+        # ::TODO:: vcard 3.0 requires commas and semicolons to be backslash quoted
+        
+        newitems=[]
+        for i in items:
+            # ::TODO:: probably delete anything preceding a '.'
+            # (see 5.8.2 in rfc 2425)
+            # unencode anything that needs it
+            if not i.startswith("ENCODING="):
+                newitems.append(i)
+                continue
+            try:
+                i=i[len("ENCODING="):]
+                if i=='QUOTED-PRINTABLE':
+                    line=quopri.decodestring(line)
+                elif i=='B':
+                    line=base64.decodestring(line)
+                else:
+                    raise VFileException("unknown encoding: "+i)
+            except Exception,e:
+                if isinstance(e,VFileException):
+                    raise e
+                raise VFileException("Exception %s while processing encoding %s on data '%s'" % (str(e), i, line))
+        # ::TODO:: repeat above shenanigans looking for a VALUE= thingy and
+        # convert line as in 5.8.4 of rfc 2425
+        return newitems,line
 
     def _getnextline(self):
         if self.saved is not None:
@@ -78,7 +108,11 @@ class VFile:
         self.saved=self._readandstripline()
         return self.saved
         
+class VCard:
+    "Understands a vcard"
 
+    def __init__(self, vfile):
+        self.vfile=vfile
 
 if __name__=='__main__':
     vf=VFile(open(sys.argv[1]))
