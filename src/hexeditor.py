@@ -15,8 +15,8 @@ import string
 
 class HexEditor(wx.ScrolledWindow):
 
-    def __init__(self, id=-1, style=wx.WANTS_CHARS):
-        wx.ScrolledWindow.__init__(self, id, style)
+    def __init__(self, parent, id=-1, style=wx.WANTS_CHARS):
+        wx.ScrolledWindow.__init__(self, parent, id, style=style)
         self.data=""
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))

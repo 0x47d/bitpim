@@ -71,7 +71,7 @@ import time
 # wx stuff
 import wx
 import wx.lib
-import wx.lib.maskededit
+import wx.lib.masked.textctrl
 import wx.lib.intctrl
 
 # my modules
@@ -853,7 +853,7 @@ class DVDateTimeControl(wx.Panel):
     def __init__(self,parent,id):
         f="EUDATETIMEYYYYMMDD.HHMM"
         wx.Panel.__init__(self, parent, -1)
-        self.c=wx.lib.maskededit.MaskedTextCtrl(self, id, "",
+        self.c=wx.lib.masked.textctrl.TextCtrl(self, id, "",
                                 autoformat=f)
         bs=wx.BoxSizer(wx.HORIZONTAL)
         bs.Add(self.c,0,wx.EXPAND)

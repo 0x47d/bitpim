@@ -235,9 +235,6 @@ def readlsb(data):
     return res
 
 wx.BITMAP_TYPE_BCI=73
-import wxPython.wx
-wxPython.wx.wxBIMAP_TYPE_BCI=73
-
 
 class BCIImageHandler(wx.ImageHandler):
 
@@ -271,7 +268,6 @@ except:
 if __name__=='__main__':
     import sys
 
-    wx.InitAllImageHandlers()
     app=wx.PySimpleApp()
     if len(sys.argv)==2:
         f=Display(sys.argv[1])

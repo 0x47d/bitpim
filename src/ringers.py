@@ -40,7 +40,7 @@ class RingerView(guiwidgets.FileView):
         self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
-        pubsub.subscribe(pubsub.REQUEST_RINGTONES, self, "OnListRequest")
+        pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
 
     def GetIconSize(self):
         return (24,24)

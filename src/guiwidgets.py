@@ -367,7 +367,7 @@ class ConfigDialog(wx.Dialog):
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
         gs.Add( self.phonebox, 0, wx.EXPAND)
-        gs.Add( 1,1, 0, wx.EXPAND) # blank
+        gs.Add( (1,1), 0, wx.EXPAND) # blank
 
         # com port
         gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.ALIGN_CENTER_VERTICAL)
@@ -395,7 +395,7 @@ class ConfigDialog(wx.Dialog):
         # crud at the bottom
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
-        bs.Add(1,1, 1, wx.EXPAND|wx.ALL, 5) # takes up slack
+        bs.Add((1,1), 1, wx.EXPAND|wx.ALL, 5) # takes up slack
         bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
         but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
@@ -892,7 +892,7 @@ class BitFlingSettingsDialog(wx.Dialog):
             ])
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(gs, 0, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(1,1, 1, wx.EXPAND)
+        vbs.Add((1,1), 1, wx.EXPAND)
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
 
         gs=wx.GridSizer(1,4, 5,5)

@@ -374,10 +374,10 @@ class CategoryManager:
 
     def __init__(self):
         self.categories=[]
-        pubsub.subscribe(pubsub.REQUEST_CATEGORIES, self, "OnListRequest")
-        pubsub.subscribe(pubsub.SET_CATEGORIES, self, "OnSetCategories")
-        pubsub.subscribe(pubsub.MERGE_CATEGORIES, self, "OnMergeCategories")
-        pubsub.subscribe(pubsub.ADD_CATEGORY, self, "OnAddCategory")
+        pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_CATEGORIES)
+        pubsub.subscribe(self.OnSetCategories, pubsub.SET_CATEGORIES)
+        pubsub.subscribe(self.OnMergeCategories, pubsub.MERGE_CATEGORIES)
+        pubsub.subscribe(self.OnAddCategory, pubsub.ADD_CATEGORY)
 
     def OnListRequest(self, msg=None):
         # nb we publish a copy of the list, not the real
@@ -554,7 +554,7 @@ class PhoneWidget(wx.Panel):
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
         wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
-        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnCategoriesUpdate")
+        pubsub.subscribe(self.OnCategoriesUpdate, pubsub.ALL_CATEGORIES)
         # we draw the column headers
         # code based on original implementation by Paul Mcnett
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
@@ -639,7 +639,7 @@ class PhoneWidget(wx.Panel):
     def EnsureBitPimSerials(self):
         "Make sure all entries have a BitPim serial"
         rand2=random.Random() # this random is seeded when this function is called
-        d={}
+        d={}  # this keeps track of which ids we have seen
         for k in self._data:
             entry=self._data[k]
             found=False

@@ -49,8 +49,8 @@ class CalendarCellAttributes:
     the defaults"""
     def __init__(self):
         # Set some defaults
-        self.cellbackground=wx.TheBrushList.FindOrCreateBrush(wx.Colour(230,255,255), wx.SOLID)
-        #self.cellbackground=wx.Brush(wx.Colour(197,255,255), wx.SOLID)
+        #self.cellbackground=wx.TheBrushList.FindOrCreateBrush(wx.Colour(230,255,255), wx.SOLID)
+        self.cellbackground=wx.Brush(wx.Colour(197,255,255), wx.SOLID)
         self.labelfont=wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL )
         self.labelforeground=wx.NamedColour("CORNFLOWER BLUE")
         self.labelalign=wx.ALIGN_RIGHT
@@ -147,8 +147,17 @@ class CalendarCellAttributes:
         return True
 
 
-DefaultCalendarCellAttributes=CalendarCellAttributes()
+# a hack - this used to be an instance, but wx 2.5 doesn't allow using brushes/pens etc until
+# app instance is created
+DefaultCalendarCellAttributes=None
 
+def GetCalendarCellAttributes(attr=None):
+    if attr is not None:
+        return attr
+    global DefaultCalendarCellAttributes
+    if DefaultCalendarCellAttributes is None:
+        DefaultCalendarCellAttributes=CalendarCellAttributes()
+    return DefaultCalendarCellAttributes
                 
 class CalendarCell(wx.Window):
     """A control that is used for each day in the calendar
@@ -160,8 +169,8 @@ class CalendarCell(wx.Window):
     fontscalecache=FontscaleCache()
 
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wx.SIMPLE_BORDER):
-        wx.Window.__init__(self, parent, id, style=style|wx.WANTS_CHARS)
-        self.attr=attr
+        wx.Window.__init__(self, parent, id, style=style|wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE )
+        self.attr=GetCalendarCellAttributes(attr)
         self.day=33
         self.year=2033
         self.month=3
@@ -189,7 +198,7 @@ class CalendarCell(wx.Window):
         """Sets what CalendarCellAtrributes we use for appearance
 
         @type attr: CalendarCellAtrributes"""
-        self.attr=attr
+        self.attr=GetCalendarCellAttributes(attr)
         self.needsupdate=True
         self.Refresh(False)
 
@@ -210,10 +219,13 @@ class CalendarCell(wx.Window):
         @return: tuple of (year, month, day)"""
         return (self.year, self.month, self.day)
 
-    def OnSize(self, _=None):
+    def OnSize(self, evt=None):
         """Callback for when we are resized"""
         self.width, self.height = self.GetClientSizeTuple()
         self.needsupdate=True
+        if evt is not None:
+            evt.Skip()
+            
 
     def redraw(self):
         """Causes a forced redraw into our back buffer"""
@@ -343,7 +355,7 @@ class CalendarLabel(wx.Window):
     It uses double buffering etc for a flicker free experience"""
     
     def __init__(self, parent, cells, id=-1):
-        wx.Window.__init__(self, parent, id)
+        wx.Window.__init__(self, parent, id, style=wx.FULL_REPAINT_ON_RESIZE)
         self.needsupdate=True
         self.buffer=None
         self.cells=cells
@@ -489,7 +501,7 @@ class Calendar(wx.Panel):
     
     def __init__(self, parent, rows=5, id=-1):
         self._initvars()
-        wx.Panel.__init__(self, parent, id, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS)
+        wx.Panel.__init__(self, parent, id, style=wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE)
         sizer=wx.lib.rcsizer.RowColSizer()
         self.upbutt=wx.BitmapButton(self, self.ID_UP, getupbitmapBitmap())
         sizer.Add(self.upbutt, flag=wx.EXPAND, row=0,col=0, colspan=8)
@@ -880,10 +892,13 @@ def getdownbitmapImage():
 if __name__=="__main__":
     class MainWindow(wx.Frame):
         def __init__(self, parent, id, title):
-            wx.Frame.__init__(self, parent, id, title, size=(800,600),
-                             style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
+            wx.Frame.__init__(self, parent, id, title, size=(640,480),
+                             style=wx.DEFAULT_FRAME_STYLE)
             #self.control=CalendarCell(self, 1) # test just the cell
+            #hbs=wx.BoxSizer(wx.VERTICAL)
             self.control=Calendar(self)
+            #hbs.Add(self.control, 1, wx.EXPAND)
+            #self.SetSizer(hbs)
             self.Show(True)
     
     app=wx.PySimpleApp()

@@ -8,7 +8,6 @@
 ### $Id$
 
 import wx
-from  wxPython.lib.grids import wxFlexGridSizer
 import fixedscrolledpanel
 import pubsub
 import bphtml
@@ -51,7 +50,7 @@ class RingtoneEditor(wx.Panel):
         self.SetSizer(hs)
         hs.Fit(self)
 
-        pubsub.subscribe(pubsub.ALL_RINGTONES, self, "OnRingtoneUpdates")
+        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
         wx.CallAfter(pubsub.publish, pubsub.REQUEST_RINGTONES) # make the call once we are onscreen
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
@@ -153,7 +152,7 @@ class WallpaperEditor(wx.Panel):
         self.SetSizer(hs)
         hs.Fit(self)
 
-        pubsub.subscribe(pubsub.ALL_WALLPAPERS, self, "OnWallpaperUpdates")
+        pubsub.subscribe(self.OnWallpaperUpdates, pubsub.ALL_WALLPAPERS)
         wx.CallAfter(pubsub.publish, pubsub.REQUEST_WALLPAPERS) # make the call once we are onscreen
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
@@ -252,7 +251,7 @@ class CategoryManager(wx.Dialog):
         hs.Add(self.add, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
 
-        gs=wxFlexGridSizer(2,3,5,5)
+        gs=wx.FlexGridSizer(2,3,5,5)
         gs.Add(wx.StaticText(self, -1, "List"))
         gs.Add(wx.StaticText(self, -1, "Added"))
         gs.Add(wx.StaticText(self, -1, "Deleted"))
@@ -274,7 +273,7 @@ class CategoryManager(wx.Dialog):
         self.dellist=[]
         self.addlist=[]
 
-        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnUpdateCategories")
+        pubsub.subscribe(self.OnUpdateCategories, pubsub.ALL_CATEGORIES)
         pubsub.publish(pubsub.REQUEST_CATEGORIES)
 
         wx.EVT_BUTTON(self, self.addbut.GetId(), self.OnAdd)
@@ -355,7 +354,7 @@ class CategoryEditor(wx.Panel):
 
         self.categories=[self.unnamed]
         self.category=wx.ListBox(self, -1, choices=self.categories)
-        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnUpdateCategories")
+        pubsub.subscribe(self.OnUpdateCategories, pubsub.ALL_CATEGORIES)
         pubsub.publish(pubsub.REQUEST_CATEGORIES)
         hs.Add(self.category, 1, wx.EXPAND|wx.ALL, 5)
         
@@ -577,7 +576,7 @@ class AddressEditor(wx.Panel):
         self.company=wx.TextCtrl(self, -1, "")
         hs.Add(self.company, 1, wx.EXPAND|wx.ALL, 5)
 
-        gs=wxFlexGridSizer(6,2,2,5)
+        gs=wx.FlexGridSizer(6,2,2,5)
 
         for name,desc in self.fieldinfos:
             gs.Add(wx.StaticText(self, -1, desc), 0, wx.ALIGN_CENTRE)

@@ -24,9 +24,6 @@ import wx
 import wx.lib.colourdb
 import wx.gizmos
 
-# temporarily needed due to bugs
-import wxPython.gizmosc as gizmosc
-
 # my modules
 import guiwidgets
 import common
@@ -255,7 +252,6 @@ class MainApp(wx.App):
     def OnInit(self):
         self.made=False
         # Routine maintenance
-        wx.InitAllImageHandlers()
         wx.lib.colourdb.updateColourDB()
         
         # Thread stuff
@@ -1310,19 +1306,6 @@ class WorkerThread(WorkerThreadFramework):
 
 
 class FileSystemView(wx.gizmos.TreeListCtrl):
-
-    # the gizmos.py shipped with wx 2.4.1.2 has wrong implementation
-    # of these three methods.  We have fixed versions here.  They will be removed
-    # when a later version of wx ships
-    def GetFirstChild(self, *_args, **_kwargs):
-        val = gizmosc.wxTreeListCtrl_GetFirstChild(self, *_args, **_kwargs)
-        return val
-    def GetNextChild(self, *_args, **_kwargs):
-        val = gizmosc.wxTreeListCtrl_GetNextChild(self, *_args, **_kwargs)
-        return val
-    def HitTest(self, point):
-        w = self.GetMainWindow()
-        return gizmosc.wxTreeListCtrl_HitTest(self, self.ScreenToClient(w.ClientToScreen(point)))
 
     # we have to add None objects to all nodes otherwise the tree control refuses
     # sort (somewhat lame imho)
