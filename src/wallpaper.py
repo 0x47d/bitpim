@@ -233,6 +233,7 @@ class WallpaperView(guiwidgets.FileView):
         types={}
         for item in items:
             t=item.fileinfo.format
+            if t is None: t="<Unknown>"
             l=types.get(t, [])
             l.append(item)
             types[t]=l
@@ -297,7 +298,6 @@ class WallpaperView(guiwidgets.FileView):
                     self.modified=True
 
     def GetItemThumbnail(self, name, width, height):
-        print name
         img,_=self.GetImage(name)
         if width!=img.GetWidth() or height!=img.GetHeight():
             # scale the image. 
