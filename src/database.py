@@ -183,9 +183,20 @@ class Database:
                 # recreate the source table with new columns
                 del cmd[1] # remove temporary
                 cmd[2]=sqlquote(tablename) # change tablename
+                del cmd[-1] # remove trailing )
+                for n,t in creates:
+                    cmd.extend((',', sqlquote('n'), t))
+                cmd.append(')')
                 self.sql(" ".join(cmd))
                 # put values back in
-                self.sql("insert into %s select * from %s" % (sqlquote(tablename), sqlquote("backup_"+tablename)))
+                cmd=["insert into", sqlquote(tablename), '(']
+                for n,_ in dbtkeys:
+                    if cmd[-1]!="(":
+                        cmd.append(",")
+                    cmd.append(sqlquote(n))
+                cmd.extend([")", "select * from", sqlquote("backup_"+tablename)])
+                self.sql(" ".join(cmd))
+                self.connection.commit() # ::TODO:: remove this
                 
     savemajordict=ExclusiveWrapper(savemajordict)
 
