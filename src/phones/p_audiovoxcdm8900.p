@@ -68,6 +68,15 @@ PACKET readgroupentryresponse:
     17 STRING name  # always terminated
     2 UINT nummembers "how many members of the group"
     
+PACKET dunnorequest:
+    1 UINT {'constant': 0x26} +cmd
+    1 UINT {'constant': 0xf7} +cmd2
+    1 UINT {'constant': 0x03} +cmd3
+    1 UINT which
+
+PACKET dunnoresponse:
+    * DATA stuff
+
 
 # also available but not used by BitPim
 PACKET readlockcoderequest:

@@ -97,6 +97,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             self.progress(i, numentries, res.name)
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
+
+        for i in range(0x1e):
+            req=self.protocolclass.dunnorequest()
+            req.which=i
+            self.sendpbcommand(req, self.protocolclass.dunnoresponse)
+        
         return pbook
 
     def extractphonebookentry(self, entry, result):
