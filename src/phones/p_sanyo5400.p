@@ -15,8 +15,8 @@ from prototypes import *
 
 # Make all sanyo stuff available in this module as well
 from p_sanyo import *
-from p_sanyo5500 import *
-#import p_sanyo
+from p_sanyomedia import *
+from p_sanyonewer import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb

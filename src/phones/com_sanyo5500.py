@@ -20,13 +20,14 @@ import com_brew
 import com_phone
 import com_sanyo
 import com_sanyomedia
+import com_sanyonewer
 import prototypes
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
 
 
-class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
+class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo SCP-5500 cell phone"
 
     desc="SCP-5500"
@@ -73,7 +74,8 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         self.writewait()
         result = com_sanyo.Phone.savecalendar(self, dict, merge)
     
-class Profile(com_sanyo.Profile):
+class Profile(com_sanyonewer.Profile):
+
     protocolclass=p_sanyo5500
     serialsname='scp5500'
 

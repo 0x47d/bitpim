@@ -7,48 +7,49 @@
 ###
 ### $Id$
 
-"""Talk to the Sanyo SCP-5400 (RL2500) cell phone
-
-Reported to work with 5500 bitpim code.
-"""
+"""Talk to the Sanyo SCP-5400 (RL2500) cell phone"""
 
 # my modules
 import common
 import p_sanyo5400
-import com_sanyo5500
 import com_brew
 import com_phone
 import com_sanyo
+import com_sanyonewer
 import prototypes
 
 
-class Phone(com_sanyo5500.Phone):
+class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo SCP-5400 cell phone"
 
     desc="SCP-5400"
 
+    imagelocations=(
+        # offset, directory #, indexflag, type, maximumentries
+        )    
+
     protocolclass=p_sanyo5400
     serialsname='scp5400'
 
-    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
-                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
-                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
-                       '', '', '', '', '', '', '',
-                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
-                       'Bach Air on the G', 'Beethoven Sym.5', 'Greensleeves',
-                       'Johnny Comes..', 'Foster Ky. Home', 'Asian Jingle',
-                       'Disco', 'Toy Box', 'Rodeo' )
-                      
+# Should it be 4 or 0?
     calendar_defaultringtone=0
 
     def __init__(self, logtarget, commport):
-        com_sanyo5500.Phone.__init__(self, logtarget, commport)
+        com_sanyonewer.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-class Profile(com_sanyo5500.Profile):
+class Profile(com_sanyonewer.Profile):
 
     protocolclass=p_sanyo5400
     serialsname='scp5400'
 
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+#        ('wallpaper', 'read', None),  # all wallpaper reading
+    )
+
     def __init__(self):
-        com_sanyo5500.Profile.__init__(self)
+        com_sanyonewer.Profile.__init__(self)
