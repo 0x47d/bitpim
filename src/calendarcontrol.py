@@ -18,7 +18,7 @@ OnGetEntries(self, year, month, day):
 
     Return a list of entries for the specified y,m,d.  The format is
     ( (hour,min,desc), (hour,min,desc)... )  Hour should be in 24 hour
-    format.
+    format.  You should sort the entries.
 
     Note that Calendar does not cache any results so you will be
     asked for the same dates as the user scrolls around.
