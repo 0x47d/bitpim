@@ -126,7 +126,10 @@ def formatexception(excinfo=None, lastframes=8):
 
 
 # Where to find bitmaps etc
-p=sys.path[0]
+if IsMac():
+    p=os.getcwd()
+else:
+    p=sys.path[0]
 if p.lower().endswith(".zip"): # zip importer in action
     p=os.path.dirname(p)
 resourcedirectory=os.path.join(os.path.abspath(p), "resources")

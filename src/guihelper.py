@@ -185,7 +185,10 @@ def getresourcefiles(wildcard):
     return l
 
 # Where to find bitmaps etc
-p=sys.path[0]
+if IsMac():
+    p=os.getcwd()
+else:
+    p=sys.path[0]
 if os.path.isfile(p): # zip importer in action
     p=os.path.dirname(p)
 resourcedirectory=os.path.abspath(os.path.join(p, 'resources'))
