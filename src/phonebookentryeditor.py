@@ -14,6 +14,7 @@ import pubsub
 import bphtml
 import database
 import wallpaper
+import guihelper
 
 """The dialog for editing a phonebook entry"""
 
@@ -987,12 +988,18 @@ class Editor(wx.Dialog):
         self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
+        # work around a bug in which the mac toolbar icons are 4 pixels bigger
+        # in each dimension
+        if guihelper.IsMac():
+            tb.SetToolBitmapSize(wx.Size(27,27))
+        else:
+            tb.SetToolBitmapSize(wx.Size(32,32))
         sz=tb.GetToolBitmapSize()
-        tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
-        tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
+        tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_UP, wx.ART_TOOLBAR, sz), shortHelp="Move field up")
+        tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_DOWN, wx.ART_TOOLBAR, sz), shortHelp="Move field down")
         tb.AddSeparator()
-        tb.AddLabelTool(self.ID_ADD, "Add", wx.ArtProvider_GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz))
-        tb.AddLabelTool(self.ID_DELETE, "Delete", wx.ArtProvider_GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz))
+        tb.AddLabelTool(self.ID_ADD, "Add", wx.ArtProvider.GetBitmap(guihelper.ART_ADD_FIELD, wx.ART_TOOLBAR, sz), shortHelp="Add field")
+        tb.AddLabelTool(self.ID_DELETE, "Delete", wx.ArtProvider.GetBitmap(guihelper.ART_DEL_FIELD, wx.ART_TOOLBAR, sz), shortHelp="Delete field")
 
         tb.Realize()
         vs.Add(tb, 0, wx.EXPAND|wx.BOTTOM, 5)

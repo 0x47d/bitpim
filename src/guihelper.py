@@ -262,3 +262,33 @@ def GetOpenCommand(mimetypes, filename):
             return cmd
     return None
     
+# Art provider stuff
+
+# Our constants
+_ourart={
+    "ART_ADD_WALLPAPER": "add_picture",
+    "ART_DEL_WALLPAPER": "delete_picture",
+    "ART_ARROW_UP": "arrow_up",
+    "ART_ARROW_DOWN": "arrow_down",
+    "ART_ADD_FIELD": "add_field",
+    "ART_DEL_FIELD": "delete_field",
+    "ART_ADD_CONTACT": "add_contact",
+    "ART_DEL_CONTACT": "delete_contact",
+    "ART_ADD_WALLPAPER": "add_picture",
+    "ART_ADD_RINGER": "add_ringer",
+    "ART_DEL_RINGER": "delete_ringer",
+    }
+
+# populate namespace
+for s in _ourart: globals()[s]=s
+    
+class ArtProvider(wx.ArtProvider):
+    """ArtProvider manages the art for the application"""
+
+    def CreateBitmap(self, artid, client, size):
+        """Loads a bitmap and returns it depending on the parameters
+        """
+        if artid in _ourart:
+            return getbitmap(_ourart[artid])
+        print "not returning a bitmap for",artid
+        return wx.NullBitmap

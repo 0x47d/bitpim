@@ -478,6 +478,11 @@ class MainWindow(wx.Frame):
         sb=guiwidgets.MyStatusBar(self)
         self.SetStatusBar(sb)
 
+        ### Art
+        # establish the custom art provider for custom icons
+        # this is a global setting, so no need to call it for each toolbar
+        wx.ArtProvider_PushProvider(guihelper.ArtProvider())
+
         ### Menubar
 
         menuBar = wx.MenuBar()
@@ -558,18 +563,20 @@ class MainWindow(wx.Frame):
         menuBar.Append(menu, "&Help");
 
         ### toolbar
-        # self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.NO_BORDER|wx.TB_FLAT)
         self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.TB_TEXT)
-        #self.tb.SetToolBitmapSize(wx.Size(32,32))
+        # work around a bug in which the Mac toolbar icons are 4 pixels bigger
+        # in each dimension
+        if guihelper.IsMac():
+            self.tb.SetToolBitmapSize(wx.Size(27,27))
+        else:
+            self.tb.SetToolBitmapSize(wx.Size(32,32))
         sz=self.tb.GetToolBitmapSize()
-        # work around a bug on Linux that returns random (large) numbers
-        if sz[0]<10 or sz[0]>100: sz=wx.Size(32,32)
 
         # add and delete tools
-        self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider_GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
-                              shortHelp="Add", longHelp="Add an item")
-        self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider_GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
-                              shortHelp="Delete", longHelp="Delete item")
+        self.tooladd=self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider.GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
+                                          shortHelp="Add", longHelp="Add an item")
+        self.tooldelete=self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider.GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
+                                             shortHelp="Delete", longHelp="Delete item")
             
         # You have to make this call for the toolbar to draw itself properly
         self.tb.Realize()
@@ -973,13 +980,27 @@ class MainWindow(wx.Frame):
         text=self.nb.GetPageText(self.nb.GetSelection())
         if text is not None:
             self.config.Write("viewnotebookpage", text)
-        # is ringers viewable?
+        # does the page have editable properties?
         widget=self.nb.GetPage(self.nb.GetSelection())
         if widget is self.ringerwidget or \
            widget is self.wallpaperwidget or \
            widget is self.phonewidget:
             enableedit=True
         else: enableedit=False
+
+        sz=self.tb.GetToolBitmapSize()
+        mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
+                id(self.wallpaperwidget): guihelper.ART_ADD_WALLPAPER,
+                id(self.phonewidget): guihelper.ART_ADD_CONTACT}
+        mapbmpdelete={id(self.ringerwidget): guihelper.ART_DEL_RINGER,
+                   id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
+                   id(self.phonewidget): guihelper.ART_DEL_CONTACT}
+        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
+        self.tooladd.SetNormalBitmap(bmpadd)
+        bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
+        self.tooldelete.SetNormalBitmap(bmpdel)
+        # this has to be called to force the actual update
+        self.GetToolBar().Realize()
 
         # Toolbar
         self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enableedit)
