@@ -16,9 +16,9 @@ import string
 
 class HexEditor(wx.ScrolledWindow):
 
-    def __init__(self, id=-1, style=wx.WANTS_CHARS|wx.HSCROLL|wx.VSCROLL):
+    def __init__(self, id=-1, style=wx.WANTS_CHARS):
         wx.ScrolledWindow.__init__(self, id, style)
-        self.data="this is a test of this \x03\xf7code to see \thow well it draws stuff"*70
+        self.data=""
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
         self.sethighlight(wx.NamedColour("BLACK"), wx.NamedColour("YELLOW"))
@@ -28,8 +28,18 @@ class HexEditor(wx.ScrolledWindow):
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        wx.EVT_SET_FOCUS(self, self.OnGainFocus)
+        wx.EVT_KILL_FOCUS(self, self.OnLoseFocus)
         self.OnSize(None)
         self.buffer=None
+        self.hasfocus=False
+        self.highlightrange(-1,-1)
+
+    def SetData(self, data):
+        self.data=data
+        self.needsupdate=True
+        self.updatescrollbars()
+        self.Refresh()
 
     def OnEraseBackground(self, _):
         pass
@@ -40,6 +50,25 @@ class HexEditor(wx.ScrolledWindow):
         # if self.width>self.widthinchars*self.charwidth:
         #    self.SetClientSize( (self.widthinchars*self.charwidth, self.height) )
         self.needsupdate=True
+
+    def OnGainFocus(self,_):
+        self.hasfocus=True
+        self.needsupdate=True
+        self.Refresh()
+
+    def OnLoseFocus(self,_):
+        self.hasfocus=False
+        self.needsupdate=True
+        self.Refresh()
+
+    def highlightrange(self, start, end):
+        self.needsupdate=True
+        self.highlightstart=start
+        self.highlightend=end
+        self.Refresh()
+
+    def _ishighlighted(self, pos):
+        return pos>=self.highlightstart and pos<self.highlightend
 
     def sethighlight(self, foreground, background):
         self.highlight=foreground,background
@@ -63,11 +92,15 @@ class HexEditor(wx.ScrolledWindow):
         lines+=1 # status line
         # fixed width
         self.widthinchars=8+2+3*16+1+2+16
-        self.SetScrollbars(self.charwidth, self.charheight, self.widthinchars, lines)
+        self.SetScrollbars(self.charwidth, self.charheight, self.widthinchars, lines, self.GetViewStart()[0], self.GetViewStart()[1])
 
     def _setnormal(self,dc):
         dc.SetTextForeground(self.normal[0])
         dc.SetTextBackground(self.normal[1])
+
+    def _sethighlight(self,dc):
+        dc.SetTextForeground(self.highlight[0])
+        dc.SetTextBackground(self.highlight[1])    
 
     def _setstatus(self,dc):
         dc.SetTextForeground(self.normal[1])
@@ -77,8 +110,9 @@ class HexEditor(wx.ScrolledWindow):
 
     def OnDraw(self, dc):
         xd,yd=self.GetViewStart()
-        st=0  # 0=normal, 1=highlight, 2=cursor
+        st=0  # 0=normal, 1=highlight
         dc.BeginDrawing()
+        dc.SetBackgroundMode(wx.SOLID)
         dc.SetFont(self.font)
         for line in range(yd, min(self.datalines, yd+self.height/self.charheight+1)):
             # address
@@ -87,18 +121,37 @@ class HexEditor(wx.ScrolledWindow):
             dc.DrawText("%08X" % (line*16), 0, line*self.charheight)
             # bytes
             for i in range(16):
-                if line*16+i>=len(self.data):
+                pos=line*16+i
+                if pos>=len(self.data):
                     break
-                c=self.data[line*16+i]
-                dc.DrawText("%02X" % (ord(c),), (10+(3*i)+(i>=8))*self.charwidth, line*self.charheight)
+                hl=self._ishighlighted(pos)
+                if hl!=st:
+                    if hl:
+                        st=1
+                        self._sethighlight(dc)
+                    else:
+                        st=0
+                        self._setnormal(dc)
+                if hl:
+                    space=""
+                    if i<15:
+                        if self._ishighlighted(pos+1):
+                            space=" "
+                            if i==7:
+                                space="  "
+                else:
+                    space=""
+                c=self.data[pos]
+                dc.DrawText("%02X%s" % (ord(c),space), (10+(3*i)+(i>=8))*self.charwidth, line*self.charheight)
                 if not (ord(c)>=32 and string.printable.find(c)>=0):
                     c='.'
                 dc.DrawText(c, (10+(3*16)+2+i)*self.charwidth, line*self.charheight)
-                
-        self._setstatus(dc)
-        w,h=self.GetClientSizeTuple()
-        dc.DrawRectangle(0,h-self.charheight+yd*self.charheight,self.widthinchars*self.charwidth,self.charheight)
-        dc.DrawText("A test of stuff "+`yd`, 0, h-self.charheight+yd*self.charheight)
+
+        if self.hasfocus:
+            self._setstatus(dc)
+            w,h=self.GetClientSizeTuple()
+            dc.DrawRectangle(0,h-self.charheight+yd*self.charheight,self.widthinchars*self.charwidth,self.charheight)
+            dc.DrawText("A test of stuff "+`yd`, 0, h-self.charheight+yd*self.charheight)
                 
         dc.EndDrawing()
 
@@ -142,7 +195,10 @@ if __name__=='__main__':
             self.Show(True)
     app=wx.PySimpleApp()
     frame=MainWindow(None, -1, "HexEditor Test")
-    if True:
+    frame.control.SetData("this is a test of this \x03\xf7code to see \thow well it draws stuff"*70)
+    frame.control.highlightrange(70, 123)
+
+    if False:
         import hotshot
         f=hotshot.Profile("hexeprof",1)
         f.runcall(app.MainLoop)

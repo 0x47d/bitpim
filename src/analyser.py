@@ -25,6 +25,8 @@ import p_lgvx4400
 import p_brew
 import p_lgtm520
 
+import hexeditor
+
 class Eventlist(wx.ListCtrl):
     "List control showing the various events"
 
@@ -87,16 +89,7 @@ class Analyser(wx.Frame):
         topsplit.SplitHorizontally(self.list, botsplit, 300)
 
         self.tree=wx.TreeCtrl(botsplit, 23, style=wx.TR_DEFAULT_STYLE)
-        self.hex=wx.TextCtrl(botsplit, -1, style=wx.TE_MULTILINE| wx.TE_RICH2|wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
-        # Fixed width font
-        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
-        ta=wx.TextAttr(font=f)
-        self.hex.SetDefaultStyle(ta)
-
-        self.highlightstyle=wx.TextAttr(font=f, colBack=wx.Colour(0xff,0xff,0))
-        self.errorstyle=wx.TextAttr(font=f, colBack=wx.Colour(0xff,64,64))
-        self.dataline=0
-
+        self.hex=hexeditor.HexEditor(botsplit)
         botsplit.SplitHorizontally(self.tree, self.hex, 200)
         
         if data is None:
@@ -120,16 +113,14 @@ class Analyser(wx.Frame):
         "The user selected an event in the listbox"
         index=evt.m_itemIndex
         curtime, curdesc, curclass, curdata=self.packets[index]
-        self.hex.Clear()
-        self.dataline=0
+        self.errorinfo=""
+        self.hex.SetData("")
         if len(curdata):
-            self.hex.AppendText(common.datatohexstring(curdata))
-            self.hex.SetInsertionPoint(0)
-            self.hex.ShowPosition(self.hex.XYToPosition(0,0))
+            self.hex.SetData(curdata)
+            # self.hex.ShowPosition(self.hex.XYToPosition(0,0))
         else:
-            self.hex.AppendText(curdesc)
-            self.hex.SetInsertionPoint(0)
-            self.hex.ShowPosition(self.hex.XYToPosition(0,0))
+            self.hex.SetData(curdesc)
+            # self.hex.ShowPosition(self.hex.XYToPosition(0,0))
 
         self.tree.DeleteAllItems()
         if len(curclass):
@@ -158,6 +149,8 @@ class Analyser(wx.Frame):
                 self.errorme("Object did not construct correctly")
                 # no return, we persevere
             self.addtreeitems(obj, root)
+        if len(self.errorinfo):
+            wx.TipWindow(self.tree,self.errorinfo)
 
     def addtreeitems(self, obj, parent):
         "Add fields from obj to parent node"
@@ -203,47 +196,22 @@ class Analyser(wx.Frame):
     def OnTreeSelection(self, evt):
         "User selected an item in the tree"
         item=evt.GetItem()
-        begin=self.hex.XYToPosition(0, self.dataline)
-        self.hex.SetStyle(begin,self.hex.GetLastPosition(),self.hex.GetDefaultStyle())
         try:
             start,end=self.tree.GetPyData(item)
         except:
+            self.hex.highlightrange(-1,-1)
             return
-        offset=start
-        while offset<end:
-            line=self.hex.XYToPosition(0,self.dataline+offset/16)
-            if offset+16<end:
-                # highlight till end of line
-                offsetmod=offset%16
-                self.hex.SetStyle(line+9+offsetmod*3, line+9+16*3-1, self.highlightstyle)
-                self.hex.SetStyle(line+61+offsetmod,  line+61+16, self.highlightstyle)
-                offset+=16-offsetmod
-                continue
-
-            # highlight till end byte which is on this row
-            howmany=end-offset
-            offsetmod=offset%16
-            # hexes
-            self.hex.SetStyle(line+9+offsetmod*3, line+9+(offsetmod+howmany)*3-1, self.highlightstyle)
-            # and now the chars
-            self.hex.SetStyle(line+61+offsetmod,  line+61+(offsetmod+howmany), self.highlightstyle)
-            break  # alls done
-        begin=self.hex.XYToPosition(0, self.dataline+start/16)
-        self.hex.ShowPosition(begin)
+        self.hex.highlightrange(start,end)
+        # self.hex.ShowPosition(begin)
 
     def errorme(self, desc, exception=None):
         "Put exception information into the hex pane and output traceback to console"
         if exception is not None:
             x=StringIO.StringIO()
             print >>x,exception.__str__(),
-            self.hex.WriteText(x.getvalue()+" : ")
+            self.errorinfo+=WriteText(x.getvalue()+" : ")
             print >>sys.stderr, common.formatexception()
-        self.hex.WriteText(desc+"\n")
-        for i,l in zip(range(10000), self.hex.GetValue().split("\n")):
-            if len(l)>8 and l[:8]=='00000000':
-                self.dataline=i
-                self.hex.SetStyle(0, self.hex.XYToPosition(0, self.dataline), self.errorstyle)
-                return
+        self.errorinfo+=desc+"\n"
 
     def getclipboarddata(self):
         """Gets text data on clipboard"""
