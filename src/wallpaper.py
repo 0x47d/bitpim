@@ -459,16 +459,7 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None, valign="center"
 ### Virtual filesystem where the images etc come from for the HTML stuff
 ###
 
-def statinfo(filename):
-    """Returns a simplified version of os.stat results that can be used to tell if a file
-    has changed.  The normal structure returned also has things like last access time
-    which should not be used to tell if a file has changed."""
-    try:
-        s=os.stat(filename)
-        return (s.st_mode, s.st_ino, s.st_dev, s.st_uid, s.st_gid, s.st_size, s.st_mtime,
-                s.st_ctime)
-    except:
-        return None
+statinfo=common.statinfo
 
 class BPFSHandler(wx.FileSystemHandler):
 

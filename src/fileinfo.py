@@ -11,6 +11,8 @@
 
 import os
 
+import common
+
 import midifile
 
 class FailedFile:
@@ -272,12 +274,14 @@ def fmts_JPG(ifi):
 
 imageids=[globals()[f] for f in dir() if f.startswith("idimg_")]
 def identify_imagefile(filename):
+    v=thefileinfocache.get(filename)
+    if v is not None: return v
     fo=SafeFileWrapper(filename)
     for f in imageids:
         obj=f(fo)
         if obj is not None:
-            return obj
-    return ImgFileInfo(fo)
+            return thefileinfocache.set(filename,obj)
+    return thefileinfocache.set(file,ImgFileInfo(fo))
 
 class AudioFileInfo:
     "Wraps information about an audio file"
@@ -664,9 +668,17 @@ def getpcmfileinfo(filename):
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 def identify_audiofile(filename):
+    v=thefileinfocache.get(filename)
+    if v is not None: return v
     fo=SafeFileWrapper(filename)
     for f in audioids:
         obj=f(fo)
         if obj is not None:
-            return obj
-    return AudioFileInfo(fo)
+            return thefileinfocache.set(filename, obj)
+    return thefileinfocache.set(filename, AudioFileInfo(fo))
+
+###
+###  caches for audio/image id
+###
+
+thefileinfocache=common.FileCache(lowwater=100,hiwater=140)

@@ -18,6 +18,7 @@ import StringIO
 import sys
 import traceback
 import tempfile
+import random
 
 class FeatureNotAvailable(Exception):
      """The device doesn't support the feature"""
@@ -539,3 +540,44 @@ def MSBstr32(v):
     return chr((v>>24)&0xff)+chr((v>>16)&0xff)+chr((v>>8)&0xff)+chr(v&0xff)
 
             
+###
+### Cache information against a file
+###
+
+def statinfo(filename):
+    """Returns a simplified version of os.stat results that can be used to tell if a file
+    has changed.  The normal structure returned also has things like last access time
+    which should not be used to tell if a file has changed."""
+    try:
+        s=os.stat(filename)
+        return (s.st_mode, s.st_ino, s.st_dev, s.st_uid, s.st_gid, s.st_size, s.st_mtime,
+                s.st_ctime)
+    except:
+        return None
+
+class FileCache:
+
+     def __init__(self, lowwater=100, hiwater=140):
+          self.items={}
+          self.hiwater=hiwater
+          self.lowwater=lowwater
+
+     def get(self, filename):
+          v=self.items.get(filename, None)
+          if v is None: return None
+          si,value=v
+          # check freshness
+          if si==statinfo(filename):
+               return value
+          return None
+
+     def set(self, filename, value):
+          # we deliberately return value make this easy to use in return statement
+          if len(self.items)>=self.hiwater:
+               while len(self.items)>self.lowwater:
+                    del self.items[random.choice(self.items.keys())]
+          # yes there is a race condition with statinfo changing after program
+          # has calculated value but before calling this function
+          self.items[filename]=statinfo(filename),value
+          return value
+          
