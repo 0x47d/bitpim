@@ -16,11 +16,13 @@ import os
 
 # wxPython modules
 from wxPython.wx import *
-from wxPython.lib.dialogs import wxScrolledMessageDialog 
+from wxPython.lib.dialogs import wxScrolledMessageDialog
+from wxPython.lib import colourdb
 
 # my modules
 import guiwidgets
 import common
+import version
 
 ###
 ### Used to check our threading
@@ -217,6 +219,7 @@ class MySplashScreen(wxSplashScreen):
         time=config.ReadInt("splashscreentime", 4000)
         if time>0:
             bmp=getbitmap("splashscreen")
+            self.drawnameandnumber(bmp)
             wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
                                     time,
                                     None, -1)
@@ -228,6 +231,29 @@ class MySplashScreen(wxSplashScreen):
             return
         # timeout is <=0 so don't show splash screen
         self.goforit()
+
+    def drawnameandnumber(self, bmp):
+        dc=wxMemoryDC()
+        dc.SelectObject(bmp)
+        # where we start writing
+        x=10
+        y=20
+        # Product name
+        str=version.name
+        dc.SetTextForeground( wxNamedColour("DARKORCHID4") )
+        dc.SetFont( wxFont(30, wxSWISS, wxNORMAL, wxNORMAL) )
+        w,h=dc.GetTextExtent(str)
+        dc.DrawText(str, x, y)
+        y+=h+5 
+        # Version number
+        str=version.versionstring
+        dc.SetTextForeground( wxNamedColour("GREY20") )
+        dc.SetFont( wxFont(20, wxSWISS, wxNORMAL, wxNORMAL) )
+        w,h=dc.GetTextExtent(str)
+        dc.DrawText(str, x+10, y)
+        y+=h+5
+        # all done
+        dc.SelectObject(wxNullBitmap)
 
     def goforit(self):
         self.app.makemainwindow()
@@ -248,7 +274,8 @@ class MainApp(wxApp):
     def OnInit(self):
         # Routine maintenance
         wxInitAllImageHandlers()
-
+        colourdb.updateColourDB()
+        
         # Thread stuff
         global mainthreadid
         mainthreadid=thread.get_ident()
@@ -468,9 +495,7 @@ class MainWindow(wxFrame):
     def OnHelpAbout(self,_):
         import version
 
-        str="BitPim Version "+version.version
-        if version.testver:
-            str+="-test"+`version.testver`
+        str="BitPim Version "+version.versionstring
         str+="\n\n"
         if len(version.extrainfo):
             str+=version.extrainfo+"\n\n"
