@@ -66,20 +66,20 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if len(cred)!=2 or cred[0].lower()!="basic":
                     raise AuthenticationBad("Unknown authentication scheme "+`cred[0]`)
                 username,password=base64.decodestring(cred[1].strip()).split(":", 1)
-            response=self.server.processxmlrpcrequest(data, self.client_addr, username, password)
+            response=self.server.processxmlrpcrequest(data, self.client_address, username, password)
         except AuthenticationBad:
             self.close_connection=True
             self.send_response(401, "Authentication required")
             self.send_header("WWW-Authenticate", "Basic realm=\"XMLRPC\"")
             self.end_headers()
             self.wfile.flush()
-        except: # This should only happen if the module is buggy
-            # internal error, report as HTTP server error
-            if __debug__ and TRACE: print "error in handling xmlrpcrequest"
-            self.close_connection=True
-            self.send_response(500, "Internal Error")
-            self.end_headers()
-            self.wfile.flush()
+##        except: # This should only happen if the module is buggy
+##            # internal error, report as HTTP server error
+##            if __debug__ and TRACE: print "error in handling xmlrpcrequest"
+##            self.close_connection=True
+##            self.send_response(500, "Internal Error")
+##            self.end_headers()
+##            self.wfile.flush()
         else:
             # got a valid XML RPC response
             self.send_response(200)
@@ -91,9 +91,18 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def finish(self):
         # do proper SSL shutdown sequence
+        import pdb
+        pdb.set_trace()
         self.wfile.flush()
         self.request.set_shutdown(M2Crypto.SSL.SSL_RECEIVED_SHUTDOWN | M2Crypto.SSL.SSL_SENT_SHUTDOWN)
         self.request.close()
+
+
+class MySSLConnection(M2Crypto.SSL.Connection):
+    # add in our special sauce
+    def flush(self):
+        res=M2Crypto.m2.bio_flush(self.sockbio)
+        print "flush res is",res,"  bio pending bytes is",M2Crypto.m2.bio_ctrl_pending(self.sockbio)
 
 
 # TODOs for the server side
@@ -119,6 +128,12 @@ class Server(threading.Thread):
             self.clientaddr=clientaddr
             self.peercert=peercert
             self.data=data
+
+        def __repr__(self):
+            d=`self.data`
+            if len(d)>40:
+                d=d[:40]
+            return "Message: cmd=%d data=%s" % (self.cmd, d)
     
     class ConnectionThread(threading.Thread):
 
@@ -162,6 +177,7 @@ class Server(threading.Thread):
                 if __debug__ and TRACE: print self.getName()+": Setting timeout to "+`self.server.connectionidlebreak`
                 conn.set_socket_read_timeout(M2Crypto.SSL.timeout(self.server.connectionidlebreak))
                 self.reqhandlerclass(conn, peeraddr, self)
+                if __debug__ and TRACE: print self.getName()+": Reqhandler returns - closing connection"
                 msg=Server.Message(Server.Message.CMD_CONNECTION_CLOSE,  None, peeraddr, peercert)
                 self.requestqueue.put(msg)
                 conn=None
@@ -172,14 +188,15 @@ class Server(threading.Thread):
             self.requestqueue.put(msg)
             resp=self.responsequeue.get()
             assert resp.cmd==resp.CMD_XMLRPC_RESPONSE
-            if hasattr(resp, exception):
+            if hasattr(resp, "exception"):
                 raise resp.exception
             return resp.data
             
 
-    def __init__(self, host, port, sslcontext=None, connectionthreadcount=5, timecheck=60, connectionidlebreak=240):
+    def __init__(self, host, port, sslcontext, connectionthreadcount=5, timecheck=60, connectionidlebreak=240):
         """Creates the listening thread and infrastructure.  Don't forget to call start() if you
-        want anything to be processed!  You probably also want to call setDaemon()
+        want anything to be processed!  You probably also want to call setDaemon().  Remember to
+        load a certificate into the sslcontext.
 
         @param connectionthreadcount:  How many threads are being used.  If new connections
                             arrive while the existing threads are busy in connections, then they will be ignored
@@ -188,9 +205,7 @@ class Server(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.setName("Threading SSL server controller for %s:%d" % (host, port))
-        if sslcontext is None:
-            sslcontext=M2Crypto.SSL.Context("sslv3")
-        connection=M2Crypto.SSL.Connection(sslcontext)
+        connection=MySSLConnection(sslcontext)
         if __debug__ and TRACE: print "Binding to host %s port %d" % (host, port)
         connection.bind( (host, port) )
         connection.listen(connectionthreadcount+5)
@@ -198,10 +213,11 @@ class Server(threading.Thread):
         self.connectionidlebreak=connectionidlebreak
         self.wantshutdown=False
         self.workqueue=Queue.Queue()
-
+        self.threadlist=[]
         for count in range(connectionthreadcount):
             conthread=self.ConnectionThread(self, connection, self.workqueue, "SSL worker thread %d/%d" % (count+1, connectionthreadcount))
             conthread.start()
+            self.threadlist.append(conthread)
 
     def shutdown(self):
         """Requests a shutdown of all threads"""
@@ -230,7 +246,8 @@ class Server(threading.Thread):
 
     def processmessage(self, msg):
         if __debug__ and TRACE:
-            print "Processing message "+`msg`
+            if msg.cmd!=msg.CMD_LOG:
+                print "Processing message "+`msg`
         resp=None
         if msg.cmd==msg.CMD_LOG:
             self.OnLog(msg.data)
@@ -241,11 +258,13 @@ class Server(threading.Thread):
         elif msg.cmd==msg.CMD_XMLRPC_REQUEST:
             data=self.OnXmlRpcRequest(* (msg.data+(msg.clientaddr, msg.peercert)))
             resp=Server.Message(Server.Message.CMD_XMLRPC_RESPONSE, data=data)
+        elif msg.cmd==msg.CMD_CONNECTION_CLOSE:
+            self.OnConnectionClose(msg.clientaddr, msg.peercert)
         else:
             assert False, "Unknown message command "+`msg.cmd`
             raise Exception("Internal processing error")
         if resp is not None:
-            msg.responsequeue.put(resp)
+            msg.respondqueue.put(resp)
 
     def OnLog(self, str):
         """Process a log message"""
@@ -254,6 +273,10 @@ class Server(threading.Thread):
     def OnNewConnection(self, clientaddr, clientcert):
         """Decide if a new connection is allowed"""
         return True
+
+    def OnConnectionClose(self, clientaddr, clientcert):
+        if __debug__ and TRACE: print "Closed connection from "+`clientaddr`
+            
 
     def OnXmlRpcRequest(self, xmldata, username, password, clientaddr, clientcert):
         params, method = xmlrpclib.loads(xmldata)
@@ -287,11 +310,19 @@ class SSLConnection(httplib.HTTPConnection):
     def connect(self):
         if __debug__ and TRACE: print "Connecting to %s:%s" % (self.host, self.port)
         httplib.HTTPConnection.connect(self)
-        self.sock=M2Crypto.SSL.Connection(self.sslc_sslctx, self.sock)
+        self.sock=MySSLConnection(self.sslc_sslctx, self.sock)
+        self.sock.setblocking(True)
         self.sock.setup_ssl()
         self.sock.set_connect_state()
         self.sock.connect_ssl()
-        
+
+    def close(self):
+        if __debug__ and TRACE: print "close() ignored"
+
+    def realclose(self):
+        if __debug__ and TRACE: print "Closing connection to %s:%s" % (self.host, self.port)
+        self.sock.close()
+        self.sock=None
 
 class SSLTransport(xmlrpclib.Transport):
 
@@ -309,14 +340,14 @@ class SSLTransport(xmlrpclib.Transport):
         self.connection=SSLConnection(self.sslt_sslctx, self.sslt_host, self.sslt_port)
         return self.connection
 
-    def request(self, host, handler, request_body, verbose=0):
+    def request(self, host, handler, request_body, verbose=0, retries=1):
         user_passwd=self.sslt_user_passwd
         _host=self.sslt_host
 
         h=self.getconnection()
         
         # What follows is as in xmlrpclib.Transport. (Except the authz bit.)
-        h.putrequest("POST", handler)
+        h.putrequest("POST", "/RPC2", skip_host=True)
 
         # required by HTTP/1.1
         h.putheader("Host", _host)
@@ -333,12 +364,20 @@ class SSLTransport(xmlrpclib.Transport):
 
         h.endheaders()
 
+        h.sock.flush()
+        # body hasn't been sent, so we can retry without having problems
+        print "state is",h.sock.get_state()
+
         if request_body:
             h.send(request_body)
 
-        errcode, errmsg, headers = h.getreply()
+        response = h.getresponse()
+
+        errcode, errmsg, headers = response.status, response.reason, response.msg
 
         if errcode != 200:
+            self.connection.close()
+            self.connection=None
             raise xmlrpclib.ProtocolError(
                 host + handler,
                 errcode, errmsg,
@@ -346,14 +385,32 @@ class SSLTransport(xmlrpclib.Transport):
                 )
 
         self.verbose = verbose
-        return self.parse_response(h.getfile())
+        return self.parse_response(response)
+    
+
+    def parse_response(self, response):
+        p, u =self.getparser() # parser and unmarshaller
+        # response.length could be None but only if there is no Content-Length header
+        # which is a violation of the XML-RPC protocol
+        p.feed(response.read(response.length))
+        p.close()
+
+        if response.will_close:
+            self.connection.realclose()
+            self.connection=None
+        # ensure the response is closed by unsetting its fp.  We don't want to call
+        # explicit close as that will close the socket down which we don't want
+        response.fp=None
+        
+
+        return u.close()
 
 
 class ServerProxy(xmlrpclib.ServerProxy):
 
-    def __init__(self, uri, allow_none=True):
+    def __init__(self, uri):
         sslcontext=M2Crypto.SSL.Context("sslv3")
-        xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext), allow_none=allow_none)
+        xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext))
         
         
 if __name__=='__main__':
@@ -366,11 +423,13 @@ if __name__=='__main__':
         sys.exit(1)
 
     if sys.argv[1]=="server":
-        server=Server('localhost', 4433)
+        ctx=M2Crypto.SSL.Context("sslv3")
+        ctx.load_cert("host.pem", "privkey.pem")
+        server=Server('localhost', 4433, ctx)
         server.setDaemon(True)
         server.start()
 
-        time.sleep(120)
+        time.sleep(1120)
 
     if sys.argv[1]=="client":
         server=ServerProxy("http://username:passwud@localhost:4433")
