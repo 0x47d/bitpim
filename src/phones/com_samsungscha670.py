@@ -90,8 +90,8 @@ class Phone(com_samsung.Phone):
     allringtones={}
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 17, 40)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 17, 30)
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 17, 20)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 17, 10)
     __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 17, 40)
         
     def __init__(self, logtarget, commport):
@@ -709,8 +709,7 @@ class Profile(com_samsung.Profile):
     serialsname='scha670'
 
     WALLPAPER_WIDTH=128
-##    WALLPAPER_HEIGHT=160
-    WALLPAPER_HEIGHT=96
+    WALLPAPER_HEIGHT=128
     MAX_WALLPAPER_BASENAME_LENGTH=17
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="bmp"
@@ -801,14 +800,14 @@ class FileEntries:
         media, idx=result[self.__file_type], result[self.__index_type]
         # check for max num of allowable files
         if len(media) > self.__max_file_count:
-            self.__phone.log('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
+            self.__phone.log('This phone only supports %d %s.  You have %d %s.  Operation aborted'% \
                                 (self.__max_file_count, self.__file_type, len(media), self.__file_type))
             return result
         # check for file name length
         for k in media:
             if len(media[k]['name']) > self.__max_file_len:
-                self.__phone.log('%s %s name is too long.  Save %s aborted'% \
-                                    (self.__file_type, media[k]['name'], self.__file_type))
+                self.__phone.log('%s %s name is too long.  Operation aborted'% \
+                                    (self.__file_type, media[k]['name']))
                 return result
         # get existing dir listing
         try:
