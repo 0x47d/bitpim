@@ -117,8 +117,9 @@ import wx.lib.masked.textctrl
 import wx.lib.intctrl
 
 # my modules
+import bptime
 import calendarcontrol
-import calendarentryeditor  # DJP
+import calendarentryeditor
 import common
 import database
 import helpids
@@ -176,7 +177,10 @@ class RepeatEntry(object):
             r[self.monthly]=None
         else:
             r[self.yearly]=None
-        r['suppressed']=self.__suppressed
+        s=[]
+        for n in self.__suppressed:
+            s.append(n.get())
+        r['suppressed']=s
         return r
 
     def get_db_dict(self):
@@ -192,7 +196,7 @@ class RepeatEntry(object):
         # and the suppressed stuff
         s=[]
         for n in self.__suppressed:
-            s.append({ 'date': '%04d%02d%02d'%tuple(n) })
+            s.append({ 'date': n.iso_str(True) })
         db_r['repeat']=[r]
         if len(s):
             db_r['suppressed']=s
@@ -213,7 +217,10 @@ class RepeatEntry(object):
             self.repeat_type=self.monthly
         else:
             self.repeat_type=self.yearly
-        self.suppressed=data.get('suppressed', [])
+        s=[]
+        for n in data.get('suppressed', []):
+            s.append(bptime.BPTime(n))
+        self.suppressed=s
 
     def set_db_dict(self, data):
         r=data.get('repeat', [{}])[0]
@@ -224,12 +231,10 @@ class RepeatEntry(object):
             self.interval=r['interval']
             self.dow=r['dow']
         # now the suppressed stuff
-        s=data.get('suppressed', [])
-        t=[]
-        for k in s:
-            n=k['date']
-            t.append((int(n[:4]), int(n[4:6]), int(n[6:8])))
-        self.suppressed=t
+        s=[]
+        for n in data.get('suppressed', []):
+            s.append(bptime.BPTime(n['date']))
+        self.suppressed=s
 
     def __check_daily(self, s, d):
         if self.interval:
@@ -262,7 +267,7 @@ class RepeatEntry(object):
 
     def is_active(self, s, d):
         # check in the suppressed list
-        if (d.year, d.month, d.day) in self.__suppressed:
+        if bptime.BPTime(d) in self.__suppressed:
             # in the list, not part of this repeat
             return False
         # determine if the date is active
@@ -314,7 +319,8 @@ class RepeatEntry(object):
     def __set_suppressed(self, d):
         self.__suppressed=d
     def add_suppressed(self, y, m, d):
-        self.__suppressed.append((y, m, d))
+        self.__suppressed.append(bptime.BPTime((y, m, d)))
+        print 'suppressed: ', self.__suppressed
     suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
 
 #-------------------------------------------------------------------------------
@@ -323,8 +329,11 @@ class CalendarEntry(object):
         self.__data={}
         # setting default values
         if day is not None:
-            self.__data['start']={ 'date': (year, month, day) }
-            self.__data['end']={ 'date': (year, month, day) }
+            self.__data['start']=bptime.BPTime((year, month, day))
+            self.__data['end']=bptime.BPTime((year, month, day))
+        else:
+            self.__data['start']=bptime.BPTime()
+            self.__data['end']=bptime.BPTime()
         self.__data['serials']=[]
         self.__create_id()
 
@@ -332,35 +341,16 @@ class CalendarEntry(object):
         r=copy.deepcopy(self.__data, _nil={})
         if self.repeat is not None:
             r['repeat']=self.repeat.get()
+        r['start']=self.__data['start'].iso_str()
+        r['end']=self.__data['end'].iso_str()
         return r
-
-    def __encode_date_time(self, v):
-        if len(v)==3:
-            # date only
-            return '%04d%02d%02d'%tuple(v)
-        elif len(v)==5:
-            # date & time
-            return '%04d%02d%02dT%02d%02d'%tuple(v)
-        else:
-            return ''
-
-    def __extract_date_time(self, v):
-        if len(v)==8:
-            return (int(v[:4]), int(v[4:6]), int(v[6:8]), 0, 0)
-        else:
-            return (int(v[:4]), int(v[4:6]), int(v[6:8]),
-                    int(v[9:11]), int(v[11:13]))
 
     def get_db_dict(self):
         # return a dict compatible with the database stuff
         r=copy.deepcopy(self.__data, _nil={})
         # adjust for start & end
-        if self.allday:
-            r['start']=self.__encode_date_time(self.start[:3])
-            r['end']=self.__encode_date_time(self.end[:3])
-        else:
-            r['start']=self.__encode_date_time(self.start)
-            r['end']=self.__encode_date_time(self.end)
+        r['start']=self.__data['start'].iso_str(self.allday)
+        r['end']=self.__data['end'].iso_str(self.allday)
         # adjust for repeat & suppressed
         if self.repeat is not None:
             r.update(self.repeat.get_db_dict())
@@ -372,6 +362,8 @@ class CalendarEntry(object):
     def set(self, data):
         self.__data={}
         self.__data.update(data)
+        self.__data['start']=bptime.BPTime(data['start'])
+        self.__data['end']=bptime.BPTime(data['end'])
         if self.repeat is not None:
             r=RepeatEntry()
             r.set(self.repeat)
@@ -384,10 +376,8 @@ class CalendarEntry(object):
         # adjust for allday
         self.allday=len(data['start'])==8
         # adjust for start and end
-        self.__data['start']={}
-        self.start=self.__extract_date_time(data['start'])
-        self.__data['end']={}
-        self.end=self.__extract_date_time(data['end'])
+        self.__data['start']=bptime.BPTime(data['start'])
+        self.__data['end']=bptime.BPTime(data['end'])
         # adjust for repeat
         if data.has_key('repeat'):
             rp=RepeatEntry()
@@ -397,8 +387,11 @@ class CalendarEntry(object):
     def is_active(self, y, m ,d):
         # return true if if this event is active on this date,
         # mainly used for repeating events.
-        s=datetime.date(*self.start[:3])
-        e=datetime.date(*self.end[:3])
+##        s=datetime.date(*self.start[:3])
+##        e=datetime.date(*self.end[:3])
+##        d=datetime.date(y, m, d)
+        s=self.__data['start'].date
+        e=self.__data['end'].date
         d=datetime.date(y, m, d)
         if d<s or d>e:
             # before start date, after end date
@@ -453,33 +446,15 @@ class CalendarEntry(object):
     allday=property(fget=__get_allday, fset=__set_allday)
 
     def __get_start(self):
-        d=self.__data['start']['date']
-        t=self.__data['start'].get('time', None)
-        if t is None:
-            return d+[0,0]
-        return d+t
+        return self.__data['start'].get()
     def __set_start(self, datetime):
-        self.__data['start']['date']=datetime[:3]
-        if len(datetime)>3:
-            self.__data['start']['time']=datetime[3:5]
-        else:
-            if self.__data['start'].has_key('time'):
-                del self.__data['start']['time']
+        self.__data['start'].set(datetime)
     start=property(fget=__get_start, fset=__set_start)
     
     def __get_end(self):
-        d=self.__data['end']['date']
-        t=self.__data['end'].get('time', None)
-        if t is None:
-            return d
-        return d+t
+        return self.__data['end'].get()
     def __set_end(self, datetime):
-        self.__data['end']['date']=datetime[:3]
-        if len(datetime)>3:
-            self.__data['end']['time']=datetime[3:5]
-        else:
-            if self.__data['end'].has_key('time'):
-                del self.__data['end']['time']
+        self.__data['end'].set(datetime)
     end=property(fget=__get_end, fset=__set_end)
 
     def __get_serials(self):

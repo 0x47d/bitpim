@@ -604,7 +604,10 @@ class Editor(wx.Dialog):
             newentry.repeat=None
         else:
             # get data from the repeat tab
+            old_repeat=newentry.repeat
             newentry.repeat=self.__widgets[self.__repeat_page].Get()
+            if old_repeat is not None:
+                newentry.repeat.suppressed=old_repeat.suppressed
         # and other tabs as well
         newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', None)
         newentry.categories=self.__widgets[self.__categories_page].Get()
