@@ -159,7 +159,7 @@ def GetCalendarCellAttributes(attr=None):
         DefaultCalendarCellAttributes=CalendarCellAttributes()
     return DefaultCalendarCellAttributes
                 
-class CalendarCell(wx.Window):
+class CalendarCell(wx.PyWindow):
     """A control that is used for each day in the calendar
 
     As the user scrolls around the calendar, each cell is updated with new dates rather
@@ -169,7 +169,7 @@ class CalendarCell(wx.Window):
     fontscalecache=FontscaleCache()
 
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wx.SIMPLE_BORDER):
-        wx.Window.__init__(self, parent, id, style=style|wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE )
+        wx.PyWindow.__init__(self, parent, id, style=style|wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE)
         self.attr=GetCalendarCellAttributes(attr)
         self.day=33
         self.year=2033
@@ -182,6 +182,9 @@ class CalendarCell(wx.Window):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.OnSize(None)
+
+    def DoGetBestSize(self):
+        return (10,10)
 
     def OnEraseBackground(self, _):
         pass
@@ -349,13 +352,13 @@ class CalendarCell(wx.Window):
                 thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
                 break
 
-class CalendarLabel(wx.Window):
+class CalendarLabel(wx.PyWindow):
     """The label window on the left of the day cells that shows the month with rotated text
 
     It uses double buffering etc for a flicker free experience"""
     
     def __init__(self, parent, cells, id=-1):
-        wx.Window.__init__(self, parent, id, style=wx.FULL_REPAINT_ON_RESIZE)
+        wx.PyWindow.__init__(self, parent, id, style=wx.FULL_REPAINT_ON_RESIZE)
         self.needsupdate=True
         self.buffer=None
         self.cells=cells
@@ -365,6 +368,9 @@ class CalendarLabel(wx.Window):
         self.setfont(wx.Font(20, wx.SWISS, wx.NORMAL, wx.BOLD ))
         self.settextcolour(wx.NamedColour("BLACK"))
         self.OnSize(None)
+
+    def DoGetBestSize(self):
+        return (10,10)
 
     def OnEraseBackground(self, _):
         pass
@@ -502,16 +508,16 @@ class Calendar(wx.Panel):
     def __init__(self, parent, rows=5, id=-1):
         self._initvars()
         wx.Panel.__init__(self, parent, id, style=wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE)
-        sizer=wx.lib.rcsizer.RowColSizer()
+        sizer=wx.GridBagSizer()
         self.upbutt=wx.BitmapButton(self, self.ID_UP, getupbitmapBitmap())
-        sizer.Add(self.upbutt, flag=wx.EXPAND, row=0,col=0, colspan=8)
+        sizer.Add(self.upbutt, flag=wx.EXPAND, pos=(0,0), span=(1,8))
         self.year=wx.Button(self, self.ID_YEARBUTTON, "2003")
-        sizer.Add(self.year, flag=wx.EXPAND, row=1, col=0)
+        sizer.Add(self.year, flag=wx.EXPAND, pos=(1,0))
         p=1
         calendar.setfirstweekday(calendar.SUNDAY)
         for i in ( "Sun", "Mon", "Tue", "Wed" , "Thu", "Fri", "Sat" ):
            sizer.Add(  wx.StaticText( self, -1, i, style=wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL),
-                       flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, row=1, col=p)
+                       flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, pos=(1,p))
            sizer.AddGrowableCol(p)
            p+=1
         self.numrows=rows
@@ -520,10 +526,11 @@ class Calendar(wx.Panel):
         for i in range(0, rows):
             self.rows.append( self.makerow(sizer, i+2) )
         self.downbutt=wx.BitmapButton(self, self.ID_DOWN, getdownbitmapBitmap())
-        sizer.Add(self.downbutt, flag=wx.EXPAND, row=2+rows, col=0, colspan=8)
+        sizer.Add(self.downbutt, flag=wx.EXPAND, pos=(2+rows, 0), span=(1,8))
         self.label=CalendarLabel(self, map(lambda x: x[0], self.rows))
-        sizer.Add(self.label, flag=wx.EXPAND, row=2, col=0, rowspan=self.numrows)
+        sizer.Add(self.label, flag=wx.EXPAND, pos=(2,0), span=(self.numrows,1))
         self.SetSizer(sizer)
+        self.sizer=sizer
         self.SetAutoLayout(True)
 
         self.popupcalendar=PopupCalendar(self, self)
@@ -595,7 +602,7 @@ class Calendar(wx.Panel):
         sizer.AddGrowableRow(row)
         for i in range(0,7):
             res.append( CalendarCell(self, -1) )
-            sizer.Add( res[-1], flag=wx.EXPAND, row=row, col=i+1)
+            sizer.Add( res[-1], flag=wx.EXPAND, pos=(row,i+1))
         return res
 
     def scrollby(self, amount):
