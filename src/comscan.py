@@ -373,6 +373,7 @@ def _comscanlinux(maxnum=9):
         ("/dev/ttyUSB", "USB to serial convertor", "serial"), 
         ("/dev/usb/ttyUSB", "USB to serial convertor", "serial"), 
         ("/dev/usb/tts/", "USB to serial convertor", "serial"),
+        ("/dev/usb/acm/", "USB modem", "modem"),
         ("/dev/input/ttyACM", "USB modem", "modem")
         ):
         for num in range(maxnum+1):
