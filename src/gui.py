@@ -1150,7 +1150,7 @@ class WorkerThread(WorkerThreadFramework):
         for name, contents in files:
             self.progressmajor(count, len(files), "Restoring files")
             count+=1
-            d=dirname(name)
+            d=guihelper.dirname(name)
             if d not in seendirs:
                 seendirs.append(d)
                 self.commphone.mkdirs(d)
@@ -1285,7 +1285,7 @@ class FileSystemView(wxTreeListCtrl):
             child,cookie=self.GetNextChild(item,cookie)
         # we now have a list of children in l
         for file in result:
-            f=basename(file)
+            f=guihelper.basename(file)
             found=None
             for i in l:
                 if self.GetItemText(i)==f:
@@ -1323,8 +1323,8 @@ class FileSystemView(wxTreeListCtrl):
     def OnFileSaveResults(self, path, exception, contents):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        bn=basename(path)
-        ext=getextension(bn)
+        bn=guihelper.basename(path)
+        ext=guihelper.getextension(bn)
         if len(ext):
             ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
         else:
@@ -1355,7 +1355,7 @@ class FileSystemView(wxTreeListCtrl):
         path=self.itemtopath(self.GetSelection())
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.rmfile, path),
-                     Callback(self.OnFileDeleteResults, dirname(path)) )
+                     Callback(self.OnFileDeleteResults, guihelper.dirname(path)) )
         
     def OnFileDeleteResults(self, parentdir, exception, _):
         mw=self.mainwindow
@@ -1374,7 +1374,7 @@ class FileSystemView(wxTreeListCtrl):
         f.close()
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.OnFileOverwriteResults, dirname(path)) )
+                     Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
         dlg.Destroy()
         
     def OnFileOverwriteResults(self, parentdir, exception, _):
@@ -1430,7 +1430,7 @@ class FileSystemView(wxTreeListCtrl):
         path=self.itemtopath(self.GetSelection())
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.rmdirs, path),
-                     Callback(self.OnDirDeleteResults, dirname(path)) )
+                     Callback(self.OnDirDeleteResults, guihelper.dirname(path)) )
         
     def OnDirDeleteResults(self, parentdir, exception, _):
         mw=self.mainwindow
@@ -1452,7 +1452,7 @@ class FileSystemView(wxTreeListCtrl):
     def OnBackupResults(self, path, exception, backup):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        bn=basename(path)
+        bn=guihelper.basename(path)
         if len(bn)<1:
             bn="root"
         bn+=".zip"
@@ -1468,7 +1468,7 @@ class FileSystemView(wxTreeListCtrl):
     def OnRestore(self, _):
         ext="Zip files|*.zip|All Files|*"
         path=self.itemtopath(self.GetSelection())
-        bn=basename(path)
+        bn=guihelper.basename(path)
         if len(bn)<1:
             bn="root"
         bn+=".zip"
@@ -1522,7 +1522,7 @@ class FileSystemView(wxTreeListCtrl):
             dirs=[]
             for _, name in results:
                 while(len(name)>len(parentdir)):
-                    name=dirname(name)
+                    name=guihelper.dirname(name)
                     if name not in dirs:
                         dirs.append(name)
             dirs.sort()
