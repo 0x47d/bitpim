@@ -15,7 +15,7 @@ class BPTime(object):
     def __init__(self, v=None):
         self.__date=self.__time=None
         # I guess this is how python handles overloading ctors
-        if isinstance(v, str):
+        if isinstance(v, (str, unicode)):
             self.set_iso_str(v)
         elif isinstance(v, (tuple, list)):
             self.set(v)
@@ -65,6 +65,7 @@ class BPTime(object):
 
     def set_iso_str(self, v):
         # set the date/time according to the ISO string
+        v=str(v)
         if len(v)==8:
             self.__date=datetime.date(int(v[:4]), int(v[4:6]), int(v[6:8]))
             self.__time=None

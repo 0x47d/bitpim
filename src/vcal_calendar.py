@@ -8,14 +8,52 @@
 ### $Id$
 
 "Deals with vcard calendar import stuff"
+import copy
 import datetime
 import wx
 
 import bpcalendar
 import bptime
 import outlook_calendar
-import vcal
+import vcard
 
+#-------------------------------------------------------------------------------
+class vCalendarFile(object):
+    def __init__(self, file_name=None):
+        self.__data=[]
+        self.__file_name=file_name
+
+    def read(self, file_name=None):
+        self.__data=[]
+        if file_name is not None:
+            self.__file_name=file_name
+        if self.__file_name is None:
+            # no file name specified
+            return
+        try:
+            f=open(self.__file_name)
+            vfile=vcard.VFile(f)
+            has_data=False
+            for n,l in vfile:
+                if n[0]=='BEGIN' and l=='VEVENT':
+                    # start of an event, turn on data loggin
+                    d={}
+                    has_data=True
+                elif n[0]=='END' and l=='VEVENT':
+                    self.__data.append(d)
+                    d={}
+                    has_data=False
+                elif has_data:
+                    d[n[0]]={ 'value': l }
+            f.close()
+        except:
+            pass
+
+    def __get_data(self):
+        return copy.deepcopy(self.__data)
+    data=property(fget=__get_data)
+        
+#-------------------------------------------------------------------------------
 class VCalendarImportData(object):
 
     __default_filter={
@@ -45,14 +83,8 @@ class VCalendarImportData(object):
             ]
         self.__file_name=file_name
         self.__data=[]
-        self.__f=None
         self.__filter=self.__default_filter
-        if file_name is not None:
-            self.__f=open(file_name)
-            v=vcal.VcfParser()
-            v.parse(self.__f)
-            self.__convert(v.data, self.__data)
-            self.__f.close()
+        self.read()
 
     def __accept(self, entry):
         # start & end time within specified filter
@@ -87,33 +119,43 @@ class VCalendarImportData(object):
             # daily event
             rp.repeat_type=rp.daily
             rp.interval=rp_interval
-            if rp_end is not None:
-                ce.end=rp_end[:3]+ce.end[3:]
-            elif rp_num is not None:
-                # num of occurrences
-                if rp_num:
-                    bp_t=bptime.BPTime(ce.start)+ \
-                          datetime.timedelta(rp.interval*(rp_num-1))
-                    ce.end=bp_t.get()[:3]+ce.end[3:]
-                else:
-                    # forever duration
-                    ce.end=outlook_calendar.no_end_date
         elif rp_type=='weekly':
             rp.repeat_type=rp.weekly
             rp.interval=rp_interval
             rp.dow=rp_dow
-            if rp_end is not None:
-                ce.end=rp_end[:3]+ce.end[3:]
-            elif rp_num is not None:
-                if rp_num:
-                    bp_t=bptime.BPTime(ce.start)+\
-                         datetime.timedelta(rp.interval*7*(rp_num-1))
-                    ce.end=bp_t.get()[:3]+ce.end[3:]
-                else:
-                    ce.end=outlook_calendar.no_end_date
+        elif rp_type=='monthly':
+            rp.repeat_type=rp.monthly
+        elif rp_type=='yearly':
+            rp.repeat_type=rp.yearly
         else:
             # not yet supported
             return
+        # setting the repeat duration/end-date of this event
+        if rp_end is not None:
+            # end date specified
+            ce.end=rp_end[:3]+ce.end[3:]
+        elif rp_num is not None:
+            # num of occurrences specified
+            if rp_num:
+                if rp_type=='daily':
+                    bp_t=bptime.BPTime(ce.start)+ \
+                          datetime.timedelta(rp_interval*(rp_num-1))
+                    ce.end=bp_t.get()[:3]+ce.end[3:]
+                elif rp_type=='weekly':
+                    bp_t=bptime.BPTime(ce.start)+ \
+                          datetime.timedelta(7*rp_interval*(rp_num-1))
+                    ce.end=bp_t.get()[:3]+ce.end[3:]
+                elif rp_type=='monthly':
+                    bp_t=bptime.BPTime(ce.start)+ \
+                          datetime.timedelta(30*(rp_num-1))
+                    ce.end=bp_t.get()[:2]+ce.end[2:]
+                else:                    
+                    bp_t=bptime.BPTime(ce.start)+ \
+                          datetime.timedelta(365*(rp_num-1))
+                    ce.end=bp_t.get()[:1]+ce.end[1:]
+            else:
+                # forever duration
+                ce.end=outlook_calendar.no_end_date
         # add the list of exceptions
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])
@@ -221,9 +263,45 @@ class VCalendarImportData(object):
         return True
 
     def __process_monthly_rule(self, v, dd):
-        return False
+        try:
+            # acceptable format: MD1 <day number> <end date | #duration>
+            s=v['value'].split(' ')
+            if len(s)>3 or s[0]!='MD1':
+                return False
+            if len(s)==3:
+                # day-of-month specified
+                dom=int(s[1])
+                dd['start']=dd['start'][:2]+(dom,)+dd['start'][3:]
+                dd['end']=dd['end'][:2]+(dom,)+dd['end'][3:]
+            n=s[-1]
+            if n[0].isdigit():
+                dd['repeat_end']=bptime.BPTime(n).get()
+            elif n[0]=='#':
+                dd['repeat_num']=int(n[1:])
+            dd['repeat_type']='monthly'
+            return True
+        except:
+            return False
     def __process_yearly_rule(self, v, dd):
-        return False
+        try:
+            # acceptable format YM1 <Month number> <end date | #duration>
+            s=v['value'].split(' ')
+            if len(s)>3 or s[0]!='YM1':
+                return False
+            if len(s)==3:
+                # month-of-year specified
+                moy=int(s[1])
+                dd['start']=dd['start'][:1]+(moy,)+dd['start'][2:]
+                dd['end']=dd['end'][:1]+(moy,)+dd['end'][2:]
+            n=s[-1]
+            if n[0].isdigit():
+                dd['repeat_end']=bptime.BPTime(n).get()
+            elif n[0]=='#':
+                dd['repeat_num']=int(n[1:])
+            dd['repeat_type']='yearly'
+            return True
+        except:
+            return False
     
     def __conv_repeat(self, v, dd):
         func_dict={
@@ -279,12 +357,9 @@ class VCalendarImportData(object):
         if self.__file_name is None:
             # no file name specified
             return
-        self.__f=open(self.__file_name)
-        v=vcal.VcfParser()
-        v.parse(self.__f)
+        v=vCalendarFile(self.__file_name)
+        v.read()
         self.__convert(v.data, self.__data)
-        self.__f.close()
-
 
 #-------------------------------------------------------------------------------
 def bp_repeat_str(dict, v):

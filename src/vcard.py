@@ -50,12 +50,17 @@ class VFile:
         normalcontinuations=True
         colon=line.find(':')
         if colon>0:
-            if "quoted-printable" in line[:colon].lower().split(";"):
+            s=line[:colon].lower().split(";")
+            if "quoted-printable" in s or 'encoding=quoted-printable' in s:
                 normalcontinuations=False
-                while line[-1]=="=":
+                while line[-1]=="=" or line[-2]=='=':
+                    if line[-1]=='=':
+                        i=-1
+                    else:
+                        i=-2
                     nextl=self._getnextline()
                     if nextl[0] in ("\t", " "): nextl=nextl[1:]
-                    line=line[:-1]+nextl
+                    line=line[:i]+nextl
 
         while normalcontinuations:
             nextline=self._lookahead()
@@ -125,7 +130,6 @@ class VFile:
                 raise VFileException("unknown character set '%s' in parameters %s" % (charset, b4))          
         if newitems==["BEGIN"] or newitems==["END"]:
             line=line.upper()
-
         return newitems,line
 
     def _getnextline(self):

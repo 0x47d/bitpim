@@ -40,7 +40,7 @@ def GetPhonebookImports():
     # Vcards - always possible
     res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Vcal - always possible
-    #res.append(('vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
+    res.append(('vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
     # Outlook
     try:
         import native.outlook
