@@ -39,13 +39,14 @@ class MyTaskBarIcon(parentclass):
         self.mw=mw
         self.menu=menu
         iconfile="bitfling.png"
-        if parentclass is wx.TaskBarIcon:
-            parentclass.__init__(self)
-            self.windowsinit(iconfile)
-        else:
+        if parentclass is wx.Frame:
             parentclass.__init__(self, None, -1, "BitFling Window", size=(32,32), style=wx.FRAME_TOOL_WINDOW)
             self.genericinit(iconfile)
-
+        else:
+            parentclass.__init__(self)
+            self.windowsinit(iconfile)
+            
+        self.leftdownpos=None
         wx.EVT_MENU(menu, ID_CONFIG, self.OnConfig)
         wx.EVT_MENU(menu, ID_LOG, self.OnLog)
         wx.EVT_MENU(menu, ID_HELP, self.OnHelp)
@@ -53,10 +54,10 @@ class MyTaskBarIcon(parentclass):
         wx.EVT_MENU(menu, ID_RESCAN, self.OnRescan)
 
     def GoAway(self):
-        if parentclass is wx.TaskBarIcon:
-            self.RemoveIcon()
-        else:
+        if parentclass is wx.Frame:
             self.Close(True)
+        else:
+            self.RemoveIcon()
         self.Destroy()
 
     def OnConfig(self,_):
@@ -75,17 +76,37 @@ class MyTaskBarIcon(parentclass):
         self.mw.Close(True)
 
     def OnRButtonUp(self, evt=None):
-        if parentclass is wx.TaskBarIcon:
-            self.PopupMenu(self.menu)
-        else:
+        if parentclass is wx.Frame:
             self.PopupMenu(self.menu, evt.GetPosition())
+        else:
+            self.PopupMenu(self.menu)
 
     def OnLButtonUp(self, evt=None):
+        if self.leftdownpos is None:
+            return # cleared out by motion stuff
         if self.mw.IsShown():
             self.mw.Show(False)
         else:
             self.mw.Show(True)
             self.mw.Raise()
+
+    def OnLeftDown(self, evt):
+        self.leftdownpos=evt.GetPosition()
+        self.motionorigin=self.leftdownpos
+
+    def OnMouseMotion(self, evt):
+        if not evt.Dragging():
+            return
+        if evt.RightIsDown() or evt.MiddleIsDown():
+            return
+        if not evt.LeftIsDown():
+            return
+        self.leftdownpos=None
+        x,y=evt.GetPosition()
+        xdelta=x-self.motionorigin[0]
+        ydelta=y-self.motionorigin[1]
+        screenx,screeny=self.GetPositionTuple()
+        self.MoveXY(screenx+xdelta, screeny+ydelta)
 
     def windowsinit(self, iconfile):
         bitmap=wx.Bitmap(iconfile, wx.BITMAP_TYPE_PNG)
@@ -94,11 +115,15 @@ class MyTaskBarIcon(parentclass):
         self.SetIcon(icon, "BitFling")
 
     def genericinit(self, iconfile):
+        self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         bitmap=wx.Bitmap(iconfile, wx.BITMAP_TYPE_PNG)
         bit=wx.StaticBitmap(self, -1, bitmap)
         self.Show(True)
         wx.EVT_RIGHT_UP(bit, self.OnRButtonUp)
         wx.EVT_LEFT_UP(bit, self.OnLButtonUp)
+        wx.EVT_MOTION(bit, self.OnMouseMotion)
+        wx.EVT_LEFT_DOWN(bit, self.OnLeftDown)
+        self.bit=bit
 
 class ConfigPanel(wx.Panel):
 
@@ -199,7 +224,6 @@ class MainWindow(wx.Frame):
 
 if __name__ == '__main__':
     theApp=wx.PySimpleApp()
-    wx.InitAllImageHandlers()
 
     menu=wx.Menu()
     menu.Append(ID_CONFIG, "Configuration")
