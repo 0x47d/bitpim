@@ -67,7 +67,6 @@ class PhoneDataTable(wxPyGridTableBase):
  
     def OnIdle(self, _):
         if self.needswrite:
-            print "updating filesystem for phonebook"
             self.populatefs(self.getdata({}))
             self.needswrite=False
 
