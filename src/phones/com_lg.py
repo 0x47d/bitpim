@@ -35,36 +35,39 @@ class LGPhonebook:
                 self.comm.shouldloop=True
                 raise
             try:
-                self.comm.readsome()
-                self.comm.setbaudrate(38400) # dm mode is always 38400
-                return 1
+                if self.comm.readsome().find("OK")>=0:
+                    return True
             except com_phone.modeignoreerrortypes:
                 self.log("No response to setting DM mode")
-        self.comm.setbaudrate(38400) # just in case it worked
-        return 0
+        return False
         
 
     def _setmodephonebook(self):
         req=p_lg.pbinitrequest()
         respc=p_lg.pbinitresponse
-        try:
-            self.sendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
-        try:
-            self.comm.setbaudrate(38400)
-            self.sendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
+
+        for baud in 0,38400,115200,230400,19200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendpbcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+
         self._setmodelgdmgo()
-        try:
-            self.sendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
-        return 0
+
+        for baud in 0,38400,115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendpbcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
         
     def sendpbcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:

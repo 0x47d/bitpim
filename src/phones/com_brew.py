@@ -234,24 +234,18 @@ class BrewProtocol:
         req=p_brew.memoryconfigrequest()
         respc=p_brew.memoryconfigresponse
         
-        try:
-            # might already be?
-            self.sendbrewcommand(req, respc, callsetmode=False)
-            return 1
-        except modeignoreerrortypes:
-            pass
-
-        for baud in 38400,115200:
+        for baud in 0, 38400,115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
             try:
-                # try again at baud
-                self.comm.setbaudrate(baud)
                 self.sendbrewcommand(req, respc, callsetmode=False)
-                return 1
+                return True
             except modeignoreerrortypes:
                 pass
 
         # send AT$CDMG at various speeds
-        for baud in (115200, 19200, 230400):
+        for baud in (0, 115200, 19200, 230400):
             if baud:
                 if not self.comm.setbaudrate(baud):
                     continue
@@ -263,20 +257,23 @@ class BrewProtocol:
                 self.comm.shouldloop=True
                 raise
             try:
-                # if we got anything back then it was success
-                self.comm.readsome()
-                return 1
+                # if we got OK back then it was success
+                if self.comm.readsome().find("OK")>=0:
+                    break
             except modeignoreerrortypes:
                 self.log("No response to setting QCDMG mode")
 
         # verify if we are in DM mode
-        for baud in 38400,115200:
+        for baud in 0,38400,115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
             try:
                 self.sendbrewcommand(req, respc, callsetmode=False)
-                return 1
+                return True
             except modeignoreerrortypes:
                 pass
-        return 0
+        return False
 
     def sendbrewcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
