@@ -1,11 +1,15 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003 Scott Craig <scott.craig@shaw.ca>
+### Copyright (C) 2003 Alan Gonzalez <agonzalez@yahoo.com>
 ###
 ### This software is under the Artistic license.
 ### http://www.opensource.org/licenses/artistic-license.php
 ###
 ### $Id$
+
+"Talk to the LG TM520/VX10 cell phone"
 
 # standard modules
 import re
@@ -24,7 +28,7 @@ import com_lg
 import prototypes
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
-    "Talk to the LG VX4400 cell phone"
+    "Talk to the LG TM520/VX10 cell phone"
     desc="LG-TM520/VX10"
 
     getwallpapers=None
@@ -49,22 +53,37 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
     def getphonebook(self,result):
         pbook={}
+        req=p_lgtm520.pbstartsyncrequest()
+        self.sendpbcommand(req, p_lgtm520.pbstartsyncresponse)
+        
         self.log("Reading number of phonebook entries")
         req=p_lgtm520.pbinitrequest()
         res=self.sendpbcommand(req, p_lgtm520.pbinitresponse)
         numentries=res.numentries
         self.log("There are %d entries" % (numentries,))
+        
+        ### Advance to first entry
+        req=p_lgtm520.pbinforequest()
+        res=self.sendpbcommand(req, p_lgtm520.pbnextentryresponse) ## NOT inforesponse
         for i in range(0, numentries):
+            entry={}
             ### Read current entry
+            entry['serials']=[ {'sourcetype': 'lgtm520', 'serial1': res.serial, 'serial2': res.data,
+                          'sourceuniqueid': result['uniqueserial']} ]
+            
             req=p_lgtm520.pbreadentryrequest()
             res=self.sendpbcommand(req, p_lgtm520.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
+
             entry=self.extractphonebookentry(res.entry, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=p_lgtm520.pbnextentryrequest()
-            self.sendpbcommand(req, p_lgtm520.pbnextentryresponse)
+            res=self.sendpbcommand(req, p_lgtm520.pbnextentryresponse)
+
+        req=p_lgtm520.pbendsyncrequest()
+        self.sendpbcommand(req, p_lgtm520.pbendsyncresponse)
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
@@ -82,8 +101,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res['emails']=[ {'email': entry.email} ]
         # 5 phone numbers
         res['numbers']=[]
-        for number in entry.numbers:
-            res['numbers'].append({'number': number.number, 'type': 'home' })
+        for type in ['home', 'office', 'mobile', 'pager', 'data/fax']:
+                res['numbers'].append({'number': entry.numbers[numbernumber].number, 'type': type })
+        return res
 
 
     def getcalendar(self,result):
