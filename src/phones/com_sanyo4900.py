@@ -57,20 +57,30 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # For now, just read a handful of entries to get the hang of things.
         # There are potentially 300 entries.  To know which one are actually
         # in use we have to read in some buffers first.  
-        numentries=16
+        buf=prototypes.buffer(self.getsanyobuffer(0x3c, 0x43, "sort buffer"))
+        sortstuff=p_sanyo.pbsortbuffer()
+        sortstuff.readfrombuffer(buf)
+        buf=prototypes.buffer(self.getsanyobuffer(0x46, 0x47, "ringer/picture assignments"))
+        ringpic=p_sanyo.ringerpicbuffer()
+        ringpic.readfrombuffer(buf)
+
+        numentries=sortstuff.slotsused
         self.log("There are %d entries" % (numentries,))
         
-        for i in range(0, numentries):
-            ### Read current entry
-            req=p_sanyo.phonebookslotrequest()
-            req.slot = i
-            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
-            self.log("Read entry "+`i`+" - "+res.entry.name)
+        count = 0
+        for i in range(0, sortstuff.numpbslots):
+            if sortstuff.usedflags[i].used:
+                ### Read current entry
+                req=p_sanyo.phonebookslotrequest()
+                req.slot = i
+                res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
+                self.log("Read entry "+`i`+" - "+res.entry.name)
 
-            entry=self.extractphonebookentry(res.entry, result)
-            pbook[i]=entry 
-            self.progress(i, numentries, res.entry.name)
-
+                entry=self.extractphonebookentry(res.entry, result)
+                pbook[i]=entry 
+                self.progress(count, numentries, res.entry.name)
+                count+=1
+        
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
         return pbook
@@ -84,8 +94,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # only one name
         res['names']=[ {'full': entry.name} ]
         # only one email
-        res['emails']=[ {'email': entry.email} ]
-        res['urls']=[ {'url': entry.url} ]
+        res['emails']=[]
+        if len(entry.email):
+            res['emails']=[ {'email': entry.email} ]
+        # only one url
+        res['urls']=[]
+        if len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
         # private
         res['flags']=[ {'secret': entry.secret } ]
         # 7 phone numbers
