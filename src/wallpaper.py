@@ -96,13 +96,7 @@ class WallpaperView(guiwidgets.FileView):
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
         # is it a bci file?
-        f=open(filename, "rb")
-        four=f.read(4)
-        f.close()
-        if four=="BCI\x00":
-            return True
-        return False
-
+        return open(filename, "rb").read(4)=="BCI\x00"
 
     def getdata(self,dict,want=guiwidgets.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.wallpaperpath, 'wallpapers', 'wallpaper-index')
@@ -347,7 +341,7 @@ class WallpaperView(guiwidgets.FileView):
         return dict
 
 
-def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
+def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None, valign="center"):
     """Scales the image and returns a bitmap
 
     @param usewidth: the width of the new image
@@ -383,7 +377,13 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
     mdc.SelectObject(bitmap)
     # figure where to place image to centre it
     posx=usewidth-(usewidth+newwidth)/2
-    posy=useheight-(useheight+newheight)/2
+    if valign=="top":
+        posy=0
+    elif valign=="center":
+        posy=useheight-(useheight+newheight)/2
+    else:
+        assert False, "bad valign "+valign
+        posy=0
     # draw the image
     mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
     # clean up
@@ -513,7 +513,7 @@ class BPFSHandler(wx.FileSystemHandler):
         self._AddCache(location, si, res)
         return res
 
-def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1, bgcolor=None):
+def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1, valign="center", bgcolor=None):
     """Handles image files
 
     If we have to do any conversion on the file then we return PNG
@@ -534,7 +534,7 @@ def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1,
     if width>0 and height>0:
         if bgcolor is None and not guihelper.IsMSWindows():
             bgcolor="ffffff" # ... don't ask
-        b=ScaleImageIntoBitmap(img, width, height, bgcolor)
+        b=ScaleImageIntoBitmap(img, width, height, bgcolor, valign)
     else:
         b=img.ConvertToBitmap()
 
