@@ -60,16 +60,9 @@ PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
-PACKET camindexentry:
-    1 UINT {'default': 0} +index
-    11 STRING {'default': ""} +name
-    4 LGCALDATE +taken
-    4 UINT {'default': 0x00ff0100} +dunno
-
-PACKET campicsdat:
-    "the cam/pics.dat file"
-    * LIST {'length': 20, 'elementclass': camindexentry, 'createdefault': True} +items
-
+PACKET sizefile:
+    "Used for tracking the total size used by a particular type of media"
+    4 UINT size
 
 # All STRINGS have raiseonterminatedread as False since the phone does
 # occassionally leave out the terminator byte
