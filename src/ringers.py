@@ -18,6 +18,7 @@ import aggregatedisplay
 import wallpaper
 import common
 import fileinfo
+import conversions
 
 ###
 ###  Ringers
@@ -45,7 +46,7 @@ class RingerView(guiwidgets.FileView):
         self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.organizemenu=wx.Menu()
         guiwidgets.FileView.__init__(self, mainwindow, parent, "ringtone-watermark")
-        self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|All files|*.*"
+        self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3;*.pmd|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|PMD/CMX files|*.pmd|All files|*.*"
 
         self.organizeinfo={}
 
@@ -196,12 +197,14 @@ class RingerView(guiwidgets.FileView):
                     self.modified=True
             
     def OnAddFiles(self, filenames):
-        print "OnAddFiles:",filenames
         for file in filenames:
+            if file is None: return  # failed dragdrop
+            # do we want to convert file?
+            afi=fileinfo.identify_audiofile(file)
+
+            
             self.thedir=self.mainwindow.ringerpath
-            # we don't try to do any format conversion now
             target=self.getshortenedbasename(file)
-            if target==None: return # user didn't want to
             open(target, "wb").write(open(file, "rb").read())
             self.AddToIndex(os.path.basename(target).lower())
         self.OnRefresh()
