@@ -52,6 +52,10 @@ class ConversionNotSupported(Exception):
           Exception.__init__(self, msg)
           self.msg=msg
 
+class InSafeModeException(Exception):
+     def __init__(self):
+          Exception.__init__(self, "BitPim is in safe mode - this operation has been blocked")
+
 # generic comms exception and then various specialisations
 class CommsException(Exception):
      """Generic commmunications exception"""

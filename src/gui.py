@@ -19,6 +19,7 @@ import zipfile
 import re
 import sys
 import shutil
+import types
 
 # wx modules
 import wx
@@ -245,12 +246,24 @@ class MySplashScreen(wx.SplashScreen):
 
 ####
 #### Main application class.  Runs the event loop etc
-####            
+####
+
+# safe mode items
+def _notsafefunc(*args, **kwargs):
+    raise common.InSafeModeException()
+
+class _NotSafeObject:
+    def __getattr__(self, *args):  _notsafefunc()
+    def __setattr__(self, *args): _notsafefunc()
+
+_NotSafeObject=_NotSafeObject()
+
 EVT_CALLBACK=None
 class MainApp(wx.App):
     def __init__(self, *_):
+        self.frame=None
+        self.SAFEMODE=False
         wx.App.__init__(self, redirect=False, useBestVisual=True)
-        sys.setcheckinterval(100)
         
     def OnInit(self):
         self.made=False
@@ -271,6 +284,9 @@ class MainApp(wx.App):
         self.SetAppName(cfgstr)
         self.SetVendorName(cfgstr)
 
+        # safe mode is read at startup and can't be changed
+        self.SAFEMODE=self.config.ReadInt("SafeMode", False)
+
         # we used to initialise help here, but in wxPython the stupid help window
         # appeared on Windows just setting it up.  We now defer setting it up
         # until it is needed
@@ -286,6 +302,57 @@ class MainApp(wx.App):
         MySplashScreen(self, self.config)
 
         return True
+
+    def ApplySafeMode(self):
+        # make very sure we are in safe mode
+        if not self.SAFEMODE:
+            return
+        if self.frame is None:
+            return
+        # ensure various objects/functions are changed to not-safe
+        objects={self.frame:
+                    ( "dlgsendphone", "OnDataSendPhone", "OnDataSendPhoneGotFundamentals", "OnDataSendPhoneResults"),
+                 self.frame.filesystemwidget:
+                    ( "OnFileDelete", "OnFileOverwrite", "OnNewSubdir", "OnNewFile", "OnDirDelete", "OnRestore"),
+                 self.frame.wt:
+                    ( "senddata", "writewallpaper", "writeringtone", "writephonebook", "writecalendar", "rmfile",
+                      "writefile", "mkdir", "rmdir", "rmdirs", "restorefiles" ),
+                 self.frame.phoneprofile:
+                    ( "convertphonebooktophone", ),
+                 self.frame.phonemodule.Phone:
+                    ( "mkdir", "mkdirs", "rmdir", "rmfile", "rmdirs", "writefile", "savegroups", "savephonebook",
+                      "savecalendar", "savewallpapers", "saveringtones")
+                 }
+
+        for obj, names in objects.iteritems():
+            if obj is None:
+                continue
+            for name in names:
+                field=getattr(obj, name, None)
+                if field is None or field is _notsafefunc or field is _NotSafeObject:
+                    continue
+                if isinstance(field, (types.MethodType, types.FunctionType)):
+                    newval=_notsafefunc
+                else: newval=_NotSafeObject
+                setattr(obj, name, newval)
+
+        # remove various menu items if we can find them
+        removeids=(guihelper.ID_DATASENDPHONE, guihelper.ID_FV_OVERWRITE, guihelper.ID_FV_NEWSUBDIR,
+                   guihelper.ID_FV_NEWFILE, guihelper.ID_FV_DELETE, guihelper.ID_FV_RENAME,
+                   guihelper.ID_FV_RESTORE, guihelper.ID_FV_ADD)
+        mb=self.frame.GetMenuBar()
+        menus=[mb.GetMenu(i) for i in range(mb.GetMenuCount())]
+        fsw=self.frame.filesystemwidget
+        if  fsw is not None:
+            menus.extend( [fsw.filemenu, fsw.dirmenu] )
+        for menu in menus:
+            for id in removeids:
+                item=menu.FindItemById(id)
+                if item is not None:
+                    menu.RemoveItem(item)
+        
+            
+        
 
 ##    def setuphelpiwant(self):
 ##        """This is how the setuphelp code is supposed to be, but stuff is missing from wx"""
@@ -330,18 +397,18 @@ class MainApp(wx.App):
             return # already been called
         self.made=True
         # make the main frame
-        frame=MainWindow(None, -1, "BitPim", self.config)
-        frame.Connect(-1, -1, EVT_CALLBACK, frame.OnCallback)
+        self.frame=MainWindow(None, -1, "BitPim", self.config)
+        self.frame.Connect(-1, -1, EVT_CALLBACK, self.frame.OnCallback)
 
         # make the worker thread
         wt=WorkerThread()
-        wt.setdispatch(frame)
+        wt.setdispatch(self.frame)
         wt.setDaemon(1)
         wt.start()
-        frame.wt=wt
-        self.frame=frame
-        self.SetTopWindow(frame)
+        self.frame.wt=wt
+        self.SetTopWindow(self.frame)
         self.SetExitOnFrameDelete(True)
+        self.ApplySafeMode()
 
     def OnExit(self): 
         self.config.Flush()
@@ -379,9 +446,7 @@ class MainWindow(wx.Frame):
     def __init__(self, parent, id, title, config):
         wx.Frame.__init__(self, parent, id, title,
                          style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
-
-        # does bitfling work?  -- commented out for moment
-        # import bitfling.client
+        wx.GetApp().frame=self
 
         wx.GetApp().htmlprinter.SetParentFrame(self)
 
@@ -730,7 +795,6 @@ class MainWindow(wx.Frame):
     def OnDataGetPhone(self,_):
         todo=[]
         dlg=self.dlggetphone
-        print self.phoneprofile
         dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wx.ID_OK:
             return

@@ -361,33 +361,38 @@ class ConfigDialog(wx.Dialog):
         gs=wx.GridBagSizer(10, 10)
         gs.AddGrowableCol(1)
 
+        # safemode
+        gs.Add( wx.StaticText(self, -1, "Read Only"), pos=(0,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.safemode=wx.CheckBox(self, wx.NewId(), "Block writing anything to the phone")
+        gs.Add( self.safemode, pos=(0,1), flag=wx.ALIGN_CENTER_VERTICAL)
+
         # where we store our files
-        gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(0,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(1,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.diskbox=wx.TextCtrl(self, -1, self.setme, size=(400,-1))
-        gs.Add( self.diskbox, pos=(0,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), pos=(0,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.diskbox, pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), pos=(1,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # phone type
-        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(1,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.phonebox, pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # com port
-        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.commbox=wx.TextCtrl(self, -1, self.setme, size=(200,-1))
-        gs.Add( self.commbox, pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(2,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.commbox, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add(self.bitflingenabled, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(4,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -563,6 +568,7 @@ class ConfigDialog(wx.Dialog):
         if self.bitflingenabled is not None:
             self.bitflingenabled.SetValue(self.mw.config.ReadInt("bitfling/enabled", 0))
             self.ApplyBitFlingSettings()
+        self.safemode.SetValue(self.mw.config.ReadInt("Safemode", 0))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -608,10 +614,14 @@ class ConfigDialog(wx.Dialog):
         if self.bitflingenabled is not None:
             self.mw.bitflingenabled=self.bitflingenabled.GetValue()
             self.mw.config.WriteInt("bitfling/enabled", self.mw.bitflingenabled)
+        # safemode - make sure you have to restart to disable
+        self.mw.config.WriteInt("SafeMode", self.safemode.GetValue())
+        if self.safemode.GetValue():
+            wx.GetApp().SAFEMODE=True
+        wx.GetApp().ApplySafeMode()
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
-        
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to
