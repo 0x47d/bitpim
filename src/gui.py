@@ -25,6 +25,7 @@ from wxPython.help import *
 import guiwidgets
 import common
 import version
+import helpids
 
 ###
 ### Used to check our threading
@@ -809,14 +810,15 @@ class MainWindow(wxFrame):
             text="%s: %s" % (exception.device, exception.message)
             title="Device needs attention - "+exception.device
             style=wxOK|wxICON_INFORMATION
+            help=lambda _: wxGetApp().displayhelpid(helpids.ID_DEVICE_NEEDS_ATTENTION)
         elif isinstance(exception, common.CommsOpenFailure):
             text="%s: %s" % (exception.device, exception.message)
             title="Failed to open communications - "+exception.device
             style=wxOK|wxICON_INFORMATION
+            help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_OPEN_DEVICE)
             
         if text is not None:
-            # ::todo:: wire help into this somehow
-            dlg=wxMessageDialog(self,text, title, style=style)
+            dlg=guiwidgets.AlertDialogWithHelp(self,text, title, help, style=style)
             dlg.ShowModal()
             dlg.Destroy()
             return True

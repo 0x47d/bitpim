@@ -803,16 +803,18 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         type=wxTheMimeTypesManager.GetFileTypeFromExtension(ext)
         cmd=type.GetOpenCommand(os.path.join(self.thedir, name))
         if cmd is None or len(cmd)==0:
-            dlg=wxMessageDialog(self, "You don't have any programs defined to open ."+ext+" files",
-                                "Unable to open", style=wxOK|wxICON_INFORMATION)
+            dlg=AlertDialogWithHelp(self, "You don't have any programs defined to open ."+ext+" files",
+                                "Unable to open", lambda _: wxGetApp().displayhelpid(helpids.ID_NO_MIME_OPEN),
+                                    style=wxOK|wxICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
         else:
             try:
                 wxExecute(cmd)
             except:
-                dlg=wxMessageDialog(self, "Unable to execute '"+cmd+"'",
-                                    "Open failed", style=wxOK|wxICON_ERROR)
+                dlg=AlertDialogWithHelp(self, "Unable to execute '"+cmd+"'",
+                                    "Open failed", lambda _: wxGetApp().displayhelpid(helpids.ID_MIME_EXEC_FAILED),
+                                        style=wxOK|wxICON_ERROR)
                 dlg.ShowModal()
                 dlg.Destroy()
                 
@@ -1043,6 +1045,7 @@ class WallpaperView(FileView):
             # gifs
             file=os.path.join(self.mainwindow.wallpaperpath, i)
             image=wxImage(file)
+            
             width=min(image.GetWidth(), self.usewidth)
             height=min(image.GetHeight(), self.useheight)
             img=image.GetSubImage(wxRect(0,0,width,height))
@@ -2099,3 +2102,60 @@ class MyStatusBar(wxStatusBar):
         else:
             str=desc
         self.SetStatusText(str,1)
+
+###
+###  A MessageBox with a help button
+###
+
+class AlertDialogWithHelp(wxDialog):
+    """A dialog box with Ok button and a help button"""
+    def __init__(self, parent, message, caption, helpfn, style=wxDEFAULT_DIALOG_STYLE, icon=wxICON_EXCLAMATION):
+        wxDialog.__init__(self, parent, -1, caption, style=style|wxDEFAULT_DIALOG_STYLE)
+
+        p=self # parent widget
+
+        # horiz sizer for bitmap and text
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        hbs.Add(wxStaticBitmap(p, -1, wxArtProvider_GetBitmap(self.icontoart(icon), wxART_MESSAGE_BOX)), 0, wxCENTER|wxALL, 10)
+        hbs.Add(wxStaticText(p, -1, message), 1, wxCENTER|wxALL, 10)
+
+        # the buttons
+        #buttsizer=wxBoxSizer(wxHORIZONTAL)
+        #buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxCENTER|wxALL, 10)
+        #buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxCENTER|wxALL, 10)
+        buttsizer=self.CreateButtonSizer(wxHELP|style) # CreateButtonSizer seems to make buttons in wrong order
+
+        # Both vertical
+        vbs=wxBoxSizer(wxVERTICAL)
+        vbs.Add(hbs, 1, wxEXPAND|wxALL, 10)
+        vbs.Add(buttsizer, 0, wxCENTER|wxALL, 10)
+
+        # wire it in
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+        EVT_BUTTON(self, wxID_HELP, helpfn)
+
+    def icontoart(self, id):
+        if id&wxICON_EXCLAMATION:
+            return wxART_WARNING
+        if id&wxICON_INFORMATION:
+            return wxART_INFORMATION
+        # ::TODO:: rest of these
+        # fallthru
+        return wxART_INFORMATION
+
+        
+
+
+
+if __name__=='__main__':
+    def func(_): print "helpfunc called"
+    from wxPython.wx import *
+    app=wxPySimpleApp()
+    dlg=wxMessageDialog(None, "Test of builtin", "builtin", wxOK|wxHELP|wxICON_INFORMATION)
+    dlg.ShowModal()
+    dlg=AlertDialogWithHelp(None, -1, "A test", "title bar", func)
+    dlg.ShowModal()
+        
