@@ -478,7 +478,7 @@ class VCard:
         if __debug__:
             print "no idea what do with"
             print "field",field
-            print "value",value
+            print "value",value[:80]
 
     def unquote(self, value):
         # ::TODO:: do this properly (deal with all backslashes)
@@ -536,9 +536,9 @@ if __name__=='__main__':
     import bp
 
     def foo():
-        for vcard in VCards(VFile(open(sys.argv[1]))):
-            pass
-            # print vcard
+        for vcard in VCards(VFile(common.opentextfile(sys.argv[1]))):
+            # pass
+            print vcard
 
     bp.profile("vard.prof", "foo()")
         

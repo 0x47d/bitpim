@@ -21,6 +21,7 @@ import wx.html
 # my modules
 import guihelper
 import fixedwxpTag
+import common
 
 ###
 ###  Enhanced HTML Widget
@@ -470,7 +471,7 @@ if __name__=='__main__':
         global scale
         scale=szlist[evt.GetPosition()]
 
-    f=open(sys.argv[1], "rt")
+    f=common.opentextfile(sys.argv[1])
     html=f.read()
     f.close()
 

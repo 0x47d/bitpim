@@ -312,7 +312,7 @@ if __name__=='__main__':
     data=None
     if len(sys.argv)==2:
         # From a file
-        f=open(sys.argv[1], "r")
+        f=common.opentextfile(sys.argv[1])
         data=f.read()
         f.close()
     frame=Analyser(data=data)

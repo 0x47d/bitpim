@@ -282,3 +282,65 @@ def list_union(*lists):
                if item not in res:
                     res.append(item)
      return res
+
+# unicode byte order markers to codecs
+# this really should be part of the standard library
+
+# we try to import the encoding first.  that has the side
+# effect of ensuring that the freeze tools pick up the
+# right bits of code as well
+import codecs
+
+_boms=[]
+# 64 bit 
+try:
+     import encodings.utf_64
+     _boms.append( (codecs.BOM64_BE, "utf_64") )
+     _boms.append( (codecs.BOM64_LE, "utf_64") )
+except:  pass
+
+# 32 bit
+try:
+     import encodings.utf_32
+     _boms.append( (codecs.BOM_UTF32, "utf_32") )
+     _boms.append( (codecs.BOM_UTF32_BE, "utf_32") )
+     _boms.append( (codecs.BOM_UTF32_LE, "utf_32") )
+except:  pass
+
+# 16 bit
+try:
+     import encodings.utf_16
+     _boms.append( (codecs.BOM_UTF16, "utf_16") )
+     _boms.append( (codecs.BOM_UTF16_BE, "utf_16") )
+     _boms.append( (codecs.BOM_UTF16_LE, "utf_16") )
+except:  pass
+
+# 8 bit
+try:
+     import encodings.utf_8
+     _boms.append( (codecs.BOM_UTF8, "utf_8") )
+except: pass
+
+# NB: the 32 bit and 64 bit versions have the BOM constants defined in Py 2.3
+# but no corresponding encodings module.  They are here for completeness.
+# The order of above also matters since the first ones have longer
+# boms than the latter ones, and we need to be unambiguous
+
+_maxbomlen=max([len(bom) for bom,codec in _boms])
+
+def opentextfile(name):
+     """This function detects unicode byte order markers and if present
+     uses the codecs module instead to open the file instead with
+     appropriate unicode decoding, else returns the file using standard
+     open function"""
+     f=open(name, "rb")
+     start=f.read(_maxbomlen)
+     for bom,codec in _boms:
+          if start.startswith(bom):
+               f.close()
+               # some codecs don't do readline, so we have to vector via stringio
+               # many postings also claim that the BOM is returned as the first
+               # character but that hasn't been the case in my testing
+               return StringIO.StringIO(codecs.open(name, "r", codec).read())
+     f.close()
+     return open(name, "rtU")

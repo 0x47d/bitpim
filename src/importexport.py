@@ -511,7 +511,7 @@ class ImportCSVDialog(ImportDialog):
                 (600,100)
 
     def getcontrols(self, vbs):
-        f=open(self.filename, "rt")
+        f=common.opentextfile(self.filename)
         data=f.read()
         f.close()
         # turn all EOL chars into \n and then ensure only one \n terminates each line
@@ -582,7 +582,7 @@ class ImportCSVDialog(ImportDialog):
         column"""
         self.predefinedcolumns=[]
         for i in guihelper.getresourcefiles("*.pdc"):
-            f=open(i, "rt")
+            f=common.opentextfile(i)
             self.predefinedcolumns.append(f.readline().strip())
             f.close()
 
@@ -648,7 +648,7 @@ class ImportCSVDialog(ImportDialog):
         self.wsave.Enable(False)
         str=self.wcolumnsname.GetValue()
         for file in guihelper.getresourcefiles("*.pdc"):
-            f=open(file, "rt")
+            f=common.opentextfile(file)
             desc=f.readline().strip()
             if desc==str:
                 self.columns=map(string.strip, f.readlines())
@@ -967,7 +967,7 @@ class ImportVCardDialog(ImportDialog):
 
     def ReReadData(self):
         if self.vcardcolumns is None or self.vcarddata is None:
-                self.vcardcolumns,self.vcarddata=self.parsevcards(open(self.filename, "rU"))
+                self.vcardcolumns,self.vcarddata=self.parsevcards(common.opentextfile(self.filename))
         self.columns=self.vcardcolumns
         self.data=self.vcarddata
 
