@@ -40,7 +40,7 @@ class MyVersion(Version):
                          original_filename = "bitpim.exe",
                          product_name = version.name,
                          product_version = version.dqverstr)
-        self.strings.append( ("License", "Artistic License") )
+        self.strings.append( ("License", "GNU General Public License (GPL)") )
 
 version = MyVersion()
 
