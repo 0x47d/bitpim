@@ -1366,7 +1366,8 @@ class ImportQtopiaDesktopDialog(ImportDialog):
         self.origcolumns=self.columns
 
 class ImporteGroupwareDialog(ImportDialog):
-    
+
+    __pwdsentinel="\x99\xff\x01\x56\x80\x09\xfe\xae"
     def __init__(self, parent, id, title, module):
         self.headerrowiseditable=False
         self.module=module
@@ -1380,11 +1381,54 @@ class ImporteGroupwareDialog(ImportDialog):
 
     def getcontrols(self, vbs):
         # need url, username, password and domain fields
-        pass
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "URL"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        self.curl=wx.TextCtrl(self, -1)
+        hbs.Add(self.curl, 3, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(wx.StaticText(self, -1, "Domain"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        self.cdomain=wx.TextCtrl(self, -1)
+        hbs.Add(self.cdomain, 1, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 2)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "User"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        self.cuser=wx.TextCtrl(self, -1)
+        hbs.Add(self.cuser, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(wx.StaticText(self, -1, "Password"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        self.cpassword=wx.TextCtrl(self, -1, style=wx.TE_PASSWORD)
+        hbs.Add(self.cpassword, 1, wx.EXPAND|wx.ALL, 2)
+        self.csavepassword=wx.CheckBox(self, -1, "Save")
+        hbs.Add(self.csavepassword, 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 2)
+
+        cfg=wx.GetApp().config
+        self.curl.SetValue(cfg.Read("egroupware/url", "http://server.example.com/egroupware"))
+        self.cdomain.SetValue(cfg.Read("egroupware/domain", "default"))
+        try:
+            import getpass
+            defuser=getpass.getuser()
+        except:
+            defuser="user"
+        self.cuser.SetValue(cfg.Read("egroupware/user", defuser))
+        p=cfg.Read("egroupware/password", "")
+        if len(p):
+            self.csavepassword.SetValue(True)
+            self.cpassword.SetValue(self.__pwdsentinel)
+
+    def OnClose(self, event=None):
+        cfg=wx.GetApp().config
+        cfg.Write("egroupware/url", self.curl.GetValue())
+        cfg.Write("egroupware/domain", self.cdomain.GetValue())
+        cfg.Write("egroupware/user", self.cuser.GetValue())
+        if self.csavepassword.GetValue():
+            p=self.cpassword.GetValue()
+            if p!=self.__pwdsentinel:
+                cfg.Write("egroupware/password", common.obfus_encode(p))
+        else:
+            cfg.DeleteEntry("egroupware/password")
 
     def ReReadData(self):
-        # could pass in category limits ...
-        pass
+        self.data=[]
+        self.columns=[]
 
 
 

@@ -16,6 +16,12 @@ import datetime
 
 def getsession(url, user, password, domain="default"):
 
+    # fixup whatever the user max have given us
+    scheme, location, path, query, fragment = urlparse.urlsplit(url)
+
+    if scheme is None and location is None and query is None:
+        url="http://"+url
+    
     if url[-1]!="/": url+="/"
     url+="xmlrpc.php"
 
@@ -42,6 +48,8 @@ class Session:
 
     def __del__(self):
         self.sp.system.logout(self.__ifo)
+        self.sp=None
+        self.__ifo=None
 
     def getyearcalendar(self, year):
         return getcalendar((year,), (year,))
@@ -66,18 +74,29 @@ class Session:
     def getcontacts(self):
         "returns all contacts"
         # internally we read them a group at a time
-        offset=1 # zero causes egroupware to return ALL contacts ignoring limit!
+        offset=0 
         limit=5
 
+        # NB an offset of zero causes egroupware to return ALL contacts ignoring limit!
+        # This has been filed as bug 1040738 at SourceForge against eGroupware.  It
+        # won't hurt unless you have huge number of contacts as egroupware will try
+        # to return all of them at once.  Alternatively make the simple fix as in
+        # the bug report
+
         while True:
-            print "getting more contacts"
             contacts=self.sp.addressbook.boaddressbook.search({'start': offset, 'limit': limit})
             if len(contacts)==0:
                 raise StopIteration()
             for i in contacts:
+                i=dict([(k,v) for k,v in i.items() if len(v)])
                 yield i
             if len(contacts)<limit:
-                print "only",len(contacts)
                 raise StopIteration()
-            offset+=limit
+            offset+=len(contacts)
             
+if __name__=='__main__':
+    import sys
+    s=getsession(*sys.argv[1:])
+    for n,i in enumerate(s.getcontacts()):
+        print n,i.get('id',""),i.get('n_given', ""),i.get('n_family', "")
+    
