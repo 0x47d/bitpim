@@ -51,10 +51,99 @@ def gen_string(minlength=0, maxlength=515, choices=letters):
     map(buffy.write, [random.choice(choices)  for i in range(random.randrange(minlength, maxlength))])
     return buffy.getvalue()
 
+def gen_strings(min=1,max=5,choices=letters):
+    return [gen_string(choices=choices) for _ in range(random.randrange(min,max+1))]
+
 
 ###
 ### Generate the various bits
 ###
+
+# vcards
+def vcardfrigme(choices):
+    if random.randrange(1,10)==7: return ""
+    
+    if random.choice((True,False)):
+        return ";TYPE="+",".join([random.choice(choices) for _ in range(random.randrange(0, 1+len(choices)/3))])
+    else:
+        return ";"+";".join([random.choice(choices) for _ in range(random.randrange(0, 1+len(choices)/3))])
+
+def FN(io):
+    print >>io, "FN:"+gen_string(choices=words)
+
+def N(io):
+    print >>io, "N:"+";".join(gen_strings(5,5,choices=words))
+
+def NICKNAME(io):
+    print >>io, "NICKNAME:"+gen_string(choices=words)
+
+atypes=( "pref", "work", "home", "dom", "intl", "postal", "parcel", "foo", "bar")
+
+def ADR(io):
+    s="ADR"
+    print >>io, "ADR"+vcardfrigme(atypes)+":"+ \
+          ";".join(gen_strings(7,7,choices=wordsanddigits))
+
+ttypes=( "pref", "home", "msg", "work", "voice", "fax", "cell", "video", "pager", "bbs", "modem", "car", "isdn", "pcs", "nonesense", "boo" )
+
+def TEL(io):
+    print >>io, "TEL"+vcardfrigme(ttypes)+":"+gen_string(choices=phonenumber)
+
+etypes= ("internet", "x400", "pref", "home", "work", "foo", "bar" )
+
+def EMAIL(io):
+    print >>io, "EMAIL"+vcardfrigme(etypes)+":"+gen_string(choices=email)
+
+def TITLE(io):
+    print >>io, "TITLE:"+gen_string(choices=wordsanddigits)
+
+def ROLE(io):
+    print >>io, "ROLE:"+gen_string(choices=words)
+
+def ORG(io):
+    print >>io, "ORG:"+";".join(gen_strings(1,5,choices=words))
+
+def CATEGORIES(io):
+    print >>io, "CATEGORIES:"+",".join(gen_strings(choices=words))
+
+def NOTE(io):
+    print >>io, "NOTE:"+gen_string(choices=words)
+
+utypes=( "home", "work", "foo")
+
+def URL(io):
+    print >>io, "URL"+vcardfrigme(utypes)+":"+gen_string(choices=url)
+        
+def random_vcard(maxentries=1000):
+    """Generate random vcards"""
+
+    # the various fields in their proportions
+    fields= [FN]*1       +\
+            [N]*1        +\
+            [NICKNAME]*1 +\
+            [ADR]*4      +\
+            [TEL]*7      +\
+            [TITLE]*1    +\
+            [ROLE]*1     +\
+            [ORG]*1      +\
+            [EMAIL]*4    +\
+            [CATEGORIES] +\
+            [URL]*2
+            
+
+    
+    io=cStringIO.StringIO()
+    for _ in range(random.randrange(0,maxentries)):
+        print >>io, "BEGIN:vcard"
+        # randomly put in a version number
+        f=random.choice([None, "Version: 2.1", "Version: 3.0"])
+        if f: print >>io, f
+
+        for _ in range(random.randrange(0,len(fields))):
+            random.choice(fields)(io)
+
+        print >>io,"END:vcard"
+    return io.getvalue()
 
 def random_phonebook_csv(minlength=0, maxlength=2000, maxfields=400):
     """Generate a random phonebook in CSV format
@@ -301,6 +390,12 @@ if __name__=='__main__':
             f=open(j(sys.argv[1], "calendar-index.idx"), "wt")
             f.write("result['calendar']=%s\n" % (`cal`,))
             f.write("FILEVERSION=2")
+            f.close()
+
+        if True:
+            vc=random_vcard()
+            f=open(j(sys.argv[1], "vcards.vcf"), "wt")
+            f.write(vc)
             f.close()
 
         if True:
