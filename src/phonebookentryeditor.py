@@ -383,6 +383,7 @@ class CategoryManager(wx.Dialog):
     def OnDelete(self,_):
         try:
             v=self.thelistb.GetStringSelection()
+            if v is None or len(v)==0: return
         except:
             return
         i=self.curlist.index(v)
