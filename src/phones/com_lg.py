@@ -237,7 +237,7 @@ class LGIndexedMedia:
             for i in index:
                 try:
                     media[index[i]]=self.getfilecontents(location+"/"+index[i])
-                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
                     
         if type=="camera":
@@ -483,7 +483,7 @@ class LGNewIndexedMedia:
             for item in self.getindex(indexfile):
                 try:
                     media[basename(item.filename)]=self.getfilecontents(item.filename)
-                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
 
         results[key]=media
@@ -766,7 +766,7 @@ class LGDirectoryMedia:
                     try:
                         # then try using "body"
                         contents=self.getfilecontents(dirlisting[item]['name']+"/body")
-                    except (com_brew.BrewNoSuchFileException,com_brew.BrewNoSuchDirectoryException):
+                    except (com_brew.BrewNoSuchFileException,com_brew.BrewNoSuchDirectoryException,com_brew.BrewNameTooLongException):
                         self.log("Can't find the actual content in "+dirlisting[item]['name'])
                         continue
                 index[filename]=contents
