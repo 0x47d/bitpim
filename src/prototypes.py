@@ -41,9 +41,9 @@ containerelements method:
     
 """
 
-from __future__ import generators
-
 import cStringIO
+
+import common
 
 class ProtogenException(Exception):
     """Base class for exceptions encountered with data marshalling"""
@@ -300,7 +300,7 @@ class STRING(BaseProtogenClass):
         if len(args)==0:
             pass
         elif len(args)==1:
-            self._value=str(args[0])
+            self._value=common.forceascii(args[0])
             if self._constant is not None and self._constant!=self._value:
                 raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         else:
