@@ -59,6 +59,16 @@ class Phone:
         if self.logtarget:
             self.logtarget.logdata("%s: %s" % (self.desc, str), data, klass)
 
+    def alert(self, message, wait):
+        """Raises an alert in the main thread
+
+        @param message: The message to display
+        @param wait:  Should this function block until the user confirms the message
+        """
+        assert wait == False
+        assert self.logtarget
+        self.logtarget.log("<!= alert wait=%s =!>%s: %s" % (`wait`, self.desc, message)
+
     def progress(self, pos, max, desc):
         "Update the progress meter"
         if self.logtarget:

@@ -960,7 +960,13 @@ class MainWindow(wx.Frame):
         self.lw.log(str)
         if self.lwdata is not None:
             self.lwdata.log(str)
-
+        if str.startswith("<!= "):
+            p=str.index("=!>")+3
+            dlg=wx.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            self.OnLog("Alert dialog closed")
+            
     def OnLogData(self, str, data, klass=None):
         if self.lwdata is not None:
             self.lwdata.logdata(str,data, klass)
