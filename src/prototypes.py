@@ -563,8 +563,7 @@ class LIST(BaseProtogenClass):
     def readfrombuffer(self,buf):
         self._bufferstartoffset=buf.getcurrentoffset()
         # delete all existing items
-        while len(self):
-            del self[0]
+        self._thelist=[]
             
         if self._length is None:
             # read rest of buffer
@@ -623,7 +622,7 @@ class LIST(BaseProtogenClass):
         self._thelist.insert(index, self._makeitem(item))
 
     def __getitem__(self, index):
-        return self._thelist.__getitem__(index)
+        return self._thelist[index]
 
     def __iter__(self):
         return self._thelist.__iter__()
