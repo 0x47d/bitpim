@@ -177,6 +177,20 @@ class Phone(com_samsung_packet.Phone):
                     # Response will have ERROR, even though it works
                     self.sendpbcommand(req, self.protocolclass.unparsedresponse, ignoreerror=True)
         
+    def _findmediaindex(self, index, name, pbentryname, type):
+        if name is None:
+            return 0
+        for i in index:
+            if index[i]['name']==name:
+                return i
+        # Not found in index, assume Vision download
+        pos=name.find('_')
+        if(pos>=0):
+            i=int(name[pos+1:])
+            return i
+        
+        return 0
+        
     def makeentry(self, entry, data):
         e=self.protocolclass.pbentry()
 
@@ -184,7 +198,13 @@ class Phone(com_samsung_packet.Phone):
             # special treatment for lists
             if k=='numbertypes' or k=='secrets':
                 continue
-            if k=='numbers':
+            if k=='ringtone':
+            #    e.ringtone=self._findmediaindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
+                continue
+            elif k=='wallpaper':
+            #    e.wallpaper=self._findmediaindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
+                continue
+            elif k=='numbers':
                 #l=getattr(e,k)
                 for numberindex in range(self.protocolclass.NUMPHONENUMBERS):
                     enpn=self.protocolclass.phonenumber()
@@ -290,10 +310,10 @@ class Profile(com_samsung_packet.Profile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('calendar', 'read', None),   # all calendar reading
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         )
 
