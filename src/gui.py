@@ -1125,6 +1125,9 @@ class WorkerThread(WorkerThreadFramework):
             self.progressmajor(count, len(keys)+1, "Getting files")
             # get the contents
             contents=self.getfile(k)
+            # an artificial sleep. if you get files too quickly, the 4400 eventually
+            # runs out of buffers and returns truncated packets
+            time.sleep(0.3)
             # add to zip file
             zi=zipfile.ZipInfo()
             zi.filename=k[strip:]
