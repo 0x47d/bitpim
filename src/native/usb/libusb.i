@@ -1,9 +1,56 @@
-%module pylibusb
+%module libusb
 
 %{
 
 #include "usb.h"
 
+// deal with data being returned
+int usb_bulk_read_wrapped(usb_dev_handle *dev, int ep, char *bytesoutbuffer, int *bytesoutbuffersize, int timeout)
+ {
+   int res=usb_bulk_read(dev, ep, bytesoutbuffer, *bytesoutbuffersize, timeout);
+   if (res<=0)
+     *bytesoutbuffersize=0;
+   else
+     *bytesoutbuffersize=res;
+   return res;
+ }
+
+// access a pointer as an array
+struct usb_interface *usb_interface_index(struct usb_interface *iface, unsigned index) 
+  { return iface+index; }
+struct usb_endpoint_descriptor *usb_endpoint_descriptor_index(struct usb_endpoint_descriptor *ep, unsigned index) 
+  { return ep+index; }
+
 %}
 
+
+// we don't modify any fields
+%immutable;
+
+// cstring manipulation
+%include cstring.i
+
+// in usb_get_string{,_simple}
+%cstring_output_maxsize(char *buf, size_t buflen);
+
+// usb_bulk_write - binary string with length
+%apply (char *STRING, int LENGTH) { (char *bytes, int size) }
+
 %include usb.h
+
+// various wrappers and convenience functions
+// these help treat pointers as arrays
+struct usb_interface *usb_interface_index(struct usb_interface *iface, unsigned index);
+struct usb_endpoint_descriptor *usb_endpoint_descriptor_index(struct usb_endpoint_descriptor *ep, unsigned index);
+
+// a wrapper so that we can deal with buffer length issues
+%cstring_output_withsize(char *bytesoutbuffer, int *bytesoutbuffersize);
+int usb_bulk_read_wrapped(struct usb_dev_handle *dev, int ep, char *bytesoutbuffer, int *bytesoutbuffersize, int timeout);
+
+// some stuff that may be missing
+#ifndef USB_ENDPOINT_IN
+#define USB_ENDPOINT_IN                 0x80
+#endif
+#ifndef USB_ENDPOINT_OUT
+#define USB_ENDPOINT_OUT                0x00
+#endif
