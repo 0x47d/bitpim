@@ -7,14 +7,14 @@
 ###
 ### $Id$
 
-"""Communicate with a Samsung SCH-A620"""
+"""Communicate with a Samsung SPH-A620"""
 
 import sha
 import re
 
 import common
 import commport
-import p_samsungscha620
+import p_samsungspha620
 import com_brew
 import com_phone
 import com_samsung_packet
@@ -23,12 +23,12 @@ import prototypes
 numbertypetab=('home','office','cell','pager','fax','none')
 
 class Phone(com_samsung_packet.Phone):
-    "Talk to a Samsung SCH-A620 phone"
+    "Talk to a Samsung SPH-A620 phone"
 
-    desc="SCH-A620"
+    desc="SPH-A620"
 
-    protocolclass=p_samsungscha620
-    serialsname='scha620'
+    protocolclass=p_samsungspha620
+    serialsname='spha620'
     __groups_range=xrange(5)
 
     imagelocations=()
@@ -157,7 +157,7 @@ class Phone(com_samsung_packet.Phone):
     getringtones=None
     
 class Profile(com_samsung_packet.Profile):
-    serialsname='scha620'
+    serialsname='spha620'
 
     def __init__(self):
         com_samsung_packet.Profile.__init__(self)
