@@ -47,9 +47,7 @@ class PhoneBookCommandException(Exception):
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
 
-    MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
     desc="LG-VX4400"
-    terminator="\x7e"
     
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
@@ -111,29 +109,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.log(common.prettyprintdict(results))
         return results
         
-        
-    def getphoneinfo(self, results):
-        "Extracts manufacturer and version information in modem mode"
-        self.setmode(self.MODEMODEM)
-        d={}
-        self.progress(0,4, "Switching to modem mode")
-        self.progress(1,4, "Reading manufacturer")
-        self.comm.write("AT+GMI\r\n")  # manuf
-        d['Manufacturer']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Manufacturer is "+d['Manufacturer'])
-        self.progress(2,4, "Reading model")
-        self.comm.write("AT+GMM\r\n")  # model
-        d['Model']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Model is "+d['Model'])
-        self.progress(3,4, "Software version")
-        self.comm.write("AT+GMR\r\n")  # software revision
-        d['Software']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Software is "+d['Software'])
-        self.progress(4,4, "Done reading information")
-        results['info']=d
-        return results
-
-
     def getphonebook(self,result):
         pbook={}
         # Bug in the phone.  if you repeatedly read the phone book it starts
@@ -144,20 +119,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.setmode(self.MODEPHONEBOOK)
         self.log("Reading number of phonebook entries")
         req=p_lgvx4400.pbinforequest()
-        res=self.newsendpbcommand(req, p_lgvx4400.pbinforesponse)
+        res=self.sendpbcommand(req, p_lgvx4400.pbinforesponse)
         numentries=res.numentries
         self.log("There are %d entries" % (numentries,))
         for i in range(0, numentries):
             ### Read current entry
             req=p_lgvx4400.pbreadentryrequest()
-            res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
+            res=self.sendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             entry=self.extractphonebookentry(res.entry, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=p_lgvx4400.pbnextentryrequest()
-            self.newsendpbcommand(req, p_lgvx4400.pbnextentryresponse)
+            self.sendpbcommand(req, p_lgvx4400.pbnextentryresponse)
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
@@ -176,7 +151,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.setmode(self.MODEPHONEBOOK)
         # similar loop to reading
         req=p_lgvx4400.pbinforequest()
-        res=self.newsendpbcommand(req, p_lgvx4400.pbinforesponse)
+        res=self.sendpbcommand(req, p_lgvx4400.pbinforesponse)
         numexistingentries=res.numentries
         progressmax=numexistingentries+len(data['phonebook'].keys())
         progresscur=0
@@ -184,7 +159,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for i in range(0, numexistingentries):
             ### Read current entry
             req=p_lgvx4400.pbreadentryrequest()
-            res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
+            res=self.sendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             
             entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1,
                     'serial2': res.entry.serial2, 'name': res.entry.name}
@@ -194,7 +169,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             self.progress(progresscur, progressmax, "existing "+entry['name'])
             #### Advance to next entry
             req=p_lgvx4400.pbnextentryrequest()
-            self.newsendpbcommand(req, p_lgvx4400.pbnextentryresponse)
+            self.sendpbcommand(req, p_lgvx4400.pbnextentryresponse)
             progresscur+=1
         # we have now looped around back to begining
 
@@ -220,7 +195,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req.serial1=ii['serial1']
             req.serial2=ii['serial2']
             req.entrynumber=ii['number']
-            self.newsendpbcommand(req, p_lgvx4400.pbdeleteentryresponse)
+            self.sendpbcommand(req, p_lgvx4400.pbdeleteentryresponse)
             self.progress(progresscur, progressmax, "Deleting "+ii['name'])
             # also remove them from existingpbook
             del existingpbook[i]
@@ -241,7 +216,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             existingserials.append(existingpbook[i]['serial1'])
             req=p_lgvx4400.pbupdateentryrequest()
             req.entry=entry
-            res=self.newsendpbcommand(res, p_lgvx4400.pbupdateentryresponse)
+            res=self.sendpbcommand(req, p_lgvx4400.pbupdateentryresponse)
             newphonebook[counter-1]=self.extractphonebookentry(entry, data)
             assert ii['serial1']==res.serial1 # serial should stay the same
 
@@ -259,7 +234,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
             req=p_lgvx4400.pbappendentryrequest()
             req.entry=entry
-            res=self.newsendpbcommand(req, p_lgvx4400.pbappendentryresponse)
+            res=self.sendpbcommand(req, p_lgvx4400.pbappendentryresponse)
             entry.serial1=res.newserial
             entry.serial2=res.newserial
             newphonebook[counter-1]=self.extractphonebookentry(entry, data)
@@ -583,135 +558,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                                    "ringtone-index")
 
 
-    def _setmodelgdmgo(self):
-        # see if we can turn on dm mode
-        for baud in (0, 115200, 19200, 38400, 230400):
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-            try:
-                self.comm.write("AT$LGDMGO\r\n")
-            except:
-                self.mode=self.MODENONE
-                self.comm.shouldloop=True
-                raise
-            try:
-                self.comm.readsome()
-                self.comm.setbaudrate(38400) # dm mode is always 38400
-                return 1
-            except com_phone.modeignoreerrortypes:
-                self.log("No response to setting DM mode")
-        self.comm.setbaudrate(38400) # just in case it worked
-        return 0
-        
 
-    def _setmodephonebook(self):
-        req=p_lgvx4400.pbinitrequest()
-        respc=p_lgvx4400.pbinitresponse
-        try:
-            self.newsendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
-        try:
-            self.comm.setbaudrate(38400)
-            self.newsendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
-        self._setmodelgdmgo()
-        try:
-            self.newsendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
-        return 0
-        
-
-    def checkresult(self, firstbyte, res):
-        if res[0]!=firstbyte:
-            return
-
-    def newsendpbcommand(self, request, responseclass, callsetmode=True):
-        if callsetmode:
-            self.setmode(self.MODEPHONEBOOK)
-        buffer=prototypes.buffer()
-        request.header.sequence=self.pbseq
-        self.pbseq+=1
-        if self.pbseq>0xff:
-            self.pbseq=0
-        request.writetobuffer(buffer)
-        data=buffer.getvalue()
-        self.logdata("lg phonebook request", data, request)
-        data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
-        try:
-            self.comm.write(data, log=False) # we logged above
-	    data=self.comm.readuntil(self.pbterminator, logsuccess=False)
-        except:
-            self.mode=self.MODENONE
-            self.raisecommsexception("manipulating the phonebook")
-        self.comm.success=True
-        data=com_brew.unescape(data)
-        # take off crc and terminator ::TODO:: check the crc
-        data=data[:-3]
-        
-        # log it
-        self.logdata("lg phonebook response", data, responseclass)
-
-        # parse data
-        buffer=prototypes.buffer(data)
-        res=responseclass()
-        res.readfrombuffer(buffer)
-        return res
-
-    def sendpbcommand(self, cmd, data):
-        self.setmode(self.MODEPHONEBOOK)
-        if self.comm.configparameters is None or \
-           not self.comm.configparameters['retryontimeout']:
-            return self._sendpbcommand(cmd, data)
-        try:
-            return self._sendpbcommand(cmd, data, wantto=True)
-        except commport.CommTimeout, e:
-            if e.partial is None or len(e.partial)==0:
-                raise e
-            # resend command
-            self.log("Phonebook command timed out with partial data.  Retrying")
-            self.comm.reset()
-            res=self._sendpbcommand(cmd,data)
-            x=res.find('\x7f')
-            if x<0:
-                raise e
-            res=res[x+1]
-            if len(res)==0:
-                raise e
-            return res
-
-    def _sendpbcommand(self, cmd, data, wantto=False):
-        d="\xff"+chr(cmd)+chr(self.pbseq&0xff)+data
-        d=com_brew.escape(d+com_brew.crcs(d))+self.terminator
-        try:
-            self.comm.write(d)
-        except:
-            self.mode=self.MODENONE
-            self.comm.shouldloop=True
-            raise
-        self.pbseq+=1
-        try:
-            d=com_brew.unescape(self.comm.readuntil(self.terminator))
-            d=d[:-3] # strip crc
-            self.comm.success=True
-            if 0: # cmd!=0x15 and d[3]!="\x00":
-                raise PhoneBookCommandException(ord(d[3]))
-            # ::TODO:: we should check crc
-            return d
-        except commport.CommTimeout, e:
-            if wantto:
-                raise e
-            self.raisecommsexception("using the phonebook")
-            return None # keep pychecker happy
-        
-    
-    
     def extractphonebookentry(self, entry, fundamentals):
         """Return a phonebook entry in BitPim format"""
         res={}
@@ -786,12 +633,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         
 
 ### Various random functions
-
-def cleanupstring(str):
-    str=str.replace("\r", "\n")
-    str=str.replace("\n\n", "\n")
-    str=str.strip()
-    return str.split("\n")
 
 def readlsb(data):
     # Read binary data in lsb
