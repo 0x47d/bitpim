@@ -13,6 +13,7 @@
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
+from wxPython.calendar import *
 import cStringIO
 import calendar
 import time
@@ -369,6 +370,7 @@ class Calendar(wxPanel):
     # All the horrible date code is an excellent case for metric time!
     ID_UP=1
     ID_DOWN=2
+    ID_YEARBUTTON=3
 
     attrevenmonth=CalendarCellAttributes()
     attroddmonth=CalendarCellAttributes()
@@ -383,7 +385,7 @@ class Calendar(wxPanel):
         sizer=RowColSizer()
         self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
         sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
-        self.year=wxButton(self, -1, "2003")
+        self.year=wxButton(self, self.ID_YEARBUTTON, "2003")
         sizer.Add(self.year, flag=wxEXPAND, row=1, col=0)
         p=1
         calendar.setfirstweekday(calendar.SUNDAY)
@@ -404,8 +406,11 @@ class Calendar(wxPanel):
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
 
+        self.popupcalendar=PopupCalendar(self, self)
+
         EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
         EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
+        EVT_BUTTON(self, self.ID_YEARBUTTON, self.OnYearButton)
         EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         # grab key down from all children
         map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
@@ -437,7 +442,8 @@ class Calendar(wxPanel):
         else:
            event.Skip()  # control can have it
 
-
+    def OnYearButton(self, event):
+        self.popupcalendar.Popup( * (self.selecteddate + (event,)) )
 
     def OnEraseBackground(self, _):
         pass
@@ -456,8 +462,8 @@ class Calendar(wxPanel):
                 y,m,d=self.rows[row][0].getdate()
                 y,m,d=normalizedate(y,m,d+amount)
                 self.updaterow(row, y,m,d)
-        self.label.changenotify()
         self.setselection(*self.selecteddate)
+        self.label.changenotify()
         self.ensureallpainted()
 
     def ensureallpainted(self):
@@ -505,6 +511,7 @@ class Calendar(wxPanel):
           y,m,d=normalizedate(year, month, d)
           for row in range(0,self.numrows):
              self.updaterow(row, *normalizedate(y, m, d+7*row))
+          self.label.changenotify()
           self.ensureallpainted()
 
     def setselection(self, year, month, day):
@@ -548,6 +555,31 @@ class Calendar(wxPanel):
                 daysinmonth=monthrange(y, m)
             else:
                 d+=1
+
+
+class PopupCalendar(wxDialog):
+    def __init__(self, parent, calendar, style=wxSIMPLE_BORDER):
+        wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP)
+        #p=wxPanel(self, -1)
+        self.calendar=calendar
+        self.control=wxCalendarCtrl(self, -1, style=wxCAL_SUNDAY_FIRST, # |wxCAL_SEQUENTIAL_MONTH_SELECTION,
+                                    pos=(0,0)) # |wxCAL_SHOW_SURROUNDING_WEEKS|
+        sz=self.control.GetBestSize()
+        # p.SetSize( sz )
+        self.SetSize(sz)
+
+    def Popup(self, year, month, day, event):
+        d=wxDateTimeFromDMY(day, month, year)
+        self.control.SetDate(d)
+        btn=event.GetEventObject()
+        pos=btn.ClientToScreen( (0,0) )
+        sz=btn.GetSize()
+        self.Move( (pos[0], pos[1]+sz.height ) )
+        print pos, (0,sz.height)
+        self.ShowModal()
+        # wxPopupWindow.Popup(self)
+        
+    
 
 
 _monthranges=[0, 31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
