@@ -88,8 +88,35 @@ class Phone(com_lgvx4400.Phone):
         g.readfrombuffer(buf)
         for i in g.items:
             if len(i.name):
-                index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
+                # index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
+                # we currently use the filesystem name rather than rename in camera
+                # since the latter doesn't include the file extension which then makes
+                # life less pleasant once the file ends up on the computer
+                index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
+
+    def getwallpapers(self, result):
+        papers={}
+        # the ordinary images
+        for offset,indexfile,location,type in self.imagelocations:
+            index=self.getindex(indexfile)
+            for i in index:
+                try:
+                    papers[index[i]]=self.getfilecontents(location+"/"+index[i])
+                except com_brew.BrewNoSuchFileException:
+                    self.log("It was in the index, but not on the filesystem")
+        # now for the camera stuff
+        index=self.getcameraindex()
+        for i in index:
+            try:
+                papers[index[i]['name']]=self.getfilecontents("cam/pic%02d.jpg" % (i,))
+            except com_brew.BrewNoSuchFileException:
+                self.log("It was in the index, but not on the filesystem")
+        result['wallpapers']=papers
+        return result
+                
+                         
+        
         
 
 class Profile(com_lgvx4400.Profile):
