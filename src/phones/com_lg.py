@@ -20,7 +20,7 @@ class LGPhonebook:
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
 
     def __init__(self):
-        pass
+        self.pbseq=0
     
     def _setmodelgdmgo(self):
         # see if we can turn on dm mode
