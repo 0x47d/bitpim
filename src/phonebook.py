@@ -1353,6 +1353,7 @@ class ImportDialog(wx.Dialog):
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
         self.grid.EnableGridLines(False)
+        wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self.grid, self.OnRightGridClick)
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
@@ -1460,6 +1461,21 @@ class ImportDialog(wx.Dialog):
             self.resultpreview.ShowEntry(self.resultdata[resultid])
         else:
             self.resultpreview.ShowEntry({})
+
+    def MakeMenus(self):
+        # menus are constructed on demand
+        menu=wx.Menu()
+        menu.Append(1, "Item Menu")
+        menu.Append(2, "with item stuff")
+        menu.Append(3, "and more stuff")
+
+        self.menu=menu
+
+    def OnRightGridClick(self, event):
+        self.MakeMenus()
+        row,col=event.GetRow(), event.GetCol()
+        pos=event.GetPosition()
+        self.grid.PopupMenu(self.menu, pos)
 
 
 def dictintersection(one,two):
