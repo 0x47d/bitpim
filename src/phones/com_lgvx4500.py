@@ -47,15 +47,19 @@ class Phone(com_lgvx4400.Phone):
         ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
         )
 
-    builtinimages= ('Beach Ball', 'Towerbridge', 'Sunflower', 'Beach',
-                    'Fish', 'Sea', 'Snowman')
+    builtinimages= ('Foliage', 'Castle', 'Dandelion', 'Golf course', 'Icicles', 
+                    'Orangutan', 'Lake', 'Golden Gate', 'Desert')
 
     builtinringtones= ('Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5', 'Ring 6',
-                       'Annen Polka', 'Leichte Kavallerie Overture',
-                       'Beethoven Symphony No. 9', 'Paganini', 'Bubble', 'Fugue',
-                       'Polka', 'Mozart Symphony No. 40', 'Cuckoo Waltz', 'Rodetzky',
-                       'Funicula', 'Hallelujah', 'Trumpets', 'Trepak', 'Prelude', 'Mozart Aria',
-                       'William Tell overture', 'Spring', 'Slavonic', 'Fantasy')
+                       'Ring 7', 'Ring 8', 'Annen Polka', 'Pachelbel Canon', 
+                       'Hallelujah', 'La Traviata', 'Leichte Kavallerie Overture', 
+                       'Mozart Symphony No.40', 'Bach Minuet', 'Farewell', 
+                       'Mozart Piano Sonata', 'Sting', 'O solemio', 
+                       'Pizzicata Polka', 'Stars and Stripes Forever', 
+                       'Pineapple Rag', 'When the Saints Go Marching In', 'Latin', 
+                       'Carol 1', 'Carol 2', 'Chimes high', 'Chimes low', 'Ding', 
+                       'TaDa', 'Notify', 'Drum', 'Claps', 'Fanfare', 'Chord high', 
+                       'Chord low') 
                        
     
     def __init__(self, logtarget, commport):
