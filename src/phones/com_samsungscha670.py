@@ -95,7 +95,7 @@ class Phone(com_samsung.Phone):
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'
     __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'mms_image', 19, 10)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'images', 'mms_image', 19, 10)
 ##    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
     __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 19, 40)
     __video0_info=('wallpapers', 'wallpaper-index', 'video', 'camcoder0', None, None)
@@ -786,31 +786,24 @@ class Profile(com_samsung.Profile):
         d['format']='QCP'
         return ('pmd', fileinfo.AudioFileInfo(afi, **d))
 
-    imageorigins={
-        "wallpapers": { 'meta-help': 'Wallpapers'}
-        }
-    imagetargets={
-        "Full Screen": {'meta-help': 'Full Screen Wallpapers'},
-        "Wallpapers": {'meta-help': 'Clipped Wallpapers'},
-        "Picture ID": {'meta-help': 'Picture ID' }
-        }
+    imageorigins={}
+    imageorigins.update(common.getkv(com_samsung.Profile.stockimageorigins, "images"))
+  
+    imagetargets={}
+    imagetargets.update(common.getkv(com_samsung.Profile.stockimagetargets, "wallpaper",
+                                      {'width': 128, 'height': 128, 'format': "PNG"}))
+    imagetargets.update(common.getkv(com_samsung.Profile.stockimagetargets, "fullscreen",
+                                      {'width': 128, 'height': 160, 'format': "PNG"}))
+    imagetargets.update(common.getkv(com_samsung.Profile.stockimagetargets, "pictureid",
+                                      {'width': 96, 'height': 96, 'format': "JPEG"}))
 
     def GetImageOrigins(self):
         # Note: only return origins that you can write back to the phone
         return self.imageorigins
 
     def GetTargetsForImageOrigin(self, origin):
-        targets={}
-        targets.update(common.getkv(self.imagetargets,
-                                    "Full Screen",
-                                  {'width': 128, 'height': 160, 'format': "PNG"}))
-        targets.update(common.getkv(self.imagetargets,
-                                    "Wallpapers",
-                                  {'width': 128, 'height': 128, 'format': "PNG"}))
-        targets.update(common.getkv(self.imagetargets,
-                                    "Picture ID",
-                                  {'width': 96, 'height': 96, 'format': "JPEG"}))
-        return targets
+        if origin=='images':
+            return self.imagetargets
 
 class FileEntries:
     def __init__(self, phone, info):
@@ -863,7 +856,7 @@ class FileEntries:
                 try :
                     contents=self.__phone.getfilecontents(file_name)
                     img_origin=m.get('origin', None)
-                    if img_origin=='wallpapers':
+                    if img_origin=='images':
                         if file_name[:mms_img_len]==mms_img_path:
                             # mms image file, skip the header
                             contents=contents[52:]
@@ -999,7 +992,7 @@ class FileEntries:
                 self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
                                     (self.__max_file_count, self.__file_type))
                 break
-            if self.__origin=='wallpapers':
+            if self.__origin=='images':
                 # ugly hack to make it work for this build
                 # realy NEED to work on this!!!
                 if n['name'][-4:]=='.jpg':
@@ -1103,7 +1096,7 @@ class ImageIndex:
                         # other image files
                         idx_name=e.file_name[l:e.file_name_len]
                     r[i]={ 'name': idx_name,
-                           'origin': 'wallpapers' }
+                           'origin': 'images' }
             # then read the camera pix image index ('Gallery')
             # starting index should be max_image_entries+1
             idx=self.__phone.protocolclass.max_image_entries+1
