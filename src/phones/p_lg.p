@@ -41,34 +41,32 @@ PACKET pbendsyncresponse:
     * pbheader header
     * UNKNOWN unknown
 
-PACKET pbinitrequest:
+PACKET pbinforequest:
+    "Random information about the phone"
     * pbheader {'command': 0x15, 'flag': 0x01} +header
     6 UNKNOWN +pad
 
-PACKET pbinitresponse:
+PACKET pbinforesponse:
     * pbheader header
     4 UNKNOWN dunno1
     2 UINT something1
     4 UINT firstentry
     4 UNKNOWN dunno2
-    4 UINT numentries
+    4 UINT numentries  # fields from this point on differ by model and are not decoded correctly
     20 UNKNOWN dunno3
     4 UINT lastentry
     20 UNKNOWN dunno4
     4 UINT esn
     * STRING phonesoftware
 
-PACKET pbinforequest:
+PACKET pbinitrequest:
+    "Moves cursor to begining of phonebook"
     * pbheader {'command': 0x11, 'flag': 0x01} +header
     6 UNKNOWN +pad
 
-PACKET pbinforesponse:
+PACKET pbinitresponse:
     * pbheader header
-    4 UNKNOWN dunno1
-    2 UINT extra
-    4 UNKNOWN dunno3
-    * UNKNOWN {'sizeinbytes': self.extra } dunno4
-    1 UINT numentries
+    * UNKNOWN dunno # varies by model, no useful information anyway
 
 PACKET pbreadentryrequest:
     * pbheader {'command': 0x13, 'flag': 0x01} +header
