@@ -44,15 +44,14 @@ class Phone(com_lg.LGNewIndexedMedia,com_lgvx4400.Phone):
                       ('No Ring',)
 
     ringtonelocations= (
-        # type file  lowest number to use
-        ( 'ringers', 'dload/sound.dat', 100),
+        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major
+        ( 'ringers', 'dload/sound.dat', 'dload/soundsize.dat', 'dload/snd', 100, 50, 1),
         )
 
     builtinwallpapers = () # none
 
     wallpaperlocations= (
-        # type file lowest number to use
-        ( 'images', 'dload/image.dat', 100),
+        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'dload/img', 100, 50, 0),
         )
         
     
@@ -65,8 +64,8 @@ class Profile(com_lgvx4400.Profile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
-    WALLPAPER_WIDTH=120
-    WALLPAPER_HEIGHT=131
+    WALLPAPER_WIDTH=176
+    WALLPAPER_HEIGHT=184
     MAX_WALLPAPER_BASENAME_LENGTH=36
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="jpg"
