@@ -1,5 +1,6 @@
 /* External Style Sheet */  
-BODY { background-color:White; }  
-H1 {  font-weight: bold; font-size: 20 pt; background-color:#99ff99; width: 100% }  
-H2,H3,H4,H5,H6 { width: 100%; background-color:#99ff99; }  
-.helppagetitle { align: center; font-weight: bold; font-size: 20 pt; background-color:#99ffcc; width: 100%  }
+BODY,TR { background-color: White; font-family: Verdana, Tahoma, Arial, sans-serif; font-size: 10pt }  
+TD { vertical-align: top }
+H1 {  font-weight: bold; font-size: 150%; background-color: #99ff99; width: 100% }  
+H2,H3,H4,H5,H6 { width: 100%; background-color: #99ff99; font-size: 120% }  
+.helppagetitle { align: center; font-weight: bold; font-size: 140% ; background-color: #99ffcc; width: 100%  }
