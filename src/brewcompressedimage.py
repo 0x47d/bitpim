@@ -117,37 +117,22 @@ class BCIPalette:
     def __getitem__(self,e):
         return self.pal[e]
 
-class ReadMethodFixup:
-    """This is a mixin that corrects the behaviour of the Read method in an InputStream"""
-    def Read(self, len):
-        res=cStringIO.StringIO()
-        while len>0 and not self.Eof():
-            res.write(self.GetC())
-            len-=1
-        return res.getvalue()
-    
-class MemoryInputStream(wx.InputStream, ReadMethodFixup):
+class MemoryInputStream(wx.InputStream):    
     def __init__(self, data):
         import cStringIO
         f=cStringIO.StringIO(data)
         wx.InputStream.__init__(self,f)
 
-
-class FileInputStream(wx.InputStream, ReadMethodFixup):
+class FileInputStream(wx.InputStream):    
     def __init__(self, name):
         self.f=open(name, "rb")
         wx.InputStream.__init__(self,self.f)
 
-    def __del__(self):
-        self.f.close()
-    
-
 def getimage(stream, intoImage=None):
     """Returns a wxImage of the stream specified"""
 
-    streamlen=stream.SeekI(0, wx.FromEnd)
-    stream.SeekI(0)
-    data=stream.Read(streamlen)
+    # try to read the entire thing in one gulp
+    data=stream.read()
 
     # save hex version for debugging
     # f=open(file+".hex", "w")
