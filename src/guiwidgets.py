@@ -501,6 +501,9 @@ class MyFileDropTarget(wxFileDropTarget):
         return self.target.OnDropFiles(x,y,filenames)
 
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
+
+    skiplist= ( 'desktop.ini', 'thumbs.db' )
+    
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL):
         wxListCtrl.__init__(self, parent, id, style=style)
         wxListCtrlAutoWidthMixin.__init__(self)
@@ -648,8 +651,9 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         if not os.path.isdir(self.thedir):
             raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
         for f in os.listdir(self.thedir):
-            # delete them all!
-            os.remove(os.path.join(self.thedir, f))
+            # delete them all except windows magic ones which we ignore
+            if f in self.skiplist:
+                os.remove(os.path.join(self.thedir, f))
         d=dict[key]
         for i in d:
             f=open(os.path.join(self.thedir, i), "wb")
@@ -675,6 +679,9 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
                 d['result']={}
                 execfile(os.path.join(self.thedir, file), d, d)
                 result.update(d['result'])
+            elif file in self.skiplist:
+                # ignore windows detritus
+                continue
             else:
                 f=open(os.path.join(self.thedir, file), "rb")
                 data=f.read()
@@ -949,7 +956,7 @@ class MyStatusBar(wxStatusBar):
         EVT_IDLE(self, self.OnIdle)
         self.gauge=wxGauge(self, 1000, 1)
         self.SetFieldsCount(4)
-        self.SetStatusWidths( [300, -5, 260, -20] )
+        self.SetStatusWidths( [300, -5, 180, -20] )
         self.Reposition()
 
     def OnSize(self,_):
