@@ -148,11 +148,16 @@ class PhoneDataTable(wxPyGridTableBase):
         try:
             return self._data[self.roworder[row]][self.labels[col]]
         except:
-            # print "bad request", row, col
+            print "bad request", row, col
             return ""
+
+    def GetTypeName(self, row, col):
+        print "GetTypeName",row,col
+        return wxGRID_VALUE_STRING
 
     def SetValue(self, row, col, value):
         print "SetValue",row,col,value
+        self._data[self.roworder[row]][self.labels[col]]=value
 
     def GetColLabelValue(self, col):
         return self.labels[col]
