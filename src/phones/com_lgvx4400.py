@@ -106,6 +106,7 @@ class Phone:
         # Bug in the phone.  if you repeatedly read the phone book it starts
         # returning a random number as the number of entries.  We get around
         # this by switching into brew mode which clears that.
+        self.mode=self.MODENONE
         self.setmode(self.MODEBREW)
         self.setmode(self.MODEPHONEBOOK)
         self.log("Reading number of phonebook entries")
