@@ -499,13 +499,15 @@ class codegen:
         if len(fields)==1:
             print >>out, indent(2)+"if len(args):"
             # we can't use makefield as we have to make a new dict
+            d=[]
             if f[2]>=0:
-                print >>out, indent(3)+"dict2={'sizeinbytes': "+`f[2]`+"}"
-            else:
-                print >>out, indent(3)+"dict2={}"
+                d.append("{'sizeinbytes': "+`f[2]`+"}")
             for xx in 4,5:
                 if f[xx] is not None:
-                    print >>out, indent(3)+"dict2.update("+f[xx]+")"
+                    d.append(f[xx])
+            for dd in d: assert dd[0]=="{" and dd[-1]=='}'
+            d=[dd[1:-1] for dd in d]
+            print >>out, indent(3)+"dict2={%s}" % (", ".join(d),)
             print >>out, indent(3)+"dict2.update(kwargs)"
             print >>out, indent(3)+"kwargs=dict2"
             print >>out, indent(3)+"self.__field_%s=%s(*args,**dict2)" % (f[1],f[3])
@@ -603,44 +605,25 @@ class codegen:
 
         print >>out, "\n\n"
 
-    def makefield(self, out, indentamount, field, args="", dictname='dict', isreading=True):
-        # how many dict updates will we be doing?
-        n=0
+    def makefield(self, out, indentamount, field, args="", isreading=True):
+        d=[]
         if field[2]!='P' and field[2]>=0:
-            n+=1
+            d.append("{'sizeinbytes': "+`field[2]`+"}")
         if not (isreading and '*' in field[7]):
             for xx in 4,5:
                 if field[xx] is not None:
-                    n+=1
-        if n==0:
+                    d.append(field[xx])
+
+        for dd in d:
+            assert dd[0]=='{' and dd[-1]=='}'
+
+        if len(d)==0:
             print >>out, indent(indentamount)+"self.__field_%s=%s(%s)" % (field[1], field[3], args)
             return
-        # will it contain exactly one update?
-        if n==1:
-            if field[2]!='P' and field[2]>=0:
-                dd="{'sizeinbytes': "+`field[2]`+"}" 
-            if not (isreading and '*' in field[7]):
-                for xx in 4,5:
-                    if field[xx] is not None:
-                        dd=field[xx]
-            print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dd)
-            return
-        # ok, build it up manually
-        if field[2]!='P' and field[2]>=0:
-            dictmade=True
-            print >>out, indent(indentamount)+dictname+"={'sizeinbytes': "+`field[2]`+"}" 
-        else:
-            dictmade=False
-        if not (isreading and '*' in field[7]):
-            for xx in 4,5:
-                if field[xx] is not None:
-                    if dictmade:
-                        print >>out, indent(indentamount)+dictname+".update("+field[xx]+")"
-                    else:
-                        dictmade=True
-                        print >>out, indent(indentamount)+dictname+"="+field[xx]
-        assert dictmade
-        print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dictname)
+
+        d=[dd[1:-1] for dd in d]
+        dd="{"+", ".join(d)+"}"
+        print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dd)
 
 
 if __name__=='__main__':
