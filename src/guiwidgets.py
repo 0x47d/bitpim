@@ -975,8 +975,11 @@ class FileView(bpmedia.MediaDisplayer):
 
         self.droptarget=MyFileDropTarget(self)
         self.SetDropTarget(self.droptarget)
-        self.icons.SetDropTarget(self.droptarget)
-        self.preview.SetDropTarget(self.droptarget)
+
+        # Left temporarily for reference - causes it to partially work on the Mac,
+        # whereas it doesn't work otherwise... But it crashes on exit.
+        # self.icons.SetDropTarget(self.droptarget)
+        # self.preview.SetDropTarget(self.droptarget)
 
     def OnDelete(self,_):
         names=self.GetSelectedItemNames()
