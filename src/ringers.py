@@ -22,6 +22,7 @@ import wallpaper
 import common
 import fileinfo
 import conversions
+import helpids
 
 import rangedslider
 
@@ -240,13 +241,7 @@ class RingerView(guiwidgets.FileView):
         self.modified=True
 
     def ConvertFormat(self, file, convertinfo):
-        if convertinfo.format=='MP3':
-            dlg=ConvertDialog(self, file, convertinfo)
-        elif convertinfo.format=='QCP':
-            dlg=ConvertMP3toQCP(self, file, convertinfo)
-        else:
-            # no can do
-            return None
+        dlg=ConvertDialog(self, file, convertinfo)
         if dlg.ShowModal()==wx.ID_OK:
             res=dlg.newfiledata
         else:
@@ -307,15 +302,50 @@ class ConvertDialog(wx.Dialog):
     ID_PLAY_CLIP=wx.NewId()
     ID_STOP=wx.NewId()
     ID_TIMER=wx.NewId()
+    ID_SLIDER=wx.NewId()
+
+    # we need to offer all types here rather than using derived classes as the phone may support several
+    # alternatives
+
+    PARAMETERS={
+        'MP3':  {
+        'formats': ["MP3"],
+        'samplerates': ["16000", "22050", "24000", "32000", "44100", "48000"],
+        'channels': ["1", "2"],
+        'bitrates': ["8", "16", "24", "32", "40", "48", "56", "64", "80", "96", "112", "128", "144", "160", "192", "224", "256", "320"],
+        'setup': 'mp3setup',
+        'convert': 'mp3convert',
+        'filelength': 'mp3filelength',
+        'final': 'mp3final',
+        },
+
+        'QCP': {
+        'formats': ["QCP"],
+        'samplerates': ["8000"],
+        'channels': ["1"],
+        'bitrates': ["13000"],
+        'setup': 'qcpsetup',
+        'convert': 'qcpconvert',
+        'filelength': 'qcpfilelength',
+        'final': 'qcpfinal',
+        }
+        
+        }
+       
+        
 
     def __init__(self, parent, file, convertinfo):
         wx.Dialog.__init__(self, parent, title="Convert Audio File")
         self.file=file
         self.convertinfo=convertinfo
         self.afi=None
-        self.mp3file=common.gettempfilename("mp3")      # the working output file
+        self.temporaryfiles=[]
         self.wavfile=common.gettempfilename("wav")      # full length wav equivalent
         self.clipwavfile=common.gettempfilename("wav")  # used for clips from full length wav
+        self.temporaryfiles.extend([self.wavfile, self.clipwavfile])
+
+        getattr(self, self.PARAMETERS[convertinfo.format]['setup'])()
+        
         vbs=wx.BoxSizer(wx.VERTICAL)
         # create the covert controls
         self.create_convert_pane(vbs, file, convertinfo)
@@ -327,32 +357,39 @@ class ConvertDialog(wx.Dialog):
         self.SetSizer(vbs)
         vbs.Fit(self)
 
+        # diable various things
+        self.FindWindowById(wx.ID_OK).Enable(False)
+        for i in self.cropids:
+            self.FindWindowById(i).Enable(False)
+        
+
         # Events
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
         wx.EVT_TIMER(self, self.ID_TIMER, self.OnTimer)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_DLG_AUDIOCONVERT))
 
         # timers and sounds
         self.sound=None
         self.timer=wx.Timer(self, self.ID_TIMER)
 
     def create_convert_pane(self, vbs, file, convertinfo):
+        params=self.PARAMETERS[convertinfo.format]
         # convert bit
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Convert"), wx.VERTICAL)
         bs.Add(wx.StaticText(self, -1, "Input File: "+file), 0, wx.ALL, 5)
         gs=wx.FlexGridSizer(2, 4, 5, 5)
         gs.Add(wx.StaticText(self, -1, "New Type"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.type=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["MP3"])
+        self.type=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=params['formats'])
         gs.Add(self.type, 0, wx.ALL|wx.EXPAND, 5)
-        gs.Add(wx.StaticText(self, -1, "Sample Rate (Hz)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.samplerate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["16000", "22050", "24000", "32000", "44100", "48000"])
+        gs.Add(wx.StaticText(self, -1, "Sample Rate (per second)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.samplerate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=params['samplerates'])
         gs.Add(self.samplerate, 0, wx.ALL|wx.EXPAND, 5)
         gs.Add(wx.StaticText(self, -1, "Channels (Mono/Stereo)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.channels=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["1", "2"])
+        self.channels=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=params['channels'])
         gs.Add(self.channels, 0, wx.ALL|wx.EXPAND, 5)
         gs.Add(wx.StaticText(self, -1, "Bitrate (kbits per second)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.bitrate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["8", "16", "24", "32", "40", "48", "56", "64", "80", "96", "112",
-                                                                                     "128", "144", "160", "192", "224", "256", "320"])
+        self.bitrate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=params['bitrates'])
         gs.Add(self.bitrate, 0, wx.ALL|wx.EXPAND, 5)
         gs.AddGrowableCol(1, 1)
         gs.AddGrowableCol(3, 1)
@@ -361,12 +398,27 @@ class ConvertDialog(wx.Dialog):
         bs.Add(wx.Button(self, self.ID_CONVERT, "Convert"), 0, wx.ALIGN_RIGHT|wx.ALL, 5)
 
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
-        # Fill out fields
-        if convertinfo.format!="MP3": raise common.ConversionNotSupported("Can only convert to MP3")
-        self.type.SetStringSelection(convertinfo.format)
-        self.channels.SetStringSelection(`convertinfo.channels`)
-        self.bitrate.SetStringSelection(`convertinfo.bitrate`)
-        self.samplerate.SetStringSelection(`convertinfo.samplerate`)
+        # Fill out fields - we explicitly set even when not necessary due to bugs on wxMac
+        if self.type.GetCount()==1:
+            self.type.SetSelection(0)
+        else:
+            self.type.SetStringSelection(convertinfo.format)
+
+        if self.channels.GetCount()==1:
+            self.channels.SetSelection(0)
+        else:
+            self.channels.SetStringSelection(`convertinfo.channels`)
+
+        if self.bitrate.GetCount()==1:
+            self.bitrate.SetSelection(0)
+        else:
+            self.bitrate.SetStringSelection(`convertinfo.bitrate`)
+
+        if self.samplerate.GetCount()==1:
+            self.samplerate.SetSelection(0)
+        else:
+            self.samplerate.SetStringSelection(`convertinfo.samplerate`)
+            
         # Events
         wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
 
@@ -385,7 +437,7 @@ class ConvertDialog(wx.Dialog):
         hbs.Add(self.lengthlabel, 0, wx.ALL, 5)
         bs.Add(hbs, 0, wx.ALL, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self.slider=rangedslider.RangedSlider(self, size=(-1, 30))
+        self.slider=rangedslider.RangedSlider(self, id=self.ID_SLIDER, size=(-1, 30))
         hbs.Add(self.slider, 1, wx.EXPAND|wx.ALL, 5)
         bs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -399,22 +451,23 @@ class ConvertDialog(wx.Dialog):
         wx.EVT_BUTTON(self, self.ID_PLAY_CLIP, self.OnPlayClip)
         wx.EVT_BUTTON(self, self.ID_STOP, self.OnStop)
 
-        rangedslider.EVT_POS_CHANGED(self, self.slider.GetId(), self.OnSliderCurrentChanged)
-        rangedslider.EVT_CHANGING(self, self.slider.GetId(), self.OnSliderChanging)
+        rangedslider.EVT_POS_CHANGED(self, self.ID_SLIDER, self.OnSliderCurrentChanged)
+        rangedslider.EVT_CHANGING(self, self.ID_SLIDER, self.OnSliderChanging)
+
+        self.cropids=[self.ID_SLIDER, self.ID_STOP, self.ID_PLAY, self.ID_PLAY_CLIP]
+
 
     def OnConvert(self, _):
-        # make mp3 to work with
-        open(self.mp3file, "wb").write(conversions.converttomp3(self.file, int(self.bitrate.GetStringSelection()), int(self.samplerate.GetStringSelection()), int(self.channels.GetStringSelection())))
-        self.afi=fileinfo.getmp3fileinfo(self.mp3file)
-        print "result is",len(self.afi.frames),"frames"
-        # and corresponding wav to play
-        conversions.converttowav(self.mp3file, self.wavfile)
+        self.OnStop()
+        for i in self.cropids:
+            self.FindWindowById(i).Enable(False)
+        self.FindWindowById(wx.ID_OK).Enable(False)
+        getattr(self, self.PARAMETERS[self.convertinfo.format]['convert'])()
         self.wfi=fileinfo.getpcmfileinfo(self.wavfile)
-        # reset positions
-        self.slider.SetStart(0)
-        self.slider.SetEnd(1)
-        self.slider.SetCurrent(0)
         self.UpdateCrop()
+        for i in self.cropids:
+            self.FindWindowById(i).Enable(True)
+        self.FindWindowById(wx.ID_OK).Enable(True)
 
     OnConvert=guihelper.BusyWrapper(OnConvert)
 
@@ -423,13 +476,11 @@ class ConvertDialog(wx.Dialog):
         self.positionlabel.SetLabel("%.1f secs" % (self.slider.GetCurrent()*self.wfi.duration),)
         duration=(self.slider.GetEnd()-self.slider.GetStart())*self.wfi.duration
         self.durationlabel.SetLabel("%.1f secs" % (duration,))
-        # mp3 specific file length calculation
-        frames=self.afi.frames
-        self.beginframe=int(self.slider.GetStart()*len(frames))
-        self.endframe=int(self.slider.GetEnd()*len(frames))
-        length=sum([frames[frame].nextoffset-frames[frame].offset for frame in range(self.beginframe, self.endframe)])
-        self.lengthlabel.SetLabel(`length`)
-                                    
+        v=getattr(self, self.PARAMETERS[self.convertinfo.format]['filelength'])(duration)
+        self.lengthlabel.SetLabel("%s" % (v,))
+
+
+
     def OnPlayClip(self,_):
         self._Play(self.slider.GetStart(), self.slider.GetEnd())
               
@@ -444,9 +495,7 @@ class ConvertDialog(wx.Dialog):
         
         self.playduration=(self.playend-self.playstart)*self.wfi.duration
 
-        print "Requested params: playstart",self.playstart*self.wfi.duration,"playduration",self.playduration,"entire duration",self.wfi.duration
         conversions.trimwavfile(self.wavfile, self.clipwavfile, self.playstart*self.wfi.duration, self.playduration)
-        print "Actual length",fileinfo.getpcmfileinfo(self.clipwavfile).duration
         self.sound=wx.Sound(self.clipwavfile)
         assert self.sound.IsOk()
         res=self.sound.Play(wx.SOUND_ASYNC)
@@ -483,22 +532,16 @@ class ConvertDialog(wx.Dialog):
         wx.CallAfter(self.UpdateCrop)
 
     def _removetempfiles(self):
-        for file in self.mp3file, self.clipwavfile, self.wavfile:
+        for file in self.temporaryfiles:
             if os.path.exists(file):
                 os.remove(file)
         
     def OnOk(self, evt):
         self.OnStop()
         # make new data
-        self.newfiledata=None
-        # mp3 writing out
-        frames=self.afi.frames
-        offset=frames[self.beginframe].offset
-        length=frames[self.endframe-1].nextoffset-offset
-        f=open(self.mp3file, "rb", 0)
-        f.seek(offset)
-        self.newfiledata=f.read(length)
-        f.close()
+        start=self.slider.GetStart()*self.wfi.duration
+        duration=(self.slider.GetEnd()-self.slider.GetStart())*self.wfi.duration
+        self.newfiledata=getattr(self, self.PARAMETERS[self.convertinfo.format]['final'])(start, duration)
         # now remove files
         self._removetempfiles()
         # use normal handler to quit dialog
@@ -509,104 +552,70 @@ class ConvertDialog(wx.Dialog):
         self._removetempfiles()
         evt.Skip()
 
-class ConvertMP3toQCP(ConvertDialog):
-    def __init__(self, parent, file, convertinfo):
-        ConvertDialog.__init__(self, parent, file, convertinfo)
-        self.beginframe=self.endframe=0
-        tempfilename=common.gettempfilename('')
-        self.wavfile=tempfilename+'wav'
-        self.qcpfile=tempfilename+'qcp'
-        self.workingwavfile=common.gettempfilename('wav')
-        
-    def create_convert_pane(self, vbs, file, convertinfo):
-        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Convert MP3 to QCP"), wx.VERTICAL)
-        bs.Add(wx.StaticText(self, -1, "Input File: "+file), 0, wx.ALL, 5)
-        self.__status=wx.StaticText(self, -1, 'Status: None')
-        bs.Add(self.__status, 0, wx.ALL|wx.EXPAND, 5)
-        bs.Add(wx.Button(self, self.ID_CONVERT, "Convert"), 0, wx.ALIGN_RIGHT|wx.ALL, 5)
-        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
-        # Events
-        wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
+    ###
+    ###  MP3 functions
+    ###
 
-    def OnConvert(self, _):
+    def mp3setup(self):
+        self.mp3file=common.gettempfilename("mp3")
+        self.temporaryfiles.append(self.mp3file)
+
+    def mp3convert(self):
+        # make mp3 to work with
+        open(self.mp3file, "wb").write(conversions.converttomp3(self.file, int(self.bitrate.GetStringSelection()), int(self.samplerate.GetStringSelection()), int(self.channels.GetStringSelection())))
+        self.afi=fileinfo.getmp3fileinfo(self.mp3file)
+        print "result is",len(self.afi.frames),"frames"
+        # and corresponding wav to play
+        conversions.converttowav(self.mp3file, self.wavfile)
+
+    def mp3filelength(self, duration):
+        # mp3 specific file length calculation
+        frames=self.afi.frames
+        self.beginframe=int(self.slider.GetStart()*len(frames))
+        self.endframe=int(self.slider.GetEnd()*len(frames))
+        length=sum([frames[frame].nextoffset-frames[frame].offset for frame in range(self.beginframe, self.endframe)])
+        return length
+
+    def mp3final(self, start, duration):
+        # mp3 writing out
+        f=None
         try:
-            wx.BeginBusyCursor()
-            self.__status.SetLabel('Status: conversion in progress, please wait ...')
-            kargc={ 'samplerate': 8000, 'channels': 1}
-            if self.endframe:
-                kargc['start']=self.beginframe
-                kargc['duration']=self.endframe-self.beginframe
-            conversions.converttowav(self.file, self.wavfile, **kargc)
-            conversions.convertwavtoqcp(self.wavfile)
-            self.lengthlabel.SetLabel(str(os.stat(self.qcpfile).st_size))
-            self.afi=fileinfo.getpcmfileinfo(self.wavfile)
-            self.beginframe=0
-            self.endframe=self.afi.duration
-            self.UpdateCrop()
+            frames=self.afi.frames
+            offset=frames[self.beginframe].offset
+            length=frames[self.endframe-1].nextoffset-offset
+            f=open(self.mp3file, "rb", 0)
+            f.seek(offset)
+            return f.read(length)
         finally:
-            wx.EndBusyCursor()
-            self.__status.SetLabel('Status: Completed')
+            if f is not None:
+                f.close()
 
-    def UpdateCrop(self):
-        self.durationlabel.SetLabel("%.1f secs" % (self.endframe-self.beginframe,))
-        self.positionlabel.SetLabel(`0`)
-        self.slider.SetRange(self.beginframe, self.endframe)
-        self.slider.SetValue(self.beginframe)
+    ###
+    ###  QCP/PureVoice functions
+    ###
 
-    def OnPlay(self,_):
-        if self.afi is None:
-            return
-        self.OnStop()
-        self.startpos=self.slider.GetValue()
-        duration=self.endframe-self.startpos
-##        conversions.converttowav(self.wavfile, self.workingwavfile,
-##                                    start=self.startpos)
-	conversions.trimwav1(self.wavfile, self.workingwavfile,
-			    start=self.startpos)
-##        open(self.workingwavfile, 'wb').write(
-##            conversions.trimwav2(open(self.wavfile, 'rb').read(),
-##                                start=self.startpos))
-        self.sound=wx.Sound(self.workingwavfile)
-        assert self.sound.IsOk()
-        res=self.sound.Play(wx.SOUND_ASYNC)
-        assert res
-        print 'duration:', duration
-        self.starttime=time.time()
-        self.endtime=self.starttime+duration
-        self.timer.Start(100, wx.TIMER_CONTINUOUS)
+    def qcpsetup(self):
+        self.qcpfile=common.gettempfilename("qcp")
+        self.temporaryfiles.append(self.qcpfile)
 
-    def UpdatePosition(self, curval=None):
-        if curval is None: curval=self.slider.GetValue()
-        self.positionlabel.SetLabel("%.1f secs" % (curval,))
+    def qcpconvert(self):
+        # convert to wav first
+        conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1)
+        # then to qcp
+        conversions.convertwavtoqcp(self.wavfile, self.qcpfile)
+        # and finally the wav from the qcp so we can accurately hear what it sounds like
+        conversions.convertqcptowav(self.qcpfile, self.wavfile)
 
-    def OnTimer(self,_):
-        now=time.time()
-        if now>self.endtime:
-            self.OnStop()
-            # assert wx.Sound.IsPlaying()==False
-            self.slider.SetValue(self.endframe)
-            self.UpdatePosition(self.endframe)
-            return
-        # work out where the slider should go
-        newval=self.startpos+(now-self.starttime)
-        self.slider.SetValue(newval)
-        self.UpdatePosition(newval)
+    def qcpfilelength(self, duration):
+        # we don't actually know unless we do a conversion as QCP is
+        # variable bitrate, so just assume the worst case of 13000
+        # bits per second (1625 bytes per second) with an additional
+        # 5% overhead due to the file format (I often see closer to 7%)
+        return int(duration*1625*1.05) 
 
-    def _removetempfiles(self):
-        ConvertDialog._removetempfiles(self)
-        for file in self.qcpfile, self.workingwavfile:
-            if os.path.exists(file):
-                os.remove(file)
-
-    def OnOk(self, evt):
-        self.OnStop()
-        # make new data
-        try:
-            self.newfiledata=open(self.qcpfile, 'rb').read()
-        except:
-            self.newfiledata=None
-        # now remove files
-        self._removetempfiles()
-
-        # use normal handler to quit dialog
-        evt.Skip()
+    def qcpfinal(self, start, duration):
+        # use the original to make a new wav, not the one that went through foo -> qcp -> wav
+        conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1, start=start, duration=duration)
+        conversions.convertwavtoqcp(self.wavfile, self.qcpfile)
+        return open(self.qcpfile, "rb").read()
+        
