@@ -382,7 +382,6 @@ class Phone:
         d2=d
         if len(dir)==0: # to list files on root, must start with /
             d2=chr(len("/")+1)+"/"+"\x00"
-        
 
         # self.log("file listing 0x0b command")
         for i in range(0,1000):
