@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+# This file is licensed as public domain.  The exception is the
+# random_midi_data function which is somewhat derived from part
+# of a function in the phase.sf.net.  Feel free to figure out
+# if it constitutes a derived work (in which case it is GPL)
+# or not (in which case it is public domain).
+
 # This program generates test data for BitPim
 # The one and only argument should be an output directory
 import random
@@ -84,6 +90,10 @@ def random_phonebook_csv(minlength=0, maxlength=2000, maxfields=400):
     print "  ... generation completed"
     return DSV.exportDSV(op, quoteall=random.choice([0,1]))
 
+
+# See license statement at the top of this file
+# This function is partially derived from MaleCB function
+# http://cvs.sourceforge.net/viewcvs.py/phase/phase/phase.c
 def random_midi_data(minlength=2, maxlength=300):
     op=cStringIO.StringIO()
     # header
