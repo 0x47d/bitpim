@@ -73,8 +73,8 @@ PACKET writepbentryresponse:
 PACKET pbentry:
     1 UINT secret "non-zero if entry is secret/locked"
     1 UINT group   
-    2 UINT previous "index number for previous entry"
-    2 UINT next     "index number for next entry"
+    2 UINT previous "?index number for previous entry"
+    2 UINT next     "?index number for next entry"
     # these use a fixed size buffer with counter byte saying how much to use
     33 COUNTEDBUFFEREDSTRING mobile
     33 COUNTEDBUFFEREDSTRING home
@@ -106,7 +106,7 @@ PACKET writegroupentryrequest:
     1 UINT {'constant': 0x80} +cmd
     1 UINT number
     1 UINT anothernumber  "same as number"
-    2 UINT {'constant': 0xffff} +dunno
+    2 UINT {'constant': 0xffff} +dunno "?first member of the group"
     17 STRING name
     2 UINT nummembers
 
