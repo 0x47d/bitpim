@@ -20,6 +20,7 @@ from string import split,atoi,strip,join
 # my modules
 
 import common
+import commport
 import com_brew
 import com_samsung
 import com_phone
@@ -128,7 +129,7 @@ class Phone(com_samsung.Phone):
                 c=0
             return c
             
-        except ATError:
+        except commport.ATError:
             return 0
 
     def _get_phonebook(self, result, show_progress=True):

@@ -15,6 +15,7 @@ from string import split,atoi,strip,join
 
 # my modules
 import common
+import commport
 import com_brew
 import com_phone
 import com_samsung
@@ -116,7 +117,7 @@ class Phone(com_samsung.Phone):
             s=self.comm.sendatcommand('#PUGSN?')
             if len(s)==0:
                 return {}
-        except ATError:
+        except commport.ATError:
             return {}
             
         s2=split(s[0], ': ')[1]
