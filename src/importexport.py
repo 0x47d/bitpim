@@ -47,7 +47,7 @@ class ImportCSVDialog(wx.Dialog):
         }
 
     possiblecolumns=["<ignore>", "First Name", "Last Name", "Middle Name",
-                     "Name", "Nickname", "Email Address", "Web Page", "Home Street",
+                     "Name", "Nickname", "Email Address", "Web Page", "Fax", "Home Street",
                      "Home City", "Home Postal Code", "Home State",
                      "Home Country/Region",  "Home Phone", "Home Fax", "Mobile Phone", "Home Web Page",
                      "Business Street", "Business City", "Business Postal Code",
@@ -60,7 +60,7 @@ class ImportCSVDialog(wx.Dialog):
     filternamecolumns=["First Name", "Last Name", "Middle Name", "Name", "Nickname"]
     
     filternumbercolumns=["Home Phone", "Home Fax", "Mobile Phone", "Business Phone",
-                         "Business Fax", "Pager"]
+                         "Business Fax", "Pager", "Fax"]
 
     filterhomeaddresscolumns=["Home Street", "Home City", "Home Postal Code", "Home State",
                           "Home Country/Region"]
@@ -88,6 +88,17 @@ class ImportCSVDialog(wx.Dialog):
         'Name': 'full',
         'Nickname': 'nickname'
         }
+
+    numbermap={
+        "Home Phone": 'home',
+        "Home Fax":   'fax',
+        "Mobile Phone": 'cell',
+        "Business Phone": 'office',
+        "Business Fax":  'fax',
+        "Pager": 'pager',
+        "Fax": 'fax'
+        }
+
 
     def __init__(self, filename, parent, id, title, style=wx.CAPTION|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
@@ -268,7 +279,8 @@ class ImportCSVDialog(wx.Dialog):
                 if len(record[n])==0:
                     continue
                 c=self.columns[n]
-                if c in self.filternumbercolumns or c in self.filteremailcolumns or c in ["Category"]:
+                if c in self.filternumbercolumns or c in self.filteremailcolumns or c in \
+                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes"]:
                     # these are multivalued
                     if not rec.has_key(c):
                         rec[c]=[]
@@ -279,7 +291,6 @@ class ImportCSVDialog(wx.Dialog):
             entry={}
             # emails
             if rec.has_key('Email Address'):
-                print rec['Email Address']
                 emails=[]
                 for e in rec['Email Address']:
                     emails.append({'email': e})
@@ -306,6 +317,15 @@ class ImportCSVDialog(wx.Dialog):
                     if not entry.has_key("addresses"):
                         entry["addresses"]=[]
                     entry["addresses"].append(addr)
+            # numbers
+            numbers=[]
+            for field in self.filternumbercolumns:
+                if rec.has_key(field):
+                    for val in rec[field]:
+                        numbers.append({'type': self.numbermap[field], 'number': val})
+                    del rec[field]
+            if len(numbers):
+                entry["numbers"]=numbers
             # names
             name={}
             for field in self.filternamecolumns:
@@ -314,10 +334,33 @@ class ImportCSVDialog(wx.Dialog):
                     del rec[field]
             if len(name):
                 entry["names"]=[name]
+            # notes
+            if rec.has_key("Notes"):
+                notes=[]
+                for note in rec["Notes"]:
+                    notes.append({'memo': note})
+                del rec["Notes"]
+                entry["memos"]=notes
+            # web pages
+            urls=[]
+            for type, key in ( (None, "Web Page"),
+                              ("home", "Home Web Page"),
+                              ("business", "Business Web Page")
+                              ):
+                if rec.has_key(key):
+                    for url in rec[key]:
+                        u={'url': url}
+                        if type is not None:
+                            u['type']=type
+                        urls.append(url)
+                        del rec[key]
+            if len(urls):
+                entry["urls"]=urls
+
             # stash it away
             res[count]=entry
             if len(rec):
-                print "CRUD still to do:", rec
+                raise Exception("Internal conversion failed to complete on %s\nStill to do: %s" % (record, rec))
             count+=1
         return res
     
