@@ -13,7 +13,7 @@
     with a plain text editor.
 
     <p>Users never need to explicitly load and save data (ie there is
-    no need for them to manage to the transitioning of data between
+    no need for them to manage the transitioning of data between
     temporary storage - RAM - and persistent storage - disk.)
 
     <h2>Problems and goals</h2>
@@ -33,14 +33,15 @@
     longer appropriate since users can and do access their machines
     via different means (eg logging in on the console and logging in
     remotely).  Some programs such as Mozilla/Firefox force you to
-    have multiple independent profiles, which is very annoying.
+    have multiple independent profiles, which is <b>very</b> annoying.
 
     <p>BitPim currently doesn't support multiple information stores.
     This happens if there are multiple users who login as the same
     user at the operating system level.  There is <a
     href="http://bitpim.org/testhelp/howto-multipleusers.htm">some
     advice</a> in the online doc, which amounts to switching the
-    preferences behind BitPim's back before starting.
+    preferences behind BitPim's back before starting to switch the
+    main data directory.
 
     <p>Care also needs to be taken over dealing with version issues.
     This means BitPim starting up with an older version of the saved
@@ -102,42 +103,192 @@
       <code>foo-1.1-`date`</code>
     </blockquote>
 
-    <p>Once BitPim has successfully loaded, the user will be given the
-      option to delete the old file (created copy).
+    <h2>Main method</h2>
 
-    <h2>main practises</h2>
+    <p>The main data type used in BitPim will be the dict, as is
+    currently the case.  dicts will be saved to tables with each dict
+    key being a column in the table.  <code>None</code> values in
+    Python are mapped to <code>null</code> in SQL.  When reading from
+    the table, a dict is produced based on the columns.  Note that
+    columns with a null value will not have any key in the returned
+    dict.
 
-    <p><ul> 
+    <p>When saving to a table, the support code will automatically
+    create columns as needed, that default to <code>null</code>.
 
-      <li>Each record is immutable like Python strings.  Make new
-      record to change values.
+    <p>Each table will be a journal.  Existing rows will never be
+    modified, only new rows added at the end.  A distinct entry is
+    identified by a unique identifier and is stored in a column named
+    <code>__uid__</code>.  Consequently a table will typically look
+    like this:
 
-      <li>Seperate table to point to current values
+    <p><blockquote><table border=1 cellpadding=5>
+      <tr><th>primary key<br>(integer)
+          <th>Name
+          <th>Phone number
+          <th>__uid__
+        </tr>
 
-      <li>That table also has to be versioned ...
+        <tr>
+          <td>0
+          <td>John Smith
+          <td>123456
+          <td>0x4523
+        </tr>
 
-      <li>Use guids for entries?
+        <tr>
+          <td>1
+          <td>Fred Bloggs
+          <td>7676987897
+          <td>0x8769
+        </tr>
 
-      <li>dict maps onto table
+        <tr>
+          <td>2
+          <td>John Smythe
+          <td>123456
+          <td>0x4523
+        </tr>
 
-      <li>Need to deal with fields that have lists as value
+        <tr>
+          <td>3
+          <td>Spiderman
+          <td>435435345
+          <td>0x7888
+        </tr>
 
-      <li>auto-alter tables to have necessary fields
+        <tr>
+          <td>4
+          <td>John Smythe
+          <td>123888
+          <td>0x4523
+        </tr>
+        
+      </table>
 
-      <li>Have a counter for each source.  Code looks like:
+    </blockquote>
 
-        <blockquote><pre>
-serial=0
-while serial!=table.serial():
-     serial=table.serial()
-     ... read and use values ...
-</pre></blockquote>
+    <p>You can see how the "John Smith" record was editted at row 2,
+    and again at row 4.  To produce the list of "current" records, the
+    last entry the table for a particular <code>uid</code> is used.
 
-        <p>This ensures that code uses values correctly if another
-        process is modifying them.
+    <p>There will be an additional <code>__timestamp__</code> column.
+    That will allow for retrieving old values for any record, as well
+    as archiving off very old values (eg if the user doesn't care
+    about anything old than 6 months).
 
-    </ul>
+    <p>There will also be a <code>__deleted__</code> column which is
+    set to true when a particular uid is deleted.
 
+    <p>The uid will actually be a long unique string.  For phonebook
+    records, it will be the bitpim serial.
+
+    <p>This scheme will allow easy undo's since you can always find
+    out what any particular record used to look like.  You can also
+    track a mass action (eg 10 records being selected and then all
+    deleted at the same time) since they will have the same timestamp.
+
+    <p>Undo will also be possible between runs of the program, and
+    even amongst multiple running concurrent instances!
+
+    <h2>Implementation plan</h2>
+
+    <p>The initial implementation will create a new
+    <code>database.py</code> file.  The existing phonebook code will
+    point to this new module.  Code in <code>database.py</code> will
+    continue to use the existing routines that read and write
+    <code>index.idx</code> as well as to the sqlite database.  The data
+    will be compared between the two to ensure it is working
+    correctly.  Once we are certain the code talking to sqlite is
+    correct, then the code using <code>index.idx</code> will be
+    switched off.
+
+    <p>The process will then be repeated for the other data types
+    (calendar, wallpaper and ringtones).
+
+    <p>New data sources (SMS, call history, voice and text memos) will
+    just use the sqlite database exclusively.
+
+    <h2>Undecided issue - lists of dicts</h2>
+    
+    <p>Almost every field in a phonebook entry is a list of dicts.
+    This can be stored as a single value (the string representation),
+    or a new table can be created, and redirect to that.  Both
+    approaches are shown below for the phone numbers column with most
+    other columns omitted for the purpose of clarification.
+
+    <h3>Stringized</h3>
+
+    <p><blockquote><table border=1 cellpadding=5>
+          <tr><th>primary key<br>(integer)
+          <th>Name
+          <th>Phone numbers
+          </tr>
+          
+          <tr><td>0
+            <td>John Smith
+            <td>[{'number': '1234567890', 'type': 'home'}, {'number': '233423423', 'type': 'work'}]
+          </tr>
+            
+      </table>
+      </blockquote>
+
+   <h3>Indirect table</h3>
+    <p><blockquote><table border=1 cellpadding=5>
+              <tr><th>primary key<br>(integer)
+                <th>Name
+                <th>Phone numbers
+              </tr>
+          
+              <tr><td>0
+                <td>John Smith
+                <td>__numbertable:0,2
+          </tr>
+      </table>
+      
+      <p><b>_numbertable</b> is:
+      <p><table border=1 cellpadding=5>
+              <tr><th>primary key<br>(integer)
+                <th>number
+                <th>type
+              </tr>
+          
+              <tr><td>0
+                <td>1234567890
+                <td>home
+              </tr>
+
+              <tr><td>1
+                <td>76547657
+                <td>cell
+              </tr>
+
+              <tr><td>2
+                <td>233423423       
+                <td>work
+              </tr>
+
+      </table>
+</blockquote>
+
+    <p>I am leaning towards implementig both schemes in
+    <code>database.py</code> since they are not mutually exclusive and
+    then see how it goes.  My instinct is inclined towards the
+    indirect table since it will save space, and allows faster
+    searches down the road.
+
+    <h2>Undecided issue - bitmaps and wallpapers</h2>
+
+    <p>sqlite does allow storing blobs (binary large objects) in the
+    database itself, so we could store the actual files directly in
+    the database.  The other alternative is store the files on disk
+    with non-descript names (eg <code>0000001.jpg</code>) and then
+    point to the file from the relevant records.
+
+    <p>My instinct is for the latter approach for wallpaper and
+    ringtones since it will keep the database smaller.  For other file
+    like items such as text memos and SMS messages, I would be
+    inclined to keep them directly in the database.
 
 
   </body>
