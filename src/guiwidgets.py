@@ -333,6 +333,7 @@ class ConfigDialog(wx.Dialog):
                   'SCP-7300': 'com_sanyo7300',
                   'SCP-8100': 'com_sanyo8100',
                   'SCP-8100 (Bell Mobility)': 'com_sanyo8100_bell',
+                  'SCH-A620': 'com_scha620',
                   'Other CDMA phone': 'com_othercdma',
                   }
 
