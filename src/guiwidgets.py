@@ -293,6 +293,7 @@ class ConfigDialog(wx.Dialog):
                   'SCP-5300': 'com_sanyo5300',
                   'SCP-8100': 'com_sanyo8100',
                   'SCP-5500': 'com_sanyo5500',
+                  'SCP-7200': 'com_sanyo7200',
                   'Other CDMA phone': 'com_othercdma',
                   }
 
