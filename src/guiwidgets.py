@@ -317,8 +317,7 @@ class SendPhoneDialog(GetPhoneDialog):
 
 class ConfigDialog(wx.Dialog):
     phonemodels={ # 'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile
-                  'SCAN': 'com_scan',
-                  'LG-VX4400': 'com_scan',
+                  'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
                   'LG-VX6000': 'com_lgvx6000',
