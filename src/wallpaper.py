@@ -37,7 +37,7 @@ class DisplayItem(guiwidgets.FileViewDisplayItem):
     datakey="wallpaper-index"
     datatype="Image"  # this is used in the tooltip
         
-
+thewallpapermanager=None
 
 class WallpaperView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
@@ -59,6 +59,8 @@ class WallpaperView(guiwidgets.FileView):
     
 
     def __init__(self, mainwindow, parent):
+        global thewallpapermanager
+        thewallpapermanager=self
         self.mainwindow=mainwindow
         self.usewidth=10
         self.useheight=10
@@ -398,6 +400,47 @@ class WallpaperView(guiwidgets.FileView):
                 d[i]={'name': input[i]}
             dict['wallpaper-index']=d
         return dict
+
+class WallpaperPreview(wx.PyWindow):
+
+    def __init__(self, parent, image=None, id=1, size=wx.DefaultSize, pos=wx.DefaultPosition, style=0):
+        wx.PyWindow.__init__(self, parent, id=id, size=size, pos=pos, style=style|wx.FULL_REPAINT_ON_RESIZE)
+        self.bg=wx.Brush(parent.GetBackgroundColour())
+        self._bufbmp=None
+        
+        wx.EVT_ERASE_BACKGROUND(self, lambda evt: None)
+        wx.EVT_PAINT(self, self.OnPaint)
+
+        self.SetImage(image)
+
+    def SetImage(self, name):
+        if name is None:
+            self.theimage=None
+        else:
+            self.theimage, _=thewallpapermanager.GetImage(name)
+        self.thesizedbitmap=None
+        self.Refresh(False)
+
+    def OnPaint(self, _):
+        sz=self.GetClientSize()
+        if self._bufbmp is None or sz.width>self._bufbmp.GetWidth() or sz.height>self._bufbmp.GetHeight():
+            self._bufbmp=wx.EmptyBitmap((sz.width+64)&~8, (sz.height+64)&~8)
+        dc=wx.BufferedPaintDC(self, self._bufbmp)
+        dc.SetBackground(self.bg)
+        dc.Clear()
+        if self.theimage is None: return
+        # work out what size the scaled bitmap should be to retain its aspect ratio and fit within sz
+        sfactorw=float(sz.width)/self.theimage.GetWidth()
+        sfactorh=float(sz.height)/self.theimage.GetHeight()
+        sfactor=min(sfactorw,sfactorh)
+        newwidth=int(self.theimage.GetWidth()*sfactor)
+        newheight=int(self.theimage.GetHeight()*sfactor)
+        if self.thesizedbitmap is None or self.thesizedbitmap.GetWidth()!=newwidth or \
+           self.thesizedbitmap.GetHeight()!=newheight:
+            self.thesizedbitmap=self.theimage.Scale(newwidth, newheight).ConvertToBitmap()
+        dc.DrawBitmap(self.thesizedbitmap, sz.width/2-newwidth/2, sz.height/2-newheight/2, True)
+        
+    
 
 
 def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None, valign="center"):

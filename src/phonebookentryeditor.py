@@ -13,6 +13,7 @@ import fixedscrolledpanel
 import pubsub
 import bphtml
 import database
+import wallpaper
 
 """The dialog for editing a phonebook entry"""
 
@@ -176,8 +177,7 @@ class WallpaperEditor(DirtyUIBase):
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
-        self.preview=bphtml.HTMLWindow(self, -1)
-        self.preview.SetBorders(self._bordersize)
+        self.preview=wallpaper.WallpaperPreview(self)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
         self.type.SetSelection(0)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
@@ -188,7 +188,7 @@ class WallpaperEditor(DirtyUIBase):
 
         hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
 
-        self.wallpaper=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
+        self.wallpaper=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200), style=wx.LB_SINGLE)
         hs.Add(self.wallpaper, 1, wx.EXPAND|wx.ALL, 5)
 
         self.SetSizer(hs)
@@ -199,19 +199,6 @@ class WallpaperEditor(DirtyUIBase):
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
-        wx.EVT_LISTBOX(self, self.ID_LIST, self.OnDirtyUI)
-        self._updaterequested=False # see OnSize for why this exists
-        wx.EVT_SIZE(self.preview, self.OnPreviewResize)
-
-    def OnPreviewResize(self, event):
-        "Need to regenerate the image at the new size"
-        if not self._updaterequested:
-            # if opaque resizing is on then we get hundreds of OnSize events, but the
-            # callafter stuff is not run until the user lets go of the mouse button.
-            # we ensure that at most one callafter is outstanding using the _updaterequested variable
-            wx.CallAfter(self.OnLBClicked)
-            self._updaterequested=True
-        event.Skip()
         
     def OnWallpaperUpdates(self, msg):
         "Receives pubsub message with wallpaper list"
@@ -224,18 +211,15 @@ class WallpaperEditor(DirtyUIBase):
         self.Set(cur)
 
     def OnLBClicked(self, evt=None):
-        self._updaterequested=False
+        self.OnDirtyUI(evt)
         v=self.Get().get('wallpaper', None)
         self.SetPreview(v)
 
     def SetPreview(self, name):
         if name is None:
-            self.preview.SetPage('')
+            self.preview.SetImage(None)
         else:
-            w,h=self.preview.GetSizeTuple()
-            w-=3*self._bordersize
-            h-=3*self._bordersize
-            self.preview.SetPage('<img src="bpuserimage:%s;width=%d;height=%d">' % (name,w,h))        
+            self.preview.SetImage(name)        
 
     def Set(self, data):
         self.ignore_dirty=True
