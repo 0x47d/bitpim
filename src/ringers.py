@@ -77,23 +77,32 @@ class RingerView(guiwidgets.FileView):
         for file in filenames:
             self.thedir=self.mainwindow.ringerpath
             self.thedir=self.mainwindow.ringerpath
-            if os.path.splitext(file)[1]=='.mid':
-                target=self.getshortenedbasename(file, 'mid')
-                if target==None: return # user didn't want to
-                f=open(file, "rb")
-                contents=f.read()
-                f.close()
-                f=open(target, "wb")
-                f.write(contents)
-                f.close()
-            else:
-                # ::TODO:: warn if not on Windows
-                target=self.getshortenedbasename(file, 'qcp')
-                if target==None: return # user didn't want to
-                qcpdata=bpaudio.converttoqcp(file)
-                f=open(target, "wb")
-                f.write(qcpdata)
-                f.close()
+            # we don't try to do any format conversion now
+            target=self.getshortenedbasename(file)
+            if target==None: return # user didn't want to
+            f=open(file, "rb")
+            contents=f.read()
+            f.close()
+            f=open(target, "wb")
+            f.write(contents)
+            f.close()
+##            if os.path.splitext(file)[1]=='.mid':
+##                target=self.getshortenedbasename(file, 'mid')
+##                if target==None: return # user didn't want to
+##                f=open(file, "rb")
+##                contents=f.read()
+##                f.close()
+##                f=open(target, "wb")
+##                f.write(contents)
+##                f.close()
+##            else:
+##                # ::TODO:: warn if not on Windows
+##                target=self.getshortenedbasename(file, 'qcp')
+##                if target==None: return # user didn't want to
+##                qcpdata=bpaudio.converttoqcp(file)
+##                f=open(target, "wb")
+##                f.write(qcpdata)
+##                f.close()
             self.AddToIndex(os.path.basename(target).lower())
         self.OnRefresh()
 
@@ -188,13 +197,15 @@ class RingerView(guiwidgets.FileView):
             newentry['name']=entry['name']
             newentry['filelen']=filelen
             newentry['file']=filename
-            ext=os.path.splitext(entry['name'])[1]
+            ext=os.path.splitext(entry['name'].lower())[1]
             if ext=='.qcp':
                 newentry['description']="PureVoice file"
             elif ext=='.mid':
                 newentry['description']="Midi file"
+            elif ext=='.mp3':
+                newentry['description']="MP3 file"
             else:
-                newentry['description']="Unknown file"
+                newentry['description']="Unknown file type"
             newentry['origin']=entry.get('origin','ringers')
             newitems.append(newentry)
         self.SetItems(newitems)

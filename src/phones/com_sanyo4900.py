@@ -247,11 +247,11 @@ class Profile(com_sanyo.Profile):
     WALLPAPER_WIDTH=90
     WALLPAPER_HEIGHT=96
     MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
     
     MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
        
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

@@ -142,11 +142,11 @@ class Profile:
     WALLPAPER_WIDTH=100
     WALLPAPER_HEIGHT=100
     MAX_WALLPAPER_BASENAME_LENGTH=64
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="bmp"
 
     MAX_RINGTONE_BASENAME_LENGTH=64
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
 
     # which usb ids correspond to us
     usbids=( 

@@ -560,8 +560,8 @@ class Profile:
     WALLPAPER_HEIGHT=100
     MAX_WALLPAPER_BASENAME_LENGTH=19
     MAX_RINGTONE_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="bmp"
     
     usbids = ( )
