@@ -1310,10 +1310,19 @@ def comparenames(s,a):
     r=(sm.ratio()-0.6)*10
     return r
 
-urlprefix=re.compile("^(http://)?(www.)?")
-def cleanurl(url):
-    "Returns lowercase url with the ""http://www."" prefix removed"
+def cleanurl(url, mode="compare"):
+    """Returns lowercase url with the "http://" prefix removed
+    
+    @param mode: If the value is compare (default), it removes ""http://www.""
+                 in preparation for comparing entries. Otherwise, if the value
+                 is pb, the result is formatted for writing to the phonebook.
+    """
+    if mode == "compare":
+        urlprefix=re.compile("^(http://)?(www.)?")
+    else: urlprefix=re.compile("^(http://)?")
+    
     return default_cleaner(re.sub(urlprefix, "", url).lower())
+
 
 nondigits=re.compile("[^0-9]")
 def cleannumber(num):
@@ -1492,7 +1501,7 @@ def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
                 # break out of original item loop
                 break
         
-        # if we have found the item to be imported, we can move to the next one         
+        # if we have found the item to be imported, we can move to the next one
         if found:
             continue
 
@@ -1502,12 +1511,15 @@ def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
         for r in res:
             if (i.has_key('type') and r.has_key('type')):
                 if i['type']==r['type']:
-                    r[field]=i[field]
+                    # write the field entry in the way the phonebook expects it
+                    r[field]=cleaner(i[field], "pb")
                     found=True
                     break
         if found:
             continue
         # add new item on the end if there no matching type
+        # and write the field entry in the way the phonebook expects it
+        i[field] = cleaner(i[field], "pb")
         res.append(i)
 
     return res
@@ -1520,7 +1532,6 @@ try:
     def comparestrings(origfield, impfield):
         """ Compares two strings and returns the score using 
         winkler routine from Febrl (stringcmp.py)
-        built-in difflib (if stringcmp.py isn't available).
         
         Return value is between 0.0 and 1.0, where 0.0 means no similarity
         whatsoever, and 1.0 means the strings match exactly."""
@@ -1530,8 +1541,7 @@ except:
     # fallback on difflib
     import difflib
     def comparestrings(origfield, impfield):
-        """ Compares two strings and returns the score using either the
-        winkler routine from Febrl (stringcmp.py) or Python's
+        """ Compares two strings and returns the score using Python's
         built-in difflib (if stringcmp.py isn't available).
         
         Return value is between 0.0 and 1.0, where 0.0 means no similarity
