@@ -381,7 +381,7 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
     mdc.SelectObject(wx.NullBitmap)
     # deal with transparency
     if transparent is not None:
-            mask=wx.MaskColour(bitmap, transparent)
+            mask=wx.Mask(bitmap, transparent)
             bitmap.SetMask(mask)
     return bitmap
 
