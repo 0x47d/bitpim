@@ -328,21 +328,16 @@ class BrewProtocol:
             print "Baud="+`baud`
 
             try:
-                response=self.comm.sendatcommand("+GMM")
+                for line in self.comm.sendatcommand("+GMM"):
+                    if line.find("SPH-A700")>0:
+                        raise BrewNotSupported("This phone is not supported by BitPim", self.desc)
+            except modeignoreerrortypes:
+                self.log("No response to AT+GMM")
             except:
                 print "GMM Exception"
                 self.mode=self.MODENONE
                 self.comm.shouldloop=True
                 raise
-
-            try:
-                s=self.comm.readline()
-                self.log(s)
-                if s.find("SPH-A700")>=0:
-                    raise BrewNotSupported("This phone is not supported by BitPim", self.desc)
-            except modeignoreerrortypes:
-                self.log("No response to AT+GMM")
-
 
             try:
                 self.comm.write("AT$QCDMG\r\n")
