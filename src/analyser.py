@@ -225,7 +225,7 @@ class Analyser(wx.Frame):
         "Put exception information into the hex pane and output traceback to console"
         if exception is not None:
             x=StringIO.StringIO()
-            print >>x,`exception`,
+            print >>x,exception.__str__(),
             self.hex.WriteText(x.getvalue()+" : ")
             print >>sys.stderr, common.formatexception()
         self.hex.WriteText(desc+"\n")
