@@ -10,11 +10,12 @@
 "Deals with importing and exporting stuff"
 
 # System modules
-
+import string
 
 # wxPython modules
 import wx
 import wx.grid
+import wx.html
 
 # Others
 from DSV import DSV
@@ -26,7 +27,7 @@ import gui
 class PreviewGrid(wx.grid.Grid):
 
     def __init__(self, parent, id):
-        wx.grid.Grid.__init__(self, parent, id)
+        wx.grid.Grid.__init__(self, parent, id, style=wx.WANTS_CHARS)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnLeftDClick)
 
     # (Taken from the demo) I do this because I don't like the default
@@ -51,7 +52,8 @@ class ImportCSVDialog(wx.Dialog):
                      "Home Country/Region",  "Home Phone", "Home Fax", "Mobile Phone", "Home Web Page",
                      "Business Street", "Business City", "Business Postal Code",
                      "Business State", "Business Country/Region", "Business Web Page",
-                     "Business Phone", "Business Fax", "Pager", "Company", "Notes"]
+                     "Business Phone", "Business Fax", "Pager", "Company", "Notes", "Private",
+                     "Category"]
     
     # used for the filtering - any of the named columns have to be present for the data row
     # to be considered to have that type of column
@@ -74,8 +76,10 @@ class ImportCSVDialog(wx.Dialog):
 
         self.UpdatePredefinedColumns()
         vbs=wx.BoxSizer(wx.VERTICAL)
-        vbs.Add(wx.StaticText(self, -1, "Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  Verify they are correct.  You need to select what each column is, or select one of the predefined defaults." % (filename,), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP), 0, wx.EXPAND|wx.ALL,5)
-        # ::TODO:: make a text control that auto wraps onto newlines, not one long line like the moronic StaticText does
+        bg=self.GetBackgroundColour()
+        w=wx.html.HtmlWindow(self, -1, size=wx.Size(600,100), style=wx.html.HW_SCROLLBAR_NEVER)
+        w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets fo columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(),filename))
+        vbs.Add(w, 0, wx.EXPAND|wx.ALL,5)
         f=open(filename, "rt")
         self.rawdata=f.read()
         f.close()
@@ -83,37 +87,42 @@ class ImportCSVDialog(wx.Dialog):
         self.qualifier=DSV.guessTextQualifier(self.rawdata)
         self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
         self.delimiter= DSV.guessDelimiter(self.data)
+        if self.delimiter is None:
+            if filename.lower().endswith("tsv"):
+                self.delimiter="\t"
+            else:
+                self.delimiter=","
         # Delimter and Qualifier row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL, 2)
-        self.wdelimiter=wx.ComboBox(self, wx.NewId(), self.PrettyDelimiter(self.delimiter), choices=self.delimiternames.values())
+        hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wdelimiter=wx.ComboBox(self, wx.NewId(), self.PrettyDelimiter(self.delimiter), choices=self.delimiternames.values(), style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
         hbs.Add(self.wdelimiter, 1, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(wx.StaticText(self, -1, "Text Qualifier"), 0, wx.EXPAND|wx.ALL,2)
-        self.wqualifier=wx.ComboBox(self, wx.NewId(), self.qualifier, choices=['"', "'", "(None)"])
+        hbs.Add(wx.StaticText(self, -1, "Text Qualifier"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
+        self.wqualifier=wx.ComboBox(self, wx.NewId(), self.qualifier, choices=['"', "'", "(None)"], style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
         hbs.Add(self.wqualifier, 1, wx.EXPAND|wx.ALL, 2)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # Pre-set columns and save row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL, 2)
-        self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN)
+        hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN|wx.WANTS_CHARS)
         hbs.Add(self.wcolumnsname, 1, wx.EXPAND|wx.ALL, 2)
         self.wsave=wx.CheckBox(self, wx.NewId(), "Save")
         self.wsave.SetValue(False)
-        hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # Only records with ... row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL,2)
+        hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
         self.wname=wx.CheckBox(self, wx.NewId(), "a name")
         self.wname.SetValue(True)
-        hbs.Add(self.wname, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
+        hbs.Add(self.wname, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wnumber=wx.CheckBox(self, wx.NewId(), "a number")
         self.wnumber.SetValue(True)
-        hbs.Add(self.wnumber, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
+        hbs.Add(self.wnumber, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.waddress=wx.CheckBox(self, wx.NewId(), "an address")
-        hbs.Add(self.waddress, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
+        hbs.Add(self.waddress, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wemail=wx.CheckBox(self, wx.NewId(), "an email")
-        hbs.Add(self.wemail, 0, wx.EXPAND|wx.LEFT,7)
+        hbs.Add(self.wemail, 0, wx.EXPAND|wx.LEFT|wx.ALIGN_CENTRE,7)
         vbs.Add(hbs,0, wx.EXPAND|wx.ALL,5)
         # Preview grid row
         self.preview=PreviewGrid(self, wx.NewId())
@@ -131,6 +140,8 @@ class ImportCSVDialog(wx.Dialog):
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
         wx.grid.EVT_GRID_CELL_CHANGE(self, self.OnGridCellChanged)
         wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
+        wx.EVT_TEXT(self, self.wqualifier.GetId(), self.OnQualifierChanged)
+        wx.EVT_TEXT(self, self.wcolumnsname.GetId(), self.OnColumnsNameChanged)
         self.DataNeedsUpdate()
 
     def DataNeedsUpdate(self, _=None):
@@ -175,7 +186,47 @@ class ImportCSVDialog(wx.Dialog):
         wx.CallAfter(self.wdelimiter.SetInsertionPointEnd)
         wx.CallAfter(self.wdelimiter.SetMark, 0,len(self.wdelimiter.GetValue()))
 
+    def OnQualifierChanged(self,_):
+        "Called when the user has changed the qualifier"
+        # Very similar to the above function
+        text=self.wqualifier.GetValue()
+        if hasattr(self, "lastwqualifiervalue") and self.lastwqualifiervalue==text:
+            return
+        if len(text)!=1:
+            if text=='(None)':
+                text=None
+            else:
+                if len(text)==0:
+                    self.wqualifier.SetValue('(None)')
+                    text=None
+                else:
+                    text=text[-1]
+                    self.wqualifier.SetValue(text)
+        self.qualifier=text
+        self.columns=None
+        self.DataNeedsUpdate()
+        self.lastwqualifiervalue=self.wqualifier.GetValue()
+        wx.CallAfter(self.wqualifier.SetInsertionPointEnd)
+        wx.CallAfter(self.wqualifier.SetMark, 0,len(self.wqualifier.GetValue()))
         
+    def OnColumnsNameChanged(self,_):
+        if self.wcolumnsname.GetValue()=="Custom":
+            self.wsave.Enable(True)
+            return
+        self.wsave.Enable(False)
+        str=self.wcolumnsname.GetValue()
+        for file in gui.getresourcefiles("*.pdc"):
+            f=open(file, "rt")
+            desc=f.readline().strip()
+            if desc==str:
+                self.columns=map(string.strip, f.readlines())
+                self.DataNeedsUpdate()
+                f.close()
+                return
+            f.close()
+        print "didn't find pdc for",str
+        
+    
     def UpdateData(self):
         "Actually update the preview data"
         if not self.needsupdate:
@@ -235,17 +286,30 @@ class ImportCSVDialog(wx.Dialog):
         else:
             numcols=len(self.columns)
         # add header row
+        editor=wx.grid.GridCellChoiceEditor(self.possiblecolumns, False)
         self.preview.AppendRows(1)
         self.preview.AppendCols(numcols)
         for col in range(numcols):
             self.preview.SetCellValue(0, col, self.columns[col])
-            self.preview.SetCellEditor(0, col, wx.grid.GridCellChoiceEditor(self.possiblecolumns, False))
+            self.preview.SetCellEditor(0, col, editor)
+        attr=wx.grid.GridCellAttr()
+        attr.SetBackgroundColour(wx.GREEN)
+        attr.SetFont(wx.Font(10,wx.SWISS, wx.NORMAL, wx.BOLD))
+        self.preview.SetRowAttr(0,attr)
         # add each row
+        oddattr=wx.grid.GridCellAttr()
+        oddattr.SetBackgroundColour("OLDLACE")
+        evenattr=wx.grid.GridCellAttr()
+        evenattr.SetBackgroundColour("ALICE BLUE")
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
                 self.preview.SetCellValue(row+1, col, str(self.data[row][col]))
                 self.preview.SetReadOnly(row+1, col, True)
+            if row%2:
+                self.preview.SetRowAttr(row+1, oddattr)
+            else:
+                self.preview.SetRowAttr(row+1, evenattr)
         self.preview.AutoSizeColumns()
         self.preview.AutoSizeRows()
         self.preview.EndBatch()
@@ -287,6 +351,7 @@ class ImportCSVDialog(wx.Dialog):
 
     def PrettyDelimiter(self, delim):
         "Returns a pretty version of the delimiter (eg Tab, Space instead of \t, ' ')"
+        assert delim is not None
         if delim in self.delimiternames:
             return self.delimiternames[delim]
         return delim
