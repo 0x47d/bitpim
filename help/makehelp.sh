@@ -19,6 +19,8 @@ HBDIR="/c/program files/helpblocks"
 
 # version info for helpblocks pre-processor
 $PYTHON version.py > help/version.h
+# phone features info
+$PYTHON -O phone_features.py > help/phonesupporttable
 
 # update web tree of docs
 cd help

@@ -54,14 +54,16 @@ def html_results(r):
     print '</tr>'
     keys=r.keys()
     keys.sort()
-    yes_no={ True: 'X', False: ' ' }
-    r_flg={ True: 'R', False: ' ' }
-    w_flg={ True: 'W', False: ' ' }
+    r_flg={ True: 'R', False: '' }
+    w_flg={ True: 'W', False: '' }
     for k in keys:
         n=r[k]
         print '<tr><th>%s'%k
         for f in features:
-            print '<td align=center>%s %s'%(r_flg[n[f]['r']], w_flg[n[f]['w']])
+            if n[f]['r'] or n[f]['w']:
+                print '<td align=center>%s %s'%(r_flg[n[f]['r']], w_flg[n[f]['w']])
+            else:
+                print '<td align=center>&nbsp'
         print '</tr>'
     print '</table>'
 
