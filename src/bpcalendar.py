@@ -157,7 +157,7 @@ class RepeatEntry(object):
     __dow=1
     __dom=0
     __moy=1
-
+    
     def __init__(self, repeat_type=daily):
         self.__type=repeat_type
         self.__data=[0,0]
@@ -316,16 +316,29 @@ class RepeatEntry(object):
     def __get_suppressed(self):
         return self.__suppressed
     def __set_suppressed(self, d):
-        self.__suppressed=d
+        if not isinstance(d, list):
+            raise TypeError, 'must be a list of string or BPTime'
+        if not len(d) or isinstance(d[0], bptime.BPTime):
+            # empty list or already a list of BPTime
+            self.__suppressed=d
+        elif isinstance(d[0], str):
+            # list of 'yyyy-mm-dd'
+            self.__suppressed=[]
+            for n in d:
+                self.__suppressed.append(bptime.BPTime(n.replace('-', '')))
     def add_suppressed(self, y, m, d):
         self.__suppressed.append(bptime.BPTime((y, m, d)))
-        print 'suppressed: ', self.__suppressed
     def get_suppressed_list(self):
         return [x.date_str() for x in self.__suppressed]
     suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
 
 #-------------------------------------------------------------------------------
 class CalendarEntry(object):
+    # priority const
+    priority_high=1
+    priority_normal=5
+    priority_low=10
+
     def __init__(self, year=None, month=None, day=None):
         self.__data={}
         # setting default values
