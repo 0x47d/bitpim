@@ -1550,9 +1550,12 @@ class MyStatusBar(wx.StatusBar):
         self.__version_text=s
         self.__set_version_phone_text()
     def __set_version_phone_text(self):
-        self.SetStatusText(\
-            self.__version_text+'\t'+self.__phone_text,
-            self.__general_pane)
+        if guihelper.IsMac():
+            s = self.__version_text+'         '+self.__phone_text
+        else:
+            s = self.__version_text+'\t'+self.__phone_text
+        self.SetStatusText(s, self.__general_pane)
+
 ###
 ###  A MessageBox with a help button
 ###
