@@ -471,7 +471,8 @@ class MainWindow(wxFrame):
         if self.config.ReadInt("firstrun", True):
             self.config.WriteInt("firstrun", False)
             self.config.Flush()
-            wxCallAfter(self.OnHelpTour)
+            if guihelper.IsMSWindows():
+                wxCallAfter(self.OnHelpTour)
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
@@ -509,7 +510,7 @@ class MainWindow(wxFrame):
         if fv:
             menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
-            wxYield()
+            wxYield(True)
 
         # now register for notebook changes
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
@@ -540,7 +541,7 @@ class MainWindow(wxFrame):
         ### remove splash screen if there is one
         global thesplashscreen
         if thesplashscreen is not None:
-            wxSafeYield()
+            wxSafeYield(onlyIfNeeded=True)
             try:
 		# on Linux this is often already deleted and generates an exception
                 thesplashscreen.Show(False)
@@ -793,13 +794,13 @@ class MainWindow(wxFrame):
         self.ringerwidget.getfromfs(results)
         self.calendarwidget.getfromfs(results)
         # update controls
-        wxSafeYield()
+        wxSafeYield(onlyIfNeeded=True)
         self.phonewidget.populate(results)
-        wxSafeYield()
+        wxSafeYield(onlyIfNeeded=True)
         self.wallpaperwidget.populate(results)
-        wxSafeYield()
+        wxSafeYield(onlyIfNeeded=True)
         self.ringerwidget.populate(results)
-        wxSafeYield()
+        wxSafeYield(onlyIfNeeded=True)
         self.calendarwidget.populate(results)
 
         
