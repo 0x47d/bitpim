@@ -168,8 +168,8 @@ def autoguessports():
     # recommend, and ports containing a list of remaining available
     # ports
 
-    return ['com17', 'com1']+map(lambda x: x['name'], res)+['com12', 'com2']
-            
+    # return ['com17', 'com1']+map(lambda x: x['name'], res)+['com12', 'com2']
+    return map(lambda x: x['name'], res)
 
 if __name__=='__main__':
     print autoguessports()
