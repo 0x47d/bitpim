@@ -736,7 +736,6 @@ class MainWindow(wx.Frame):
         dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wx.ID_OK:
             return
-        #todo.append((self.DisplayMessages, "Display Messages"))
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getdata, dlg, todo),
                       Callback(self.OnDataGetPhoneResults))
@@ -840,28 +839,10 @@ class MainWindow(wx.Frame):
             # writing will modify serials so we need to update
             funcscb.append(self.phonewidget.updateserials)
 
-        #todo.append((self.DisplayMessages, "Display Messages"))
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
 
-    def DisplayMessages(self, result):
-        if not result.has_key('messages'):
-            return
-        m=result['messages']
-        s=''
-        for k in m:
-            if len(k['text']):
-                s=s+'\r\n\r\n'+'Results from: '+k['name']+k['text']
-        # del this dict just to be sure
-        del result['messages']
-        if not len(s):
-            # empty string, nothing to display
-            return
-        dlg=wx.MessageDialog(self, s, "Results", style=wx.OK|wx.ICON_INFORMATION)
-        dlg.ShowModal()
-        dlg.Destroy()
-        
     def OnDataSendPhoneGotFundamentals(self,data,todo,convertors, funcscb, exception, results):
         if self.HandleException(exception): return
         data.update(results)

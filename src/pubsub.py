@@ -40,6 +40,8 @@ REQUEST_WALLPAPERS=( 'request', 'wallpapers') # no data
 ALL_RINGTONES=( 'response', 'ringtones' ) # data is list of strings
 REQUEST_RINGTONES=( 'request', 'ringtones') # no data
 PHONE_MODEL_CHANGED=( 'notification', 'phonemodelchanged') # data is phone module
+REQUEST_RINGTONE_INDEX=('request', 'ringtone-index') # no data
+ALL_RINGTONE_INDEX=('response', 'ringtone-index') # data is the ringtone-index dict
 
 def subscribe(listener, topic):
     Publisher.subscribe(listener, topic)

@@ -41,6 +41,7 @@ class RingerView(guiwidgets.FileView):
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
+        pubsub.subscribe(self.OnDictRequest, pubsub.REQUEST_RINGTONE_INDEX)
 
     def GetIconSize(self):
         return (24,24)
@@ -53,6 +54,9 @@ class RingerView(guiwidgets.FileView):
         l=[self._data['ringtone-index'][x]['name'] for x in self._data['ringtone-index']]
         l.sort()
         pubsub.publish(pubsub.ALL_RINGTONES, l)
+
+    def OnDictRequest(self, msg=None):
+        pubsub.publish(pubsub.ALL_RINGTONE_INDEX, self._data['ringtone-index'].copy())
 
     def OnIdle(self, _):
         "Save out changed data"

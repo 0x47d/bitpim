@@ -38,7 +38,6 @@ class Phone:
     
     MODENONE="modenone"  # not talked to yet
     MODEMODEM="modemodem" # modem mode
-    __enable_reporting=False # Don't turn on unless explictly set
 
     desc="Someone forget to set desc in derived class"
 
@@ -47,12 +46,6 @@ class Phone:
         self.comm=commport
         self.mode=self.MODENONE
         self.__msg=None
-        # The restuls report thing does not seem to work for the Mac.
-        # Disable it for now.
-        if self.__enable_reporting:
-            print "TRUE"
-        if sys.platform=='darwin':
-            self.__enable_reporting=False
 
     def close(self):
         self.comm.close()
@@ -146,16 +139,6 @@ class Phone:
                 pass
         return False       
 
-    def reportinit(self, name, dict):
-        if self.__enable_reporting:
-            try:
-                self.__msg=Report(name, dict)
-            except:
-                self.__msg=None
-
-    def report(self, msg):
-        if self.__enable_reporting and self.__msg is not None:
-            self.__msg.report(msg)
 
 class Profile:
 
@@ -218,23 +201,3 @@ class NoFilesystem:
 
     def getfilecontents(self, name):
         self.__raisefna("filesystem (getfilecontents)")
-
-class Report:
-    """
-    Send a report back to the main gui to display info to users.
-    Mainly used to report results back to users after a send-data-to-phone
-    operation.
-    """
-    def __init__(self, name, dict):
-        self.__name=name
-        self.__msg={ 'name': name, 'text': '' }
-        if dict.has_key('messages'):
-            dict['messages'].append(self.__msg)
-        else:
-            dict['messages']=[self.__msg]
-
-    def report(self, msg):
-        self.__msg['text'] += '\r\n'+msg
-
-        
-    
