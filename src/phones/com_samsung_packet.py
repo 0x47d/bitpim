@@ -149,7 +149,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         response=self.comm.sendatcommand("#PMODE=0")
         return True
         
-    def sendpbcommand(self, request, responseclass, ignoreerror=False):
+    def sendpbcommand(self, request, responseclass, ignoreerror=False, fixup=None):
         """Similar to the sendpbcommand in com_sanyo and com_lg, except that
         a list of responses is returned, one per line of information returned
         from the phone"""
@@ -171,6 +171,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         reslist=[]
         for line in response_lines:
+            if fixup:
+                line=fixup(line)
             self.logdata("Samsung phonebook response", line, responseclass)
             res=responseclass()
             buffer=prototypes.buffer(line)
@@ -228,6 +230,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             g[i]={'name': res[0].entry.groupname}
 	return g
 
+    def pblinerepair(self, line):
+        "Repair a line from a phone with broken firmware"
+        return line
+    
     def getphonebook(self, result):
         """Read the phonebook data."""
         pbook={}
@@ -238,7 +244,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         lastname=""
         for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
             req.slot=slot
-            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
+            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse, fixup=self.pblinerepair)
             if len(res) > 0:
                 lastname=res[0].entry.name
                 self.log(`slot`+": "+lastname)
@@ -299,6 +305,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             tone=self.serialsname+"Index_"+`entry.wallpaper`
             res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
             
+        # We don't have a place to put these
+        # print entry.name, entry.birthday
+        # print entry.name, entry.timestamp
+
         return res
     
     def get_phone_entry(self, entry_index, alias_column=-1, num_columns=-1):
@@ -380,6 +390,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         #s=s.replace('"','}\002')
         return s
         
+    def addcommas(self, s, nfields):
+        "Add commas so that a line has a desired number of fields"
+        return s
+    
     def defrell(self, s, acol, ncol):
         """Fixes up phonebook responses with the alias field.  The alias field
         does not have quotes around it, but can still contain commas"""
