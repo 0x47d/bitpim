@@ -313,7 +313,7 @@ PACKET phonenumber:
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False} name
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
     49 STRING {'default': ""} +email
