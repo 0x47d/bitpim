@@ -102,13 +102,13 @@ def prettyprintdict(dictionary, indent=0):
 
      @rtype: string"""
 
-     res=""
-     
+     res=cStringIO.StringIO()
+
      # the indent string
      istr="  "
 
      # opening brace
-     res+="%s{\n" % (istr*indent,)
+     res.write("%s{\n" % (istr*indent,))
      indent+=1
 
      # sort the keys
@@ -120,7 +120,7 @@ def prettyprintdict(dictionary, indent=0):
           v=dictionary[k]
           # is it a dict
           if isinstance(v, dict):
-               res+="%s%s:\n%s\n" % (istr*indent, `k`, prettyprintdict(v, indent+1))
+               res.write("%s%s:\n%s\n" % (istr*indent, `k`, prettyprintdict(v, indent+1)))
           else:
                # is it a list of dicts?
                if isinstance(v, list):
@@ -129,12 +129,12 @@ def prettyprintdict(dictionary, indent=0):
                          if isinstance(item, dict):
                               dicts+=1
                     if dicts and dicts==len(v):
-                         res+="%s%s:\n%s[\n" % (istr*indent,`k`,istr*(indent+1))
+                         res.write("%s%s:\n%s[\n" % (istr*indent,`k`,istr*(indent+1)))
                          for item in v:
-                              res+=prettyprintdict(item, indent+2)
-                         res+="%s],\n" % (istr*(indent+1))
+                              res.write(prettyprintdict(item, indent+2))
+                         res.write("%s],\n" % (istr*(indent+1)))
                          continue
-               res+="%s%s: %s,\n" % (istr*indent, `k`, `v`)
+               res.write("%s%s: %s,\n" % (istr*indent, `k`, `v`))
 
      # closing brace
      indent-=1
@@ -142,9 +142,9 @@ def prettyprintdict(dictionary, indent=0):
           comma=","
      else:
           comma=""
-     res+="%s}%s\n" % (istr*indent,comma)
+     res.write("%s}%s\n" % (istr*indent,comma))
 
-     return res
+     return res.getvalue()
 
      
 class exceptionwrap:
