@@ -561,7 +561,7 @@ def _getpreviewformatted(value, column):
             value="%s (%s)" %(phonenumber.format(value["number"]), value["type"])
         elif column=="Address":
             v=[]
-            for f in ("pobox", "street", "street2", "city", "state", "postalcode", "country"):
+            for f in ("company", "pobox", "street", "street2", "city", "state", "postalcode", "country"):
                 vv=value.get(f, None)
                 if vv is not None:
                     v.append(vv)
@@ -1650,8 +1650,9 @@ def GetPhonebookExports():
     res=[]
     # Vcards - always possible
     res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
-    # eGroupware - always possible
-    res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
+    if __debug__: # not in production builds
+        # eGroupware - always possible
+        res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
     
     return res
 
