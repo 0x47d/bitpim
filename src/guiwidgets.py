@@ -386,11 +386,11 @@ class LogWindow(wxPanel):
         self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
     def logdata(self, str, data):
+        hd=""
         if data is not None:
-            self.log("%s - Data %d bytes" % (str, len(data),))
-            self.log("\n"+common.datatohexstring(data))        
-        else:
-            self.log(str)
+            hd="Data - "+`len(data)`+" bytes\n"+common.datatohexstring(data)
+        self.log("%s %s" % (str, hd))
+            
 
 
 ###
