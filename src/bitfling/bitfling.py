@@ -25,9 +25,6 @@ import threading
 import time
 from xmlrpclib import Fault
 
-# m2 stuff
-import M2Crypto
-
 # wx stuff
 import wx
 import wx.html
