@@ -483,10 +483,10 @@ class Calendar(wx.Panel):
 """
 
     # All the horrible date code is an excellent case for metric time!
-    ID_UP=1
-    ID_DOWN=2
-    ID_YEARBUTTON=3
-    ID_TODAYBUTTON=4
+    ID_UP=wx.NewId()
+    ID_DOWN=wx.NewId()
+    ID_YEARBUTTON=wx.NewId()
+    ID_TODAYBUTTON=wx.NewId()
 
     attrevenmonth=None
     attroddmonth=None
