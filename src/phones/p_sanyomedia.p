@@ -67,7 +67,9 @@ PACKET sanyomediafilenameresponse:
     1 UINT num2
     1 UNKNOWN pad3
     1 UINT num3
-    10 UNKNOWN pad4
+    1 UNKNOWN pad4
+    1 UINT num4
+    10 UNKNOWN pad5
     
 PACKET sanyomediafragmentrequest:
     * sanyomediaheader {'command': 0x74} +header
