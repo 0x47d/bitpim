@@ -14,7 +14,7 @@
 <py-open>for wallpaper in entry.get("wallpapers", []):</py-open>
 <py-open>if wallpaper.get('wallpaper', None) is not None:</py-open>
 <img src="bpuserimage:${wallpaper['wallpaper']};width=64;height=64"
-alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br/>
+alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"/><br/>
 <py-close/>
 <py-close/>
 </td>
@@ -22,7 +22,7 @@ alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br/>
 <td class='ringtonepanel'>
 <py-open>for ringtone in entry.get("ringtones", []):</py-open>
 <img src="bpimage:ringer.png;width=16;height=16"
-alt="${ringtone['use']}: ${ringtone['ringtone']}"><br/>
+alt="${ringtone['use']}: ${ringtone['ringtone']}"/><br/>
 <py-close/>
 </td>
 
@@ -38,7 +38,7 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br/>
 <py-close/>
 <br/>
 <py-open>if has_flag(entry,"secret"):</py-open>
-<span style="secret">Secret</span> <img src="bpimage:private.png;width=16;height=16" alt="secret"><br/>
+<span style="secret">Secret</span> <img src="bpimage:private.png;width=16;height=16" alt="secret" /><br/>
 <py-close/>
 </td>
 </tr>
@@ -120,10 +120,11 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br/>
 <td class="memopanel">
 <py-line>first=True</py-line>
 <py-open>for memo in entry.get("memos", []):</py-open>
-<py-open>if not first:</py-open><hr><py-clause>else:</py-clause><py-line>first=False</py-line><py-close/>
+<py-open>if not first:</py-open><hr/><py-clause>else:</py-clause><py-line>first=False</py-line><py-close/>
 <p>${htmlify(memo["memo"])}
 </p>
 <py-close/>
+</td>
 </table><br/>
 <py-close/>
 
