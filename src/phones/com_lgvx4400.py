@@ -556,7 +556,7 @@ class Phone:
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         try:
-            d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
+            d=self.unescape(self.comm.readuntil(self.terminator))
             # ::TODO:: we should check crc
             if d[2]!="\x00":
                 err=ord(d[2])
