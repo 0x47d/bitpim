@@ -676,7 +676,17 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         self.SetSizer(self.sizer)
         self.widgets=[]
         self.childclass=childclass
+        self.instructions=wx.StaticText(self, -1,
+                                        "\n\n\nPress Add above to add a field.  Press Delete to remove the field your\n"
+                                        "cursor is on.\n"
+                                        "\n"
+                                        "You can use Up and Down to change the priority of items.  For example, some\n"
+                                        "phones store the first five numbers in the numbers tab, and treat the first\n"
+                                        "number as the default to call.  Other phones can only store one email address\n"
+                                        "so only the first one would be stored.")
+        self.sizer.Add(self.instructions, 0, wx.ALIGN_CENTER )
         self.SetupScrolling()
+
 
     def Get(self):
         res=[]
@@ -699,9 +709,25 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             del self.widgets[-1]
         for num in range(len(data)):
             self.widgets[num].Set(data[num])
+        callsus=self.DoInstructionsLayout() or callsus
         if callsus:
             self.sizer.Layout()
             self.SetupScrolling()
+
+    def DoInstructionsLayout(self):
+        "Returns True if Layout should be called"
+        if len(self.widgets):
+            if self.instructions.IsShown():
+                self.sizer.Remove(self.instructions)
+                self.instructions.Show(False)
+                return True
+        else:
+            if not self.instructions.IsShown():
+                self.sizer.Add(self.instructions, 0, wx.ALIGN_CENTER )
+                self.instructions.Show(True)
+                return True
+        return False
+
 
     def GetCurrentWidgetIndex(self):
         focuswin=wx.Window_FindFocus()
@@ -723,6 +749,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             pos=None
         self.widgets.append(self.childclass(self, len(self.widgets)))
         self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
+        self.DoInstructionsLayout() 
         self.sizer.Layout()
         self.SetupScrolling()
         if len(self.widgets)>1:
@@ -744,6 +771,12 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         self.sizer.Remove(self.widgets[-1])
         self.widgets[-1].Destroy()
         del self.widgets[-1]
+        # if we deleted last item and it had focus, move focus
+        # to second to last item
+        if len(self.widgets):
+            if pos==len(self.widgets):
+                self.widgets[pos-1].SetFocus()
+        self.DoInstructionsLayout() 
         self.sizer.Layout()
         self.SetupScrolling()
 
@@ -821,7 +854,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         
 
 class Editor(wx.Dialog):
-
+    "The Editor Dialog itself.  It contains panes for the various field types."
+    
     ID_DOWN=wx.NewId()
     ID_UP=wx.NewId()
     ID_ADD=wx.NewId()
@@ -914,7 +948,7 @@ if __name__=='__main__':
 
     data={ 'names': [ { 'full': 'John Smith'}, { 'nickname': 'I Love Testing'} ],
            'categories': [ {'category': 'business'}, {'category': 'friend' } ],
-           'emails': [ {'email': 'ex1@example.com'}, {'email': 'ex2@example.net', 'type': 'home'} ],
+           # 'emails': [ {'email': 'ex1@example.com'}, {'email': 'ex2@example.net', 'type': 'home'} ],
            'urls': [ {'url': 'www.example.com'}, {'url': 'http://www.example.net', 'type': 'home'} ],
            'ringtones': [ {'ringtone': 'mi2.mid', 'use': 'call'}, {'ringtone': 'dots.mid', 'use': 'message'}],
            'addresses': [ {'type': 'home', 'street': '123 Main Street', 'city': 'Main Town', 'state': 'CA', 'postalcode': '12345'},
