@@ -1227,7 +1227,7 @@ class ImportQtopiaDesktopDialog(ImportDialog):
 
 def OnFileImportCSVContacts(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
-                      wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
+                      wildcard="CSV files (*.csv)|*.csv|Tab Separated file (*.tsv)|*.tsv|All files|*",
                       style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
     path=None
     if dlg.ShowModal()==wx.ID_OK:
