@@ -6,6 +6,7 @@
 import os
 import re
 import calendar
+import time
 
 # wx modules
 from wxPython.grid import *
@@ -1057,7 +1058,7 @@ class Calendar(calendarcontrol.Calendar):
         return res
 
     def OnEdit(self, year, month, day):
-        
+        self.dialog.setdate(year, month, day)
         self.dialog.Show(True)
             
     def populate(self, dict):
@@ -1148,8 +1149,6 @@ class DayViewDialog(wxDialog):
             gs.Add(c,0,wxEXPAND)
             self.fields[field]=c
                  
-        
-
         self.listbox=wxListBox(self, -1, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
         add=wxButton(self, self.ID_ADD, "Add")
         delete=wxButton(self, self.ID_DELETE, "Delete")
@@ -1171,6 +1170,33 @@ class DayViewDialog(wxDialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
+        self.entries={}
+        self.entrymap=[]
+
+    def setdate(self, year, month, day):
+        d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
+        self.title.SetLabel(d)
+        self.updatefields(None)
+
+    def updatelistbox(self):
+        self.listbox.Clear()
+        self.entrymap=[]
+        for i in entries:
+            entry=self.entries[i]
+            e=( entry.start, entry.end, desc, entry)
+            self.entrymap.append(e)
+        # time ordered
+        self.entrymap.sort()
+        # add listbox entries
+        
+        # make entrymap only be entries
+        self.entrymap=[x[3] for x in self.entrymap] 
+
+    def updatefields(self, entry):
+        if entry is None:
+            for i in self.fields:
+                self.fields[i].SetValue("")
+            return
         
         
 ###
