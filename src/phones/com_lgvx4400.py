@@ -536,7 +536,17 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         if len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
-        res['wallpapers']=[ {'wallpaper': entry.wallpaper, 'use': 'call'} ]
+        wp=entry.wallpaper
+        paper=None
+        # 0-9 are builtin wallpapers (except phone doesn't let you select them anyway)
+        if wp>=10:
+            try:
+                paper=fundamentals['wallpaper-index'][wp-10]
+            except:
+                pass
+
+        if paper is not None:
+            res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]
         # numbers
         res['numbers']=[]
         for i in range(entry.numberofphonenumbers):
