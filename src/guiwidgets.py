@@ -690,11 +690,11 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
                 if f.lower() not in self.skiplist:
                     os.remove(os.path.join(self.thedir, f))
 
-                d=dict[key]
-                for i in d:
-                    f=open(os.path.join(self.thedir, i), "wb")
-                    f.write(d[i])
-                    f.close()
+            d=dict[key]
+            for i in d:
+                f=open(os.path.join(self.thedir, i), "wb")
+                f.write(d[i])
+                f.close()
         d={}
         d[indexkey]=dict[indexkey]
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
