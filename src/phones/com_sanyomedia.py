@@ -12,7 +12,7 @@
 # standard modules
 
 import time
-import wx
+import cStringIO
 
 # BitPim Modules
 import com_sanyo
@@ -26,6 +26,11 @@ class SanyoMedia:
 
     NUM_MEDIA_DIRECTORIES=4
     
+    imagelocations=(
+        # offset, index file, files location, type, maximumentries
+        ( 150, 1, 1, "camera", 30),
+        )
+
     def __init__(self):
         pass
 
@@ -33,31 +38,68 @@ class SanyoMedia:
         media=com_sanyo.SanyoPhonebook.getmediaindex(self, builtins, maps, results, key)
         # the maps
         type=''
-        for offset,indexfile,location,type,maxentries in maps:
-            if type=="camera": break
-            index=self.getindex(indexfile)
-            for i in index:
-                media[i+offset]={'name': index[i], 'origin': type}
-
-        # camera must be last
-        if type=="camera":
-            index=self.getcameraindex()
-            for i in index:
-                media[i+offset]=index[i]
+        for offset,indexfile,idir,type,maxentries in maps:
+            req=self.protocolclass.sanyochangedir()
+            req.dirindex=idir
+            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
+            req=self.protocolclass.sanyonumfilesrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
+            for ifile in range(res.count):
+                req=self.protocolclass.sanyomediafilenamerequest()
+                req.index=ifile
+                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
+                media[ifile+offset]={'name': res.filename, 'origin': "camera"}
 
         results[key]=media
         return media
 
-    def getwallpapers(self, results):
+    def getindex(self, location):
+        "Get an index of files in a Sanyo directory"
+        index={}
+        req=self.protocolclass.sanyochangedir()
+        req.dirindex=location
+        res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
+
+        req=self.protocolclass.sanyonumfilesrequest()
+        res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
+        for ifile in range(res.count):
+            req=self.protocolclass.sanyomediafilenamerequest()
+            req.index=ifile
+            res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
+            index[ifile]=res.filename
+
+        return index
+        
+    def getmedia(self, maps, result, key):
+        media={}
+        for offset,indexfile,location,type,maxentries in maps:
+            index=self.getindex(location)
+            for i in index:
+                try:
+                    media[index[i]]=self.getsanyofilecontents(location,i)
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
+                    self.log("It was in the index, but not on the filesystem")
+                    
+        result[key]=media
+        return result
+        
+    def getwallpapers(self, result):
+        return self.getmedia(self.imagelocations, result, 'wallpapers')
+
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
+
+    
+    def mediatestcode(self, results):
         # Test code to list files on phone
         for idir in range(1,self.NUM_MEDIA_DIRECTORIES+1):
             req=self.protocolclass.sanyochangedir()
             req.dirindex=idir
 
-            res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
+            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
 
-            req=self.protocolclass.sanyonumpicsrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
+            req=self.protocolclass.sanyonumfilesrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
             self.log("Directory "+`idir`+", File Count="+`res.count`)
             nfiles=res.count
 
@@ -66,16 +108,15 @@ class SanyoMedia:
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
                 self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
-        return
     
         for idir in range(1,self.NUM_MEDIA_DIRECTORIES+1):
             req=self.protocolclass.sanyochangedir()
             req.dirindex=idir
 
-            res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
+            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
 
-            req=self.protocolclass.sanyonumpicsrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
+            req=self.protocolclass.sanyonumfilesrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
             self.log("Directory "+`idir`+", File Count="+`res.count`)
             nfiles=res.count
             try:
@@ -86,16 +127,9 @@ class SanyoMedia:
                 req=self.protocolclass.sanyomediafilenamerequest()
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`)
                 fout=open(`idir`+"/"+res.filename, "wb")
-                more=1
-                while more==1:
-                    req=self.protocolclass.sanyomediafragmentrequest()
-                    req.fileindex=ifile
-                    res=self.sendpbcommand(req,self.protocolclass.sanyomediafragmentresponse)
-                    fout.write(res.data[0:res.length])
-                    fout.flush()
-                    more=res.more
+                fout.write(self.getsanyofilecontents(idir,ifile))
+                fout.flush()
                 fout.close()
                 
         return
@@ -118,32 +152,50 @@ class SanyoMedia:
     def getsanyofilecontents(self, directory, fileindex):
         "Get file # index from directory # directory"
         start=time.time()
-        self.log("Getting file # "+`index`+" from directory "+`directory`)
+        self.log("Getting file # "+`fileindex`+" from directory "+`directory`)
         desc="Reading "+`directory`+"/"+`fileindex`
 
         req=self.protocolclass.sanyochangedir()
         req.dirindex=directory
 
-        res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
+        res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
+
+        req=self.protocolclass.sanyonumfilesrequest()
+        res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
 
         # Should check that fileindex requested does not exceed number
         # of files in directory
 
-        data=cStringIO.StringIO()
+        req=self.protocolclass.sanyomediafilenamerequest()
+        req.index=fileindex
+        res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
 
         req=self.protocolclass.sanyomediafragmentrequest()
         req.fileindex=fileindex
 
         # Can't find a way to get the file size so we can show progress
+
+        data=cStringIO.StringIO()
         
         more=1
+        counter=0
+        filesize=0
         while more==1:
+            counter+=1
+            if counter%5==0:
+                self.progress(counter%250, 250, desc)
+                
             res=self.sendpbcommand(req,self.protocolclass.sanyomediafragmentresponse)
             data.write(res.data[0:res.length])
+            more=res.more
+            filesize+=res.length
 
         self.progress(1,1,desc)
 
+        data=data.getvalue()
+        end=time.time()
+        if end-start>3:
+            self.log("Read "+`filesize`+" bytes at "+`int(filesize/(end-start))`+" bytes/second")
 
-
-        return
+        return data
     
