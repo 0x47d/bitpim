@@ -26,7 +26,14 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo7300
     serialsname='scp7300'
 
-    builtinringtones=( 'None', 'Vibrate')
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
+                       '', '', '', '', '', '', '',
+                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
+                       'Bach Air on the G', 'Beethoven Sym.5', 'Greensleeves',
+                       'Johnny Comes..', 'Foster Ky. Home', 'Asian Jingle',
+                       'Disco', 'Toy Box', 'Rodeo' )
                       
     calendar_defaultringtone=0
 
