@@ -89,6 +89,38 @@ class SanyoPhonebook:
                 # print c,name
             c+=1
         results['ringtone-index']=ringermedia
+
+        return
+
+        wallpaper = self.getsanyobuffer(self.protocolclass.wallpaperbuffer)
+        for i in range(0, self.protocolclass._NUMPBSLOTS):
+            if wallpaper.wallpapers[i].flag:
+                print i, wallpaper.wallpapers[i].word1, wallpaper.wallpapers[i].word2
+
+        req=self.protocolclass.bufferpartrequest()
+
+        req.header.command=0xc8
+        req.header.packettype=0x0c
+        res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        #req.header.command=0x69
+        #req.header.packettype=0x0f
+        #res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        #req.header.command=0x6a
+        #res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        #req.header.command=0x6b
+        #res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        
+        req.header.packettype=0x0c
+        req.header.command=0x49
+        res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        req.header.command=0xc8
+        res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+
+        if not self.serialsname == 'scp4900':
+            # 4900 doesn't like this
+            req.header.command=0xc9
+            res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+
         return
         
     def getmediaindex(self, builtins, maps, results, key):
@@ -895,7 +927,7 @@ class SanyoPhonebook:
                 else:
                     entry['ringtone']=res.entry.ringtone
                 entry['snoozedelay']=0
-                calres[count]=entry
+                calres[entry['pos']]=entry
                 count+=1
 
         req=self.protocolclass.callalarmrequest()
@@ -918,7 +950,7 @@ class SanyoPhonebook:
                 else:
                     entry['ringtone']=res.entry.ringtone
                 entry['snoozedelay']=0
-                calres[count]=entry
+                calres[entry['pos']]=entry
                 count+=1
 
         result['calendar']=calres
