@@ -79,7 +79,7 @@ class ImportCSVDialog(wx.Dialog):
         'Postal Code': 'postalcode',
         'State':      'state',
         'Country/Region': 'country',
-        }
+       }
 
     namemap={
         'First Name': 'first',
@@ -111,9 +111,18 @@ class ImportCSVDialog(wx.Dialog):
         w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets of columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(),filename))
         vbs.Add(w, 0, wx.EXPAND|wx.ALL,5)
         f=open(filename, "rt")
-        self.rawdata=f.read()
+        data=f.read()
         f.close()
-        # ::TODO:: do something about alien line endings (eg windows file on linux). DSV only splits on newline
+        # turn all EOL chars into \n and then ensure only one \n terminates each line
+        data=data.replace("\r", "\n")
+        oldlen=-1
+        while len(data)!=oldlen:
+            oldlen=len(data)
+            data=data.replace("\n\n", "\n")
+            
+        self.rawdata=data
+        
+
         self.qualifier=DSV.guessTextQualifier(self.rawdata)
         if self.qualifier is None or len(self.qualifier)==0:
             self.qualifier='"'
