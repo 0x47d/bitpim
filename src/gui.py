@@ -736,7 +736,7 @@ class MainWindow(wxFrame):
                 want=self.wallpaperwidget.ALL
             self.wallpaperwidget.getdata(data, want)
             todo.append( (self.wt.writewallpaper, "Wallpaper", merge) )
-            funcscb.append( self.wallpaperwidget.populate )
+            # funcscb.append( self.wallpaperwidget.populate )
         ### Ringtone
         v=dlg.GetRingtoneSetting()
         if v!=dlg.NOTREQUESTED:
@@ -748,7 +748,7 @@ class MainWindow(wxFrame):
                 want=self.ringerwidget.ALL
             self.ringerwidget.getdata(data, want)
             todo.append( (self.wt.writeringtone, "Ringtone", merge) )
-            funcscb.append( self.ringerwidget.populate )
+            # funcscb.append( self.ringerwidget.populate )
 
         ### Phonebook
         v=dlg.GetPhoneBookSetting()
@@ -757,10 +757,8 @@ class MainWindow(wxFrame):
                 self.phonewidget.getdata(data)
                 todo.append( (self.wt.writephonebook, "Phonebook") )
             convertors.append(self.phonewidget.converttophone)
-            # writing will modify data (especially index) so
-            # we repopulate on return
-            funcscb.append( self.phonewidget.populatefs )
-            funcscb.append( self.phonewidget.populate )
+            # writing will modify serials so we need to update
+            funcscb.append(self.phonewidget.updateserials)
 
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
@@ -790,8 +788,6 @@ class MainWindow(wxFrame):
     def OnDataSendPhoneResults(self, funcscb, exception, results):
         if self.HandleException(exception): return
         print results.keys()
-        return
-        # ::TODO:: process results of sending phone data
         for f in funcscb:
             f(results)
                 
