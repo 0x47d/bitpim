@@ -231,11 +231,12 @@ def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
         samplerate=common.LSBUint32(headers[24:28])
         blockalign=common.LSBUint16(headers[32:34])
         # compute new start & duration
-        new_start=int(start*samplerate*blockalign)
+        new_start=int(start*samplerate)*blockalign
+        new_size=subchunk2size-new_start
         if duration is not None:
-            new_size=int((duration-start)*samplerate*blockalign)
-        else:
-            new_size=subchunk2size-new_start
+            i=int(duration*samplerate)*blockalign
+            if i<new_size:
+                new_size=i
         # go get it
         f.seek(new_start, 1)
         open(wavoutfilename, 'wb').write("".join(['RIFF',
@@ -260,12 +261,13 @@ def trimwavdata(wavedatain, start, duration=None):
     samplerate=common.LSBUint32(wavedatain[24:28])
     blockalign=common.LSBUint16(wavedatain[32:34])
     # compute new start & duration
-    new_start=int(start*samplerate*blockalign)
+    new_start=int(start*samplerate)*blockalign
     newsubchunk2datastart=subchunk2datastart+new_start
+    new_size=subchunk2size-new_start
     if duration is not None:
-        new_size=int((duration-start)*samplerate*blockalign)
-    else:
-        new_size=subchunk2size-new_start
+        i=int(duration*samplerate)*blockalign
+        if i<new_size:
+            new_size=i
     # return new data
     return 'RIFF'+common.LSBstr32(4+8+subchunk1size+8+new_size)+\
            wavedatain[8:subchunk2start]+\
