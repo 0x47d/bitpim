@@ -24,7 +24,7 @@ PACKET firmwarerequest:
     1 UINT {'constant': 0x00} +command
 
 PACKET firmwareresponse:
-    1 UINT {'constant': 0x00} command
+    1 UINT command
     11 STRING {'terminator': None}  date1
     8 STRING {'terminator': None}  time1
     11 STRING {'terminator': None}  date2
@@ -39,6 +39,14 @@ PACKET firmwareresponse:
     7 UNKNOWN dunno4
     16 STRING {'terminator': None}  phonemodel
     5 STRING {'terminator': None}  prl
+
+PACKET beginendupdaterequest:
+    1 UINT {'constant': 0x29} +command
+    1 UINT beginend
+
+PACKET beginendupdateresponse:
+    1 UINT command
+    1 UINT beginend
 
 PACKET phonenumberrequest:
     1 UINT {'constant': 0x26} +command1
@@ -207,7 +215,7 @@ PACKET messageresponse:
     * UNKNOWN unknown
 
 PACKET bufferpartrequest:
-    * sanyoheader {'packettype': 0x0f} +header
+    * sanyoheader {'packettype': 0x0f} header
     502 UNKNOWN +pad
 
 PACKET bufferpartresponse:
@@ -215,6 +223,11 @@ PACKET bufferpartresponse:
     500 DATA data
     2 UNKNOWN pad
 
+PACKET bufferpartupdaterequest:
+    * sanyoheader {'readwrite': 0x0e, 'packettype': 0x0f} header
+    500 DATA data
+    2 UNKNOWN +pad
+        
 PACKET phonebookslotrequest:
     * sanyoheader {'packettype': 0x0c,
                    'command': 0x28} +header
@@ -232,13 +245,19 @@ PACKET phonebookentry:
     49 STRING email
     1 UINT url_len
     49 STRING url
-    1 UINT secret
+    1 BOOL secret
     1 UINT name_len
      
 PACKET phonebookslotresponse:
     * sanyoheader header
     * phonebookentry entry
     30 UNKNOWN pad
+
+PACKET phonebookslotupdaterequest:
+    * sanyoheader {'packettype': 0x0c, 'readwrite': 0x0e,
+                   'command': 0x28} header
+    * phonebookentry entry
+    30 UNKNOWN +pad
 
 PACKET voicedialrequest:
     * sanyoheader {'packettype': 0x0b,
@@ -286,7 +305,7 @@ PACKET ringerpicbuffer:
     * LIST {'length': self.numpbslots} ringtones:
         1 UINT ringtone "ringtone index"
     * LIST {'length': self.numpbslots} wallpapers:
-        1 UINT wallpaper "walpaper index"
+        1 UINT wallpaper "wallpaper index"
     400 UNKNOWN +pad
 
 PACKET pbsortbuffer:
