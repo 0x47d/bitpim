@@ -1142,7 +1142,7 @@ class Calendar(calendarcontrol.Calendar):
             res['end'][4]=59
         res['repeat']=None
         res['description']='New event'
-        res['changeserial']=0
+        res['changeserial']=1
         res['alarm']=None
         res['?d']=0
         res['ringtone']=0
@@ -1472,6 +1472,7 @@ class DayViewDialog(wxDialog):
         # where do we get newentry template from?
         if res==self.ANSWER_ORIGINAL:
             newentry=copy.copy(entry)
+            # this will have no effect until we don't display the changeserial field
             newentry['changeserial']=entry['changeserial']+1
         else:
             newentry=self.cw.newentryfactory(*self.date)
