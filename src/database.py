@@ -47,8 +47,6 @@ class basedataobject(dict):
         # in debug code we check key name and value types
 
         def _check_property(self,name,value=None):
-            # filter out normal gunk
-            if value is None and name in ('__deepcopy__',): raise AttributeError(name)
             # check it
             assert isinstance(name, (str, unicode)), "keys must be a string type"
             assert name in self._knownproperties or name in self._knownlistproperties or name in self._knowndictproperties, "unknown property named '"+name+"'"
@@ -106,6 +104,8 @@ class basedataobject(dict):
             self.__setitem__(name, value)
 
         def __getattr__(self, name):
+            if name not in self._knownproperties and name not in self._knownlistproperties and  name not in self._knowndictproperties:
+                raise AttributeError(name)
             self._check_property(name)
             if name in self.keys():
                 return self[name]
@@ -126,6 +126,8 @@ class basedataobject(dict):
 
         def __getattr__(self, name):
             # and getattr checks the dict
+            if name not in self._knownproperties and name not in self._knownlistproperties and  name not in self._knowndictproperties:
+                raise AttributeError(name)
             if name in self.keys():
                 return self[name]
             return None
