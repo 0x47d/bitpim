@@ -1,0 +1,126 @@
+BEGIN:VCARD
+VERSION:2.1
+N:Another;One
+FN:One Another
+TITLE:T
+ORG:My company
+TEL;WORK:908908908098098
+TEL;FAX:980098098098
+END:VCARD
+
+BEGIN:VCARD
+VERSION:2.1
+N:My Surname;My Firstname
+FN:My Firstname My Surname
+TITLE:Title,Title2
+ORG:Company, company
+ADR:;;An addrtess;In a city;state;zip;country
+NOTE:Some notes
+TEL;FAX:21312312312
+TEL;HOME:123123123123
+TEL;FAX:1231231231
+EMAIL:email1
+EMAIL:email2
+END:VCARD
+
+begin:VCARD
+source:ldap://cn=born Hansen, o=university of Michigan, c=US
+name:Born Hansen
+fn;ENCODING=QUOTED-PRINTABLE:Bo=F8rn Hansen
+n;ENCODING=QUOTED-PRINTABLE:Hansen;Bo=F8rn
+email;type=internet:born@umich.edu
+tel;type=work,voice,msg:+1 303 555-5555
+key;type=x509;encoding=B:dGhpcyBjb3VsZCBiZSAKbXkgY2VydGlmaWNhdGUK
+end:VCARD
+
+begin:vcard
+source:ldap://cn=Meister Berger,o=Universitaet Goerlitz,c=DE
+name:Meister Berger
+fn:Meister Berger
+n:Berger;Meister
+bday;value=date:1963-09-21
+o;ENCODING=QUOTED-PRINTABLE:Universit=E6t G=F6rlitz
+title:Mayor
+title;language=de;value=text:Burgermeister
+note:The Mayor of the great city of
+  Goerlitz in the great country of Germany.
+email;internet:mb@goerlitz.de
+home.tel;type=fax,voice,msg:+49 3581 123456
+home.label:Hufenshlagel 1234\n
+ 02828 Goerlitz\n
+ Deutschland
+key;type=X509;encoding=b:MIICajCCAdOgAwIBAgICBEUwDQYJKoZIhvcNAQEEBQ
+ AwdzELMAkGA1UEBhMCVVMxLDAqBgNVBAoTI05ldHNjYXBlIENvbW11bmljYXRpb25zI
+ ENvcnBvcmF0aW9uMRwwGgYDVQQLExNJbmZvcm1hdGlvbiBTeXN0ZW1zMRwwGgYDVQQD
+ ExNyb290Y2EubmV0c2NhcGUuY29tMB4XDTk3MDYwNjE5NDc1OVoXDTk3MTIwMzE5NDc
+ 1OVowgYkxCzAJBgNVBAYTAlVTMSYwJAYDVQQKEx1OZXRzY2FwZSBDb21tdW5pY2F0aW
+ 9ucyBDb3JwLjEYMBYGA1UEAxMPVGltb3RoeSBBIEhvd2VzMSEwHwYJKoZIhvcNAQkBF
+ hJob3dlc0BuZXRzY2FwZS5jb20xFTATBgoJkiaJk/IsZAEBEwVob3dlczBcMA0GCSqG
+ SIb3DQEBAQUAA0sAMEgCQQC0JZf6wkg8pLMXHHCUvMfL5H6zjSk4vTTXZpYyrdN2dXc
+ oX49LKiOmgeJSzoiFKHtLOIboyludF90CgqcxtwKnAgMBAAGjNjA0MBEGCWCGSAGG+E
+ IBAQQEAwIAoDAfBgNVHSMEGDAWgBT84FToB/GV3jr3mcau+hUMbsQukjANBgkqhkiG9
+ w0BAQQFAAOBgQBexv7o7mi3PLXadkmNP9LcIPmx93HGp0Kgyx1jIVMyNgsemeAwBM+M
+ SlhMfcpbTrONwNjZYW8vJDSoi//yrZlVt9bJbs7MNYZVsyF1unsqaln4/vy6Uawfg8V
+ UMk1U7jt8LYpo4YULU7UZHPYVUaSgVttImOHZIKi4hlPXBOhcUQ=3D=3D
+end:vcard
+
+BEGIN:vCard
+VERSION:3.0
+FN:Frank Dobson
+ORG:Lotus Development Corporation
+ADR;TYPE=WORK,POSTAL,PARCEL:;;1234 Ford Drive
+ ;Raleigh;NC;27613-1234;U.S.A.
+TEL;TYPE=VOICE,MSG,WORK:+1-919-555-9515
+TEL;TYPE=FAX,WORK:+1-919-555-9564
+EMAIL;TYPE=INTERNET,PREF:abcd@example.com
+EMAIL;TYPE=INTERNET:abcd@example.net
+URL:http://home.example.net/~ancd
+END:vCard
+
+BEGIN:vCard
+VERSION:3.0
+FN:Bartholemew Howes
+ORG:Netscape Communications Corp.
+ADR;TYPE=WORK:;;501 E. Middlefield Rd.;Mountain View;
+ CA; 94043;U.S.A.
+TEL;TYPE=VOICE,MSG,WORK:+1-415-555-3419
+TEL;TYPE=FAX,WORK:+1-415-555-4164
+EMAIL;TYPE=INTERNET:bart@netscape.com
+END:vCard
+
+BEGIN:VCARD
+VERSION:2.1
+N:Pela;Jukka;Abcde
+FN:Julla Kalerrrvo Pela
+ORG:TIEKE Finnish Information Society Development Centre
+TITLE:senior adviser / erityisasiantuntija
+TEL;WORK;VOICE:+358 9 5555 0397
+TEL;HOME;VOICE:+358 9 555 2675
+TEL;CELL;VOICE:+358 40 5555 617
+TEL;WORK;FAX:+358 9 5555 0399
+ADR;WORK:;;Salomonkatu 17 A, 10th floor;Helsinki;;00100;Finland
+LABEL;WORK;ENCODING=QUOTED-PRINTABLE:Salomonkatu 250 A, 5th floor=0D=0AHelsinki 00100=0D=0AFinland
+ADR;HOME:;;Päivänsäteenkulla 9 as. 2;Espoo;;FIN-02210;Finland
+LABEL;HOME;ENCODING=QUOTED-PRINTABLE:P=E4iv=E4ns=E4teenkulla 9 as. 2=0D=0AEspoo FIN-02210=0D=0AFinland
+URL:http://www.cs.tut.fi/~abcde/
+EMAIL;PREF;INTERNET:abcde@cs.tut.fi
+EMAIL;INTERNET:abcde@tieke.fi
+REV:20010913T061510Z
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+N:Bond;James
+FN:James Bond
+ORG:Microsoft Corporation
+ADR;WORK;POSTAL;PARCEL:;;One Microsoft Way;
+ Redmond;WA;98052-6399;USA
+TEL;WORK;MSG:+1-206-555-4544
+TEL;WORK;FAX:+1-206-555-7329
+EMAIL;INTERNET:user@example.com
+CALADRURI;PREF:mailto:user@host1.com
+CALURI;PREF:http://cal.host1.com/user/cal.ics
+FBURL;PREF:http://cal.host1.com/user/fb.ifb
+CALURI:http://cal.company.com/projectA/pjtA.ics
+FBURL:http://cal.company.com/projectA/pjtAfb.ifb
+END:VCARD
