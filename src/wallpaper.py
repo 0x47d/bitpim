@@ -29,7 +29,7 @@ import helpids
 ###
 
 class WallpaperView(guiwidgets.FileView):
-    CURRENTFILEVERSION=1
+    CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
     
@@ -38,10 +38,8 @@ class WallpaperView(guiwidgets.FileView):
         wx.FileSystem_AddHandler(BPFSHandler(self))
         if guihelper.HasFullyFunctionalListView():
             self.InsertColumn(2, "Size")
-            self.InsertColumn(3, "Index")
-        self._data={}
-        self._data['wallpaper']={}
-        self._data['wallpaper-index']={}
+            self.InsertColumn(3, "Origin")
+        self._data={'wallpaper-index': {}}
         self.maxlen=19
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
         self.usewidth=120
@@ -49,6 +47,15 @@ class WallpaperView(guiwidgets.FileView):
 
         self.addfilemenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_PASTE, self.OnPaste)
+        self.modified=False
+        wx.EVT_IDLE(self, self.OnIdle)
+
+    def OnIdle(self, _):
+        "Save out changed data"
+        if self.modified:
+            print "Saving wallpaper information"
+            self.modified=False
+            self.populatefs(self._data)
 
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
@@ -65,27 +72,42 @@ class WallpaperView(guiwidgets.FileView):
         return dict
 
     def GetImage(self, file):
+        """Gets the named image
+
+        @return: (wxImage, filesize)
+        """
         file=os.path.join(self.mainwindow.wallpaperpath, file)
         if self.isBCI(file):
             image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         else:
             image=wx.Image(file)
-        return image
+        # we use int to force the long to an int (longs print out with a trailing L which looks ugly)
+        return image, int(os.stat(file).st_size)
 
+    def updateindex(self, index):
+        self._data['wallpaper-index']=index
+        self.modified=True
+        
     def populate(self, dict):
         self.DeleteAllItems()
         self._data={}
-        self._data['wallpaper']=dict['wallpaper'].copy()
         self._data['wallpaper-index']=dict['wallpaper-index'].copy()
+        self.modified=True
         il=wx.ImageList(self.usewidth,self.useheight)
         self.AssignImageList(il, wx.IMAGE_LIST_NORMAL)
         count=0
-        keys=dict['wallpaper'].keys()
+        keys=dict['wallpaper-index'].keys()
         keys.sort()
         for i in keys:
+            # ignore ones we don't have a file for
+            entry=dict['wallpaper-index'][i]
+            if not os.path.isfile(os.path.join(self.mainwindow.wallpaperpath, entry['name'])):
+                continue
+            
             # ImageList barfs big time when adding bmps that came from
             # gifs
-            image=self.GetImage(i)
+            file=entry['name']
+            image,filelen=self.GetImage(file)
 
             if not image.Ok():
                 dlg=guiwidgets.AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
@@ -95,7 +117,9 @@ class WallpaperView(guiwidgets.FileView):
                 dlg.Destroy()
                 print "result is",x
                 if x==self.ID_DELETEFILE:
+                    del dict['wallpaper-index'][i]
                     os.remove(file)
+                    self.modified=True
                 continue
             
             width=min(image.GetWidth(), self.usewidth)
@@ -119,20 +143,12 @@ class WallpaperView(guiwidgets.FileView):
                                 "Imagelist got upset", style=wx.OK|wx.ICON_ERROR)
                 dlg.ShowModal()
                 il.Add(wx.NullBitmap)
-            item={}
-            item['name']=i
-            item['data']=dict['wallpaper'][i]
-            item['index']=-1
-            for ii in dict['wallpaper-index']:
-                if dict['wallpaper-index'][ii]==i:
-                    item['index']=ii
-                    break
-            self.InsertImageStringItem(count, item['name'], count)
+            self.InsertImageStringItem(count, file, count)
             if guihelper.HasFullyFunctionalListView():
-                self.SetStringItem(count, 0, item['name'])
-                self.SetStringItem(count, 1, `len(item['data'])`)
+                self.SetStringItem(count, 0, file)
+                self.SetStringItem(count, 1, `filelen`)
                 self.SetStringItem(count, 2, "%d x %d" % (image.GetWidth(), image.GetHeight()))
-                self.SetStringItem(count, 3, `item['index']`)
+                self.SetStringItem(count, 3, entry.get("origin", ""))
             image.Destroy()
             count+=1
 
@@ -214,11 +230,11 @@ class WallpaperView(guiwidgets.FileView):
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.wallpaperpath
-        return self.genericpopulatefs(dict, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
+        return self.genericpopulatefs(dict, 'wallpapers', 'wallpaper-index', self.CURRENTFILEVERSION)
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.wallpaperpath
-        return self.genericgetfromfs(result, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
+        return self.genericgetfromfs(result, None, 'wallpaper-index', self.CURRENTFILEVERSION)
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
@@ -229,10 +245,17 @@ class WallpaperView(guiwidgets.FileView):
 
         # version 0 to 1 upgrade
         if version==0:
-            version=1  # the are the same
+            version=1  # they are the same
 
         # 1 to 2 etc
-
+        if version==1:
+            print "converting to version 2"
+            version=2
+            d={}
+            input=dict.get('wallpaper-index', {})
+            for i in input:
+                d[i]={'name': input[i]}
+            dict['wallpaper-index']=d
 
 ###
 ### Virtual filesystem where the images etc come from for the HTML stuff

@@ -525,7 +525,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     # File we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
     
-    def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_AUTOARRANGE ):
+    def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT):
         wxListCtrl.__init__(self, parent, id, style=style)
         wxListCtrlAutoWidthMixin.__init__(self)
         self.droptarget=MyFileDropTarget(self)
@@ -676,16 +676,19 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             pass
         if not os.path.isdir(self.thedir):
             raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
-        for f in os.listdir(self.thedir):
-            # delete them all except windows magic ones which we ignore
-            if f.lower() not in self.skiplist:
-                os.remove(os.path.join(self.thedir, f))
 
-        d=dict[key]
-        for i in d:
-            f=open(os.path.join(self.thedir, i), "wb")
-            f.write(d[i])
-            f.close()
+        # delete all files we don't know about if 'key' contains replacements
+        if dict.has_key(key):
+            for f in os.listdir(self.thedir):
+                # delete them all except windows magic ones which we ignore
+                if f.lower() not in self.skiplist:
+                    os.remove(os.path.join(self.thedir, f))
+
+                d=dict[key]
+                for i in d:
+                    f=open(os.path.join(self.thedir, i), "wb")
+                    f.write(d[i])
+                    f.close()
         d={}
         d[indexkey]=dict[indexkey]
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
@@ -708,12 +711,13 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             elif file.lower() in self.skiplist:
                 # ignore windows detritus
                 continue
-            else:
+            elif key is not None:
                 f=open(os.path.join(self.thedir, file), "rb")
                 data=f.read()
                 f.close()
                 dict[file]=data
-        result[key]=dict
+        if key is not None:
+            result[key]=dict
         if indexkey not in result:
             result[indexkey]={}
         return result
@@ -781,10 +785,11 @@ class RingerView(FileView):
         return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index', self.CURRENTFILEVERSION)
             
     def populate(self, dict):
+        return
         self.DeleteAllItems()
         self._data={}
-        self._data['ringtone']=dict['ringtone'].copy()
-        self._data['ringtone-index']=dict['ringtone-index'].copy()
+        self._data['ringtone']=dict.get('ringtone', {}).copy()
+        self._data['ringtone-index']=dict.get('ringtone-index', {}).copy()
         count=0
         keys=dict['ringtone'].keys()
         keys.sort()
@@ -812,7 +817,7 @@ class RingerView(FileView):
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.ringerpath
-        return self.genericgetfromfs(result, "ringtone", 'ringtone-index', self.CURRENTFILEVERSION)
+        return self.genericgetfromfs(result, None, 'ringtone-index', self.CURRENTFILEVERSION)
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
