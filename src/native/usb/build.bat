@@ -1,7 +1,17 @@
-set USBDIR=c:\projects\libusb-win32-bin-0.1.7.10
-set SWIG="c:\program files\swig-1.3.19\swig.exe"
+set USBDIR=c:\progra~1\libusb-win32-0.1.7.10
+set SWIG="c:\program files\swig-1.3.20\swig.exe"
 set PYTHONDIR=c:\python23
+set PYTHONLIB=python23
 
-%SWIG% -I%USBDIR%\include -python -no_default libusb.i
+@rem Create MinGW compatible Python library if appropriate
+@if exist %PYTHONDIR%\lib%PYTHONLIB%.a goto libok
+@REM this only works on NT/XP
+pexports %systemroot%\system32\%PYTHONLIB%.dll > %PYTHONLIB%.def
+dlltool --dllname %PYTHONLIB%.dll --def %PYTHONLIB%.def --output-lib %PYTHONDIR%\libs\lib%PYTHONLIB%.a
+del %PYTHONLIB%.def
 
-gcc -Wall -g -shared -I %USBDIR%\include -L %USBDIR%\lib\gcc -I %PYTHONDIR%\include -L %PYTHONDIR%\libs -o _libusb.dll libusb_wrap.c -lusb -lpython23
+:libok
+
+%SWIG% -I%USBDIR%\include -python -modern -no_default libusb.i
+
+gcc -Wall -g -shared -I %USBDIR%\include -L %USBDIR%\lib\gcc -I %PYTHONDIR%\include -L %PYTHONDIR%\libs -o _libusb.dll libusb_wrap.c -lusb -l%PYTHONLIB%
