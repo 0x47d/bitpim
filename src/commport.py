@@ -47,6 +47,7 @@ class CommConnection:
         self.autolistargs=autolistargs
         self.configparameters=configparameters
         self.params=(baud,timeout,hardwareflow,softwareflow)
+        self.readahead=""
         assert port!="auto" or (port=="auto" and autolistfunc is not None)
         if autolistfunc is not None:
             self._isauto=True
@@ -187,6 +188,51 @@ class CommConnection:
         self.ser.write(data)
         self.writebytes+=len(data)
 
+    def sendatcommand(self, atcommand):
+        print "sendatcommand: "+atcommand
+        fullline="AT"+atcommand
+        self.write(atcommand+"\r\n")
+        nextline=self.peekline()
+        if nextline==fullline:
+            self.readline()  # Ignore echoed lines
+            return
+        if nextline=="OK":
+            return "OK"
+        if nextline=="ERROR":
+            return "ERROR"
+        return
+
+    def peekline(self):
+        print "Peekline:"
+        self.readahead=self.readsome()
+        return self.getcleanline(peek=True)
+
+    def getcleanline(self, peek=False):
+        i=0
+        sbuf=self.readahead
+        if len(sbuf)==0:
+            return ""
+        while sbuf[i]!='\n' and sbuf[i]!='\r':
+            i+=1
+        firstline=sbuf[0:i]
+        if peek:
+            i+=1
+            while i<len(sbuf):
+                if sbuf[i]!='\n' and sbuf[i]!='\r':
+                    break
+                i+=1
+            self.readahead=self.readahead[i:]
+        print "Getcleanline returning "+firstline
+        return firstline
+        
+    def readline(self):
+        print "In readline"
+        if(self.readahead):
+            return getcleanline(peek=False)
+        self.readahead=self.readsome()
+        print "readline: "+self.readahead
+        return getcleanline(peek=False)
+        
     def _isbrokendriver(self, e):
         if pywintypes is None or not isinstance(e, pywintypes.error) or e[0]!=121:
             return False
