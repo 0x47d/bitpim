@@ -669,68 +669,38 @@ class SanyoPhonebook:
         wp=results[mediakey].copy()
         wpi=results[mediaindexkey].copy()
         # remove builtins
+#        print "WP"
+#        print wp
+#        print "WPI"
+#        print wpi
         for k in wpi.keys():
             if wpi[k]['origin']=='builtin':
                 del wpi[k]
 
-        # Don't care about origin since there is only one place to put images
-#        print wp
+        # Remove camera pictures
+        for w in wp.keys():
+            name=wp[w]['name']
+            if wp[w].get("origin", "")=='camera':
+                self.log("Not transferring camera picture "+name+" to phone")
+                del wp[w]
+            else:
+                for k in wpi.keys():
+                    if name==wpi[k]['name']:
+                        self.log("Not transferring "+name+" as it is already on the phone")
+                        del wp[w]
+                        break
+        
         init={}
         init[mediatype]={}
-        for k in wpi.keys():
-            if wpi[k]['origin']==mediatype:
-                index=k
-                name=wpi[k]['name']
-                data=None
-                del wpi[k]
-                for w in wp.keys():
-                    if wp[w]['name']==name:
-                        data=wp[w]['data']
-                        del wp[w]
-                if not merge and data is None:
-                    # delete the entry
-                    continue
-                init[mediatype][index]={'name': name, 'data': data}
-        
-        # now look through wallpapers and see if anything remaining was assigned a particular
-        # origin
+        idx=0
         for w in wp.keys():
-            o=wp[w].get("origin", "")
-            if o is not None and len(o) and o in init:
-                idx=-1
-                while idx in init[o]:
-                    idx-=1
-                init[o][idx]=wp[w]
-                del wp[w]
+            idx-=1
+            data=wp[w]['data']
+            name=wp[w]['name']
+            init[mediatype][idx]={'name': name, 'data': data}
         
-        # we now have init[mediatype] with the entries and index number as key (negative indices are
-        # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
-                             
         index=init[mediatype]
 
-        maxentries=10
-
-        #  slurp up any from wp we can take
-        while len(index)<maxentries and len(wp):
-            idx=-1
-            while idx in index:
-                idx-=1
-            k=wp.keys()[0]
-            index[idx]=wp[k]
-            del wp[k]
-        # normalise indices
-        # index=self._normaliseindices(index)  # hey look, I called a function!
-        # move any overflow back into wp
-        if len(index)>maxentries:
-            keys=index.keys()
-            keys.sort()
-            for k in keys[maxentries:]:
-                idx=-1
-                while idx in wp:
-                    idx-=1
-                wp[idx]=index[k]
-                del index[k]
-                    
         # write out the content
 
         ####  index is dict, key is index number, value is dict
@@ -746,11 +716,6 @@ class SanyoPhonebook:
 
             self.writesanyofile(efile, content)
 
-        # did we have too many
-        if len(wp):
-            for k in wp:
-                self.log("Unable to put %s on the phone as there weren't any spare index entries" % (wp[k]['name'],))
-                
         # Note that we don't write to the camera area
 
         # tidy up - reread indices
@@ -1012,7 +977,11 @@ class SanyoPhonebook:
                 e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
 
                 alarmdiff=entry.get('alarm',0)
-                e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
+                if not alarmdiff:
+                    alarmdiff=0
+                alarmdiff=max(alarmdiff,0)*60
+                e.alarmdiff=alarmdiff
+                e.alarm=starttimelocal-self._sanyoepochtounix-alarmdiff
                 e.location=location
                 e.location_len=len(e.location)
 
@@ -1048,6 +1017,7 @@ class SanyoPhonebook:
         e.dom=0
         e.ringtone=0
         e.alarm=0
+        e.alarmdiff=0
         req=self.protocolclass.eventupdaterequest()
         req.entry=e
         for eventslot in range(eventslot,self.protocolclass._NUMEVENTSLOTS):
@@ -1117,11 +1087,11 @@ class Profile(com_phone.Profile):
     OVERSIZE_PERCENTAGE=100
     
     MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
     
     MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
 
     # which usb ids correspond to us
     usbids=( ( 0x0474, 0x0701, 1),  # VID=Sanyo, PID=4900 internal USB interface
@@ -1139,8 +1109,8 @@ class Profile(com_phone.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'write', 'OVERWRITE'),
-        ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'write', 'MERGE'),
+        ('ringtone', 'write', 'MERGE'),
         )
 
 ### Some drop in replacement routines for phonebook.py that can be moved
