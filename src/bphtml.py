@@ -323,8 +323,7 @@ class HtmlEasyPrinting:
             assert False, "preview problem"
             return
         self.frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
-        # Retrieve saved settings... Use 75% of screen if not specified
-        self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", 75)
+        self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", screenpct=90, aspect=0.58)
         self.frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
         wx.EVT_CLOSE(self.frame, self.OnPreviewClose)
         self.frame.Initialize()

@@ -341,7 +341,7 @@ class ConfigDialog(wx.Dialog):
         bs.Fit(self)
 
         # Retrieve saved settings... Use 40% of screen if not specified
-        confDlgRect=retrieve_size(self.mw.config, "ConfigDialog", 40)
+        confDlgRect=retrieve_size(self.mw.config, "ConfigDialog", screenpct=75, aspect=3.5)
         self.SetDimensions(confDlgRect.x, confDlgRect.y, confDlgRect.width, confDlgRect.height)
         wx.EVT_CLOSE(self, self.OnClose)
 
@@ -558,7 +558,7 @@ class CommPortDialog(wx.Dialog):
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
 
         # Retrieve saved settings... Use 40% of screen if not specified
-        self.dlgRect=retrieve_size(self.parent.mw.config, "CommDialog", 40)
+        self.dlgRect=retrieve_size(self.parent.mw.config, "CommDialog", screenpct=60)
         self.SetDimensions(self.dlgRect.x, self.dlgRect.y, self.dlgRect.width, self.dlgRect.height)
         wx.EVT_CLOSE(self, self.OnClose)
 
@@ -1345,20 +1345,22 @@ class AnotherDialog(wx.Dialog):
         # fallthru
         return wx.ART_INFORMATION
 
-def retrieve_size(confobj, confname, screenpct):
-    # sanity check for supplied percentage
+def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
+    # sanity check for supplied percentage, if they give us .25 instead of 25
     if screenpct <= 1:
         screenpct *= 100
     if screenpct > 100:
         screenpct = 100
-    if screenpct == 0:
-        screenpct = 75
-
+    
     # Get screen size, scale according to percentage supplied
     screenSize = wxGetDisplaySize()
-    newWidth = screenSize.x * screenpct / 100
-    newHeight = screenSize.y * screenpct / 100
-
+    if (aspect >= 1):
+        newWidth = screenSize.x * screenpct / 100
+        newHeight = screenSize.y * screenpct / aspect / 100
+    else:
+        newWidth = screenSize.x * screenpct * aspect / 100
+        newHeight = screenSize.y * screenpct / 100
+        
     # Retrieve values (if any) from config database for this config object
     rs_width  = confobj.ReadInt(confname + "/width", newWidth)
     rs_height = confobj.ReadInt(confname + "/height", newHeight)
@@ -1373,10 +1375,19 @@ def retrieve_size(confobj, confname, screenpct):
 
     # Make sure window is no larger than about screen size
     # (offset of 50 for menubar on the Mac (others?))
-    if rs_height > (screenSize.y - 50):
-        rs_height = screenSize.y - 50
-    if rs_width > screenSize.x:
-        rs_width = screenSize.x
+    #
+    # determine ratio of original oversized window so we keep the ratio if we resize...
+    rs_aspect = rs_width/rs_height
+    if rs_aspect >= 1:
+        if rs_width > screenSize.x:
+            rs_width = screenSize.x
+        if rs_height > (screenSize.y - 50):
+            rs_height = (screenSize.y / rs_aspect) - 50
+    else:
+        if rs_width > screenSize.x:
+            rs_width = screenSize.x * rs_aspect
+        if rs_height > screenSize.y - 50:
+            rs_height = screenSize.y - 50
 
     # Off the screen?  Just pull it back a little bit so it's visible....
     if rs_x > screenSize.x:

@@ -542,7 +542,7 @@ class MainWindow(wx.Frame):
             self.nb.SetSelection(sel)
 
         # Retrieve saved settings... Use 80% of screen if not specified
-        self.mwRect=guiwidgets.retrieve_size(self.config, "MainWin", 80)
+        self.mwRect=guiwidgets.retrieve_size(self.config, "MainWin", screenpct=90)
         self.SetDimensions(self.mwRect.x, self.mwRect.y, self.mwRect.width, self.mwRect.height)
 
         ### Lets go visible
