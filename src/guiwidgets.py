@@ -2140,6 +2140,7 @@ class MyFixedScrolledMessageDialog(wxDialog):
         text.SetDefaultStyle(ta)
 
         text.AppendText(msg) # if i supply this in constructor then the font doesn't take
+        text.SetInsertionPoint(0)
         text.ShowPosition(text.XYToPosition(0,0))
 
         # vertical sizer
@@ -2152,7 +2153,6 @@ class MyFixedScrolledMessageDialog(wxDialog):
         # plumb
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
-
         EVT_BUTTON(self, wxID_HELP, lambda _,helpid=helpid: wxGetApp().displayhelpid(helpid))
 
 ###
