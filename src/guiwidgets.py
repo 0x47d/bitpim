@@ -197,6 +197,8 @@ class SendPhoneDialog(GetPhoneDialog):
         # We do support merge for wallpaper and ringtone
         # but not phonebook
         self.rb[0][0].Enable(False)
+        self.rb[0][0].SetValue(False)
+        self.rb[0][1].SetValue(True)
         self.rb[2][0].Enable(True)
         self.rb[3][0].Enable(True)
         
