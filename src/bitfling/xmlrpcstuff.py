@@ -44,7 +44,7 @@ import os
 import socket
 
 # required add ons
-import paramiko_bp as paramiko # we use a slightly modified version that knows how to work with Python 2.2
+import paramiko
 
 # my modules
 if TRACE: import guihelper # to format exceptions

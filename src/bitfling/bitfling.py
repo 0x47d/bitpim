@@ -32,6 +32,9 @@ import wx.lib.newevent
 import wx.lib.maskededit
 import wx.lib.mixins.listctrl
 
+# others
+import paramiko
+
 # My stuff
 try:
     import native.usb as usb
@@ -44,7 +47,6 @@ import commport
 import guihelper
 import xmlrpcstuff
 import version
-import paramiko_bp as paramiko
 
 ID_CONFIG=wx.NewId()
 ID_LOG=wx.NewId()
