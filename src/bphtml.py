@@ -20,6 +20,7 @@ import wx.html
 
 # my modules
 import guihelper
+import fixedwxpTag
 
 ###
 ###  Enhanced HTML Widget
@@ -213,6 +214,10 @@ def _applystyles(node, styles):
     if len(node.data):
         return
 
+    # wxp tags are left alone
+    if node.tag=="wxp":
+        return
+
     if _hasclass(node):
         newattrs=[]
         for a,v in node.attrs:
@@ -394,7 +399,6 @@ class HtmlEasyPrinting:
         self.config.Write(self.configstr+"/margins", v)
         self.margins=[tl[0],tl[1],br[0],br[1]]
         
-
 if __name__=='__main__':
     src="""
 <HTML>
