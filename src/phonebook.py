@@ -143,8 +143,6 @@ class PhoneWidget(wxTextCtrl):
             os.remove(os.path.join(self.thedir, f))
         d={}
         d['phonebook']=dict['phonebook']
-        if dict.has_key('groups'):
-            d['groups']=dict['groups']
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
 
@@ -162,7 +160,6 @@ class PhoneWidget(wxTextCtrl):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
-            dict['groups']=self.groupdict
         return dict
 
     def populate(self, dict):
@@ -172,7 +169,6 @@ class PhoneWidget(wxTextCtrl):
         k.sort()
         self.clear()
         self._data=pb.copy()
-        self.groupdict=dict['groups']
         txt=common.prettyprintdict(self._data)
         self.AppendText(txt)
 
@@ -189,8 +185,6 @@ class PhoneWidget(wxTextCtrl):
             os.remove(os.path.join(self.thedir, f))
         d={}
         d['phonebook']=dict['phonebook']
-        if dict.has_key('groups'):
-            d['groups']=dict['groups']
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
     
