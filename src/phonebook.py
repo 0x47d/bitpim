@@ -136,9 +136,10 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
         try:
             text=bphtml.applyhtmlstyles(text, self.xcpstyles['styles'])
         except:
-            f=open("debug.html", "wt")
-            f.write(text)
-            f.close()
+            if __debug__:
+                f=open("debug.html", "wt")
+                f.write(text)
+                f.close()
             raise
         self.SetPage(text)
 
@@ -1583,6 +1584,7 @@ class PhonebookPrintDialog(wx.Dialog):
         for i in range(3):
             bs.Add(wx.StaticText(self, -1, ("Sort by", "Then")[i!=0]), 0, wx.EXPAND|wx.ALL, 2)
             self.sortkeyscb.append(wx.ComboBox(self, wx.NewId(), "<None>", choices=choices, style=wx.CB_READONLY))
+            self.sortkeyscb[-1].SetSelection(0)
             bs.Add(self.sortkeyscb[-1], 0, wx.EXPAND|wx.ALL, 2)
         hbs.Add(bs)
 
@@ -1592,6 +1594,7 @@ class PhonebookPrintDialog(wx.Dialog):
         k=self.layoutfiles.keys()
         k.sort()
         self.layout=wx.ListBox(self, self.ID_LAYOUT, style=wx.LB_SINGLE|wx.LB_NEEDED_SB|wx.LB_HSCROLL, choices=k)
+        self.layout.SetSelection(0)
         bs.Add(self.layout, 1, wx.EXPAND|wx.ALL, 2)
         vbs2.Add(bs, 1, wx.EXPAND|wx.ALL, 2)
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Styles"), wx.VERTICAL)
@@ -1638,6 +1641,9 @@ class PhonebookPrintDialog(wx.Dialog):
         self.UpdateHtml()
 
     def UpdateHtml(self,_=None):
+        wx.CallAfter(self._UpdateHtml)
+
+    def _UpdateHtml(self):
         self.html=self.GetCurrentHTML()
         self.preview.SetPage(self.html)
 
@@ -1675,9 +1681,10 @@ class PhonebookPrintDialog(wx.Dialog):
         try:
             html=bphtml.applyhtmlstyles(html, sd['styles'])
         except:
-            f=open("debug.html", "wt")
-            f.write(html)
-            f.close()
+            if __debug__:
+                f=open("debug.html", "wt")
+                f.write(html)
+                f.close()
             raise
         return html
 
