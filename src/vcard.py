@@ -26,7 +26,6 @@ class VFile:
         self.saved=None
 
     def __iter__(self):
-        print "iter called"
         return self
 
     def next(self):
@@ -38,7 +37,17 @@ class VFile:
             if len(line)!=0:
                 break
 
-        while True:
+        # Hack for evolution.  If ENCODING is QUOTED-PRINTABLE then it doesn't
+        # offset the next line.
+        normalcontinuations=True
+        colon=line.find(':')
+        if colon>0:
+            if "quoted-printable" in line[:colon].lower().split(";"):
+                normalcontinuations=False
+                while line[-1]=="=":
+                    line=line[:-1]+self._getnextline()
+
+        while normalcontinuations:
             nextline=self._lookahead()
             if nextline is None:
                 break
@@ -65,14 +74,13 @@ class VFile:
             # ::TODO:: probably delete anything preceding a '.'
             # (see 5.8.2 in rfc 2425)
             # unencode anything that needs it
-            if not i.startswith("ENCODING="):
+            if not i.startswith("ENCODING=") and not i=="QUOTED-PRINTABLE": # evolution doesn't bother with "ENCODING="
                 newitems.append(i)
                 continue
             try:
-                i=i[len("ENCODING="):]
-                if i=='QUOTED-PRINTABLE':
+                if i=='QUOTED-PRINTABLE' or i=="ENCODING=QUOTED-PRINTABLE":
                     line=quopri.decodestring(line)
-                elif i=='B':
+                elif i=='ENCODING=B':
                     line=base64.decodestring(line)
                 else:
                     raise VFileException("unknown encoding: "+i)
@@ -82,6 +90,8 @@ class VFile:
                 raise VFileException("Exception %s while processing encoding %s on data '%s'" % (str(e), i, line))
         # ::TODO:: repeat above shenanigans looking for a VALUE= thingy and
         # convert line as in 5.8.4 of rfc 2425
+        if newitems==["BEGIN"] or newitems==["END"]:
+            line=line.upper()
         return newitems,line
 
     def _getnextline(self):
@@ -108,15 +118,65 @@ class VFile:
         self.saved=self._readandstripline()
         return self.saved
         
-class VCard:
-    "Understands a vcard"
+class VCards:
+    "Understands vcards in a vfile"
 
     def __init__(self, vfile):
         self.vfile=vfile
 
-if __name__=='__main__':
-    vf=VFile(open(sys.argv[1]))
+    def __iter__(self):
+        return self
 
-    for line in vf:
-        print line
+    def next(self):
+        # find vcard start
+        field=value=None
+        for field,value in self.vfile:
+            while (field,value)!=(["BEGIN"], "VCARD"):
+                continue
+            found=True
+            break
+        if (field,value)!=(["BEGIN"], "VCARD"):
+            # hit eof without any BEGIN:vcard
+            raise StopIteration()
+        # suck up lines
+        lines=[]
+        for field,value in self.vfile:
+            if (field,value)!=(["END"], "VCARD"):
+                lines.append( (field,value) )
+                continue
+            break
+        if (field,value)!=(["END"], "VCARD"):
+            raise VFileException("There is a BEGIN:VCARD but no END:VCARD")
+        return VCard(lines)
+
+class VCard:
+    "A single vcard"
+
+    def __init__(self, lines):
+        self._version=(2,0)
+        self.lines=[]
+        # extract version field
+        for f,v in lines:
+            if f==["VERSION"]:
+                ver=v.split(".")
+                try:
+                    ver=[int(xx) for xx in ver]
+                except ValueError:
+                    raise VFileException(v+" is not a valid vcard version")
+                self._version=ver
+                continue
+            self.lines.append( (f,v) )
+
+    def version(self):
+        return self._version
+
+    def __repr__(self):
+        str="Version: %s\n" % (`self.version()`)
+        str+=`self.lines`
+        return str
+
+if __name__=='__main__':
+
+    for vcard in VCards(VFile(open(sys.argv[1]))):
+        print vcard
         
