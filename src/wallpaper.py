@@ -66,7 +66,7 @@ class WallpaperView(guiwidgets.FileView):
             print "Saving wallpaper information"
             self.modified=False
             self.populatefs(self._data)
-            self.OnListRequest()
+            self.OnListRequest() # broadcast changes
 
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
