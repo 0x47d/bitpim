@@ -78,7 +78,8 @@
 	1151  750xi Printer/Scanner/Copier
 	1204  DeskJet 930c
 	1305  ScanJet 4570c
-	1504  Deskjet 920c
+	1504  DeskJet 920c
+	1904  DeskJet 3820
 	2004  DeskJet 640c
 	2005  ScanJet 3570c
 	2205  ScanJet 3500c
@@ -197,6 +198,14 @@
 	4017  WebCam Mobile
 	4018  WebCam Vista
 	401c  Creative WebCam NX [PD1110]
+	4100  Nomad Jukebox 2 MP3 player
+        4101  Nomad Jukebox 3 MP3 player  
+	4106  Nomad MuVo MP3 Player
+        4108  Nomad Jukebox Zen MP3 player
+        410b  Nomad Jukebox Zen USB 2.0 MP3 player
+        4109  Nomad Jukebox Zen NX MP3 player
+        4110  Nomad Jukebox Zen Xtra MP3 player
+	4111  Dell Digital Jukebox
 041f  LCS Telegraphics
 0420  Chips and Technologies
 0421  Nokia Mobile Phones
@@ -245,6 +254,9 @@
 	002d  X70/X73 Scan/Print/Copy
 	003d  X83 Scan/Print/Copy
 	0057  Z35 Printer
+	0060  X74/X75 Scanner
+	0061  X74 Hub
+	0069  X74 Printer
 043e  LG Electronics USA, Inc.
 	42bd  Flatron 795FT Plus Monitor
 	4a4d  Flatron 915FT Plus Monitor
@@ -321,6 +333,7 @@
 	001b  SideWinder Force Feedback 2 Joystick
 	001d  Natural Keyboard Pro
 	001e  IntelliMouse Explorer
+	0023  Trackball Optical
 	0024  Trackball Explorer
 	0025  IntelliEye Mouse
 	0026  SideWinder GamePad Pro
@@ -361,6 +374,8 @@
 	0813  IBM UltraPort Camera
 	0815  Micro Innovations WebCam
 	081a  Fujifilm IX-30 Camera
+	081c  Elitegroup ECS-C11 Camera
+	081d  Elitegroup ECS-C11 Storage
 	4d01  Comfort Keyboard
 	4d02  Mouse-in-a-Box
 	4d03  Kensington Mouse-in-a-box
@@ -392,6 +407,7 @@
 	08b3  QuickCam Zoom
 	0900  ClickSmart 310
 	0901  ClickSmart 510
+	0921  Labtec WebCam
 	0950  Pocket Camera
 	c000  N43 [Pilot Mouse]
 	c001  N48/M-BB48 [FirstMouse Plus]
@@ -584,12 +600,14 @@
 	304f  PowerShot A10
 	3055  PowerShot G2
 	3056  PowerShot S40
+	3057  PowerShot S30
 	3058  PowerShot A40
 	305b  ZR45MC Digital Camcorder
 	3062  PowerShot A200
 	3067  MV550i Digital Video Camara
 	306c  PowerShot S45
 	306d  PowerShot S45 PtP Mode
+	3075  IXUS 400 Camera
 04aa  DaeWoo Telecom, Ltd
 04ab  Chromatic Research
 04ac  Micro Audiometrics Corp.
@@ -601,6 +619,7 @@
 	0104  Coolpix 995
 	0106  Coolpix 775
 	0107  Coolpix 5000
+	0108  Coolpix 2500
 	010a  Coolpix 4500
 	010e  Coolpix 4300 (storage)
 	010f  Coolpix 4300 (ptp)
@@ -613,6 +632,8 @@
 04b3  IBM Corp.
 	3004  Media Access Pro Keyboard
 	3100  NetVista Mouse
+	3103  ScrollPoint Pro Mouse
+	3109  Optical ScrollPoint Pro Mouse
 	4427  Portable CD ROM
 	4525  Double sided CRT
 	4550  NVRAM (128 KB)
@@ -712,6 +733,8 @@
 	0117  FinePix A203 (PC-Cam mode)
 	011a  FinePix S304/3800
 	011c  FinePix 2650 (Disk mode)
+	0130  Finepix S5000 Camera (PC-Cam mode)
+	0131  Finepix S5000 Camera (Disk mode)
 04cc  Philips Semiconductors
 	1122  Hub
 	1521  USB 2.0 Hub
@@ -741,6 +764,7 @@
 	8005  Zaurus A-300
 	8006  Zaurus SL-B500/SL-5600/SL-C700 PDA
 	8007  Zaurus C-700 PDA
+	9014  IM-DR80 Portable NetMD Player
 	9031  Zaurus C-750/C-760 PDA
 04de  MindShare, Inc.
 04df  Interlink Electronics
@@ -766,6 +790,7 @@
 	1003  MP3 Player and Recorder
 	300c  ML-1210 Printer
 	5a03  Yepp MP3 Player
+	6601  Z100 Mobile Phone
 04e9  PC-Tel, Inc.
 04ea  Brooktree Corp.
 04eb  Northstar Systems, Inc.
@@ -918,6 +943,7 @@
 	8002  IBM NetCamera
 	800c  Veo StingRay
 	8080  IBM C-It WebCam
+	810a  Veo Advanced Connect WebCam
 0546  Polaroid Corp.
 0547  Anchor Chips, Inc.
 	2131  AN2131 EZUSB Microcontroller
@@ -940,8 +966,9 @@
 	0032  MemoryStick MSC-U01 Reader
 	0038  Clie PEG-S300/D PalmOS PDA
 	0058  Clie PEG-N7x0C PalmOS PDA Mass Storage
-	0066  Clie PEG-N7x0C PalmOS PDA Serial
+	0066  Clie PEG-N7x0C/PEG-T425 PalmOS PDA Serial
 	0069  Memorystick MSC-U03 Reader
+	006d  Clie PEG-T425 PDA Mass Storage
 	0099  Clie NR70 PDA Mass Storage
 	009a  Clie NR70 PDA Serial
 054d  Try Corp.
@@ -1208,6 +1235,7 @@
 	2100  MicroLink ISDN Office
 	2219  MicroLink ISDN
 	2265  MicroLink 56k
+	2267  MicroLink 56k (V.250)
 	2280  MicroLink 56k Fun
 	3000  Micolink USB2Ethernet [pegasus]
 	3363  MicroLink ADSL Fun
@@ -1482,6 +1510,7 @@
 06a5  Divio
 	0000  Typhoon Webcam 100k [nw8000]
 	d001  ProLink DS3303u WebCam
+	d800  Chicony TwinkleCam
 06a8  Topaz Systems, Inc.
 	0042  SignatureGem 1X5 Pad
 	0043  SignatureGem 1X5-HID Pad
@@ -1674,6 +1703,8 @@
 0769  Surecom Technology Corp.
 076a  Smart Technology Enablers, Inc.
 076b  OmniKey AG
+	0596  CardMan 2020
+	1784  CardMan 6020
 076c  Partner Tech
 076d  Denso Corp.
 076e  Kuan Tech Enterprise Co., Ltd
@@ -1813,6 +1844,9 @@
 	2002  E-125 Cassiopeia Pocket PC
 	3801  Casio WMP-1 MP3-Watch
 	4500  LV-20 Digital Camera
+07d0  Dazzle
+	0002  Global Village VideoFX Grabber
+	0004  DVC-800 (PAL) Grabber
 07d1  D-Link System
 07d2  Aptio Products, Inc.
 07d3  Cyberdata Corp.
@@ -1909,6 +1943,7 @@
 0859  Minolta Systems Laboratory, Inc.
 085a  Xircom
 	0001  Portstation Dual Serial Port
+	0299  Colorvision, Inc. Monitor Spyder
 	8027  PGSDB9 Serial Port
 0862  Teletrol Systems, Inc.
 0863  Filanet Corp.
@@ -1975,7 +2010,8 @@
 08d1  smartBridges, Inc.
 	0001  smartNIC Ethernet [catc]
 08d3  Virtual Ink
-08d4  Siemens PC Systems
+08d4  Fujitsu Siemens Computers
+	0009  SCR SmartCard Reader
 08d9  Increment P Corp.
 08dd  Billionton Systems, Inc.
 	0986  USB-100N Ethernet [pegasus]
@@ -2125,6 +2161,8 @@
 09b3  Altius Solutions, Inc.
 09b4  MDS Telephone Systems
 09b5  Celltrix Technology Co., Ltd
+09bc  Grundig
+	0002  MPaxx MP150 MP3 Player
 09be  MySmart.Com
 	0001  MySmartPad
 09bf  Auerswald GmbH & Co. KG
@@ -2278,6 +2316,7 @@
 0ac7  Panwest Corp.
 0ac8  Z-Star Microelectronics Corp.
 0ac9  Micro Solutions, Inc.
+	0000  BackPack CD-ReWriter
 0acc  Koga Electronics Co.
 0acd  ID Tech
 0acf  Intoto, Inc.
@@ -2329,6 +2368,8 @@
 0b3c  Olivetti Techcenter
 0b3e  Kikusui Electronics Corp.
 0b41  Hal Corp.
+0b43  Play.com, Inc.
+	0003  PS2 Controller Convertor
 0b47  Sportbug.com, Inc.
 0b48  TechnoTrend AG
 0b49  ASCII Corp.
@@ -2466,7 +2507,8 @@
 0c44  Motorola iDEN
 0c45  Microdia
 	1060  iFlash SM-Direct Card Reader
-	6029  Triplex i-mini PC camera
+	6029  Triplex i-mini PC Camera
+	602a  Meade ETX-105EC Camera
 0c46  WaveRider Communications, Inc.
 0c52  Sealevel Systems, Inc.
 0c53  ViewPLUS, Inc.
@@ -2549,7 +2591,8 @@
 0cd8  JS Digitech, Inc.
 0cd9  Hitachi Shin Din Cable, Ltd
 0cde  Z-Com
-	0002  725/726 Prism2.5 802.11b Adapter
+	0002  XI-725/726 Prism2.5 802.11b Adapter
+	0005  XI-735 Prism3 802.11b Adapter
 0cf1  e-Conn Electronic Co., Ltd
 0cf2  ENE Technology, Inc.
 0cf3  Atheros Communications, Inc.
@@ -2811,6 +2854,7 @@
 0ef3  Lynn Products, Inc.
 0ef4  DSI Datotech
 0ef5  PointChips
+	2202  Flash Disk
 0ef6  Yield Microelectronics Corp.
 0ef7  SM Tech Co., Ltd (Tulip)
 0efe  Wem Technology, Inc.
@@ -3007,6 +3051,8 @@
 10e2  Nada Electronics, Ltd
 10ec  Vast Technologies, Inc.
 10fb  Pictos Technologies, Inc.
+10fd  Anubis Electronics, Ltd
+	804d  Typhoon Webshot II Webcam [zc0301]
 1100  VirTouch, Ltd
 1101  EasyPass Industrial Co., Ltd
 1108  Brightcom Technologies, Ltd
