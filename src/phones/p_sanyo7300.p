@@ -15,7 +15,8 @@ from prototypes import *
 
 # Make all sanyo stuff available in this module as well
 from p_sanyo import *
-import p_sanyo
+from p_sanyo5500 import *
+#import p_sanyo
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -27,8 +28,8 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
 _NUMCALLHISTORY=20
-_MAXNUMBERLEN=48
-_MAXEMAILLEN=48
+_MAXNUMBERLEN=32
+_MAXEMAILLEN=96
  
 #for sym in dir(p_sanyo):
 #    print sym
