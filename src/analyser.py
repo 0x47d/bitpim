@@ -21,6 +21,7 @@ import common
 import prototypes
 
 import p_lgvx4400
+import p_brew
 
 class Eventlist(wx.ListCtrl):
     "List control showing the various events"
@@ -180,7 +181,7 @@ class Analyser(wx.Frame):
                     except Exception,e:
                         v="<Exception: "+e.__str__()+">"
                     s+=": "
-                    if isinstance(v, int) and not (sys.version_info[:2]>=(2,3) and not isinstance(v, bool)):
+                    if isinstance(v, int) and not isinstance(v, bool):
                         s+="%d 0x%x" % (v,v)
                     else:
                         s+=`v`
@@ -246,7 +247,7 @@ class Analyser(wx.Frame):
         return do.GetText()
 
     patevent=re.compile(r"^(\d?\d:\d\d:\d\d\.\d\d\d)(.*)")
-    patdataevent=re.compile(r"^(\d?\d:\d\d:\d\d\.\d\d\d)(.*)Data - \d+ bytes.*")
+    patdataevent=re.compile(r"^(\d?\d:\d\d:\d\d\.\d\d\d)(.*)(Data - \d+ bytes.*)")
     patdatarow=re.compile(r"^([0-9A-Fa-f]{8})(.*)")
     patclass=re.compile(r"^<#!\s+(.*)\s+!#>")
 
@@ -302,7 +303,7 @@ class Analyser(wx.Frame):
                 self.packets.append( (curtime, curdesc, curclass, curdata) )
                 curtime=curdesc=curclass=curdata=""
                 curtime=mo.group(1)
-                curdesc=mo.group(2)
+                curdesc=mo.group(2)+mo.group(3)
                 indata=True
                 continue
             # ordinary event?
