@@ -70,6 +70,7 @@ class CommConnection:
             self.ser=None
 
     def _openport(self, port, baud, timeout, hardwareflow, softwareflow, description=None):
+        self.close()
         self.log("Opening port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
                  (port, baud, float(timeout), hardwareflow, softwareflow) )
         if description is not None:
@@ -93,11 +94,13 @@ class CommConnection:
         raise ex
 
     def _openusb(self, name, timeout):
+        self.close()
         if usb is None:
             self.log("USB module not available - unable to open "+name)
             raise Exception("USB module not available - unable to open "+name)
         _,wantedbus,wanteddev,wantediface=name.split("::")
         wantediface=int(wantediface)
+        usb.UpdateLists()
         for bus in usb.AllBusses():
             if bus.name()!=wantedbus:
                 continue
