@@ -166,7 +166,7 @@ class CommConnection:
         # Keeps reading until it hits char
         self.readrequests+=1
         if log:
-            self.logdata("Begin reading until", char)
+            self.logdata("Begin reading until 0x%02x" % (ord(char),), None)
 
         # set to non-zero for retries on timeouts
         numfailures=0
