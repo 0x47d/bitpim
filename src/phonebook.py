@@ -21,7 +21,7 @@ names:
    - middle
    - last
    - full       You should specify the fullname or the 4 above
-   - nickname   
+   - nickname   (This could also be an alias)
 
 categories:
 
