@@ -11,9 +11,26 @@
 
 import os
 import threading
+import copy
 
 import sqlite
 
+# pysqlite 2 is currently broken for manifest typing (it likes to
+# convert strings of digits into integers and screw them up).  We use
+# these as a workaround
+
+def _isstring(val):
+    return isinstance(val, (type(""), type(u"")))
+
+def _addsentinel(val):
+    if _isstring(val) and val.isdigit(): # this checks all chars
+        return "#@$%>"+val
+    return val
+
+def _stripsentinel(val):
+    if _isstring(val) and val.startswith("#@$%>"):
+        return val[5:]
+    return val
 
 def ExclusiveWrapper(method):
     """Wrap a method so that it has an exclusive lock on the database
@@ -99,7 +116,7 @@ def sqlquote(s):
     return "'"+s.replace("'", "''")+"'"
 
 def idquote(s):
-    """returns an sqlite quoted identified (eg for when a column name is also an SQL keyword
+    """returns an sqlite quoted identifier (eg for when a column name is also an SQL keyword
 
     The value returned is quoted in square brackets"""
     return '['+s+']'
@@ -150,7 +167,7 @@ class Database:
         """
 
         # work on a copy of dict
-        dict=dict.copy()
+        dict=copy.deepcopy(dict)
         
         # make sure the table exists first
         if not self.doestableexist(tablename):
@@ -249,9 +266,9 @@ class Database:
 
         # add deleted entries back into dict
         for d in deleted:
-            assert d not in deleted
+            assert d not in dict
             dict[d]=current[d]
-            dict[d]["__deleted__"]=True
+            dict[d]["__deleted__"]=1
             
         # now we only have new, changed and deleted entries left in dict
         
@@ -282,11 +299,8 @@ class Database:
             cmd.extend([")", "values", "("])
             cmd.append(",".join(["?" for r in rk]))
             cmd.append(")")
-            self.sql(" ".join(cmd), [record[r] for r in rk])
+            self.sql(" ".join(cmd), [_addsentinel(record[r]) for r in rk])
         
-        self.sql("COMMIT")
-
-
     def updateindirecttable(self, tablename, indirects):
         # this is mostly similar to savemajordict, except we only deal
         # with lists of dicts, and we find existing records with the
@@ -368,7 +382,7 @@ class Database:
                         if cmd[-1]!="(":
                             cmd.append(",")
                         cmd.append(k)
-                        params.append(record[k])
+                        params.append(_addsentinel(record[k]))
                     cmd.extend([")", "values", "("])
                     cmd.append(",".join(["?" for p in params]))
                     cmd.append(")")
@@ -400,7 +414,7 @@ class Database:
                 if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
                     continue
                 if type=="value":
-                    record[name]=row[colnum]
+                    record[name]=_stripsentinel(row[colnum])
                     continue
                 assert type=="indirect"
                 record[name]=self.getindirect(row[colnum], desc)
@@ -417,7 +431,7 @@ class Database:
         if schemas is None:
             schemas={}
 
-        tablename,rows=schemas.split(',', 1)
+        tablename,rows=what.split(',', 1)
         if tablename not in schemas:
             schemas[tablename]=[d for d in self.getcolumns(tablename)]
 
@@ -428,7 +442,7 @@ class Database:
                 if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
                     continue
                 if type=="value":
-                    record[name]=row[colnum]
+                    record[name]=_stripsentinel(row[colnum])
                     continue
                 assert type=="indirect"
                 assert False, "indirect in indirect no handled"
@@ -464,7 +478,29 @@ if __name__=='__main__':
         # use the phonebook out of the examples directory
         execfile("examples/phonebook-index.idx")
 
+        # write it out
         db.savemajordict("phonebook", extractbpserials(phonebook))
+
+        # check what we get back is identical
+        v=db.getmajordictvalues("phonebook")
+        assert v==extractbpserials(phonebook)
+
+        # do a deletion
+        del phonebook[17] # james bond @ microsoft
+        db.savemajordict("phonebook", extractbpserials(phonebook))
+        # and verify
+        v=db.getmajordictvalues("phonebook")
+        assert v==extractbpserials(phonebook)
+        
+        # modify a value
+        phonebook[15]['addresses'][0]['city']="Bananarama"
+        db.savemajordict("phonebook", extractbpserials(phonebook))
+        # and verify
+        v=db.getmajordictvalues("phonebook")
+        assert v==extractbpserials(phonebook)
+        
+        
     except:
         print common.formatexception()
         
+    db.cursor.execute("COMMIT")
