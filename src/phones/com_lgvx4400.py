@@ -259,9 +259,6 @@ class Phone:
                 entry['exceptions']=exceptions[pos]
             entry['start']=brewdecodedate(readlsb(data[pos+4:pos+8]))
             entry['end']=brewdecodedate(readlsb(data[pos+8:pos+0xc]))
-            # bug in phone - it only updates the hour and minutes field for
-            # end date.  We need to copy year, month, day from start
-            entry['end']=entry['start'][:3]+entry['end'][3:]
             repeat=ord(data[pos+0xc])
             entry['repeat']=self._calrepeatvalues[repeat]
             entry['?d']=readlsb(data[pos+0xd:pos+0x10])
