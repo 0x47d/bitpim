@@ -199,7 +199,46 @@ def getcontacts(folder, keys=None):
             res.append(record)
     return res
 
-def getfolderfromid(id, default=False):
+def getitemdata(item, record, keys, client):
+    for k, k_out, convertor_func in keys:
+        v=getattr(item, k)
+        if v is None or v=="\x00\x00":
+            v=''
+        if convertor_func is not None:
+            # run through convertor func
+            try:
+                v=convertor_func(record, v, client)
+            except:
+                # failed conversion, skip this field
+                raise
+        # assign in dict if specified
+        if k_out is not None:
+            record[k_out]=v
+    return record
+
+def getdata(folder, keys=None, preset_dict={}, client=None, post_func=None):
+    """Returns a list of dicts"""
+    res=[]
+    if not folder.Items.Count:
+        # empty folder, just return
+        return res
+    # prefill keys if necessary
+    if keys is None:
+        keys=[]
+        item=folder.Items.Item(1)
+        for k in item._prop_map_get_:
+            if item._prop_map_get_[k][-1] is None:
+                keys.append((k, k, None))
+    # go through the folder and read the data
+    for i in range(folder.Items.Count):
+        item=folder.Items.Item(i+1)
+        record=preset_dict.copy()
+        getitemdata(item, record, keys, client)
+        if post_func is None or post_func(item, record, client):
+            res.append(record)
+    return res
+
+def getfolderfromid(id, default=False, default_type='contacts'):
     """Returns a folder object from the supplied id
 
     @param id: The id of the folder
@@ -211,8 +250,13 @@ def getfolderfromid(id, default=False):
         folder=None
         
     # ::TODO:: should be supplied default type (contacts, calendar etc)
-    if not folder:
-        folder=onMAPI.GetDefaultFolder(outlook_com.constants.olFolderContacts)
+    if default and not folder:
+        if default_type=='calendar':
+            default_folder=outlook_com.constants.olFolderCalendar
+        else:
+            # default to contacts, works as before
+            default_folder=outlook_com.constants.olFolderContacts
+        folder=onMAPI.GetDefaultFolder(default_folder)
     return folder
 
 def getfoldername(folder):

@@ -43,6 +43,7 @@ def GetPhonebookImports():
     try:
         import native.outlook
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
+        res.append( ("Outlook Calendar...", "Import Outlook calendar for the calendar", OnFileImportOutlookCalendar) )
     except:
         pass
     # Evolution
@@ -1625,6 +1626,21 @@ def OnFileImporteGroupwareContacts(parent):
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
 
+def OnFileImportOutlookCalendar(parent):
+    import native.outlook
+    import outlook_calendar
+    dlg=outlook_calendar.OutlookImportCalDialog(parent, -1,
+                                                'Import Outlook Calendar')
+    if dlg.ShowModal()==wx.ID_OK:
+        import pubsub
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and save the new data
+        calendar_r={ 'calendar': dlg.get() }
+        parent.calendarwidget.populate(calendar_r)
+        parent.calendarwidget.populatefs(calendar_r)
+    native.outlook.releaseoutlook()
 
 ###
 ###   EXPORTS
