@@ -38,6 +38,7 @@ ALL_WALLPAPERS=( 'response', 'wallpapers') # data is list of strings
 REQUEST_WALLPAPERS=( 'request', 'wallpapers') # no data
 ALL_RINGTONES=( 'response', 'ringtones' ) # data is list of strings
 REQUEST_RINGTONES=( 'request', 'ringtones') # no data
+PHONE_MODEL_CHANGED=( 'notification', 'phonemodelchanged') # data is phone module
 
 ###
 ### Actual code using pubsub library
