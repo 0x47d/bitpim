@@ -110,7 +110,8 @@ PACKET ringerpicbuffer:
     # This 1000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 46 0F through 0X 47 0F
     P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
-    P UINT {'constant': 0x41} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 0xd7} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 0x0f} packettype "Non standard packet type"
     P UINT {'constant': 1024} bufsize
     * LIST {'length': _NUMPBSLOTS} +ringtones:
         1 UINT ringtone "ringtone index"
