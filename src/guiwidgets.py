@@ -19,6 +19,8 @@ import copy
 import cStringIO
 import getpass
 import sha
+import zlib
+import base64
 
 # wx. modules
 import wx
@@ -427,16 +429,23 @@ class ConfigDialog(wx.Dialog):
         dlg.Destroy()
 
     def VerifyBitFlingCert(self, addr, cert):
-        print "verifybitflingcert", cert, dir(cert)
-        print "addr", addr
-        print "subject", cert.get_subject()
-        print "pubkey", cert.get_pubkey()
-        print "not before", cert.get_not_before()
-        print "not after", cert.get_not_after()
-        print "as text", cert.as_text()
-        print "fingerprint", sha.new(cert.as_der()).hexdigest()
-        # print "as der", cert.as_der()
-        raise ValueError("cert refused")
+        # get fingerprint
+        fingerprint=sha.new(cert.as_der()).hexdigest()
+        # do we already know about it?
+        existing=wx.GetApp().config.Read("bitfling/certificates/%s" % (addr[0],), "")
+        if len(existing):
+            fp=existing.split("$", 1)[0]
+            if fp==fingerprint:
+                return
+        # throw up the dialog
+        dlg=AcceptCertificateDialog(self, wx.GetApp().config, addr, cert, fingerprint)
+        if dlg.ShowModal()==wx.ID_YES:
+            txt=base64.encodestring(zlib.compress(cert.as_text(), 9))
+            wx.GetApp().config.Write("bitfling/certificates/%s" % (addr[0],), "%s$%s" % (fingerprint, txt))
+            dlg.Destroy()
+            return
+        dlg.Destroy()
+        raise Exception("Certificate is not accepted")
 
     def OnClose(self, evt):
         self.saveSize()
@@ -689,6 +698,53 @@ class CommPortDialog(wx.Dialog):
         save_size(self.parent.mw.config, "CommDialog", self.GetRect())
 
 ###
+###  Accept certificate dialog
+###
+
+
+class AcceptCertificateDialog(wx.Dialog):
+
+    def __init__(self, parent, config, addr, cert, fingerprint):
+        wx.Dialog.__init__(self, parent, -1, "Accept certificate?", style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.config=config
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Host:"), 0, wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, addr[0]), 0, wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, " Fingerprint:"), 0, wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, fingerprint), 1, wx.ALL, 5)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        txt=wx.TextCtrl(self, -1, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.TE_DONTWRAP)
+        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
+        ta=wx.TextAttr(font=f)
+        txt.SetDefaultStyle(ta)
+        txt.AppendText(cert.as_text())
+        vbs.Add(txt, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
+        but=self.CreateButtonSizer(wx.YES|wx.NO|wx.HELP)
+        vbs.Add(but, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+        set_size(config, "AcceptCertificateDialog", self, screenpct=30, aspect=1)
+
+        wx.EVT_BUTTON(self, wx.ID_YES, self.OnYes)
+        wx.EVT_BUTTON(self, wx.ID_NO, self.OnNo)
+        wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnNo)
+
+    def OnYes(self, _):
+        self.savesize()
+        self.EndModal(wx.ID_YES)
+
+    def OnNo(self, _):
+        self.savesize()
+        self.EndModal(wx.ID_NO)
+
+    def savesize(self):
+        save_size(self.config, "AcceptCertificateDialog", self.GetRect())
+        
+###
 ###  BitFling settings dialog
 ###
 
@@ -762,7 +818,10 @@ class BitFlingSettingsDialog(wx.Dialog):
         self.config.Write("bitfling/host", host)
         self.config.WriteInt("bitfling/port", port)
 
-    def OnTest(self,_):
+    def _OnTest(self, _):
+        wx.CallAfter(self._ontest)
+
+    def OnTest(self, _=None):
         try:
             res=bitflingscan.flinger.connect(*self.GetSettings())
             dlg=wx.MessageDialog(self, "Succeeded. It is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
@@ -770,7 +829,7 @@ class BitFlingSettingsDialog(wx.Dialog):
             dlg.Destroy()
         except:
             res="Failed: %s: %s" % sys.exc_info()[:2]
-            # print common.formatexception()
+            print common.formatexception()
             dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
