@@ -161,6 +161,13 @@ PACKET setmoderequest:
 PACKET setmoderesponse:
     * UNKNOWN pad
 
+PACKET setmodemmoderequest:
+    # Tell phone to leave Diagnostic mode back to modem mode where AT
+    # commands work.  In qcplink, this was called reboot.  Perhaps it reboots
+    # older phones.  For at least some Sanyo and Samsung phones, it puts
+    # phone back in modem mode without a reboot.
+    1 UINT  {'constant': 0x44} +command
+
 %{
 # Several responses are nothing
 mkdirresponse=responseheader
