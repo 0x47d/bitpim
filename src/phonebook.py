@@ -125,6 +125,11 @@ class HTMLWindow(wx.html.HtmlWindow):
         if relsize!=1:
             self.SetFonts("", "", [int(sz*relsize) for sz in basefonts])
 
+##    def OnCellMouseHover(self, cell, x, y):
+##        print cell
+##        print dir(cell)
+##        print cell.GetId()
+
     def OnLinkClicked(self, event):
         # see ClickableHtmlWindow in wxPython source for inspiration
         # :::TODO::: redirect bitpim images and audio to correct
@@ -194,30 +199,6 @@ class PhoneEntryDetailsView(HTMLWindow):
 ### Functions used to get data from a record
 ###
 
-def getdata(column, entry, default=None):
-    if column=="Name":
-        names=entry.get("names", [{}])
-        name=names[0]
-        x=formatname(name)
-        if len(x)==0:
-            return default
-        return x
-
-    if column=="Home":
-        for number in entry.get("numbers", []):
-            if number.get("type", "")=="home":
-                return number['number']
-        return default
-
-    if column=="Email":
-        for email in entry.get("emails", []):
-            return email['email']
-        return default
-
-    assert False, "Unknown column type "+column
-    return default
-
-
 def formatname(name):
     # Returns a string of the name in name.
     # Since there can be many fields, we try to make sense of them
@@ -253,6 +234,132 @@ def formatname(name):
     if name.has_key("nickname"):
         res+=" ("+name["nickname"]+")"
     return res
+
+def formatcategories(cats):
+    return "; ".join([cat['category'] for cat in cats])
+
+def formataddress(address):
+    l=[]
+    for i in 'company', 'street', 'street2', 'city', 'state', 'postalcode', 'country':
+        if i in address:
+            l.append(address[i])
+    return "; ".join(l)
+
+def formatnumber(number):
+    t=number['type']
+    t=t[0].upper()+t[1:]
+    return "%s (%s)" % (number['number'], t)
+
+# this is specified here as a list so that we can get the
+# keys in the order below for the settings UI (alpha sorting
+# or dictionary order would be user hostile).  The data
+# is converted to a dict below
+_getdatalist=[
+    # column   (matchnum   match   func_or_field)
+    'Name', ("names", 0, None, formatname),
+
+    'Category', ("categories", 0,  None, "category"),
+    'Category2', ("categories", 1,  None, "category"),
+    'Category3', ("categories", 2,  None, "category"),
+    'Categories', ("categories", None, None, formatcategories),
+
+    'Email', ("emails", 0, None, "email"),
+    'Email2', ("emails", 1, None, "email"),
+    'Email3', ("emails", 2, None, "email"),
+    'Business Email', ("emails", 0, ("type", "business"), "email"),
+    'Home Email', ("emails", 0, ("type", "home"), "email"),
+
+    'URL', ("urls", 0, None, "url"),
+    'URL2', ("urls", 1, None, "url"),
+    'URL3', ("urls", 2, None, "url"),
+    'Business URL', ("urls", 0, ("type", "business"), "url"),
+    'Home URL', ("urls", 0, ("type", "home"), "url"),
+
+    'Ringtone', ("ringtones", 0, ("use", "call"), "ringtone"),
+    'Message Ringtone', ("ringtones", 0, ("use", "message"), "ringtone"),
+
+    'Address', ("addresses", 0, None, formataddress),
+    'Address2', ("addresses", 1, None, formataddress),
+    'Home Address', ("addresses", 0, ("type", "home"), formataddress),
+    'Business Address', ("addressess", 0, ("type", "business"), formataddress),
+
+    "Wallpaper", ("wallpapers", 0, None, "wallpaper"),
+
+    "Secret", ("flags", 0, ("secret", True), "secret"),
+
+    "Memo", ("memos", 0, None, "memo"),
+    "Memo2", ("memos", 1, None, "memo"),
+    "Memo3", ("memos", 2, None, "memo"),
+
+    "Phone", ("numbers", 0, None, formatnumber),
+    "Phone2", ("numbers", 1, None, formatnumber),
+    "Phone3", ("numbers", 2, None, formatnumber),
+    
+    ]
+
+ll=[]
+for pretty, actual in ("Home", "home"), ("Office", "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"), ("Data", "data"):
+    for suf,n in ("", 0), ("2", 1), ("3", 2):
+        ll.append(pretty+suf)
+        ll.append(("numbers", n, ("type", actual), 'number'))
+_getdatalist[2:2]=ll
+
+_getdatatable={}
+AvailableColumns=[]
+DefaultColumns=['Name', 'Phone', 'Phone2', 'Phone3', 'Email', 'Categories', 'Memo', 'Secret']
+
+for n in range(len(_getdatalist)/2):
+    AvailableColumns.append(_getdatalist[n*2])
+    _getdatatable[_getdatalist[n*2]]=_getdatalist[n*2+1]
+
+del _getdatalist  # so we don't accidentally use it
+
+def getdata(column, entry, default=None):
+
+    key, count, prereq, formatter=_getdatatable[column]
+
+    # do we even have that key
+    if key not in entry:
+        return default
+
+    # which value or values do we want
+    if count is None:
+        # all of them
+        thevalue=entry[key]
+    elif prereq is None:
+        # no prereq
+        if len(entry[key])<=count:
+            return default
+        thevalue=entry[key][count]
+    else:
+        # find the count instance of value matching k,v in prereq
+        ptr=0
+        togo=count+1
+        l=entry[key]
+        k,v=prereq
+        while togo:
+            if ptr==len(l):
+                return default
+            if k not in l[ptr]:
+                ptr+=1
+                continue
+            if l[ptr][k]!=v:
+                ptr+=1
+                continue
+            togo-=1
+            if togo!=0:
+                ptr+=1
+                continue
+            thevalue=entry[key][ptr]
+            break
+
+    # thevalue now contains the dict with value we care about
+    if callable(formatter):
+        return formatter(thevalue)
+
+    return thevalue.get(formatter, default)
+
+
 
 def formatsimplename(name):
     # like formatname, except we use the first matching component
@@ -329,7 +436,7 @@ CategoryManager=CategoryManager() # shadow out class name
 
 class PhoneDataTable(wx.grid.PyGridTableBase):
 
-    def __init__(self, widget):
+    def __init__(self, widget, columns):
         self.main=widget
         self.rowkeys=self.main._data.keys()
         self.rowkeys.sort()
@@ -338,7 +445,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         self.oddattr.SetBackgroundColour("OLDLACE")
         self.evenattr=wx.grid.GridCellAttr()
         self.evenattr.SetBackgroundColour("ALICE BLUE")
-        self.columns=['Name', 'Home', 'Email']
+        self.columns=columns
 
     def GetColLabelValue(self, col):
         return self.columns[col]
@@ -359,8 +466,25 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         if msg is not None:
             self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSizeColumns()
 
+    def SetColumns(self, columns):
+        oldcols=self.columns
+        self.columns=columns
+        lo=len(oldcols)
+        ln=len(self.columns)
+        if ln>lo:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_COLS_APPENDED, ln-lo)
+        elif lo>ln:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_COLS_DELETED, 0, lo-ln)
+        else:
+            msg=None
+        if msg is not None:
+            self.GetView().ProcessTableMessage(msg)
+        msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        self.GetView().ProcessTableMessage(msg)
+        self.GetView().AutoSizeColumns()
 
     def IsEmptyCell(self, row, col):
         return False
@@ -388,7 +512,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
 class PhoneWidget(wx.Panel):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
-    def __init__(self, mainwindow, parent):
+    def __init__(self, mainwindow, parent, config):
         wx.Panel.__init__(self, parent,-1)
         # keep this around while we exist
         self.categorymanager=CategoryManager
@@ -400,7 +524,15 @@ class PhoneWidget(wx.Panel):
         self.modified=False
         self.table=wx.grid.Grid(split, wx.NewId())
         self.table.EnableGridLines(False)
-        self.dt=PhoneDataTable(self)
+        # which columns?
+        cur=config.Read("phonebookcolumns", "")
+        if len(cur):
+            cur=cur.split(",")
+            # ensure they all exist
+            cur=[c for c in cur if c in AvailableColumns]
+        else:
+            cur=DefaultColumns
+        self.dt=PhoneDataTable(self, cur)
         self.table.SetTable(self.dt, False, wx.grid.Grid.wxGridSelectRows)
         self.table.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
         self.table.SetRowLabelSize(0)
@@ -421,6 +553,9 @@ class PhoneWidget(wx.Panel):
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
         pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnCategoriesUpdate")
 
+
+    def SetColumns(self, columns):
+        self.dt.SetColumns(columns)
 
     def OnCategoriesUpdate(self, msg):
         if self.categories!=msg.data:
@@ -1158,3 +1293,147 @@ def mergenumberlists(orig, imp):
 
     return res
 
+class ColumnSelectorDialog(wx.Dialog):
+    "The dialog for selecting what columns you want to view"
+
+    ID_SHOW=wx.NewId()
+    ID_AVAILABLE=wx.NewId()
+    ID_UP=wx.NewId()
+    ID_DOWN=wx.NewId()
+    ID_ADD=wx.NewId()
+    ID_REMOVE=wx.NewId()
+
+    def __init__(self, parent, config, phonewidget):
+        wx.Dialog.__init__(self, parent, id=-1, title="Select Columns to view", style=wx.CAPTION|
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+
+        self.config=config
+        self.phonewidget=phonewidget
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+
+        # the show bit
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(wx.StaticText(self, -1, "Showing"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.show=wx.ListBox(self, self.ID_SHOW, style=wx.LB_SINGLE|wx.LB_NEEDED_SB, size=(250, 300))
+        bs.Add(self.show, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
+
+        # the column of buttons
+        bs=wx.BoxSizer(wx.VERTICAL)
+        self.up=wx.Button(self, self.ID_UP, "Move Up")
+        self.down=wx.Button(self, self.ID_DOWN, "Move Down")
+        self.add=wx.Button(self, self.ID_ADD, "Show")
+        self.remove=wx.Button(self, self.ID_REMOVE, "Don't Show")
+
+        for b in self.up, self.down, self.add, self.remove:
+            bs.Add(b, 0, wx.ALL|wx.ALIGN_CENTRE, 10)
+
+        hbs.Add(bs, 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+
+        # the available bit
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(wx.StaticText(self, -1, "Available"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.available=wx.ListBox(self, self.ID_AVAILABLE, style=wx.LB_EXTENDED|wx.LB_NEEDED_SB, choices=AvailableColumns)
+        bs.Add(self.available, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
+
+        # main layout
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+        # fill in current selection
+        cur=self.config.Read("phonebookcolumns", "")
+        if len(cur):
+            cur=cur.split(",")
+            # ensure they all exist
+            cur=[c for c in cur if c in AvailableColumns]
+        else:
+            cur=DefaultColumns
+        self.show.Set(cur)
+
+        # buttons, events etc
+        self.up.Disable()
+        self.down.Disable()
+        self.add.Disable()
+        self.remove.Disable()
+
+        wx.EVT_LISTBOX(self, self.ID_SHOW, self.OnShowClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_SHOW, self.OnShowClicked)
+        wx.EVT_LISTBOX(self, self.ID_AVAILABLE, self.OnAvailableClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_AVAILABLE, self.OnAvailableDClicked)
+
+        wx.EVT_BUTTON(self, self.ID_ADD, self.OnAdd)
+        wx.EVT_BUTTON(self, self.ID_REMOVE, self.OnRemove)
+        wx.EVT_BUTTON(self, self.ID_UP, self.OnUp)
+        wx.EVT_BUTTON(self, self.ID_DOWN, self.OnDown)
+
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+
+    def OnShowClicked(self, _=None):
+        self.up.Enable(self.show.GetSelection()>0)
+        self.down.Enable(self.show.GetSelection()<self.show.GetCount()-1)
+        self.remove.Enable(self.show.GetCount()>0)
+        self.FindWindowById(wx.ID_OK).Enable(self.show.GetCount()>0)
+
+    def OnAvailableClicked(self, _):
+        self.add.Enable(True)
+
+    def OnAvailableDClicked(self, _):
+        self.OnAdd()
+
+    def OnAdd(self, _=None):
+        items=[AvailableColumns[i] for i in self.available.GetSelections()]
+        for i in self.available.GetSelections():
+            self.available.Deselect(i)
+        self.add.Disable()
+        it=self.show.GetSelection()
+        if it>=0:
+            self.show.Deselect(it)
+            it+=1
+        else:
+            it=self.show.GetCount()
+        self.show.InsertItems(items, it)
+        self.remove.Disable()
+        self.up.Disable()
+        self.down.Disable()
+        self.show.SetSelection(it)
+        self.OnShowClicked()
+
+    def OnRemove(self, _):
+        it=self.show.GetSelection()
+        assert it>=0
+        self.show.Delete(it)
+        if self.show.GetCount():
+            if it==self.show.GetCount():
+                self.show.SetSelection(it-1)
+            else:
+                self.show.SetSelection(it)
+        self.OnShowClicked()
+
+    def OnUp(self, _):
+        it=self.show.GetSelection()
+        assert it>=1
+        self.show.InsertItems([self.show.GetString(it)], it-1)
+        self.show.Delete(it+1)
+        self.show.SetSelection(it-1)
+        self.OnShowClicked()
+
+    def OnDown(self, _):
+        it=self.show.GetSelection()
+        assert it<self.show.GetCount()-1
+        self.show.InsertItems([self.show.GetString(it)], it+2)
+        self.show.Delete(it)
+        self.show.SetSelection(it+1)
+        self.OnShowClicked()
+
+    def OnOk(self, event):
+        cur=[self.show.GetString(i) for i in range(self.show.GetCount())]
+        self.config.Write("phonebookcolumns", ",".join(cur))
+        self.config.Flush()
+        self.phonewidget.SetColumns(cur)
+        event.Skip()
