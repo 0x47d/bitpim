@@ -34,6 +34,7 @@ import version
 import helpids
 import comdiagnose
 import phonebook
+import importexport
 
 ###
 ### Used to check our threading
@@ -50,6 +51,7 @@ helperthreadid=-1 # set later
 ID_FILENEW=1
 ID_FILEOPEN=1
 ID_FILESAVE=1
+ID_FILEIMPORT=1
 ID_FILEPRINT=1
 ID_FILEPRINTPREVIEW=1
 ID_FILEEXIT=1
@@ -424,8 +426,9 @@ class MainWindow(wxFrame):
         # menu.Append(ID_FILESAVE, "&Save", "Save your work")
         #menu.AppendSeparator()
         #menu.Append(ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
-        #menu.Append(ID_FILEPRINT, "&Print", "Print")        
-        #menu.AppendSeparator()
+        #menu.Append(ID_FILEPRINT, "&Print", "Print")
+        menu.Append(ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
+        menu.AppendSeparator()
         menu.Append(ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wxMenu()
@@ -491,6 +494,7 @@ class MainWindow(wxFrame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
+        EVT_MENU(self, ID_FILEIMPORT, self.OnFileImport)
         EVT_MENU(self, ID_FILEEXIT, self.OnExit)
         EVT_MENU(self, ID_EDITSETTINGS, self.OnEditSettings)
         EVT_MENU(self, ID_DATAGETPHONE, self.OnDataGetPhone)
@@ -681,6 +685,17 @@ class MainWindow(wxFrame):
                 return
         assert False, "filesytem view page is missing!"
         
+
+    def OnFileImport(self,_):
+        dlg=wxFileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv",
+                         style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
+        path=None
+        if dlg.ShowModal()==wxID_OK:
+            path=dlg.GetPath()
+        dlg.Destroy()
+        if path is None:
+            return
+        importexport.OnImportCSVPhoneBook(self, path)
 
     ### 
     ### Main bit for getting stuff from phone
