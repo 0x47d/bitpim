@@ -1,6 +1,5 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
 ### Copyright (C) 2003 Stephen Wood <saw@genhomepage.com>
 ###
 ### This software is under the Artistic license.

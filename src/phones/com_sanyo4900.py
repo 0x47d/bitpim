@@ -1,8 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
-### Maybe Scott Craig and Alan Gonzalez belong here too??
-### Copyright (C) 2003 Stephen Wood <sawecw@users.>
+### Copyright (C) 2003 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This software is under the Artistic license.
 ### http://www.opensource.org/licenses/artistic-license.php
