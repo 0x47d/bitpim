@@ -407,7 +407,7 @@ class LGIndexedMedia:
 
 
 class LGNewIndexedMedia:
-    "Implements media for LG phones that use the new index format such as the VX7000"
+    "Implements media for LG phones that use the new index format such as the VX7000/8000"
 
     # tables for minor type number
     _minor_typemap={

@@ -7,12 +7,9 @@
 ###
 ### $Id$
 
-"""Communicate with the LG VX7000 cell phone
+"""Communicate with the LG VX8000 cell phone
 
-The VX7000 is substantially similar to the VX6000 but also supports video.
-
-The code in this file mainly inherits from VX4400 code and then extends where
-the 6000 has extra functionality
+The VX8000 is substantially similar to the VX7000 but also supports video.
 
 """
 
@@ -24,22 +21,22 @@ import sha
 # my modules
 import common
 import copy
-import p_lgvx7000
-import com_lgvx4400
+import p_lgvx8000
+import com_lgvx7000
 import com_brew
 import com_phone
 import com_lg
 import prototypes
 
-class Phone(com_lg.LGNewIndexedMedia,com_lgvx4400.Phone):
+class Phone(com_lgvx7000.Phone):
     "Talk to the LG VX7000 cell phone"
 
-    desc="LG-VX7000"
+    desc="LG-VX8000"
 
-    protocolclass=p_lgvx7000
-    serialsname='lgvx7000'
+    protocolclass=p_lgvx8000
+    serialsname='lgvx8000'
 
-    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps') + \
+    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'VZW Default Ringtone') + \
                       tuple(['Ringtone '+`n` for n in range(1,11)]) + \
                       ('No Ring',)
 
@@ -55,12 +52,8 @@ class Phone(com_lg.LGNewIndexedMedia,com_lgvx4400.Phone):
         )
         
     
-    def __init__(self, logtarget, commport):
-        com_lgvx4400.Phone.__init__(self,logtarget,commport)
-        com_lg.LGNewIndexedMedia.__init__(self)
-        self.mode=self.MODENONE
 
-parentprofile=com_lgvx4400.Profile
+parentprofile=com_lgvx7000.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
@@ -74,7 +67,10 @@ class Profile(parentprofile):
     MAX_RINGTONE_BASENAME_LENGTH=32
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
 
-    # the 7000 doesn't have seperate origins - they are all dumped in "images"
+    # there is an origin named 'aod' - no idea what it is for except maybe
+    # 'all other downloads'
+
+    # the 8000 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     def GetImageOrigins(self):

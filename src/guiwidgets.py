@@ -2,7 +2,7 @@
 
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -327,6 +327,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX6000': 'com_lgvx6000',
                   'LG-VX6100': 'com_lgvx6100',
                   'LG-VX7000': 'com_lgvx7000',
+                  'LG-VX8000 (Verizon Wireless)': 'com_lgvx8000',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'MM-7400': 'com_sanyo7400',
