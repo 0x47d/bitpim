@@ -130,7 +130,7 @@ if _IsWindows():
                     mult*=256
                 return res
             # un unicode if possible
-            if isinstance(v, type(u"")):
+            if isinstance(v, unicode):
                 try:
                     return str(v)
                 except:

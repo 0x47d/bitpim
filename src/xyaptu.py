@@ -56,8 +56,8 @@ class copier:
             "return the eval of a found expression, for replacement"
             # uncomment for debug: print '!!! replacing',match.group(1)
             expr = self.preproc(match.group(1), 'eval')
-            try: return str(eval(expr, self.globals, self.locals))
-            except: return str(self.handle(expr))
+            try: return common.strorunicode(eval(expr, self.globals, self.locals))
+            except: return common.strorunicode(self.handle(expr))
         block = self.locals['_bl']
         if last is None: last = len(block)
         while i<last:
@@ -164,20 +164,20 @@ class xcopier(copier):
     '''
     
     # Translate (xyaptu) input to (yaptu) input, and call yaptu.copy()
-    from cStringIO import StringIO
+    from StringIO import StringIO
     yinf = StringIO(self._x2y_translate(inputText))
     self.copy(inf=yinf)
     yinf.close()
 
   def setupxcopy(self, inputText):
-      from cStringIO import StringIO
+      from StringIO import StringIO
       yinf = StringIO(self._x2y_translate(inputText))
       # we have to build the list since you can only run
       # readline/s once on a file
       self.remembered=[line for line in yinf.readlines()]
       
   def xcopywithdns(self, dns):
-      from cStringIO import StringIO
+      from StringIO import StringIO
       self.globals=dns
       out=StringIO()
       self.ouf=out
@@ -263,6 +263,7 @@ class xcopier(copier):
       self.dbgOuf.write('!!! ERROR: failed to evaluate expression: %s \n' % s)
     res="<!-- EXCEPTION: \nExpression: "+s+"\n"
     res+=common.formatexception()+"\n-->"
+    print common.formatexception()
     return res+('***! %s !***' % s)
 
   # Preprocess code

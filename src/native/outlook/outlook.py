@@ -14,6 +14,8 @@ import sys
 if sys.platform!="win32":
    raise ImportError()
 
+import common
+
 # See this recipe on ASPN for how this code started
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/173216
 # Chris Somerlot also gave some insights
@@ -289,10 +291,7 @@ if __name__=='__main__':
         for col in range(len(keys)):
             key=keys[col]
             v=item.get(key, "")
-            try:
-                v=str(v)
-            except UnicodeEncodeError:
-                v=v.encode("ascii", 'xmlcharrefreplace')
+            v=common.strorunicode(v)
             g.SetCellValue(row+1, col, v)
         g.SetRowAttr(row+1, (evenattr,oddattr)[row%2])
 

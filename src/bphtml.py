@@ -12,7 +12,7 @@ import webbrowser
 import re
 import htmlentitydefs
 import HTMLParser
-import cStringIO
+import StringIO
 
 # wx modules
 import wx
@@ -173,7 +173,7 @@ class TreeParser(HTMLParser.HTMLParser):
                self.printtree(c, indent+1)
 
     def flatten(self):
-        io=cStringIO.StringIO()
+        io=StringIO.StringIO()
         self._flatten(self.rootnode, io)
         return io.getvalue()
 

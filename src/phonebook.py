@@ -139,7 +139,7 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
         except:
             if __debug__:
                 f=open("debug.html", "wt")
-                f.write(text)
+                f.write(common.forceascii(text))
                 f.close()
             raise
         self.SetPage(text)
@@ -1221,13 +1221,13 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         imported,existing,result=None,None,None
         if row[1] is not None:
             imported=getdata(self.columns[col], self.main.importdata[row[1]], None)
-            if imported is not None: imported=str(imported)
+            if imported is not None: imported=common.strorunicode(imported)
         if row[2] is not None:
             existing=getdata(self.columns[col], self.main.existingdata[row[2]], None)
-            if existing is not None: existing=str(existing)
+            if existing is not None: existing=common.strorunicode(existing)
         if row[3] is not None:
             result=getdata(self.columns[col], self.main.resultdata[row[3]], None)
-            if result is not None: result=str(result)
+            if result is not None: result=common.strorunicode(result)
 
         # The following code looks at the combinations of imported,
         # existing and result with them being None and/or equalling

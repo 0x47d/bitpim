@@ -341,6 +341,19 @@ def opentextfile(name):
                # some codecs don't do readline, so we have to vector via stringio
                # many postings also claim that the BOM is returned as the first
                # character but that hasn't been the case in my testing
-               return cStringIO.StringIO(codecs.open(name, "r", codec).read().encode("ascii", 'xmlcharrefreplace'))
+               return StringIO.StringIO(codecs.open(name, "r", codec).read())
      f.close()
      return open(name, "rtU")
+
+
+# don't you just love i18n
+
+def strorunicode(s):
+     if isinstance(s, unicode): return s
+     return str(s)
+
+def forceascii(s):
+     try:
+          return str(s)
+     except UnicodeEncodeError:
+          return s.encode("ascii", 'xmlcharrefreplace')

@@ -75,7 +75,7 @@ class VFile:
             line+=":"
 
         b4=line[:colon]
-        line=line[colon+1:].strip()
+        line=line[colon+1:].strip().decode("latin1")
 
         # upper case and split on semicolons
         items=b4.upper().split(";")
@@ -91,7 +91,8 @@ class VFile:
                 continue
             try:
                 if i=='QUOTED-PRINTABLE' or i=="ENCODING=QUOTED-PRINTABLE":
-                    line=quopri.decodestring(line)
+                    # technically quoted printable is ascii only but some data is latin1 which is compatible
+                    line=quopri.decodestring(line).decode("latin1")
                 elif i=='ENCODING=B':
                     line=base64.decodestring(line)
                 else:
@@ -106,6 +107,7 @@ class VFile:
             raise VFileException("Line contains no property: %s" % (line,))
         if newitems==["BEGIN"] or newitems==["END"]:
             line=line.upper()
+
         return newitems,line
 
     def _getnextline(self):

@@ -486,10 +486,7 @@ def _getpreviewformatted(value, column):
         else:
             print "don't know how to convert list",value,"for preview column",column
             assert False
-    try:
-        return str(value)
-    except UnicodeEncodeError:
-        return value.encode("ascii", 'xmlcharrefreplace')
+    return common.strorunicode(value)
 
 class ImportCSVDialog(ImportDialog):
 
@@ -925,11 +922,7 @@ class ImportOutlookDialog(ImportDialog):
             row=[]
             for k in want:
                 v=item.get(k, None)
-                try:
-                    if v is not None:
-                        v=str(v)
-                except UnicodeEncodeError:
-                    v=v.encode("ascii", 'xmlcharrefreplace')
+                v=common.strorunicode(v)
                 row.append(v)
             self.data.append(row+moredata)
 
