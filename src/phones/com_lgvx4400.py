@@ -571,14 +571,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 res['emails'].append( {'email': i.email} )
         if not len(res['emails']): del res['emails'] # it was empty
         # urls
-        if len(entry.url):
+        if 'url' in entry.getfields() and len(entry.url):
             res['urls']=[ {'url': entry.url} ]
         # private
-        if entry.secret:
+        if 'secret' in entry.getfields() and entry.secret:
             # we only supply secret if it is true
             res['flags']=[ {'secret': entry.secret } ]
         # memos
-        if len(entry.memo):
+        if  'memo' in entry.getfields() and len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
         if entry.wallpaper>0:
