@@ -8,3 +8,4 @@ check.out
 dist
 i386
 pyxr
+setup.cfg
