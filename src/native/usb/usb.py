@@ -24,6 +24,7 @@ import libusb as usb
 for sym in dir(usb):
     if sym.startswith("USB_CLASS_") or sym.startswith("USB_DT"):
         exec "%s=usb.%s" %(sym, sym)
+del sym
 
 TRACE=False
 
