@@ -61,12 +61,12 @@ PACKET readpbentryresponse:
     * pbentry entry
 
 PACKET writepbentryrequest:
-    1 UINT {'constant': 0x84} +cmd
+    1 UINT {'constant': 0x82} +cmd
     2 UINT slotnumber
     * pbentry entry
 
 PACKET writepbentryresponse:
-    1 UINT {'constant': 0x84} cmd
+    1 UINT {'constant': 0x82} cmd
     2 UINT slotnumber
 
 PACKET pbentry:

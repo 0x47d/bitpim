@@ -11,6 +11,7 @@
 
 # standard modules
 import sha
+import re
 
 # our modules
 import common
@@ -169,6 +170,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def savephonebook(self, data):
         self.log("New phonebook\n"+common.prettyprintdict(data['phonebook']))
 
+        # in theory we should offline the phone and wait two seconds first ...
+        
         pb=data['phonebook']
         keys=pb.keys()
         keys.sort()
@@ -202,8 +205,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
             self.progress(i, len(keys), "Writing "+req.entry.name)
             self.sendpbcommand(req, self.protocolclass.writepbentryresponse)
-        self.progress(len(keys)+1, len(keys)+1, "Phone book write completed")
-        
+        self.progress(len(keys)+1, len(keys)+1, "Phone book write completed - phone will be rebooted")
+        data['rebootphone']=True
+        return data
+       
     
     def sendpbcommand(self, request, responseclass):
         self.setmode(self.MODEBREW)
@@ -257,6 +262,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         res=responseclass()
         res.readfrombuffer(buffer)
         return res
+
+
         
 class Profile(com_phone.Profile):
 
@@ -295,13 +302,11 @@ class Profile(com_phone.Profile):
             try:
                 e={} # entry out
                 entry=data['phonebook'][pbentry]
-                e['name']=helper.getfullname(entry.get('names', [ {'full': ''}]), 1, 1, self.protocolclass._MAXNAMELEN)[0]
-                e['group']=0xff
-                e['mobile']=helper.getnumber(entry.get('numbers', []), 'cell')
-                e['home']=helper.getnumber(entry.get('numbers', []), 'home')
-                e['office']=helper.getnumber(entry.get('numbers', []), 'office')
-                e['pager']=helper.getnumber(entry.get('numbers', []), 'pager')
-                e['fax']=helper.getnumber(entry.get('numbers', []), 'fax')
+                e['mobile']=self.phonize(helper.getnumber(entry.get('numbers', []), 'cell'))
+                e['home']=self.phonize(helper.getnumber(entry.get('numbers', []), 'home'))
+                e['office']=self.phonize(helper.getnumber(entry.get('numbers', []), 'office'))
+                e['pager']=self.phonize(helper.getnumber(entry.get('numbers', []), 'pager'))
+                e['fax']=self.phonize(helper.getnumber(entry.get('numbers', []), 'fax'))
                 emails=helper.getemails(entry.get('emails', []), 0, 2, self.protocolclass._MAXEMAILLEN)
                 e['email']=""
                 e['wireless']=""
@@ -309,7 +314,30 @@ class Profile(com_phone.Profile):
                     e['email']=emails[0]
                     if len(emails)>=2:
                         e['wireless']=emails[1]
+
+                # must be at least one number or email
+                if max([len(e[field]) for field in e])==0:
+                    # ::TODO:: log that we are ignoring this entry
+                    continue
+                        
+                e['name']=helper.getfullname(entry.get('names', [ {'full': ''}]), 1, 1, self.protocolclass._MAXNAMELEN)[0]
+                e['group']=0xff                
                 e['memo']=helper.getmemos(entry.get('memos', [{'memo': ''}]), 1,1, self.protocolclass._MAXMEMOLEN)[0]
+
+                rt=helper.getringtone(entry.get('ringtones', []), 'call', "")
+                if rt.startswith("avox "):
+                    e['ringtone']=int(rt[5:])
+
+                rt=helper.getringtone(entry.get('ringtones', []), 'message', "")
+                if rt.startswith("avox "):
+                    e['msgringtone']=int(rt[5:])
+
+                wp=helper.getwallpaper(entry.get('wallpapers', []), 'call', "")
+                if wp.startswith("avox "):
+                    e['wallpaper']=int(wp[5:])
+
+                e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
+                
                 for i in range(1000):
                     if i not in results:
                         results[i]=e
@@ -319,3 +347,11 @@ class Profile(com_phone.Profile):
         data['phonebook']=results
         return data
     
+
+    def phonize(self, str):
+        """Convert the phone number into something the phone understands
+
+        All digits, P, T, *, #  are kept, everything else is removed.
+        In theory the phone can store a dash in the phonebook, but that
+        is not normal."""
+        return re.sub("[^0-9PT#*]", "", str)[:self.protocolclass._MAXPHONENUMBERLEN]
