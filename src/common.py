@@ -19,6 +19,7 @@ import sys
 import traceback
 import tempfile
 import random
+import os
 
 class FeatureNotAvailable(Exception):
      """The device doesn't support the feature"""
