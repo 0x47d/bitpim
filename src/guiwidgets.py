@@ -1447,6 +1447,7 @@ class DayViewDialog(wxDialog):
         # where do we get newentry template from?
         if res==self.ANSWER_ORIGINAL:
             newentry=copy.copy(entry)
+            newentry['changeserial']=entry['changeserial']+1
         else:
             newentry=self.cw.newentryfactory(*self.date)
 
