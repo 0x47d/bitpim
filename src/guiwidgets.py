@@ -1408,6 +1408,9 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
              than one then the other way round
     """
 
+    # frig confname
+    confname="windows/"+confname
+
     # Get screen size, scale according to percentage supplied
     screenSize = wx.GetClientDisplayRect()
     if (aspect >= 1):
@@ -1469,6 +1472,8 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
             window.SetDimensions(rs_x, rs_y, rs_width, rs_height)
 
 def save_size(confobj, confname, myRect):
+    confname="windows/"+confname
+
     x = myRect.x
     y = myRect.y
     width = myRect.width
