@@ -172,13 +172,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def savephonebook(self, data):
         self.log("Saving group information")
 
-        for gid in range(1, self.protocolclass._NUMGROUPS): # we don't rewrite group zero
+        for gid in range(0, self.protocolclass._NUMGROUPS):
             name=data['groups'].get(gid, {'name': ''})['name']
             req=self.protocolclass.writegroupentryrequest()
             req.number=gid
             req.anothernumber=gid
             req.name=name
-            self.log("Group #%d %s" % (gid, `name`))
+            req.nummembers=data['groups'].get(gid, {'members': 0})['members']
+            self.log("Group #%d %s - %d members" % (gid, `name`, req.nummembers))
             self.sendpbcommand(req, self.protocolclass.writegroupentryresponse)
 
         
@@ -332,7 +333,7 @@ class Profile(com_phone.Profile):
         newgroups={}
 
         # put in No group
-        newgroups[0]={'name': 'All'}
+        newgroups[0]={'name': 'All', 'members': 0}
 
         # populate
         for name in groups:
@@ -341,6 +342,7 @@ class Profile(com_phone.Profile):
             key,value=self._getgroup(name, data['groups'])
             if key is not None and key!=0:
                 newgroups[key]=value
+                newgroups[key]['members']=0
                 
         # new entries get whatever numbers are free
         for name in groups:
@@ -348,7 +350,7 @@ class Profile(com_phone.Profile):
             if key is None:
                 for key in range(1,10000):
                     if key not in newgroups:
-                        newgroups[key]={'name': name}
+                        newgroups[key]={'name': name, 'members': 0}
                         break
         # yay, done
         data['groups']=newgroups
@@ -408,8 +410,11 @@ class Profile(com_phone.Profile):
                 gid,_=self._getgroup(group, data['groups'])
                 if gid is None:
                     gid,_=self._getgroup("Etc.", data['groups'])
+                assert gid!=0
                 e['group']=gid
-
+                data['groups'][gid]['members']+=1
+                data['groups'][0]['members']+=1
+                
                 for i in range(1000):
                     if i not in results:
                         results[i]=e

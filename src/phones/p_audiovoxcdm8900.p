@@ -108,7 +108,7 @@ PACKET writegroupentryrequest:
     1 UINT anothernumber  "same as number"
     2 UINT {'constant': 0xffff} +dunno
     17 STRING name
-    2 UINT {'constant': 0} +nummembers "we always supply zero, the phone works out correct count"
+    2 UINT nummembers
 
 PACKET writegroupentryresponse:
     1 UINT {'constant': 0x80} cmd
