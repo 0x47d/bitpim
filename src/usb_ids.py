@@ -64,7 +64,7 @@ class usb_ids:
 		It reads/parses the file and creates the objects to match
 	"""
 	
-	def __init__(self, fname):
+	def __init__(self, fname=None):
 		""" Initialize the class.  This includes reading the supplied file
 		    and creating/populating as many related objects as needed.
 		"""
@@ -72,7 +72,8 @@ class usb_ids:
 		self.usbclasslist = USBClassList()
 		self.inVendor = 0
 		self.inClass = 0
-		self.add_data(fname)
+		if fname is not None:
+			self.add_data(fname)
 
 	def add_data(self, fname):
 		try:
@@ -132,6 +133,7 @@ class usb_ids:
 				
 		except IOError:
 			print ("Cannot open the USB ID file: %s" % fname)
+			raise
 
 		if (ufile):
 			ufile.close()
