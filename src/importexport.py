@@ -46,6 +46,8 @@ def GetPhonebookImports():
         res.append( ("Evolution Contacts...", "Import Evolution contacts for the phonebook", OnFileImportEvolutionContacts) )
     except ImportError:
         pass
+    # Qtopia Desktop - always possible
+    res.append( ("Qtopia Desktop...", "Import Qtopia Desktop contacts for the phonebook", OnFileImportQtopiaDesktopContacts) )
     
     return res
     
@@ -98,7 +100,7 @@ class ImportDialog(wx.Dialog):
 
     filteraddresscolumns=filterhomeaddresscolumns+filterbusinessaddresscolumns+["Address"]
 
-    filteremailcolumns=["Email Address"]
+    filteremailcolumns=["Email Address", "Email Addresses"]
                           
     # used in mapping column names above into bitpim phonebook fields
     addressmap={
@@ -160,6 +162,7 @@ class ImportDialog(wx.Dialog):
         self.preview.SetColLabelSize(0)
         self.preview.SetRowLabelSize(0)
         self.preview.SetMargins(1,0)
+
         vbs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         # Static line and buttons
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
@@ -206,8 +209,8 @@ class ImportDialog(wx.Dialog):
                 if record[n] is None or len(record[n])==0:
                     continue
                 c=self.columns[n]
-                if c in self.filternumbercolumns or c in self.filteremailcolumns or c in \
-                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone", "Address"]:
+                if c in self.filternumbercolumns or c in \
+                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone", "Address", "Email Address"]:
                     # these are multivalued
                     if not rec.has_key(c):
                         rec[c]=[]
@@ -217,14 +220,19 @@ class ImportDialog(wx.Dialog):
             # entry is what we are building.  fields are removed from rec as we process them
             entry={}
             # emails
+            emails=[]
             if rec.has_key('Email Address'):
-                emails=[]
                 for e in rec['Email Address']:
                     if isinstance(e, dict):
                         emails.append(e)
                     else:
                         emails.append({'email': e})
                 del rec['Email Address']
+            if rec.has_key("Email Addresses"):
+                for e in rec['Email Addresses']:
+                    emails.append({'email': e})
+                del rec["Email Addresses"]
+            if len(emails):
                 entry['emails']=emails
             # addresses
             for prefix,fields in \
@@ -319,8 +327,12 @@ class ImportDialog(wx.Dialog):
                 del rec["Category"]
             if rec.has_key("Categories"):
                 # multiple entries in the field, semi-colon seperated
-                for cat in rec['Categories'].split(';'):
-                    cats.append({'category': cat})
+                if isinstance(rec['Categories'], list):
+                    for cat in rec['Categories']:
+                        cats.append({'category': cat})
+                else:
+                    for cat in rec['Categories'].split(';'):
+                        cats.append({'category': cat})
                 del rec['Categories']
             if len(cats):
                 entry["categories"]=cats
@@ -399,7 +411,6 @@ class ImportDialog(wx.Dialog):
                             break
                     if present==req:
                         newdata.append(self.data[rownum])
-
                 self.data=newdata
 
             self.FillPreview()
@@ -469,6 +480,15 @@ def _getpreviewformatted(value, column):
             value="\n".join(v)
         else:
             print "don't know how to convert dict",value,"for preview column",column
+            assert False
+    elif isinstance(value, list):
+        if column=="Email Addresses":
+            value="\n".join(value)
+        elif column=="Categories":
+            value=";".join(value)
+        else:
+            print "don't know how to convert list",value,"for preview column",column
+            assert False
     try:
         return str(value)
     except UnicodeEncodeError:
@@ -901,9 +921,10 @@ class ImportOutlookDialog(ImportDialog):
         for item in items:
             row=[]
             for k in want:
-                v=item.get(k, "")  # ::TODO:: possibly use None here to make output smaller?
+                v=item.get(k, None)
                 try:
-                    v=str(v)
+                    if v is not None:
+                        v=str(v)
                 except UnicodeEncodeError:
                     v=v.encode("ascii", 'xmlcharrefreplace')
                 row.append(v)
@@ -1088,6 +1109,119 @@ class ImportEvolutionDialog(ImportVCardDialog):
         self.evocolumns=self.columns=columns
         self.evodata=self.data=data
 
+class ImportQtopiaDesktopDialog(ImportDialog):
+    # the order of this mapping matters ....
+    importmapping=(
+        # first column is field in Qtopia
+        # second column is field in dialog (ImportDialog.possiblecolumns)
+           ('FirstName', "First Name"  ),
+           ('LastName',  "Last Name" ),
+           ('MiddleName',  "Middle Name"),
+           ('Nickname',   "Nickname"),
+           ('Emails',   "Email Addresses"),
+           ('HomeStreet',   "Home Street"),
+           ('HomeCity',   "Home City"),
+           ('HomeZip',   "Home Postal Code"),
+           ('HomeState',  "Home State" ),
+           ('HomeCountry',  "Home Country/Region" ),
+           ('HomePhone',  "Home Phone" ),
+           ('HomeFax',  "Home Fax" ),
+           ('HomeMobile', "Mobile Phone"  ),
+           ('BusinessMobile', "Mobile Phone"  ),
+           ('HomeWebPage',  "Home Web Page" ),
+           ('BusinessStreet',   "Business Street"),
+           ('BusinessCity',  "Business City" ),
+           ('BusinessZip',  "Business Postal Code" ),
+           ('BusinessState',  "Business State" ),
+           ('BusinessCountry',  "Business Country/Region", ),
+           ('BusinessWebPage',   "Business Web Page"),
+           ('BusinessPhone',   "Business Phone"),
+           ('BusinessFax',  "Business Fax" ),
+           ('BusinessPager', "Pager"  ),
+           ('Company',  "Company" ),
+           ('Notes',  "Notes" ),
+           ('Categories',  "Categories" ),
+           ('Uid',  "UniqueSerial-uid" ),
+           
+           )           
+
+##    # the fields we ignore
+        
+##           ('Assistant',   )
+##           ('Children',   )
+##           ('DefaultEmail',   )
+##           ('Department',   )
+##           ('Dtmid',   )
+##           ('FileAs',   )
+##           ('Gender',   )
+##           ('JobTitle',   )
+##           ('Manager',   )
+##           ('Office',   )
+##           ('Profession',   )
+##           ('Spouse',   )
+##           ('Suffix',   )
+##           ('Title',   )
+
+    importmappingdict={}
+    for o,i in importmapping: importmappingdict[o]=i
+
+    def __init__(self, parent, id, title):
+        self.headerrowiseditable=False
+        self.origcolumns=self.origdata=None
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing Qtopia Desktop Contacts..</body></html>' % (bg.Red(), bg.Green(), bg.Blue()), \
+                (600,30)
+
+    def getcontrols(self, vbs):
+        pass
+
+    def ReReadData(self):
+        if self.origcolumns is not None and self.origdata is not None:
+            self.columns=self.origcolumns
+            self.data=self.origdata
+            return
+
+        import native.qtopiadesktop
+
+        items=native.qtopiadesktop.getcontacts()
+        
+        # work out what keys are actually present
+        keys={}
+        for item in items:
+            for k in item.keys():
+                keys[k]=1
+
+        # We now need to produce columns with BitPim names not the Qtopia ones.
+        # mappings are in self.importmapping
+        want=[]
+        for o,i in self.importmapping:
+            if o in keys.keys():
+                want.append(o)
+        # want now contains list of Qtopia keys we want, and the order we want them in
+        
+        self.columns=[self.importmappingdict[k] for k in want]
+        # deal with serials
+        self.columns.append("UniqueSerial-sourcetype")
+        moredata=[ "qtopiadesktop"]
+
+        # build up data
+        self.data=[]
+        for item in items:
+            row=[]
+            for k in want:
+                v=item.get(k, None)
+                row.append(v)
+            self.data.append(row+moredata)
+
+        self.origdata=self.data
+        self.origcolumns=self.columns
+
+
+
 
 def OnFileImportCSVContacts(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
@@ -1126,7 +1260,16 @@ def OnFileImportVCards(parent):
     dlg.Destroy()
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
-    
+
+def OnFileImportQtopiaDesktopContacts(parent):
+    dlg=ImportQtopiaDesktopDialog(parent, -1, "Import Qtopia Desktop Contacts")
+    data=None
+    if dlg.ShowModal()==wx.ID_OK:
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
+    if data is not None:
+        parent.phonewidget.importdata(data, merge=True)
+
         
 def OnFileImportOutlookContacts(parent):
     import native.outlook

@@ -60,7 +60,7 @@ class ABParser(XMLParser):
             return
         d=cleandict(attrs)
         # fixup fields
-        d["Uid"]=int(d["Uid"])
+        # d["Uid"]=int(d["Uid"]) - leaving as string for moment since semantics of value are not clear (eg does two's complement of number mean the same thing?)
         # categories
         c=d.get("Categories", "")
         cats=[]
@@ -77,6 +77,9 @@ class ABParser(XMLParser):
         else:
             if d.has_key("Categories"):
                 del d["Categories"]
+        # emails
+        if d.has_key("Emails"):
+            d["Emails"]=d["Emails"].split()
         # ::TODO:: gender also needs to be munged
         self._data.append(d)
 
