@@ -8,43 +8,53 @@
 ### $Id$
 
 
+# Documentation
+"""Various classes and functions that are used by GUI and command line versions of BitPim"""
+
 # standard modules
 import string
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):
+     """Generic commmunications exception"""
      def __init__(self, device, message):
         Exception.__init__(self, "%s: %s" % (device, message))
         self.device=device
         self.message=message
 
 class CommsNeedConfiguring(CommsException):
+     """The communication settings need to be configured"""
      def __init__(self, device, message):
         CommsException.__init__(self, device, message)
         self.device=device
         self.message=message
 
 class CommsDeviceNeedsAttention(CommsException):
+    """The communication port or device attached to it needs some
+    manual intervention"""
     def __init__(self, device, message):
         CommsException.__init__(self, device, message)
         self.device=device
         self.message=message
 
 class CommsTimeout(CommsException):
+    """Timeout while reading or writing the commport"""
     def __init__(self, device, message):
         CommsException.__init__(self, device, message)
         self.device=device
         self.message=message
 
 class CommsOpenFailure(CommsException):
+    """Failed to open the communications port/device"""
     def __init__(self, device, message):
         CommsException.__init__(self, device, message)
         self.device=device
         self.message=message
 
-
-# mostly useful for debugging
 def datatohexstring(data):
+    """Returns a pretty printed hexdump of the data
+
+    @rtype: string"""
     res=""
     lchar=""
     lhex="00000000 "
@@ -67,3 +77,40 @@ def datatohexstring(data):
         res=res+lhex+"    "+lchar+"\n"
     return res
 
+def prettyprintdict(dictionary, indent=0):
+     """Returns a pretty printed version of the dictionary
+
+     The elements are sorted into alphabetical order, and printed
+     one per line.  Dictionaries within the values are also pretty
+     printed suitably indented.
+
+     @rtype: string"""
+
+     res=""
+     
+     # the indent string
+     istr="  "
+
+     # opening brace
+     res+="%s{\n" % (istr*indent,)
+     indent+=1
+
+     # sort the keys
+     keys=dictionary.keys()
+     keys.sort()
+
+     # print each key
+     for k in keys:
+          v=dictionary[k]
+          if isinstance(v, dict):
+               res+="%s%s:\n%s,\n" % (istr*indent, `k`, prettyprintdict(v, indent+1))
+          else:
+               res+="%s%s: %s,\n" % (istr*indent, `k`, `v`)
+
+     # closing brace
+     indent-=1
+     res+="%s}\n" % (istr*indent,)
+
+     return res
+
+     
