@@ -1429,7 +1429,7 @@ class DayViewDialog(wxDialog):
     def getentry(self, num):
         """maps from entry number in listbox to an entry in entries
 
-        @ptype num: int
+        @type num: int
         @rtype: entry(dict)"""
         return self.entries[self.entrymap[num]]
 
