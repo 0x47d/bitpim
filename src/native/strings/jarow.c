@@ -64,6 +64,9 @@ FUNCTION(JWCHARP s1, unsigned lens1, JWCHARP s2, unsigned lens2, unsigned winkle
   if (lens1==0 || lens2==0)
     return 0;
 
+  /* if the strings are identical then it is 1.0 */
+  if (lens1==lens2 && 0==memcmp(s1, s2, lens1*sizeof(s1[0])))
+    return 1.0;
 
   halflen=MIN(lens1/2+1, lens2/2+1);
 
