@@ -13,16 +13,16 @@
 
 # USB to serial cables
 
-067b  FutureDial cable (Prolific Technology chip)
+067b  Prolific Technology chip
 	2303  USB to serial convertor
 		00  Serial connection
 
-0403  LG Cable (FTDI chip)
+0403  FTDI chip
 	6001  USB to serial convertor
 		00  Serial connection
 
 106c  Curitel Communications
-	2101  Audiovox CDM 8900
+	2101  Audiovox Cell Phone
 		01 Modem Interface
 
 # Prettier names for the classes
