@@ -20,6 +20,9 @@ import sys
 # wx modules
 import wx
 
+# my modules
+import common  # note we modify the common module contents
+
 ###
 ### The various IDs we use.  Code below munges the integers into sequence
 ###
@@ -186,3 +189,22 @@ p=sys.path[0]
 if os.path.isfile(p): # zip importer in action
     p=os.path.dirname(p)
 resourcedirectory=os.path.abspath(os.path.join(p, 'resources'))
+
+# See strorunicode comment in common
+if wx.USE_UNICODE:
+    def strorunicode(s):
+        if isinstance(s, unicode): return s
+        return str(s)
+
+    common.strorunicode=strorunicode
+    del strorunicode
+
+else:
+    def strorunicode(s):
+        try:
+            return str(s)
+        except UnicodeEncodeError:
+            return s.encode("ascii", "replace")
+
+    common.strorunicode=strorunicode
+    del strorunicode

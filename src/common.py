@@ -348,12 +348,17 @@ def opentextfile(name):
 
 # don't you just love i18n
 
-def strorunicode(s):
-     if isinstance(s, unicode): return s
-     return str(s)
+# the following function is actually defined in guihelper and
+# inserted into this module.  the intention is to ensure this
+# module doesn't have to import wx.  The guihelper version
+# checks if wx is in unicode mode
+
+#def strorunicode(s):
+#     if isinstance(s, unicode): return s
+#     return str(s)
 
 def forceascii(s):
      try:
           return str(s)
      except UnicodeEncodeError:
-          return s.encode("ascii", 'xmlcharrefreplace')
+          return s.encode("ascii", 'replace')
