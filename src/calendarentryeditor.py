@@ -23,6 +23,7 @@ import helpids
 import phonebookentryeditor as pb_editor
 import pubsub
 import guihelper
+import guiwidgets
 
 class RepeatEditor(pb_editor.DirtyUIBase):
     __repeat_type= {
@@ -554,10 +555,6 @@ class Editor(wx.Dialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
-        if guihelper.IsMac():
-            self.SetSize( (700, 450) )
-        else:
-            self.SetSize((560, 380))
         # delete is disabled until an item is selected
         self.__delete_btn.Enable(False)
 
@@ -578,6 +575,12 @@ class Editor(wx.Dialog):
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         self.ignoredirty=False
         self.setdirty(False)
+        guiwidgets.set_size("CalendarEntryEditor", self, 50, 1.5)
+
+    def ShowModal(self):
+        res=wx.Dialog.ShowModal(self)
+        guiwidgets.save_size("CalendarEntryEditor", self.GetRect())
+        return res
 
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
