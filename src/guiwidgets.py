@@ -16,6 +16,7 @@ import os
 import calendar
 import time
 import copy
+import cStringIO
 
 # wx modules
 from wxPython.wx import *
@@ -412,6 +413,7 @@ class CommPortDialog(wxDialog):
     ID_TEXTBOX=2
     ID_REFRESH=3
     ID_SASH=4
+    ID_SAVE=5
     
     def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto", sashposition=0):
         wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
@@ -428,9 +430,10 @@ class CommPortDialog(wxDialog):
         splitter.SplitHorizontally(self.lb, self.tb, sashposition)
 
         # the buttons
-        buttsizer=wxGridSizer(1, 4)
+        buttsizer=wxGridSizer(1, 5)
         buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxALL, 10)
         buttsizer.Add(wxButton(p, self.ID_REFRESH, "Refresh"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, self.ID_SAVE, "Save..."), 0, wxALL, 10)
         buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxALL, 10)
         buttsizer.Add(wxButton(p, wxID_CANCEL, "Cancel"), 0, wxALL, 10)
 
@@ -451,6 +454,7 @@ class CommPortDialog(wxDialog):
         EVT_BUTTON(self, wxID_CANCEL, self.OnCancel)
         EVT_BUTTON(self, wxID_HELP, self.OnHelp)
         EVT_BUTTON(self, self.ID_REFRESH, self.OnRefresh)
+        EVT_BUTTON(self, self.ID_SAVE, self.OnSave)
         EVT_BUTTON(self, wxID_OK, self.OnOk)
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBox)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
@@ -495,6 +499,26 @@ class CommPortDialog(wxDialog):
             self.FindWindowById(wxID_OK).Enable(True)
         self.tb.SetPage(p[2])
         
+
+    def OnSave(self, _):
+        html=cStringIO.StringIO()
+        
+        print >>html, "<html><head><title>BitPim port listing - %s</title></head>" % (time.ctime(), )
+        print >>html, "<body><h1>BitPim port listing - %s</h1><table>" % (time.ctime(),)
+
+        for long,actual,desc in self.portinfo:
+            if actual is None or actual=="auto": continue
+            print >>html, '<tr  bgcolor="#77ff77"><td colspan=2>%s</td><td>%s</td></tr>' % (long,actual)
+            print >>html, "<tr><td colspan=3>%s</td></tr>" % (desc,)
+            print >>html, "<tr><td colspan=3><hr></td></tr>"
+        print >>html, "</table></body></html>"
+        dlg=wxFileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
+                         style=wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR)
+        if dlg.ShowModal()==wxID_OK:
+            f=open(dlg.GetPath(), "w")
+            f.write(html.getvalue())
+            f.close()
+        dlg.Destroy()
 
     def OnCancel(self, _):
         self.EndModal(wxID_CANCEL)
