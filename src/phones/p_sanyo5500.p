@@ -132,8 +132,7 @@ PACKET eventresponse:
     436 UNKNOWN pad
 
 PACKET eventupdaterequest:
-    * sanyoheader {'readwrite': 0x0e,
-                   'packettype': 0x0c, 'command':0x23} +header
+    * sanyoheader {'packettype': 0x0c, 'command':0x23} +header
     * evententry entry
     436 UNKNOWN +pad
         
@@ -168,8 +167,7 @@ PACKET callalarmresponse:
     417 UNKNOWN pad
 
 PACKET callalarmupdaterequest:
-    * sanyoheader {'readwrite': 0x0e,
-                   'packettype': 0x0c, 'command':0x24} +header
+    * sanyoheader {'packettype': 0x0c, 'command':0x24} +header
     * callalarmentry entry
     417 UNKNOWN +pad
 
