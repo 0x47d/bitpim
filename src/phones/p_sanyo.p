@@ -68,7 +68,7 @@ PACKET statusresponse:
     1 UINT ready
     1 UINT dunno3
     1 UINT flag2
-    6 UINT dunno4
+    6 UNKNOWN dunno4
     1 UINT flag3
     * UNKNOWN unknown
     
