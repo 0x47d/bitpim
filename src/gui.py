@@ -1580,7 +1580,7 @@ class RestoreDialog(wxDialog):
     def __init__(self, parent, title, zipf, path, okcb):
         """Constructor
 
-        @param prefix: Placed before names in the archive.  Should not include a
+        @param path: Placed before names in the archive.  Should not include a
                        trailing slash.
         """
         wxDialog.__init__(self, parent, -1, title, style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
