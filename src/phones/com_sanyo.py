@@ -65,6 +65,23 @@ class SanyoPhonebook:
             pass
         return 0
         
+    def convertto8bitpng(self, pngdata):
+        "Convert a PNG file to 8bit color map"
+        orig=common.gettempfilename("png")
+        pnm=common.gettempfilename("pnm")
+        pnmquant=common.gettempfilename("pnm")
+        pngquant=common.gettempfilename("png")
+        f=open(orig, "wb")
+        f.write(pngdata)
+        f.close()
+        run("pngtopnm", orig, ">"+pnm)
+        run("pnmquant", "256", pnm, ">"+pnmquant)
+        run("pnmtopng", pnmquant, ">"+pngquant)
+        f=open(pngquant)
+        pngquantdata=f.read()
+        f.close
+        return pngquantdata
+        
     def getmediaindices(self, results):
         """Get all the media indices
 
@@ -581,7 +598,6 @@ class SanyoPhonebook:
         keys=pbook.keys()
         keys.sort()
         sortstuff.slotsused=len(keys)
-        sortstuff.slotsused2=len(keys)
         sortstuff.numemail=0
         sortstuff.numurl=0
 
@@ -589,6 +605,7 @@ class SanyoPhonebook:
         progressmax=len(keys)
         self.log("Writing %d entries to phone" % (len(keys),))
         nlongphonenumbers=0
+        nonumbercount=0
         for ikey in keys:
             ii=pbook[ikey]
             slot=ii['slot'] # Or should we just use i for the slot
@@ -615,8 +632,10 @@ class SanyoPhonebook:
             else:
                 if(len(ii['email'])):
                     sortstuff.firsttypes[slot].firsttype=8
+                    nonumbercount+=1
                 elif(len(ii['url'])):
                     sortstuff.firsttypes[slot].firsttype=9
+                    nonumbercount+=1
                 else:
                     sortstuff.firsttypes[slot].firsttype=0
                     
@@ -658,17 +677,23 @@ class SanyoPhonebook:
 
             newphonebook[slot]=entry
 
-                    
+        sortstuff.slotsused2=len(keys)-nonumbercount
         # Sort Names, Emails and Urls for the sort buffer
         # The phone sorts case insensitive and puts numbers after the
         # letters.
         i=0
+        j=0
         sortstuff.pbfirstletters=""
         namemap.sort(self.sanyosort)
         for (slot, name) in namemap:
             sortstuff.sortorder[i].pbslot=slot
-            sortstuff.sortorder2[i].pbslot=slot
-            sortstuff.pbfirstletters+=name[0]
+            if sortstuff.firsttypes[slot].firsttype<=7:
+                sortstuff.sortorder2[j].pbslot=slot
+                j+=1
+            if name:
+                sortstuff.pbfirstletters+=name[0]
+            else:
+                sortstuff.pbfirstletters+=chr(0)
             i+=1
 
         i=0
@@ -1210,7 +1235,10 @@ class Profile(com_phone.Profile):
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=helper.getfullname(entry.get('names', []),1,1,16)[0]
+                try:
+                    e['name']=helper.getfullname(entry.get('names', []),1,1,16)[0]
+                except:
+                    e['name']=''
                 e['name_len']=len(e['name'])
 
                 serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
@@ -1302,7 +1330,8 @@ class Profile(com_phone.Profile):
                 results[pbentry]=e
                 
             except helper.ConversionFailed:
-                self.log("No Free Slot for "+e['name'])
+                #self.log("No Free Slot for "+e['name'])
+                print "No Free Slot for "+e['name']
                 continue
 
         data['phonephonebook']=results
