@@ -7,7 +7,7 @@
 <td width="72" ${styles['wallpaperpanel']} >
 <py-open>for wallpaper in entry.get("wallpapers", []):</py-open>
 <py-open>if wallpaper.get('wallpaper', None) is not None:</py-open>
-<img src="bpuserimage:${wallpaper['wallpaper']};width=64;height=64;bgcolor=c2d4e6"
+<img src="bpuserimage:${wallpaper['wallpaper']};width=64;height=64"
 alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br>
 <py-close/>
 <py-close/>
@@ -15,7 +15,7 @@ alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br>
 
 <td width="20" ${styles['ringtonepanel']}>
 <py-open>for ringtone in entry.get("ringtones", []):</py-open>
-<img src="bpimage:ringer.png;width=16;height=16;bgcolor=7f97db"
+<img src="bpimage:ringer.png;width=16;height=16"
 alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <py-close/>
 </td>
@@ -32,7 +32,7 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <py-close/>
 <br>
 <py-open>if has_flag(entry,"secret"):</py-open>
-<img src="bpimage:secret;width=16;height=16" alt="secret"><font size="-2">Secret</font><br>
+<font size="-2">Secret</font> <img src="bpimage:private.png;width=16;height=16" alt="secret"><br>
 <py-close/>
 </td>
 </tr>
