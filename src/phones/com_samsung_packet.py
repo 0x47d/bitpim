@@ -18,6 +18,7 @@ import common
 import commport
 import time
 import re
+import todo
 from DSV import DSV
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
@@ -187,34 +188,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         except:
             pass
         return ''
-        
-    def _get_at_response(self):
-        self.log("_get_at_response")
-        s=self.comm.read(1, False)
-	if not len(s):
-	    return ''
-
-	# got at least one char, try to read the rest with short timeout
-
-	i=self.comm.ser.getTimeout()
-	self.comm.ser.setTimeout(self.__read_timeout)
-	while True:
-            s1=self.comm.read(1, False)
-            if len(s1):
-                s += s1
-            else:
-                break
-
-        self.comm.ser.setTimeout(i)
-        return s
-
-    def is_online(self):
-        self.setmode(self.MODEPHONEBOOK)
-        try:
-	    self.comm.sendatcommand("E0V1")
-	    return True
-        except commport.ATError:
-	    return False
 
     def read_groups(self):
 
@@ -659,6 +632,33 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.setmode(self.MODEMODEM)
 
         return dict
+
+    def gettodo(self, result):
+        todos = {}
+        self.log("Getting todo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        req=self.protocolclass.todorequest()
+        for slot in range(self.protocolclass.NUMTODOENTRIES):
+            req.slot=slot
+            res=self.sendpbcommand(req,self.protocolclass.todoresponse)
+            if len(res) > 0:
+                entry = todo.TodoEntry()
+                entry.summary=res[0].subject
+                # Convert back to formatted date string
+                # Shouldn't todo take dates as a list like
+                # other modules do?
+                entry.due_date='%4.4d%2.2d%2.2d'%(res[0].duedate[0],res[0].duedate[1],res[0].duedate[2])
+                if res[0].priority:
+                    entry.priority=1
+                else:
+                    entry.priority=10
+                    
+                self.log("Todo "+`slot`+" "+entry.summary+" "+entry.due_date)
+                todos[entry.id]=entry
+
+        result['todo']=todos
+        return result
+        
 
 class Profile(com_phone.Profile):
 
