@@ -98,15 +98,13 @@ class Phone:
         result['phonebook']=pbook
         # Bug in the phone.  if you repeatedly read the phone book it starts
         # returning a random number as the number of entries.  We get around
-        # this by switching into brew mode whick clears that.
+        # this by switching into brew mode which clears that.
         self.setmode(self.MODEBREW)
         return pbook
 
     def getcalendar(self,result):
         self.setmode(self.MODEBREW)
         return result
-
-
 
     def getwallpapers(self, result):
         # we have to retreive both the wallpapers and the index file
@@ -131,6 +129,7 @@ class Phone:
         return result
 
     def savephonebook(self, data):
+        print "savephonebookcalled"
         pass # :::TODO:::
 
     def savewallpapers(self, data):
@@ -461,6 +460,7 @@ class Phone:
             d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
             if 0: # cmd!=0x15 and d[3]!="\x00":
                 raise PhoneBookCommandException(ord(d[3]))
+            # ::TODO:: we should check crc
             return d
         except commport.CommTimeout:
             self.raisecommsexception("using the phonebook")
@@ -472,6 +472,7 @@ class Phone:
         self.comm.write(d)
         try:
             d=self.unescape(self.comm.readuntil(self.terminator))
+            # ::TODO:: we should check crc
             if d[2]!="\x00":
                 err=ord(d[2])
                 if err==0x1c:
@@ -748,3 +749,18 @@ def brewbasename(str):
     if str.rfind("/")>0:
         return str[str.rfind("/")+1:]
     return str
+
+# Some notes
+#
+# phonebook command numbers
+#
+# 0x15   get phone info (returns stuff about vx400 connector)
+# 0x00   start sync (phones display changes)
+# 0x11   select phonebook (goes back to first entry, returns how many left)
+# 0x12   advance one entry
+# 0x13   get current entry
+# 0x07   quit (phone will restart)
+# 0x06   ? parameters maybe
+# 0x05   delete entry
+# 0x04   write entry
+# 0x03   append entry
