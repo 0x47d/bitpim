@@ -26,9 +26,28 @@ if testver>0:
 if release>0:
     versionstring+="-"+`release`
 
+# dotted quad version as used on Windows (a.b.c.d where all must be digits only)
+# we use major.minor.point.last
+# last is <1000 for test releases, and 1000+release for real releases
+x=[int(x) for x in version.split(".")]
+if x[1]<10:  # ie .6 not .62
+    x[1]=x[1]*10
+assert x[1]>=10 and x[1]<=99
+x.append(x[1]%10)
+x[1]=x[1]/10
+if testver:
+    x.append(testver)
+else:
+    x.append(1000+release)
+dqver=x[:]
+del x
+
 author="Roger Binns"
 author_email="rogerb@users.sourceforge.net"
 url="http://bitpim.sourceforge.net"
+
+description="BitPim - see http://bitpim.sf.net"
+copyright="(C) Roger Binns <rogerb@users.sf.net> and others - see http://bitpim.sf.net"
 
 if __name__=='__main__':
     # generated for the benefit of the help
