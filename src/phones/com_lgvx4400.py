@@ -39,8 +39,18 @@ class PhoneBookCommandException(Exception):
         self.errnum=errnum
 
 
-    
+# when trying to setmode, we ignore various exception types
+# since the types are platform specific (eg on windows we get pywintypes.error)
+# so we have to construct the list here of which ones we ignore
+modeignoreerrortypes=[ commport.CommTimeout ]
+try:
+    import pywintypes
+    modeignoreerrortypes.append(pywintypes.error)
+except:
+    pass
 
+# has to be tuple or it doesn't work
+modeignoreerrortypes=tuple(modeignoreerrortypes) 
 
 class Phone:
     "Talk to the LG VX4400 cell phone"
@@ -75,7 +85,6 @@ class Phone:
     def getphoneinfo(self, results):
         d={}
         self.progress(0,4, "Switching to modem mode")
-        self.setmode(self.MODEMODEM)
         self.progress(1,4, "Reading manufacturer")
         self.comm.write("AT+GMI\r\n")  # manuf
         d['Manufacturer']=cleanupstring(self.comm.readsome())[2][6:]
@@ -122,7 +131,6 @@ class Phone:
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
         # now read groups
-        self.setmode(self.MODEBREW)
         self.log("Reading group information")
         res=self.getfilecontents("pim/pbgroup.dat")
         groups={}
@@ -553,19 +561,16 @@ class Phone:
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
-        self.setmode(self.MODEBREW)
         d=chr(len(name)+1)+name+"\x00"
         self.sendbrewcommand(0x00, d)
 
     def rmdir(self,name):
         self.log("Deleting directory '"+name+"'")
-        self.setmode(self.MODEBREW)
         d=chr(len(name)+1)+name+"\x00"
         self.sendbrewcommand(0x01, d)
 
     def rmfile(self,name):
         self.log("Deleting file '"+name+"'")
-        self.setmode(self.MODEBREW)
         d=chr(len(name)+1)+name+"\x00"
         self.sendbrewcommand(0x06, d)
 
@@ -573,8 +578,6 @@ class Phone:
         results={}
 
         self.log("Listing dir '"+dir+"'")
-        self.setmode(self.MODEBREW)
-
         
         d=chr(len(dir)+1)+dir+"\x00"
         d2=d
@@ -610,7 +613,6 @@ class Phone:
 
     def writefile(self, name, contents):
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
-        self.setmode(self.MODEBREW)
         desc="Writing "+name
         d="\x00" # probably block number
         if len(contents)<256:
@@ -651,7 +653,6 @@ class Phone:
 
     def getfilecontents(self, file):
         self.log("Getting file contents '"+file+"'")
-        self.setmode(self.MODEBREW)
         desc="Reading "+file
         d=chr(len(file)+1)+file+"\x00"
         res=self.sendbrewcommand(0x04, "\x00"+d)
@@ -673,9 +674,10 @@ class Phone:
         self.log("expected size "+`size`+"  actual "+`len(data)`)
         return data
 
-
     def raisecommsexception(self, str):
-        raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nCheck that the port on the phone is set correctly\n(Menu -> 8 -> 6 -> 2: It is normally set to RS-232 COM port).\nAlso check that you have selected the correct communications port on your computer\nand the cable is still firmly plugged in (currently using "+self.comm.port+")")
+        self.mode=self.MODENONE
+        self.comm.shouldloop=True
+        raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nSee the help for troubleshooting tips")
         
 
     def setmode(self, desiredmode):
@@ -699,9 +701,13 @@ class Phone:
         for func in ( '_setmode%sto%s' % (strmode, strdesiredmode),
                         '_setmode%s' % (strdesiredmode,)):
             if hasattr(self,func):
-                res=getattr(self, func)()
+                try:
+                    res=getattr(self, func)()
+                except modeignoreerrortypes:
+                    res=False
                 if res: # mode changed!
                     self.mode=desiredmode
+                    self.log("Now in "+strdesiredmode+" mode")
                     return
 
         # failed
@@ -718,21 +724,21 @@ class Phone:
             # might already be?
             self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             pass
         try:
             # try again at 38400
             self.comm.setbaudrate(38400)
             self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             pass
         self._setmodelgdmgo() # brute force into data mode
         try:
             # should work in lgdmgo mode
             self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             return 0
 
     def _setmodelgdmgo(self):
@@ -741,12 +747,17 @@ class Phone:
             if baud:
                 if not self.comm.setbaudrate(baud):
                     continue
-            self.comm.write("AT$QCDMG\r\n")
+            try:
+                self.comm.write("AT$QCDMG\r\n")
+            except:
+                self.mode=self.MODENONE
+                self.comm.shouldloop=True
+                raise
             try:
                 self.comm.readsome()
                 self.comm.setbaudrate(38400) # dm mode is always 38400
                 return 1
-            except commport.CommTimeout:
+            except modeignoreerrortypes:
                 self.log("No response to setting DM mode")
         self.comm.setbaudrate(38400) # just in case it worked
         return 0
@@ -756,19 +767,19 @@ class Phone:
         try:
             self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             pass
         try:
             self.comm.setbaudrate(38400)
             self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             pass
         self._setmodelgdmgo()
         try:
             self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
-        except commport.CommTimeout:
+        except modeignoreerrortypes:
             pass
         return 0
         
@@ -781,7 +792,7 @@ class Phone:
             try:
                 self.comm.readsome()
                 return 1
-            except commport.CommTimeout:
+            except modeignoreerrortypes:
                 pass
         return 0        
 
@@ -789,17 +800,8 @@ class Phone:
         if res[0]!=firstbyte:
             return
 
-    def readsomeuntil(self, char):
-        time.sleep(3)
-        data=self.comm.readsome()
-        l=len(data)
-        try:
-            data=data+self.comm.readsome()
-        except commport.CommTimeout:
-            pass
-        return data
-
     def sendpbcommand(self, cmd, data):
+        self.setmode(self.MODEPHONEBOOK)
         if self.comm.configparameters is None or \
            not self.comm.configparameters['retryontimeout']:
             return self._sendpbcommand(cmd, data)
@@ -811,7 +813,7 @@ class Phone:
             # resend command
             self.log("Phonebook command timed out with partial data.  Retrying")
             self.comm.reset()
-            res=self._sendpbcommand(cmd,data,usereadsome=True)
+            res=self._sendpbcommand(cmd,data)
             x=res.find('\x7f')
             if x<0:
                 raise e
@@ -820,16 +822,18 @@ class Phone:
                 raise e
             return res
 
-    def _sendpbcommand(self, cmd, data, usereadsome=False, wantto=False):
+    def _sendpbcommand(self, cmd, data, wantto=False):
         d="\xff"+chr(cmd)+chr(self.seq&0xff)+data
         d=self.escape(d+self.crcs(d))+self.terminator
-        self.comm.write(d)
+        try:
+            self.comm.write(d)
+        except:
+            self.mode=self.MODENONE
+            self.comm.shouldloop=True
+            raise
         self.seq+=1
         try:
-            if usereadsome:
-                d=self.unescape(self.readsomeuntil(self.terminator))[:-3]
-            else:
-                d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
+            d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
             self.comm.success=True
             if 0: # cmd!=0x15 and d[3]!="\x00":
                 raise PhoneBookCommandException(ord(d[3]))
@@ -843,6 +847,7 @@ class Phone:
         
 
     def sendbrewcommand(self, cmd, data):
+        self.setmode(self.MODEBREW)
         if self.comm.configparameters is None or \
            not self.comm.configparameters['retryontimeout']:
             return self._sendbrewcommand(cmd, data)
@@ -854,7 +859,7 @@ class Phone:
             # resend command
             self.log("Brew command timed out with partial data.  Retrying")
             self.comm.reset()
-            res=self._sendbrewcommand(cmd,data,usereadsome=True)
+            res=self._sendbrewcommand(cmd,data)
             x=res.find('\x7f')
             if x<0:
                 raise e
@@ -863,15 +868,17 @@ class Phone:
                 raise e
             return res
 
-    def _sendbrewcommand(self, cmd, data, usereadsome=False, wantto=False):
+    def _sendbrewcommand(self, cmd, data, wantto=False):
         d="\x59"+chr(cmd)+data
         d=self.escape(d+self.crcs(d))+self.terminator
-        self.comm.write(d)
         try:
-            if usereadsome:
-                d=self.unescape(self.comm.readuntil(self.terminator))
-            else:
-                d=self.unescape(self.comm.readuntil(self.terminator))
+            self.comm.write(d)
+        except:
+            self.mode=self.MODENONE
+            self.comm.shouldloop=True
+            raise
+        try:
+            d=self.unescape(self.comm.readuntil(self.terminator))
             self.comm.success=True
             # ::TODO:: we should check crc
             if d[2]!="\x00":
