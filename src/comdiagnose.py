@@ -133,7 +133,10 @@ def genhtml(port):
     return res
 
 # A list of USB vendor and product ids we look for
+# These will move into the individual phone profiles ::TODO::
 usbdb=( ( 0x1004, 0x6000), # VID=LG Electronics, PID=LG VX4400 -internal USB interface
+        ( 0x1004, 0x6000), # VID=LG Electronics, PID=LG VX6000 -internal USB interface
+        ( 0x0474, 0x0701), # VID=Sanyo, PID=4900 internal USB interface
         ( 0x067b, 0x2303), # VID=Prolific, PID=USB to serial
         )
 
