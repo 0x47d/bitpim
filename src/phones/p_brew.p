@@ -17,6 +17,8 @@ from prototypes import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+import com_brew
+
 %}
 
 # Note that we don't include the trailing CRC and 7f
@@ -97,11 +99,13 @@ PACKET listfilerequest:
 PACKET listfileresponse:
     * responseheader header
     4 UINT entrynumber  
-    4 UNKNOWN unknown1  
+    4 UNKNOWN unknown1  "probably the file attributes"
     4 UINT date         
     4 UINT size         
-    5 UNKNOWN unknown2   
-    * STRING {'terminator': None, 'pascal': True} filename # no terminator for some reason
+    4 UNKNOWN unknown2
+    * com_brew.SPURIOUSZERO spuriouszero  "on some models there is a zero here"
+    1 UINT dirnamelen "which portion of the filename is the directory, including the last /"
+    * STRING {'terminator': None, 'pascal': True} filename 
 
 PACKET mkdirrequest:
     * requestheader {'command': 0x00} +header

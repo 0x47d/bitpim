@@ -849,6 +849,12 @@ class buffer:
         "Returns distance into data we are"
         return self._offset
 
+    def peeknextbyte(self, howmuch=0):
+        "Returns value of next byte, but doesn't advance position"
+        if self._offset+howmuch>=len(self._data):
+            return None
+        return ord(self._data[self._offset+howmuch]) 
+
     def getnextbyte(self):
         "Returns next byte"
         if self._offset>=len(self._data):
@@ -866,6 +872,11 @@ class buffer:
         self._offset+=howmany
         return res
 
+    def peeknextbytes(self, howmany):
+        if self._offset+howmany>len(self._data):
+            return None
+        return self._data[self._offset:self._offset+howmany]
+
     def getremainingbytes(self):
         "Returns rest of buffer"
         sz=len(self._data)-self._offset
@@ -874,6 +885,10 @@ class buffer:
     def hasmore(self):
         "Is there any data left?"
         return self._offset<len(self._data)
+
+    def howmuchmore(self):
+        "Returns how many bytes left"
+        return len(self._data)-self._offset
 
     def appendbyte(self, val):
         """Appends byte to data.

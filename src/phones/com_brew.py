@@ -471,3 +471,98 @@ def brewbasename(str):
         return str[str.rfind("/")+1:]
     return str
 
+class SPURIOUSZERO(prototypes.BaseProtogenClass):
+    """This is a special class used to consume the spurious zero in some p_brew.listfileresponse
+
+    The three bytes are formatted as follows:
+
+       - An optional 'null' byte (this class)
+       - A byte specifying how long the directory name portion is, including trailing slash
+       - A byte specifying the length of the whole name
+       - The bytes of the filename (which includes the full directory name)
+
+    Fun and games ensue because files in the root directory have a zero length directory
+    name, so we have some heuristics to try and distinguish if the first byte is the
+    spurious zero or not
+    """
+    def __init__(self, *args, **kwargs):
+        super(SPURIOUSZERO,self).__init__(*args, **kwargs)
+        
+        self._value=None
+        if self._ismostderived(SPURIOUSZERO):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(SPURIOUSZERO, self)._update(args, kwargs)
+        
+        self._complainaboutunusedargs(SPURIOUSZERO, kwargs)
+
+        if len(args):
+            raise TypeError("Unexpected arguments "+`args`)
+
+    def readfrombuffer(self, buf):
+         self._bufferstartoffset=buf.getcurrentoffset()
+
+         # there are several cases this code has to deal with
+         #
+         # The data is ordered like this:
+         #
+         # optional spurious zero (sz)
+         # dirlen
+         # fulllen
+         # name
+         #
+         # These are the various possibilities.  The first two
+         # are a file in the root directory (dirlen=0), with the other
+         # two being a file in a subdirectory  (dirlen>0). fulllen
+         # is always >0
+         #
+         # A:    dirlen=0 fulllen name
+         # B: sz dirlen=0 fulllen name
+         # C:    dirlen>0 fulllen name
+         # D: sz dirlen>0 fulllen name
+
+         while True:  # this is just used so we can break easily
+
+             # CASE C
+             if buf.peeknextbyte()!=0:
+                 self._value=-1
+                 break
+
+             # CASE B
+             if buf.peeknextbyte(1)==0:
+                 self._value=buf.getnextbyte() # consume sz
+                 break
+             
+             # A & D are harder to distinguish since they both consist of a zero
+             # followed by non-zero.  Consequently we examine the data for
+             # consistency
+
+             all=buf.peeknextbytes(min(max(2+buf.peeknextbyte(1), 3+buf.peeknextbyte(2)), buf.howmuchmore()))
+
+             # are the values consistent for D?
+             ddirlen=ord(all[1])
+             dfulllen=ord(all[2])
+
+             if ddirlen<dfulllen and ddirlen<len(all)-3 and all[3+ddirlen-1]=='/':
+                 self._value=buf.getnextbyte() # consume sz
+                 break
+
+             # case C, do nothing
+             self._value=-2
+             break
+             
+         self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        raise NotImplementedError()
+
+    def packetsize(self, buf):
+         raise NotImplementedError()
+
+    def getvalue(self):
+        "Returns the string we are"
+
+        if self._value is None:
+            raise prototypes.ValueNotSetException()
+        return self._value
