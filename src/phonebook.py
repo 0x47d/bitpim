@@ -133,6 +133,13 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
             self.stylesfilestat=os.stat(self.stylesfile)
         self.xcpstyles['entry']=entry
         text=self.xcp.xcopywithdns(self.xcpstyles)
+        try:
+            text=bphtml.applyhtmlstyles(text, self.xcpstyles['styles'])
+        except:
+            f=open("debug.html", "wt")
+            f.write(text)
+            f.close()
+            raise
         self.SetPage(text)
 
 ###
