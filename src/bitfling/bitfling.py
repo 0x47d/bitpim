@@ -17,6 +17,9 @@ import sys
 import cStringIO
 import os
 
+# m2 stuff
+import M2Crypto
+
 # wx stuff
 import wx
 import wx.html
@@ -223,6 +226,18 @@ class MainWindow(wx.Frame):
     def __init__(self, parent, id, title):
         self.taskwin=None # set later
         wx.Frame.__init__(self, parent, id, title, style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION)
+
+        # Establish config stuff
+        cfgstr='bitfling'
+        if guihelper.IsMSWindows():
+            cfgstr="BitFling"  # nicely capitalized on Windows
+        self.config=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
+
+        # for help to save prefs
+        wx.GetApp().SetAppName(cfgstr)
+        wx.GetApp().SetVendorName(cfgstr)
+
+        
         wx.EVT_CLOSE(self, self.CloseRequested)
 
         panel=wx.Panel(self, -1)
@@ -257,6 +272,9 @@ class MainWindow(wx.Frame):
         wx.EVT_BUTTON(self, self.hide.GetId(), self.OnHideButton)
         wx.EVT_BUTTON(self, self.exit.GetId(), self.OnExitButton)
 
+        self.xmlrpcserver=None
+        wx.CallAfter(self.StartIfICan)
+        
     def CloseRequested(self, evt):
         if evt.CanVeto():
             self.Show(False)
@@ -275,7 +293,44 @@ class MainWindow(wx.Frame):
     def Log(self, text):
         self.lw.log(text)
 
+    def GetCertificateFilename(self):
+        """Return certificate filename
 
+        By default $HOME (or My Documents) / .bitfling.key
+        but can be overridden with "certificatefile" config key"""
+        
+        if guihelper.IsMSWindows(): # we want subdir of my documents on windows
+            # nice and painful
+            import _winreg
+            x=_winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
+            y=_winreg.OpenKey(x, r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
+            str=_winreg.QueryValueEx(y, "Personal")[0]
+            _winreg.CloseKey(y)
+            _winreg.CloseKey(x)
+            path=os.path.join(str, ".bitfling.key")
+        else:
+            path=os.path.expanduser("~/.bitfling.key")
+        return self.config.Read("certificatefile", path)
+        
+
+    def StartIfICan(self):
+        certfile=self.GetCertificateFilename()
+        if not os.path.isfile(certfile):
+            certfile=None
+        port=self.config.ReadInt("port", 0)
+        if port<1 or port>65535: port=None
+        host=self.config.Read("bindaddress", "")
+        if certfile is None or port is None:
+            if self.xmlrpcserver is not None:
+                self.xmlrpcserver.Stop()
+                self.xmlrpcserver=None
+            return
+        ctx=M2Crypto.SSL.Context("sslv23")
+        ctx.load_cert(certfile)
+        self.xmlrpcserver=XMLRPCService(self, host, port, ctx)
+        self.xmlrpcserver.setDaemon(True)
+        server.start()
+        
 class CertificateDialog(wx.Dialog):
     """A dialog for generating a self-signed certificate"""
     def __init__(self, parent):
@@ -304,6 +359,36 @@ def GenerateSelfSignedCert(fileout, subject, email="", org="", orgunit="", l="",
         # -nodes means keyfile is not password protected
         # openssl req -config bitfling.cfg -new -x509 -newkey rsa:1024 -nodes -days 365 -keyout file.pem -out file.pem \
         #    -subj "/countryName=US/L=Texas/O=org/OU=orgunit/CN=Who Me?"  # can have zero length strings
+
+
+class XMLRPCService(xmlrpcstuff.Server):
+
+    def __init__(self, mainwin, host, port, ctx):
+        self.mainwin=mainwin
+        xmlrpcstuff.Server.__init__(self, host, port, ctx)
+
+    def OnNewConnection(self, clientaddr, _):
+        return True
+
+    def OnMethodDispatch(self, method, params, username, password, clientaddr, clientcert):
+        # we don't care about clientcert
+        self.verifyok(username, password, clientaddr) # are they legitimately using the username, password and address?
+
+        # all methods 
+        method=method.split(".")
+        if len(method)>1:
+            assert False, "write this code"
+
+        method="exp_"+method
+        if not hasattr(self, method):
+            raise Exception("No such method")
+        return getattr(self, method)(*params)
+
+    def exp_comscan(self):
+        return self.mainwin.comscan_info
+
+    def exp_usbscan(self):
+        return self.mainwin.usbscan_info
 
 
 if __name__ == '__main__':
