@@ -716,8 +716,9 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
         for f in os.listdir(self.thedir):
             # delete them all except windows magic ones which we ignore
-            if f.lower() in self.skiplist:
+            if f.lower() not in self.skiplist:
                 os.remove(os.path.join(self.thedir, f))
+
         d=dict[key]
         for i in d:
             f=open(os.path.join(self.thedir, i), "wb")
