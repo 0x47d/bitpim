@@ -417,6 +417,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         for n in rp:
             current_date=today
             end_date=datetime.date(*n.end[:3])
+            cnt=0
             while current_date<=end_date:
                 if n.is_active(current_date.year, current_date.month,
                                current_date.day):
@@ -424,6 +425,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                           current_date.day)
                     r.setdefault(cd_l, []).append(\
                                       Samsung_Calendar(n, cd_l))
+                    cnt+=1
+                    if cnt>self.__cal_max_events:
+                        # enough for this one, breaking out
+                        break
                 current_date+=delta_1
         # and put them all into a list
         res=[]
