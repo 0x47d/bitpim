@@ -694,7 +694,7 @@ class ImageCropSelect(wx.ScrolledWindow):
         sz=max(sz[0],sz2[0])+32,max(sz[1],sz2[1])+32
         if self._bufbmp is None or self._bufbmp.GetWidth()<sz[0] or self._bufbmp.GetHeight()<sz[1]:
             self._bufbmp=wx.EmptyBitmap((sz[0]+64)&~8, (sz[1]+64)&~8)
-        dc=wx.BufferedPaintDC(self, self._bufbmp)
+        dc=wx.BufferedPaintDC(self, self._bufbmp, style=wx.BUFFER_VIRTUAL_AREA)
         if sz2[0]<sz[0] or sz2[1]<sz[1]:
             dc.SetBackground(self.parentbg)
             dc.Clear()
