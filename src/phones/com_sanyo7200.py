@@ -26,13 +26,7 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo7200
     serialsname='scp7200'
 
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
-                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
-                       '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                       '', 'La Bamba', 'Foster Dreamer', 'Schubert March',
-                       'Mozart Eine Kleine', 'Debussey Arabesq', 'Nedelka',
-                       'Brahms Hungarian', 'Star Spangled Banner', 'Rodeo',
-                       'Birds', 'Toy Box' )
+    builtinringtones=( 'None', 'Vibrate')
                       
     calendar_defaultringtone=0
 
@@ -44,11 +38,6 @@ class Profile(com_sanyo.Profile):
 
     protocolclass=p_sanyo7200
     serialsname='scp7200'
-
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-    )
 
     def __init__(self):
         com_sanyo.Profile.__init__(self)
