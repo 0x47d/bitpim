@@ -53,7 +53,7 @@ class ImportCSVDialog(wx.Dialog):
                      "Business Street", "Business City", "Business Postal Code",
                      "Business State", "Business Country/Region", "Business Web Page",
                      "Business Phone", "Business Fax", "Pager", "Company", "Notes", "Private",
-                     "Category"]
+                     "Category", "Categories"]
     
     # used for the filtering - any of the named columns have to be present for the data row
     # to be considered to have that type of column
@@ -118,12 +118,17 @@ class ImportCSVDialog(wx.Dialog):
         if self.qualifier is None or len(self.qualifier)==0:
             self.qualifier='"'
         self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
-        self.delimiter= DSV.guessDelimiter(self.data)
+        self.delimiter=DSV.guessDelimiter(self.data)
+        # sometimes it picks the letter 'w'
+        if self.delimiter is not None and self.delimiter.lower() in "abcdefghijklmnopqrstuvwxyz":
+            self.delimiter=None
         if self.delimiter is None:
             if filename.lower().endswith("tsv"):
                 self.delimiter="\t"
             else:
                 self.delimiter=","
+        # complete processing the data otherwise we can't guess if first row is headers
+        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
         # Delimter and Qualifier row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
@@ -133,7 +138,7 @@ class ImportCSVDialog(wx.Dialog):
         self.wqualifier=wx.ComboBox(self, wx.NewId(), self.qualifier, choices=['"', "'", "(None)"], style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
         hbs.Add(self.wqualifier, 1, wx.EXPAND|wx.ALL, 2)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        # Pre-set columns and save row
+        # Pre-set columns, save and header row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
         self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN|wx.WANTS_CHARS)
@@ -141,15 +146,18 @@ class ImportCSVDialog(wx.Dialog):
         self.wsave=wx.CheckBox(self, wx.NewId(), "Save")
         self.wsave.SetValue(False)
         hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wfirstisheader=wx.CheckBox(self, wx.NewId(), "First row is header")
+        self.wfirstisheader.SetValue(DSV.guessHeaders(self.data))
+        hbs.Add(self.wfirstisheader, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 5)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # Only records with ... row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
         self.wname=wx.CheckBox(self, wx.NewId(), "a name")
-        self.wname.SetValue(True)
+        self.wname.SetValue(False)
         hbs.Add(self.wname, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wnumber=wx.CheckBox(self, wx.NewId(), "a number")
-        self.wnumber.SetValue(True)
+        self.wnumber.SetValue(False)
         hbs.Add(self.wnumber, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.waddress=wx.CheckBox(self, wx.NewId(), "an address")
         hbs.Add(self.waddress, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
@@ -170,6 +178,7 @@ class ImportCSVDialog(wx.Dialog):
         self.SetAutoLayout(True)
         for w in self.wname, self.wnumber, self.waddress, self.wemail:
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
+        wx.EVT_CHECKBOX(self, self.wfirstisheader.GetId(), self.OnHeaderToggle)
         wx.grid.EVT_GRID_CELL_CHANGE(self, self.OnGridCellChanged)
         wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
         wx.EVT_TEXT(self, self.wqualifier.GetId(), self.OnQualifierChanged)
@@ -190,13 +199,16 @@ class ImportCSVDialog(wx.Dialog):
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
 
+    def OnHeaderToggle(self, _):
+        self.columns=None
+        self.DataNeedsUpdate()
+
     def OnDelimiterChanged(self, _):
         "Called when the user has changed the delimiter"
         text=self.wdelimiter.GetValue()
         if hasattr(self, "lastwdelimitervalue") and self.lastwdelimitervalue==text:
             print "on delim changed ignored"
             return
-        print "on delim changed", text
 
         if len(text)!=1:
             if text in self.delimiternames.values():
@@ -358,9 +370,23 @@ class ImportCSVDialog(wx.Dialog):
                         del rec[key]
             if len(urls):
                 entry["urls"]=urls
+            # categories
+            cats=[]
+            if rec.has_key("Category"):
+                for cat in rec['Category']:
+                    cats.append({'category': cat})
+                del rec["Category"]
+            if rec.has_key("Categories"):
+                # multiple entries in the field, semi-colon seperated
+                for cat in rec['Categories'].split(';'):
+                    cats.append({'category': cat})
+                del rec['Categories']
+            if  len(cats):
+                entry["categories"]=cats
 
             # stash it away
             res[count]=entry
+            # Did we forget anything?
             if len(rec):
                 raise Exception("Internal conversion failed to complete on %s\nStill to do: %s" % (record, rec))
             count+=1
@@ -469,7 +495,7 @@ class ImportCSVDialog(wx.Dialog):
         while len(self.columns)<numcols:
             self.columns.append("<ignore>")
         self.columns=self.columns[:numcols]
-        if not DSV.guessHeaders(self.data):
+        if not self.wfirstisheader.GetValue():
             return
         headers=self.data[0]
         self.data=self.data[1:]
