@@ -69,7 +69,7 @@ class Phone(com_samsung.Phone):
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
     __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'user/sound/ringer', 17, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'nvm/brew/shared', 17, 10)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'images', 'nvm/brew/shared', 17, 10)
         
     def __init__(self, logtarget, commport):
 
@@ -615,36 +615,22 @@ class Profile(com_samsung.Profile):
 
     # fill in your own image origins using these
     # use this temorarily until the stock one is finalized
-    imageorigins={
-        "wallpapers": { 'meta-help': 'Generic wallpapers'}
-        }
-
-    imagetargets={
-        "BMP Wallpaper": {'meta-help': 'Display as wallpaper'},
-        "PNG Wallpaper": {'meta-help': 'Display as wallpaper'},
-        "BMP Full Screen": {'meta-help': 'Display as wallpaper'},
-        "PNG Full Screen": {'meta-help': 'Display as wallpaper'},
-        }
-
+    imageorigins={}
+    imageorigins.update(common.getkv(com_samsung.Profile.stockimageorigins, "images"))
+  
+    imagetargets={}
+    imagetargets.update(common.getkv(com_samsung.Profile.stockimagetargets, "wallpaper",
+                                      {'width': 128, 'height': 128, 'format': "PNG"}))
+    imagetargets.update(common.getkv(com_samsung.Profile.stockimagetargets, "fullscreen",
+                                      {'width': 128, 'height': 160, 'format': "PNG"}))
+    
     def GetImageOrigins(self):
         # Note: only return origins that you can write back to the phone
         return self.imageorigins
 
     def GetTargetsForImageOrigin(self, origin):
-        targets={}
-        targets.update(common.getkv(self.imagetargets,
-                                    "BMP Wallpaper",
-                                  {'width': 128, 'height': 128, 'format': "BMP"}))
-        targets.update(common.getkv(self.imagetargets,
-                                    "PNG Wallpaper",
-                                  {'width': 128, 'height': 128, 'format': "PNG"}))
-        targets.update(common.getkv(self.imagetargets,
-                                    "BMP Full Screen",
-                                  {'width': 128, 'height': 160, 'format': "BMP"}))
-        targets.update(common.getkv(self.imagetargets,
-                                    "PNG Full Screen",
-                                  {'width': 128, 'height': 160, 'format': "PNG"}))
-        return targets
+        if origin=='images':
+            return self.imagetargets
 
 #-------------------------------------------------------------------------------
 class FileEntries:
@@ -740,7 +726,7 @@ class FileEntries:
                                     (self.__max_file_count, self.__file_type))
                 break
             file_name=self.__path+'/'+n['name']
-            if self.__origin=='wallpapers':
+            if self.__origin=='images':
                 # try to optimize it if it's a png image file
                 file_contents=conversions.convertto8bitpng_joe(n['data'])
             else:
@@ -836,7 +822,7 @@ class ImageIndex:
                 e=img_idx.entry[i]
                 if e.name_len:
                     r[idx+i]={ 'name': e.file_name[l:e.file_name_len],
-                               'origin': 'wallpapers' }
+                               'origin': 'images' }
         except:
             raise
         return r

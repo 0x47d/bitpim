@@ -235,6 +235,9 @@ class WallpaperView(guiwidgets.FileView):
 
     def GetItemThumbnail(self, name, width, height):
         img,_=self.GetImage(name)
+        if img is None or not img.Ok():
+            # unknown image file, display wallpaper.png
+            img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
         if width!=img.GetWidth() or height!=img.GetHeight():
             # scale the image. 
             sfactorw=float(width)/img.GetWidth()
