@@ -608,32 +608,22 @@ class Profile(com_samsung.Profile):
         if afi.format in ("MIDI", "QCP", "PMD"):
             for k,n in self.RINGTONE_LIMITS.items():
                 setattr(afi, k, n)
-            return self.__audio_ext[afi.format], afi
+            return currentextension, afi
         d=self.RINGTONE_LIMITS.copy()
         d['format']='QCP'
         return ('qcp', fileinfo.AudioFileInfo(afi, **d))
 
     # fill in your own image origins using these
-    stockimageorigins={
-        "images": {'meta-help': 'General images'},
-        "mms": {'meta-help': 'Multimedia Messages'},
-        "drm": {'meta-help': 'DRM protected images'},
-        "camera": {'meta-help': 'Camera images'},
+    # use this temorarily until the stock one is finalized
+    imageorigins={
         "wallpapers": { 'meta-help': 'Generic wallpapers'}
         }
-    # Override in derived class - use this template.  Avoid defining new origins -
-    # instead add them to the stock list and use that.  That will ensure the
-    # same string and description are used for all phones.
-    imageorigins={}
-    imageorigins.update(common.getkv(stockimageorigins, "wallpapers"))
 
-    stockimagetargets={
-        # You need to override in your GetTargetsForImageOrigin function and update
-        # for ImgFileInfo fields
-        "128x128 BMP wallpaper": {'meta-help': 'Display as wallpaper'},
-        "128x128 PNG wallpaper": {'meta-help': 'Display as wallpaper'},
-        "128x160 BMP wallpaper": {'meta-help': 'Display as wallpaper'},
-        "128x160 PNG wallpaper": {'meta-help': 'Display as wallpaper'},
+    imagetargets={
+        "BMP Wallpaper": {'meta-help': 'Display as wallpaper'},
+        "PNG Wallpaper": {'meta-help': 'Display as wallpaper'},
+        "BMP Full Screen": {'meta-help': 'Display as wallpaper'},
+        "PNG Full Screen": {'meta-help': 'Display as wallpaper'},
         }
 
     def GetImageOrigins(self):
@@ -642,17 +632,17 @@ class Profile(com_samsung.Profile):
 
     def GetTargetsForImageOrigin(self, origin):
         targets={}
-        targets.update(common.getkv(self.stockimagetargets,
-                                    "128x128 BMP wallpaper",
+        targets.update(common.getkv(self.imagetargets,
+                                    "BMP Wallpaper",
                                   {'width': 128, 'height': 128, 'format': "BMP"}))
-        targets.update(common.getkv(self.stockimagetargets,
-                                    "128x128 PNG wallpaper",
+        targets.update(common.getkv(self.imagetargets,
+                                    "PNG Wallpaper",
                                   {'width': 128, 'height': 128, 'format': "PNG"}))
-        targets.update(common.getkv(self.stockimagetargets,
-                                    "128x160 BMP wallpaper",
+        targets.update(common.getkv(self.imagetargets,
+                                    "BMP Full Screen",
                                   {'width': 128, 'height': 160, 'format': "BMP"}))
-        targets.update(common.getkv(self.stockimagetargets,
-                                    "128x160 PNG wallpaper",
+        targets.update(common.getkv(self.imagetargets,
+                                    "PNG Full Screen",
                                   {'width': 128, 'height': 160, 'format': "PNG"}))
         return targets
 
