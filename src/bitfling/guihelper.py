@@ -65,7 +65,7 @@ class LogWindow(wx.Panel):
     def log(self, str):
         now=time.time()
         t=time.localtime(now)
-        if str[0]=="&": # already has time etc stamps
+        if len(str)==0 or str[0]=="&": # already has time etc stamps
             self.outstandingtext+=str[1:]+"\r\n"
         else:
             self.outstandingtext+="%d:%02d:%02d.%03d: %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
@@ -129,7 +129,7 @@ def formatexception(excinfo=None, lastframes=8):
 p=sys.path[0]
 if p.lower().endswith(".zip"): # zip importer in action
     p=os.path.dirname(p)
-resourcedirectory=os.path.abspath(p)
+resourcedirectory=os.path.join(os.path.abspath(p), "resources")
 
 def getresourcefile(filename):
     """Returns name of file by adding it to resource directory pathname
@@ -152,7 +152,9 @@ def run(*args):
         # so we call system() instead
         str=""
         for a in args:
-            if a.find(' ')>=0:
+            if len(a)==0:
+                str+=' ""'
+            elif a.find(' ')>=0:
                 str+=' "'+a+'"'
             else:
                 str+=" "+a
