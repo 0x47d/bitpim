@@ -332,6 +332,9 @@ class MainApp(wxApp):
         # self.helpprovider=wxHelpControllerHelpProvider(self.helpcontroller)
         # wxHelpProvider_Set(provider)
 
+    def displayhelpid(self, id):
+        self.helpcontroller.Display(id)
+
     def makemainwindow(self):
         if self.made:
             return # already been called
@@ -1335,11 +1338,13 @@ def gethelpfilename():
     # we look in a help subdirectory first which is
     # present in the developer tree
     j=os.path.join
-    paths=( j(resourcedirectory, "..", "help"),
-            resourcedirectory )
+    paths=( (j(resourcedirectory, "..", "help"), True),
+            (resourcedirectory, False) )
 
-    for p in paths:
-        if os.path.isdir(p):
+    for p,mention in paths:
+        if os.path.isfile(j(p, "bitpim.htb")):
+            if mention:
+                print "Using help file from "+p
             return j(p, "bitpim")
 
     assert False
