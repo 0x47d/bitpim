@@ -537,7 +537,7 @@ class Phone:
         for baud in (0, 115200, 19200, 230400, 38400):
             if baud:
                 self.comm.setbaudrate(baud)
-            self.comm.write("AT$LGDMGO\r\n")
+            self.comm.write("AT$QCDMG\r\n")
             try:
                 self.comm.readsome()
                 self.comm.setbaudrate(38400) # dm mode is always 38400
