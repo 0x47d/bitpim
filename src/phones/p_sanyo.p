@@ -21,7 +21,8 @@ _NUMPBSLOTS=300
 _NUMSPEEDDIALS=8
 _NUMLONGNUMBERS=5
 _LONGPHONENUMBERLEN=30
-
+_NUMEVENTSLOTS=100
+_NUMCALLALARMSLOTS=15
 %}
 
 PACKET firmwarerequest:
@@ -100,7 +101,6 @@ PACKET ownerinforesponse:
     179 UNKNOWN pad
     
 PACKET eventrequest:
-    P UINT {'constant': 100} maxevents "Number of event slots"
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x23} +header
     1 UINT slot
@@ -109,12 +109,12 @@ PACKET eventrequest:
 PACKET evententry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
-    14 STRING {'raiseonunterminatedread': False} eventname
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT start "# seconds since Jan 1, 1980 approximately"
     4 UINT end
-    14 STRING {'raiseonunterminatedread': False} location
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
     1 UINT alarm_type "0: Beep, 1: Voice, 2: Silent"
@@ -124,7 +124,7 @@ PACKET evententry:
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT alarm
-    1 UINT {'default': 0} +dunno4
+    1 UINT {'default': 0} +serial "Some kind of serial number"
 
 PACKET eventresponse:
     * sanyoheader header
