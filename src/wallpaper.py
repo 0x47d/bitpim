@@ -12,6 +12,7 @@
 # standard modules
 import os
 import sys
+import cStringIO
 
 # wx modules
 import wx
@@ -20,6 +21,7 @@ import wx
 import guiwidgets
 import brewcompressedimage
 import guihelper
+import common
 
 ###
 ###  Wallpaper pane
@@ -32,6 +34,7 @@ class WallpaperView(guiwidgets.FileView):
     
     def __init__(self, mainwindow, parent, id=-1):
         guiwidgets.FileView.__init__(self, mainwindow, parent, id, style=wx.LC_ICON|wx.LC_SINGLE_SEL|wx.LC_AUTOARRANGE )
+        wx.FileSystem_AddHandler(BPFSHandler(self))
         if guihelper.HasFullyFunctionalListView():
             self.InsertColumn(2, "Size")
             self.InsertColumn(3, "Index")
@@ -60,6 +63,14 @@ class WallpaperView(guiwidgets.FileView):
         dict.update(self._data)
         return dict
 
+    def GetImage(self, file):
+        file=os.path.join(self.mainwindow.wallpaperpath, file)
+        if self.isBCI(file):
+            image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+        else:
+            image=wx.Image(file)
+        return image
+
     def populate(self, dict):
         self.DeleteAllItems()
         self._data={}
@@ -73,11 +84,7 @@ class WallpaperView(guiwidgets.FileView):
         for i in keys:
             # ImageList barfs big time when adding bmps that came from
             # gifs
-            file=os.path.join(self.mainwindow.wallpaperpath, i)
-            if self.isBCI(file):
-                image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-            else:
-                image=wx.Image(file)
+            image=self.GetImage(i)
 
             if not image.Ok():
                 dlg=AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
@@ -177,12 +184,12 @@ class WallpaperView(guiwidgets.FileView):
             bitmap=wx.EmptyBitmap(self.usewidth, self.useheight)
             mdc=wx.MemoryDC()
             mdc.SelectObject(bitmap)
-            # scale the source.  we use int arithmetic with 10000 being 1.000
-            sfactorw=self.usewidth*10000/img.GetWidth()
-            sfactorh=self.useheight*10000/img.GetHeight()
+            # scale the source. 
+            sfactorw=self.usewidth*1.0/img.GetWidth()
+            sfactorh=self.useheight*1.0/img.GetHeight()
             sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=img.GetWidth()*sfactor/10000
-            newheight=img.GetHeight()*sfactor/10000
+            newwidth=img.GetWidth()*sfactor/1.0
+            newheight=img.GetHeight()*sfactor/1.0
             self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
                                                             img.GetHeight(), newwidth,
                                                             newheight))
@@ -224,3 +231,111 @@ class WallpaperView(guiwidgets.FileView):
             version=1  # the are the same
 
         # 1 to 2 etc
+
+
+###
+### Virtual filesystem where the images etc come from for the HTML stuff
+###
+
+class BPFSHandler(wx.FileSystemHandler):
+
+    def __init__(self, wallpapermanager):
+        wx.FileSystemHandler.__init__(self)
+        self.wpm=wallpapermanager
+
+    def CanOpen(self, location):
+        proto=self.GetProtocol(location)
+        if proto=="bpimage" or proto=="bpuserimage":
+            print "handling url",location
+            return True
+        return False
+
+    def OpenFile(self,filesystem,location):
+        return common.exceptionwrap(self._OpenFile)(filesystem,location)
+
+    def _OpenFile(self, filesystem, location):
+        proto=self.GetProtocol(location)
+        r=self.GetRightLocation(location)
+        params=r.split(';')
+        r=params[0]
+        params=params[1:]
+        p={}
+        for param in params:
+            x=param.find('=')
+            key=param[:x]
+            value=param[x+1:]
+            try:
+                p[key]=int(value)
+            except:
+                p[key]=value
+        if proto=="bpimage":
+            return self.OpenBPImageFile(location, r, **p)
+        elif proto=="bpuserimage":
+            return self.OpenBPUserImageFile(location, r, **p)
+        return None
+
+    def OpenBPUserImageFile(self, location, name, **kwargs):
+        image=self.wpm.GetImage(name)
+        return BPFSImageFile(self, location, img=image, **kwargs)
+
+    def OpenBPImageFile(self, location, name, **kwargs):
+        f=guihelper.getresourcefile(name)
+        if not os.path.isfile(f):
+            print f,"doesn't exist"
+            return None
+        return BPFSImageFile(self, location, name=f, **kwargs)
+
+class BPFSImageFile(wx.FSFile):
+    """Handles image files
+
+    All files are internally converted to PNG
+    """
+
+    def __init__(self, fshandler, location, name=None, img=None, width=32, height=32):
+        self.fshandler=fshandler
+        self.location=location
+
+        if img is None:
+            img=wx.Image(name)
+
+        # resize image
+        sfactorw=width*1.0/img.GetWidth()
+        sfactorh=height*1.0/img.GetHeight()
+        sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
+        newwidth=img.GetWidth()*sfactor/1.0
+        newheight=img.GetHeight()*sfactor/1.0
+        img.Rescale(newwidth, newheight)
+
+        b=wx.EmptyBitmap(width, height)
+        mdc=wx.MemoryDC()
+        mdc.SelectObject(b)
+        # mdc.SetBackground(wx.TRANSPARENT_BRUSH)
+        mdc.SetBackground(wx.WHITE_BRUSH)
+        mdc.Clear()
+        
+        mdc.DrawBitmap(img.ConvertToBitmap(), (width-img.GetWidth())/2, (height-img.GetHeight())/2, True)
+        mdc.SelectObject(wx.NullBitmap)
+        
+        f=common.gettempfilename("png")
+        if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
+            raise Exception, "Saving to png failed"
+
+        file=open(f, "rb")
+        data=file.read()
+        file.close()
+        del file
+        os.remove(f)
+
+        s=wx.InputStream(cStringIO.StringIO(data))
+        
+        wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
+
+
+class StringInputStream(wx.InputStream):
+
+    def __init__(self, data):
+        f=cStringIO.StringIO(data)
+        wx.InputStream.__init__(self,f)
+
+    
+        

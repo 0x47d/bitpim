@@ -212,7 +212,6 @@ class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
     def __init__(self, mainwindow, parent, id=-1):
-        wx.FileSystem_AddHandler(BPFSHandler())
         wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
@@ -450,101 +449,3 @@ class PhoneWidget(wx.SplitterWindow):
                 return i[name]
         return default
 
-###
-### Virtual filesystem where the images etc come from for the HTML stuff
-###
-
-class BPFSHandler(wx.FileSystemHandler):
-
-    def __init__(self):
-        wx.FileSystemHandler.__init__(self)
-
-    def CanOpen(self, location):
-        proto=self.GetProtocol(location)
-        if proto=="bpimage" or proto=="bpuserimage":
-            print "handling url",location
-            return True
-        return False
-
-    def OpenFile(self,filesystem,location):
-        return common.exceptionwrap(self._OpenFile)(filesystem,location)
-
-    def _OpenFile(self, filesystem, location):
-        proto=self.GetProtocol(location)
-        r=self.GetRightLocation(location)
-        params=r.split(';')
-        r=params[0]
-        params=params[1:]
-        p={}
-        for param in params:
-            x=param.find('=')
-            key=param[:x]
-            value=param[x+1:]
-            try:
-                p[key]=int(value)
-            except:
-                p[key]=value
-        if proto=="bpimage":
-            return self.OpenBPImageFile(location, r, **p)
-        elif proto=="bpuserimage":
-            return self.OpenBPUserImageFile(location, r, **p)
-        return None
-
-    def OpenBPUserImageFile(self, location, name, **kwargs):
-        return None
-
-    def OpenBPImageFile(self, location, name, **kwargs):
-        f=guihelper.getresourcefile(name)
-        if not os.path.isfile(f):
-            print f,"doesn't exist"
-            return None
-        print "here"
-        return BPFSImageFile(self, location, f, **kwargs)
-
-class BPFSImageFile(wx.FSFile):
-    """Handles image files
-
-    All files are internally converted to PNG
-    """
-
-    def __init__(self, fshandler, location, name, data=None, width=32, height=32):
-        self.fshandler=fshandler
-        self.location=location
-
-        if data is None:
-            img=wx.Image(name)
-        else:
-            wx.ImageFromStream(StringInputStream(data))
-
-        b=wx.EmptyBitmap(width, height)
-        mdc=wx.MemoryDC()
-        mdc.SelectObject(b)
-        mdc.SetBackgroundMode(wx.TRANSPARENT)
-        mdc.Clear()
-        # ::TODO:: size conversions, center placing
-        mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
-        mdc.SelectObject(wx.NullBitmap)
-        
-        f=common.gettempfilename("png")
-        if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
-            raise Exception, "Saving to png failed"
-
-        file=open(f, "rb")
-        data=file.read()
-        file.close()
-        del file
-        os.remove(f)
-
-        s=wx.InputStream(cStringIO.StringIO(data))
-        
-        wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
-
-
-class StringInputStream(wx.InputStream):
-
-    def __init__(self, data):
-        f=cStringIO.StringIO(data)
-        wx.InputStream.__init__(self,f)
-
-    
-        
