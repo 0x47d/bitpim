@@ -141,17 +141,22 @@ class ImportDialog(wx.Dialog):
 
         # Only records with ... row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
+        # ::TODO:: remember settings in config and retrieve here as defaults
+        hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.ALL|wx.ALIGN_CENTRE,2)
         self.wname=wx.CheckBox(self, wx.NewId(), "a name")
         self.wname.SetValue(False)
-        hbs.Add(self.wname, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
+        hbs.Add(self.wname, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wnumber=wx.CheckBox(self, wx.NewId(), "a number")
         self.wnumber.SetValue(False)
-        hbs.Add(self.wnumber, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
+        hbs.Add(self.wnumber, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.waddress=wx.CheckBox(self, wx.NewId(), "an address")
-        hbs.Add(self.waddress, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
+        hbs.Add(self.waddress, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wemail=wx.CheckBox(self, wx.NewId(), "an email")
-        hbs.Add(self.wemail, 0, wx.EXPAND|wx.LEFT|wx.ALIGN_CENTRE,7)
+        hbs.Add(self.wemail, 0, wx.LEFT|wx.ALIGN_CENTRE,7)
+        self.categoriesbutton=wx.Button(self, wx.NewId(), "Categories...")
+        hbs.Add(self.categoriesbutton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE, 10)
+        self.categorieslabel=wx.StaticText(self, -1, "*ALL*")
+        hbs.Add(self.categorieslabel, 1, wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, 5)
         vbs.Add(hbs,0, wx.EXPAND|wx.ALL,5)
         # Preview grid row
         self.preview=PreviewGrid(self, wx.NewId())
@@ -170,6 +175,7 @@ class ImportDialog(wx.Dialog):
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
 
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_BUTTON(self, self.categoriesbutton.GetId(), self.OnCategories)
         self.DataNeedsUpdate()
 
     def DataNeedsUpdate(self, _=None):
@@ -181,7 +187,6 @@ class ImportDialog(wx.Dialog):
         "Called when the user has changed one of the columns"
         self.columns[event.GetCol()]=self.preview.GetCellValue(0, event.GetCol())
         self.wcolumnsname.SetValue("Custom")
-        self.wsave.Enable(True)
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
 
@@ -190,7 +195,6 @@ class ImportDialog(wx.Dialog):
         if self.preview.IsCellEditControlEnabled():
             self.preview.HideCellEditControl()
             self.preview.SaveEditControlValue()
-        # ::TODO:: deal with save button
         self.EndModal(wx.ID_OK)
         
     def GetFormattedData(self):
@@ -367,6 +371,9 @@ class ImportDialog(wx.Dialog):
                 raise Exception("Internal conversion failed to complete on %s\nStill to do: %s" % (record, rec))
             count+=1
         return res
+
+    def OnCategories(self, _):
+        pass
     
     def UpdateData(self):
         "Actually update the preview data"
@@ -550,9 +557,6 @@ class ImportCSVDialog(ImportDialog):
         hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
         self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN|wx.WANTS_CHARS)
         hbs.Add(self.wcolumnsname, 1, wx.EXPAND|wx.ALL, 2)
-        self.wsave=wx.CheckBox(self, wx.NewId(), "Save")
-        self.wsave.SetValue(False)
-        hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
         self.wfirstisheader=wx.CheckBox(self, wx.NewId(), "First row is header")
         self.wfirstisheader.SetValue(DSV.guessHeaders(self.data))
         hbs.Add(self.wfirstisheader, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 5)
@@ -641,9 +645,7 @@ class ImportCSVDialog(ImportDialog):
         
     def OnColumnsNameChanged(self,_):
         if self.wcolumnsname.GetValue()=="Custom":
-            self.wsave.Enable(True)
             return
-        self.wsave.Enable(False)
         str=self.wcolumnsname.GetValue()
         for file in guihelper.getresourcefiles("*.pdc"):
             f=common.opentextfile(file)
