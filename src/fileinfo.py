@@ -618,9 +618,9 @@ def idaudio_QCP(f):
         if d['codecguid']==( 0x5e7f6d41, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ) or \
            d['codecguid']==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ):
             d['mimetypes']=['audio/qcelp'] # in theory audio/vnd.qcelp could also be used but is deprecated
-        elif d['codecguid']==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
+        elif d['codecguid']==( 0xe689d48dL, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
             d['mimetypes']=['audio/evrc-qcp']
-        elif d['codecguid']==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
+        elif d['codecguid']==( 0x8d7c2b75L, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
             d['mimetypes']=['audio/smv-qcp']
         
         for i in d.itervalues():
@@ -637,9 +637,9 @@ def fmt_QCP(afi):
         res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 1)")
     elif codecguid==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ):
         res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 2)")
-    elif codecguid==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
+    elif codecguid==( 0xe689d48dL, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
         res.append("EVRC V"+`afi.codecversion`)
-    elif codecguid==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
+    elif codecguid==( 0x8d7c2b75L, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
         res.append("SMV V"+`afi.codecversion`)
     else:
         res.append("Codec Guid {%08X-%04X-%04X-%04X-%012X} V%d" % (afi.codecguid+(afi.codecversion,)))
