@@ -877,7 +877,8 @@ class BitFlingSettingsDialog(wx.Dialog):
 
         # fill in data
         self.FindWindowById(self.ID_USERNAME).SetValue(config.Read("bitfling/username", getpass.getuser()))
-        self.FindWindowById(self.ID_PASSWORD).SetValue(self.passwordsentinel)
+        if len(config.Read("bitfling/password", "")):
+            self.FindWindowById(self.ID_PASSWORD).SetValue(self.passwordsentinel)
         self.FindWindowById(self.ID_HOST).SetValue(config.Read("bitfling/host", ""))
         self.FindWindowById(self.ID_PORT).SetValue(config.ReadInt("bitfling/port", 12652))
 
@@ -916,7 +917,9 @@ class BitFlingSettingsDialog(wx.Dialog):
         except Exception,ex:
             res="Failed: %s: %s" % sys.exc_info()[:2]
             if hasattr(ex, "gui_exc_info"):
-                print common.formatexception( ex.gui_exc_info) 
+                print common.formatexception( ex.gui_exc_info)
+            else:
+                print common.formatexception()
             dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
