@@ -480,10 +480,6 @@ class MainWindow(wxFrame):
                 self.OnExit()
         self.configdlg.updatevariables()
         
-        self.phoneprofile=self.phonemodule.Profile()  # make this a property possibly
-
-        # draw everything now that we have a profile
-        
         ### notebook
         self.nb=wxNotebook(self,-1, style=wxNO_FULL_REPAINT_ON_RESIZE)
         # EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
@@ -657,6 +653,8 @@ class MainWindow(wxFrame):
     ###
     def OnDataGetPhone(self,_):
         dlg=self.dlggetphone
+        print self.phoneprofile
+        dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wxID_OK:
             return
         self.MakeCall(Request(self.wt.getdata, dlg),
@@ -712,6 +710,8 @@ class MainWindow(wxFrame):
     ###
     def OnDataSendPhone(self, _):
         dlg=self.dlgsendphone
+        print self.phoneprofile
+        dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wxID_OK:
             return
         data={}
