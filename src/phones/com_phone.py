@@ -142,6 +142,8 @@ class Phone:
     def getmemo(self, result):
         return {}
 
+
+
 class Profile:
 
     BP_Calendar_Version=2
@@ -172,6 +174,58 @@ class Profile:
            (source, action, None) in self._supportedsyncs:
             return True
         return False
+
+    # fill in your own image origins using these
+    stockimageorigins={
+        "images": {'meta-help': 'General images'},
+        "mms": {'meta-help': 'Multimedia Messages'},
+        "drm": {'meta-help': 'DRM protected images'},
+        "camera": {'meta-help': 'Camera images'},
+        }
+
+    stockimagetargets={
+        # You need to override in your GetTargetsForImageOrigin function and update
+        # for ImgFileInfo fields
+        "wallpaper": {'meta-help': 'Display as wallpaper'},
+        "pictureid": {'meta-help': 'Display as picture id for a caller'},
+        "outsidelcd": {'meta-help': 'Display on outside screen'},
+        "fullscreen": {'meta-help': 'Fullscreen such as startup screen'},
+        }
+
+
+    # Override in derived class - use this template.  Avoid defining new origins -
+    # instead add them to the stock list and use that.  That will ensure the
+    # same string and description are used for all phones.
+    imageorigins={}
+    imageorigins.update(common.getkv(stockimageorigins, "images"))
+    imageorigins.update(common.getkv(stockimageorigins, "mms"))
+    imageorigins.update(common.getkv(stockimageorigins, "camera"))
+
+    def GetImageOrigins(self):
+        # Note: only return origins that you can write back to the phone
+        return self.imageorigins
+
+    def GetTargetsForImageOrigin(self, origin):
+        if False:
+            # this is how you should do it in your derived class.  The update dictionary
+            # fields must correspond to what fileinfo.ImgFileInfo uses.  The information
+            # is used to save the new file out.
+            targets={}
+            targets.update(common.getkv(self.stockimagetargets, "wallpaper",
+                                      {'width': 77, 'height': 177, 'format': "BMP"}))
+            targets.update(common.getkv(self.stockimagetargets, "outsidelcd",
+                                      {'width': 77, 'height': 77, 'format': "JPEG"}))
+            return targets
+        # this code is here to work with the old way we used to do things
+        convert_format_map={'bmp': 'BMP',
+                            'jpg': 'JPEG',
+                            'png': 'PNG'}
+        return common.getkv(self.stockimagetargets, "wallpaper",
+                                      {'width': self.WALLPAPER_WIDTH,
+                                       'height': self.WALLPAPER_HEIGHT,
+                                       'format': convert_format_map[self.WALLPAPER_CONVERT_FORMAT]})
+               
+        
 
     def QueryAudio(self, origin, currentextension, audiofileinfo):
         """Query for MP3 file support

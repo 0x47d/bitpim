@@ -308,33 +308,23 @@ class WallpaperView(guiwidgets.FileView):
             wx.MessageBox("There isn't an image in the clipboard", "Error")
             return
         # work out a name for it
-        self.thedir=self.mainwindow.wallpaperpath
-        for i in range(255):
-            name="clipboard"+`i`+".bmp"
-            if not os.path.exists(os.path.join(self.thedir, name)):
-                break
-        self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), name)
+        self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), None)
 
-    def AddToIndex(self, file):
+    def AddToIndex(self, file, origin):
         for i in self._data['wallpaper-index']:
             if self._data['wallpaper-index'][i]['name']==file:
+                self._data['wallpaper-index'][i]['origin']=origin
                 return
         keys=self._data['wallpaper-index'].keys()
         idx=10000
         while idx in keys:
             idx+=1
-        self._data['wallpaper-index'][idx]={'name': file}
+        self._data['wallpaper-index'][idx]={'name': file, 'origin': origin}
         self.modified=True
 
     def OnAddFiles(self, filenames):
         for file in filenames:
-            self.thedir=self.mainwindow.wallpaperpath
-            # special handling for BCI files
-            if self.isBCI(file):
-                target=os.path.join(self.thedir, os.path.basename(file).lower())
-                open(target, "wb").write(open(file, "rb").read())
-                self.AddToIndex(os.path.basename(file).lower())
-                continue
+            # :::TODO:: do i need to handle bci specially here?
             img=wx.Image(file)
             if not img.Ok():
                 dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
@@ -344,41 +334,53 @@ class WallpaperView(guiwidgets.FileView):
             self.OnAddImage(img,file,refresh=False)
         self.OnRefresh()
 
-    OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
 
     def OnAddImage(self, img, file, refresh=True):
-        target=self.getshortenedbasename(file, self.convertextension)
-        if target==None: return # user didn't want to
-        obj=img
-        # if image is more than 20% bigger or 60% smaller than screen, resize
-        if img.GetWidth()>self.usewidth*self.woversize_percentage/100 or \
-           img.GetHeight()>self.useheight*self.hoversize_percentage/100 or \
-           img.GetWidth()<self.usewidth*60/100 or \
-           img.GetHeight()<self.useheight*60/100:
-            obj=ScaleImageIntoBitmap(obj, self.usewidth, self.useheight, "FFFFFF") # white background ::TODO:: something more intelligent
+        # ::TODO:: if file is None, find next basename in our directory for
+        # clipboard99 where 99 is next unused number
+        
+        dlg=ImagePreviewDialog(self, img, file, self.mainwindow.phoneprofile)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
 
-        # ensure in wxImage, not wxBitmap
-        try:
-            theimg=wx.ImageFromBitmap(obj)
-        except TypeError:
-            theimg=obj
-        # ensure highest quality if saving as jpeg
-        theimg.SetOptionInt("quality", 100)
-        # if a bmp, use 8 bit+palette if necessary
-        if self.convertwxbitmaptype:
-            if theimg.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less
-                theimg.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
-        if not theimg.SaveFile(target, self.convertwxbitmaptype):
-            os.remove(target)
+        img=dlg.GetResultImage()
+        imgparams=dlg.GetResultParams()
+        origin=dlg.GetResultOrigin()
+
+        # ::TODO:: temporary hack - this should really be an imgparam
+        extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
+
+        # munge name
+        targetfilename=self.getshortenedbasename(file, self.convertextension)
+
+        res=getattr(self, "saveimage_"+imgparams['format'])(img, targetfilename, imgparams)
+        if not res:
+            try:    os.remove(targetfilename)
+            except: pass
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             return
 
-        self.AddToIndex(os.path.basename(target))
+        self.AddToIndex(os.path.basename(targetfilename), origin)
         if refresh:
             self.OnRefresh()
 
+    def saveimage_BMP(self, img, targetfilename, imgparams):
+        if img.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less
+            img.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
+        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_BMP)
+
+    def saveimage_JPG(self, img, targetfilename, imgparams):
+        img.SetOptionInt("quality", 100)        
+        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_JPEG)
+
+    def saveimage_PNG(self, img, targetfilename, imgparams):
+        # ::TODO:: this is where the file size constraints should be examined
+        # and obeyed
+        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_PNG)
+    
     def populatefs(self, dict):
         self.thedir=self.mainwindow.wallpaperpath
         return self.genericpopulatefs(dict, 'wallpapers', 'wallpaper-index', self.CURRENTFILEVERSION)
@@ -1042,7 +1044,7 @@ class ImagePreviewDialog(wx.Dialog):
     def OnTargetSelect(self, _):
         v=self.targetbox.GetStringSelection()
         print "target is",v
-        w,h=self.targets[v]['dimensions']
+        w,h=self.targets[v]['width'],self.targets[v]['height']
         self.imagepreview.SetSize( (w,h) )
         self.cropselect.setresultsize( (w, h) )
         sz=self.GetSizer()
@@ -1052,6 +1054,15 @@ class ImagePreviewDialog(wx.Dialog):
             sz.Layout()
             self.Refresh(True)
         
+    def GetResultImage(self):
+        return self.imagepreview.bmp.ConvertToImage()
+
+    def GetResultParams(self):
+        return self.targets[self.targetbox.GetStringSelection()]
+
+    def GetResultOrigin(self):
+        return self.originbox.GetStringSelection()
+
 
 
 if __name__=='__main__':
@@ -1083,9 +1094,9 @@ if __name__=='__main__':
                     "camera": {'description': 'Camera images'}}
 
         def GetTargetsForImageOrigin(self, origin):
-            return {"wallpaper": {'dimensions': (100,200), 'description': 'Display as wallpaper'},
-                    "photoid": {'dimensions': (100, 150), 'description': 'Display as photo id'},
-                    "outsidelcd": {'dimensions': (90,80), 'description': 'Display on outside screen'}}
+            return {"wallpaper": {'width': 100, 'height': 200, 'description': 'Display as wallpaper'},
+                    "photoid": {'width': 100, 'height': 150, 'description': 'Display as photo id'},
+                    "outsidelcd": {'width': 90, 'height': 80, 'description': 'Display on outside screen'}}
 
     def run():
         app=wx.PySimpleApp()

@@ -310,6 +310,13 @@ def list_union(*lists):
                     res.append(item)
      return res
 
+def getkv(dict, key, updates=None):
+     "Gets a key and value from a dict, returning as a dict potentially applying updates"
+     d={key: dict[key].copy()} 
+     if updates: 
+          d[key].update(updates)
+     return d 
+
 # some obfuscation
 # obfuscate pwd
 _magic=[ord(x) for x in "IamAhaPp12&s]"]
