@@ -230,7 +230,49 @@ class Phone:
         return None
             
     def getcalendar(self,result):
-        self.setmode(self.MODEBREW)
+        res={}
+        # Read exceptions file first
+        data=self.getfilecontents("sch/schexception.dat")
+        exceptions={}
+        for i in range(0,len(data)/8):
+            pos=8*i
+            offset=readlsb(data[pos:pos+4])
+            d=ord(data[pos+4])
+            m=ord(data[pos+5])
+            y=readlsb(data[pos+6:pos+8])
+            try:
+                exceptions[offset].append( (y,m,d) )
+            except KeyError:
+                exceptions[offset]=[ (y,m,d) ]
+
+        # Now read schedule
+        data=self.getfilecontents("sch/schedule.dat")
+        numentries=readlsb(data[0:2])
+        for i in range(0, (len(data)-2)/60):
+            entry={}
+            pos=2+i*60
+            entry['pos']=readlsb(data[pos+0:pos+4])  # hex offset of entry within schedule file
+            if pos==-1: continue # blanked entry
+            if exceptions.has_key(pos):
+                entry['exceptions']=exceptions[pos]
+            entry['start']=brewdecodedate(data[pos+4:pos+8])
+            entry['end']=brewdecodedate(data[pos+8:pos+0xc])
+            # bug in phone - it only updates the hour and minutes field for
+            # end date.  We need to copy year, month, day from start
+            entry['end']=entry['start'][:3]+entry['end'][3:]
+            entry['repeat']=readlsb(data[pos+0xc:pos+0x10])
+            min=ord(data[pos+0x10])
+            hour=ord(data[pos+0x11])
+            if min==100 or hour==100:
+                entry['alarm']=-1 # no alarm set
+            else:
+                entry['alarm']=hour*60+min
+            entry['changeserial']=readlsb(data[pos+0x12:pos+0x14])
+            entry['ringtone']=ord(data[pos+0x14])
+            entry['description']=readstring(data[pos+0x15:pos+0x3d])
+            res[pos]=entry
+
+        result['calendar']=res
         return result
 
     
@@ -937,6 +979,8 @@ class Phone:
               'Can-Can', 'Sabre Dance', 'Magic Flute', 'Carmen' )
 
 
+        
+
 ### Various random functions
 
 def cleanupstring(str):
@@ -992,6 +1036,18 @@ def brewbasename(str):
     if str.rfind("/")>0:
         return str[str.rfind("/")+1:]
     return str
+
+def brewdecodedate(val):
+    min=val&0x3f # 6 bits
+    val>>=6
+    hour=val&0x1f # 5 bits (uses 24 hour clock)
+    val>>=5
+    day=val&0x1f # 5 bits
+    val>>=5
+    month=val&0xf # 4 bits
+    val>>=4
+    year=val&0xfff # 12 bits
+    return (year, month, day, hour, min)
 
 # Some notes
 #
