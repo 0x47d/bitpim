@@ -328,8 +328,16 @@ class MainApp(wx.App):
         self.SetExitOnFrameDelete(True)
 
     def OnExit(self): 
-        sys.excepthook=sys.__excepthook__
         self.config.Flush()
+        # we get stupid messages about daemon threads, and Python's library
+        # doesn't provide any way to interrupt them, nor to suppress these
+        # messages.  ::TODO:: maybe remove the onexit handler installed by
+        # treading._MainThread
+        sys.excepthook=donothingexceptionhandler
+
+# do nothing exception handler
+def donothingexceptionhandler(*args):
+    pass
 
 # Entry point
 def run(*args):
