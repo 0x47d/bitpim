@@ -82,7 +82,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 # ringtones
                 entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
                 # wallpapers
-                entry['wallpapers']=[ {'wallpaper': ringpic.wallpapers[i].wallpaper, 'use': 'call'} ]
+                entry['wallpapers']=[{'wallpaper': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
                     
                 pbook[i]=entry 
                 self.progress(count, numentries, res.entry.name)
@@ -169,6 +169,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         sortstuff=p_sanyo.pbsortbuffer()
         ringpic=p_sanyo.ringerpicbuffer()
         callerid=p_sanyo.calleridbuffer()
+###
+### Initialize lists
+###
+        for i in range(300):
+            sortstuff.usedflags.append(0)
+            sortstuff.firsttypes.append(0)
+            sortstuff.sortorder.append(0xffff)
+            sortstuff.sortorder2.append(0xffff)
+            sortstuff.emails.append(0xffff)
+            sortstuff.urls.append(0xffff)
+            ringpic.ringtones.append(0)
+            ringpic.wallpapers.append(0)
         
         pbook=data['phonebook']
         self.log("Putting phone into write mode")
@@ -200,7 +212,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # Sort Names, Emails and Urls for the sort buffer
         
         # Now write out the 3 buffers
-        
         
         self.log("Taking phone out of write mode")
         req=p_sanyo.beginendupdaterequest()
