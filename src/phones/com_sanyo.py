@@ -29,6 +29,13 @@ import time
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
 
+class SanyoCommandException(Exception):
+    def __init__(self, errnum, str=None):
+        if str is None:
+            str="Sanyo Packet Error 0x%02x" % (errnum,)
+        Exception.__init__(self, str)
+        self.errnum=errnum
+
 class SanyoPhonebook:
     "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
     
@@ -194,7 +201,7 @@ class SanyoPhonebook:
             command+=1
             self.sendpbcommand(req, self.protocolclass.bufferpartresponse, writemode=True)
         
-    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=0):
+    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=0, returnerror=False):
         if writemode:
             numretry=2
         else:
@@ -207,8 +214,8 @@ class SanyoPhonebook:
         request.writetobuffer(buffer)
         data=buffer.getvalue()
         self.logdata("Sanyo phonebook request", data, request)
-        data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
         firsttwo=data[:2]
+        data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
         isendretry=numsendretry
         while isendretry>=0:
             try:
@@ -240,27 +247,46 @@ class SanyoPhonebook:
         # turn it back to normal
         data=com_brew.unescape(rdata)
 
-        # sometimes there is other crap at the beginning
+        # Sometimes there is other crap at the beginning.  But it might
+        # be a Sanyo error byte.  So strip off bytes from the beginning
+        # until the crc agrees, or we get to the first two bytes of the
+        # request packet.
         d=data.find(firsttwo)
-        if d>0:
-            self.log("Junk at beginning of Sanyo packet, data at "+`d`)
-            self.logdata("Original Sanyo data", origdata, None)
-            self.logdata("Working on Sanyo data", data, None)
-            data=data[d:]
-        # take off crc and terminator
         crc=data[-3:-1]
-        data=data[:-3]
-        if com_brew.crcs(data)!=crc:
+        crcok=False
+        for i in range(0,d+1):
+            trydata=data[i:-3]
+            if com_brew.crcs(trydata)==crc:
+                crcok=True
+                break
+
+        if not crcok:
+            self.logdata("first two",firsttwo, None)
             self.logdata("Original Sanyo data", origdata, None)
             self.logdata("Working on Sanyo data", data, None)
             raise common.CommsDataCorruption("Sanyo packet failed CRC check", self.desc)
+
+        res=responseclass()
+        if d>0:
+            if d==i:
+                self.log("Junk at beginning of Sanyo packet, data at "+`d`)
+                self.logdata("Original Sanyo data", origdata, None)
+                self.logdata("Working on Sanyo data", data, None)
+            else:
+                if returnerror:
+                    res=self.protocolclass.sanyoerror()
+                else:
+                    self.log("Sanyo Error code "+`ord(data[0])`)
+                    self.logdata("sanyo phonebook response", data, None)
+                    raise SanyoCommandException(ord(data[0]))
+            
+        data=trydata
 
         # log it
         self.logdata("sanyo phonebook response", data, responseclass)
 
         # parse data
         buffer=prototypes.buffer(data)
-        res=responseclass()
         res.readfrombuffer(buffer)
         return res
 
@@ -879,7 +905,7 @@ class SanyoPhonebook:
 
 #        dict['calendar'] = cal
 #        Not mucking with passed in calendar yet
-        dict['rebootphone'] = 1
+        dict['rebootphone'] = True
         return dict
 
     def decodedate(self,val):
@@ -914,7 +940,7 @@ class Profile(com_phone.Profile):
     WALLPAPER_HEIGHT=100
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
-    WALLPAPER_CONVERT_FORMAT="bmp"
+    WALLPAPER_CONVERT_FORMAT="png"
     
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
