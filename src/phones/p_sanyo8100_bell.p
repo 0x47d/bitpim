@@ -28,21 +28,91 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
 _NUMCALLHISTORY=20
-_MAXNUMBERLEN=32
-_MAXEMAILLEN=96
+_MAXNUMBERLEN=48
+_MAXEMAILLEN=48
 
 %}
+
+PACKET phonenumber:
+    1 UINT {'default': 0} +number_len
+    49 STRING {'default': ""} +number
 
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
-    1 UINT name_len
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
-    97 STRING {'default': ""} +email
+    49 STRING {'default': ""} +email
     1 UINT +url_len
-    97 STRING {'default': ""} +url
-    1 BOOL {'default': 1} +dunno
+    49 STRING {'default': ""} +url
     1 BOOL +secret
+    1 UINT name_len
+     
+PACKET phonebookslotresponse:
+    * sanyoheader header
+    * phonebookentry entry
+    554 UNKNOWN pad
 
+PACKET phonebookslotupdaterequest:
+    * sanyowriteheader {'packettype': 0x0c, 'command': 0x28} +header
+    * phonebookentry entry
+    554 UNKNOWN pad
+
+PACKET evententry:
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    7 UNKNOWN +pad1
+    1 UINT eventname_len
+    4 UINT start "# seconds since Jan 1, 1980 approximately"
+    4 UINT end
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    7 UNKNOWN +pad2
+    1 UINT location_len
+    1 UINT ringtone "0: Beep, 1: Voice, 2: Silent"
+    1 UINT {'default': 0} +dunno1
+    1 UINT {'default': 0} +dunno2
+    2 UINT {'default': 0} +dunno3 "Guess which are 1 and which are 2 byte numbers"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT alarm
+    1 UINT {'default': 0} +serial "Some kind of serial number"
+
+PACKET eventresponse:
+    * sanyoheader header
+    * evententry entry
+    990 UNKNOWN pad
+
+PACKET eventupdaterequest:
+    * sanyoheader {'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    990 UNKNOWN +pad
+
+PACKET callalarmentry:
+    P UINT {'constant': 0} ringtone
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
+    1 UINT {'default': 0} +dunno1 "Related to Snooze?"
+    49 STRING {'raiseonunterminatedread': False} phonenum
+    1 UINT phonenum_len
+    4 UINT date "# seconds since Jan 1, 1980 approximately"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT datedup "Copy of the date.  Always the same???"
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    1 UNKNOWN +pad1
+    1 UINT name_len
+    1 UINT phonenumbertype "1: Home, 2: Work, ..." 
+    2 UINT phonenumberslot
+    1 UINT {'default': 0} +serial
+
+PACKET callalarmresponse:
+    * sanyoheader header
+    * callalarmentry entry
+    971 UNKNOWN pad
+
+PACKET callalarmupdaterequest:
+    * sanyoheader {'packettype': 0x0c, 'command':0x24} +header
+    * callalarmentry entry
+    971 UNKNOWN +pad
