@@ -695,8 +695,6 @@ class PhoneWidget(wx.Panel):
         data=self._data[key]
         # can we get it to open on the correct field?
         datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
-        if dataindex is not None and dataindex<0:
-            dataindex=0 # we can't select all values
         dlg=phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex)
         if dlg.ShowModal()==wx.ID_OK:
             data=dlg.GetData()
@@ -1076,7 +1074,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     CHANGED=2
     DELETED=3
 
-    htmltemplate=["Not set - "+`i` for i in range(14)]
+    htmltemplate=["Not set - "+`i` for i in range(15)]
     
     def __init__(self, widget):
         self.main=widget
@@ -1085,13 +1083,21 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.columns=['Confidence']+ImportColumns
         self.addedattr=wx.grid.GridCellAttr()
         self.addedattr.SetBackgroundColour("HONEYDEW")
+        self.addedattr.SetRenderer(ImportCellRenderer())
         self.unalteredattr=wx.grid.GridCellAttr()
         self.unalteredattr.SetBackgroundColour("WHITE")
+        self.unalteredattr.SetRenderer(ImportCellRenderer())
         self.changedattr=wx.grid.GridCellAttr()
         self.changedattr.SetBackgroundColour("LEMON CHIFFON")
         self.changedattr.SetRenderer(ImportCellRenderer())
         self.deletedattr=wx.grid.GridCellAttr()
         self.deletedattr.SetBackgroundColour("ROSYBROWN1")
+        self.deletedattr.SetRenderer(ImportCellRenderer())
+
+    def GetRowData(self, row):
+        """Returns a 4 part tuple as defined in ImportDialog.rowdata
+        for the numbered row"""
+        return self.main.rowdata[self.rowkeys[row]]
 
     def GetColLabelValue(self, col):
         return self.columns[col]
@@ -1108,7 +1114,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     def GetAttr(self, row, col, _):
         try:
             # it likes to ask for non-existent cells
-            row=self.main.rowdata[self.rowkeys[row]]
+            row=self.GetRowData(row)
         except:
             return None
         v=None
@@ -1126,7 +1132,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                 
     def GetValue(self, row, col):
         try:
-            row=self.main.rowdata[self.rowkeys[row]]
+            row=self.GetRowData(row)
         except:
             print "bad row", row
             return "<error>"
@@ -1158,7 +1164,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
     def GetHtmlCellValue(self, row, col, colour=None):
         try:
-            row=self.main.rowdata[self.rowkeys[row]]
+            row=self.GetRowData(row)
         except:
             print "bad row", row
             return "&gt;error&lt;"
@@ -1169,6 +1175,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             colour="#%02X%02X%02X" % (colour.Red(), colour.Green(), colour.Blue())
 
         if self.columns[col]=='Confidence':
+            # row[0] could be a zero length string or an integer
+            if row[0]=="": return ""
             return '<font color="%s">%d</font>' % (colour, row[0])
 
         # Get values - note default of None
@@ -1189,31 +1197,31 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         # extensively to ensure the logic is correct
 
         if imported is None and existing is None and result is None:
-            return ""  # idx=8 - shortcut
+            return ""  # idx=9 - shortcut
 
         # matching function for this column
         matchfn=lambda x,y: x==y
 
         # if the result field is missing then value was deleted
         if result is None:
-            # one of them must be present otherwise idx=8 above would have matched
+            # one of them must be present otherwise idx=9 above would have matched
             assert  imported is not None or existing is not None
             if imported is not None and existing is not None:
                 if matchfn(imported, existing):
-                    idx=13
+                    idx=14
                 else:
-                    idx=12
+                    idx=13
             else:
                 if imported is None:
                     assert existing is not None
                     idx=11
                 else:
                     assert existing is None
-                    idx=10
+                    idx=12
             
         else:
             if imported is None and existing is None:
-                idx=9
+                idx=10
             else:
                 # we have a result - the first 8 entries need the following
                 # comparisons
@@ -1239,10 +1247,22 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                 elif    not imported_eq_result    and    existing_eq_result:
                     idx=6
                 elif    not imported_eq_result    and    not existing_eq_result:
-                    idx=7
+                    # neither imported or existing are the same as result
+                    # are they the same as each other?
+                    if matchfn(imported, existing):
+                        idx=7
+                    else:
+                        idx=8
                 else:
                     assert False, "This is unpossible!"
                     return "FAILED"
+
+        if False: # set to true to debug this
+            return `idx`+" "+self.htmltemplate[idx] % { 'imported': _htmlfixup(imported),
+                                          'existing': _htmlfixup(existing),
+                                          'result': _htmlfixup(result),
+                                          'colour': colour}
+
 
         return self.htmltemplate[idx] % { 'imported': _htmlfixup(imported),
                                           'existing': _htmlfixup(existing),
@@ -1312,34 +1332,37 @@ def _htmlfixup(txt):
            .replace("\r\n", "<br>").replace("\r", "<br>").replace("\n", "<br>")
 
 ###
-### 0 thru 7 inclusive have a result present
+### 0 thru 8 inclusive have a result present
 ###
 
 #  0 - imported is None,  existing equals result
 ImportDataTable.htmltemplate[0]='<font color="%(colour)s">%(result)s</font>'
 #  1 - imported is None,  existing not equal result
-
+ImportDataTable.htmltemplate[1]='<font color="%(colour)s"><strike>%(result)s</strike><br><b><font size=-1>Existing</font></b> %(existing)s</font>'
 #  2 - imported equals result,  existing is None
-ImportDataTable.htmltemplate[2]=ImportDataTable.htmltemplate[0]  # just display result
+ImportDataTable.htmltemplate[2]='<font color="%(colour)s"><strike>%(result)s</strike></font>'
 #  3 - imported not equal result,  existing is None
-
+ImportDataTable.htmltemplate[3]='<font color="%(colour)s"><strike>%(result)s</strike><br><b><font size=-1>Imported</font></b> %(imported)s</font>'
 #  4 - imported equals result, existing equals result
 ImportDataTable.htmltemplate[4]=ImportDataTable.htmltemplate[0]  # just display result
 #  5 - imported equals result, existing not equals result
-ImportDataTable.htmltemplate[5]='<font color="%(colour)s"><font color="#00ff00">+</font>%(result)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
+ImportDataTable.htmltemplate[5]='<font color="%(colour)s"><strike><font color="#00aa00">%(result)s</font></strike><br><b><font size=-1>Existing</font></b> %(existing)s</font>'
 #  6 - imported not equal result, existing equals result
 ImportDataTable.htmltemplate[6]='<font color="%(colour)s">%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s</font>'
-#  7 - imported not equal result, existing not equal result
+#  7 - imported not equal result, existing not equal result, imported equals existing
+ImportDataTable.htmltemplate[7]='<font color="%(colour)s"><strike>%(result)s</strike><br><b><font size=-1>Imported/Existing</font></b> %(imported)s</font>'
+#  8 - imported not equal result, existing not equal result, imported not equals existing
+ImportDataTable.htmltemplate[8]='<font color="%(colour)s"><strike>%(result)s</strike><br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
 
 ###
 ### Two special cases
 ###
 
-#  8 - imported, existing, result are all None
-ImportDataTable.htmltemplate[8]=""
+#  9 - imported, existing, result are all None
+ImportDataTable.htmltemplate[9]=""
 
-#  9 - imported, existing are None and result is present
-ImportDataTable.htmltemplate[9]='<font color="%(colour)s"><b>%(result)s</b></font>'
+#  10 - imported, existing are None and result is present
+ImportDataTable.htmltemplate[10]='<font color="%(colour)s"><strike>%(result)s</strike></b></font>'
 
 ###
 ### From 10 onwards, there is no result field, but one or both of
@@ -1347,14 +1370,14 @@ ImportDataTable.htmltemplate[9]='<font color="%(colour)s"><b>%(result)s</b></fon
 ### resulting value
 ###
 
-# 10 - imported is None and existing is present
-ImportDataTable.htmltemplate[10]='<font color="#ff0000"><strike>%(existing)s</strike></font>'
-# 11 - imported is present and existing is None
-ImportDataTable.htmltemplate[11]='<font color="#888888"><font size=-1><strike>%(imported)s</strike></font></font>' # slightly smaller
-# 12 - imported != existing
-ImportDataTable.htmltemplate[12]='<font color="%(colour)s"><b><font size=-1>Existing</font></b> <font color="#ff0000"><strike>%(existing)s</strike></font><br><b><font size=-1>Imported</font></b> <font color="#888888"><strike>%(imported)s</strike></font></font>'
-# 13 - imported equals existing
-ImportDataTable.htmltemplate[13]='<font color="#ff0000"><strike>%(existing)s</strike></font>'
+# 11 - imported is None and existing is present
+ImportDataTable.htmltemplate[11]='<font color="#aa0000">%(existing)s</font>'
+# 12 - imported is present and existing is None
+ImportDataTable.htmltemplate[12]='<font color="#aa0000"><font size=-1>%(imported)s</font></font>' # slightly smaller
+# 13 - imported != existing
+ImportDataTable.htmltemplate[13]='<font color="%(colour)s"><b><font size=-1>Existing</font></b> <font color="#aa0000">%(existing)s</font><br><b><font size=-1>Imported</font></b> <font color="#888888">%(imported)s</font></font>'
+# 14 - imported equals existing
+ImportDataTable.htmltemplate[14]='<font color="#aa0000">%(existing)s</font>'
 
 
 class ImportDialog(wx.Dialog):
@@ -1374,6 +1397,10 @@ class ImportDialog(wx.Dialog):
         # the resulting data
         self.resultdata={}
         # each row to display showing what happened, with ids pointing into above data
+        # rowdata[0]=confidence
+        # rowdata[1]=importdatakey
+        # rowdata[2]=existingdatakey
+        # rowdata[3]=resultdatakey
         self.rowdata={}
 
         vbs=wx.BoxSizer(wx.VERTICAL)
@@ -1412,6 +1439,8 @@ class ImportDialog(wx.Dialog):
         self.grid.SetMargins(1,0)
         self.grid.EnableGridLines(False)
         wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self.grid, self.OnRightGridClick)
+        wx.grid.EVT_GRID_SELECT_CELL(self.grid, self.OnCellSelect)
+        wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self.grid, self.OnCellDClick)
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
@@ -1426,7 +1455,6 @@ class ImportDialog(wx.Dialog):
         self.SetAutoLayout(True)
         vbs.Fit(self)
 
-        wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
 
         self.config = parent.mainwindow.config
@@ -1535,6 +1563,27 @@ class ImportDialog(wx.Dialog):
         self.grid.SelectRow(row, False)
         pos=event.GetPosition()
         self.grid.PopupMenu(self.menu, pos)
+
+    def OnCellDClick(self, event):
+        self.EditEntry(event.GetRow(), event.GetCol())
+
+    def EditEntry(self, row, col=None):
+        row=self.table.GetRowData(row)
+        k=row[3]
+        # if k is none then this entry has been deleted.  fix this ::TODO::
+        assert k is not None
+        data=self.resultdata[k]
+        if col is not None:
+            columnname=self.table.GetColLabelValue(col)
+        else:
+            columnname="Name"
+        datakey, dataindex=getdatainfo(columnname, data)
+        dlg=phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex)
+        if dlg.ShowModal()==wx.ID_OK:
+            data=dlg.GetData()
+            self.resultdata[k]=data
+            self.table.OnDataUpdated()
+        dlg.Destroy()
 
 
 def dictintersection(one,two):

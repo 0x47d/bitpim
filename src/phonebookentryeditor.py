@@ -880,6 +880,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
                         
     def SetFocusOnValue(self, index):
         """Sets focus to the editor widget corresponding to the supplied index"""
+        # ::TODO:: this doesn't work on Linux for unknown reasons.  I
+        # even tried all sorts of levels of wx.CallAfter
         self.widgets[index].SetFocus()
 
 class Editor(wx.Dialog):
