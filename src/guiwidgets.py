@@ -1124,6 +1124,11 @@ class FileView(wx.Panel):
             self.OnRefresh()
 
     def OnSave(self, _):
+        # If one item is selected we ask for a filename to save.  If
+        # multiple then we ask for a directory, and users don't get
+        # the choice to affect the names of files.  Note that we don't
+        # allow users to select a different format for the file - we
+        # just copy it as is.
         items=self.GetSelectedItems()
         if len(items)==1:
             ext=getext(items[0].name)
@@ -1131,7 +1136,7 @@ class FileView(wx.Panel):
             else: ext="*."+ext
             dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0].name, style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
             if dlg.ShowModal()==wx.ID_OK:
-                shutil.copyfile(items[0].filename, dlg.GetFilename())
+                shutil.copyfile(items[0].filename, dlg.GetPath())
             dlg.Destroy()
         else:
             dlg=wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
