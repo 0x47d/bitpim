@@ -370,7 +370,8 @@ def _comscanlinux(maxnum=9):
     results={}
     for prefix, description, klass in ( 
         ("/dev/cua", "Standard serial port", "serial"), 
-        ("/dev/ttyUSB", "USB to serial convertor", "serial"), 
+        ("/dev/ttyUSB", "USB to serial convertor", "serial"),
+        ("/dev/ttyACM", "USB modem", "modem"),
         ("/dev/usb/ttyUSB", "USB to serial convertor", "serial"), 
         ("/dev/usb/tts/", "USB to serial convertor", "serial"),
         ("/dev/usb/acm/", "USB modem", "modem"),
