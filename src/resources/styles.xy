@@ -19,7 +19,7 @@ styles['table']='width="100%" cellpadding="5" cellspacing="0"'
 
 styles['wallpaperpanel']='valign="top" bgcolor="#c2d4e6"'
 styles['ringtonepanel']='valign="top" bgcolor="#7f97d4"'
-styles['namepanel']='valign="top" bgcolor="#c2d4e6"'
+styles['namepanel']='valign="center" align="center" bgcolor="#c2d4e6"'
 styles['categoryflagspanel']='valign="top" bgcolor="#91c37f"'
 styles['numberspanel']='valign="top" bgcolor="#7f97d4"'
 styles['urlpanel']='valign="top" bgcolor="#c2d4e6"'
