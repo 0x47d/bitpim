@@ -1423,7 +1423,6 @@ def set_size(confname, window, screenpct=50, aspect=1.0):
              how much wider than tall the window is, and if less
              than one then the other way round
     """
-
     confobj=wx.GetApp().config
 
     # frig confname
@@ -1453,9 +1452,9 @@ def set_size(confname, window, screenpct=50, aspect=1.0):
     rs_y = confobj.ReadInt(confname + "/y", unconfigured)
 
     # Check for small window
-    if rs_height < 25:
+    if rs_height < 96:
         rs_height = newHeight
-    if rs_width < 25:
+    if rs_width < 96:
         rs_width = newWidth
 
     # Make sure window is no larger than about screen size
@@ -1476,17 +1475,25 @@ def set_size(confname, window, screenpct=50, aspect=1.0):
     # Off the screen?  Just pull it back a little bit so it's visible....
     if rs_x!=unconfigured and rs_x > screenSize.width:
         rs_x = screenSize.width - 50
+    if rs_x!=unconfigured and rs_x + rs_width < screenSize.x:
+        rs_x = screenSize.x
     if rs_y!=unconfigured and rs_y > screenSize.height:
         rs_y = screenSize.height - 50
+    if rs_y!=unconfigured and rs_y + rs_height < screenSize.y:
+        rs_y = screenSize.y
+        
 
     if screenpct<=0 and (rs_width,rs_height)==window.GetSizeTuple():
         # set position only, and no need to resize
         if rs_x!=unconfigured and rs_y!=unconfigured:
+            print "setting %s to position %d, %d" % (confname, rs_x, rs_y)
             window.SetPosition(wx.Point(rs_x, rs_y))
     else:
         if rs_x==unconfigured or rs_y==unconfigured:
+            print "setting %s to size %d x %d" % (confname, rs_width, rs_height)
             window.SetSize(wx.Size(rs_width, rs_height))
         else:
+            print "setting %s to position %d, %d - size %d x %d" % (confname, rs_x, rs_y, rs_width, rs_height)
             window.SetDimensions(rs_x, rs_y, rs_width, rs_height)
 
 def save_size(confname, myRect):
