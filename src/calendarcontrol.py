@@ -23,6 +23,10 @@ OnGetEntries(self, year, month, day):
     Note that Calendar does not cache any results so you will be
     asked for the same dates as the user scrolls around.
 
+OnEdit(self, year, month, day):
+
+    The user wishes to edit the y,m,d.
+
 The following methods you may want to call at some point:
 
 RefreshEntry(year, month, day):
@@ -36,9 +40,6 @@ RefreshAllEntries():
     will be called for each visible day.
     
 """
-       
-
-
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
@@ -444,9 +445,10 @@ class Calendar(wxPanel):
         map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
         # and mousewheel
         map(lambda child: EVT_MOUSEWHEEL(child, self.OnMouseWheel), self.GetChildren())
-        # grab left down from all cells
+        # grab left down, left dclick from all cells
         for r in self.rows:
             map(lambda cell: EVT_LEFT_DOWN(cell, self.OnLeftDown), r)
+            map(lambda cell: EVT_LEFT_DCLICK(cell, self.OnLeftDClick), r)
 
         self.selectedcell=(-1,-1)
         self.selecteddate=(-1,-1,-1)
@@ -472,6 +474,7 @@ class Calendar(wxPanel):
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]-1, self.selecteddate[2]) )
         elif key==WXK_END: # forward a month
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]+1, self.selecteddate[2]) )
+        # ::TODO:: activate edit code for return or space on a calendarcell
         else:
            event.Skip()  # control can have it
 
@@ -482,6 +485,10 @@ class Calendar(wxPanel):
     def OnLeftDown(self, event):
         cell=event.GetEventObject()
         self.setselection(cell.year, cell.month, cell.day)
+
+    def OnLeftDClick(self,event):
+        cell=event.GetEventObject()
+        self.OnEdit(cell.year, cell.month, cell.day)
 
     def OnYearButton(self, event):
         self.popupcalendar.Popup( * (self.selecteddate + (event,)) )
@@ -612,7 +619,10 @@ class Calendar(wxPanel):
                 daysinmonth=monthrange(y, m)
             else:
                 d+=1
-
+                
+    # The following methods should be implemented in derived class.
+    # Implementations here ar to make it be a nice demo if not subclassed
+    
     def OnGetEntries(self, year, month, day):
         return (
             (1, 88, "Early morning"),
@@ -624,6 +634,8 @@ class Calendar(wxPanel):
             (20,30, "Evening drinks"),
             )
 
+    def OnEdit(self, year, month, day):
+        print "The user wants to edit %04d-%02d-%02d" % (year,month,day)
 
 
 class PopupCalendar(wxDialog):
