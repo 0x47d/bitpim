@@ -7,6 +7,7 @@ import os
 import re
 import calendar
 import time
+import copy
 
 # wx modules
 from wxPython.wx import *
@@ -990,22 +991,54 @@ def getext(name):
 ###
 
 class Calendar(calendarcontrol.Calendar):
+    """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
+    used to edit the content of one particular day."""
+    
     def __init__(self, mainwindow, parent, id=-1):
+        """constructor
+
+        @type  mainwindow: gui.MainWindow
+        @param mainwindow: Used to get configuration data (such as directory to save/load data.
+        @param parent:     Widget acting as parent for this one
+        @param id:         id
+        """
         self.mainwindow=mainwindow
         self.entrycache={}
         self.entries={}
         self.repeating=[]  # nb this is stored unsorted
-        self._data={}
+        self._data={} # the underlying data
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
         self.dialog=DayViewDialog(self, self)
+        self._nextpos=-1  # pos ids for events we make
 
     def getdata(self, dict):
-        # Return underlying calendar data in bitpim format
+        """Return underlying calendar data in bitpim format
+
+        @return:   The modified dict updated with at least C{dict['calendar']}"""
         dict['calendar']=self._data
         return dict
 
+    def AddEntry(self, entry):
+        """Adds and entry into the calendar data.
+
+        The entries on disk are updated by this function.
+
+        @type  entry: a dict containing all the fields.
+        @param entry: an entry.  It must contain a C{pos} field. You
+                     should call L{newentryfactory} to make
+                     an entry that you then modify
+        """
+        self._data[entry['pos']]=entry
+        d={}
+        d=self.getdata(d)
+        self.populatefs(d)
+        self.populate(d)
+
     def getentrydata(self, year, month, day):
-        # return the entry objects for corresponding date
+        """return the entry objects for corresponding date
+
+        @rtype: list"""
+        # return data from cache if we have it
         res=self.entrycache.get( (year,month,day), None)
         if res is not None:
             return res
@@ -1050,18 +1083,62 @@ class Calendar(calendarcontrol.Calendar):
         self.entrycache[(year,month,day)] = res
         return res
         
+    def newentryfactory(self, year, month, day):
+        """Returns a new 'blank' entry with default fields
+
+        @rtype: dict"""
+        res={}
+        now=time.localtime()
+        res['start']=(year, month, day, now.tm_hour, now.tm_min)
+        res['end']=[year, month, day, now.tm_hour, now.tm_min]
+        # we make end be the next hour, unless it has gone 11pm
+        # in which case it is 11:59pm
+        if res['end'][3]<23:
+            res['end'][3]+=1
+            res['end'][4]=0
+        else:
+            res['end'][3]=23
+            res['end'][4]=59
+        res['repeat']=None
+        res['description']='New event'
+        res['changeserial']=0
+        res['alarm']=None
+        res['?d']=0
+        res['ringtone']=0
+        res['pos']=self.allocnextpos()
+        return res
+
+    def allocnextpos(self):
+        """Allocates a unique id for a new entry
+
+        Negative integers are used to avoid any clashes with existing
+        entries from the phone.  The existing data is checked to
+        ensure there is no clash.
+
+        @rtype: int"""
+        while True:
+            self._nextpos,res=self._nextpos-1, self._nextpos
+            if res not in self._data:
+                return res
         
     def OnGetEntries(self, year, month, day):
-        # return pretty printed sorted entries for date
+        """return pretty printed sorted entries for date
+        as required by the parent L{calendarcontrol.Calendar} for
+        display in a cell"""
         res=[(i['start'][3], i['start'][4], i['description']) for i in self.getentrydata(year, month,day)]
         res.sort()
         return res
 
     def OnEdit(self, year, month, day):
-        self.dialog.setdate(year, month, day)
-        self.dialog.Show(True)
+        if self.dialog.dirty:
+            # user is editing a field so we don't allow edit
+            wxBell()
+        else:
+            self.dialog.setdate(year, month, day)
+            self.dialog.Show(True)
             
     def populate(self, dict):
+        """Updates the internal data with the contents of C{dict['calendar']}"""
         self._data=dict['calendar']
         self.entrycache={}
         self.entries={}
@@ -1128,8 +1205,6 @@ class DayViewDialog(wxDialog):
     ID_HELP=12
     ID_REVERT=13
 
-    
-    
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
         wxDialog.__init__(self, parent, id, title, style=wxDEFAULT_DIALOG_STYLE)
@@ -1229,6 +1304,7 @@ class DayViewDialog(wxDialog):
         EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
         EVT_BUTTON(self, self.ID_REVERT, self.OnRevertButton)
         EVT_BUTTON(self, self.ID_CLOSE, self.OnCloseButton)
+        EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
 
         # this is allegedly called automatically but didn't work for me
         EVT_CLOSE(self, self.OnCloseWindow)
@@ -1258,6 +1334,8 @@ class DayViewDialog(wxDialog):
         return self.entries[self.entrymap[num]]
 
     def OnSaveButton(self, _=None):
+        entry=self.getentry(self.listbox.GetSelection())
+        newentry=copy.copy(entry)
         for f in self.fields:
             control=self.fields[f]
             if isinstance(control, DVTimeControl):
@@ -1265,7 +1343,15 @@ class DayViewDialog(wxDialog):
                 v=self.date+control.GetValue()
             else:
                 v=control.GetValue()
-            print f,v
+            newentry[f]=v
+
+        print "replacing",entry, "\nwith", newentry
+
+    def OnNewButton(self, _=None):
+        entry=self.cw.newentryfactory(*self.date)
+        self.cw.AddEntry(entry)
+        self.refreshentries()
+        self.updatelistbox(entry['pos'])
 
     def OnRevertButton(self, _=None):
         # We basically pretend the user has selected the item in the listbox again (which they
@@ -1290,23 +1376,36 @@ class DayViewDialog(wxDialog):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
         self.date=year,month,day
         self.title.SetLabel(d)
-        self.entries=self.cw.getentrydata(year,month,day)
+        self.refreshentries()
         self.updatelistbox()
         self.updatefields(None)
 
-    def updatelistbox(self):
+    def refreshentries(self):
+        self.entries=self.cw.getentrydata(*self.date)
+
+    def updatelistbox(self, entrytoselect=None):
+        """
+        Updates the contents of the listbox.  It will re-sort the contents.
+
+        @param entrytoselect: The integer id of an entry to select.  Note that
+                              this is an event id, not an index
+        """
         self.listbox.Clear()
+        selectitem=-1
         self.entrymap=[]
-        for index, entry in zip(range(0,len(self.entries)), self.entries):
-            e=( entry['start'][3:5], entry['end'][3:5], entry['description'],  index)
+        # decorate
+        for index, entry in zip(range(len(self.entries)), self.entries):
+            e=( entry['start'][3:5], entry['end'][3:5], entry['description'], entry['pos'],  index)
             self.entrymap.append(e)
         # time ordered
         self.entrymap.sort()
         # now undecorate
-        self.entrymap=[index for ign0, ign1, ign2, index in self.entrymap]
+        self.entrymap=[index for ign0, ign1, ign2, ign3, index in self.entrymap]
         # add listbox entries
-        for index in self.entrymap:
+        for curpos, index in zip(range(len(self.entrymap)), self.entrymap):
             e=self.entries[index]
+            if e['pos']==entrytoselect:
+                selectitem=curpos
             if 0: # ampm/miltime config here ::TODO::
                 str="%2d:%02d" % (e['start'][3], e['start'][4])
             else:
@@ -1321,8 +1420,15 @@ class DayViewDialog(wxDialog):
             print "adding",str
             self.listbox.Append(str)
 
+        # Select an item if requested
+        if selectitem>=0:
+            self.listbox.SetSelection(selectitem)
+            self.OnListBoxItem() # update fields
+
+        # temporary debug output
         print `self.entrymap`
         print `self.entries`
+        
 
     def updatefields(self, entry):
         self.ignoredirty=True
@@ -1345,14 +1451,11 @@ class DayViewDialog(wxDialog):
 
     # called from various widget update callbacks
     def OnMakeDirty(self, _=None):
-        print "OnMakeDirty"
         self.setdirty(True)
 
     def setdirty(self, val):
         if self.ignoredirty:
-            print "ignoring setdirty(%d)" % (val,)
             return
-        print "setdirty(%d)" % (val,)
         self.dirty=val
         if self.dirty:
             # The data has been modified, so we only allow working
@@ -1401,6 +1504,7 @@ class DVTimeControl(wxPanel):
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
+        EVT_TIMEUPDATE(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
         if isinstance(v, str):
@@ -1421,6 +1525,7 @@ class DVRepeatControl(wxChoice):
 
     def __init__(self, parent, id):
         wxChoice.__init__(self, parent, id, choices=self.desc)
+        EVT_CHOICE(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
         if isinstance(v,str) and len(v)==0:  # blank string
@@ -1437,6 +1542,7 @@ class DVIntControl(wxIntCtrl):
     # shows integer values
     def __init__(self, parent, id):
         wxIntCtrl.__init__(self, parent, id, limited=True)
+        EVT_INT(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
         if isinstance(v, str):
