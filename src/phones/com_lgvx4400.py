@@ -77,7 +77,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
         results['groups']=groups
         self.getwallpaperindices(results)
-        self.log(common.prettyprintdict(results['wallpaper-index']))
         self.getringtoneindices(results)
         self.log("Fundamentals retrieved")
         return results
@@ -520,13 +519,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # Write out index
         self.writeindex(indexfile, index)
 
-        data[stuffindexkey]=index
+        if stuffkey=='wallpapers':
+            self.getwallpaperindices(data)
+        else:
+            self.getringtoneindices(data)
+
+        del data[stuffkey]
         return data
 
 
     def savewallpapers(self, data, merge):
         return self.saveprettystuff(data, "brew/shared", self.wallpaperindexfilename,
-                                    'wallpaper', 'wallpaper-index', merge)
+                                    'wallpapers', 'wallpaper-index', merge)
         
     def saveringtones(self,data, merge):
         return self.saveprettystuff(data, "user/sound/ringer", self.ringerindexfilename,
@@ -597,6 +601,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             try:
                 paper=fundamentals['wallpaper-index'][wp]['name']
             except:
+                print "can't find wallpaper for index",wp
                 pass
 
         if paper is not None:
