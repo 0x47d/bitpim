@@ -54,17 +54,5 @@ class Profile(com_sanyonewer.Profile):
     protocolclass=p_sanyo5500
     serialsname='scp5500'
 
-    WALLPAPER_WIDTH=132
-    WALLPAPER_HEIGHT=176
-    
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'read', None),  # all wallpaper reading
-        ('ringtone', 'read', None),   # all ringtone reading
-    )
-
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
