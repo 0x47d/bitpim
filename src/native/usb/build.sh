@@ -1,4 +1,4 @@
-PYTHONVER=python2.2
+PYTHONVER=python2.3
 INCLUDEDIR=/usr/include/$PYTHONVER
 LIBDIR=/usr/lib/$PYTHONVER/config
 
