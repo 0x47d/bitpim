@@ -452,16 +452,13 @@ class ServerProxy:
         return result
 
     def __send(self, methodname, args):
-        print "__send", `methodname`, `args`
         self.__ensure_channel()
         request=xmlrpclib.dumps(args, methodname, encoding=None) #  allow_none=False (allow_none is py2.3+)
         self.__channel.sendall("%08d" % (len(request),))
         self.__channel.sendall(request)
         resplen=self.__recvall(self.__channel, 8)
-        print "resplen",`resplen`
         resplen=int(resplen)
         response=self.__recvall(self.__channel, resplen)
-        print "response", `response`
         p, u = xmlrpclib.getparser()
         p.feed(response)
         p.close()
@@ -478,7 +475,7 @@ class FunctionLogHandler(logging.Handler):
         self.function=function
 
     def emit(self, record):
-        self.function(record)
+        self.function(record.getMessage())
 
 
 if __name__=='__main__':
@@ -498,7 +495,7 @@ if __name__=='__main__':
         time.sleep(1120)
 
     if sys.argv[1]=="client":
-        server=ServerProxy('username', 'password', 'localhost', 4433)
+        server=ServerProxy('username', 'password', 'localhost', 12652)
 
         print server.add(3,4)
         print server.add("one", "two")
