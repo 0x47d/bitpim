@@ -454,7 +454,7 @@ class ServerProxy:
     def __send(self, methodname, args):
         print "__send", `methodname`, `args`
         self.__ensure_channel()
-        request=xmlrpclib.dumps(args, methodname, encoding=None, allow_none=False)
+        request=xmlrpclib.dumps(args, methodname, encoding=None) #  allow_none=False (allow_none is py2.3+)
         self.__channel.sendall("%08d" % (len(request),))
         self.__channel.sendall(request)
         resplen=self.__recvall(self.__channel, 8)
