@@ -3,6 +3,7 @@
 *.htm
 *.chm
 *.htb
+*.prv.*
 Thumbs.db
 version.h
 *-preview.png
