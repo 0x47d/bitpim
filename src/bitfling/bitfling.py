@@ -711,7 +711,10 @@ class BitFlingService(XMLRPCService):
     # Only methods begining with exp are exported to XML-RPC
     
     def exp_scan(self, context):
-        return usbscan.usbscan()+comscan.comscan()
+        if usb is None:
+            return comscan.comscan()
+        else:
+            return usbscan.usbscan()+comscan.comscan()
     
     def exp_getversion(self, context):
         return version.description
