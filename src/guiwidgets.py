@@ -21,6 +21,10 @@ import gui
 
 # we use a custom table class
 class PhoneDataTable(wxPyGridTableBase):
+
+    numbertypetab=( 'Home', 'Home2', 'Office', 'Office2', 'Mobile', 'Mobile2',
+                    'Pager', 'Fax', 'Fax2', 'None' )
+    
     def __init__(self, mainwindow):
         wxPyGridTableBase.__init__(self)
         self.mainwindow=mainwindow
@@ -29,6 +33,15 @@ class PhoneDataTable(wxPyGridTableBase):
         self.labels=[] # columns
         self.roworder=[] # rows
         self._data={}
+        self.needswrite=0
+
+
+    def OnIdle(self, _):
+        if self.needswrite:
+            print "updating filesystem"
+            self.populatefs(self.getdata({}))
+            self.needswrite=0
+
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
@@ -142,7 +155,7 @@ class PhoneDataTable(wxPyGridTableBase):
         return len(self.labels)
 
     def IsEmptyCell(self, row, col):
-        return false
+        return False
 
     def GetValue(self, row, col):
         try:
@@ -158,6 +171,7 @@ class PhoneDataTable(wxPyGridTableBase):
     def SetValue(self, row, col, value):
         print "SetValue",row,col,value
         self._data[self.roworder[row]][self.labels[col]]=value
+        self.needswrite=1
 
     def GetColLabelValue(self, col):
         return self.labels[col]
@@ -167,7 +181,7 @@ class PhoneDataTable(wxPyGridTableBase):
 
     def CanGetValueAs(self, row, col, typename):
         print "CanGetValueAs", row, col, typename
-        return true
+        return True
 
     def CanSetValueAs(self, row, col, typename):
         return self.CanGetValueAs(row, col, typename)
@@ -179,10 +193,11 @@ class PhoneGrid(wxGrid):
         apply(wxGrid.__init__, (self,parent,id)+args, kwargs)
         self.mainwindow=mainwindow
         self.table=PhoneDataTable(mainwindow)
-        self.SetTable( self.table, true)
+        self.SetTable( self.table, True)
         self.table.setstandardlabels()
-        self.AutoSizeColumns(true)
+        self.AutoSizeColumns(True)
         self.AutoSize()
+        EVT_IDLE(self, self.table.OnIdle)
 
     def clear(self):
         self.table.clear()
@@ -215,7 +230,7 @@ class LogWindow(wxPanel):
         self.sizer=wxBoxSizer(wxVERTICAL)
         self.sizer.Add(self.tb, 1, wxEXPAND)
         self.SetSizer(self.sizer)
-        self.SetAutoLayout(true)
+        self.SetAutoLayout(True)
         self.sizer.Fit(self)
         
     def log(self, str):
@@ -251,7 +266,7 @@ class GetPhoneDialog(wxDialog):
         self.rb=[]
         for i in self.strings:
             self.cb.append(wxCheckBox(self,-1, ""))
-            if len(self.cb)>1: self.cb[-1].SetValue(true) # info not requested by default
+            if len(self.cb)>1: self.cb[-1].SetValue(True) # info not requested by default
             gs.Add(self.cb[-1], 0, wxEXPAND)
             gs.Add(wxStaticText(self,-1,i), 0, wxEXPAND|wxALIGN_CENTER_VERTICAL) # align needed for gtk
             self.rb.append( [wxRadioButton(self, -1, "", style=wxRB_GROUP),
@@ -259,9 +274,9 @@ class GetPhoneDialog(wxDialog):
             gs.Add(self.rb[-1][0], 0, wxEXPAND|wxALIGN_CENTRE)
             gs.Add(self.rb[-1][1], 0, wxEXPAND|wxALIGN_CENTRE)
             # merge not supported
-            self.rb[-1][0].Enable(false)
-            self.rb[-1][0].SetValue(false)
-            self.rb[-1][1].SetValue(true)
+            self.rb[-1][0].Enable(False)
+            self.rb[-1][0].SetValue(False)
+            self.rb[-1][1].SetValue(True)
 
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
@@ -271,7 +286,7 @@ class GetPhoneDialog(wxDialog):
         bs.Add(but, 0, wxEXPAND|wxALL, 10)
         
         self.SetSizer(bs)
-        self.SetAutoLayout(true)
+        self.SetAutoLayout(True)
         bs.Fit(self)
 
     def _setting(self, index):
@@ -298,10 +313,10 @@ class SendPhoneDialog(GetPhoneDialog):
     def __init__(self, frame, title, id=-1):
         GetPhoneDialog.__init__(self, frame, title, id)
         # disable the information line
-        self.cb[0].SetValue(false)
-        self.cb[0].Enable(false)
-        self.rb[0][0].Enable(false)
-        self.rb[0][1].Enable(false)
+        self.cb[0].SetValue(False)
+        self.cb[0].Enable(False)
+        self.rb[0][0].Enable(False)
+        self.rb[0][1].Enable(False)
         
 
 ###
@@ -333,7 +348,7 @@ class ConfigDialog(wxDialog):
         bs.Add(but, 0, wxEXPAND|wxALL, 10)
         
         self.SetSizer(bs)
-        self.SetAutoLayout(true)
+        self.SetAutoLayout(True)
         bs.Fit(self)
 
     def setfromconfig(self):
@@ -378,8 +393,8 @@ class ConfigDialog(wxDialog):
         self.setfromconfig()
         if self.diskbox.GetValue()==self.setme or \
            self.commbox.GetValue()==self.setme:
-            return true
-        return false
+            return True
+        return False
 
     def ShowModal(self):
         self.setfromconfig()
@@ -537,12 +552,12 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         raise Exception("not implemented")
 
     def seticonview(self):
-        self.SetSingleStyle(wxLC_REPORT, false)
-        self.SetSingleStyle(wxLC_ICON, true)
+        self.SetSingleStyle(wxLC_REPORT, False)
+        self.SetSingleStyle(wxLC_ICON, True)
 
     def setlistview(self):
-        self.SetSingleStyle(wxLC_ICON, false)
-        self.SetSingleStyle(wxLC_REPORT, true)
+        self.SetSingleStyle(wxLC_ICON, False)
+        self.SetSingleStyle(wxLC_REPORT, True)
 
     def genericpopulatefs(self, dict, key, indexkey):
         try:
@@ -719,7 +734,7 @@ class WallpaperView(FileView):
                 mdc=wxMemoryDC()
                 mdc.SelectObject(b)
                 mdc.Clear()
-                mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, true)
+                mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
                 mdc.SelectObject(wxNullBitmap)
                 bitmap=b
             else:
@@ -776,7 +791,7 @@ class WallpaperView(FileView):
             posy=self.useheight-(self.useheight+newheight)/2
             # background fill in white
             mdc.Clear()
-            mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, true)
+            mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
             obj=bitmap
         if not obj.SaveFile(target, wxBITMAP_TYPE_BMP):
             os.remove(target)
@@ -844,7 +859,7 @@ class FixedScrolledMessageDialog(wx.wxDialog):
 class MyStatusBar(wxStatusBar):
     def __init__(self, parent, id=-1):
         wxStatusBar.__init__(self, parent, id)
-        self.sizechanged=false
+        self.sizechanged=False
         EVT_SIZE(self, self.OnSize)
         EVT_IDLE(self, self.OnIdle)
         self.gauge=wxGauge(self, 1000, 1)
@@ -854,7 +869,7 @@ class MyStatusBar(wxStatusBar):
 
     def OnSize(self,_):
         self.Reposition()
-        self.sizechanged=true
+        self.sizechanged=True
 
     def OnIdle(self,_):
         if self.sizechanged:
@@ -864,7 +879,7 @@ class MyStatusBar(wxStatusBar):
         rect=self.GetFieldRect(2)
         self.gauge.SetPosition(wxPoint(rect.x+2, rect.y+2))
         self.gauge.SetSize(wxSize(rect.width-4, rect.height-4))
-        self.sizeChanged = false
+        self.sizeChanged = False
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)

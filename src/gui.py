@@ -521,10 +521,10 @@ class MainWindow(wxFrame):
         widget=self.nb.GetPage(self.nb.GetSelection())
         if widget is self.ringerwidget or \
            widget is self.wallpaperwidget:
-            enable=true
-        else: enable=false
+            enable=True
+        else: enable=False
         if IsGtk():
-            enable=false # crummy platform
+            enable=False # crummy platform
         
         self.GetToolBar().EnableTool(ID_FV_ICONS, enable)
         self.GetToolBar().EnableTool(ID_FV_LIST, enable)
@@ -769,7 +769,7 @@ class FileSystemView(wxTreeCtrl):
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
         self.SetPyData(self.root, None)
-        self.SetItemHasChildren(self.root, true)
+        self.SetItemHasChildren(self.root, True)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.dirhash={ "": 1}
         EVT_TREE_ITEM_EXPANDED(self, idd, self.OnItemExpanded)
@@ -867,7 +867,7 @@ class FileSystemView(wxTreeCtrl):
                 self.SetItemHasChildren(found, false)
             else: # it is a directory
                 self.dirhash[result[file]['name']]=1
-                self.SetItemHasChildren(found, true)
+                self.SetItemHasChildren(found, True)
                 if made: # only add this for new items
                     self.SetPyData(self.AppendItem(found, "Retrieving..."), None)
         for i in l: # remove all children not present in result
