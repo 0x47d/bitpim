@@ -16,6 +16,14 @@ try:
 except ImportError:
     usb=None
 
+import guihelper
+import usb_ids
+
+ids=usb_ids.usb_ids()
+ids.add_data(guihelper.getresourcefile("usb.ids"))
+ids.add_data(guihelper.getresourcefile("bitpim_usb.ids"))
+
+
 def usbscan(*args, **kwargs):
 
     if usb is None:
@@ -39,17 +47,35 @@ def usbscan(*args, **kwargs):
                     name="usb::%s::%s::%d" % (bus.name(), device.name(), iface.number())
                     active=True
                     available=False
-                    hwinstance="USB Device - Vendor 0x%x Product 0x%x (Interface %d)" % (device.vendor(),
-                                                                            device.product(), iface.number())
                     try:
                         iface.openbulk().close()
                         available=True
                     except:
                         pass
                     v={'name': name, 'active': active, 'available': available,
-                       'description': hwinstance, 'libusb': True,
-                       'usb-vendor': device.vendor(), 'usb-product': device.product(),
-                       'usb-interface': iface.number()}
+                       'libusb': True,
+                       'usb-vendor#': device.vendor(), 'usb-product#': device.product(),
+                       'usb-interface#': iface.number()}
+                    vend,prod,i=ids.lookupdevice(device.vendor(), device.product(), iface.number())
+                    if vend is None:
+                        vend="#%04X" % (device.vendor(),)
+                    else:
+                        v['usb-vendor']=vend
+                    if prod is None:
+                        prod="#%04X" % (device.product(),)
+                    else:
+                        v['usb-product']=prod
+                    if i is None:
+                        i="#%02X" % (iface.number(),)
+                    else:
+                        v['usb-interface']=i
+                    hwinstance="USB Device - Vendor %s Product %s (Interface %s)" % (vend, prod, i)
+                    v['description']=hwinstance
+
+                    prot=" / ".join([val for val in ids.lookupclass(*(iface.classdetails())) if val is not None])
+                    if len(prot):
+                        v["protocol"]=prot
+                        
                     for n,i in ("usb-vendorstring", device.vendorstring), \
                         ("usb-productstring", device.productstring), \
                         ("usb-serialnumber", device.serialnumber):
