@@ -28,7 +28,7 @@
 # stuff, but the actual request handling still seems single threaded.
 
 
-TRACE=True
+TRACE=False
 
 
 # standard modules
@@ -61,13 +61,10 @@ class ServerChannel(paramiko.Channel):
     def readall(self, amount):
         result=""
         while amount:
-            print "recv"
             l=self.chan.recv(amount)
-            print amount,l
             if len(l)==0:
                 return result # eof
             result+=l
-            print result
             amount-=len(l)
         return result
 
@@ -76,62 +73,15 @@ class ServerChannel(paramiko.Channel):
 
         @param conn:  The connectionthread object we are working for
         """
-        print "In xmlrpcloop"
         while True:
             try:
                 length=int(self.readall(8))
             except ValueError:
                 return
             xml=self.readall(length)
-            print "xml",xml
             response=conn.processxmlrpcrequest(xml, self.peeraddr,
                                            self.username)
             self.chan.sendall( ("%08d" % (len(response),))+response)
-
-class ServerTransport(paramiko.Transport):
-
-    def __init__(self, sock, peeraddr, onbehalfof):
-        """Constructor.
-
-        @param sock: a connected TCP socket
-        @param peeraddr: address of remote end
-        @param onbehalfof: a connectionthread object that we do stuff on behalfof.  This
-                  is necessary because this code operates in a different thread.
-        """
-        paramiko.Transport.__init__(self, sock)
-        self.peeraddr=peeraddr
-        self.onbehalfof=onbehalfof
-
-    def get_allowed_auths(self, username):
-        return "password"
-
-    def check_auth_password(self, username, password):
-        print "check_auth_password",username,password
-        # we borrow the connection's queue object for this
-        self.bf_auth_username="<invalid user>"
-        conn=self.onbehalfof
-        conn.log("Checking authentication for user "+`username`)
-        msg=Server.Message(Server.Message.CMD_NEW_USER_REQUEST, conn.responsequeue,
-                           self.peeraddr, data=(username,password))
-        conn.requestqueue.put(msg)
-        resp=conn.responsequeue.get()
-        assert resp.cmd==resp.CMD_NEW_USER_RESPONSE
-        if hasattr(resp, 'exception'):
-            conn.logexception("Exception while checking authentication",resp.exception)
-            return paramiko.AUTH_FAILED
-        if resp.data:
-            conn.log("Credentials ok for user "+`username`)
-            self.bf_auth_username=username
-            return paramiko.AUTH_SUCCESSFUL
-        conn.log("Credentials not accepted for user "+`username`)
-        return paramiko.AUTH_FAILED
-
-    def check_channel_request(self, kind, chanid):
-        print "check channel request",kind
-        if kind == 'bitfling':
-            return paramiko.OPEN_SUCCEEDED
-            #return ServerChannel(chanid)
-        return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
 class myServer(paramiko.ServerInterface):
 
@@ -144,7 +94,6 @@ class myServer(paramiko.ServerInterface):
         return "password"
 
     def check_auth_password(self, username, password):
-        print "check_auth_password",username,password
         # we borrow the connection's queue object for this
         self.bf_auth_username="<invalid user>"
         conn=self.onbehalfof
@@ -165,7 +114,6 @@ class myServer(paramiko.ServerInterface):
         return paramiko.AUTH_FAILED
 
     def check_channel_request(self, kind, chanid):
-        print "check channel request",kind
         if kind == 'bitfling':
             return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
@@ -242,9 +190,7 @@ class Server(threading.Thread):
                     transport=None
                     event.clear()
                     # blocking wait for new connection to come in
-                    print "Self.listen.accept()"
                     sock, peeraddr = self.listen.accept()
-                    print "accepted",sock, peeraddr
                     # ask if we allow this connection
                     msg=Server.Message(Server.Message.CMD_NEW_ACCEPT_REQUEST, self.responsequeue, peeraddr)
                     self.requestqueue.put(msg)
@@ -257,18 +203,13 @@ class Server(threading.Thread):
                         continue
                     # startup ssh stuff
                     self.log("Connection from "+`peeraddr`+" accepted")
-                    #transport=ServerTransport(sock, peeraddr, self)
                     transport=paramiko.Transport(sock)
-                    print "add server key"
                     transport.add_server_key(self.server.ssh_server_key)
-                    print "setdaemon"
                     transport.setDaemon(True)
-                    print "start_server"
                     srvr=myServer(peeraddr, self)
                     transport.start_server(event,srvr)
                                          
                 except:
-                    print "exception"
                     if __debug__ and TRACE: print self.getName()+": Exception in accept block\n"+guihelper.formatexception()
                     self.logexception("Exception in accept", sys.exc_info())
                     if transport is not None: del transport
@@ -276,11 +217,8 @@ class Server(threading.Thread):
                     continue
 
                 # wait for it to become an SSH connection
-                print "waiting"
                 event.wait()
-                print "done waiting"
                 if not event.isSet() or not transport.is_active():
-                    print "Closing transport"
                     self.log("Connection from "+`peeraddr`+" didn't do SSH negotiation")
                     transport.close()
                     sock.close()
@@ -291,19 +229,12 @@ class Server(threading.Thread):
 
                 chan=None
                 try:
-                    print "Doing transport.accept"
                     chan=transport.accept()
-                    print "Accept done"
-                    if chan is None:
-                        print "No channel"
-                    print "In chan.XMLRPCLoop"
-                    serverchan=ServerChannel(chan,peeraddr,"saw")
+                    serverchan=ServerChannel(chan,peeraddr,srvr.bf_auth_username)
                     serverchan.XMLRPCLoop(self)
                 except:
-                    print "Exception on accept or XMLRPCLoop"
                     self.logexception("Exception in XMLRPCLoop", sys.exc_info())
 
-                print "Closing up"
                 if chan is not None:
                     chan.close()
                     del chan
@@ -397,7 +328,6 @@ class Server(threading.Thread):
         run=run22
 
     def processmessage(self, msg):
-        print "processmessag",msg
         if not isinstance(msg, Server.Message):
             self.OnUserMessage(msg)
             return
@@ -407,7 +337,6 @@ class Server(threading.Thread):
         resp=None
         if msg.cmd==msg.CMD_LOG:
             self.OnLog(msg.data)
-            print "OnLog worked"
             return
         elif msg.cmd==msg.CMD_LOG_EXCEPTION:
             self.OnLogException(msg.data)
@@ -550,11 +479,7 @@ class ServerProxy:
         event.wait()
         if not t.is_active():
             raise Exception("Authentication to %s failed:  Username %s, password %s" % (self.__host, `self.__username`, `self.__password`))
-        print "GOT HERE"
         self.__channel=t.open_channel("bitfling")
-        print "Channel opened"
-        if self.__channel is None:
-            print "self.__channel is None"
 
     def __ensure_channel(self):
         if self.__channel is None:
@@ -579,9 +504,7 @@ class ServerProxy:
 
     def __send(self, methodname, args):
         self.__ensure_channel()
-        print "calling xmlrpclib.dumps"
         request=xmlrpclib.dumps(args, methodname, encoding=None) #  allow_none=False (allow_none is py2.3+)
-        print "sendall",request
         self.__channel.sendall( ("%08d" % (len(request),))+request)
         resplen=self.__recvall(self.__channel, 8)
         resplen=int(resplen)
