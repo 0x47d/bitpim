@@ -616,7 +616,7 @@ class LIST(BaseProtogenClass):
         self._thelist.insert(index, self._makeitem(item))
 
     def __getitem__(self, index):
-        return self._thelist.__getitem(index)
+        return self._thelist.__getitem__(index)
 
     def __iter__(self):
         return self._thelist.__iter__()
