@@ -34,38 +34,3 @@ _NUMCALLHISTORY=20
     
 %}
 
-# Experimental packet descriptions for media upload.  Eventually move into
-# p_sanyo.p
-
-
-PACKET sanyomediaheader:
-    1 UINT {'constant': 0xfa} +commandmode
-    1 UINT {'constant': 0x0} +null
-    1 UINT command
-    2 UINT subcommand  "Sub command or byte pointer"
-
-PACKET sanyomediafilegragment:
-    * sanyomediaheader +header
-    2 UINT {'constant': 0} +word
-    1 UINT {'constant': 150} +len
-    150 DATA data
-    21 UNKNOWN +pad
-    
-PACKET sanyomediafilename:
-    * sanyomediaheader {'command': 0x05, 'subcommand': 0xffa1} +header
-    2 UINT {'constant': 0} +word
-    1 UINT {'constant': 150} +len
-    171 STRING filename
-
-PACKET sanyomediaresponse:
-    * sanyomediaheader header
-    * UNKNOWN UNKNOWN
-    
-PACKET sanyomediafilelength:
-    * sanyomediaheader {'command': 0x05, 'subcommand': 0xffc1} +header
-    2 UINT {'constant': 0} +word
-    1 UINT {'constant': 150} +len
-    1 UNKNOWN +pad
-    2 UINT filelength
-    168 UNKNOWN +pad
-
