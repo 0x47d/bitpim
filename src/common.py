@@ -341,6 +341,6 @@ def opentextfile(name):
                # some codecs don't do readline, so we have to vector via stringio
                # many postings also claim that the BOM is returned as the first
                # character but that hasn't been the case in my testing
-               return StringIO.StringIO(codecs.open(name, "r", codec).read())
+               return cStringIO.StringIO(codecs.open(name, "r", codec).read().encode("ascii", 'xmlcharrefreplace'))
      f.close()
      return open(name, "rtU")
