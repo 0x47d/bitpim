@@ -710,10 +710,13 @@ class Profile(com_phone.Profile):
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     
     # which usb ids correspond to us
-    usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface
+    usbids_straight=( ( 0x1004, 0x6000, 2), )# VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface
+    usbids_usbtoserial=(
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
         ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
         )
+    usbids=usbids_straight+usbids_usbtoserial
+    
     # which device classes we are.  not we are not modem!
     deviceclasses=("serial",)
 

@@ -76,6 +76,9 @@ class Profile(com_lgvx4400.Profile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
+    # no direct usb interface
+    usbids=com_lgvx4400.Profile.usbids_usbtoserial
+
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
     MAX_WALLPAPER_BASENAME_LENGTH=19
