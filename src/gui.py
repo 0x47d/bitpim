@@ -683,7 +683,7 @@ class WorkerThread(WorkerThreadFramework):
         willcall=[]
         sync={}
         for i in (
-            (req.GetInformationSetting, self.commphone.getphoneinfo, "Information", "information"),
+            (req.GetInformationSetting, self.commphone.getphoneinfo, "Version Information", "information"),
             (req.GetPhoneBookSetting, self.commphone.getphonebook, "Phone Book", "phonebook"),
             (req.GetCalendarSetting, self.commphone.getcalendar, "Calendar", "calendar",),
             (req.GetWallpaperSetting, self.commphone.getwallpapers, "Wallpaper", "wallpaper"),

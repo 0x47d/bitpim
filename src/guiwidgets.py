@@ -231,7 +231,7 @@ class LogWindow(wxPanel):
 ###
 
 class GetPhoneDialog(wxDialog):
-    strings= ('Information', 'PhoneBook', 'Calendar', 'Wallpaper', 'Ringtone')
+    strings= ('Version Information', 'PhoneBook', 'Calendar', 'Wallpaper', 'Ringtone')
     NOTREQUESTED=0
     MERGE=1
     OVERWRITE=2
