@@ -1011,6 +1011,13 @@ class MainWindow(wx.Frame):
             title="Failed to automatically detect port"
             style=wx.OK|wx.ICON_INFORMATION
             help=lambda _: wx.GetApp().displayhelpid(helpids.ID_FAILED_TO_AUTODETECT_PORT)
+        elif isinstance(exception, common.HelperBinaryNotFound) and exception.basename=="pvconv":
+            text="The Qualcomm PureVoice converter program (%s) was not found.\nPlease see the help. Directories looked in are:\n\n " +\
+                  "\n ".join(exception.paths)
+            text=text % (exception.fullname,)
+            title="Failed to find PureVoice converter"
+            style=wx.OK|wx.ICON_INFORMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_NO_PVCONV)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
