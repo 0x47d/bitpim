@@ -1730,8 +1730,8 @@ class ImportDialog(wx.Dialog):
         for r in row:
             _, importid, existingid, resid=row[r]
             if importid is not None and existingid is not None:
-                checkresult=results[resid]
-                checkexisting=self.existingdata[existingid]
+                checkresult=copy.deepcopy(results[resid])
+                checkexisting=copy.deepcopy(self.existingdata[existingid])
                 # we don't care about serials changing ...
                 if "serials" in checkresult: del checkresult["serials"]
                 if "serials" in checkexisting: del checkexisting["serials"]
