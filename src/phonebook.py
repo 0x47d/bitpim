@@ -1718,6 +1718,8 @@ class ImportDialog(wx.Dialog):
                 result['numbers']=mergenumberlists(o['numbers'], i['numbers'])
             elif key=="urls":
                 result['urls']=mergefields(o['urls'], i['urls'], 'url', cleaner=cleanurl)
+            elif key=="emails":
+                result['emails']=mergefields(o['emails'], i['emails'], 'email', cleaner=cleanemail)
             else:
                 result[key]=common.list_union(o[key], i[key])
 
@@ -2072,7 +2074,7 @@ def comparenames(s,a):
     return r
 
 def cleanurl(url, mode="compare"):
-    """Returns lowercase url with the "http://" prefix removed
+    """Returns lowercase url with the "http://" prefix removed and in lower case
     
     @param mode: If the value is compare (default), it removes ""http://www.""
                  in preparation for comparing entries. Otherwise, if the value
@@ -2083,6 +2085,11 @@ def cleanurl(url, mode="compare"):
     else: urlprefix=re.compile("^(http://)?")
     
     return default_cleaner(re.sub(urlprefix, "", url).lower())
+
+def cleanemail(email, mode="compare"):
+    """Returns lowercase email 
+    """
+    return default_cleaner(email.lower())
 
 
 nondigits=re.compile("[^0-9]")
