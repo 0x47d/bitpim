@@ -352,7 +352,7 @@ class SanyoPhonebook:
         sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
 
         # Get the ringer and wall paper assignments
-        if serialsname!='mm7400':
+        if self.serialsname!='mm7400':
             ringpic = self.getsanyobuffer(self.protocolclass.ringerpicbuffer)
 
         speedslot=[]
@@ -390,7 +390,7 @@ class SanyoPhonebook:
                                 entry['numbers'][k]['speeddial']=j+2
                                 break
 
-                if serialsname!='mm7400':
+                if self.serialsname!='mm7400':
                     # ringtones
                     if ringpic.ringtones[i].ringtone>0:
                         try:
@@ -697,7 +697,7 @@ class SanyoPhonebook:
         # Now write out the 3 buffers
         self.sendsanyobuffer(sortstuff)
 
-        if serialsname!='mm7400':
+        if self.serialsname!='mm7400':
             self.sendsanyobuffer(ringpic)
         
         self.sendsanyobuffer(callerid)
