@@ -399,6 +399,14 @@ class BPFSHandler(wx.FileSystemHandler):
         self.wpm=wallpapermanager
 
     def CanOpen(self, location):
+
+        # The call to self.GetProtocol causes an exception if the
+        # location starts with a pathname!  This typically happens
+        # when the help file is opened.  So we work around that bug
+        # with this quick check.
+        
+        if location.startswith("/"):
+            return False
         proto=self.GetProtocol(location)
         if proto=="bpimage" or proto=="bpuserimage":
             print "handling url",location
