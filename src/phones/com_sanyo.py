@@ -49,28 +49,6 @@ class SanyoPhonebook:
     def __init__(self):
         self.numbertypetab=numbertypetab
     
-    def _setmodelgdmgo(self):
-        # see if we can turn on dm mode
-        for baud in (0, 115200, 19200, 38400, 230400):
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-            try:
-                self.comm.write("AT$LGDMGO\r\n")
-            except:
-                self.mode=self.MODENONE
-                self.comm.shouldloop=True
-                raise
-            try:
-                self.comm.readsome()
-                self.comm.setbaudrate(38400) # dm mode is always 38400
-                return 1
-            except com_phone.modeignoreerrortypes:
-                self.log("No response to setting DM mode")
-        self.comm.setbaudrate(38400) # just in case it worked
-        return 0
-        
-
     def _setmodephonebook(self):
         req=p_sanyo.firmwarerequest()
         respc=p_sanyo.firmwareresponse
@@ -85,12 +63,6 @@ class SanyoPhonebook:
             return 1
         except com_phone.modeignoreerrortypes:
             pass
-    #    self._setmodelgdmgo()
-    #    try:
-    #        self.sendpbcommand(req, respc, callsetmode=False)
-    #        return 1
-    #    except com_phone.modeignoreerrortypes:
-    #        pass
         return 0
         
     def getmediaindices(self, results):
@@ -107,14 +79,14 @@ class SanyoPhonebook:
         for name in self.builtinimages:
             if name:
                 imagemedia[c]={'name': name, 'origin': 'builtin' }
-                print c,name
+                # print c,name
             c+=1
         results['wallpaper-index']=imagemedia
         c=1
         for name in self.builtinringtones:
             if name:
                 ringermedia[c]={'name': name, 'origin': 'builtin' }
-                print c,name
+                # print c,name
             c+=1
         results['ringtone-index']=ringermedia
         return
@@ -136,7 +108,7 @@ class SanyoPhonebook:
         for name in builtins:
             if name:
                 media[c]={'name': name, 'origin': 'builtin' }
-                print c,name
+                # print c,name
             c+=1
 
         results[key]=media
@@ -675,7 +647,7 @@ class SanyoPhonebook:
     
 
     def savewallpapers(self, results, merge):
-        print "savewallpapers ",results['wallpaper-index']
+        # print "savewallpapers ",results['wallpaper-index']
         return self.savemedia('wallpapers', 'wallpaper-index', 'images', results, merge)
                               
     # Note:  Was able to write 6 ringers to phone.  If there are ringers
@@ -720,7 +692,6 @@ class SanyoPhonebook:
                     continue
                 init[mediatype][index]={'name': name, 'data': data}
         
-        print "C",init.keys()    
         # now look through wallpapers and see if anything remaining was assigned a particular
         # origin
         for w in wp.keys():
@@ -736,26 +707,6 @@ class SanyoPhonebook:
         # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
                              
         index=init[mediatype]
-
-        dellist=[]
-
-        if not merge:
-            # get existing wpi for this location
-            wpi=results[mediaindexkey]
-            for i in wpi:
-                entry=wpi[i]
-                if entry['origin']==type:
-                    # it is in the original index, are we writing it back out?
-                    delit=True
-                    for idx in index:
-                        if index[idx]['name']==entry['name']:
-                            delit=False
-                            break
-                    if delit:
-                        if stripext(entry['name']) in dirlisting:
-                            dellist.append(entry['name'])
-                        else:
-                            self.log("%s in %s index but not filesystem" % (entry['name'], type))
 
         maxentries=10
 
@@ -788,7 +739,6 @@ class SanyoPhonebook:
 
         for key in index:
             efile=index[key]['name']
-            print "Writing "+efile
             content=index[key]['data']
             if content is None:
                 continue # in theory we could rewrite .desc file in case index number has changed
@@ -825,6 +775,16 @@ class SanyoPhonebook:
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         desc="Writing "+name
 
+        # strip .png and .mid from name because phone will add them
+        # back on
+        try:
+            name=name[:name.index(".mid")]
+        except:
+            try:
+                name=name[:name.index(".png")]
+            except:
+                pass
+        
         # The newer phones can be put in PC Sync mode with these commands
         if hasattr(self.protocolclass,"sanyomediathingyrequest"):
             req=self.protocolclass.sanyomediathingyrequest()
