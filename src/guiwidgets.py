@@ -24,6 +24,14 @@ class PhoneDataTable(wxPyGridTableBase):
 
     numbertypetab=( 'Home', 'Home2', 'Office', 'Office2', 'Mobile', 'Mobile2',
                     'Pager', 'Fax', 'Fax2', 'None' )
+
+    typesnames=( 'type1', 'type2', 'type3', 'type4', 'type5' )
+
+    typestypename=wxGRID_VALUE_CHOICE+":"+",".join(numbertypetab)
+
+    intnames=( '#', 'group', 'msgringtone', 'ringtone', 'serial1', 'serial2' )
+    
+    boolnames=( 'secret', )
     
     def __init__(self, mainwindow):
         wxPyGridTableBase.__init__(self)
@@ -159,6 +167,8 @@ class PhoneDataTable(wxPyGridTableBase):
 
     def GetValue(self, row, col):
         try:
+            if self.labels[col] in self.typesnames:
+                return self.numbertypetab[ self._data[self.roworder[row]][self.labels[col]] ]
             return self._data[self.roworder[row]][self.labels[col]]
         except:
             print "bad request", row, col
@@ -166,9 +176,20 @@ class PhoneDataTable(wxPyGridTableBase):
 
     def GetTypeName(self, row, col):
         # print "GetTypeName",row,col
+        if self.labels[col] in self.typesnames:
+            return self.typestypename
+        if self.labels[col] in self.intnames or self.labels[col][0]=='?':
+            return wxGRID_VALUE_NUMBER
+        if self.labels[col] in self.boolnames:
+            return wxGRID_VALUE_BOOL
         return wxGRID_VALUE_STRING
 
     def SetValue(self, row, col, value):
+        if self.labels[col] in self.typesnames:
+            for i in range(0,len(self.numbertypetab)):
+                if value==self.numbertypetab[i]:
+                    value=i
+                    break
         print "SetValue",row,col,value
         self._data[self.roworder[row]][self.labels[col]]=value
         self.needswrite=1
@@ -180,7 +201,7 @@ class PhoneDataTable(wxPyGridTableBase):
         return self._data[self.roworder[row]]['name']
 
     def CanGetValueAs(self, row, col, typename):
-        print "CanGetValueAs", row, col, typename
+        # print "CanGetValueAs", row, col, typename
         return True
 
     def CanSetValueAs(self, row, col, typename):
@@ -195,9 +216,14 @@ class PhoneGrid(wxGrid):
         self.table=PhoneDataTable(mainwindow)
         self.SetTable( self.table, True)
         self.table.setstandardlabels()
-        self.AutoSizeColumns(True)
-        self.AutoSize()
+        # self.AutoSizeColumns(True)
+        # self.AutoSize()
         EVT_IDLE(self, self.table.OnIdle)
+        EVT_GRID_CELL_LEFT_DCLICK(self, self.OnLeftDClick) # see the demo
+
+    def OnLeftDClick(self, _):
+        if self.CanEnableCellControl():
+            self.EnableCellEditControl()
 
     def clear(self):
         self.table.clear()

@@ -301,7 +301,7 @@ class MainWindow(wxFrame):
         menuBar.Append(menu, "&Help");
 
         ### notebook
-        self.nb=wxNotebook(self,-1, style=wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE)
+        self.nb=wxNotebook(self,-1)
 
         ### notebook tabs
         self.phonewidget=guiwidgets.PhoneGrid(self, self.nb)
