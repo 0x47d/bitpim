@@ -71,7 +71,8 @@ class ServerChannel(paramiko.Channel):
             xml=self.readall(length)
             response=conn.processxmlrpcrequest(xml, self.get_transport().peeraddr,
                                            self.get_transport().bf_auth_username)
-            self.sendall( ("%08d" % (len(response),))+response)
+            self.sendall( "%08d" % (len(response),))
+            self.sendall(response)
 
 class ServerTransport(paramiko.Transport):
 
@@ -482,7 +483,8 @@ class ServerProxy:
     def __send(self, methodname, args):
         self.__ensure_channel()
         request=xmlrpclib.dumps(args, methodname, encoding=None) #  allow_none=False (allow_none is py2.3+)
-        self.__channel.sendall( ("%08d" % (len(request),))+request)
+        self.__channel.sendall( "%08d" % (len(request),))
+        self.__channel.sendall(request)
         resplen=self.__recvall(self.__channel, 8)
         resplen=int(resplen)
         response=self.__recvall(self.__channel, resplen)
@@ -490,7 +492,6 @@ class ServerProxy:
         p.feed(response)
         p.close()
         # if the response was a Fault, then it is raised by u.close()
-        print "request\n"+request+"\n\nresponse\n"+response
         response=u.close()
         if len(response)==1:
             response=response[0]
