@@ -736,7 +736,7 @@ class MainWindow(wx.Frame):
         dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wx.ID_OK:
             return
-        todo.append((self.DisplayMessages, "Display Messages"))
+        #todo.append((self.DisplayMessages, "Display Messages"))
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getdata, dlg, todo),
                       Callback(self.OnDataGetPhoneResults))
@@ -840,7 +840,7 @@ class MainWindow(wx.Frame):
             # writing will modify serials so we need to update
             funcscb.append(self.phonewidget.updateserials)
 
-        todo.append((self.DisplayMessages, "Display Messages"))
+        #todo.append((self.DisplayMessages, "Display Messages"))
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
