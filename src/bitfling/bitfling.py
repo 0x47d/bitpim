@@ -181,12 +181,6 @@ class ConfigPanel(wx.Panel):
         butdelete=wx.Button(self, wx.NewId(), "Delete")
         butdelete.Enable(False)
         hbs.Add(butdelete, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
-        hbs.Add(wx.StaticText(self, -1, "Unmatched:"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        butprompt=wx.RadioButton(self, wx.NewId(), "Prompt")
-        hbs.Add(butprompt, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        butblock=wx.RadioButton(self, wx.NewId(), "Block")
-        hbs.Add(butblock, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
         # and the authorization listview
@@ -194,11 +188,9 @@ class ConfigPanel(wx.Panel):
         self.authlist.InsertColumn(0, "User")
         self.authlist.InsertColumn(1, "Allowed Addresses")
         self.authlist.InsertColumn(2, "Expires")
-        self.authlist.InsertColumn(3, "Then")
         self.authlist.SetColumnWidth(0, 300)
         self.authlist.SetColumnWidth(1, 300)
         self.authlist.SetColumnWidth(2, 100)
-        self.authlist.SetColumnWidth(3, 100)
         bs.Add(self.authlist, 1, wx.EXPAND|wx.ALL, 5)
         
         vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
