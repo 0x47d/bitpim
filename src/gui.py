@@ -1383,6 +1383,7 @@ class FileSystemView(wxTreeListCtrl):
     def OnHexViewResults(self, path, exception, result):
         mw=self.mainwindow
         if mw.HandleException(exception): return
+        # ::TODO:: make this use HexEditor
         dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
                                                     path+" Contents", helpids.ID_HEXVIEW_DIALOG)
         dlg.Show()
