@@ -752,7 +752,7 @@ class CommPortDialog(wx.Dialog):
         
 
     def OnSave(self, _):
-        html=cStringIO.StringIO()
+        html=StringIO.StringIO()
         
         print >>html, "<html><head><title>BitPim port listing - %s</title></head>" % (time.ctime(), )
         print >>html, "<body><h1>BitPim port listing - %s</h1><table>" % (time.ctime(),)
