@@ -335,8 +335,7 @@ class Phone(com_samsung.Phone):
             if pb_entry['names'][0]['full']!=name:
                 pb_entry['names'][0]['full']=name
             if pb_entry['names'][0].has_key('nickname'):
-                name=pb_entry['names'][0]['nickname']
-                replace(name, '"', '')
+                name=replace(pb_entry['names'][0]['nickname'], '"', '')
                 if len(name)>self.__pb_max_name_len:
                     name=name[:self.__pb_max_name_len]
                 if pb_entry['names'][0]['nickname']!=name:
@@ -361,8 +360,7 @@ class Phone(com_samsung.Phone):
             if pb_entry.has_key('emails'):
                 if len(pb_entry['emails'])>self.__pb_max_emails:
                     self.log(name+': Each entry can only have %s emails.  The rest will be ignored.'%str(self.__pb_max_emails))
-                email=pb_entry['emails'][0]['email']
-                replace(email, '"', '')
+                email=replace(pb_entry['emails'][0]['email'], '"', '')
                 if len(email)>self.__pb_max_number_len:
                     email=email[:self.__pb_max_number_len]
                 if email!=pb_entry['emails'][0]['email']:
