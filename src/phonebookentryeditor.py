@@ -16,6 +16,109 @@ import phonebook
 """The dialog for editing a phonebook entry"""
 
 
+class RingtoneEditor(wx.Panel):
+    "Edit a ringtone"
+
+    # this is almost an exact clone of the wallpaper editor
+    
+    unnamed="Select:"
+    unknownselprefix=": "
+
+    choices=["call", "message"]
+
+    ID_LIST=wx.NewId()
+
+    _bordersize=5
+
+    def __init__(self, parent, _):
+        wx.Panel.__init__(self, parent, -1)
+        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Ringtone"), wx.HORIZONTAL)
+
+        vs=wx.BoxSizer(wx.VERTICAL)
+
+        self.preview=phonebook.HTMLWindow(self, -1)
+        self.preview.SetBorders(self._bordersize)
+        self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
+        vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
+        vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
+
+        self.ringtone=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
+        hs.Add(self.ringtone, 1, wx.EXPAND|wx.ALL, 5)
+
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+        pubsub.subscribe(pubsub.ALL_RINGTONES, self, "OnRingtoneUpdates")
+        wx.CallAfter(pubsub.publish, pubsub.REQUEST_RINGTONES) # make the call once we are onscreen
+
+        wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
+
+    def OnRingtoneUpdates(self, msg):
+        "Receives pubsub message with ringtone list"
+        tones=msg.data[:]
+        cur=self.Get()
+        self.ringtone.Clear()
+        self.ringtone.Append(self.unnamed)
+        for p in tones:
+            self.ringtone.Append(p)
+        self.Set(cur)
+
+    def OnLBClicked(self, _=None):
+        self._updaterequested=False
+        v=self.Get().get('ringtone', None)
+        self.SetPreview(v)
+
+    def SetPreview(self, name):
+        if name is None:
+            self.preview.SetPage('')
+        else:
+            pass
+            self.preview.SetPage('<img src="bpimage:ringer.png;width=24;height=24"><br>At some point there will be info about the ringtone as well as the ability to play it here')
+            pass
+
+    def Set(self, data):
+        wp=data.get("ringtone", self.unnamed)
+
+        self.SetPreview(wp)
+        type=data.get("type", "call")
+        if type=="message":
+            self.type.SetSelection(1)
+        else:
+            self.type.SetSelection(0)
+
+        # try using straight forward name
+        try:
+            self.ringtone.SetStringSelection(wp)
+            return
+        except:
+            pass
+
+        # ok, with unknownselprefix
+        try:
+            self.ringtone.SetStringSelection(self.unknownselprefix+wp)
+            return
+        except:
+            pass
+
+        # ok, just add it
+        self.ringtone.InsertItems([self.unknownselprefix+wp], 1)
+        self.ringtone.SetStringSelection(self.unknownselprefix+wp)
+
+    def Get(self):
+        res={}
+        rt=self.ringtone.GetStringSelection()
+        if rt==self.unnamed:
+            return res
+        if rt.startswith(self.unknownselprefix):
+            rt=rt[len(self.unknownselprefix):]
+        res['ringtone']=rt
+        res['use']=self.type.GetStringSelection()
+        return res
+        
+        
 class WallpaperEditor(wx.Panel):
 
     unnamed="Select:"
@@ -736,6 +839,7 @@ class Editor(wx.Dialog):
         ("Memos", "memos", MemoEditor),
         ("Categories", "categories", CategoryEditor),
         ("Wallpapers", "wallpapers", WallpaperEditor),
+        ("Ringtones", "ringtones", RingtoneEditor),
         ]
 
     def __init__(self, parent, data, title="Edit PhoneBook entry"):
@@ -779,7 +883,7 @@ class Editor(wx.Dialog):
         wx.EVT_TOOL(self, self.ID_DELETE, self.Delete)
 
     def GetData(self):
-        res={}
+        res=self.data
         for i in range(len(self.tabsfactory)):
             widget=self.nb.GetPage(i)
             data=widget.Get()
