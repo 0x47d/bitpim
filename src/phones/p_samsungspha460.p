@@ -41,6 +41,7 @@ PACKET phonebookslotresponse:
 
 PACKET pbentry:
     P STRING {'default': ""} +url
+    P SAMDATE {'default': ""} +birthday
     * SAMINT slot "Internal Slot"
     * SAMINT uslot "User Slot, Speed dial"
     * SAMINT group
