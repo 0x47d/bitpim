@@ -424,7 +424,9 @@ class BPFSHandler(wx.FileSystemHandler):
 
         Note that the location value includes the filename and the parameters such as width/height
         """
-        if statinfo is None: return None
+        if statinfo is None:
+            print "bad location",location
+            return None
         return self.cache.get( (location, statinfo), None)
 
     def _AddCache(self, location, statinfo, value):
@@ -447,7 +449,6 @@ class BPFSHandler(wx.FileSystemHandler):
             return False
         proto=self.GetProtocol(location)
         if proto=="bpimage" or proto=="bpuserimage":
-            print "handling url",location
             return True
         return False
 
@@ -458,9 +459,13 @@ class BPFSHandler(wx.FileSystemHandler):
             res=None
             print "Exception in getting image file - you can't do that!"
             print common.formatexception()
-        #if res is not None:
-        #    
-        #    res.thisown=False # work around bug in wxPython 2.5.2.7
+        if res is not None:
+            # we have to seek the file object back to the begining and make a new
+            # wx.FSFile each time as wxPython doesn't do the reference counting
+            # correctly
+            res[0].seek(0)
+            args=(wx.InputStream(res[0]),)+res[1:]
+            res=wx.FSFile(*args)
         return res
 
     def _OpenFile(self, filesystem, location):
@@ -508,53 +513,37 @@ class BPFSHandler(wx.FileSystemHandler):
         self._AddCache(location, si, res)
         return res
 
-class BPFSImageFile(wx.FSFile):
+def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1, bgcolor=None):
     """Handles image files
 
-    All files are internally converted to PNG
+    If we have to do any conversion on the file then we return PNG
+    data.  This used to be a class derived from wx.FSFile, but due to
+    various wxPython bugs it instead returns the parameters to make a
+    wx.FSFile since a new one has to be made every time.
     """
-
-    def __init__(self, fshandler, location, name=None, img=None, width=-1, height=-1, bgcolor=None):
-        self.fshandler=fshandler
-        self.location=location
-
         # special fast path if we aren't resizing or converting image
-        if img is None and width<0 and height<0:
-            mime=guihelper.getwxmimetype(name)
-            # wxPython 2.5.3 has a new bug and fails to read bmp files returned as a stream
-            if mime not in (None, "image/x-bmp"):
-                wx.FSFile.__init__(self, wx.InputStream(open(name, "rb")), location, mime, "", wx.DateTime_Now())
-                return
-            
-        if img is None:
-            img=wx.Image(name)
+    if img is None and width<0 and height<0:
+        mime=guihelper.getwxmimetype(name)
+        # wxPython 2.5.3 has a new bug and fails to read bmp files returned as a stream
+        if mime not in (None, "image/x-bmp"):
+            return (open(name, "rb"), location, mime, "", wx.DateTime_Now())
 
-        if width>0 and height>0:
-            if bgcolor is None and not guihelper.IsMSWindows():
-                bgcolor="ffffff" # ... don't ask
-            b=ScaleImageIntoBitmap(img, width, height, bgcolor)
-        else:
-            b=img.ConvertToBitmap()
-        
-        f=common.gettempfilename("png")
-        if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
-            raise Exception, "Saving to png failed"
+    if img is None:
+        img=wx.Image(name)
 
-        file=open(f, "rb")
-        data=file.read()
-        file.close()
-        del file
-        os.remove(f)
+    if width>0 and height>0:
+        if bgcolor is None and not guihelper.IsMSWindows():
+            bgcolor="ffffff" # ... don't ask
+        b=ScaleImageIntoBitmap(img, width, height, bgcolor)
+    else:
+        b=img.ConvertToBitmap()
 
-        s=wx.InputStream(cStringIO.StringIO(data))
-        
-        wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
+    f=common.gettempfilename("png")
+    if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
+        raise Exception, "Saving to png failed"
 
-class StringInputStream(wx.InputStream):
+    data=open(f, "rb").read()
+    os.remove(f)
 
-    def __init__(self, data):
-        f=cStringIO.StringIO(data)
-        wx.InputStream.__init__(self,f)
+    return (cStringIO.StringIO(data), location, "image/png", "", wx.DateTime_Now())
 
-    
-        
