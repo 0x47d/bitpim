@@ -162,6 +162,18 @@ class LGIndexedMedia:
     def __init__(self):
         pass
 
+    def getwallpapers(self, result):
+        return self.getmedia(self.imagelocations, result, 'wallpapers')
+
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
+
+    def savewallpapers(self, results, merge):
+        return self.savemedia('wallpapers', 'wallpaper-index', self.imagelocations, results, merge, self.getwallpaperindices)
+
+    def saveringtones(self, results, merge):
+        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
+
     def getmediaindex(self, builtins, maps, results, key):
         """Gets the media (wallpaper/ringtone) index
 
@@ -395,7 +407,25 @@ class LGIndexedMedia:
 
 
 class LGNewIndexedMedia:
-    "Implements media for LG phones that use the new index format"
+    "Implements media for LG phones that use the new index format such as the VX7000"
+
+    # tables for minor type number
+    _minor_typemap={
+        0: {  # images
+        ".jpg": 3,
+        ".bmp": 1,
+        },
+
+        1: { # audio
+        ".qcp": 5,
+        ".mid": 4,
+        },
+
+        2: { # video
+        ".3g2": 3,
+        }
+    }
+        
     
     def __init__(self):
         pass
@@ -417,11 +447,16 @@ class LGNewIndexedMedia:
             media[i]={'name': n, 'origin': 'builtin'}
 
         # maps
-        for type, location, _ in maps:
-            for item in self.getindex(location):
+        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor  in maps:
+            for item in self.getindex(indexfile):
+                if item.type&0xff!=typemajor:
+                    self.log("Entry "+item.filename+" has wrong type for this index.  It is %d and should be %d" % (item.type&0xff, typemajor))
+                    self.log("This is going to cause you all sorts of problems.")
                 media[item.index]={
                     'name': basename(item.filename),
-                    'filename': item.filename
+                    'filename': item.filename,
+                    'origin': type,
+                    'vtype': item.type,
                     }
                 if item.date!=0:
                     media[item.index]['date']=item.date
@@ -444,8 +479,8 @@ class LGNewIndexedMedia:
     def getmedia(self, maps, results, key):
         media={}
 
-        for _,location, _ in maps:
-            for item in self.getindex(location):
+        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor  in maps:
+            for item in self.getindex(indexfile):
                 try:
                     media[basename(item.filename)]=self.getfilecontents(item.filename)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
@@ -454,6 +489,166 @@ class LGNewIndexedMedia:
         results[key]=media
         return results
         
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+        """Actually saves out the media
+
+        @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
+        @param mediaindexkey:  index key (eg 'wallpaper-index')
+        @param maps: list index files and locations
+        @param results: results dict
+        @param merge: are we merging or overwriting what is there?
+        @param reindexfunction: the media is re-indexed at the end.  this function is called to do it
+        """
+
+        # take copies of the lists as we modify them
+        wp=results[mediakey].copy()  # the media we want to save
+        wpi=results[mediaindexkey].copy() # what is already in the index files
+
+        # remove builtins
+        for k in wpi.keys():
+            if wpi[k].get('origin', "")=='builtin':
+                del wpi[k]
+
+        # build up list into init
+        init={}
+        for type,_,_,_,lowestindex,_,typemajor in maps:
+            init[type]={}
+            for k in wpi.keys():
+                if wpi[k]['origin']==type:
+                    index=k
+                    name=wpi[k]['name']
+                    fullname=wpi[k]['filename']
+                    vtype=wpi[k]['vtype']
+                    data=None
+                    del wpi[k]
+                    for w in wp.keys():
+                        # does wp contain a reference to this same item?
+                        if wp[w]['name']==name:
+                            data=wp[w]['data']
+                            del wp[w]
+                    if not merge and data is None:
+                        # delete the entry
+                        continue
+                    assert index>=lowestindex
+                    init[type][index]={'name': name, 'data': data, 'filename': fullname, 'vtype': vtype}
+
+        # init now contains everything from wallpaper-index
+        # wp contains items that we still need to add, and weren't in the existing index
+        assert len(wpi)==0
+        print init.keys()
+        
+        # now look through wallpapers and see if anything was assigned a particular
+        # origin
+        for w in wp.keys():
+            o=wp[w].get("origin", "")
+            if o is not None and len(o) and o in init:
+                idx=-1
+                while idx in init[o]:
+                    idx-=1
+                init[o][idx]=wp[w]
+                del wp[w]
+
+        # wp will now consist of items that weren't assigned any particular place
+        # so put them in the first available space
+        for type,_,_,_,lowestindex,maxentries,typemajor in maps:
+            # fill it up
+            for w in wp.keys():
+                if len(init[type])>=maxentries:
+                    break
+                idx=-1
+                while idx in init[type]:
+                    idx-=1
+                init[type][idx]=wp[w]
+                del wp[w]
+
+        # time to write the files out
+        dircache=self.DirCache(self)
+        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor  in maps:
+            # get the index file so we can work out what to delete
+            names=[init[type][x]['name'] for x in init[type]]
+            for item in self.getindex(indexfile):
+                if basename(item.filename) not in names:
+                    self.log(item.filename+" is being deleted")
+                    dircache.rmfile(item.filename)
+            # fixup the indices
+            fixups=[k for k in init[type].keys() if k<lowestindex]
+            fixups.sort()
+            for f in fixups:
+                for ii in xrange(lowestindex, lowestindex+maxentries):
+                    # allocate an index
+                    if ii not in init[type]:
+                        init[type][ii]=init[type][f]
+                        del init[type][f]
+                        break
+            # any left over?
+            fixups=[k for k in init[type].keys() if k<lowestindex]
+            for f in fixups:
+                self.log("There is no space in the index for "+type+" for "+init[type][f]['name'])
+                del init[type][f]
+            # write each entry out
+            for idx in init[type].keys():
+                entry=init[type][idx]
+                filename=entry.get('filename', directory+"/"+entry['name'])
+                entry['filename']=filename
+                fstat=dircache.stat(filename)
+                if 'data' not in entry:
+                    # must be in the filesystem already
+                    if fstat is None:
+                        self.log("Entry "+entry['name']+" is in index "+indexfile+" but there is no data for it and it isn't in the filesystem.  The index entry will be removed.")
+                        del init[type][idx]
+                        continue
+                # check len(data) against fstat->length
+                data=entry['data']
+                if data is None:
+                    assert merge 
+                    continue # we are doing an add and don't have data for this existing entry
+                if fstat is not None and len(data)==fstat['size']:
+                    self.log("Not writing "+filename+" as a file of the same name and length already exists.")
+                else:
+                    dircache.writefile(filename, data)
+            # write out index
+            ifile=self.protocolclass.indexfile()
+            idxlist=init[type].keys()
+            idxlist.sort()
+            idxlist.reverse() # the phone has them in reverse order for some reason so we do the same
+            for idx in idxlist:
+                ie=self.protocolclass.indexentry()
+                ie.index=idx
+                vtype=init[type][idx].get("vtype", None)
+                if vtype is None:
+                    vtype=self._guessvtype(init[type][idx]['filename'], typemajor)
+                    print "guessed vtype of "+`vtype`+" for "+init[type][idx]['filename']
+                else:
+                    print init[type][idx]['filename']+" already had a vtype of "+`vtype`
+                ie.type=vtype
+                ie.filename=init[type][idx]['filename']
+                # ie.date left as zero
+                ie.dunno=0 # mmmm
+                ifile.items.append(ie)
+            buf=prototypes.buffer()
+            ifile.writetobuffer(buf)
+            self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+            self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
+            dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
+            # write out size file
+            size=0
+            for idx in idxlist:
+                fstat=dircache.stat(init[type][idx]['filename'])
+                size+=fstat['size']
+            szfile=self.protocolclass.sizefile()
+            szfile.size=size
+            buf=prototypes.buffer()
+            szfile.writetobuffer(buf)
+            self.log("You are using a total of "+`size`+" bytes for "+type)
+            dircache.writefile(sizefile, buf.getvalue())
+        return reindexfunction(results)
+                            
+    def _guessvtype(self, filename, typemajor):
+        lookin=self._minor_typemap[typemajor]
+        for ext,val in lookin.items():
+            if filename.lower().endswith(ext):
+                return typemajor+(256*val)
+        return typemajor # implicit val of zero
 
     def getwallpaperindices(self, results):
         return self.getmediaindex(self.builtinwallpapers, self.wallpaperlocations, results, 'wallpaper-index')
@@ -466,7 +661,14 @@ class LGNewIndexedMedia:
 
     def getringtones(self, result):
         return self.getmedia(self.ringtonelocations, result, 'ringtone')
+
+    def savewallpapers(self, results, merge):
+        return self.savemedia('wallpapers', 'wallpaper-index', self.wallpaperlocations, results, merge, self.getwallpaperindices)
             
+    def saveringtones(self, results, merge):
+        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
+
+
 
 class LGDirectoryMedia:
     """The media is stored one per directory with .desc and body files"""
@@ -742,10 +944,15 @@ class LGDirectoryMedia:
 
 
 def basename(name):
-    if name.rfind('\\')>=0 or name.rfind('/')>=0:
-        pos=max(name.rfind('\\'), name.rfind('/'))
+    if name.rfind('/')>=0:
+        pos=name.rfind('/')
         name=name[pos+1:]
     return name
+
+def dirname(name):
+    if name.rfind("/")<1:
+        return ""
+    return name[:name.rfind("/")]
 
 def stripext(name):
     if name.rfind('.')>=0:
@@ -753,6 +960,7 @@ def stripext(name):
     return name
 
 def getext(name):
+    name=basename(name)
     if name.rfind('.')>=0:
         return name[name.rfind('.')+1:]
     return ''
