@@ -34,17 +34,24 @@ class CalendarCellAttributes:
     def ismiltime(self):
         return self.miltime
 
-    def setforlabel(self, dc):
-        dc.SetFont(self.labelfont)
+    def setforlabel(self, dc, fontscale=1):
+        self.setscaledfont(dc, self.labelfont, fontscale)
         dc.SetTextForeground(self.labelforeground)
 
-    def setfortime(self,dc):
-        dc.SetFont(self.timefont)
+    def setfortime(self,dc, fontscale=1):
+        self.setscaledfont(dc, self.timefont, fontscale)
         dc.SetTextForeground(self.timeforeground)
 
-    def setforentry(self, dc):
-        dc.SetFont(self.entryfont)
+    def setforentry(self, dc, fontscale=1):
+        self.setscaledfont(dc, self.entryfont, fontscale)
         dc.SetTextForeground(self.entryforeground)
+
+    def setscaledfont(self, dc, font, fontscale):
+        if fontscale==1:
+            dc.SetFont(font)
+            return
+        f=wxFont(font.GetPointSize()*fontscale, font.GetFamily(), font.GetStyle(), font.GetWeight())
+        dc.SetFont(f)
 
 
 DefaultCalendarCellAttributes=CalendarCellAttributes()
@@ -127,9 +134,12 @@ class CalendarCell(wxWindow):
         dc.DestroyClippingRegion()
         dc.SetClippingRegion( 0, entrystart, self.width, self.height-entrystart)
 
-        for iteration in range(1,10): # this loop scales the contents to fit the space available
+        fontscale=1.0
+        iteration=0
+        while 1: # this loop scales the contents to fit the space available
+            iteration+=1
             # now calculate how much space is needed for the time fields
-            self.attr.setfortime(dc)
+            self.attr.setfortime(dc, fontscale)
             boundingspace=10
             space,_=dc.GetTextExtent(" ")
             timespace,timeheight=dc.GetTextExtent("88:88")
@@ -140,17 +150,16 @@ class CalendarCell(wxWindow):
 
             leading=0
 
-            self.attr.setforentry(dc)
+            self.attr.setforentry(dc, fontscale)
             _,entryheight=dc.GetTextExtent(" ")
             firstrowheight=max(timeheight, entryheight)
 
             # Now draw each item
             lastap=""
-            y=entrystart/dc.GetUserScale()[0]+5
-            y=int(y)
+            y=entrystart+5
             for h,m,desc in self.entries:
                 x=0
-                self.attr.setfortime(dc)
+                self.attr.setfortime(dc, fontscale)
                 # bounding
                 x+=boundingspace # we don't draw anything yet
                 timey=y
@@ -172,21 +181,17 @@ class CalendarCell(wxWindow):
                         dc.DrawText(ap, x, timey)
                         lastap=ap
                     x+=ampm+space
-                self.attr.setforentry(dc)
+                self.attr.setforentry(dc, fontscale)
                 ey=y
                 if entryheight<firstrowheight:
                     ey+=firstrowheight-ey
                 dc.DrawText(desc, x, ey)
                 # that row is dealt with!
                 y+=firstrowheight
-            if y>self.height/dc.GetUserScale()[1]:
+            if iteration<10 and y>self.height:
                 dc.Clear()
-                factorx,factory=dc.GetUserScale()
-                if factorx<.1:
-                    break
                 # how much too big were we?
-                scale=(self.height/factory)/y
-                dc.SetUserScale(0.9*scale*factory, 0.9*scale*factorx)
+                fontscale=fontscale*float(self.height)/y
             else:
                 break
 
