@@ -955,3 +955,22 @@ class Profile:
 
         data['phonebook']=results
         return data
+
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
+        ('ringtone', 'write', 'OVERWRITE'),
+        )
+
+    def SyncQuery(self, source, action, type):
+        if (source, action, type) in self._supportedsyncs or \
+           (source, action, None) in self._supportedsyncs:
+            return True
+        return False

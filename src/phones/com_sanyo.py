@@ -785,6 +785,21 @@ class Profile:
 
     def __init__(self):
         pass
+
+    # which sync types we deal with
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        )
+
+    def SyncQuery(self, source, action, type):
+        if (source, action, type) in self._supportedsyncs or \
+           (source, action, None) in self._supportedsyncs:
+            return True
+        return False
+
     
 ### Some drop in replacement routines for phonebook.py that can be moved
 ### if they look OK.
