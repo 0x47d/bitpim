@@ -420,6 +420,20 @@ class SanyoPhonebook:
             setattr(e,k,entry[k])
         return e
 
+    def writewait(self):
+        """Loop until phone status indicates ready to write"""
+        for i in range(100):
+            req=self.protocolclass.statusrequest()
+            res=self.sendpbcommand(req, self.protocolclass.statusresponse)
+            # print res.flag1, res.ready, res.flag3
+            if res.ready==res.readyvalue:
+                return
+            time.sleep(0.1)
+
+        self.log("Phone did not transfer to ready to write state")
+        self.log("Waiting a bit longer and trying anyway")
+        return
+    
     def savephonebook(self, data):
         # Overwrite the phonebook in the phone with the data.
         # As we write the phone book slots out, we need to build up
@@ -472,7 +486,7 @@ class SanyoPhonebook:
         req.beginend=1 # Start update
         res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
 
-        time.sleep(1)  # Wait a little bit to make sure phone is ready
+        self.writewait()
         
         keys=pbook.keys()
         keys.sort()
