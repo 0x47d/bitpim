@@ -17,6 +17,7 @@ import cStringIO
 # wx modules
 import wx
 import wx.html
+from wxPython.wx import EVT_CLOSE
 
 # my modules
 import guihelper
@@ -272,7 +273,6 @@ def _applystyle(node, style):
     for i in node.children:
         _applystyle(i, style)
 
-
 class HtmlEasyPrinting:
     """Similar to wxHtmlEasyPrinting, except this is actually useful.
 
@@ -323,16 +323,15 @@ class HtmlEasyPrinting:
             print "preview problem"
             assert False, "preview problem"
             return
-        frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
-        frame.Initialize()
-        
+        self.frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
         # Retrieve saved settings... Use 75% of screen if not specified
         self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", 75)
-        frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
-
-        # frame.SetPosition(self.parent.GetPosition())
-        # frame.SetSize(self.parent.GetSize())
-        frame.Show(True)
+        self.frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
+        EVT_CLOSE(self.frame, self.OnPreviewClose)
+        self.frame.Initialize()
+        # self.frame.SetPosition(self.parent.GetPosition())
+        # self.frame.SetSize(self.parent.GetSize())
+        self.frame.Show(True)
 
     def PrintText(self, htmltext, basepath="", scale=1.0):
         pdd=wx.PrintDialogData()
@@ -404,6 +403,10 @@ class HtmlEasyPrinting:
         v="%d,%d,%d,%d" % (tl[0], tl[1], br[0], br[1])
         self.config.Write(self.configstr+"/margins", v)
         self.margins=[tl[0],tl[1],br[0],br[1]]
+
+    def OnPreviewClose(self, event):
+        guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
+        self.frame.Destroy()
         
 if __name__=='__main__':
     src="""
