@@ -605,42 +605,18 @@ class Profile(com_phone.Profile):
     def normalisegroups(self, helper, data):
         "Assigns groups based on category data"
 
-        # find the 9 most popular categories
-        freq={}
-        for entry in data['phonebook']:
-            e=data['phonebook'][entry]
-            for cat in e.get('categories', []):
-               n=cat['category'][:22] # truncate
-               if n != "No Group":
-                   freq[n]=1+freq.get(n,0)
-
-        freq=[(count,value) for value,count in freq.items()]
-        freq.sort()
-        freq.reverse() # most popular first
-        if len(freq)>9:
-            print "too many groups",freq
-            print "removing",freq[9:] # ::TODO:: log this to helper
-            freq=freq[:9] # clip to 9 items
-
-        # name only
-        freq=[value for count,value in freq]
-
-        # uniqify (since some may have been different after char 22)
-        u={}
-        for f in freq: u[f]=1
-        freq=u.keys()
-
-        # if less than 9 entries, add some back in, using earliest entries first (most likely to be most important to the user)
+        pad=[]
         keys=data['groups'].keys()
         keys.sort()
         for k in keys:
-            if k and len(freq)<9: # ignore key 0 which is 'No Group'
-                name=data['groups'][k]['name']
-                if name not in freq:
-                    freq.append(name)
+                if k: # ignore key 0 which is 'No Group'
+                    name=data['groups'][k]['name']
+                    pad.append(name)
+
+        groups=helper.getmostpopularcategories(10, data['phonebook'], ["No Group"], 22, pad)
 
         # alpha sort
-        freq.sort()
+        groups.sort()
 
         # newgroups
         newgroups={}
@@ -649,23 +625,22 @@ class Profile(com_phone.Profile):
         newgroups[0]={'name': 'No Group', 'icon': 0}
 
         # populate
-        for name in freq:
+        for name in groups:
             # existing entries remain unchanged
+            if name=="No Group": continue
             key,value=self._getgroup(name, data['groups'])
             if key is not None and key!=0:
                 newgroups[key]=value
         # new entries get whatever numbers are free
-        for name in freq:
+        for name in groups:
             key,value=self._getgroup(name, newgroups)
-            if key is None or key==0:
-                for key in range(1,10):
+            if key is None:
+                for key in range(1,100000):
                     if key not in newgroups:
                         newgroups[key]={'name': name, 'icon': 1}
                         break
                        
         # yay, done
-        print data['groups']
-        print newgroups
         data['groups']=newgroups
 
     def convertphonebooktophone(self, helper, data):

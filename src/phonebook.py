@@ -770,10 +770,32 @@ class PhoneWidget(wx.Panel):
         
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
+
+    def importdata(self, importdata, categoriesinfo=[], merge=True):
+        if merge:
+            d=self._data
+        else:
+            d={}
+        dlg=ImportDialog(self, d, importdata)
+        result=None
+        if dlg.ShowModal()==wx.ID_OK:
+            result=dlg.resultdata
+        dlg.Destroy()
+        if result is not None:
+            d={}
+            d['phonebook']=result
+            d['categories']=categoriesinfo
+            self.populatefs(d)
+            self.populate(d)
     
     def converttophone(self, data):
         self.mainwindow.phoneprofile.convertphonebooktophone(self, data)
 
+    ###
+    ###  The methods from here on are passed as the 'helper' to
+    ###  convertphonebooktophone in the phone profiles.  One
+    ###  day they may move to a seperate class.
+    ###
 
     class ConversionFailed(Exception):
         pass
@@ -897,24 +919,47 @@ class PhoneWidget(wx.Panel):
                 return i[name]
         return default
 
-    def importdata(self, importdata, categoriesinfo=[], merge=True):
-        if merge:
-            d=self._data
-        else:
-            d={}
-        dlg=ImportDialog(self, d, importdata)
-        result=None
-        if dlg.ShowModal()==wx.ID_OK:
-            result=dlg.resultdata
-        dlg.Destroy()
-        if result is not None:
-            d={}
-            d['phonebook']=result
-            d['categories']=categoriesinfo
-            self.populatefs(d)
-            self.populate(d)
-            
+    def getmostpopularcategories(self, howmany, entries, reserved=[], truncateat=None, padnames=[]):
+        """Returns the most popular categories
 
+        @param howmany:  How many to return, including the reserved ones
+        @ptype howmany:  int
+        @param entries:  A dict of the entries
+        @param reserved: A list of reserved entries (ie must be present, no matter
+                         how popular)
+        @param truncateat: How long to truncate the category names at
+        @param padnames: if the list is less than howmany long, then add these on the end providing
+                         they are not already in the list
+        @return: A list of the group names.  The list starts with the members of
+               reserved followed by the most popular groups
+        """
+        # build a histogram
+        freq={}
+        for entry in entries:
+            e=entries[entry]
+            for cat in e.get('categories', []):
+               n=cat['category']
+               if truncateat: n=n[:truncateat] # truncate
+               freq[n]=1+freq.get(n,0)
+        # sort
+        freq=[(count,value) for value,count in freq.items()]
+        freq.sort()
+        freq.reverse() # most popular first
+        # build a new list
+        newl=reserved[:]
+        for _, group in freq:
+            if len(newl)==howmany:
+                break
+            if group not in newl:
+                newl.append(group)
+        # pad list out
+        for p in padnames:
+            if len(newl)==howmany:
+                break
+            if p not in newl:
+                newl.append(p)
+                
+        return newl
 
 class ImportDataTable(wx.grid.PyGridTableBase):
     ADDED=0
