@@ -51,7 +51,8 @@ def filterremovenoise(lines):
     while l<len(lines):
         v=lines[l][1]
         if v in ('IOCTL_SERIAL_GET_TIMEOUTS', 'IOCTL_SERIAL_GET_BAUD_RATE', 'IOCTL_SERIAL_GET_LINE_CONTROL',
-                 'IOCTL_SERIAL_GET_HANDFLOW', 'IOCTL_SERIAL_GET_CHARS'):
+                 'IOCTL_SERIAL_GET_HANDFLOW', 'IOCTL_SERIAL_GET_CHARS', 'IOCTL_SERIAL_GET_WAIT_MASK',
+                 'IOCTL_SERIAL_WAIT_ON_MASK', 'IOCTL_SERIAL_GET_COMMSTATUS', 'IOCTL_SERIAL_PURGE'):
             del lines[l]
             continue
         l+=1
