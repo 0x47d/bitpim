@@ -630,14 +630,31 @@ class codegen:
         print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dd)
 
 
-if __name__=='__main__':
-    fn=os.path.basename(sys.argv[2])
+def processfile(inputfilename, outputfilename):
+    print "Processing",inputfilename,"to",outputfilename
+    fn=os.path.basename(outputfilename)
     fn=os.path.splitext(fn)[0]
-    f=open(sys.argv[1], "rt")
+    f=open(inputfilename, "rtU")
     tokens=tokenize.generate_tokens(f.readline)
     tt=protogentokenizer(tokens, "_gen_"+fn+"_")
-    f2=open(sys.argv[2], "wt")
+    f2=open(outputfilename, "wt")
     cg=codegen(tt)
     f2.write(cg.gencode())
     f2.close()
+    
+
+if __name__=='__main__':
+    if len(sys.argv)>3 or (len(sys.argv)==2 and sys.argv[1]=="--help"):
+        print "protogen                compiles all .p files in this directory to .py"
+        print "protogen foo.p          compiles foo.p to foo.py"
+        print "protogen foo.p bar.py   compiles foo.p to bar.py"
+        sys.exit(1)
+    elif len(sys.argv)==3:
+        processfile(sys.argv[1], sys.argv[2])
+    elif len(sys.argv)==2:
+        processfile(sys.argv[1], sys.argv[1]+"y")
+    elif len(sys.argv)==1:
+        import glob
+        for f in glob.glob("*.p"):
+            processfile(f, f+"y")
 
