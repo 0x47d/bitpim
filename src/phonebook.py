@@ -245,16 +245,21 @@ for n in range(len(_getdatalist)/2):
 del _getdatalist  # so we don't accidentally use it
 
 def getdata(column, entry, default=None):
+    """Returns the value in a particular column.
+    Note that the data is appropriately formatted.
 
+    @param column: column name
+    @param entry: the dict representing a phonebook entry
+    @param default: what to return if the entry has no data for that column
+    """
     key, count, prereq, formatter, _ =_getdatatable[column]
 
     # do we even have that key
     if key not in entry:
         return default
 
-    # which value or values do we want
     if count is None:
-        # all of them
+        # value is all the fields (eg Categories)
         thevalue=entry[key]
     elif prereq is None:
         # no prereq
@@ -289,6 +294,53 @@ def getdata(column, entry, default=None):
 
     return thevalue.get(formatter, default)
 
+def getdatainfo(column, entry):
+    """Similar to L{getdata} except returning higher level information.
+
+    Returns the key name and which index from the list corresponds to
+    the column.
+
+    @param column: Column name
+    @param entry: The dict representing a phonebook entry
+    @returns: (keyname, index) tuple.  index will be None if the entry doesn't
+         have the relevant column value and -1 if all of them apply
+    """
+    key, count, prereq, formatter, _ =_getdatatable[column]
+
+    # do we even have that key
+    if key not in entry:
+        return (key, None)
+
+    # which value or values do we want
+    if count is None:
+        return (key, -1)
+    elif prereq is None:
+        # no prereq
+        if len(entry[key])<=count:
+            return (key, None)
+        return (key, count)
+    else:
+        # find the count instance of value matching k,v in prereq
+        ptr=0
+        togo=count+1
+        l=entry[key]
+        k,v=prereq
+        while togo:
+            if ptr==len(l):
+                return (key,None)
+            if k not in l[ptr]:
+                ptr+=1
+                continue
+            if l[ptr][k]!=v:
+                ptr+=1
+                continue
+            togo-=1
+            if togo!=0:
+                ptr+=1
+                continue
+            return (key, ptr)
+    return (key, None)
+    
 class CategoryManager:
 
     # this is only used to prevent the pubsub module
@@ -633,16 +685,19 @@ class PhoneWidget(wx.Panel):
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
     def OnPreviewDClick(self, _):
-        self.EditEntry(self.table.GetGridCursorRow())
+        self.EditEntry(self.table.GetGridCursorRow(), self.table.GetGridCursorColumn())
 
     def OnCellDClick(self, event):
-        row=event.GetRow()
-        self.EditEntry(row)
+        self.EditEntry(event.GetRow(), event.GetCol())
 
-    def EditEntry(self, row):
+    def EditEntry(self, row, column):
         key=self.dt.rowkeys[row]
         data=self._data[key]
-        dlg=phonebookentryeditor.Editor(self, data)
+        # can we get it to open on the correct field?
+        datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
+        if dataindex is not None and dataindex<0:
+            dataindex=0 # we can't select all values
+        dlg=phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex)
         if dlg.ShowModal()==wx.ID_OK:
             data=dlg.GetData()
             self._data[key]=data
@@ -1305,6 +1360,9 @@ ImportDataTable.htmltemplate[13]='<font color="#ff0000"><strike>%(existing)s</st
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
 
+    ID_EDIT_ITEM=wx.NewId()
+    
+
     def __init__(self, parent, existingdata, importdata):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
              wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
@@ -1376,6 +1434,7 @@ class ImportDialog(wx.Dialog):
         # the above doesn't change the splitter position
         w,_=splitter.GetSize()
         splitter.SetSashPosition(max(w/2, w-200))
+        self.MakeMenus()
 
     def DoMerge(self):
         """Merges all the importdata with existing data
@@ -1463,7 +1522,6 @@ class ImportDialog(wx.Dialog):
             self.resultpreview.ShowEntry({})
 
     def MakeMenus(self):
-        # menus are constructed on demand
         menu=wx.Menu()
         menu.Append(1, "Item Menu")
         menu.Append(2, "with item stuff")
@@ -1472,8 +1530,9 @@ class ImportDialog(wx.Dialog):
         self.menu=menu
 
     def OnRightGridClick(self, event):
-        self.MakeMenus()
         row,col=event.GetRow(), event.GetCol()
+        self.grid.SetGridCursor(row,col)
+        self.grid.SelectRow(row, False)
         pos=event.GetPosition()
         self.grid.PopupMenu(self.menu, pos)
 

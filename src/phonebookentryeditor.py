@@ -671,6 +671,11 @@ class NameEditor(wx.Panel):
 class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
     def __init__(self, parent, childclass):
+        """Constructor
+
+        @param parent: Parent window
+        @param childclass: One of the *Editor classes which is used as a factory for making the
+               widgets that correspond to each value"""
         fixedscrolledpanel.wxScrolledPanel.__init__(self, parent)
         self.sizer=wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
@@ -689,6 +694,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
 
     def Get(self):
+        """Returns a list of dicts corresponding to the values"""
         res=[]
         for i in self.widgets:
             g=i.Get()
@@ -697,6 +703,9 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         return res
 
     def Populate(self, data):
+        """Fills in the editors according to the list of dicts in data
+
+        The editor widgets are created and destroyed as needed"""
         callsus=False
         while len(data)>len(self.widgets):
             callsus=True
@@ -730,6 +739,9 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
 
     def GetCurrentWidgetIndex(self):
+        """Returns the index of the currently selected editor widget
+
+        @raise IndexError: if there is no selected one"""
         focuswin=wx.Window_FindFocus()
         win=focuswin
         while win is not None and win not in self.widgets:
@@ -742,6 +754,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         return pos
 
     def Add(self):
+        """Adds a new widget at the currently selected location"""
         gets=[x.Get() for x in self.widgets]
         try:
             pos=self.GetCurrentWidgetIndex()
@@ -761,6 +774,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             self.widgets[0].SetFocus()
         
     def Delete(self):
+        """Deletes the currently select widget"""
         # ignore if there is nothing to delete
         if len(self.widgets)==0:
             return
@@ -791,6 +805,10 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
 
     def Move(self, delta):
+        """Moves the currently selected widget
+
+        @param delta: positive to move down, negative to move up
+        """
         focuswin=wx.Window_FindFocus()
         pos=self.GetCurrentWidgetIndex()
         if pos+delta<0:
@@ -807,6 +825,15 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         self.SetWidgetPathAndSettings(self.widgets[pos+delta], path, settings)
 
     def GetWidgetPathAndSettings(self, widgetfrom, controlfrom):
+        """Finds the specified control within the editor widgetfrom.
+        The values are for calling L{SetWidgetPathAndSettings}.
+        
+        Returns a tuple of (path, settings).  path corresponds
+        to the hierarchy with an editor (eg a panel contains a
+        radiobox contains the radio button widget).  settings
+        means something to L{SetWidgetPathAndSettings).  For example,
+        if the widget is a text widget it contains the current insertion
+        point and selection."""
         # we find where the control is in the hierarchy of widgetfrom
         path=[]
 
@@ -836,7 +863,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         return path,settings
 
     def SetWidgetPathAndSettings(self,widgetto,path,settings):
-
+        """See L{GetWidgetPathAndSettings}"""
         # now have the path.  follow it in widgetto
         print path
         win=widgetto
@@ -851,7 +878,9 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             controlto.SetInsertionPoint(settings[0])
             controlto.SetSelection(settings[1][0], settings[1][1])
                         
-        
+    def SetFocusOnValue(self, index):
+        """Sets focus to the editor widget corresponding to the supplied index"""
+        self.widgets[index].SetFocus()
 
 class Editor(wx.Dialog):
     "The Editor Dialog itself.  It contains panes for the various field types."
@@ -874,7 +903,16 @@ class Editor(wx.Dialog):
         ("Ringtones", "ringtones", RingtoneEditor),
         ]
 
-    def __init__(self, parent, data, title="Edit PhoneBook entry"):
+    def __init__(self, parent, data, title="Edit PhoneBook entry", keytoopenon=None, dataindex=None):
+        """Constructor for phonebookentryeditor dialog
+
+        @param parent: parent window
+        @param data: dict of values to edit
+        @param title: window title
+        @param keytoopenon: The key to open on. This is the key as stored in the data such as "names", "numbers"
+        @param dataindex: Which value within the tab specified by keytoopenon to set focus to
+        """
+        
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.data=data.copy()
         vs=wx.BoxSizer(wx.VERTICAL)
@@ -899,9 +937,13 @@ class Editor(wx.Dialog):
         for name,key,klass in self.tabsfactory:
             widget=EditorManager(self.nb, klass)
             nb.AddPage(widget,name)
+            if key==keytoopenon:
+                nb.SetSelection(len(self.tabs))
             self.tabs.append(widget)
             if self.data.has_key(key):
                 widget.Populate(self.data[key])
+                if key==keytoopenon and dataindex is not None:
+                    widget.SetFocusOnValue(dataindex)
 
         vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
