@@ -129,6 +129,8 @@ for f in filters:
 basetime=time.time()
 f=open(outfile, "wt")
 for l in lines:
+    if l[2]=='Length':  # incomplete READ - SUCCESS/FAILURE field not filled in
+        continue
     tt=basetime+l[0]
     t=time.localtime(tt)
     print >>f, "%02d:%02d:%02d.%03d" % (t[3], t[4], t[5], int((tt-int(tt))*1000)),
@@ -140,7 +142,7 @@ for l in lines:
         continue
     # read or write - deal with data
     f.write("\n")
-    assert l[3].startswith("Length")
+    assert l[3].startswith("Length"), "Line %s doesn't begin with Length" % (`l`,)
     data=l[3].split(":",1)[1].split()
     # data is now each byte as a hex string, turn into actual stream of bytes
     data="".join([chr(int(x,16)) for x in data])
