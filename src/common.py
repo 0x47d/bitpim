@@ -170,10 +170,12 @@ def formatexception(excinfo=None, lastframes=6):
 
      See Python Cookbook, recipe 14.4.
 
-     @excinfo: tuple of information returned from sys.exc_info when
+     @param excinfo: tuple of information returned from sys.exc_info when
                the exception occurred.  If you don't supply this then
                information about the current exception being handled
                is used
+     @param lastframes: local variables are shown for these number of
+                  frames
                """
      if excinfo is None:
           excinfo=sys.exc_info()
