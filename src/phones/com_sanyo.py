@@ -103,9 +103,10 @@ class SanyoPhonebook:
                 print c,name
             c+=1
         results['wallpaper-index']=imagemedia
+        c=1
         for name in self.builtinringtones:
             if name:
-                imagemedia[c]={'name': name, 'origin': 'builtin' }
+                ringermedia[c]={'name': name, 'origin': 'builtin' }
                 print c,name
             c+=1
         results['ringtone-index']=ringermedia
