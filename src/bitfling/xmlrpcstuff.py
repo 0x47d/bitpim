@@ -234,8 +234,10 @@ class Server(threading.Thread):
                     conn.close()
                     continue
                 self.log("SSL connection from "+`peeraddr`+" accepted")
-                if __debug__ and TRACE: print self.getName()+": Setting timeout to "+`self.server.connectionidlebreak`
-                conn.set_socket_read_timeout(M2Crypto.SSL.timeout(self.server.connectionidlebreak))
+                if sys.platform!="win32":
+                    if __debug__ and TRACE: print self.getName()+": Setting timeout to "+`self.server.connectionidlebreak`
+                    conn.set_socket_read_timeout(M2Crypto.SSL.timeout(self.server.connectionidlebreak,
+                                                                      self.server.connectionidlebreak))
                 self.reqhandlerclass(conn, peeraddr, self)
                 if __debug__ and TRACE: print self.getName()+": Reqhandler returns - closing connection"
                 msg=Server.Message(Server.Message.CMD_CONNECTION_CLOSE,  None, peeraddr, peercert)
@@ -407,18 +409,18 @@ class SSLConnection(httplib.HTTPConnection):
         self.certverifier=certverifier
         self.addrforverifier=(host, port)
 
+    def __del__(self):
+        self.realclose()
+
     def connect(self):
         if __debug__ and TRACE: print "Connecting to %s:%s" % (self.host, self.port)
         httplib.HTTPConnection.connect(self)
         self.sock=MySSLConnection(self.sslc_sslctx, self.sock)
-        self.sock.setblocking(True)
         self.sock.setup_ssl()
         self.sock.set_connect_state()
         self.sock.connect_ssl()
         if self.certverifier is not None:
-            print "calling certverifier"
             res=self.certverifier(self.addrforverifier, self.sock.get_peer_cert())
-            print "cert verifier returned",res
             if not res:
                 self.realclose()
                 raise Exception("Certificate not accepted")
