@@ -7,8 +7,12 @@ examine the code for UINTlsb in this file.  Of note:
 
   - Inherit from BaseProtogenClass
   - Call superclass constructors using super()
-  - Delete keyword arguments as you process them
-    (consider using L{BaseProtogenClass._consumekw} function)
+  - Do not process any of the args or kwargs in the constructor unless
+    you need them to alter how you are constructed
+  - At the end of the constructor, call _update if you are the most
+    derived class
+  - In _update, call super()._update, and then delete keyword arguments
+    as you process them (consider using L{BaseProtogenClass._consumekw} function)
   - If you are the most derived class, complain about
     unused keyword arguments (consider using
     L{BaseProtogenClass._complainaboutunusedargs} function)
@@ -103,8 +107,19 @@ class BaseProtogenClass(object):
         if len(dict) and self.__class__.__mro__[0]==klass:
             raise TypeError('Unexpected keyword args supplied: '+`dict`)
 
+    def _ismostderived(self, klass):
+        
+        return self.__class__.__mro__[0]==klass
+
+    def _update(self, args, kwargs):
+        return
+
     def iscontainer(self):
+        """Do we contain fields?"""
         return False
+
+    def update(self, *args, **kwargs):
+        self._update(args, kwargs)
 
 class UINTlsb(BaseProtogenClass):
     "An integer in Least Significant Byte first order"
@@ -123,6 +138,13 @@ class UINTlsb(BaseProtogenClass):
         self._value=None
         self._default=None
 
+        if self._ismostderived(UINTlsb):
+            self._update(args,kwargs)
+
+
+    def _update(self, args, kwargs):
+        super(UINTlsb,self)._update(args, kwargs)
+        
         self._consumekw(kwargs, ("constant", "sizeinbytes", "default", "value"))
         self._complainaboutunusedargs(UINTlsb,kwargs)
 
@@ -193,8 +215,13 @@ class BOOLlsb(UINTlsb):
         Keyword arguments are the same a UINTlsb
         """
         super(BOOLlsb, self).__init__(*args, **kwargs)
-        self._complainaboutunusedargs(UINTlsb,kwargs)
 
+        if self._ismostderived(BOOLlsb):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(BOOLlsb,self)._update(args,kwargs)
+        self._complainaboutunusedargs(BOOLlsb,kwargs)
         self._boolme()
 
     def _boolme(self):
@@ -237,6 +264,12 @@ class STRING(BaseProtogenClass):
         self._raiseonunterminatedread=True
         self._raiseontruncate=True
         self._value=None
+
+        if self._ismostderived(STRING):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(STRING,self)._update(args, kwargs)
 
         self._consumekw(kwargs, ("constant", "terminator", "pad",
         "sizeinbytes", "default", "raiseonunterminatedread", "value"))
@@ -362,6 +395,12 @@ class DATA(BaseProtogenClass):
         self._raiseonwrongsize=True
         self._value=None
 
+        if self._ismostderived(DATA):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(DATA,self)._update(args, kwargs)
+
         self._consumekw(kwargs, ("constant", "pad", "sizeinbytes", "default", "raiseonwrongsize", "value"))
         self._complainaboutunusedargs(DATA,kwargs)
 
@@ -437,6 +476,12 @@ class UNKNOWN(DATA):
         dict={'pad':0 , 'default': ""}
         dict.update(kwargs)
         super(UNKNOWN,self).__init__(*args, **kwargs)
+
+        if self._ismostderived(UNKNOWN):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(UNKNOWN,self)._update(args, kwargs)
         self._complainaboutunusedargs(UNKNOWN,kwargs)
 
         # Was a value specified?
@@ -474,6 +519,12 @@ class LIST(BaseProtogenClass):
         self._raiseonbadlength=True
         self._elementclass=None
         self._elementinitkwargs={}
+
+        if self._ismostderived(LIST):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(LIST,self)._update(args, kwargs)
         self._consumekw(kwargs, ("createdefault","length","raiseonbadlength","elementclass","elementinitkwargs"))
         if kwargs.has_key("value"):
             self._thelist=list(kwargs['value'])
@@ -503,6 +554,7 @@ class LIST(BaseProtogenClass):
             for dummy in range(self._length):
                 # read specified number of items
                 x=self._makeitem()
+                x.readfrombuffer(buffer)
                 self._thelist.append(x)
 
         self._bufferendoffset=buffer.getcurrentoffset()
@@ -523,9 +575,13 @@ class LIST(BaseProtogenClass):
             sz+=item.packetsize()
         return sz
 
+    def iscontainer(self):
+        return True
+
     def containerelements(self):
         self._ensurelength()
-        return self._thelist.__iter__()
+        for i,v in zip(range(len(self._thelist)), self._thelist):
+            yield "["+`i`+"]",v,None
         
 
     # Provide various list methods.  I initially tried just subclassing list,
@@ -569,11 +625,12 @@ class LIST(BaseProtogenClass):
 
     def _ensurelength(self):
         "Ensures we are the correct length"
-        if self._createdefault and self._length is not None and len(self)<self._length:
-            while len(self)<self._length:
+        if self._createdefault and self._length is not None and len(self._thelist)<self._length:
+            while len(self._thelist)<self._length:
                 x=self._makeitem()
                 self._thelist.append(x)
-        if self._length is not None and self._raiseonbadlength:
+            return
+        if self._length is not None and self._raiseonbadlength and len(self._thelist)!=self._length:
             raise ValueLengthException(len(self), self._length)
 
 
