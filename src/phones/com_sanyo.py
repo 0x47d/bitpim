@@ -707,6 +707,7 @@ class SanyoPhonebook:
         ####  value['name'] = filename
         ####  value['data'] is contents
 
+        errors=False
         for key in index:
             efile=index[key]['name']
             content=index[key]['data']
@@ -714,8 +715,16 @@ class SanyoPhonebook:
                 continue # in theory we could rewrite .desc file in case index number has changed
             # dirname=stripext(efile)
 
-            self.writesanyofile(efile, content)
+            if not self.writesanyofile(efile, content):
+                errors=True
 
+        if errors:
+            self.log("One or more files were rejected by the phone, due to")
+            self.log("invalid file type (only PNG or MIDI are allowed), file")
+            self.log("size too big, or too many ringers or wallpaper on the phone")
+            self.log("See Sanyo Error Codes section of the Sanyh Phone Notes")
+            self.log("in the help for more information")
+            
         # Note that we don't write to the camera area
 
         # tidy up - reread indices
@@ -799,19 +808,19 @@ class SanyoPhonebook:
             self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
             if 'errorcode' in res.getfields():
                 self.log(name+" not written due to error code "+`res.errorcode`)
-                return
+                return False
                 
         req=self.protocolclass.sanyosendfileterminator()
         res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
         # The returned value in res.header.faset may mean something
         if 'errorcode' in res.getfields():
             self.log(name+" not written due to error code "+`res.errorcode`)
-            return
+            return False
         
         end=time.time()
         if end-start>3:
             self.log("Wrote "+`len(contents)`+" bytes at "+`int(len(contents)/(end-start))`+" bytes/second")
-
+        return True
 
 
     def getcalendar(self,result):
