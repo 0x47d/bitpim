@@ -27,6 +27,7 @@ from DSV import DSV
 import common
 import guihelper
 import vcard
+import phonenumber
 
 # control
 def GetPhonebookImports():
