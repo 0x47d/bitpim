@@ -310,9 +310,8 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(self.mw.config.Read("path", ""))
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
-        if len(self.mw.config.Read("phonetype")):
+        if self.mw.config.Read("phonetype", "") in self.phonemodels:
             self.phonebox.SetValue(self.mw.config.Read("phonetype"))
-
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -372,6 +371,9 @@ class ConfigDialog(wxDialog):
     def needconfig(self):
         # Set base config
         self.setfromconfig()
+        # do we know the phone?
+        if self.mw.config.Read("phonetype", "") not in self.phonemodels:
+            return True
         # are any at unknown settings
         if self.diskbox.GetValue()==self.setme or \
            self.commbox.GetValue()==self.setme:
