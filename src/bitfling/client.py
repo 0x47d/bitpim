@@ -29,4 +29,6 @@ class client:
 
     def getversion(self):
         return self.server.getversion()
-    
+
+    def scan(self):
+        return self.server.scan()

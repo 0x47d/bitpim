@@ -11,10 +11,14 @@
 
 """Generate opinions on the attached com devices"""
 
+# Standard modules
 import re
+import sys
+
+# My modules
 import comscan
 import usbscan
-import sys
+import bitflingscan
 
 def diagnose(portlist, phonemodule):
     """Returns data suitable for use in com port settings dialog
@@ -28,16 +32,24 @@ def diagnose(portlist, phonemodule):
     # not available but active
     # the rest
     available=[]
+    bfavailable=[]
+    bfrest=[]
     notavailablebutactive=[]
     therest=[]
     for port in portlist:
         if port.has_key("available") and port["available"]:
-            available.append(port)
+            if port.has_key("BitFling"):
+                bfavailable.append(port)
+            else:
+                available.append(port)
             continue
-        if port.has_key("available") and port.has_key("active") and port["active"]:
+        if not port.has_key("BitFling") and (port.has_key("available") and port.has_key("active") and port["active"]):
             notavailablebutactive.append(port)
             continue
-        therest.append(port)
+        if port.has_key("BitFling"):
+            bfrest.append(port)
+        else:
+            therest.append(port)
 
     if len(available):
         whattodisplay="===== Available Ports ===== "
@@ -83,6 +95,41 @@ def diagnose(portlist, phonemodule):
             under available. Note that the name may change as it becomes available.<p>"""+genhtml(port)
             res.append( (whattodisplay, portselected, htmldiagnosis) )
 
+    if len(bfavailable):
+        whattodisplay="===== BitFling Available Ports ===== "
+        portselected=None
+        htmldiagnosis="<p>These BitFling ports are open and can be selected"
+        res.append( (whattodisplay, portselected, htmldiagnosis) )
+        for port in bfavailable:
+            likely=islikelyport(port, phonemodule)
+            whattodisplay=port['description']
+            if likely:
+                whattodisplay="(*) "+whattodisplay
+            portselected=port['name']
+            if likely:
+                htmldiagnosis="<p>This port is likely to be your phone.  The port is available and can be selected.<p>"+genhtml(port)
+            else:
+                htmldiagnosis="<p>This port is available and can be selected.<p>"+genhtml(port)
+            res.append( (whattodisplay, portselected, htmldiagnosis) )
+
+    if len(bfrest):
+        whattodisplay="===== BitFling Other Ports ===== "
+        portselected=None
+        htmldiagnosis="<p>These BitFling ports exist but are not available"
+        res.append( (whattodisplay, portselected, htmldiagnosis) )
+        for port in bfrest:
+            likely=islikelyport(port, phonemodule)
+            whattodisplay=port['description']
+            if likely:
+                whattodisplay="(*) "+whattodisplay
+            portselected=port['name']
+            if likely:
+                htmldiagnosis="<p>This port is likely to be your phone.  The port is available and can be selected.<p>"+genhtml(port)
+            else:
+                htmldiagnosis="<p>This port is available and can be selected.<p>"+genhtml(port)
+            res.append( (whattodisplay, portselected, htmldiagnosis) )
+
+
     return res
 
 def htmlify(text):
@@ -111,7 +158,8 @@ def genhtml(port):
             else:
                 res+=sfont+"False"+efont
         elif k=='driverdate':
-            res+=sfont+("%d-%d-%d" % port[k])+efont
+            # XML-RPC converts tuples to lists, so we have to convert back again here
+            res+=sfont+("%d-%d-%d" % tuple(port[k]))+efont
         elif k=='driverstatus':
             res+=sfont+`port[k]`+efont # should print it nicer at some point
         else:
@@ -215,7 +263,7 @@ def autoguessports(phonemodule):
     # this function also demonsrates the use of list comprehensions :-)
     res=[]
     # we only care about available ports
-    ports=[(islikelyportscore(port, phonemodule), port) for port in comscan.comscan()+usbscan.usbscan() if port['available']]
+    ports=[(islikelyportscore(port, phonemodule), port) for port in comscan.comscan()+usbscan.usbscan()+bitflingscan.flinger.scan() if port['available']]
     # sort on score
     ports.sort()
     # return all ones with score >=0

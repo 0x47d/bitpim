@@ -37,6 +37,8 @@ try:
     import native.usb as usb
 except ImportError:
     usb=None
+import usbscan
+import comscan
     
 import guihelper
 import xmlrpcstuff
@@ -429,7 +431,7 @@ class MainWindow(wx.Frame):
         self.lw=guihelper.LogWindow(self.nb)
         self.nb.AddPage(self.lw, "Log")
         html=wx.html.HtmlWindow(self.nb, -1)
-        wx.CallAfter(html.LoadPage, guihelper.getresourcefile("index.html"))
+        wx.CallAfter(html.LoadPage, guihelper.getresourcefile("bitfling.html"))
         self.nb.AddPage(html, "Help")
 
 
@@ -675,19 +677,16 @@ class BitFlingService(XMLRPCService):
     def __init__(self, mainwin, host, port, servercert):
         XMLRPCService.__init__(self, mainwin, host, port, servercert)
     
-    def exp_comscan(self, context):
-        return self.mainwin.comscan_info
-
-    def exp_usbscan(self, context):
-        return self.mainwin.usbscan_info
-
+    def exp_scan(self, context):
+        return usbscan.usbscan()+comscan.comscan()
+    
     def exp_getversion(self, context):
         return version.description
 
     def exp_add(self, a, b, context):
         return a+b
 
-if __name__ == '__main__':
+def run(args):
     theApp=wx.PySimpleApp()
 
     menu=wx.Menu()
@@ -700,3 +699,6 @@ if __name__ == '__main__':
     taskwin=MyTaskBarIcon(mw, menu)
     mw.taskwin=taskwin
     theApp.MainLoop()
+    
+if __name__ == '__main__':
+    run()

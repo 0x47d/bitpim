@@ -918,7 +918,8 @@ class MainWindow(wx.Frame):
             self.lwdata.logdata(str,data, klass)
 
     def excepthook(self, type, value, traceback):
-        value.gui_exc_info=(type,value,traceback)
+        if not hasattr(value, "gui_exc_info"):
+            value.gui_exc_info=(type,value,traceback)
         self.HandleException(value)
 
     def HandleException(self, exception):

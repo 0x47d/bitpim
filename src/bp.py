@@ -40,4 +40,8 @@ if __name__ == '__main__':
             stats.print_stats(25)
             sys.exit(0)
 
-    gui.run(sys.argv)
+    if len(sys.argv)==2 and sys.argv[1]=="bitfling":
+        import bitfling.bitfling
+        bitfling.bitfling.run(sys.argv)
+    else:
+        gui.run(sys.argv)

@@ -22,22 +22,52 @@ def IsBitFlingEnabled():
         return False
     return True
 
+class BitFlingIsNotConfiguredException(Exception): pass
+
 class flinger:
 
     def __init__(self, certverifier=None):
-        self.username=self.password=self.url=None
         self.certverifier=certverifier
+        self.unconfigure()
 
-    def connect(self, username, password, host, port):
-        "Connects and returns version info of remote end, or an exception"
-        # try and connect by getting version info
-        self.client=bitfling.client(username, password, host, port, self.certverifier)
-        res=self.client.getversion()
-        print "flinger.connect returning",res
-        return res
+    def isconfigured(self):
+        return self.username is not None and \
+               self.password is not None and \
+               self.host is not None and \
+               self.port is not None
+
+    def _configure(self):
+        if not self.isconfigured():
+            raise BitFlingIsNotConfiguredException("BitFling needs to be configured")
+        if self.client is None:
+            self.client=bitfling.client(self.username, self.password, self.host, self.port, self.certverifier)
+            
+    def configure(self, username, password, host, port):
+        self.client=None
+        self.username=username
+        self.password=password
+        self.host=host
+        self.port=port
+
+    def unconfigure(self):
+        self.username=self.password=self.host=self.port=self.client=None
+
+    def getversion(self):
+        self._configure()
+        return self.client.getversion()
 
     def SetCertVerifier(self, certverifier):
         self.certverifier=certverifier
+
+    def scan(self):
+        if not self.isconfigured():
+            return []
+        self._configure()
+        ports=self.client.scan()
+        for p in range(len(ports)):
+            ports[p]['BitFling']=True
+        return ports
+
 
 # ensure there is a singleton
 flinger=flinger()
@@ -90,32 +120,24 @@ class BitFlingWorkerThread(threading.Thread):
     def run(self):
         while True:
             q,func,args,kwargs=self.q.get()
-            print thread.get_ident(),"about to execute", func
             try:
                 res=func(*args, **kwargs)
-                print thread.get_ident(), "result of", func, "is", res
                 q.put( (res, None) )
             except:
-                print thread.get_ident(), "exception for", func, "is", sys.exc_info()
                 q.put( (None, sys.exc_info()) )
 
     def callfunc(self, func, args, kwargs):
-        print thread.get_ident(), "callfunc dispatcher for", func
         qres=self.getresultqueue()
         self.q.put( (qres, func, args, kwargs) )
         # do we need event loop?
         loopfunc=self.eventloops.get(thread.get_ident(), None)
         if loopfunc is not None:
-            print thread.get_ident(), "entering busy wait loop"
             while qres.empty():
                 loopfunc()
-            print thread.get_ident(), "exit busy wait loop"
-        print thread.get_ident(), "callfunc about to read results back for", func
         res, exc = qres.get()
-        print thread.get_ident(), "callfunc results for", func, "are", (res,exc)
         if exc is not None:
             ex=exc[1]
-            ex.traceback=exc[2]
+            ex.gui_exc_info=exc
             raise ex
         return res
 
