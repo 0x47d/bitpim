@@ -20,7 +20,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     serialsname='sk6100'
 	
     # This is ordered by the type id nums the phone uses:
-    phonetypes = [ 'cell', 'home', 'office', 'fax' ]
+    phonetypes = [ 'cell', 'home', 'office', 'fax', 'pager' ]
 	
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
