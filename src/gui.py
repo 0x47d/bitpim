@@ -447,7 +447,7 @@ class MainWindow(wxFrame):
 
         ### Events we handle
         EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
-        EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
+        # EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
         EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
         EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
@@ -858,7 +858,7 @@ class MainWindow(wxFrame):
         # View Columns .. is only in Phonebook
         self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
         # as is File Print
-        self.GetMenuBar().Enable(guihelper.ID_FILEPRINT, widget is self.phonewidget)
+        # self.GetMenuBar().Enable(guihelper.ID_FILEPRINT, widget is self.phonewidget)
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):
