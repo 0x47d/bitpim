@@ -1,5 +1,5 @@
-# This file has been modified from the original,  but remains
-# under the original license
+# This file has been modified from the original from the wxPython
+# distribution and remains under that license
 #
 #  - uses the 'import wx' style naming
 #  - you can use other modules to get the values in the id tag

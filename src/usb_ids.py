@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-### usb_ids.py - part of the BITPIM project
+### BITPIM
 ###
 ### Copyright (C) 2003 Steve Palm <n9yty@n9yty.com>
 ###
-### This software is under the Artistic license.
-### Please see the accompanying LICENSE file
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
+### $Id$
 
 """Parse the usb.ids file for quick access to the information contained therein"""
 

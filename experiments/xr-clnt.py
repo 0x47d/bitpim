@@ -62,7 +62,7 @@ class MyTransport(SSL_Transport):
         return self.parse_response(h.getfile())
 
 
-server=ServerProxy("https://username:password@localhost:1234", MyTransport())
+server=ServerProxy("https://username:password@localhost:4433", MyTransport())
 
 
 print server.add(1,2)

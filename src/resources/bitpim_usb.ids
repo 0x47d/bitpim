@@ -21,6 +21,10 @@
 	6001  USB to serial convertor
 		00  Serial connection
 
+106c  Curitel Communications
+	2101  Audiovox CDM 8900
+		01 Modem Interface
+
 # Prettier names for the classes
 C 0a  Data
 	00  Generic

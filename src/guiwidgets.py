@@ -4,8 +4,8 @@
 ###
 ### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
 ###
-### This software is under the Artistic license.
-### Please see the accompanying LICENSE file
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
 

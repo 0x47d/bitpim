@@ -1,5 +1,14 @@
 #!/usr/bin/env python
-# $Id$
+
+### BITPIM
+###
+### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
+###
+### $Id$
+
 
 """Detect and enumerate com(serial) ports
 
@@ -281,7 +290,8 @@ def _comscanwindows():
                                 usename="\\\\?\\"+name
                             open(usename, "rw").close()
                             res['available']=True
-                        except:
+                        except Exception,e:
+                            print usename,"is not available",e
                             res['available']=False
                     else:
                         res['available']=False

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-# This file is under the Python and BSD liceneses.  It incorporates
-# code from both the standard Python library and M2Crypto, which
-# was then modified to work properly.
+# This file is triple licensed as the BitPim License, and the Python
+# and BSD licenses.  It incorporates code from both the standard
+# Python library and M2Crypto, which was then modified to work
+# properly.
 
 # My own implementation of xmlrpc (both server and client)
 

@@ -2,10 +2,10 @@
 
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
 ###
-### This software is under the Artistic license.
-### Please see the accompanying LICENSE file
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
 
@@ -22,7 +22,6 @@ import prototypes
 
 import p_brew
 import p_lg
-import p_lgtm520
 import p_lgvx4400
 import p_lgvx4500
 import p_lgvx6000
