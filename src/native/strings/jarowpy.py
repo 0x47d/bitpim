@@ -35,7 +35,7 @@
 #     that are the same have misspellings later in the string.
 #
 # Note that if you want caseless comparison then the strings should be
-# converted beforehand. It isn't efficient to do it in the code.
+# converted beforehand. It isn't efficient to do it in this code.
 #
 # This implementation treats all characters equally.  A refinement is
 # partial scores for similar characters (such as 'i' and 'y' or 'b'
@@ -45,6 +45,7 @@
 
 def jarow(s1, s2, winkleradjust=0):
     if len(s1)==0 or len(s2)==0: return 0
+    if s1==s2: return 1
     halflen=min(len(s1)/2+1, len(s2)/2+1)
 
     s1pos=0
