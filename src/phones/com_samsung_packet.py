@@ -23,13 +23,10 @@ from DSV import DSV
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
 
-    desc="Samsung SCH-Axx phone"
+    desc="Samsung SPH-Axx phone"
 
     MODEPHONEBOOK="modephonebook"
 
-    __AT_str="AT"
-    __OK_str="\r\nOK\r\n"
-    __Error_str="\r\nERROR\r\n"
     __read_timeout=0.1
     # Calendar class vars
     __cal_entries_range=xrange(20)
@@ -230,6 +227,53 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             g[i]={'name': res[0].entry.groupname}
 	return g
 
+    def savegroups(self, data):
+        """Write the groups, sending only those groups that have had
+        a name change.  (So that ringers don't get messed up)"""
+        groups=data['groups']
+
+        groups_onphone=self.read_groups() # Get groups on phone
+
+        keys=groups.keys()
+        keys.sort()
+
+        for k in keys:
+            if groups[k]['name']!=groups_onphone[k]['name']:
+                if groups[k]['name']!="Unassigned":
+                    req=self.protocolclass.groupnamesetrequest()
+                    req.gid=k
+                    req.groupname=groups[k]['name']
+                    # Response will have ERROR, even though it works
+                    self.sendpbcommand(req, self.protocolclass.unparsedresponse, ignoreerror=True)
+        
+    def makeentry(self, entry, data):
+        e=self.protocolclass.pbentry()
+
+        for k in entry:
+            # special treatment for lists
+            if k=='numbertypes' or k=='secrets':
+                continue
+            if k=='ringtone':
+            #    e.ringtone=self._findmediaindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
+                continue
+            elif k=='wallpaper':
+            #    e.wallpaper=self._findmediaindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
+                continue
+            elif k=='numbers':
+                #l=getattr(e,k)
+                for numberindex in range(self.protocolclass.NUMPHONENUMBERS):
+                    enpn=self.protocolclass.phonenumber()
+                    # l.append(enpn)
+                    e.numbers.append(enpn)
+                for i in range(len(entry[k])):
+                    numberindex=entry['numbertypes'][i]
+                    e.numbers[numberindex].number=entry[k][i]
+                    e.numbers[numberindex].secret=entry['secrets'][i]
+                continue
+            # everything else we just set
+            setattr(e, k, entry[k])
+        return e
+
     def pblinerepair(self, line):
         "Repair a line from a phone with broken firmware"
         return line
@@ -306,10 +350,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             tone=self.serialsname+"Index_"+`entry.ringtone`
             res['ringtones']=[{'ringtone': tone, 'use': 'call'}]
             
-        if entry.wallpaper != 20:
-            tone=self.serialsname+"Index_"+`entry.wallpaper`
-            res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
-            
+        try:
+            if entry.wallpaper != 20:
+                tone=self.serialsname+"Index_"+`entry.wallpaper`
+                res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
+
+        except:
+            pass
 
         # We don't have a place to put these
         # print entry.name, entry.birthday
@@ -328,20 +375,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         except commport.ATError:
             pass
         return []
-
-    def del_phone_entry(self, entry_index):
-        try:
-            s=self.comm.sendatcommand("#PBOKW=%d" % entry_index)
-            return True
-        except commport.ATError:
-            return False
-
-    def save_phone_entry(self, entry_str):
-        try:
-            s=self.comm.sendatcommand("#PBOKW="+entry_str)
-            return True
-        except commport.ATError:
-            return False
 
     def get_time_stamp(self):
 
