@@ -73,7 +73,7 @@ class ImgFileInfo:
     "Wraps information about an image file"
 
     # These will always be present
-    attrnames=("width", "height", "format", "bpp", "size")
+    attrnames=("width", "height", "format", "bpp", "size", "MAXSIZE")
 
     def __init__(self, f, **kwds):
         for a in self.attrnames:
@@ -275,7 +275,7 @@ class AudioFileInfo:
     "Wraps information about an audio file"
 
     # These will always be present
-    attrnames=("format", "size", "duration")
+    attrnames=("format", "size", "duration", "MAXSIZE")
 
     def __init__(self, f, **kwds):
         for a in self.attrnames:
@@ -335,13 +335,25 @@ def _getbits(start, length, value):
     assert length>0
     return (value>>(start-length+1)) & ((2**length)-1)
 
-def idaudio_MP3(f):
+def getmp3fileinfo(filename):
+    f=SafeFileWrapper(filename)
+    return idaudio_MP3(f, True)
+
+
+twooheightzeros="\x00"*208
+def idaudio_MP3(f, returnframes=False):
     # http://mpgedit.org/mpgedit/mpeg_format/mpeghdr.htm
+
+    idv3present=False
+    id3v1present=False
 
     header=f.GetMSBUint32(0)
 
+    # there may be ffmpeg output with 208 leading zeros for no apparent reason
+    if header==0 and f.data.startswith(twooheightzeros):
+        offset=208
     # there may be an id3 header at the begining
-    if header==0x49443303:
+    elif header==0x49443303:
         sz=[f.GetByte(x) for x in range(6,10)]
         if len([zz for zz in sz if zz<0 or zz>=0x80]):
             return None
@@ -351,9 +363,6 @@ def idaudio_MP3(f):
         header=f.GetMSBUint32(offset)
     else:
         offset=0
-        idv3present=False
-
-    id3v1present=False
 
     frames=[]
     while offset<f.size:
@@ -362,11 +371,14 @@ def idaudio_MP3(f):
             id3v1present=True
             continue
         frame=MP3Frame(f, offset)
-        if not frame.OK:  break
+        if not frame.OK or frame.nextoffset>f.size:  break
         offset=frame.nextoffset
         frames.append(frame)
 
     if len(frames)==0: return
+
+    if offset!=f.size:
+        print "MP3 offset is",offset,"size is",f.size
 
     # copy some information from the first frame
     f0=frames[0]
@@ -391,17 +403,19 @@ def idaudio_MP3(f):
             d['bitrate']=0
         if frame.samplerate!=f0.samplerate:
             d['samplerate']=0
+            vbrmin=min(frame.bitrate,vbrmin)
+            vbrmax=max(frame.bitrate,vbrmax)
         if frame.channels!=f0.channels:
             d['channels']=0
-        vbrmin=min(frame.bitrate,vbrmin)
-        vbrmax=max(frame.bitrate,vbrmax)
       
     d['duration']=duration
     d['vbrmin']=vbrmin
     d['vbrmax']=vbrmax
     d['_longdescription']=fmt_MP3
     d['_shortdescription']=fmts_MP3
-    
+
+    if returnframes:
+        d['frames']=frames
 
     return AudioFileInfo(f, **d)
 
@@ -476,11 +490,10 @@ class MP3Frame:
         self.samplerate=self.samplerates[self.version][_getbits(11,2,header)]
         self.padding=_getbits(9,1,header)
         if self.layer==1:
-            self.framelength=(12*self.bitrate/(self.samplerate/1000.0)+self.padding)*4
+            self.framelength=(12000*self.bitrate/self.samplerate+self.padding)*4
         else:
-            self.framelength=144*self.bitrate/(self.samplerate/1000.0)+self.padding
+            self.framelength=144000*self.bitrate/self.samplerate+self.padding
         self.duration=self.framelength*8*1.0/(self.bitrate*1000)
-        self.framelength=int(self.framelength)
         self.private=_getbits(8,1,header)
         self.channelmode=_getbits(7,2,header)
         if self.channelmode in (0,1,2):
@@ -496,6 +509,11 @@ class MP3Frame:
 
         self.offset=offset
         self.nextoffset=offset+self.framelength
+        if f.GetByte(self.nextoffset)!=0xff:
+            # sometimes this ends up being off by one and I can't figure out why
+            if f.GetBytes(self.nextoffset-1,2)=="\xff\xf3":
+                self.nextoffset-=1
+                self.framelength-=1
         self.OK=True
 
 def idaudio_QCP(f):
