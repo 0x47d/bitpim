@@ -330,9 +330,6 @@ class ConfigDialog(wxDialog):
         if self.commbox.GetValue()==self.setme:
             comm="auto"
             self.commbox.SetValue(comm)
-        print "pb=",self.phonebox.GetValue()
-        if self.phonebox.GetValue()=="":
-            self.phonebox.SetValue("LG-VX4400")
 
     def updatevariables(self):
         path=self.diskbox.GetValue()
