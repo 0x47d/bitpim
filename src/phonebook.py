@@ -1446,13 +1446,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.main.OnCellSelect()
         self.GetView().AutoSize()
         wx.CallAfter(self.GetView().Fit)
-        wx.CallAfter(self.sizetwiddle)
         wx.EndBusyCursor()
-
-    def sizetwiddle(self):
-        dlg=self.GetView().GetParent().GetParent()
-        w,h=dlg.GetSize()
-        dlg.SetSize( (w-1, h-1) )
 
 def _htmlfixup(txt):
     if txt is None: return ""
