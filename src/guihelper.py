@@ -52,10 +52,6 @@ ID_HELPCONTENTS=1
 ID_HELPTOUR=1
 ID_HELPABOUT=1
 
-# alter files viewer modes
-ID_FV_ICONS=1
-ID_FV_LIST=1
-
 # file/filesystem viewer context menus
 ID_FV_SAVE=1
 ID_FV_HEXVIEW=1
@@ -144,14 +140,6 @@ def dirname(str):
     """Returns everything before the last / in the name""" 
     if str.rfind('/')<0: return ""
     return str[:str.rfind('/')]
-
-def HasFullyFunctionalListView():
-    """Can the list view widget be switched between icon view and report views
-
-    @rtype: Bool"""
-    if IsMSWindows():
-        return True
-    return False
 
 def IsMSWindows():
     """Are we running on Windows?

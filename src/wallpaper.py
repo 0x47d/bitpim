@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -25,10 +25,91 @@ import guihelper
 import common
 import helpids
 import pubsub
+import aggregatedisplay
+import fileinfo
 
 ###
 ###  Wallpaper pane
 ###
+
+class DisplayItem(object):
+
+    PADDING=3
+
+    def __init__(self, view, key):
+        self.view=view
+        self.key=key
+        self.thumbsize=10,10
+        self.setvals()
+        self.lastw=None
+
+    def setvals(self):
+        me=self.view._data['wallpaper-index'][self.key]
+        self.name=me['name']
+        self.origin=me.get('origin', None)
+        self.filename=os.path.join(self.view.mainwindow.wallpaperpath, self.name)
+        self.fileinfo=self.view.GetFileInfo(self.filename)
+        self.size=self.fileinfo.size
+        self.short=self.fileinfo.shortdescription()
+        self.long=self.fileinfo.longdescription()
+        self.thumb=None
+        self.selbbox=None
+        self.lines=[self.name, self.short,
+                    '%.1f kb' % (self.size/1024.0,)]
+        if self.origin:
+            self.lines.append(self.origin)
+
+    def setthumbnailsize(self, thumbnailsize):
+        self.thumbnailsize=thumbnailsize
+        self.thumb=None
+        self.selbox=None
+
+    def Draw(self, dc, width, height, selected):
+        if self.thumb is None:
+            self.thumb=self.view.GetItemThumbnail(self.name, self.thumbnailsize[0], self.thumbnailsize[1])
+        redrawbbox=False
+        if selected:
+            if self.lastw!=width or self.selbbox is None:
+                redrawbbox=True
+            else:
+                oldb=dc.GetBrush()
+                oldp=dc.GetPen()
+                dc.SetBrush(self.view.item_selection_brush)
+                dc.SetPen(self.view.item_selection_pen)
+                dc.DrawRectangle(*self.selbbox)
+                dc.SetBrush(oldb)
+                dc.SetPen(oldp)
+        dc.DrawBitmap(self.thumb, self.PADDING, self.PADDING, True)
+        xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
+        yoff=self.PADDING*2
+        widthavailable=width-xoff-self.PADDING
+        maxw=0
+        old=dc.GetFont()
+        for i,line in enumerate(self.lines):
+            dc.SetFont(self.view.item_line_font[i])
+            w,h=guiwidgets.DrawTextWithLimit(dc, xoff, yoff, line, widthavailable, self.view.item_guardspace, self.view.item_term)
+            maxw=max(maxw,w)
+            yoff+=h
+        dc.SetFont(old)
+        self.lastw=width
+        self.selbbox=(0,0,xoff+maxw+self.PADDING,max(yoff+self.PADDING,self.thumb.GetHeight()+self.PADDING*2))
+        if redrawbbox:
+            return self.Draw(dc, width, height, selected)
+        return self.selbbox
+
+    def DisplayTooltip(self, parent, rect):
+        res=["Name: "+self.name, "Origin: "+(self.origin, "default")[self.origin is None],
+             'File size: %.1f kb (%d bytes)' % (self.size/1024.0, self.size), "\nImage information:\n", self.long]
+        # tipwindow takes screen coordinates so we have to transform
+        x,y=parent.ClientToScreen(rect[0:2])
+        return wx.TipWindow(parent, "\n".join(res), 1024, wx.Rect(x,y,rect[2], rect[3]))
+
+    def RemoveFromIndex(self):
+        del self.view._data['wallpaper-index'][self.key]
+        self.view.modified=True
+        self.view.OnRefresh()
+        
+
 
 class WallpaperView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
@@ -45,18 +126,35 @@ class WallpaperView(guiwidgets.FileView):
         'jpg': wx.BITMAP_TYPE_JPEG,
         'png': wx.BITMAP_TYPE_PNG,
         }
+
+    organizetypes=("Image Type", "Origin", "File Size") # Image Size
+    
+
     def __init__(self, mainwindow, parent):
-        guiwidgets.FileView.__init__(self, mainwindow, parent, guihelper.getresourcefile("wallpaper.xy"),
-                                        guihelper.getresourcefile("wallpaper-style.xy"), bottomsplit=200,
-                                        rightsplit=200)
-        self.SetColumns(["Name", "Size", "Bytes", "Origin"])
+        self.mainwindow=mainwindow
+        self.usewidth=10
+        self.useheight=10
         wx.FileSystem_AddHandler(BPFSHandler(self))
         self._data={'wallpaper-index': {}}
-        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
         self.updateprofilevariables(self.mainwindow.phoneprofile)
 
-        self.addfilemenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
-        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_PASTE, self.OnPaste)
+        self.organizemenu=wx.Menu()
+        guiwidgets.FileView.__init__(self, mainwindow, parent, "wallpaper-watermark")
+
+        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
+
+
+        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
+        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
+
+        self.organizeinfo={}
+
+        for k in self.organizetypes:
+            id=wx.NewId()
+            self.organizemenu.AppendRadioItem(id, k)
+            wx.EVT_MENU(self, id, self.OrganizeChange)
+            self.organizeinfo[id]=getattr(self, "organizeby_"+k.replace(" ",""))
+            
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_WALLPAPERS)
@@ -93,6 +191,95 @@ class WallpaperView(guiwidgets.FileView):
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes
 
+    def OrganizeChange(self, evt):
+        evt.GetEventObject().Check(evt.GetId(), True)
+        self.OnRefresh()
+
+    def GetSections(self):
+        # get all the items
+        items=[DisplayItem(self, key) for key in self._data['wallpaper-index']]
+        # prune out ones we don't have images for
+        items=[item for item in items if os.path.exists(item.filename)]
+
+        self.sections=[]
+
+        if len(items)==0:
+            return self.sections
+        
+        # get the current sorting type
+        for i in range(len(self.organizetypes)):
+            item=self.organizemenu.FindItemByPosition(i)
+            if self.organizemenu.IsChecked(item.GetId()):
+                for sectionlabel, items in self.organizeinfo[item.GetId()](items):
+                    sh=aggregatedisplay.SectionHeader(sectionlabel)
+                    sh.itemsize=(self.usewidth+120, self.useheight+DisplayItem.PADDING*2)
+                    for item in items:
+                        item.thumbnailsize=self.usewidth, self.useheight
+                    # sort items by name
+                    items=[(item.name.lower(), item) for item in items]
+                    items.sort()
+                    items=[item for name,item in items]
+                    self.sections.append( (sh, items) )
+                return [sh for sh,items in self.sections]
+        assert False, "Can't get here"
+
+    def GetItemSize(self, sectionnumber, sectionheader):
+        return sectionheader.itemsize
+
+    def GetItemsFromSection(self, sectionnumber, sectionheader):
+        return self.sections[sectionnumber][1]
+
+    def organizeby_ImageType(self, items):
+        types={}
+        for item in items:
+            t=item.fileinfo.format
+            l=types.get(t, [])
+            l.append(item)
+            types[t]=l
+
+        keys=types.keys()
+        keys.sort()
+        return [ (key, types[key]) for key in types]
+
+    def organizeby_Origin(self, items):
+        types={}
+        for item in items:
+            t=item.origin
+            if t is None: t="Default"
+            l=types.get(t, [])
+            l.append(item)
+            types[t]=l
+
+        keys=types.keys()
+        keys.sort()
+        return [ (key, types[key]) for key in types]
+        
+    def organizeby_FileSize(self, items):
+        
+        sizes={0: ('Less than 8kb', []),
+               8192: ('8 kilobytes', []),
+               16384: ('16 kilobytes', []),
+               65536: ('64 kilobytes', []),
+               131052: ('128 kilobytes', []),
+               524208: ('512 kilobytes', []),
+               1024*1024: ('One megabyte', [])}
+
+        keys=sizes.keys()
+        keys.sort()
+
+        for item in items:
+            t=item.size
+            if t>=keys[-1]:
+                sizes[keys[-1]][1].append(item)
+                continue
+            for i,k in enumerate(keys):
+                if t<keys[i+1]:
+                    sizes[k][1].append(item)
+                    break
+
+        return [sizes[k] for k in keys if len(sizes[k][1])]
+            
+
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
         # is it a bci file?
@@ -109,59 +296,13 @@ class WallpaperView(guiwidgets.FileView):
                     del wp[k]
                     self.modified=True
 
-    def GetItemImage(self, item):
-        file=item['file']
-        if self.isBCI(file):
-            image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-        else:
-            if file.endswith(".mp4"):
-                image=wx.Image(guihelper.getresourcefile('wallpaper.png'))
-                # Need to find a more appropriate graphic
-            else:
-                image=wx.Image(file)
-        return image
-
-    def GetItemSizedBitmap(self, item, width, height):
-        if __debug__: print item
-        img=self.GetItemImage(item)
-        if __debug__: print width, height
-        if __debug__: print img.GetWidth(), img.GetHeight()
+    def GetItemThumbnail(self, name, width, height):
+        img,_=self.GetImage(name)
         if width!=img.GetWidth() or height!=img.GetHeight():
-            if guihelper.IsMSWindows():
-                bg=None # transparent
-            elif guihelper.IsGtk():
-                # we can't use transparent as the list control gets very confused on Linux
-                # it also returns background as grey and foreground as black even though
-                # the window is drawn with a white background.  So we give up and hard code
-                # white
-                bg="ffffff"
-            elif guihelper.IsMac():
-                # use background colour
-                bg=self.GetBackgroundColour()
-                bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
-            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
+            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=None, valign="clip")
         else:
             bitmap=img.ConvertToBitmap()
         return bitmap
-
-    def GetItemValue(self, item, col):
-        if col=='Name':
-            return item['name']
-        elif col=='Size':
-            img=self.GetItemImage(item)
-            item['size']=img.GetWidth(), img.GetHeight()
-            return '%d x %d' % item['size']
-        elif col=='Bytes':
-            return int(os.stat(item['file']).st_size)
-        elif col=='Origin':
-            return item.get('origin', "")
-        assert False, "unknown column"
-
-    def GetItemValueForSorting(self, item, col):
-        if col=='Size':
-            w,h=item['size']
-            return w*h
-        return self.GetItemValue(item, col) 
 
     def GetImage(self, file):
         """Gets the named image
@@ -194,6 +335,9 @@ class WallpaperView(guiwidgets.FileView):
             return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         return file, wx.Image
 
+    def GetFileInfo(self, filename):
+        return fileinfo.identify_imagefile(filename)
+
     def GetImageStatInformation(self, file):
         """Returns the statinfo for file"""
         file=os.path.join(self.mainwindow.wallpaperpath, file)
@@ -208,28 +352,7 @@ class WallpaperView(guiwidgets.FileView):
         if self._data['wallpaper-index']!=dict['wallpaper-index']:
             self._data['wallpaper-index']=dict['wallpaper-index'].copy()
             self.modified=True
-        newitems=[]
-        existing=self.GetAllItems()
-        keys=dict['wallpaper-index'].keys()
-        keys.sort()
-        for k in keys:
-            entry=dict['wallpaper-index'][k]
-            filename=os.path.join(self.mainwindow.wallpaperpath, entry['name'])
-            if not os.path.exists(filename):
-                if __debug__: print "no file for wallpaper",entry['name']
-                continue
-            newentry={}
-            # look through existing to see if we already have a match
-            for i in existing:
-                if entry['name']==i['name']:
-                    newentry.update(i)
-                    break
-            # fill in newentry
-            newentry.update(entry)
-            newentry['wp-index']=k
-            newentry['file']=filename
-            newitems.append(newentry)
-        self.SetItems(newitems)
+        self.OnRefresh()
                     
     def OnPaste(self, _=None):
         do=wx.BitmapDataObject()
@@ -264,11 +387,7 @@ class WallpaperView(guiwidgets.FileView):
             # special handling for BCI files
             if self.isBCI(file):
                 target=os.path.join(self.thedir, os.path.basename(file).lower())
-                src=open(file, "rb")
-                dest=open(target, "wb")
-                dest.write(src.read())
-                dest.close()
-                src.close()
+                open(target, "wb").write(open(file, "rb").read())
                 self.AddToIndex(os.path.basename(file).lower())
                 continue
             img=wx.Image(file)
@@ -377,7 +496,7 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None, valign="center"
     mdc.SelectObject(bitmap)
     # figure where to place image to centre it
     posx=usewidth-(usewidth+newwidth)/2
-    if valign=="top":
+    if valign in ("top", "clip"):
         posy=0
     elif valign=="center":
         posy=useheight-(useheight+newheight)/2
@@ -392,6 +511,8 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None, valign="center"
     if transparent is not None:
             mask=wx.Mask(bitmap, transparent)
             bitmap.SetMask(mask)
+    if valign=="clip" and newheight!=useheight:
+        return bitmap.GetSubBitmap( (0,0,usewidth,newheight) )
     return bitmap
 
 ###

@@ -256,6 +256,10 @@ class Display(wx.ScrolledWindow):
         self.selected=[ [False]*len(items) for items in self.items]
         self.Refresh(False)
 
+    def SelectAll(self):
+        self.selected=[ [True]*len(items) for items in self.items]
+        self.Refresh(False)
+
     def SetSelectedByNumber(self, sectionnum, itemnum, add=False):
         if not add:
             self.ClearSelection()
@@ -276,6 +280,7 @@ class Display(wx.ScrolledWindow):
                     
     def HitTest(self, pointx, pointy):
         # work out which item this corresponds to
+        origin=self.GetViewStart()[1]*self.VSCROLLPIXELS # used later
         cury=0
         for i, section in enumerate(self.sections):
             if cury<=pointy<=cury+self.sectionheights[i]:
@@ -306,11 +311,15 @@ class Display(wx.ScrolledWindow):
                 starty=posy+self.boundingboxes[i][num][1]
                 endy=starty+self.boundingboxes[i][num][3]-self.boundingboxes[i][num][1]
                 if startx<=pointx<=endx and starty<=pointy<=endy:
-                    return self.HitTestResult(location=self.HitTestResult.IN_ITEM,
-                                              sectionnum=i, section=section,
-                                              itemnum=num, item=item,
-                                              itemx=pointx-startx+self.boundingboxes[i][num][0],
-                                              itemy=pointy-starty+self.boundingboxes[i][num][1])
+                    ht=self.HitTestResult(location=self.HitTestResult.IN_ITEM,
+                                          sectionnum=i, section=section,
+                                          itemnum=num, item=item,
+                                          itemx=pointx-startx+self.boundingboxes[i][num][0],
+                                          itemy=pointy-starty+self.boundingboxes[i][num][1],
+                                          itemrect=(startx, starty, endx-startx, endy-starty),
+                                          itemrectscrolled=(startx, starty-origin, endx-startx, endy-starty),
+                                          )
+                    return ht
                 num+=1
             cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
         return self.HitTestResult()

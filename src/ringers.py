@@ -14,12 +14,85 @@ import guiwidgets
 import guihelper
 import os
 import pubsub
-
+import aggregatedisplay
 import wallpaper
+import common
 
 ###
-###  Midi
+###  Ringers
 ###
+
+class DisplayItem(object):
+
+    PADDING=3
+
+    def __init__(self, view, key):
+        self.view=view
+        self.key=key
+        self.thumbsize=10,10
+        self.setvals()
+        self.lastw=None
+
+    def setvals(self):
+        me=self.view._data['ringtone-index'][self.key]
+        self.name=me['name']
+        self.origin=me.get('origin', None)
+        self.filename=os.path.join(self.view.mainwindow.ringerpath, self.name)
+        try:
+            self.size=os.stat(self.filename).st_size
+        except OSError:
+            self.size=-1
+        self.thumb=None
+        self.selbbox=None
+        self.lines=[self.name, common.getext(self.name), '%.1f kb' % (self.size/1024.0,)]
+        if self.origin:
+            self.lines.append(self.origin)
+
+    def setthumbnailsize(self, thumbnailsize):
+        self.thumbnailsize=thumbnailsize
+        self.thumb=None
+        self.selbox=None
+
+    def Draw(self, dc, width, height, selected):
+        if self.thumb is None:
+            self.thumb=self.view.GetItemThumbnail(self.name, self.thumbnailsize[0], self.thumbnailsize[1])
+        redrawbbox=False
+        if selected:
+            if self.lastw!=width or self.selbbox is None:
+                redrawbbox=True
+            else:
+                oldb=dc.GetBrush()
+                oldp=dc.GetPen()
+                dc.SetBrush(self.view.item_selection_brush)
+                dc.SetPen(self.view.item_selection_pen)
+                dc.DrawRectangle(*self.selbbox)
+                dc.SetBrush(oldb)
+                dc.SetPen(oldp)
+        dc.DrawBitmap(self.thumb, self.PADDING, self.PADDING, True)
+        xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
+        yoff=self.PADDING*2
+        widthavailable=width-xoff-self.PADDING
+        maxw=0
+        old=dc.GetFont()
+        for i,line in enumerate(self.lines):
+            dc.SetFont(self.view.item_line_font[i])
+            w,h=guiwidgets.DrawTextWithLimit(dc, xoff, yoff, line, widthavailable, self.view.item_guardspace, self.view.item_term)
+            maxw=max(maxw,w)
+            yoff+=h
+        dc.SetFont(old)
+        self.lastw=width
+        self.selbbox=(0,0,xoff+maxw+self.PADDING,max(yoff+self.PADDING,self.thumb.GetHeight()+self.PADDING*2))
+        if redrawbbox:
+            return self.Draw(dc, width, height, selected)
+        return self.selbbox
+
+    def RemoveFromIndex(self):
+        del self.view._data['ringtone-index'][self.key]
+        self.view.modified=True
+        self.view.OnRefresh()
+
+    def DisplayTooltip(self, parent, rect):
+        return None
 
 class RingerView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
@@ -30,21 +103,16 @@ class RingerView(guiwidgets.FileView):
 
     
     def __init__(self, mainwindow, parent, id=-1):
-        guiwidgets.FileView.__init__(self, mainwindow, parent, guihelper.getresourcefile("ringtone.xy"),
-                                        guihelper.getresourcefile("ringtone-style.xy"), bottomsplit=400,
-                                        rightsplit=200)
-        self.SetColumns(["Name", "Length", "Origin", "Description"])
+        self.mainwindow=mainwindow
         self._data={'ringtone-index': {}}
+        self.updateprofilevariables(self.mainwindow.phoneprofile)
+        guiwidgets.FileView.__init__(self, mainwindow, parent, "ringtone-watermark")
         self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|All files|*.*"
 
-        self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
         pubsub.subscribe(self.OnDictRequest, pubsub.REQUEST_RINGTONE_INDEX)
-
-    def GetIconSize(self):
-        return (24,24)
 
     def updateprofilevariables(self, profile):
         self.maxlen=profile.MAX_RINGTONE_BASENAME_LENGTH
@@ -68,6 +136,31 @@ class RingerView(guiwidgets.FileView):
     def getdata(self,dict,want=guiwidgets.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.ringerpath, 'ringtone', 'ringtone-index')
 
+    def GetItemThumbnail(self, item, w, h):
+        assert w==self.thumbnail.GetWidth() and h==self.thumbnail.GetHeight()
+        return self.thumbnail
+
+    def GetSections(self):
+        x=aggregatedisplay.SectionHeader("Ringtones")
+        self.thumbnail=wx.Image(guihelper.getresourcefile('ringer.png')).ConvertToBitmap()
+        x.thumbsize=(self.thumbnail.GetWidth(), self.thumbnail.GetHeight())
+        dc=wx.MemoryDC()
+        dc.SelectObject(wx.EmptyBitmap(100,100))
+        h=dc.GetTextExtent("I")[1]
+        x.itemsize=x.thumbsize[0]+120, max(x.thumbsize[1], h*4)+DisplayItem.PADDING*2
+        return [x]
+
+    def GetItemSize(self, sectionnumber, sectionheader):
+        return sectionheader.itemsize
+
+    def GetItemsFromSection(self, sectionnumber, sectionheader):
+        items=[DisplayItem(self, key) for key in self._data['ringtone-index']]
+        # prune out ones we don't have files for
+        items=[item for item in items if os.path.exists(item.filename)]
+        for item in items:
+            item.setthumbnailsize(sectionheader.thumbsize)
+        return items
+
     def RemoveFromIndex(self, names):
         for name in names:
             wp=self._data['ringtone-index']
@@ -80,33 +173,10 @@ class RingerView(guiwidgets.FileView):
         print "OnAddFiles:",filenames
         for file in filenames:
             self.thedir=self.mainwindow.ringerpath
-            self.thedir=self.mainwindow.ringerpath
             # we don't try to do any format conversion now
             target=self.getshortenedbasename(file)
             if target==None: return # user didn't want to
-            f=open(file, "rb")
-            contents=f.read()
-            f.close()
-            f=open(target, "wb")
-            f.write(contents)
-            f.close()
-##            if os.path.splitext(file)[1]=='.mid':
-##                target=self.getshortenedbasename(file, 'mid')
-##                if target==None: return # user didn't want to
-##                f=open(file, "rb")
-##                contents=f.read()
-##                f.close()
-##                f=open(target, "wb")
-##                f.write(contents)
-##                f.close()
-##            else:
-##                # ::TODO:: warn if not on Windows
-##                target=self.getshortenedbasename(file, 'qcp')
-##                if target==None: return # user didn't want to
-##                qcpdata=bpaudio.converttoqcp(file)
-##                f=open(target, "wb")
-##                f.write(qcpdata)
-##                f.close()
+            open(target, "wb").write(open(file, "rb").read())
             self.AddToIndex(os.path.basename(target).lower())
         self.OnRefresh()
 
@@ -121,48 +191,6 @@ class RingerView(guiwidgets.FileView):
         self._data['ringtone-index'][idx]={'name': file}
         self.modified=True
 
-    def GetItemImage(self, item):
-        image=wx.Image(guihelper.getresourcefile('ringer.png'))
-        return image
-
-    def GetItemSizedBitmap(self, item, width, height):
-        img=self.GetItemImage(item)
-        if width!=img.GetWidth() or height!=img.GetHeight():
-            if guihelper.IsMSWindows():
-                bg=None # transparent
-            elif guihelper.IsGtk():
-                # we can't use transparent as the list control gets very confused on Linux
-                # it also returns background as grey and foreground as black even though
-                # the window is drawn with a white background.  So we give up and hard code
-                # white
-                bg="ffffff"
-            elif guihelper.IsMac():
-                # use background colour
-                bg=self.GetBackgroundColour()
-                bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
-            bitmap=wallpaper.ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
-        else:
-            bitmap=img.ConvertToBitmap()
-        return bitmap
-
-    def GetItemValue(self, item, col):
-        if col=='Name':
-            return item['name']
-        elif col=='Length':
-            return item['filelen']
-        elif col=='Origin':
-            return item.get('origin', "")
-        elif col=='Description':
-            return item['description']
-        assert False, "unknown column"
-
-    def GetImage(self, file):
-        """Gets the named image
-
-        @return: (wxImage, filesize)
-        """
-        image=wx.Image(guihelper.getresourcefile('ringer.png'))
-        return image, int(os.stat(guihelper.getresourcefile('ringer.png')).st_size)
 
     def updateindex(self, index):
         if index!=self._data['ringtone-index']:
@@ -177,43 +205,8 @@ class RingerView(guiwidgets.FileView):
         if self._data['ringtone-index']!=dict['ringtone-index']:
             self._data['ringtone-index']=dict['ringtone-index'].copy()
             self.modified=True
-        newitems=[]
-        existing=self.GetAllItems()
-        keys=dict['ringtone-index'].keys()
-        keys.sort()
-        for i in keys:
-            # ignore ones we don't have a file for
-            entry=dict['ringtone-index'][i]
-            filename=os.path.join(self.mainwindow.ringerpath, entry['name'])
-            if not os.path.isfile(filename):
-                if __debug__: print "no file for",entry['name']
-                continue
-            filelen=int(os.stat(filename).st_size)
-            newentry={}
-            # Look through existing to see if we already have an entry for this
-            for k in existing:
-                if entry['name']==k['name']:
-                    newentry.update(k)
-                    break
-            # fill in new entry
-            newentry.update(newentry)
-            newentry['rt-index']=i
-            newentry['name']=entry['name']
-            newentry['filelen']=filelen
-            newentry['file']=filename
-            ext=os.path.splitext(entry['name'].lower())[1]
-            if ext=='.qcp':
-                newentry['description']="PureVoice file"
-            elif ext=='.mid':
-                newentry['description']="Midi file"
-            elif ext=='.mp3':
-                newentry['description']="MP3 file"
-            else:
-                newentry['description']="Unknown file type"
-            newentry['origin']=entry.get('origin','ringers')
-            newitems.append(newentry)
-        self.SetItems(newitems)
-
+        self.OnRefresh()
+        
     def getfromfs(self, result):
         self.thedir=self.mainwindow.ringerpath
         return self.genericgetfromfs(result, None, 'ringtone-index', self.CURRENTFILEVERSION)

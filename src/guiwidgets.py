@@ -41,9 +41,9 @@ import comdiagnose
 import analyser
 import guihelper
 import pubsub
-import bpmedia
 import bphtml
 import bitflingscan
+import aggregatedisplay
 
 ###
 ### BitFling cert stuff
@@ -973,7 +973,16 @@ class MyFileDropTarget(wx.FileDropTarget):
     def OnDropFiles(self, x, y, filenames):
         return self.target.OnDropFiles(x,y,filenames)
 
-class FileView(bpmedia.MediaDisplayer):
+class FileView(wx.Panel):
+
+    # Various DC objects used for drawing the items.  We have to calculate them in the constructor as
+    # the app object hasn't been constructed when this file is imported.
+    item_selection_brush=None
+    item_selection_pen=None
+    item_line_font=None
+    item_term="..."
+    item_guardspace=None
+    
     # Files we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
 
@@ -987,46 +996,115 @@ class FileView(bpmedia.MediaDisplayer):
     # acceptable characters in a filename
     filenamechars=None # set via phone profile
 
-    def __init__(self, mainwindow, parent, xyfile, stylefile, topsplit=None, bottomsplit=None, rightsplit=None):
-        bpmedia.MediaDisplayer.__init__(self, parent, xyfile, stylefile, topsplit, bottomsplit, rightsplit)
+    def __init__(self, mainwindow, parent, watermark=None):
+        wx.Panel.__init__(self,parent,style=wx.CLIP_CHILDREN)
+
+        if not hasattr(self, "organizemenu"):
+            self.organizemenu=None
+        
+        # item attributes
+        if self.item_selection_brush is None:
+            self.item_selection_brush=wx.TheBrushList.FindOrCreateBrush("MEDIUMPURPLE2", wx.SOLID)
+            self.item_selection_pen=wx.ThePenList.FindOrCreatePen("MEDIUMPURPLE2", 1, wx.SOLID)
+            f1=wx.TheFontList.FindOrCreateFont(8, wx.SWISS, wx.NORMAL, wx.BOLD)
+            f2=wx.TheFontList.FindOrCreateFont(8, wx.SWISS, wx.NORMAL, wx.NORMAL)
+            self.item_line_font=[f1, f2, f2, f2]
+            dc=wx.MemoryDC()
+            dc.SelectObject(wx.EmptyBitmap(100,100))
+            self.item_guardspace=dc.GetTextExtent(self.item_term)[0]
+            del dc
+
+        # no redraw ickiness
+        # wx.EVT_ERASE_BACKGROUND(self, lambda evt: None)
+        
         self.mainwindow=mainwindow
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
 
+        # use the aggregatedisplay to do the actual item display
+        self.aggdisp=aggregatedisplay.Display(self, self, watermark) # we are our own datasource
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(self.aggdisp, 1, wx.EXPAND|wx.ALL, 2)
+        self.SetSizer(vbs)
+        timerid=wx.NewId()
+        self.thetimer=wx.Timer(self, timerid)
+        wx.EVT_TIMER(self, timerid, self.OnTooltipTimer)
+        self.motionpos=None
+        wx.EVT_MOUSE_EVENTS(self.aggdisp, self.OnMouseEvent)
+        self.tipwindow=None
+
         # Menus
 
-        self.menu=wx.Menu()
-        self.menu.Append(guihelper.ID_FV_OPEN, "Open")
-        self.menu.Append(guihelper.ID_FV_SAVE, "Save ...")
-        self.menu.AppendSeparator()
-        self.menu.Append(guihelper.ID_FV_DELETE, "Delete")
-        self.menu.AppendSeparator()
-        self.menu.Append(guihelper.ID_FV_RENAME, "Rename")
-        self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+        self.itemmenu=wx.Menu()
+        #self.itemmenu.Append(guihelper.ID_FV_OPEN, "Open")
+        self.itemmenu.Append(guihelper.ID_FV_SAVE, "Save ...")
+        self.itemmenu.AppendSeparator()
+        self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.itemmenu.AppendSeparator()
+        # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
+        self.itemmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        self.addfilemenu=wx.Menu()
-        self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
-        self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+        self.bgmenu=wx.Menu()
+        if self.organizemenu is not None:
+            self.bgmenu.AppendMenu(wx.NewId(), "Organize by", self.organizemenu)
+        self.bgmenu.Append(guihelper.ID_FV_ADD, "Add ...")
+        self.bgmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        wx.EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
-        wx.EVT_MENU(self.menu, guihelper.ID_FV_SAVE, self.OnSave)
-        #wx.EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
-        wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
-        # these are triggered from the HTML pane
-        wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
-        wx.EVT_BUTTON(self, guihelper.ID_FV_SAVE, self.OnSave)
+        #wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_SAVE, self.OnSave)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
 
-        self.SetRightClickMenus(self.menu, self.addfilemenu)
+        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_ADD, self.OnAdd)
+        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh)
+
+        wx.EVT_RIGHT_UP(self.aggdisp, self.OnRightClick)
 
         self.droptarget=MyFileDropTarget(self)
         self.SetDropTarget(self.droptarget)
 
-        # Left temporarily for reference - causes it to partially work on the Mac,
-        # whereas it doesn't work otherwise... But it crashes on exit.
-        # self.icons.SetDropTarget(self.droptarget)
-        # self.preview.SetDropTarget(self.droptarget)
+    def OnRightClick(self, evt):
+        """Popup the right click context menu
+
+        @param widget:  which widget to popup in
+        @param position:  position in widget
+        @param onitem: True if the context menu is for an item
+        """
+        if len(self.aggdisp.GetSelection()):
+            menu=self.itemmenu
+        else:
+            menu=self.bgmenu
+        if menu is None:
+            return
+        self.aggdisp.PopupMenu(menu, evt.GetPosition())
+
+    def OnMouseEvent(self, evt):
+        self.motionpos=evt.GetPosition()
+        evt.Skip()
+        self.thetimer.Stop()
+        if evt.AltDown() or evt.MetaDown() or evt.ControlDown() or evt.ShiftDown() or evt.Dragging() or evt.IsButton():
+            return
+        self.thetimer.Start(1750, wx.TIMER_ONE_SHOT)
+
+    def OnTooltipTimer(self, _):
+        x,y=self.aggdisp.CalcUnscrolledPosition(*self.motionpos)
+        res=self.aggdisp.HitTest(x,y)
+        if res.item is not None:
+            try:    self.tipwindow.Destroy()
+            except: pass
+            self.tipwindow=res.item.DisplayTooltip(self.aggdisp, res.itemrectscrolled)
+
+    def OnRefresh(self):
+        self.aggdisp.UpdateItems()
+
+    def GetSelectedItems(self):
+        return [item for _,_,_,item in self.aggdisp.GetSelection()]
+
+    def GetAllItems(self):
+        return [item for _,_,_,item in self.aggdisp.GetAllItems()]
+
+    def OnSelectAll(self, _):
+        self.aggdisp.SelectAll()
 
     def EndSelectedFilesContext(self, context, deleteitems=False):
         # We have a fun additional problem.  By default Windows
@@ -1035,39 +1113,41 @@ class FileView(bpmedia.MediaDisplayer):
         # source file is gone, or deleteitems is true
         if not deleteitems:
             for item in context:
-                if not os.path.exists(item['file']):
+                if not os.path.exists(item.filename):
                     print "Forcing EndSelectedFilesContext to delete mode even though not specified"
                     deleteitems=True
                     break
         if deleteitems:
             for item in context:
-                if os.path.exists(item['file']):
-                    os.remove(item['file'])
-            self.RemoveFromIndex([item['name'] for item in context])
+                if os.path.exists(item.filename):
+                    os.remove(item.filename)
+            for item in context:
+                item.RemoveFromIndex()
             self.OnRefresh()
 
     def OnSave(self, _):
-        items=self.GetAllSelectedItems()
+        items=self.GetSelectedItems()
         if len(items)==1:
-            ext=getext(items[0]['name'])
+            ext=getext(items[0].name)
             if ext=="": ext="*"
             else: ext="*."+ext
-            dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0]['name'], style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+            dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0].name, style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
             if dlg.ShowModal()==wx.ID_OK:
-                shutil.copyfile(items[0]['file'], dlg.GetFilename())
+                shutil.copyfile(items[0].filename, dlg.GetFilename())
             dlg.Destroy()
         else:
             dlg=wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
             if dlg.ShowModal()==wx.ID_OK:
                 for item in items:
-                    shutil.copyfile(item['file'], os.path.join(dlg.GetPath(), basename(item['file'])))
+                    shutil.copyfile(item.filename, os.path.join(dlg.GetPath(), basename(item.filename)))
             dlg.Destroy()
 
     def OnDelete(self,_):
-        items=self.GetAllSelectedItems()
+        items=self.GetSelectedItems()
         for item in items:
-            os.remove(item['file'])
-        self.RemoveFromIndex([item['name'] for item in items])
+            os.remove(item.filename)
+        for item in items:
+            item.RemoveFromIndex()
         self.OnRefresh()
 
     def genericpopulatefs(self, dict, key, indexkey, version):
@@ -1088,9 +1168,7 @@ class FileView(bpmedia.MediaDisplayer):
 
             d=dict[key]
             for i in d:
-                f=open(os.path.join(self.thedir, i), "wb")
-                f.write(d[i])
-                f.close()
+                open(os.path.join(self.thedir, i), "wb").write(d[i])
         d={}
         d[indexkey]=dict[indexkey]
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
@@ -1114,21 +1192,12 @@ class FileView(bpmedia.MediaDisplayer):
                 # ignore windows detritus
                 continue
             elif key is not None:
-                f=open(os.path.join(self.thedir, file), "rb")
-                data=f.read()
-                f.close()
-                dict[file]=data
+                dict[file]=open(os.path.join(self.thedir, file), "rb").read()
         if key is not None:
             result[key]=dict
         if indexkey not in result:
             result[indexkey]={}
         return result
-
-    def OnRefresh(self,_=None):
-        self.populate(self._data)
-
-    def GetSelectedItemNames(self):
-        return [i['name'] for i in self.GetAllSelectedItems()]
 
     def OnDropFiles(self, _, dummy, filenames):
         # There is a bug in that the most recently created tab
@@ -1170,30 +1239,24 @@ class FileView(bpmedia.MediaDisplayer):
     def genericgetdata(self,dict,want, mediapath, mediakey, mediaindexkey):
         # this was originally written for wallpaper hence using the 'wp' variable
         dict.update(self._data)
-        names=None
+        items=None
         if want==self.SELECTED:
-            names=self.GetSelectedItemNames()
-            if len(names)==0:
+            items=self.GetSelectedItems()
+            if len(items)==0:
                 want=self.ALL
 
         if want==self.ALL:
-            names=[item['name'] for item in self.GetAllItems()]
+            items=self.GetAllItems()
 
-        if names is not None:
+        if items is not None:
             wp={}
             i=0
-            for name in names:
-                file=os.path.join(mediapath, name)
-                f=open(file, "rb")
-                data=f.read()
-                f.close()
-                wp[i]={'name': name, 'data': data}
-                for k in self._data[mediaindexkey]:
-                    if self._data[mediaindexkey][k]['name']==name:
-                        v=self._data[mediaindexkey][k].get("origin", "")
-                        if len(v):
-                            wp[i]['origin']=v
-                            break
+            for item in items:
+                data=open(item.filename, "rb").read()
+                wp[i]={'name': item.name, 'data': data}
+                v=item.origin
+                if v is not None:
+                    wp[i]['origin']=v
                 i+=1
             dict[mediakey]=wp
                 
@@ -1203,21 +1266,9 @@ class FileView(bpmedia.MediaDisplayer):
 ### Various platform independent filename functions
 ###
 
-def basename(name):
-    if name.rfind('\\')>=0 or name.rfind('/')>=0:
-        pos=max(name.rfind('\\'), name.rfind('/'))
-        name=name[pos+1:]
-    return name
-
-def stripext(name):
-    if name.rfind('.')>=0:
-        name=name[:name.rfind('.')]
-    return name
-
-def getext(name):
-    if name.rfind('.')>=0:
-        return name[name.rfind('.')+1:]
-    return ''
+basename=common.basename
+stripext=common.stripext
+getext=common.getext
 
 
 ###
@@ -1414,6 +1465,47 @@ class AnotherDialog(wx.Dialog):
         # ::TODO:: rest of these
         # fallthru
         return wx.ART_INFORMATION
+
+###
+### Utility code
+###
+
+def DrawTextWithLimit(dc, x, y, text, widthavailable, guardspace, term="..."):
+    """Draws text and if it will overflow the width available, truncates and  puts ... at the end
+
+    @param x: start position for text
+    @param y: start position for text
+    @param text: the string to draw
+    @param widthavailable: the total amount of space available
+    @param guardspace: if the text is longer than widthavailable then this amount of space is
+             reclaimed from the right handside and term put there instead.  Consequently
+             this value should be at least the width of term
+    @param term: the string that is placed in the guardspace if it gets truncated.  Make sure guardspace
+             is at least the width of this string!
+    @returns: The extent of the text that was drawn in the end as a tuple of (width, height)
+    """
+    w,h=dc.GetTextExtent(text)
+    if w<widthavailable:
+        dc.DrawText(text,x,y)
+        return w,h
+    extents=dc.GetPartialTextExtents(text)
+    limit=widthavailable-guardspace
+    # find out how many chars in we have to go before hitting limit
+    for i,offset in enumerate(extents):
+        if offset>limit:
+            break
+    text=text[:i]+term
+    w,h=dc.GetTextExtent(text)
+    assert w<=widthavailable
+    dc.DrawText(text, x, y)
+    return w,h
+    
+        
+
+###
+###  Window geometry/positioning memory
+###
+
 
 def set_size(confname, window, screenpct=50, aspect=1.0):
     """Sets remembered/calculated dimensions/position for window

@@ -447,10 +447,6 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_EDITSELECTALL, "Select All\tCtrl+A", "Select All")
         menu.Append(guihelper.ID_EDITADDENTRY, "New...\tCtrl+N", "Add an item")
         menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete\tDel", "Delete currently selected entry")
-        if guihelper.HasFullyFunctionalListView():
-            menu.AppendSeparator()
-            menu.Append(guihelper.ID_FV_ICONS, "View as Images", "Show items as images")
-            menu.Append(guihelper.ID_FV_LIST, "View As List", "Show items as a report")
         if guihelper.IsMac():
             wx.App_SetMacPreferencesMenuItemId(guihelper.ID_EDITSETTINGS)
             menu.Append(guihelper.ID_EDITSETTINGS, "&Preferences...", "Edit Settings")
@@ -500,14 +496,6 @@ class MainWindow(wx.Frame):
         # work around a bug on Linux that returns random (large) numbers
         if sz[0]<10 or sz[0]>100: sz=wx.Size(32,32)
 
-        if guihelper.HasFullyFunctionalListView():
-            # The art names are the opposite way round than people would normally describe ...
-            self.tb.AddLabelTool(guihelper.ID_FV_LIST, "List", wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_TOOLBAR, sz),
-                                  shortHelp="List View", longHelp="View items as a list")
-            self.tb.AddLabelTool(guihelper.ID_FV_ICONS, "Images", wx.ArtProvider_GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR, sz),
-                                  shortHelp="Icon View", longHelp="View items as icons")
-            self.tb.AddSeparator()
-
         # add and delete tools
         self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider_GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
                               shortHelp="Add", longHelp="Add an item")
@@ -532,8 +520,6 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
         wx.EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
         wx.EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
-        wx.EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
-        wx.EVT_MENU(self, guihelper.ID_FV_ICONS, self.OnFileViewIcons)
         wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.OnEditSelectAll)
@@ -559,8 +545,7 @@ class MainWindow(wx.Frame):
         self.configdlg.updatevariables()
         
         ### notebook
-        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
-        # wx.EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
+        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
 
         ### notebook tabs
         if self.config.ReadInt("console", 0):
@@ -612,7 +597,7 @@ class MainWindow(wx.Frame):
         else:
             self.nb.SetSelection(sel)
 
-        # Retrieve saved settings... Use 80% of screen if not specified
+        # Retrieve saved settings... Use 90% of screen if not specified
         guiwidgets.set_size("MainWin", self, screenpct=90)
 
         ### Lets go visible
@@ -781,7 +766,7 @@ class MainWindow(wx.Frame):
             updrng=True
             self.ringerwidget.populatefs(results)
             self.ringerwidget.populate(results)
-        # wallpaper-index
+        # ringtone-index
         if not updrng and results.has_key('ringtone-index'):
             self.ringerwidget.updateindex(results['ringtone-index'])            
         # calendar
@@ -918,9 +903,6 @@ class MainWindow(wx.Frame):
             self.config.Write("viewnotebookpage", text)
         # is ringers viewable?
         widget=self.nb.GetPage(self.nb.GetSelection())
-        if widget is self.ringerwidget:
-            enablefv=True
-        else: enablefv=False
         if widget is self.ringerwidget or \
            widget is self.wallpaperwidget or \
            widget is self.phonewidget:
@@ -928,15 +910,9 @@ class MainWindow(wx.Frame):
         else: enableedit=False
 
         # Toolbar
-        if guihelper.HasFullyFunctionalListView():
-            self.GetToolBar().EnableTool(guihelper.ID_FV_ICONS, enablefv)
-            self.GetToolBar().EnableTool(guihelper.ID_FV_LIST, enablefv)
         self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enableedit)
         self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enableedit)
         # menu items
-        if guihelper.HasFullyFunctionalListView():
-            self.GetMenuBar().Enable(guihelper.ID_FV_ICONS, enablefv)
-            self.GetMenuBar().Enable(guihelper.ID_FV_LIST, enablefv)
         self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enableedit)
         self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enableedit)
 
@@ -948,13 +924,6 @@ class MainWindow(wx.Frame):
         # select all
         self.GetMenuBar().Enable(guihelper.ID_EDITSELECTALL, hasattr(widget, "OnSelectAll"))
          
-    # Change how file viewer items are shown
-    def OnFileViewList(self, _):
-        self.nb.GetPage(self.nb.GetSelection()).setlistview()
-
-    def OnFileViewIcons(self, _):
-        self.nb.GetPage(self.nb.GetSelection()).seticonview()
-
     # add/delete entry in the current tab
     def OnEditAddEntry(self, evt):
         self.nb.GetPage(self.nb.GetSelection()).OnAdd(evt)
