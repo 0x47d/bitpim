@@ -101,11 +101,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # only one name
         res['names']=[ {'full': entry.name} ]
         # only one email
-        res['emails']=[]
         if len(entry.email):
             res['emails']=[ {'email': entry.email} ]
         # only one url
-        res['urls']=[]
         if len(entry.url):
             res['urls']=[ {'url': entry.url} ]
         # private
