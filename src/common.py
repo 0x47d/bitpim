@@ -468,3 +468,24 @@ def crcs(data, initial=0xffff):
     r=crc(data, initial)
     return "%c%c" % ( r& 0xff, (r>>8)&0xff)
 
+
+
+###
+### Pathname processing (independent of host OS)
+###
+
+def basename(name):
+    if name.rfind('\\')>=0 or name.rfind('/')>=0:
+        pos=max(name.rfind('\\'), name.rfind('/'))
+        name=name[pos+1:]
+    return name
+
+def stripext(name):
+    if name.rfind('.')>=0:
+        name=name[:name.rfind('.')]
+    return name
+
+def getext(name):
+    if name.rfind('.')>=0:
+        return name[name.rfind('.')+1:]
+    return ''
