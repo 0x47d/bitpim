@@ -203,17 +203,41 @@ class WorkerThreadFramework(threading.Thread):
         if self.dispatchto.wantlog:
             wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data))
 
-            
+
+###
+###  Splash screen
+###
+
+class MySplashScreen(wxSplashScreen):
+    def __init__(self):
+        bmp=getbitmap("splashscreen")
+        wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
+                                2000, # two seconds
+                                None, -1)
+    
 ####
 #### Main application class.  Runs the event loop etc
 ####            
 wxEVT_CALLBACK=None
-class MainApp(wxPySimpleApp):
-    def __init__(self, _):
+class MainApp(wxApp):
+    def __init__(self, *args):
+        wxApp.__init__(self, redirect=False, useBestVisual=True)
+        sys.setcheckinterval(100)
+        
+    def OnInit(self):
+        # Routine maintenance
+        wxInitAllImageHandlers()
+
+        # get the splash screen up
+        s=MySplashScreen()
+        s.Show()
+        self.Yield()
+
+        # Thread stuff
         global mainthreadid
         mainthreadid=thread.get_ident()
-        sys.setcheckinterval(100)
-        wxPySimpleApp.__init__(self)
+
+        # Establish config stuff
         cfgstr='bitpim'
         if IsMSWindows():
             cfgstr="BitPim"  # nicely capitalized on Windows
@@ -222,24 +246,31 @@ class MainApp(wxPySimpleApp):
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
 
+        # make the main frame
         frame=MainWindow(None, -1, "BitPim", self.config)
         frame.Connect(-1, -1, wxEVT_CALLBACK, frame.OnCallback)
+
+        # make the worker thread
         wt=WorkerThread()
         wt.setdispatch(frame)
         wt.setDaemon(1)
         wt.start()
         frame.wt=wt
         self.frame=frame
+        self.SetTopWindow(frame)
+        self.SetExitOnFrameDelete(True)
+        return True
 
-    def run(self):
-        self.MainLoop()
+    def OnExit(self):
+        print "onexit"
         sys.excepthook=sys.__excepthook__
         self.config.Flush()
 
 # Entry point
-def run(args):
-    m=MainApp(args)
-    return m.run()
+def run(*args):
+    m=MainApp(*args)
+    res=m.MainLoop()
+    return res
 
 ###
 ### Main Window (frame) class
@@ -266,7 +297,6 @@ class MainWindow(wxFrame):
         self.progmajortext=""
         self.lw=None
         self.lwdata=None
-        self.resdir=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
         self.filesystemwidget=None
         
         ### Status bar
@@ -331,8 +361,8 @@ class MainWindow(wxFrame):
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
         self.tb=self.CreateToolBar(wxTB_HORIZONTAL)
-        self.tb.AddSimpleTool(ID_FV_LIST, self.getbitmap('listview'), "List View", "View items as a list")
-        self.tb.AddSimpleTool(ID_FV_ICONS, self.getbitmap('report'), "Icon View", "View items as icons")
+        self.tb.AddSimpleTool(ID_FV_LIST, getbitmap('listview'), "List View", "View items as a list")
+        self.tb.AddSimpleTool(ID_FV_ICONS, getbitmap('report'), "Icon View", "View items as icons")
         # dunno why this call has to be there, but without it the toolbar doesn't draw
         self.tb.Realize()
 
@@ -617,16 +647,6 @@ class MainWindow(wxFrame):
     def OnEditDeleteEntry(self, evt):
         self.nb.GetPage(self.nb.GetSelection()).OnDelete(evt)
 
-    # images and other resources
-    def getbitmap(self,name):
-        if os.path.exists(self.getresourcefile(name+".png")):
-            return wxImage(self.getresourcefile(name+".png")).ConvertToBitmap()
-        print "You need to make "+name+".png"
-        return self.getbitmap('unknown')
-
-    def getresourcefile(self, filename):
-        return os.path.join(self.resdir, filename)
-        
     # Busy handling
     def OnBusyStart(self):
         self.SetStatusText("BUSY")
@@ -1119,28 +1139,72 @@ class FileSystemView(wxTreeCtrl):
             self.SetPyData(node, None)
         return node
 
+###
+### Various functions not attached to classes
+###
+
+# Filename functions.  These work on brew names which use forward slash /
+# as the directory delimiter.  The builtin Python functions can't be used
+# as they are platform specific (eg they use \ on Windows)
+
 def getextension(str):
+    """Returns the extension of a filename (characters after last period)
+
+    An empty string is returned if the file has no extension.  The period
+    character is not returned"""
     str=basename(str)
     if str.rfind('.')>=0:
         return str[str.rfind('.')+1:]
     return ""
 
 def basename(str):
+    """Returns the last part of the name (everything after last /)"""
     if str.rfind('/')<0: return str
     return str[str.rfind('/')+1:]
 
 def dirname(str):
+    """Returns everything before the last / in the name""" 
     if str.rfind('/')<0: return ""
     return str[:str.rfind('/')]
 
 def HasFullyFunctionalListView():
-    # can the list view be switched between icon view and report views
+    """Can the list view widget be switched between icon view and report views
+
+    @rtype: Bool"""
     if IsMSWindows():
         return True
     return False
 
 def IsMSWindows():
+    """Are we running on Windows?
+
+    @rtype: Bool"""
     return wxPlatform=='__WXMSW__'
 
 def IsGtk():
+    """Are we running on GTK (Linux)
+
+    @rtype: Bool"""
     return wxPlatform=='__WXGTK__'
+
+def getbitmap(name):
+    """Gets a bitmap from the resource directory
+
+    @rtype: wxBitmap
+    """
+    for ext in ("", ".png", ".jpg"):
+        if os.path.exists(getresourcefile(name+ext)):
+            return wxImage(getresourcefile(name+ext)).ConvertToBitmap()
+    print "You need to make "+name+".png"
+    return getbitmap('unknown')
+
+def getresourcefile(filename):
+    """Returns name of file by adding it to resource directory pathname
+
+    No attempt is made to verify the file exists
+    @rtype: string
+    """
+    return os.path.join(resourcedirectory, filename)
+
+# Where to find bitmaps etc
+resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
