@@ -42,6 +42,8 @@ class Phone(com_sanyo.Phone):
                        'Johnny Comes..', 'Foster Ky. Home', 'Asian Jingle',
                        'Disco', 'Toy Box', 'Rodeo' )
 
+    calendar_defaultringtone=4
+
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
@@ -113,9 +115,9 @@ class Profile(com_sanyo.Profile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-#        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-#        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
     )
 
     def __init__(self):
