@@ -34,7 +34,7 @@ class WallpaperView(guiwidgets.FileView):
     ID_IGNOREFILE=3
     
     def __init__(self, mainwindow, parent, id=-1):
-        guiwidgets.FileView.__init__(self, mainwindow, parent, id, style=wx.LC_ICON|wx.LC_SINGLE_SEL|wx.LC_AUTOARRANGE )
+        guiwidgets.FileView.__init__(self, mainwindow, parent, id, style=wx.LC_ICON)
         wx.FileSystem_AddHandler(BPFSHandler(self))
         if guihelper.HasFullyFunctionalListView():
             self.InsertColumn(2, "Size")
@@ -67,8 +67,39 @@ class WallpaperView(guiwidgets.FileView):
             return True
         return False
         
-    def getdata(self,dict):
+    def getdata(self,dict,want=guiwidgets.FileView.NONE):
         dict.update(self._data)
+        names=None
+        if want==self.SELECTED:
+            names=[]
+            for i in range(0,self.GetItemCount()):
+                if self.GetItemState(i, wx.LIST_MASK_STATE)&wx.LIST_STATE_SELECTED:
+                    names.append(self.GetItemText(i))
+            if len(names)==0:
+                want=self.ALL
+        if want==self.ALL:
+            names=[]
+            for i in range(0,self.GetItemCount()):
+                names.append(self.GetItemText(i))
+
+        if names is not None:
+            wp={}
+            i=0
+            for name in names:
+                file=os.path.join(self.mainwindow.wallpaperpath, name)
+                f=open(file, "rb")
+                data=f.read()
+                f.close()
+                wp[i]={'name': name, 'data': data}
+                for k in self._data['wallpaper-index']:
+                    if self._data['wallpaper-index'][k]['name']==name:
+                        v=self._data['wallpaper-index'][k].get("origin", "")
+                        if len(v):
+                            wp[i]['origin']=v
+                            break
+                i+=1
+            dict['wallpapers']=wp
+                
         return dict
 
     def GetImage(self, file):
@@ -85,14 +116,15 @@ class WallpaperView(guiwidgets.FileView):
         return image, int(os.stat(file).st_size)
 
     def updateindex(self, index):
-        self._data['wallpaper-index']=index
-        self.modified=True
+        if index!=self._data['wallpaper-index']:
+            self._data['wallpaper-index']=index
+            self.modified=True
         
     def populate(self, dict):
         self.DeleteAllItems()
-        self._data={}
-        self._data['wallpaper-index']=dict['wallpaper-index'].copy()
-        self.modified=True
+        if self._data['wallpaper-index']!=dict['wallpaper-index']:
+            self._data['wallpaper-index']=dict['wallpaper-index'].copy()
+            self.modified=True
         il=wx.ImageList(self.usewidth,self.useheight)
         self.AssignImageList(il, wx.IMAGE_LIST_NORMAL)
         count=0
@@ -102,8 +134,9 @@ class WallpaperView(guiwidgets.FileView):
             # ignore ones we don't have a file for
             entry=dict['wallpaper-index'][i]
             if not os.path.isfile(os.path.join(self.mainwindow.wallpaperpath, entry['name'])):
+                print "no file for",entry['name']
                 continue
-            
+
             # ImageList barfs big time when adding bmps that came from
             # gifs
             file=entry['name']
@@ -168,16 +201,31 @@ class WallpaperView(guiwidgets.FileView):
                 break
         self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), name)
 
+    def OnRefresh(self,_=None):
+        self.populate(self._data)
+
+    def AddToIndex(self, file):
+        for i in self._data['wallpaper-index']:
+            if self._data['wallpaper-index'][i]['name']==file:
+                return
+        keys=self._data['wallpaper-index'].keys()
+        idx=10000
+        while idx in keys:
+            idx+=1
+        self._data['wallpaper-index'][idx]={'name': file}
+        self.modified=True
+
     def OnAddFile(self, file):
         self.thedir=self.mainwindow.wallpaperpath
         # special handling for BCI files
         if self.isBCI(file):
-            target=os.path.join(self.thedir, os.path.basename(file))
+            target=os.path.join(self.thedir, os.path.basename(file).lower())
             src=open(file, "rb")
             dest=open(target, "wb")
             dest.write(src.read())
             dest.close()
             src.close()
+            self.AddToIndex(os.path.basename(file).lower())
             self.OnRefresh()
             return
         img=wx.Image(file)
@@ -205,12 +253,12 @@ class WallpaperView(guiwidgets.FileView):
             sfactorw=self.usewidth*1.0/img.GetWidth()
             sfactorh=self.useheight*1.0/img.GetHeight()
             sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=img.GetWidth()*sfactor/1.0
-            newheight=img.GetHeight()*sfactor/1.0
+            newwidth=int(img.GetWidth()*sfactor/1.0)
+            newheight=int(img.GetHeight()*sfactor/1.0)
             self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
                                                             img.GetHeight(), newwidth,
                                                             newheight))
-            img.Rescale(int(newwidth), int(newheight))
+            img.Rescale(newwidth, newheight)
             # figure where to place image to centre it
             posx=self.usewidth-(self.usewidth+newwidth)/2
             posy=self.useheight-(self.useheight+newheight)/2
@@ -225,7 +273,8 @@ class WallpaperView(guiwidgets.FileView):
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             return
-            
+
+        self.AddToIndex(os.path.basename(target))
         self.OnRefresh()
 
     def populatefs(self, dict):
@@ -300,7 +349,7 @@ class BPFSHandler(wx.FileSystemHandler):
 
     def OpenBPUserImageFile(self, location, name, **kwargs):
         try:
-            image=self.wpm.GetImage(name)
+            image,_=self.wpm.GetImage(name)
         except IOError:
             return self.OpenBPImageFile(location, "wallpaper.png", **kwargs)
         return BPFSImageFile(self, location, img=image, **kwargs)
@@ -341,7 +390,6 @@ class BPFSImageFile(wx.FSFile):
             red=int(bgcolor[0:2],16)
             green=int(bgcolor[2:4],16)
             blue=int(bgcolor[4:6],16)
-            print "bg is",red,green,blue
             mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(wx.Colour(red,green,blue), wx.SOLID))
         else:
             bgcolor=None
