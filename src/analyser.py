@@ -225,7 +225,6 @@ class Analyser(wx.Frame):
             # highlight till end byte which is on this row
             howmany=end-offset
             offsetmod=offset%16
-            called+=1
             # hexes
             self.hex.SetStyle(line+9+offsetmod*3, line+9+(offsetmod+howmany)*3-1, self.highlightstyle)
             # and now the chars
