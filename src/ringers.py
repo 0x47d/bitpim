@@ -46,7 +46,6 @@ class RingerView(guiwidgets.FileView):
     def OnIdle(self, _):
         "Save out changed data"
         if self.modified:
-            print "Saving ringer information"
             self.modified=False
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes

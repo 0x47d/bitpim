@@ -597,7 +597,6 @@ class PhoneWidget(wx.Panel):
     def OnIdle(self, _):
         "We save out changed data"
         if self.modified:
-            print "Saving phonebook"
             self.modified=False
             self.populatefs(self.getdata({}))
 
