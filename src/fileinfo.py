@@ -22,31 +22,27 @@ class FailedFile:
 class SafeFileWrapper:
     """Wraps a file object letting you get various parts without exceptions"""
 
+    READAHEAD=1024
+
     def __init__(self, filename):
         try:
             self.file=open(filename, "rb")
             self.size=os.stat(filename).st_size
-            self.data=self.file.read(1024)
-            self.offset=len(self.data)
+            self.data=self.file.read(self.READAHEAD)
         except (OSError,IOError):
             # change our class
             self.size=-1
             self.__class__=FailedFile
 
-    def EnsureRange(self, offset, length):
-        if offset+length<=len(self.data):
-            return True
-        if offset+length>self.size:
-            return False
-        more=self.file.read(offset+length-self.offset)
-        self.offset+=len(more)
-        self.data+=more
-        return offset+length<=len(self.data)
-
     def GetBytes(self, offset, length):
-        if not self.EnsureRange(offset, length):
+        if offset+length<len(self.data):
+            return self.data[offset:offset+length]
+        if offset+length>=self.size:
             return None
-        return self.data[offset:offset+length]
+        self.file.seek(offset)
+        res=self.file.read(length)
+        if len(res)<length: return None
+        return res
 
     def GetLSBUint32(self, offset):
         v=self.GetBytes(offset, 4)
@@ -74,7 +70,7 @@ class SafeFileWrapper:
         return ord(v)
 
 class ImgFileInfo:
-    "Wraps information about a file"
+    "Wraps information about an image file"
 
     # These will always be present
     attrnames=("width", "height", "format", "bpp", "size")
@@ -274,3 +270,284 @@ def identify_imagefile(filename):
         if obj is not None:
             return obj
     return ImgFileInfo(fo)
+
+class AudioFileInfo:
+    "Wraps information about an audio file"
+
+    # These will always be present
+    attrnames=("format", "size", "duration")
+
+    def __init__(self, f, **kwds):
+        for a in self.attrnames:
+            setattr(self, a, None)
+        self.size=f.size
+        self.__dict__.update(kwds)
+
+    def shortdescription(self):
+        v=getattr(self, "_shortdescription", None)
+        if v is not None:
+            return v(self)        
+        res=[]
+        if self.format is not None:
+            res.append( self.format)
+        if self.duration is not None:
+            res.append( "%d seconds" % (self.duration,))
+
+        if len(res):
+            return " ".join(res)
+        return "Unknown format"
+
+    def longdescription(self):
+        v=getattr(self, "_longdescription", None)
+        if v is not None:
+            return v(self)
+        return self.shortdescription()
+
+def idaudio_MIDI(f):
+    "Identify a midi file"
+    # http://www.borg.com/~jglatt/tech/midifile.htm
+    #
+    # You can't work out the length without working out
+    # which track is the longest which you have to do by
+    # parsing each note.
+    if f.GetBytes(0,4)=="MThd" and f.GetMSBUint32(4)==6:
+        d={'format': "MIDI"}
+        d['type']=f.GetMSBUint16(8)
+        d['numtracks']=f.GetMSBUint16(10)
+        d['division']=f.GetMSBUint16(12)
+        d['_shortdescription']=fmts_MIDI
+        for i in d.itervalues():
+            if i is None:  return None
+        afi=AudioFileInfo(f,**d)
+        return afi
+    return None
+
+def fmts_MIDI(afi):
+    res=[]
+    res.append( afi.format)
+    res.append( "type "+`afi.type`)
+    if afi.type!=0 and afi.numtracks>1:
+        res.append("(%d tracks)" % (afi.numtracks,))
+    # res.append("%04x" % (afi.division,))
+    return " ".join(res)
+
+def _getbits(start, length, value):
+    assert length>0
+    return (value>>(start-length+1)) & ((2**length)-1)
+
+def idaudio_MP3(f):
+    # http://mpgedit.org/mpgedit/mpeg_format/mpeghdr.htm
+
+    header=f.GetMSBUint32(0)
+
+    # there may be an id3 header at the begining
+    if header==0x49443303:
+        sz=[f.GetByte(x) for x in range(6,10)]
+        if len([zz for zz in sz if zz<0 or zz>=0x80]):
+            return None
+        sz=(sz[0]<<21)+(sz[1]<<14)+(sz[2]<<7)+sz[3]
+        offset=10+sz
+        idv3present=True
+        header=f.GetMSBUint32(offset)
+    else:
+        offset=0
+        idv3present=0
+
+    id3v1present=False
+
+    frames=[]
+    while offset<f.size:
+        if offset==f.size-128 and f.GetBytes(offset,3)==0x544147: # "TAG"
+            offset+=128
+            id3v1present=True
+            continue
+        frame=MP3Frame(f, offset)
+        if not frame.OK:  break
+        offset=frame.nextoffset
+        frames.append(frame)
+
+    if len(frames)==0: return
+
+    # copy some information from the first frame
+    f0=frames[0]
+    d={'format': 'MP3',
+       'version': f0.version,
+       'layer': f0.layer,
+       'bitrate': f0.bitrate,
+       'samplerate': f0.samplerate,
+       'channels': f0.channels,
+       'copyright': f0.copyright,
+       'original': f0.original}
+
+    duration=f0.duration
+    vbrmin=vbrmax=f0.bitrate
+    
+    for frame in frames[1:]:
+        duration+=frame.duration
+        if frame.bitrate!=f0.bitrate:
+            d['bitrate']=0
+        if frame.samplerate!=f0.samplerate:
+            d['samplerate']=0
+        if frame.channels!=f0.channels:
+            d['channels']=0
+        vbrmin=min(frame.bitrate,vbrmin)
+        vbrmax=max(frame.bitrate,vbrmax)
+      
+    d['duration']=duration
+    d['vbrmin']=vbrmin
+    d['vbrmax']=vbrmax
+    d['_longdescription']=fmt_MP3
+    d['_shortdescription']=fmts_MP3
+    
+
+    return AudioFileInfo(f, **d)
+
+def fmt_MP3(afi):
+    res=[]
+    res.append("MP3 (Mpeg Version %d Layer %d)" % (afi.version, afi.layer))
+    res.append("%s %.1f Khz %0.1f seconds" % (["Variable!!", "Mono", "Stereo"][afi.channels], afi.samplerate/1000.0, afi.duration,))
+    if afi.bitrate:
+        res.append(`afi.bitrate`+" kbps")
+    else:
+        res.append("VBR (min %d kbps, max %d kbps)" % (afi.vbrmin, afi.vbrmax))
+    if afi.copyright:
+        res.append("Marked as copyrighted")
+    if afi.original:
+        res.append("Marked as the original")
+
+    return "\n".join(res)
+
+def fmts_MP3(afi):
+    return "MP3 %s %dKhz %d sec" % (["Variable!!", "Mono", "Stereo"][afi.channels], afi.samplerate/1000.0, afi.duration,)
+
+
+class MP3Frame:
+
+    bitrates={
+        # (version, layer): bitrate mapping
+        (1, 1): [None, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, None],
+        (1, 2): [None, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, None],
+        (1, 3): [None, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, None],
+        (2, 1): [None, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, None],
+        (2, 2): [None,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, None],
+        (2, 3): [None,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, None],
+        }
+
+    samplerates={
+        1: [44100, 48000, 32000, None],
+        2: [22050, 24000, 16000, None]
+        }
+
+    def __init__(self, f, offset):
+        self.OK=False
+        header=f.GetMSBUint32(offset)
+        if header is None: return
+        # first 11 buts must all be set
+        if _getbits(31,11, header)!=2047:
+            return
+        self.header=header
+        # Version
+        version=_getbits(20,2,header)
+        if version not in (2,3):  # we don't support 'reserved' or version 2.5
+            return
+        if version==3: # yes, version 1 is encoded as 3
+            version=1
+        self.version=version
+        # Layer
+        layer=_getbits(18,2,header)
+        if layer==0: return # reserved which we don't support
+        if layer==1:
+            self.layer=3
+        elif layer==2:
+            self.layer=2
+        elif layer==3:
+            self.layer=1
+        self.crc=_getbits(16,1,header)
+        self.bitrate=self.bitrates[(self.version, self.layer)][_getbits(15,4,header)]
+        self.samplerate=self.samplerates[self.version][_getbits(11,2,header)]
+        self.padding=_getbits(9,1,header)
+        if self.layer==1:
+            self.framelength=(12*self.bitrate/(self.samplerate/1000.0)+self.padding)*4
+        else:
+            self.framelength=144*self.bitrate/(self.samplerate/1000.0)+self.padding
+        self.duration=self.framelength*8*1.0/(self.bitrate*1000)
+        self.framelength=int(self.framelength)
+        self.private=_getbits(8,1,header)
+        self.channelmode=_getbits(7,2,header)
+        if self.channelmode in (0,1,2):
+            self.channels=2
+        else:
+            self.channels=1
+        
+        self.modeextenstion=_getbits(5,2,header)
+        self.copyright=_getbits(3,1,header)
+        self.original=_getbits(2,1, header)
+        self.emphasis=_getbits(1,2, header)
+
+
+        self.offset=offset
+        self.nextoffset=offset+self.framelength
+        self.OK=True
+
+def idaudio_QCP(f):
+    "Identify a Qualcomm Purevoice file"
+    # http://www.faqs.org/rfcs/rfc3625.html
+    #
+    # Sigh, another format where you have no hope of being able to work out the length
+    if f.GetBytes(0,4)=="RIFF" and f.GetBytes(8,4)=="QLCM":
+        d={'format': "QCP"}
+        
+        # fmt section
+        if f.GetBytes(12,4)!="fmt ":
+            return None
+        # chunksize is at 16, len 4
+        d['qcpmajor']=f.GetByte(20)
+        d['qcpminor']=f.GetByte(21)
+        # guid is at 22
+        d['codecguid']=(f.GetLSBUint32(22), f.GetLSBUint16(26), f.GetLSBUint16(28), f.GetMSBUint16(30), (long(f.GetMSBUint16(32))<<32)+f.GetMSBUint32(34))
+        d['codecversion']=f.GetLSBUint16(38)
+        name=f.GetBytes(40,80)
+        zero=name.find('\x00')
+        if zero>=0:
+            name=name[:zero]
+        d['codecname']=name
+        d['averagebps']=f.GetLSBUint16(120)
+        # packetsize is at 122, len 2
+        # block size is at 124, len 2
+        d['samplingrate']=f.GetLSBUint16(126)
+        d['samplesize']=f.GetLSBUint16(128)
+
+        d['_longdescription']=fmt_QCP
+        for i in d.itervalues():
+            if i is None:  return None
+        afi=AudioFileInfo(f,**d)
+        return afi
+    return None
+
+def fmt_QCP(afi):
+    res=["QCP %s" % (afi.codecname,)]
+    res.append("%d bps %d Hz %d bits/sample" % (afi.averagebps, afi.samplingrate, afi.samplesize))
+    codecguid=afi.codecguid
+    if   codecguid==( 0x5e7f6d41, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97e ):
+        res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 1)")
+    elif codecguid==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97e ):
+        res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 2)")
+    elif codecguid==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4 ):
+        res.append("EVRC V"+`afi.codecversion`)
+    elif codecguid==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84 ):
+        res.append("SMV V"+`afi.codecversion`)
+    else:
+        res.append("Codec Guid {%08X-%04X-%04X-%04X-%012X} V%d" % (afi.codecguid+(afi.codecversion,)))
+    res.append("QCP File Version %d.%d" % (afi.qcpmajor, afi.qcpminor))
+    
+    return "\n".join(res)
+                  
+
+audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
+def identify_audiofile(filename):
+    fo=SafeFileWrapper(filename)
+    for f in audioids:
+        obj=f(fo)
+        if obj is not None:
+            return obj
+    return AudioFileInfo(fo)
