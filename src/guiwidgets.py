@@ -1017,6 +1017,17 @@ class Calendar(calendarcontrol.Calendar):
         dict['calendar']=self._data
         return dict
 
+    def updateonchange(self):
+        """Called when our data has changed
+
+        The disk, widget and display are all updated with the new data"""
+        d={}
+        d=self.getdata(d)
+        self.populatefs(d)
+        self.populate(d)
+        # Brute force - assume all entries have changed
+        self.RefreshAllEntries()
+
     def AddEntry(self, entry):
         """Adds and entry into the calendar data.
 
@@ -1028,10 +1039,7 @@ class Calendar(calendarcontrol.Calendar):
                      an entry that you then modify
         """
         self._data[entry['pos']]=entry
-        d={}
-        d=self.getdata(d)
-        self.populatefs(d)
-        self.populate(d)
+        self.updateonchange()
 
     def DeleteEntry(self, entry):
         """Deletes an entry from the calendar data.
@@ -1043,11 +1051,18 @@ class Calendar(calendarcontrol.Calendar):
                       corresponding to an existing entry
         """
         del self._data[entry['pos']]
-        d={}
-        d=self.getdata(d)
-        self.populatefs(d)
-        self.populate(d)
+        self.updateonchange()
 
+    def DeleteEntryRepeat(self, entry, year, month, day):
+        """Deletes a specific repeat of an entry
+
+        See L{DeleteEntry}"""
+        e=self._data[entry['pos']]
+        if not e.has_key('exceptions'):
+            e['exceptions']=[]
+        e['exceptions'].append( (year, month, day) )
+        self.updateonchange()
+        
     def ChangeEntry(self, oldentry, newentry):
         """Changes an entry in the calendar data.
 
@@ -1055,10 +1070,7 @@ class Calendar(calendarcontrol.Calendar):
         """
         assert oldentry['pos']==newentry['pos']
         self._data[newentry['pos']]=newentry
-        d={}
-        d=self.getdata(d)
-        self.populatefs(d)
-        self.populate(d)
+        self.updateonchange()
 
     def getentrydata(self, year, month, day):
         """return the entry objects for corresponding date
@@ -1156,6 +1168,7 @@ class Calendar(calendarcontrol.Calendar):
         return res
 
     def OnEdit(self, year, month, day):
+        """Called when the user wants to edit entries for a particular day"""
         if self.dialog.dirty:
             # user is editing a field so we don't allow edit
             wxBell()
@@ -1184,6 +1197,7 @@ class Calendar(calendarcontrol.Calendar):
         self.RefreshAllEntries()
 
     def populatefs(self, dict):
+        """Saves the dict to disk"""
         self.thedir=self.mainwindow.calendarpath
         try:
             os.makedirs(self.thedir)
@@ -1195,11 +1209,18 @@ class Calendar(calendarcontrol.Calendar):
             # delete them all!
             os.remove(os.path.join(self.thedir, f))
         f=open(os.path.join(self.thedir, "index.idx"), "wb")
-        f.write("result['calendar']="+`dict['calendar']`+"\n")
+        f.write("result['calendar']="+common.prettyprintdict(dict['calendar'])+"\n")
         f.close()
         return dict
 
     def getfromfs(self, dict):
+        """Updates dict with info from disk
+
+        @Note: The dictionary passed in is modified, as well
+        as returned
+        @rtype: dict
+        @param dict: the dictionary to update
+        @return: the updated dictionary"""
         self.thedir=self.mainwindow.calendarpath
         try:
             os.makedirs(self.thedir)
@@ -1218,7 +1239,8 @@ class Calendar(calendarcontrol.Calendar):
 
 class DayViewDialog(wxDialog):
     """Used to edit the entries on one particular day"""
-    
+
+    # ids for the various controls
     ID_PREV=1
     ID_NEXT=2
     ID_ADD=3
@@ -1233,7 +1255,14 @@ class DayViewDialog(wxDialog):
     ID_HELP=12
     ID_REVERT=13
 
+    # results on asking if the user wants to change the original (repeating) entry, just
+    # this instance, or cancel
+    ANSWER_ORIGINAL=1
+    ANSWER_THIS=2
+    ANSWER_CANCEL=3
+
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
+        # This method is a good illustration of why people use gui designers :-)
         self.cw=calendarwidget
         wxDialog.__init__(self, parent, id, title, style=wxDEFAULT_DIALOG_STYLE)
 
@@ -1353,24 +1382,51 @@ class DayViewDialog(wxDialog):
         self.ignoredirty=False 
         self.setdirty(False)
 
+    def AskAboutRepeatDelete(self):
+        """Asks the user if they wish to delete the original (repeating) entry, or this instance
+
+        @return: An C{ANSWER_} constant
+        """
+        dlg=wxMessageDialog(self, "Do you want to delete all the repeats?  Click Yes to remove all, No to delete just todays, or Cancel to make no changes",
+                            "Delete repeating event",
+                            wxYES_NO|wxCANCEL|wxNO_DEFAULT|wxICON_QUESTION)
+        res=dlg.ShowModal()
+        if res==wxID_YES:
+            return self.ANSWER_ORIGINAL
+        if res==wxID_NO:
+            return self.ANSWER_THIS
+        if res==wxID_CANCEL:
+            return self.ANSWER_CANCEL
 
     def OnListBoxItem(self, _=None):
-        self.updatefields(self.getentry(self.listbox.GetSelection()))
+        """Callback for when user clicks on an event in the listbox"""
+        self.updatefields(self.getcurrententry())
         self.setdirty(False)
         self.FindWindowById(self.ID_DELETE).Enable(True)
 
+    def getcurrententry(self):
+        """Returns the entry currently being viewed
+
+        @Note: this returns the unedited form of the entry"""
+        return self.getentry(self.listbox.GetSelection())
+
     def getentry(self, num):
-        # maps from entry number in listbox to an entry in entries
+        """maps from entry number in listbox to an entry in entries
+
+        @ptype num: int
+        @rtype: entry(dict)"""
         return self.entries[self.entrymap[num]]
 
     def OnSaveButton(self, _=None):
-        entry=self.getentry(self.listbox.GetSelection())
+        """Callback for when user presses save"""
+        entry=self.getcurrententry()
         newentry=copy.copy(entry)
         for f in self.fields:
             control=self.fields[f]
             if isinstance(control, DVTimeControl):
-                # we have to add back in the date
-                v=self.date+control.GetValue()
+                # we have to use original date in the entry
+                # combined with our new time
+                v=list(entry[f][0:3])+list(control.GetValue())
             else:
                 v=control.GetValue()
             newentry[f]=v
@@ -1378,7 +1434,6 @@ class DayViewDialog(wxDialog):
         self.setdirty(False)
         self.refreshentries()
         self.updatelistbox(newentry['pos'])
-
 
     def OnNewButton(self, _=None):
         entry=self.cw.newentryfactory(*self.date)
@@ -1392,6 +1447,14 @@ class DayViewDialog(wxDialog):
         self.OnListBoxItem()
 
     def OnDeleteButton(self, _=None):
+        entry=self.getcurrententry()
+        # is it a repeat?
+        res=self.ANSWER_ORIGINAL
+        if entry['repeat'] is not None:
+            # ask the user
+            res=self.AskAboutRepeatDelete()
+            if res==self.ANSWER_CANCEL:
+                return
         enum=self.listbox.GetSelection()
         if enum+1<len(self.entrymap):
             # try and find entry after current one
@@ -1401,7 +1464,10 @@ class DayViewDialog(wxDialog):
             newpos=self.getentry(enum-1)['pos']
         else:
             newpos=None
-        self.cw.DeleteEntry(self.getentry(enum))
+        if res==self.ANSWER_ORIGINAL:
+            self.cw.DeleteEntry(entry)
+        else:
+            self.cw.DeleteEntryRepeat(entry, *self.date)
         self.refreshentries()
         self.updatelistbox(newpos)
         
@@ -1420,6 +1486,9 @@ class DayViewDialog(wxDialog):
         self.Show(False)
 
     def setdate(self, year, month, day):
+        """Sets the date we are editing entries for
+
+        @Note: The list of entries is updated"""
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
         self.date=year,month,day
         self.title.SetLabel(d)
@@ -1428,6 +1497,7 @@ class DayViewDialog(wxDialog):
         self.updatefields(None)
 
     def refreshentries(self):
+        """re-requests the list of entries for the currently visible date from the main calendar"""
         self.entries=self.cw.getentrydata(*self.date)
 
     def updatelistbox(self, entrytoselect=None):
@@ -1503,6 +1573,9 @@ class DayViewDialog(wxDialog):
     def setdirty(self, val):
         """Set the dirty flag
 
+        The various buttons in the dialog are enabled/disabled as appropriate
+        for the new state.
+        
         @type  val: Bool
         @param val: True to mark edit fields as different from entry (ie
                     editing has taken place)
@@ -1547,7 +1620,7 @@ class DayViewDialog(wxDialog):
 
 
 class DVTimeControl(wxPanel):
-    # A time control customised to work in the dayview editor
+    """A time control customised to work in the dayview editor"""
     def __init__(self,parent,id):
         wxPanel.__init__(self, parent, -1)
         self.tc=wxTimeCtrl(self, id, display_seconds=False)
@@ -1570,11 +1643,11 @@ class DVTimeControl(wxPanel):
 
     def GetValue(self):
         t=self.tc.GetValue(as_wxDateTime=True)
-        return t.GetHour(), t.GetMinute()
+        return [t.GetHour(), t.GetMinute()]
         
     
 class DVRepeatControl(wxChoice):
-    # shows the repeat values
+    """Shows the calendar repeat values"""
     vals=[None, "daily", "monfri", "weekly", "monthly", "yearly"]
     desc=["None", "Daily", "Mon - Fri", "Weekly", "Monthly", "Yearly" ]
 
@@ -1624,12 +1697,14 @@ class DVTextControl(wxTextCtrl):
 from wxPython.lib.layoutf import Layoutf
 
 class FixedScrolledMessageDialog(wx.wxDialog):
-    def __init__(self, parent, msg, caption, pos = wxDefaultPosition, size = (800,600)):
+    """A dialog displaying a readonly text control with a fixed width font"""
+    def __init__(self, parent, msg, caption, pos = wxDefaultPosition, size = (850,600)):
         wxDialog.__init__(self, parent, -1, caption, pos, size,
                           style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxNO_FULL_REPAINT_ON_RESIZE)
         text = wxTextCtrl(self, 1,
                           style=wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 |
                           wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP  )
+        # Fixed width font
         f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
         ta=wxTextAttr(font=f)
         text.SetDefaultStyle(ta)
