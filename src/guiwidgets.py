@@ -73,7 +73,7 @@ class LogWindow(wx.Panel):
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
         wx.EVT_IDLE(self, self.OnIdle)
-        self.outstandingtext=""
+        self.outstandingtext=cStringIO.StringIO()
 
         wx.EVT_KEY_UP(self.tb, self.OnKeyUp)
 
@@ -81,30 +81,35 @@ class LogWindow(wx.Panel):
         self.tb.Clear()
 
     def OnIdle(self,_):
-        if len(self.outstandingtext):
+        if self.outstandingtext.tell():
             # this code is written to be re-entrant
-            newt=self.outstandingtext
-            self.outstandingtext=""
+            newt=self.outstandingtext.getvalue()
+            self.outstandingtext.seek(0)
+            self.outstandingtext.truncate()
             self.tb.AppendText(newt)
             self.tb.ScrollLines(-1)
 
-    def log(self, str):
+    def log(self, str, nl=True):
         now=time.time()
         t=time.localtime(now)
-        self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
+        self.outstandingtext.write("%d:%02d:%02d.%03d " % ( t[3], t[4], t[5],  int((now-int(now))*1000)))
+        self.outstandingtext.write(str)
+        if nl:
+            self.outstandingtext.write("\n")
 
     def logdata(self, str, data, klass=None):
-        hd=""
+        o=self.outstandingtext
+        self.log(str, nl=False)
         if data is not None:
-            hd="Data - "+`len(data)`+" bytes\n"
+            o.write(" Data - "+`len(data)`+" bytes\n")
             if klass is not None:
                 try:
-                    hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+                    o.write("<#! %s.%s !#>\n" % (klass.__module__, klass.__name__))
                 except:
                     klass=klass.__class__
-                    hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
-            hd+=common.datatohexstring(data)
-        self.log("%s %s" % (str, hd))
+                    o.write("<#! %s.%s !#>\n" % (klass.__module__, klass.__name__))
+            o.write(common.datatohexstring(data))
+        o.write("\n")
 
     def OnKeyUp(self, evt):
         keycode=evt.GetKeyCode()
@@ -302,6 +307,7 @@ class ConfigDialog(wx.Dialog):
     phonemodels={ 'Audiovox CDM-8900': 'com_audiovoxcdm8900',
                   'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
+                  'LG-VX4600': 'com_lgvx4600',
                   'LG-VX6000': 'com_lgvx6000',
                   # 'LG-TM520': 'com_lgtm520',
                   # 'LG-VX10': 'com_lgtm520',
