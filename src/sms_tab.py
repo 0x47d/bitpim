@@ -138,7 +138,6 @@ class FolderPage(wx.Panel):
         d=msg.data
         k=d.get('item', None)
         name=d.get('name', None)
-        print k, name
         if k is None:
             return
         self.__name_map[k]=name
@@ -262,8 +261,6 @@ class SMSWidget(wx.Panel):
                    getmajordictvalues(self.__data_key, sms.smsobjectfactory)
         r={}
         for k,e in sms_dict.items():
-            if __debug__:
-                print e
             ce=sms.SMSEntry()
             ce.set_db_dict(e)
             r[ce.id]=ce

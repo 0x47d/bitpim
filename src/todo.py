@@ -592,8 +592,6 @@ class TodoWidget(wx.Panel):
                    getmajordictvalues('todo',todoobjectfactory)
         r={}
         for k,e in todo_dict.items():
-            if __debug__:
-                print e
             ce=TodoEntry()
             ce.set_db_dict(e)
             r[ce.id]=ce
