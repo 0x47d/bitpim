@@ -46,23 +46,23 @@ class USBDevice:
     "Wraps a device"
 
     def __init__(self, usb_device):
+        self.usb=usb # save it so that it can't be GC before us
         self.dev=usb_device
         self.handle=usb.usb_open(self.dev)
         if self.handle is None:
             raise USBException()
 
     def __del__(self):
-        # this is often called after the USB module is unloaded
-        # so we don't worry about exceptions
-        try:
-            self.close()
-        except:
-            pass
+        self.close()
 
     def close(self):
         if self.handle is not None:
-            usb.usb_close(self.handle)
+            self.usb.usb_close(self.handle)
             self.handle=None
+        self.usb=None
+
+    def number(self):
+        return self.dev.bInterfaceNumber
 
     def name(self):
         return self.dev.filename
@@ -93,7 +93,7 @@ class USBDevice:
 
     def interfaces(self):
         for i in range(self.dev.config.bNumInterfaces):
-            yield USBInterface(usb.usb_interface_index(self.dev.config.interface, i))
+            yield USBInterface(self, usb.usb_interface_index(self.dev.config.interface, i))
         raise StopIteration()
 
     def classdetails(self):
@@ -105,8 +105,9 @@ class USBDevice:
 class USBInterface:
 
     # currently we only deal with first configuration
-    def __init__(self, iface):
+    def __init__(self, device, iface):
         self.iface=iface
+        self.device=device
         self.desc=iface.altsetting
 
     def number(self):
@@ -117,6 +118,39 @@ class USBInterface:
                self.desc.bInterfaceSubClass, \
                self.desc.bInterfaceProtocol
 
+    def openbulk(self):
+        "Returns a filelike object you can use to read and write"
+        # find the endpoints
+        epin=None
+        epout=None
+        for ep in self.endpoints():
+            if ep.isbulk():
+                if ep.direction()==ep.IN:
+                    epin=ep
+                else:
+                    epout=ep
+        assert epin is not None
+        assert epout is not None
+
+        # grab the interface
+        print "claiming"
+        res=usb.usb_claim_interface(self.device.handle, self.number())
+        if res<0:
+            raise USBException()
+
+        # set the configuration
+        print "getting configvalue"
+        v=self.device.dev.config.bConfigurationValue
+        print "value is",v,"now about to set config"
+        res=usb.usb_set_configuration(self.device.handle, v)
+        print "config set"
+        if res<0:
+            usb.usb_release_interface(self.device.handle, self.number())
+            raise USBException()
+
+        # we now have the file
+        return USBFile(self, epin, epout)
+        
     def endpoints(self):
        for i in range(self.desc.bNumEndpoints):
            yield USBEndpoint(usb.usb_endpoint_descriptor_index(self.desc.endpoint, i))
@@ -138,7 +172,7 @@ class USBEndpoint:
         return self.ep.bmAttributes&usb.USB_ENDPOINT_TYPE_MASK
 
     def address(self):
-        return self.ep.bEndpointAddress
+        return self.ep.bEndpointAddress&usb.USB_ENDPOINT_ADDRESS_MASK
 
     def maxpacketsize(self):
         return self.ep.wMaxPacketSize
@@ -150,7 +184,61 @@ class USBEndpoint:
         assert self.isbulk()
         return self.ep.bEndpointAddress&usb.USB_ENDPOINT_DIR_MASK
         
+class USBFile:
 
+    def __init__(self, iface, epin, epout):
+        self.usb=usb  # save this so that our destructor can run
+        self.claimed=True
+        self.iface=iface
+        self.epin=epin
+        self.epout=epout
+        self.addrin=epin.address()
+        self.addrout=epout.address()
+        self.insize=epin.maxpacketsize()
+        self.outsize=epout.maxpacketsize()
+
+    def __del__(self):
+        self.close()
+
+    def read(self,howmuch=1024, timeout=1000):
+        print "reading from addr",self.addrin
+        data=""
+        while howmuch>0:
+            res,str=usb.usb_bulk_read_wrapped(iface.device.handle, self.addrin, min(howmuch,self.insize), timeout)
+            if res<0:
+                if len(data)>0:
+                    return data
+                raise USBException()
+            if res==0:
+                return data
+            data+=str
+            howmuch-=len(str)
+
+        return data
+
+    def write(self, data, timeout=1000):
+        print "writing to addr",self.addrout
+        while len(data):
+            res=usb.usb_bulk_write(iface.device.handle, self.addrout, data[:min(len(data), self.outsize)], timeout)
+            if res<0:
+                raise USBException()
+            data=data[res:]
+            
+    def close(self):
+        if self.claimed:
+            self.usb.usb_release_interface(self.iface.device.handle, self.iface.number())
+        self.usb=None
+        self.claimed=False
+
+def OpenDevice(vendorid, productid, interfaceid):
+    for bus in AllBusses():
+        for device in bus.devices():
+            if device.vendor()==vendorid and device.product()==productid:
+                for iface in device.interfaces():
+                    if iface.number()==interfaceid:
+                        return iface.openbulk()
+    raise ValueError( "vendor 0x%x product 0x%x interface %d not found" % (vendorid, productid, interfaceid))
+        
     
 def classtostring(klass):
     "Returns the class as a string"
@@ -173,7 +261,7 @@ def AllBusses():
     raise StopIteration()
 
 # initialise
-usb.usb_set_debug(0)
+usb.usb_set_debug(255)
 usb.usb_init() # sadly no way to tell if this has failed
 
 if __name__=='__main__':
@@ -210,3 +298,12 @@ if __name__=='__main__':
                 print ""
             print ""
         print ""
+
+    print "opening device"
+    cell=OpenDevice(0x1004, 0x6000, 2)
+    print "device opened, about to write"
+    cell.write("\x59\x0c\xc4\xc1\x7e")
+    print "wrote, about to read"
+    res=cell.read(10)
+    print "read %d bytes" % (len(res),)
+    cell.close()
