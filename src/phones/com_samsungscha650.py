@@ -626,7 +626,15 @@ class Phone(com_samsung.Phone):
         r=m.save_media(result)
         result['rebootphone']=1
         return r
+    # DJP
+    def gettodo(self, result):
+        print 'gettodo'
+        return result
 
+    def savetodo(self, result, merge):
+        print 'savetodo'
+        return result
+    # DJP
     getmedia=None
 
 class Profile(com_samsung.Profile):
@@ -655,6 +663,8 @@ class Profile(com_samsung.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
+        ('todo', 'read', None),     # all todo list reading DJP
+        ('todo', 'write', 'OVERWRITE')  # all todo list writing DJP
         )
 
     def convertphonebooktophone(self, helper, data):
@@ -719,9 +729,6 @@ class FileEntries:
             # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
             for k1 in media:
-                if media[k1].get('origin', None) != self.__origin:
-                    continue
-                # self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
                 if media[k1]['name']==name:
                     found=True
                     break
@@ -734,7 +741,8 @@ class FileEntries:
         # writing new/existing files
         for k in media:
             try:
-                if media[k].get('origin', None) != self.__origin:
+                origin=media[k].get('origin', None)
+                if origin is not None and origin != self.__origin:
                     continue
                 name=self.__path+'/'+media[k]['name']
                 if name in dir_l:
@@ -746,3 +754,14 @@ class FileEntries:
             except:
                 self.__phone.report('Failed to write file: '+media[k]['name'])
         return result
+
+class TodoList:
+    def __init__(self, phone, data={}):
+        self.__phone=phone
+        self.__data=data
+
+    def read(self, result):
+        pass
+
+    def write(self, result):
+        pass
