@@ -16,7 +16,7 @@ import os
 import sys
 import time
 import copy
-import cStringIO
+import StringIO
 import getpass
 import sha,md5
 import zlib
@@ -73,7 +73,7 @@ class LogWindow(wx.Panel):
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
         wx.EVT_IDLE(self, self.OnIdle)
-        self.outstandingtext=cStringIO.StringIO()
+        self.outstandingtext=StringIO.StringIO()
 
         wx.EVT_KEY_UP(self.tb, self.OnKeyUp)
 
