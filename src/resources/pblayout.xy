@@ -56,6 +56,18 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 </table><br>
 <py-close/>
 
+<!-- Emails rows -->
+<py-open>if len(entry.get("emails", [])):</py-open>
+<table ${styles['table']}>
+<py-open>for rownum,email in zip(range(len(entry.get("emails",[]))),entry.get("emails",[])):</py-open>
+<tr ${styles['emailrow'][rownum%2]}>
+<td><code><a href="mailto:${email['email']}">${email['email']}</a></code></td>
+</tr>
+<py-close/>
+</table><br>
+<py-close/>
+
+
 
 <!-- URL rows -->
 <py-open>if len(entry.get("urls", [])):</py-open>

@@ -26,6 +26,7 @@ styles['urlpanel']='valign="top" bgcolor="#c2d4e6"'
 styles['memopanel']='valign="top" bgcolor="#91c37f"'
 
 styles['numberrow']=( 'valign="top" bgcolor="#99aabb"', 'valign="top" bgcolor="#bbaa99"' )
+styles['emailrow']=( 'valign="top" bgcolor="#aabb99"', 'valign="top" bgcolor="#d47f97"' )
 styles['address']=( 'valign="top" bgcolor="#c2d4e6"', 'valign="top" bgcolor="#7f97d4"')
 
 # Individual text lines
