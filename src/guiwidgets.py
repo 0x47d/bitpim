@@ -114,10 +114,24 @@ class LogWindow(wxPanel):
 ###
 
 class GetPhoneDialog(wxDialog):
-    strings= ('PhoneBook', 'Calendar', 'Wallpaper', 'Ringtone')
+    # sync sources ("Pretty Name", "name used to query profile")
+    sources= ( ('PhoneBook', 'phonebook'),
+                ('Calendar', 'calendar'),
+                ('Wallpaper', 'wallpaper'),
+                ('Ringtone', 'ringtone'))
+    
+    # actions ("Pretty Name", "name used to query profile")
+    actions = (  ("Get", "read"), )
+
+
+
     NOTREQUESTED=0
     MERGE=1
     OVERWRITE=2
+
+    # type of action ("pretty name", "name used to query profile")
+    types= ( ("Add", MERGE),
+             ("Replace", OVERWRITE))
 
     HELPID=helpids.ID_GET_PHONE_DATA
 
@@ -126,28 +140,35 @@ class GetPhoneDialog(wxDialog):
     def __init__(self, frame, title, id=-1):
         wxDialog.__init__(self, frame, id, title,
                           style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE)
-        gs=wxFlexGridSizer(6, 4,5 ,10)
+        gs=wxFlexGridSizer(2+len(self.sources), 2+len(self.types),5 ,10)
         gs.AddGrowableCol(1)
         gs.AddMany( [
-            (wxStaticText(self, -1, "Get"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Type"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Merge"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Replace"), 0, wxEXPAND)
-            ])
+            (wxStaticText(self, -1, self.actions[0][0]), 0, wxEXPAND),
+            (wxStaticText(self, -1, "Source"), 0, wxEXPAND)])
+
+        for pretty,_ in self.types:
+            gs.Add(wxStaticText(self, -1, pretty), 0, wxEXPAND)
+
+
         self.cb=[]
         self.rb=[]
-        for i in self.strings:
-            self.cb.append(wxCheckBox(self,-1, ""))
+
+        for desc, source in self.sources:
+            self.cb.append(wxCheckBox(self, -1, ""))
             gs.Add(self.cb[-1], 0, wxEXPAND)
-            gs.Add(wxStaticText(self,-1,i), 0, wxEXPAND|wxALIGN_CENTER_VERTICAL) # align needed for gtk
-            self.rb.append( [wxRadioButton(self, -1, "", style=wxRB_GROUP),
-                             wxRadioButton(self, -1, "")])
-            gs.Add(self.rb[-1][0], 0, wxEXPAND|wxALIGN_CENTRE)
-            gs.Add(self.rb[-1][1], 0, wxEXPAND|wxALIGN_CENTRE)
-            # merge not supported
-            self.rb[-1][0].Enable(False)
-            self.rb[-1][0].SetValue(False)
-            self.rb[-1][1].SetValue(True)
+            gs.Add(wxStaticText(self,-1,desc), 0, wxEXPAND|wxALIGN_CENTER_VERTICAL) # align needed for gtk
+            first=True
+            for tdesc,tval in self.types:
+                if first:
+                    style=wxRB_GROUP
+                    first=0
+                else:
+                    style=0
+                self.rb.append( wxRadioButton(self, -1, "", style=style) )
+                if not self._dowesupport(source, self.actions[0][1], tval):
+                    self.rb[-1].Enable(False)
+                    self.rb[-1].SetValue(False)
+                gs.Add(self.rb[-1], 0, wxEXPAND|wxALIGN_CENTRE)
 
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
@@ -160,48 +181,61 @@ class GetPhoneDialog(wxDialog):
         self.SetAutoLayout(True)
         bs.Fit(self)
 
-        # merge is supported for phonebook
-        self.rb[0][0].Enable(True)
-        self.rb[0][0].SetValue(True) # and set to true by default
-
         EVT_BUTTON(self, wxID_HELP, self.OnHelp)
 
-    def _setting(self, index):
-        if not self.cb[index].GetValue(): return self.NOTREQUESTED
-        if self.rb[index][0].GetValue(): return self. MERGE
-        return self.OVERWRITE
+    def _setting(self, type):
+        for index in range(len(self.sources)):
+            if self.sources[index][1]==type:
+                if not self.cb[index].GetValue():
+                    print type,"not requested"
+                    return self.NOTREQUESTED
+                for i in range(len(self.types)):
+                    if self.rb[index*len(self.types)+i].GetValue():
+                        print type,self.types[i][1]
+                        return self.types[i][1]
+                assert False, "No selection for "+type
+        assert False, "No such type "+type
 
     def GetPhoneBookSetting(self):
-        return self._setting(0)
+        return self._setting("phonebook")
 
     def GetCalendarSetting(self):
-        return self._setting(1)
+        return self._setting("calendar")
 
     def GetWallpaperSetting(self):
-        return self._setting(2)
+        return self._setting("wallpaper")
 
     def GetRingtoneSetting(self):
-        return self._setting(3)
+        return self._setting("ringtone")
 
     def OnHelp(self,_):
         wxGetApp().displayhelpid(self.HELPID)
 
+    # this is what BitPim itself supports - the phones may support a subset
+    _notsupported=(
+        ('phonebook', 'read', MERGE), # sort of is
+        ('calendar', 'read', MERGE),
+        ('wallpaper', 'read', MERGE),
+        ('ringtone', 'read', MERGE))
+
+    def _dowesupport(self, source, action, type):
+        if (source,action,type) in self._notsupported:
+            return False
+        return True
+
 class SendPhoneDialog(GetPhoneDialog):
     HELPID=helpids.ID_SEND_PHONE_DATA
+
+    # actions ("Pretty Name", "name used to query profile")
+    actions = (  ("Send", "write"), )
     
     def __init__(self, frame, title, id=-1):
         GetPhoneDialog.__init__(self, frame, title, id)
-        # turn all checkboxes off by default for writing
-        # we want user to explicitly write stuff they changed
-        for i in self.cb:
-            i.SetValue(False)
-        # We do support merge for wallpaper and ringtone
-        # but not phonebook
-        self.rb[0][0].Enable(False)
-        self.rb[0][0].SetValue(False)
-        self.rb[0][1].SetValue(True)
-        self.rb[2][0].Enable(True)
-        self.rb[3][0].Enable(True)
+
+    # this is what BitPim itself supports - the phones may support a subset
+    _notsupported=(
+        ('phonebook', 'write', GetPhoneDialog.MERGE),
+        ('calendar', 'write', GetPhoneDialog.MERGE))
         
 
 ###
