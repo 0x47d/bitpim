@@ -41,6 +41,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
 
     desc="LG-VX4400"
+    wallpaperindexfilename="download/dloadindex/brewImageIndex.map"
+    ringerindexfilename="download/dloadindex/brewRingerIndex.map"
+    protocolclass=p_lgvx4400
+    serialsname='lgvx4400'
     
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
@@ -67,7 +71,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # now read groups
      ##   self.log("Reading group information")
 ##        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-##        g=p_lgvx4400.pbgroups()
+##        g=self.protocolclass.pbgroups()
 ##        g.readfrombuffer(buf)
 ##        self.logdata("Groups read", buf.getdata(), g)
 ##        groups={}
@@ -76,10 +80,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 ##        results['groups']=groups
         # wallpaper index
         self.log("Reading wallpaper indices")
-        results['wallpaper-index']=self.getindex('dloadindex/brewImageIndex.map')
+        results['wallpaper-index']=self.getindex(self.wallpaperindexfilename)
         # ringtone index
         self.log("Reading ringtone indices")
-        results['ringtone-index']=self.getindex('dloadindex/brewRingerIndex.map')
+        results['ringtone-index']=self.getindex(self.ringerindexfilename)
         self.log("Fundamentals retrieved")
         return results
         
@@ -91,21 +95,21 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW)
         self.log("Reading number of phonebook entries")
-        req=p_lgvx4400.pbinforequest()
-        res=self.sendpbcommand(req, p_lgvx4400.pbinforesponse)
+        req=self.protocolclass.pbinforequest()
+        res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numentries=res.numentries
         self.log("There are %d entries" % (numentries,))
         for i in range(0, numentries):
             ### Read current entry
-            req=p_lgvx4400.pbreadentryrequest()
-            res=self.sendpbcommand(req, p_lgvx4400.pbreadentryresponse)
+            req=self.protocolclass.pbreadentryrequest()
+            res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             entry=self.extractphonebookentry(res.entry, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
-            req=p_lgvx4400.pbnextentryrequest()
-            self.sendpbcommand(req, p_lgvx4400.pbnextentryresponse)
+            req=self.protocolclass.pbnextentryrequest()
+            self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
@@ -123,16 +127,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
         # similar loop to reading
-        req=p_lgvx4400.pbinforequest()
-        res=self.sendpbcommand(req, p_lgvx4400.pbinforesponse)
+        req=self.protocolclass.pbinforequest()
+        res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numexistingentries=res.numentries
         progressmax=numexistingentries+len(data['phonebook'].keys())
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
         for i in range(0, numexistingentries):
             ### Read current entry
-            req=p_lgvx4400.pbreadentryrequest()
-            res=self.sendpbcommand(req, p_lgvx4400.pbreadentryresponse)
+            req=self.protocolclass.pbreadentryrequest()
+            res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             
             entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1,
                     'serial2': res.entry.serial2, 'name': res.entry.name}
@@ -141,8 +145,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             existingpbook[i]=entry 
             self.progress(progresscur, progressmax, "existing "+entry['name'])
             #### Advance to next entry
-            req=p_lgvx4400.pbnextentryrequest()
-            self.sendpbcommand(req, p_lgvx4400.pbnextentryresponse)
+            req=self.protocolclass.pbnextentryrequest()
+            self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
             progresscur+=1
         # we have now looped around back to begining
 
@@ -164,11 +168,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             numexistingentries-=1  # keep count right
             ii=existingpbook[i]
             self.log("Deleting entry "+`i`+" - "+ii['name'])
-            req=p_lgvx4400.pbdeleteentryrequest()
+            req=self.protocolclass.pbdeleteentryrequest()
             req.serial1=ii['serial1']
             req.serial2=ii['serial2']
             req.entrynumber=ii['number']
-            self.sendpbcommand(req, p_lgvx4400.pbdeleteentryresponse)
+            self.sendpbcommand(req, self.protocolclass.pbdeleteentryresponse)
             self.progress(progresscur, progressmax, "Deleting "+ii['name'])
             # also remove them from existingpbook
             del existingpbook[i]
@@ -187,9 +191,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             entry=self.makeentry(counter, ii, data)
             counter+=1
             existingserials.append(existingpbook[i]['serial1'])
-            req=p_lgvx4400.pbupdateentryrequest()
+            req=self.protocolclass.pbupdateentryrequest()
             req.entry=entry
-            res=self.sendpbcommand(req, p_lgvx4400.pbupdateentryresponse)
+            res=self.sendpbcommand(req, self.protocolclass.pbupdateentryresponse)
             newphonebook[counter-1]=self.extractphonebookentry(entry, data)
             assert ii['serial1']==res.serial1 # serial should stay the same
 
@@ -205,9 +209,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             counter+=1
             self.log("Appending entry "+ii['name'])
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            req=p_lgvx4400.pbappendentryrequest()
+            req=self.protocolclass.pbappendentryrequest()
             req.entry=entry
-            res=self.sendpbcommand(req, p_lgvx4400.pbappendentryresponse)
+            res=self.sendpbcommand(req, self.protocolclass.pbappendentryresponse)
             entry.serial1=res.newserial
             entry.serial2=res.newserial
             newphonebook[counter-1]=self.extractphonebookentry(entry, data)
@@ -227,7 +231,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res={}
         # Read exceptions file first
         buf=prototypes.buffer(self.getfilecontents("sch/schexception.dat"))
-        ex=p_lgvx4400.scheduleexceptionfile()
+        ex=self.protocolclass.scheduleexceptionfile()
         ex.readfrombuffer(buf)
         self.logdata("Calendar exceptions", buf.getdata(), ex)
         exceptions={}
@@ -239,7 +243,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         # Now read schedule
         buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
-        sc=p_lgvx4400.schedulefile()
+        sc=self.protocolclass.schedulefile()
         sc.readfrombuffer(buf)
         self.logdata("Calendar", buf.getdata(), sc)
         for event in sc.events:
@@ -269,8 +273,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     def savecalendar(self, dict, merge):
         # ::TODO:: obey merge param
         # what will be written to the files
-        eventsf=p_lgvx4400.schedulefile()
-        exceptionsf=p_lgvx4400.scheduleexceptionfile()
+        eventsf=self.protocolclass.schedulefile()
+        exceptionsf=self.protocolclass.scheduleexceptionfile()
 
         # what are we working with
         cal=dict['calendar']
@@ -285,7 +289,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for k in keys:
             # entry is what we will return to user
             entry=cal[k]
-            data=p_lgvx4400.scheduleevent()
+            data=self.protocolclass.scheduleevent()
             data.pos=eventsf.packetsize()
             entry['pos']=data.pos
             # simple copy of these fields
@@ -313,7 +317,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             # update exceptions if needbe
             if entry.has_key('exceptions'):
                 for y,m,d in entry['exceptions']:
-                    de=p_lgvx4400.scheduleexception()
+                    de=self.protocolclass.scheduleexception()
                     de.pos=data.pos
                     de.day=d
                     de.month=m
@@ -356,10 +360,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         writing=min(len(keys), maxentries)
         if len(keys)>maxentries:
             self.log("Warning:  You have too many entries (%d) for index %s.  Only writing out first %d." % (len(keys), indexfile, writing))
-        ifile=p_lgvx4400.indexfile()
-        ifile.maxitems=writing
+        ifile=self.protocolclass.indexfile()
+        ifile.numactiveitems=writing
         for i in keys[:writing]:
-            entry=p_lgvx4400.indexentry()
+            entry=self.protocolclass.indexentry()
             entry.index=i
             entry.name=index[i]
             ifile.items.append(entry)
@@ -371,8 +375,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     def getindex(self, indexfile):
         "Read an index file"
         index={}
-        buf=prototypes.buffer(self.getfilecontents(indexfile))
-        g=p_lgvx4400.indexfile()
+        try:
+            buf=prototypes.buffer(self.getfilecontents(indexfile))
+        except com_brew.BrewNoSuchFileException:
+            # file may not exist
+            return index
+        g=self.protocolclass.indexfile()
         g.readfrombuffer(buf)
         self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
         for i in range(g.maxitems):
@@ -401,7 +409,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return result
 
     def getwallpapers(self, result):
-        return self.getprettystuff(result, "brew/shared", "wallpaper", "dloadindex/brewImageIndex.map",
+        return self.getprettystuff(result, "brew/shared", "wallpaper", self.wallpaperindexfilename,
                                    "wallpaper-index")
 
     def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey, merge):
@@ -473,11 +481,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
 
     def savewallpapers(self, data, merge):
-        return self.saveprettystuff(data, "brew/shared", "dloadindex/brewImageIndex.map",
+        return self.saveprettystuff(data, "brew/shared", self.wallpaperindexfilename,
                                     'wallpaper', 'wallpaper-index', merge)
         
     def saveringtones(self,data, merge):
-        return self.saveprettystuff(data, "user/sound/ringer", "dloadindex/brewRingerIndex.map",
+        return self.saveprettystuff(data, "user/sound/ringer", self.ringerindexfilename,
                                     'ringtone', 'ringtone-index', merge)
 
 
@@ -505,14 +513,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return -1
 
     def getringtones(self, result):
-        return self.getprettystuff(result, "user/sound/ringer", "ringtone", "dloadindex/brewRingerIndex.map",
+        return self.getprettystuff(result, "user/sound/ringer", "ringtone", self.ringerindexfilename,
                                    "ringtone-index")
 
     def extractphonebookentry(self, entry, fundamentals):
         """Return a phonebook entry in BitPim format"""
         res={}
         # serials
-        res['serials']=[ {'sourcetype': 'lgvx4400', 'serial1': entry.serial1, 'serial2': entry.serial2,
+        res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.serial1, 'serial2': entry.serial2,
                           'sourceuniqueid': fundamentals['uniqueserial']} ] 
         # only one name
         res['names']=[ {'full': entry.name} ]
@@ -561,7 +569,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                     
     def makeentry(self, counter, entry, dict):
         # dict is unused at moment, will be used later to convert string ringtone/wallpaper to numbers
-        e=p_lgvx4400.pbentry()
+        e=self.protocolclass.pbentry()
         e.entrynumber=counter
         
         for k in entry:
@@ -595,6 +603,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
               'Can-Can', 'Sabre Dance', 'Magic Flute', 'Carmen' )
 
 class Profile:
+    serialsname='lgvx4400'
+
+    def __init__(self):
+        pass
 
     def makeone(self, list, default):
         "Returns one item long list"
@@ -648,8 +660,8 @@ class Profile:
                 e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=self.filllist(e['numbers'], 5, "")
 
-                serial1=helper.getserial(entry['serials'], 'lgvx4400', data['uniqueserial'], 'serial1', 0)
-                serial2=helper.getserial(entry['serials'], 'lgvx4400', data['uniqueserial'], 'serial2', serial1)
+                serial1=helper.getserial(entry['serials'], self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry['serials'], self.serialsname, data['uniqueserial'], 'serial2', serial1)
 
                 e['serial1']=serial1
                 e['serial2']=serial2
