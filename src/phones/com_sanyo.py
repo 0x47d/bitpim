@@ -15,6 +15,9 @@ import time
 import cStringIO
 import sha
 
+import os
+import tempfile
+
 import wx
 
 # BitPim modules
@@ -25,6 +28,7 @@ import prototypes
 import common
 import cStringIO
 import time
+import sys
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -67,19 +71,56 @@ class SanyoPhonebook:
         
     def convertto8bitpng(self, pngdata):
         "Convert a PNG file to 8bit color map"
-        orig=common.gettempfilename("png")
-        pnm=common.gettempfilename("pnm")
-        pnmquant=common.gettempfilename("pnm")
-        pngquant=common.gettempfilename("png")
-        f=open(orig, "wb")
-        f.write(pngdata)
-        f.close()
-        run("pngtopnm", orig, ">"+pnm)
-        run("pnmquant", "256", pnm, ">"+pnmquant)
-        run("pnmtopng", pnmquant, ">"+pngquant)
-        f=open(pngquant)
-        pngquantdata=f.read()
-        f.close
+        size=len(pngdata)
+        if size<16384:
+            return pngdata
+
+        p=sys.path[0]
+        if os.path.isfile(p):
+            p=os.path.dirname(p)
+        helpersdirectory=os.path.abspath(os.path.join(p, 'helpers'))
+        self.log("Helper Directory: "+helpersdirectory)
+        if sys.platform=='win32':
+            osext=".exe"
+        if sys.platform=='darwin':
+            osext=".mbin"
+        if sys.platform=='linux2':
+            osext=".lbin"
+        
+        pngtopnmbin=os.path.join(helpersdirectory,'pngtopnm')+osext
+        ppmquantbin=os.path.join(helpersdirectory,'ppmquant')+osext
+        pnmtopngbin=os.path.join(helpersdirectory,'pnmtopng')+osext
+        self.log("pngtopnm: "+pngtopnmbin)
+        self.log("ppmquant: "+ppmquantbin)
+        self.log("pnmtopng: "+pnmtopngbin)
+
+        # Binary search to find largest # of colors with a file size still
+        # less than 16384
+
+        ncolormax=257
+        ncolormin=1
+        ncolortry=256
+        ncolor=ncolortry
+
+        while size>=16384 or ncolormax-ncolor>1:
+            ncolor=ncolortry
+            pnm=common.gettempfilename("pnm")
+            f=os.popen(pngtopnmbin + '>'+pnm,'w')
+            f.write(pngdata)
+            f.close()
+            f = os.popen(ppmquantbin+' '+`ncolortry`+' '+pnm+ '|'+pnmtopngbin,'r')
+            pngquantdata=f.read()
+            f.close
+            os.remove(pnm)
+            size=len(pngquantdata)
+            self.log(`ncolor`+' '+`size`)
+            if size>=16384:
+                ncolormax=ncolor
+                ncolortry=(ncolor+ncolormin)/2
+            else:
+                ncolormin=ncolor
+                ncolortry=(ncolor+ncolormax)/2
+            
         return pngquantdata
         
     def getmediaindices(self, results):
@@ -808,6 +849,8 @@ class SanyoPhonebook:
                 continue # in theory we could rewrite .desc file in case index number has changed
             # dirname=stripext(efile)
 
+            if mediatype=='images':
+                content = self.convertto8bitpng(content)
             if not self.writesanyofile(efile, content):
                 errors=True
 
