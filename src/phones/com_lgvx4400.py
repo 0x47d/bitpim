@@ -16,6 +16,7 @@ import re
 import time
 import cStringIO
 import p_lgvx4400
+import p_brew
 import prototypes
 
 class BrewCommandException(Exception):
@@ -690,29 +691,33 @@ class Phone:
         desc="Reading "+file
 
         data=cStringIO.StringIO()
+
+        req=p_brew.readfilerequest()
+        req.filename=file
         
-        d=chr(len(file)+1)+file+"\x00"
-        res=self.sendbrewcommand(0x04, "\x00"+d)
-        size=readlsb(res[5:9])
-        numblocks=size/0x100
-        if size%0x100:
-            numblocks+=1
-        data.write(res[0xb:])
-        count=1
-        for i in range(1,numblocks):
-            if i%5==0:
-                self.progress(i,numblocks,desc)
-            res=self.sendbrewcommand(0x04, chr(count))
-            # loop count
-            count+=1
-            if count==0x100: count=1
-            # extract data
-            dsize=readlsb(res[0x5:0x7])
-            res=res[0x7:]
-            data.write(res[:dsize])
-        self.progress(numblocks,numblocks,desc)
+        res=self.newsendbrewcommand(req, p_brew.readfileresponse)
+        
+        filesize=res.filesize
+        data.write(res.data)
+
+        counter=0
+        while res.thereismore:
+            counter+=1
+            if counter>0xff:
+                counter=0x01
+            if counter%5==0:
+                self.progress(data.tell(), filesize, desc)
+            req=p_brew.readfileblockrequest()
+            req.blockcounter=counter
+            res=self.newsendbrewcommand(req, p_brew.readfileblockresponse)
+            data.write(res.data)
+
+        self.progress(1,1,desc)
+        
         data=data.getvalue()
-        self.log("expected size "+`size`+"  actual "+`len(data)`)
+        self.log("expected size "+`filesize`+"  actual "+`len(data)`)
+        assert filesize==len(data)
+        # ::todo:: throw fileintegrityexception if sizes don't match
         return data
 
     def raisecommsexception(self, str):
@@ -886,6 +891,29 @@ class Phone:
                 raise e
             self.raisecommsexception("using the phonebook")
             return None # keep pychecker happy
+        
+
+    def newsendbrewcommand(self, request, responseclass):
+        self.setmode(self.MODEBREW)
+        buffer=prototypes.buffer()
+        request.writetobuffer(buffer)
+        data=buffer.getvalue()
+        self.logdata("brew request", data, request)
+        data=self.escape(data+self.crcs(data))+self.terminator
+        try:
+            self.comm.write(data, log=False) # we logged above
+        except:
+            self.mode=self.MODENONE
+            raise
+        data=self.comm.readuntil(self.terminator, logsuccess=False)
+        self.comm.success=True
+        data=self.unescape(data)
+        data=data[:-3] # take off crc and terminator ::TODO:: check the crc
+        buffer=prototypes.buffer(data)
+        self.logdata("brew response", data, responseclass)
+        res=responseclass()
+        res.readfrombuffer(buffer)
+        return res
         
 
     def sendbrewcommand(self, cmd, data):
