@@ -12,6 +12,7 @@
 """Generate opinions on the attached com devices"""
 
 import comscan
+import usbscan
 import sys
 
 def diagnose(portlist):
@@ -86,6 +87,9 @@ def genhtml(port):
     keys.sort()
     for k in keys:
         # property
+        if k.startswith('usb-') and not k.endswith('string'):
+            # ignore these
+            continue
         res+="<tr><td>"+sfont+k+efont+"</td><td>\n"
         # value
         if k=='active' or k=='available':
@@ -132,12 +136,12 @@ def genhtml(port):
 
     return res
 
-# A list of USB vendor and product ids we look for
+# A list of USB vendor id, product id and interface we look for
 # These will move into the individual phone profiles ::TODO::
-usbdb=( ( 0x1004, 0x6000), # VID=LG Electronics, PID=LG VX4400 -internal USB interface
-        ( 0x1004, 0x6000), # VID=LG Electronics, PID=LG VX6000 -internal USB interface
-        ( 0x0474, 0x0701), # VID=Sanyo, PID=4900 internal USB interface
-        ( 0x067b, 0x2303), # VID=Prolific, PID=USB to serial
+usbdb=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400 -internal USB interface
+        ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX6000 -internal USB interface
+        ( 0x0474, 0x0701, 1), # VID=Sanyo, PID=4900 internal USB interface
+        ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
         )
 
             
@@ -146,7 +150,8 @@ def autoguessports():
     res=[]
     # we only care about available ports
     ports=filter(lambda x: x['available'], comscan.comscan())
-
+    ports=ports+filter(lambda x: x['available'], usbscan.usbscan())
+    
     # some special cases
     np=[]
     for p in ports:
@@ -159,9 +164,17 @@ def autoguessports():
     ports=np
 
     # look through usbdb
-    for vid,pid in usbdb:
+    for vid,pid,iface in usbdb:
         np=[]
         for p in ports:
+            if p.has_key("libusb"):
+                if p['usb-vendor']==vid and \
+                   p['usb-product']==pid and \
+                   p['usb-interface']==iface:
+                    res.append(p)
+                    continue
+                np.append(p)
+                continue
             if p.has_key('hardwareinstance'):
                 v=p['hardwareinstance'].lower()
                 str="vid_%04x&pid_%04x" % (vid,pid)
@@ -176,9 +189,9 @@ def autoguessports():
     # ports
 
     if sys.platform!='win32' and len(res)==0:
-        # not windows, so we just add anything that has 'usb' in it
+        # not windows, so we just add anything that has 'usb' in it for the name or driver
         for p in ports:
-            if p['name'].lower().find('usb')>0:
+            if p['name'].lower().find('usb')>0 or p.get("driver","").lower().find('usb')>=0:
                 res.append(p)
 
     # return ['com17', 'com1']+map(lambda x: x['name'], res)+['com12', 'com2']
