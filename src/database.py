@@ -24,16 +24,13 @@ else:
 # convert strings of digits into integers and screw them up).  We use
 # these as a workaround
 
-def _isstring(val):
-    return isinstance(val, (type(""), type(u"")))
-
 def _addsentinel(val):
-    if _isstring(val) and val.isdigit(): # this checks all chars
+    if isinstance(val, (str, unicode)) and val.isdigit(): # this checks all chars
         return "#@$%>"+val
     return val
 
 def _stripsentinel(val):
-    if _isstring(val) and val.startswith("#@$%>"):
+    if isinstance(val, (str, unicode)) and val.startswith("#@$%>"):
         return val[5:]
     return val
 
@@ -144,15 +141,12 @@ class Database:
 
     def sqlmany(self, statement, params):
         "Like cursor.executemany but it actually works"
-        # get another cursor
-        cursor=self.connection.cursor()
+        # non-new cursor implementation
+        res=[]
         for p in params:
-            if TRACE:
-                print "SQLM:",statement,p
-            cursor.execute(statement, p)
-            for res in cursor:
-                yield res
-
+            res.extend([row for row in self.sql(statement, p)])
+        return res
+            
     def doestableexist(self, tablename):
         return bool(self.sql("select count(*) from sqlite_master where type='table' and name=%s" % (sqlquote(tablename),)).next()[0])
 
@@ -236,6 +230,10 @@ class Database:
                         islist=record
                     else:
                         isnotlist=record
+                    # in devel code, we check every single value
+                    # in production, we just use the first we find
+                    if not __debug__:
+                        break
                 if islist is None and isnotlist is None:
                     # they have the key but no record has any values, so we ignore it
                     del dk[dk.index(m)]
@@ -250,39 +248,8 @@ class Database:
                     creates.append( (m, "indirect") )
                     continue
             if len(creates):
-                # alter the table to add the new fields - sqlite doesn't support alter table so we do it manually
-                dbtkeys=[(name,type) for _, name, type, in self.getcolumns(tablename)]
-                cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
-                for n,t in dbtkeys:
-                    if cmd[-1]!="(":
-                        cmd.append(",")
-                    cmd.append(idquote(n))
-                    cmd.append(t)
-                cmd.append(")")
-                self.sql(" ".join(cmd))
-                # copy the values into the temporary table
-                self.sql("insert into %s select * from %s" % (idquote("backup_"+tablename), idquote(tablename)))
-                # drop the source table
-                self.sql("drop table %s" % (idquote(tablename),))
-                # recreate the source table with new columns
-                del cmd[1] # remove temporary
-                cmd[2]=idquote(tablename) # change tablename
-                del cmd[-1] # remove trailing )
-                for n,t in creates:
-                    cmd.extend((',', idquote(n), t))
-                cmd.append(')')
-                self.sql(" ".join(cmd))
-                # put values back in
-                cmd=["insert into", idquote(tablename), '(']
-                for n,_ in dbtkeys:
-                    if cmd[-1]!="(":
-                        cmd.append(",")
-                    cmd.append(idquote(n))
-                cmd.extend([")", "select * from", idquote("backup_"+tablename)])
-                self.sql(" ".join(cmd))
+                self._altertable(tablename, creates, createindex=1)
 
-
-        
         # write out indirect values
         dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
         # for every indirect, we have to replace the value with a pointer
@@ -336,50 +303,29 @@ class Database:
         # are any missing?
         missing=[k for k in datakeys if k not in dbkeys]
         if len(missing):
-            dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
-            cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
-            for n,t in dbtkeys:
-                if cmd[-1]!="(":
-                    cmd.append(",")
-                cmd.append(idquote(n))
-                cmd.append(t)
-            cmd.append(")")
-            self.sql(" ".join(cmd))
-            # copy the values into the temporary table
-            self.sql("insert into %s select * from %s" % (idquote("backup_"+tablename), idquote(tablename)))
-            # drop the source table
-            self.sql("drop table %s" % (idquote(tablename),))
-            # recreate the source table with new columns
-            del cmd[1] # remove temporary
-            cmd[2]=idquote(tablename) # change tablename
-            del cmd[-1] # remove trailing )
-            for m in missing:
-                cmd.extend((',', idquote(m), "value"))
-            cmd.append(')')
-            self.sql(" ".join(cmd))
-            # put values back in
-            cmd=["insert into", idquote(tablename), '(']
-            for n,_ in dbtkeys:
-                if cmd[-1]!="(":
-                    cmd.append(",")
-                cmd.append(idquote(n))
-            cmd.extend([")", "select * from", idquote("backup_"+tablename)])
-            self.sql(" ".join(cmd))
+            self._altertable(tablename, [(m,"value") for m in missing], createindex=2)
         # for each row we now work out the indirect information
         for r in indirects:
             res=tablename+","
             for record in indirects[r]:
                 cmd=["select __rowid__ from", idquote(tablename), "where"]
                 params=[]
+                coals=[]
                 for d in datakeys:
-                    if cmd[-1]!="where":
-                        cmd.append("and")
                     v=record.get(d,None)
                     if v is None:
-                        cmd.extend([idquote(d), "isnull"])
+                        coals.append(idquote(d))
                     else:
-                        cmd.extend([idquote(d), "=", "?"])
+                        if cmd[-1]!="where":
+                            cmd.append("and")
+                        cmd.extend([idquote(d), "= ?"])
                         params.append(_addsentinel(v))
+                assert cmd[-1]!="where" # there must be at least one non-none column!
+                if len(coals)==1:
+                    cmd.extend(["and",coals[0],"isnull"])
+                elif len(coals)>1:
+                    cmd.extend(["and coalesce(",",".join(coals),") isnull"])
+
                 found=None
                 for found in self.sql(" ".join(cmd), params):
                     # get matching row
@@ -473,6 +419,60 @@ class Database:
         
     # savemajordict=ExclusiveWrapper(savemajordict)
 
+    def _altertable(self, tablename, columnstoadd, createindex=0):
+        """Alters the named table by adding the listed columns
+
+        @param tablename: name of the table to alter
+        @param columnstoadd: a list of (name,type) of the columns to add
+        @param createindex: what sort of index to create.  0 means none, 1 means on just __uid__ and 2 is on all data columns
+        """
+        # indexes are automatically dropped when table is dropped so we don't need to
+        dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
+        cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
+        for n,t in dbtkeys:
+            if cmd[-1]!="(":
+                cmd.append(",")
+            cmd.append(idquote(n))
+            cmd.append(t)
+        cmd.append(")")
+        self.sql(" ".join(cmd))
+        # copy the values into the temporary table
+        self.sql("insert into %s select * from %s" % (idquote("backup_"+tablename), idquote(tablename)))
+        # drop the source table
+        self.sql("drop table %s" % (idquote(tablename),))
+        # recreate the source table with new columns
+        del cmd[1] # remove temporary
+        cmd[2]=idquote(tablename) # change tablename
+        del cmd[-1] # remove trailing )
+        for n,t in columnstoadd:
+            cmd.extend((',', idquote(n), t))
+        cmd.append(')')
+        self.sql(" ".join(cmd))
+        # create index if needed
+        if createindex:
+            if createindex==1:
+                cmd=["create index", idquote("__index__"+tablename), "on", idquote(tablename), "(__uid__)"]
+            elif createindex==2:
+                cmd=["create index", idquote("__index__"+tablename), "on", idquote(tablename), "("]
+                cols=[]
+                for n,t in dbtkeys:
+                    if not n.startswith("__"):
+                        cols.append(idquote(n))
+                for n,t in columnstoadd:
+                    cols.append(idquote(n))
+                cmd.extend([",".join(cols), ")"])
+            else:
+                raise ValueError("bad createindex "+`createindex`)
+            self.sql(" ".join(cmd))
+        # put values back in
+        cmd=["insert into", idquote(tablename), '(']
+        for n,_ in dbtkeys:
+            if cmd[-1]!="(":
+                cmd.append(",")
+            cmd.append(idquote(n))
+        cmd.extend([")", "select * from", idquote("backup_"+tablename)])
+        self.sql(" ".join(cmd))        
+
 def extractbpserials(dict):
     """Changes dict keys to be the bitpim serial for each row"""
     res={}
@@ -493,14 +493,15 @@ if __name__=='__main__':
     import common
     import sys
     import time
+    import os
     
     # use the phonebook out of the examples directory
-    execfile("examples/phonebook-index.idx")
+    execfile(os.getenv("DBTESTFILE", "examples/phonebook-index.idx"))
 
     phonebookmaster=phonebook
 
     def testfunc():
-        global phonebook
+        global phonebook, TRACE
 
         db=Database(".", "testdb")
 
