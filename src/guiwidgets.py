@@ -854,7 +854,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         target=self # fallback
         t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
         if isinstance(t, FileView):
-            print "changing target in dragndrop"
+            # changing target in dragndrop
             target=t
         for f in filenames:
             target.OnAddFile(f)
