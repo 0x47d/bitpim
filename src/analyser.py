@@ -14,19 +14,20 @@
 import sys
 import re
 import traceback
-from wxPython.wx import *
+import wx
+import StringIO
 
 import common
 import prototypes
 
 import p_lgvx4400
 
-class Eventlist(wxListCtrl):
+class Eventlist(wx.ListCtrl):
     "List control showing the various events"
 
     def __init__(self, parent, id=-1, events=[]):
         self.events=events
-        wxListCtrl.__init__(self, parent, id, style=wxLC_REPORT|wxLC_VIRTUAL)
+        wx.ListCtrl.__init__(self, parent, id, style=wx.LC_REPORT|wx.LC_VIRTUAL)
         self.InsertColumn(0, "Time")
         self.InsertColumn(1, "Size")
         self.InsertColumn(2, "Class")
@@ -63,7 +64,7 @@ class Eventlist(wxListCtrl):
         
     
 
-class Analyser(wxFrame):
+class Analyser(wx.Frame):
     """A top level frame for analysing protocol data"""
 
     def __init__(self, parent=None, id=-1, title="BitPim Protocol Analyser", data=None):
@@ -71,26 +72,26 @@ class Analyser(wxFrame):
 
         @param data: data to show.  If None, then it will be obtained from the clipboard
         """
-        wxFrame.__init__(self, parent, id, title, size=(800,750),
-                         style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(self, parent, id, title, size=(800,750),
+                         style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
 
 
-        topsplit=wxSplitterWindow(self, -1, style=wxSP_3D|wxSP_LIVE_UPDATE)
+        topsplit=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
 
         self.list=Eventlist(topsplit, 12)
 
-        botsplit=wxSplitterWindow(topsplit, -1, style=wxSP_3D|wxSP_LIVE_UPDATE)
+        botsplit=wx.SplitterWindow(topsplit, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         topsplit.SplitHorizontally(self.list, botsplit, 300)
 
-        self.tree=wxTreeCtrl(botsplit, 23, style=wxTR_DEFAULT_STYLE)
-        self.hex=wxTextCtrl(botsplit, -1, style=wxTE_MULTILINE| wxTE_RICH2|wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP|wxTE_READONLY)
+        self.tree=wx.TreeCtrl(botsplit, 23, style=wx.TR_DEFAULT_STYLE)
+        self.hex=wx.TextCtrl(botsplit, -1, style=wx.TE_MULTILINE| wx.TE_RICH2|wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
         # Fixed width font
-        f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
-        ta=wxTextAttr(font=f)
+        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
+        ta=wx.TextAttr(font=f)
         self.hex.SetDefaultStyle(ta)
 
-        self.highlightstyle=wxTextAttr(font=f, colBack=wxColour(0xff,0xff,0))
-        self.errorstyle=wxTextAttr(font=f, colBack=wxColour(0xff,64,64))
+        self.highlightstyle=wx.TextAttr(font=f, colBack=wx.Colour(0xff,0xff,0))
+        self.errorstyle=wx.TextAttr(font=f, colBack=wx.Colour(0xff,64,64))
         self.dataline=0
 
         botsplit.SplitHorizontally(self.tree, self.hex, 200)
@@ -100,10 +101,10 @@ class Analyser(wxFrame):
 
         self.newdata(data)
 
-        EVT_LIST_ITEM_SELECTED(self, self.list.GetId(), self.OnListBoxItem)
-        EVT_LIST_ITEM_ACTIVATED(self, self.list.GetId(), self.OnListBoxItem)
+        wx.EVT_LIST_ITEM_SELECTED(self, self.list.GetId(), self.OnListBoxItem)
+        wx.EVT_LIST_ITEM_ACTIVATED(self, self.list.GetId(), self.OnListBoxItem)
 
-        EVT_TREE_SEL_CHANGED(self, self.tree.GetId(), self.OnTreeSelection)
+        wx.EVT_TREE_SEL_CHANGED(self, self.tree.GetId(), self.OnTreeSelection)
         
         self.Show()
 
@@ -152,6 +153,7 @@ class Analyser(wxFrame):
                 self.tree.SetPyData(root, obj.packetspan())
             except:
                 self.errorme("Object did not construct correctly")
+                # no return, we persevere
             self.addtreeitems(obj, root)
 
     def addtreeitems(self, obj, parent):
@@ -221,8 +223,10 @@ class Analyser(wxFrame):
     def errorme(self, desc, exception=None):
         "Put exception information into the hex pane and output traceback to console"
         if exception is not None:
-            self.hex.WriteText(exception.__str__()+" : ")
-            traceback.print_exc()
+            x=StringIO.StringIO()
+            print >>x,`exception`,
+            self.hex.WriteText(x.getvalue()+" : ")
+            print >>sys.stderr, common.formatexception()
         self.hex.WriteText(desc+"\n")
         for i,l in zip(range(10000), self.hex.GetValue().split("\n")):
             if len(l)>8 and l[:8]=='00000000':
@@ -232,12 +236,12 @@ class Analyser(wxFrame):
 
     def getclipboarddata(self):
         """Gets text data on clipboard"""
-        do=wxTextDataObject()
-        wxTheClipboard.Open()
-        success=wxTheClipboard.GetData(do)
-        wxTheClipboard.Close()
+        do=wx.TextDataObject()
+        wx.TheClipboard.Open()
+        success=wx.TheClipboard.GetData(do)
+        wx.TheClipboard.Close()
         if not success:
-            wxMessageBox("Whatever is in the clipboard isn't text", "No way Dude")
+            wx.MessageBox("Whatever is in the clipboard isn't text", "No way Dude")
             return ""
         return do.GetText()
 
@@ -326,7 +330,7 @@ class Analyser(wxFrame):
 
 
 if __name__=='__main__':
-    app=wxPySimpleApp()
+    app=wx.PySimpleApp()
     # Find the data source
     data=None
     if len(sys.argv)==2:
