@@ -108,7 +108,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     def pmode_off(self):
         try:
 	    self.comm.sendatcommand("#PMODE=0")
-	    return Truth
+	    return True
         except commport.ATError:
 	    return False
 
@@ -147,14 +147,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     def del_phone_entry(self, entry_index):
         try:
             s=self.comm.sendatcommand("#PBOKW=%d" % entry_index)
-            return Truth
+            return True
         except commport.ATError:
             return False
 
     def save_phone_entry(self, entry_str):
         try:
             s=self.comm.sendatcommand("#PBOKW="+entry_str)
-            return Truth
+            return True
         except commport.ATError:
             return False
 
