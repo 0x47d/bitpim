@@ -68,17 +68,19 @@ class SanyoPhonebook:
             pass
         return 0
         
-    def getsanyobuffer(self, startcommand, stopcommand, comment):
+    def getsanyobuffer(self, startcommand, buffersize, comment):
         # Read buffer parts and concatenate them together
         desc="Reading "+comment
-        buffersize=(stopcommand-startcommand+1)*500
         data=cStringIO.StringIO()
-        for command in range(startcommand, stopcommand+1):
+        bufp=0
+        command=startcommand
+        for offset in range(0, buffersize, 500):
             self.progress(data.tell(), buffersize, desc)
             req=p_sanyo.bufferpartrequest()
             req.header.command=command
             res=self.sendpbcommand(req, p_sanyo.bufferpartresponse);
             data.write(res.data)
+            command+=1
 
         self.progress(1,1,desc)
 
@@ -102,10 +104,14 @@ class SanyoPhonebook:
             block=block[:l]
             req.data=block
             command+=1
-            self.sendpbcommand(req, p_sanyo.bufferpartresponse)
-            time.sleep(.30)
+            self.sendpbcommand(req, p_sanyo.bufferpartresponse, writemode=True)
         
-    def sendpbcommand(self, request, responseclass, callsetmode=True):
+    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False):
+        if writemode:
+            numretry=2
+        else:
+            numretry=0
+            
         if callsetmode:
             self.setmode(self.MODEPHONEBOOK)
         buffer=prototypes.buffer()
@@ -116,8 +122,9 @@ class SanyoPhonebook:
         firsttwo=data[:2]
         try:
             self.comm.write(data, log=False) # we logged above
-            time.sleep(0.30)
-	    data=self.comm.readuntil(self.pbterminator, logsuccess=False)
+###            time.sleep(1.0)
+	    data=self.comm.readuntil(self.pbterminator, logsuccess=False, numfailures=numretry)
+###            time.sleep(1.0)
         except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsexception("manipulating the phonebook")
