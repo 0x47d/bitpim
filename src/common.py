@@ -44,6 +44,10 @@ class CommandExecutionFailed(Exception):
           self.retcode=retcode
           self.args=args
           
+class ConversionNotSupported(Exception):
+     def __init__(self, msg):
+          Exception.__init__(self, msg)
+          self.msg=msg
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):
@@ -269,16 +273,12 @@ def formatexception(excinfo=None, lastframes=8):
                     
 def gettempfilename(extension):
     "Returns a filename to be used for a temporary file"
-    try:
-        # safest Python 2.3 method
-        x=tempfile.NamedTemporaryFile(suffix="."+extension)
-        n=x.name
-        x.close()
-        del x
-        return n
-    except:
-        # Predictable python 2.2 method
-        return tempfile.mktemp("."+extension)
+    # safest Python 2.3 method
+    x=tempfile.NamedTemporaryFile(suffix="."+extension)
+    n=x.name
+    x.close()
+    del x
+    return n
 
 def getfullname(name):
      """Returns the object corresponding to name.
