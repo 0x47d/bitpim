@@ -42,6 +42,7 @@ import bpcalendar
 import bphtml
 import bitflingscan
 import database
+import memo
 
 ###
 ### Used to check our threading
@@ -636,7 +637,8 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.ringerwidget, "Ringers")
         self.calendarwidget=bpcalendar.Calendar(self, self.nb)
         self.nb.AddPage(self.calendarwidget, "Calendar")
-
+        self.memowidget=memo.MemoWidget(self, self.nb)
+        self.nb.AddPage(self.memowidget, "Memo")
 
         ### logwindow (last notebook tab)
         self.lw=guiwidgets.LogWindow(self.nb)
@@ -855,7 +857,12 @@ class MainWindow(wx.Frame):
             results['calendar_version']=self.phoneprofile.BP_Calendar_Version
             self.calendarwidget.populatefs(results)
             self.calendarwidget.populate(results)
-            
+        # memo
+        if results['sync'].has_key('memo'):
+            v=results['sync']['memo']
+            if v=='MERGE': raise Exception("Not implemented")
+            self.memowidget.populatefs(results)
+            self.memowidget.populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -915,7 +922,12 @@ class MainWindow(wx.Frame):
             # writing will modify serials so we need to update
             funcscb.append(self.phonewidget.updateserials)
 
-
+        ### Memo
+        v=dlg.GetMemoSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=v!=dlg.OVERWRITE
+            self.memowidget.getdata(data)
+            todo.append((self.wt.writememo, "Memo", merge))
 
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
@@ -952,6 +964,7 @@ class MainWindow(wx.Frame):
             self.wallpaperwidget.getfromfs(results)
             self.ringerwidget.getfromfs(results)
             self.calendarwidget.getfromfs(results)
+            self.memowidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -961,6 +974,8 @@ class MainWindow(wx.Frame):
             self.ringerwidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.calendarwidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.memowidget.populate(results)
             # close the splash screen if it is still up
             self.CloseSplashScreen()
         finally:
@@ -982,11 +997,8 @@ class MainWindow(wx.Frame):
             self.config.Write("viewnotebookpage", text)
         # does the page have editable properties?
         widget=self.nb.GetPage(self.nb.GetSelection())
-        if widget is self.ringerwidget or \
-           widget is self.wallpaperwidget or \
-           widget is self.phonewidget:
-            enableedit=True
-        else: enableedit=False
+        enable_add=hasattr(widget, "OnAdd")
+        enable_del=hasattr(widget, "OnDelete")
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
@@ -1003,11 +1015,11 @@ class MainWindow(wx.Frame):
         self.GetToolBar().Realize()
 
         # Toolbar
-        self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enableedit)
-        self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enableedit)
+        self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enable_add)
+        self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enable_del)
         # menu items
-        self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enableedit)
-        self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enableedit)
+        self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enable_add)
+        self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
 
         # View Columns .. is only in Phonebook
         self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
@@ -1251,7 +1263,8 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetPhoneBookSetting, self.commphone.getphonebook, "Phone Book", "phonebook"),
             (req.GetCalendarSetting, self.commphone.getcalendar, "Calendar", "calendar",),
             (req.GetWallpaperSetting, self.commphone.getwallpapers, "Wallpaper", "wallpaper"),
-            (req.GetRingtoneSetting, self.commphone.getringtones, "Ringtones", "ringtone")):
+            (req.GetRingtoneSetting, self.commphone.getringtones, "Ringtones", "ringtone"),
+            (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo")):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
@@ -1316,7 +1329,11 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savecalendar(data, merge)
-        
+
+    def writememo(self, data, merge):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.savememo(data, merge)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

@@ -144,7 +144,8 @@ class GetPhoneDialog(wx.Dialog):
     sources= ( ('PhoneBook', 'phonebook'),
                 ('Calendar', 'calendar'),
                 ('Wallpaper', 'wallpaper'),
-                ('Ringtone', 'ringtone'))
+                ('Ringtone', 'ringtone'),
+               ('Memo', 'memo'))
     
     # actions ("Pretty Name", "name used to query profile")
     actions = (  ("Get", "read"), )
@@ -229,6 +230,9 @@ class GetPhoneDialog(wx.Dialog):
     def GetRingtoneSetting(self):
         return self._setting("ringtone")
 
+    def GetMemoSetting(self):
+        return self._setting("memo")
+
     def OnHelp(self,_):
         wx.GetApp().displayhelpid(self.HELPID)
 
@@ -237,7 +241,8 @@ class GetPhoneDialog(wx.Dialog):
         # ('phonebook', 'read', MERGE), # sort of is
         ('calendar', 'read', MERGE),
         ('wallpaper', 'read', MERGE),
-        ('ringtone', 'read', MERGE))
+        ('ringtone', 'read', MERGE),
+        ('memo', 'read', MERGE))
 
     def _dowesupport(self, source, action, type):
         if (source,action,type) in self._notsupported:
