@@ -367,7 +367,7 @@ class ImportCSVDialog(wx.Dialog):
                         if type is not None:
                             u['type']=type
                         urls.append(u)
-                        del rec[key]
+                    del rec[key]
             if len(urls):
                 entry["urls"]=urls
             # categories
