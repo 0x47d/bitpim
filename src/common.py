@@ -118,9 +118,22 @@ def prettyprintdict(dictionary, indent=0):
      # print each key
      for k in keys:
           v=dictionary[k]
+          # is it a dict
           if isinstance(v, dict):
                res+="%s%s:\n%s\n" % (istr*indent, `k`, prettyprintdict(v, indent+1))
           else:
+               # is it a list of dicts?
+               if isinstance(v, list):
+                    dicts=0
+                    for item in v:
+                         if isinstance(item, dict):
+                              dicts+=1
+                    if dicts and dicts==len(v):
+                         res+="%s%s:\n%s[\n" % (istr*indent,`k`,istr*(indent+1))
+                         for item in v:
+                              res+=prettyprintdict(item, indent+2)
+                         res+="%s]\n" % (istr*(indent+1))
+                         continue
                res+="%s%s: %s,\n" % (istr*indent, `k`, `v`)
 
      # closing brace
