@@ -1,4 +1,4 @@
-maNotes on the AT command phonebook protocol used by various Samsung Phones.
+Notes on the AT command phonebook protocol used by various Samsung Phones.
 Thanks to the following individuals for loans or information about these phones
 
        John Sabato, Loan of SPH-8500
@@ -193,13 +193,32 @@ OK
 
 Slot, Entry #, Group, Ringer, Name, ?, ?, 6x(Num, Secret)
 
-Ringer=20 = downloaded ringer
+Ringers=20 = downloaded ringer, Single Tones, or 
+0-9: "Ring 1 - Ring 10"
+10: Fuer Elise
+11: Star Stripe
+12: Serenade
+13: Pop4
+14: Jazz_Full_Mel
+15: Rock
+16: Sunny day
+17: Rhythm & Blues
+18: Sax
+19: Boardwalk
+20: Default, Downloaded or single tone
+
+Wallpapers:
+0-21: Man 1 - Man 22
+10-24: Animal 1 - Animal 15
+20: Other 1 - Other 10
+20: Downloads, Picture wallet
+
 
 Scan through all comannds of for
 AT#PXXXY?
 AT#PXXXY=?
 Where X is A-Z
-and Y is A-Z expcept W
+and Y is A-Z except W
 
 #PBDYN?
 #PBDYN: 916-705-XXXX
@@ -585,10 +604,21 @@ matched. Strange. :)
 
 
 - Troy
+<<<<<<< samsungnotes.txt
+
+==========================================================================
+SCH-A460 Sprint
+
+Responds to AT$QCDMG, but does not seem to have a brew file system.
+Need to try qcplink protocol
+
+
+=======
 
 ==========================================================================
 
-SCH-N392  <nakeee@gmail.com>
+SCH-N392 - Pelephone (Israel)
+<nakeee@gmail.com>
 
 Phone model:
 
@@ -657,7 +687,7 @@ OK (only when ATQ0)
 Return ESN:
 
 AT+GSN
-+GSN: 288E7F54
++GSN: XXXXXXXX
 
 OK
 
