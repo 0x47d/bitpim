@@ -299,7 +299,6 @@ def AllBusses():
     raise StopIteration()
 
 # initialise
-usb.usb_set_debug(255)
 usb.usb_init() # sadly no way to tell if this has failed
 
 if __name__=='__main__':
