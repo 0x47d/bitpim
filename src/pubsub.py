@@ -7,8 +7,6 @@
 ###
 ### $Id$
 
-from wxPython.lib.pubsub import Publisher
-import weakref
 
 
 """The publish subscribe mechanism used to maintain lists of stuff.
@@ -20,6 +18,10 @@ topics in this file, and the automatic use of weakrefs to allow the right garbag
 collection to happen at the right moment, and most importantly is that callers
 don't need to implement a __del__ method to unsubscribe.
 """
+
+from wxPython.lib.pubsub import Publisher
+import weakref
+
 
 ###
 ### A list of topics
