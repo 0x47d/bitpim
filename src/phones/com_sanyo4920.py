@@ -67,9 +67,8 @@ class Profile(com_sanyonewer.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-        # Make sure reading is working OK before we turn on writes
-        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
     )
 
     def __init__(self):
