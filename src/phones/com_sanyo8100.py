@@ -38,6 +38,7 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
                        'Disco' )
 
     calendar_defaultringtone=4
+    NUM_MEDIA_DIRECTORIES=3
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
@@ -96,7 +97,7 @@ class Profile(com_sanyo.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-#        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
 #        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
 #        ('wallpaper', 'write', 'OVERWRITE'),
     )
