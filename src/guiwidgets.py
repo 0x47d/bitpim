@@ -21,8 +21,6 @@ import cStringIO
 import wx
 import wx.html
 import wx.lib.mixins.listctrl
-from wxPython.wx import wxGetDisplaySize
-from wxPython.wx import wxRect
 
 # my modules
 import common
@@ -1353,7 +1351,7 @@ def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
         screenpct = 100
     
     # Get screen size, scale according to percentage supplied
-    screenSize = wxGetDisplaySize()
+    screenSize = wx.GetDisplaySize()
     if (aspect >= 1):
         newWidth = screenSize.x * screenpct / 100
         newHeight = screenSize.y * screenpct / aspect / 100
@@ -1395,7 +1393,7 @@ def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
     if rs_y > screenSize.y:
         rs_y = screenSize.y - 50
     
-    newRect = wxRect(rs_x, rs_y, rs_width, rs_height)
+    newRect = wx.Rect(rs_x, rs_y, rs_width, rs_height)
     return newRect
 
 def save_size(confobj, confname, myRect):
