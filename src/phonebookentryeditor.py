@@ -27,7 +27,7 @@ class RingtoneEditor(wx.Panel):
 
     ID_LIST=wx.NewId()
 
-    _bordersize=5
+    _bordersize=3
 
     def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
@@ -89,6 +89,11 @@ class RingtoneEditor(wx.Panel):
         else:
             self.type.SetSelection(0)
 
+        # zero len?
+        if len(wp)==0:
+            self.ringtone.SetSelection(0)
+            return
+
         # try using straight forward name
         try:
             self.ringtone.SetStringSelection(wp)
@@ -114,8 +119,9 @@ class RingtoneEditor(wx.Panel):
             return res
         if rt.startswith(self.unknownselprefix):
             rt=rt[len(self.unknownselprefix):]
-        res['ringtone']=rt
-        res['use']=self.type.GetStringSelection()
+        if len(rt):
+            res['ringtone']=rt
+            res['use']=self.type.GetStringSelection()
         return res
         
         
@@ -128,7 +134,7 @@ class WallpaperEditor(wx.Panel):
 
     ID_LIST=wx.NewId()
 
-    _bordersize=5 # border inside HTML widget
+    _bordersize=3 # border inside HTML widget
     
     def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
@@ -190,8 +196,8 @@ class WallpaperEditor(wx.Panel):
             self.preview.SetPage('')
         else:
             w,h=self.preview.GetSizeTuple()
-            w-=2*self._bordersize+1
-            h-=2*self._bordersize+1
+            w-=3*self._bordersize
+            h-=3*self._bordersize
             self.preview.SetPage('<img src="bpuserimage:%s;width=%d;height=%d">' % (name,w,h))        
 
     def Set(self, data):
@@ -203,6 +209,10 @@ class WallpaperEditor(wx.Panel):
             self.type.SetSelection(1)
         else:
             self.type.SetSelection(0)
+
+        if len(wp)==0:
+            self.wallpaper.SetSelection(wp)
+            return
 
         # try using straight forward name
         try:
@@ -229,8 +239,9 @@ class WallpaperEditor(wx.Panel):
             return res
         if wp.startswith(self.unknownselprefix):
             wp=wp[len(self.unknownselprefix):]
-        res['wallpaper']=wp
-        res['use']=self.type.GetStringSelection()
+        if len(wp):
+            res['wallpaper']=wp
+            res['use']=self.type.GetStringSelection()
         return res
         
         
