@@ -128,7 +128,7 @@ class Phone(com_samsung_packet.Phone):
         results['wallpaper-index']=imagemedia
         return
         
-    def save_groups(self, data):
+    def savegroups(self, data):
         """Write the groups, sending only those groups that have had
         a name change.  (So that ringers don't get messed up)"""
         groups=data['groups']
@@ -144,8 +144,8 @@ class Phone(com_samsung_packet.Phone):
                     req=self.protocolclass.groupnamesetrequest()
                     req.gid=k
                     req.groupname=groups[k]['name']
-                    sendpbcommand(req, self.protocolclass.unparsedresponse)
-
+                    # Response will have ERROR, even though it works
+                    self.sendpbcommand(req, self.protocolclass.unparsedresponse, ignoreerror=True)
         
     def savephonebook(self, data):
         "Saves out the phonebook"
@@ -158,10 +158,12 @@ class Phone(com_samsung_packet.Phone):
     getringtones=None
     
 class Profile(com_samsung_packet.Profile):
-    serialsname='spha620'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     def __init__(self):
         com_samsung_packet.Profile.__init__(self)
+        self.numbertypetab=numbertypetab
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
