@@ -56,6 +56,20 @@ PACKET beginendupdateresponse:
     1 UINT command
     2 UINT beginend
 
+PACKET statusrequest:
+    1 UINT {'constant': 0x0c} +command
+
+PACKET statusresponse:
+    P UINT {'constant': 0x0} readyvalue
+    1 UINT command
+    7 UNKNOWN dunno1
+    1 UINT flag1
+    14 UNKNOWN dunno2
+    1 UINT ready
+    1 UINT dunno3
+    1 UINT flag3
+    * UNKNOWN unknown
+    
 PACKET phonenumberrequest:
     1 UINT {'constant': 0x26} +command1
     1 UINT {'constant': 0xb2} +command2
