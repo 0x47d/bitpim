@@ -52,18 +52,19 @@ image
 
 import common
 import zlib
+import cStringIO
 
-from wxPython.wx import *
+import wx
 
-class Display(wxFrame):
+class Display(wx.Frame):
     """Used for the builtin tester"""
 
     def __init__(self, file, parent=None):
-        bmp=wxBitmapFromImage(getimage(file))
+        bmp=wx.BitmapFromImage(getimage(FileInputStream(file)))
         
-        wxFrame.__init__(self, parent, -1, "Image Display")
+        wx.Frame.__init__(self, parent, -1, "Image Display")
 
-        b=wxStaticBitmap(self, -1, bmp)
+        b=wx.StaticBitmap(self, -1, bmp)
 
         b.SetSize((bmp.GetWidth(), bmp.GetHeight()))
         self.Fit()
@@ -92,12 +93,15 @@ class MyImage:
         self.data=data.getvalue()
         # print
 
-    def toImage(self):
+    def toImage(self, img=None):
         """Converts image to wxImage
 
         @rtype: wxImage
         """
-        img=wxEmptyImage(self.width, self.height)
+        if img is None:
+            img=wx.EmptyImage(self.width, self.height)
+        else:
+            img.Create(self.width, self.height)
         img.SetData(self.data)
         return img
         
@@ -113,12 +117,32 @@ class BCIPalette:
     def __getitem__(self,e):
         return self.pal[e]
 
-def getimage(file):
-    """Returns a wxImage of the file specified"""
+class ReadMethodFixup:
+    def Read(self, len):
+        res=cStringIO.StringIO()
+        while len>0 and not self.Eof():
+            res.write(self.GetC())
+            len-=1
+        return res.getvalue()
     
-    f=open(file, "rb")
-    data=f.read()
-    f.close()
+class MemoryInputStream(wx.InputStream, ReadMethodFixup):
+    def __init__(self, data):
+        import cStringIO
+        f=cStringIO.StringIO(data)
+        wx.InputStream.__init__(self,f)
+
+
+class FileInputStream(wx.InputStream, ReadMethodFixup):
+    def __init__(self, name):
+        f=open(name, "rb")
+        wx.InputStream.__init__(self,f)
+
+def getimage(stream, intoImage=None):
+    """Returns a wxImage of the stream specified"""
+
+    streamlen=stream.SeekI(0, wx.FromEnd)
+    stream.SeekI(0)
+    data=stream.Read(streamlen)
 
     # save hex version for debugging
     # f=open(file+".hex", "w")
@@ -194,7 +218,7 @@ def getimage(file):
 
         img=MyImage(width, height, res, palettes[id2])
     
-        return img.toImage()
+        return img.toImage(intoImage)
 
 def readlsb(data):
     """Read binary data in lsb"""
@@ -205,9 +229,47 @@ def readlsb(data):
         shift+=8
     return res
 
+wx.BITMAP_TYPE_BCI=73
+import wxPython.wx
+wxPython.wx.wxBIMAP_TYPE_BCI=73
+
+
+class BCIImageHandler(wx.ImageHandler):
+
+    def __init__(self):
+        wx.ImageHandler.__init__(self)
+        self.m_name="BREW Compressed Image"
+        self.m_extension="bci"
+        self.m_type=wx.BITMAP_TYPE_BCI
+        self.m_mimetype="image/x-brewcompressedimage"
+
+    def GetImageCount(self, _):
+        # ::TODO:: return multiple images
+        return 1
+
+    def GetMimeType(self):
+        return self.m_mimetype
+
+    def LoadFile(self, image, stream, verbose, index):
+        # try:
+        if 1:
+            getimage(stream, image)
+            return True
+        else:
+        #except:
+            return False
+
+try:
+    wx.Image_AddHandler(BCIImageHandler())
+except:
+    pass
+    
+
 if __name__=='__main__':
-    wxInitAllImageHandlers()
-    app=wxPySimpleApp()
+    import sys
+
+    wx.InitAllImageHandlers()
+    app=wx.PySimpleApp()
     if len(sys.argv)==2:
         f=Display(sys.argv[1])
     elif len(sys.argv)==3:
