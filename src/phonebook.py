@@ -965,12 +965,13 @@ class PhoneWidget(wx.Panel):
         return newl
 
 class ImportCellRenderer(wx.grid.PyGridCellRenderer):
+    SCALE=0.8
     def __init__(self):
         wx.grid.PyGridCellRenderer.__init__(self)
 
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 
-        #dc.SetClippingRect(rect)
+        dc.SetClippingRect(rect)
 
         # clear the background
         dc.SetBackgroundMode(wx.SOLID)
@@ -989,59 +990,14 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
         dc.SetBackgroundMode(wx.TRANSPARENT)
 
         text = grid.GetCellValue(row, col)
-        if text is not None and text!="":
-            origscale=dc.GetUserScale()
-            hdc=wx.html.HtmlDCRenderer()
-            hdc.SetDC(dc, 1)
-            hdc.SetSize(rect.width-2, 10000)
-            hdc.SetHtmlText(text.replace("\n", "<br>"))
-            hdc.Render(rect.x+2, rect.y+1, 0, False)
-            dc.SetUserScale(*origscale)
-            
-        #dc.DestroyClippingRegion()
+        bphtml.drawhtml(dc,
+                        wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
+                        text, scale=self.SCALE)
+        dc.DestroyClippingRegion()
 
     def GetBestSize(self, grid, attr, dc, row, col):
         text = grid.GetCellValue(row, col)
-
-        if text is None or text=="":
-            return wx.Size(10,10)
-
-        # an ugly hack - if there is no space in the value anywhere then the html widget doesn't wrap the line if
-        # it gets too narrow.  so we add an artificial space
-        if " " not in text: text+=" I"
-        
-        origscale=dc.GetUserScale()
-        # we now do a binary search to try to find the smallest width for which the height doesn't increase
-
-        widthlow=10
-        widthhigh=10000
-
-        height=20000
-
-        print text
-        while widthlow+1<widthhigh:
-            width=(widthlow+widthhigh)/2
-            print "trying",width,"low",widthlow,"high",widthhigh
-            hdc=wx.html.HtmlDCRenderer()
-            hdc.SetDC(dc, 1)
-            hdc.SetSize(width, 20000)
-            hdc.SetHtmlText(text.replace("\n", "<br>"))
-            newh=hdc.GetTotalHeight()
-            print "gives height",newh
-            dc.SetUserScale(*origscale) # restore scale
-            if height>newh:
-                height=newh
-                continue
-            if newh>height:
-                widthlow=width
-                continue
-            if newh<=height:
-                widthhigh=width
-                continue
-            
-            
-        return wx.Size(width, height)
-
+        return bphtml.getbestsize(dc, text, scale=self.SCALE)
 
     def Clone(self):
         return ImportCellRenderer()

@@ -27,6 +27,19 @@ import common
 ###  Enhanced HTML Widget
 ###
 
+_basefonts_gtk=[10,13,17,20,23,27,30]
+_basefonts_mac=[9,12,14,18,24,30,36]
+_basefonts_win=[7,8,10,12,16,22,30]
+
+def getbasefontsizes(scale=1.0):
+    if guihelper.IsGtk():
+        bf=_basefonts_gtk
+    elif guihelper.IsMac():
+        bf=_basefonts_mac
+    else:
+        bf=_basefonts_win
+    return [int(scale*sz) for sz in bf]
+
 class HTMLWindow(wx.html.HtmlWindow):
     """BitPim customised HTML Window
 
@@ -43,13 +56,7 @@ class HTMLWindow(wx.html.HtmlWindow):
         self.SetFontScale(relsize)
 
     def SetFontScale(self, scale):
-        if guihelper.IsGtk():
-            basefonts=[10,13,17,20,23,27,30] # Linux
-        elif guihelper.IsMac():
-            basefonts=[9,12,14,18,24,30,36]  # MacOSX - s/b NULL for defaults
-        else:
-            basefonts=[7,8,10,12,16,22,30]   # Windows/other
-        self.SetFonts("", "", [int(sz*scale) for sz in basefonts])
+        self.SetFonts("", "", getbasefontsizes(scale))
         # the html widget clears itself if you set the scale
         if len(self.thetext):
             wx.html.HtmlWindow.SetPage(self,self.thetext)
@@ -405,6 +412,68 @@ class HtmlEasyPrinting:
     def OnPreviewClose(self, event):
         guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
         event.Skip()
+
+# some seriously nasty coding ...
+def getbestsize(dc, html, basepath="", scale=1.0):
+    """Returns the best size for the html text using the supplied dc
+
+    @param html: html source
+    @param basepath: pathname for document base (eg where relative images
+        are loaded from"""
+
+    if html is None or html=="":
+        return wx.Size(10,10)
+
+    # an ugly hack - if there is no space in the value anywhere then
+    # the html widget doesn't wrap the line if it gets too narrow.  so
+    # we add an artificial space
+    if " " not in html: html+=" I"
+    
+    origscale=dc.GetUserScale()
+
+    # we now do a binary search to try to find the smallest width for
+    # which the height doesn't increase which indicates a word wrap
+    
+    widthlow=10
+    widthhigh=10000
+    
+    height=20000
+
+    while widthlow+1<widthhigh:
+        width=(widthlow+widthhigh)/2
+        hdc=wx.html.HtmlDCRenderer()
+        hdc.SetFonts("", "", getbasefontsizes(scale))
+        hdc.SetDC(dc, 1)
+        hdc.SetSize(width, 20000)
+        hdc.SetHtmlText(html, basepath)
+        newh=hdc.GetTotalHeight()
+        dc.SetUserScale(*origscale) # restore scale
+        if height>newh:
+            height=newh
+            continue
+        if newh>height:
+            widthlow=width
+            continue
+        if newh<=height:
+            widthhigh=width
+            continue
+
+    print "returning",width, height
+    return wx.Size(width, height)
+
+def drawhtml(dc, rect, html, basepath="", scale=1.0):
+    """Draw html into supplied dc and rect"""
+    if html is None or html=="":
+        return
+    origscale=dc.GetUserScale()
+    hdc=wx.html.HtmlDCRenderer()
+    hdc.SetFonts("", "", getbasefontsizes(scale))
+    hdc.SetDC(dc, 1)
+    hdc.SetSize(rect.width, 20000)
+    hdc.SetHtmlText(html, basepath)
+    hdc.Render(rect.x, rect.y, 0, False)
+    dc.SetUserScale(*origscale)
+
 
 # done down here to prevent circular imports
 import guiwidgets
