@@ -223,12 +223,85 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.setmode(self.MODEPHONEBOOK)
         g={}
         req=self.protocolclass.groupnamerequest()
-	for i in range(self.protocolclass.NUMGROUPS):
+	for i in range(self.protocolclass.NUMGROUPS+1):
             req.gid=i
             res=self.sendpbcommand(req, self.protocolclass.groupnameresponse)
             g[i]={'name': res[0].entry.groupname}
 	return g
 
+    def getphonebook(self, result):
+        """Read the phonebook data."""
+        pbook={}
+        self.setmode(self.MODEPHONEBOOK)
+
+        count=0
+        req=self.protocolclass.phonebookslotrequest()
+        lastname=""
+        for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
+            req.slot=slot
+            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
+            if len(res) > 0:
+                lastname=res[0].entry.name
+                self.log(`slot`+": "+lastname)
+                entry=self.extractphonebookentry(res[0].entry, result)
+                pbook[count]=entry
+                count+=1
+            self.progress(slot, self.protocolclass.NUMPHONEBOOKENTRIES, lastname)
+        
+        result['phonebook']=pbook
+        cats=[]
+        for i in result['groups']:
+            if result['groups'][i]['name']!='Unassigned':
+                cats.append(result['groups'][i]['name'])
+        result['categories']=cats
+        print "returning keys",result.keys()
+        
+        return pbook
+        
+    def extractphonebookentry(self, entry, fundamentals):
+        res={}
+
+        res['serials']=[ {'sourcetype': self.serialsname,
+                          'serial1': entry.slot, 'serial2': entry.uslot,
+                          'sourceuniqueid': fundamentals['uniqueserial']} ]
+        # only one name
+        res['names']=[ {'full': entry.name} ]
+        # only one category
+        cat=fundamentals['groups'].get(entry.group, {'name': "Unassigned"})['name']
+        if cat!="Unassigned":
+            res['categories']=[ {'category': cat} ]
+        # only one email
+        if len(entry.email):
+            res['emails']=[ {'email': entry.email} ]
+        # only one url
+        if len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
+
+        res['numbers']=[]
+        secret=0
+
+        numberindex=0
+        for type in self.numbertypetab:
+            if len(entry.numbers[numberindex].number):
+                res['numbers'].append({'number': entry.numbers[numberindex].number, 'type': type })
+                if entry.numbers[numberindex].secret==1:
+                    secret=1
+            numberindex+=1
+            
+        # Field after each number is secret flag.  Setting secret on
+        # phone sets secret flag for every defined phone number
+        res['flags']=[ {'secret': secret} ]
+
+        if entry.ringtone != 20:
+            tone=self.serialsname+"Index_"+`entry.ringtone`
+            res['ringtones']=[{'ringtone': tone, 'use': 'call'}]
+            
+        if entry.wallpaper != 20:
+            tone=self.serialsname+"Index_"+`entry.wallpaper`
+            res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
+            
+        return res
+    
     def get_phone_entry(self, entry_index, alias_column=-1, num_columns=-1):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
@@ -498,4 +571,53 @@ class Profile(com_phone.Profile):
 
     def __init__(self):
         com_phone.Profile.__init__(self)
+
+    def _getgroup(self, name, groups):
+        for key in groups:
+            if groups[key]['name']==name:
+                return key,groups[key]
+        return None,None
+        
+
+    def normalisegroups(self, helper, data):
+        "Assigns groups based on category data"
+
+        pad=[]
+        keys=data['groups'].keys()
+        keys.sort()
+        for k in keys:
+                if k==self.protocolclass.NUMGROUPS: # ignore key 4 which is 'Unassigned'
+                    name=data['groups'][k]['name']
+                    pad.append(name)
+
+        groups=helper.getmostpopularcategories(self.protocolclass.NUMGROUPS, data['phonebook'], ["Unassigned"], 12, pad)
+
+        # alpha sort
+        groups.sort()
+
+        # newgroups
+        newgroups={}
+
+        # Unassigned in 5th group
+        newgroups[self.protocolclass.NUMGROUPS]={'name': 'Unassigned'}
+
+        # populate
+        for name in groups:
+            # existing entries keep same key
+            if name=="Unassigned": continue
+            key,value=self._getgroup(name, data['groups'])
+            if key is not None:
+                newgroups[key]=value
+        # new entries get whatever numbers are free
+        for name in groups:
+            key,value=self._getgroup(name, newgroups)
+            if key is None:
+                for key in range(self.protocol.NUMGROUPS):
+                    if key not in newgroups:
+                        newgroups[key]={'name': name, 'icon': 1}
+                        break
+                       
+        # yay, done
+        if data['groups']!=newgroups:
+            data['groups']=newgroups
 
