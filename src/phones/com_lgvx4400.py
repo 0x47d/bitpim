@@ -85,26 +85,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         results['groups']=groups
         # wallpaper index
         self.log("Reading wallpaper indices")
-        buf=prototypes.buffer(self.getfilecontents("dloadindex/brewImageIndex.map"))
-        g=p_lgvx4400.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Wallpaper indices read", buf.getdata(), g)
-        papers={}
-        for i in range(g.maxitems):
-            if g.items[i].index!=0xffff:
-                papers[g.items[i].index]=g.items[i].name
-        results['wallpaper-index']=papers
+        results['wallpaper-index']=self.getindex('dloadindex/brewImageIndex.map')
         # ringtone index
         self.log("Reading ringtone indices")
-        buf=prototypes.buffer(self.getfilecontents("dloadindex/brewRingerIndex.map"))
-        g=p_lgvx4400.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Ringtone indices read", buf.getdata(), g)
-        ringers={}
-        for i in range(g.maxitems):
-            if g.items[i].index!=0xffff:
-                ringers[g.items[i].index]=g.items[i].name
-        results['ringtone-index']=ringers
+        results['ringtone-index']=self.getindex('dloadindex/brewRingerIndex.map')
         self.log("Fundamentals retrieved")
         return results
         
@@ -382,28 +366,28 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         writing=min(len(keys), maxentries)
         if len(keys)>maxentries:
             self.log("Warning:  You have too many entries (%d) for index %s.  Only writing out first %d." % (len(keys), indexfile, writing))
-        newdata=makelsb(writing,2)
+        ifile=p_lgvx4400.indexfile()
+        ifile.maxitems=writing
         for i in keys[:writing]:
-            newdata+=makelsb(i,2)
-            newdata+=makestring(index[i], 40)
-        for dummy in range(writing, maxentries):
-            newdata+="\xff\xff"
-            newdata+=makestring("", 40)
-        self.log("Writing %d index entries" % (writing,))
-        self.writefile(indexfile, newdata)
+            entry=p_lgvx4400.indexentry()
+            entry.index=i
+            entry.name=index[i]
+            ifile.items.append(entry)
+        buf=prototypes.buffer()
+        ifile.writetobuffer(buf)
+        self.logdata("Writing %d index entries to %s" % (writing,indexfile), buf.getvalue(), ifile)
+        self.writefile(indexfile, buf.getvalue())
 
     def getindex(self, indexfile):
-        # Read an index file
+        "Read an index file"
         index={}
-        data=self.getfilecontents(indexfile)
-        for i in range(0,(len(data)-2)/42):
-            offset=2+42*i
-            num=readlsb(data[offset:offset+2])
-            name=readstring(data[offset+2:offset+42])
-            if num==0xffff or len(name)==0:
-                continue
-            index[num]=name
-        self.log("There are %d index entries" % (len(index.keys()),))
+        buf=prototypes.buffer(self.getfilecontents(indexfile))
+        g=p_lgvx4400.indexfile()
+        g.readfrombuffer(buf)
+        self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+        for i in range(g.maxitems):
+            if g.items[i].index!=0xffff:
+                index[g.items[i].index]=g.items[i].name
         return index
         
     def getprettystuff(self, result, directory, datakey, indexfile, indexkey):
@@ -534,8 +518,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return self.getprettystuff(result, "user/sound/ringer", "ringtone", "dloadindex/brewRingerIndex.map",
                                    "ringtone-index")
 
-
-
     def extractphonebookentry(self, entry, fundamentals):
         """Return a phonebook entry in BitPim format"""
         res={}
@@ -605,102 +587,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
               'Silken Ladder', 'Nocturne', 'Csikos Post', 'Turkish March',
               'Mozart Aria', 'La Traviata', 'Rag Time', 'Radetzky March',
               'Can-Can', 'Sabre Dance', 'Magic Flute', 'Carmen' )
-
-
-        
-
-### Various random functions
-
-def readlsb(data):
-    # Read binary data in lsb
-    res=0
-    shift=0
-    for i in data:
-        res|=ord(i)<<shift
-        shift+=8
-    return res
-
-def makelsb(num, numbytes):
-    res=""
-    for dummy in range(0,numbytes):
-        res+=chr(num&0xff)
-        num>>=8
-    return res
-
-def readstring(data):
-    # reads null padded string
-    res=""
-    for i in data:
-        if i=='\x00':
-            return res
-        res=res+i
-    return res
-
-def makestring(str, length):
-    if len(str)>length:
-        raise Exception("name too long")
-    res=str
-    while len(res)<length:
-        res+="\x00"
-    return res
-
-def readhex(data):
-    # outputs binary data as hexstring
-    res=""
-    for i in data:
-        if len(res): res+=" "
-        res+="%02x" % (ord(i),)
-    return res
-
-def brewdecodedate(val):
-    """Unpack 32 bit value into date/time
-
-    @rtype: tuple
-    @return: (year, month, day, hour, minute)
-    """
-    min=val&0x3f # 6 bits
-    val>>=6
-    hour=val&0x1f # 5 bits (uses 24 hour clock)
-    val>>=5
-    day=val&0x1f # 5 bits
-    val>>=5
-    month=val&0xf # 4 bits
-    val>>=4
-    year=val&0xfff # 12 bits
-    return (year, month, day, hour, min)
-
-def brewencodedate(year, month, day, hour, minute):
-    """Pack date/time into 32 bit value
-
-    @rtype: int
-    """
-    if year>4095:
-        year=4095
-    val=year
-    val<<=4
-    val|=month
-    val<<=5
-    val|=day
-    val<<=5
-    val|=hour
-    val<<=6
-    val|=minute
-    return val
-
-# Some notes
-#
-# phonebook command numbers
-#
-# 0x15   get phone info (returns stuff about vx400 connector)
-# 0x00   start sync (phones display changes)
-# 0x11   select phonebook (goes back to first entry, returns how many left)
-# 0x12   advance one entry
-# 0x13   get current entry
-# 0x07   quit (phone will restart)
-# 0x06   ? parameters maybe
-# 0x05   delete entry
-# 0x04   write entry  (advances to next entry)
-# 0x03   append entry  (advances to next entry)
 
 class Profile:
 
