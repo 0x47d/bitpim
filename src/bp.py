@@ -49,6 +49,19 @@ if __name__ == '__main__':
         import warnings
         def ignorer(*args, **kwargs): pass
         warnings.showwarning=ignorer
+
+        # on windows we set stdout, stderr to do nothing objects otherwise there
+        # is an error after 4kb of output
+        class _donowt:
+            def __getattr__(self, _):
+                return self
+
+            def __call__(self, *args, **kwargs):
+                pass
+            
+        # heck, do it for all platforms
+        sys.stdout=_donowt()
+        sys.stderr=_donowt()
     
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
