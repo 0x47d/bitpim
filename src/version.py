@@ -57,7 +57,7 @@ author_email="rogerb@rogerbinns.com"
 url="http://www.bitpim.org"
 
 description="BitPim "+versionstring
-copyright="(C) 2003-2004 Roger Binns <rogerb@users.sf.net> and others - see http://www.bitpim.org"
+copyright="(C) 2003-2004 Roger Binns and others - see http://www.bitpim.org"
 
 if __name__=='__main__':
     import sys
