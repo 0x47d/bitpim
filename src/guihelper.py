@@ -76,7 +76,7 @@ ID_FV_REBOOTPHONE=1
 idmap={}
 # Start at 2 (if anything ends up being one then this code didn't spot it
 for idmapname in locals().keys():
-    if len(idmapname)>3 and idmapname[0:3]=='ID_':
+    if idmapname.startswith('ID_'):
         idnum=wx.NewId()
         # locals()[idmapname]=idnum
         exec "%s = %d" % (idmapname, idnum )
