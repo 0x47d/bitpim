@@ -33,6 +33,8 @@ NORINGTONE=0
 NOMSGRINGTONE=0
 NOWALLPAPER=0
 
+MEMOLENGTH=33
+
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
 
@@ -76,7 +78,7 @@ PACKET pbentry:
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    33 STRING {'raiseonunterminatedread': False} memo
+    * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype

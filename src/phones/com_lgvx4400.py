@@ -825,8 +825,8 @@ class Profile(com_phone.Profile):
                 # url
                 e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
 
-                # memo
-                e['memo']=helper.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
+                # memo (-1 is to leave space for null terminator - not all software puts it in, but we do)
+                e['memo']=helper.makeone(helper.getmemos(entry.get('memos', []), 0, 1, self.protocolclass.MEMOLENGTH-1), "")
 
                 # phone numbers
                 # there must be at least one email address or phonenumber

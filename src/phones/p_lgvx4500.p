@@ -32,6 +32,8 @@ MAXCALENDARDESCRIPTION=38
 
 NUMEMAILS=3
 NUMPHONENUMBERS=5
+
+MEMOLENGTH=65
 %}
 
 
@@ -73,7 +75,7 @@ PACKET pbentry:
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    65 STRING {'raiseonunterminatedread': False} memo
+    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype

@@ -33,6 +33,7 @@ MAXCALENDARDESCRIPTION=38
 NUMEMAILS=1
 NUMPHONENUMBERS=5
 
+MEMOLENGTH=49
 %}
 
 # desc file used for wallpaper and ringtone indices
@@ -66,7 +67,7 @@ PACKET pbentry:
     72 STRING {'raiseonunterminatedread': False} url
     2  UINT ringtone                                     "ringtone index for a call"
     1  BOOL secret
-    49 STRING {'raiseonunterminatedread': False} memo
+    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     2  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
