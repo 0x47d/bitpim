@@ -128,12 +128,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         
         for k in entry:
             # special treatment for lists
-            if k=='ringtones' or k=='wallpapers':
+            if k=='ringtones' or k=='wallpapers' or k=='numbertypes':
                 continue
             if k=='numbers':
-                for item in entry[k]:
-                    numberindex=item.numberindex
-                    e.numbers[numberindex].number=self.phonize(item.number)
+                for i in range(len(entry[k])):
+                    numberindex=entry['numbertypes'][i]
+                    print i,numberindex,entry[k][i]
+                    e.numbers[numberindex].number=self.phonize(entry[k][i])
                     e.numbers[numberindex].number_len=len(e.numbers[numberindex].number)
                 continue
             # everything else we just set
@@ -154,6 +155,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # We could save some writing by reading the phonebook slots first
         # and then only writing those that are different, but all the buffers
         # would still need to be written.
+        #
+        # Rightnow there is not distinguishing between add and replace
         newphonebook={}
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook in com_lgvx4400 for why this is necessary
@@ -172,12 +175,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         keys=pbook.keys()
         keys.sort()
 
-        progrsscur=0
+        progresscur=0
         progressmax=len(keys)+2+8+14 # Include the buffers
         self.log("Writing %d entries to phone" % (len(keys),))
         for i in keys:
             ii=pbook[i]
-            slot=ii['serial1'] # Or should we just use i for the slot
+            slot=ii['slot'] # Or should we just use i for the slot
             # Will depend on Profile to keep the serial numbers in range
             progresscur+=1
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
@@ -240,14 +243,15 @@ class Profile:
                     for i,t in zip(range(100),numbertypetab):
                         if type==t:
                             e['numbertypes'].append(i)
-                            break
-                    e['numbers'].append(num['number'])
+                            e['numbers'].append(num['number'])
 
-                serial1=helper.getserial(entry['serials'], 'sanyo4900', data['uniqueserial'], 'serial1', 0)
-                serial2=helper.getserial(entry['serials'], 'sanyo4900', data['uniqueserial'], 'serial2', serial1)
+                            break
+
+                serial1=helper.getserial(entry['serials'], 'scp4900', data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry['serials'], 'scp4900', data['uniqueserial'], 'serial2', serial1)
 
                 e['slot']=serial1
-                e['slotdump']=serial2
+                e['slotdup']=serial2
                 
                 e['ringtone']=helper.getringtone(entry['ringtones'], 'call', 0)
 
