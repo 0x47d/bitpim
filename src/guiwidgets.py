@@ -571,6 +571,7 @@ class MyFileDropTarget(wxFileDropTarget):
 
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
+    # File we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db' )
     
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL):
@@ -721,7 +722,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
         for f in os.listdir(self.thedir):
             # delete them all except windows magic ones which we ignore
-            if f in self.skiplist:
+            if f.lower() in self.skiplist:
                 os.remove(os.path.join(self.thedir, f))
         d=dict[key]
         for i in d:
@@ -997,8 +998,13 @@ class Calendar(calendarcontrol.Calendar):
         self.entrycache={}
         self.entries={}
         self.repeating=[]  # nb this is stored unsorted
-
+        self._data={}
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
+        self.dialog=DayViewDialog(self, self)
+
+    def getdata(self, dict):
+        dict['calendar']=self._data
+        return dict
         
     def OnGetEntries(self, year, month, day):
         res=self.entrycache.get( (year,month,day), None)
@@ -1049,14 +1055,19 @@ class Calendar(calendarcontrol.Calendar):
         if len(res):
             print year,month,day,`res`
         return res
+
+    def OnEdit(self, year, month, day):
+        
+        self.dialog.Show(True)
             
     def populate(self, dict):
+        self._data=dict['calendar']
         self.entrycache={}
         self.entries={}
         self.repeating=[]
 
-        for entry in dict['calendar']:
-            entry=dict['calendar'][entry]
+        for entry in self._data:
+            entry=self._data[entry]
             y,m,d,h,min=entry['start']
             if entry['repeat'] is None:
                 if not self.entries.has_key( (y,m,d) ): self.entries[(y,m,d)]=[]
@@ -1084,6 +1095,84 @@ class Calendar(calendarcontrol.Calendar):
         f.close()
         return dict
 
+    def getfromfs(self, dict):
+        self.thedir=self.mainwindow.calendarpath
+        try:
+            os.makedirs(self.thedir)
+        except:
+            pass
+        if not os.path.isdir(self.thedir):
+            raise Exception("Bad directory for calendar '"+self.thedir+"'")
+        if os.path.exists(os.path.join(self.thedir, "index.idx")):
+            d={'result': {}}
+            execfile(os.path.join(self.thedir, "index.idx"), d, d)
+            dict.update(d['result'])
+        else:
+            dict['calendar']={}
+        return dict
+
+
+class DayViewDialog(wxDialog):
+    ID_PREV=1
+    ID_NEXT=2
+    ID_ADD=3
+    ID_DELETE=4
+    ID_CLOSE=5
+    
+    def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
+        self.cw=calendarwidget
+        wxDialog.__init__(self, parent, id, title, style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+
+        vbs=wxBoxSizer(wxVERTICAL)
+        
+        prev=wxButton(self, self.ID_PREV, "<", style=wxBU_EXACTFIT)
+        next=wxButton(self, self.ID_NEXT, ">", style=wxBU_EXACTFIT)
+        self.title=wxStaticText(self, -1, "Date here", style=wxALIGN_CENTRE|wxST_NO_AUTORESIZE)
+
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        hbs.Add(prev, 0, wxEXPAND)
+        hbs.Add(self.title, 1, wxEXPAND)
+        hbs.Add(next, 0, wxEXPAND)
+        vbs.Add(hbs, 0, wxEXPAND)
+
+        # right hand bit with all fields
+        gs=wxFlexGridSizer(-1,2,5,5)
+        gs.AddGrowableCol(1)
+        self.fields={}
+        for desc,field in ( ('Description', 'description'), ('Start', 'start'), ('End', 'end'),
+                   ('Repeat', 'repeat'), ('Alarm', 'alarm'), ('Ringtone', 'ringtone'),
+                   ('?Internal', '?d') ):
+            t=wxStaticText(self, -1, desc, style=wxALIGN_LEFT)
+            gs.Add(t)
+            c=wxTextCtrl(self, len(self.fields)+10, "dummy")
+            gs.Add(c,0,wxEXPAND)
+            self.fields[field]=c
+                 
+        
+
+        self.listbox=wxListBox(self, -1, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
+        add=wxButton(self, self.ID_ADD, "Add")
+        delete=wxButton(self, self.ID_DELETE, "Delete")
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        hbs.Add(delete, 0)
+        hbs.Add(add, 0)
+
+        lbs=wxBoxSizer(wxVERTICAL)
+        lbs.Add(self.listbox, 1, wxEXPAND)
+        lbs.Add(hbs, 0, wxEXPAND)
+
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        hbs.Add(lbs, 1, wxEXPAND)
+        hbs.Add(gs, 2, wxEXPAND)
+
+
+        vbs.Add(hbs, 1, wxEXPAND)
+
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+        
+        
 ###
 ### Copied from wxPython.lib.dialogs.  This one is different in that it
 ### uses a larger text control (standard one on windows is limited to
