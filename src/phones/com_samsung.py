@@ -75,8 +75,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 	    return False
 	except:
             if __debug__:
-                self.log('Got an excepetion, re-raise')
-                raise
+                self.log('Got an excepetion')
             return False
 
     def _setmodebrew(self):

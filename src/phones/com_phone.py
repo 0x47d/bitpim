@@ -142,7 +142,8 @@ class Phone:
     def getmemo(self, result):
         return {}
 
-
+    def gettodo(self, result):
+        return {}
 
 class Profile:
 

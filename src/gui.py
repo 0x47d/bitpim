@@ -45,6 +45,7 @@ import bitflingscan
 import database
 import memo
 import update
+import todo
 
 ###
 ### Used to check our threading
@@ -670,6 +671,8 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.calendarwidget, "Calendar")
         self.memowidget=memo.MemoWidget(self, self.nb)
         self.nb.AddPage(self.memowidget, "Memo")
+        self.todowidget=todo.TodoWidget(self, self.nb)
+        self.nb.AddPage(self.todowidget, 'Todo')
 
         ### logwindow (last notebook tab)
         self.lw=guiwidgets.LogWindow(self.nb)
@@ -921,6 +924,12 @@ class MainWindow(wx.Frame):
             if v=='MERGE': raise Exception("Not implemented")
             self.memowidget.populatefs(results)
             self.memowidget.populate(results)
+        # todo
+        if results['sync'].has_key('todo'):
+            v=results['sync']['memo']
+            if v=='MERGE': raise NotImplementedError
+            self.todowidget.populatefs(results)
+            self.todowidget.populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -987,6 +996,13 @@ class MainWindow(wx.Frame):
             self.memowidget.getdata(data)
             todo.append((self.wt.writememo, "Memo", merge))
 
+        ### Todo
+        v=dlg.GetTodoSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=v!=dlg.OVERWRITE
+            self.todowidget.getdata(data)
+            todo.append((self.wt.writetodo, "Todo", merge))
+
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
@@ -1023,6 +1039,7 @@ class MainWindow(wx.Frame):
             self.ringerwidget.getfromfs(results)
             self.calendarwidget.getfromfs(results)
             self.memowidget.getfromfs(results)
+            self.todowidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -1034,6 +1051,8 @@ class MainWindow(wx.Frame):
             self.calendarwidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.memowidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.todowidget.populate(results)
             # close the splash screen if it is still up
             self.CloseSplashScreen()
         finally:
@@ -1330,7 +1349,8 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetCalendarSetting, self.commphone.getcalendar, "Calendar", "calendar",),
             (req.GetWallpaperSetting, self.commphone.getwallpapers, "Wallpaper", "wallpaper"),
             (req.GetRingtoneSetting, self.commphone.getringtones, "Ringtones", "ringtone"),
-            (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo")):
+            (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo"),
+            (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo")):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
@@ -1400,6 +1420,11 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savememo(data, merge)
+
+    def writetodo(self, data, merge):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.savetodo(data, merge)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

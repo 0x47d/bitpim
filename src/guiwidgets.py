@@ -145,7 +145,8 @@ class GetPhoneDialog(wx.Dialog):
                 ('Calendar', 'calendar'),
                 ('Wallpaper', 'wallpaper'),
                 ('Ringtone', 'ringtone'),
-               ('Memo', 'memo'))
+               ('Memo', 'memo'),
+               ('Todo', 'todo'))
     
     # actions ("Pretty Name", "name used to query profile")
     actions = (  ("Get", "read"), )
@@ -233,6 +234,9 @@ class GetPhoneDialog(wx.Dialog):
     def GetMemoSetting(self):
         return self._setting("memo")
 
+    def GetTodoSetting(self):
+        return self._setting("todo")
+
     def OnHelp(self,_):
         wx.GetApp().displayhelpid(self.HELPID)
 
@@ -242,7 +246,8 @@ class GetPhoneDialog(wx.Dialog):
         ('calendar', 'read', MERGE),
         ('wallpaper', 'read', MERGE),
         ('ringtone', 'read', MERGE),
-        ('memo', 'read', MERGE))
+        ('memo', 'read', MERGE),
+        ('todo', 'read', MERGE))
 
     def _dowesupport(self, source, action, type):
         if (source,action,type) in self._notsupported:
