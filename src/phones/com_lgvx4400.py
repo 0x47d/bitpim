@@ -134,6 +134,8 @@ class Phone:
             progresscur+=1
         # go back to begining again
         # existingpbook contains entries from the existing phonebook on the phone
+        self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
+        self.setmode(self.MODEPHONEBOOK)
         res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
         pbook=data['phonebook']
         entries=pbook.keys()
@@ -488,17 +490,20 @@ class Phone:
 
     def _setmodephonebook(self):
         try:
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         try:
             self.comm.setbaudrate(38400)
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         self._setmodelgdmgo()
         try:
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         return 0
