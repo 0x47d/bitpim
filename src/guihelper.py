@@ -20,9 +20,6 @@ import sys
 # wx modules
 import wx
 
-# my modules
-import guihelper
-
 ###
 ### The various IDs we use.  Code below munges the integers into sequence
 ###
