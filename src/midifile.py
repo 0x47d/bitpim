@@ -58,7 +58,7 @@ class MIDIEvent(object):
     def __get_meta_event(self):
         self.__type=self.META_EVENT
         self.__cmd=self.__get_int()
-        self.__len=self.__get_int()
+        self.__len=self.__get_var_len()
         if self.__len:
             self.__param1=self.__get_bytes(self.__len)
         else:
@@ -140,6 +140,8 @@ class MIDITrack(object):
     def __init__(self, file, offset):
         self.__f=file
         self.__ofs=offset
+        if module_debug:
+            print 'New Track @ ofs:', offset
         if self.__f.GetBytes(self.__ofs, 4)!='MTrk':
             raise TypeError, 'not an MIDI track'
         self.__len=self.__f.GetMSBUint32(self.__ofs+4)
@@ -180,35 +182,38 @@ class MIDITrack(object):
 
 class MIDIFile(object):
     def __init__(self, file_wraper):
-        self.__valid=False
-        self.__file=file_wraper
-        if self.__file.GetBytes(0, 4)!='MThd' or \
-           self.__file.GetMSBUint32(4)!=6:
-            # not a valid MIDI header
-            return
-        self.__valid=True
-        self.__type=self.__file.GetMSBUint16(8)
-        self.__num_tracks=self.__file.GetMSBUint16(10)
-        self.__time_division=self.__file.GetMSBUint16(12)
-        self.__tracks=[]
-        self.__mpqn=2000000
-        file_ofs=14
-        time_delta=0
-        for i in range(self.__num_tracks):
-            trk=MIDITrack(self.__file, file_ofs)
-            self.__tracks.append(trk)
-            file_ofs+=trk.total_len
-            time_delta=max(time_delta, trk.time_delta)
-            if trk.mpqn is not None:
-                self.__mpqn=trk.mpqn
-        self.__duration=(self.__mpqn*time_delta/self.__time_division)/1000000.0
-        if module_debug:
-            print 'type:', self.__type
-            print 'time division:', self.__time_division
-            print 'num of tracks:', self.__num_tracks
-            print 'MPQN:', self.__mpqn
-            print 'longest time delta: ', time_delta
-            print 'duration:', self.__duration
+        try:
+            self.__valid=False
+            self.__file=file_wraper
+            if self.__file.GetBytes(0, 4)!='MThd' or \
+               self.__file.GetMSBUint32(4)!=6:
+                # not a valid MIDI header
+                return
+            self.__valid=True
+            self.__type=self.__file.GetMSBUint16(8)
+            self.__num_tracks=self.__file.GetMSBUint16(10)
+            self.__time_division=self.__file.GetMSBUint16(12)
+            self.__tracks=[]
+            self.__mpqn=2000000
+            file_ofs=14
+            time_delta=0
+            for i in range(self.__num_tracks):
+                trk=MIDITrack(self.__file, file_ofs)
+                self.__tracks.append(trk)
+                file_ofs+=trk.total_len
+                time_delta=max(time_delta, trk.time_delta)
+                if trk.mpqn is not None:
+                    self.__mpqn=trk.mpqn
+            self.__duration=(self.__mpqn*time_delta/self.__time_division)/1000000.0
+            if module_debug:
+                print 'type:', self.__type
+                print 'time division:', self.__time_division
+                print 'num of tracks:', self.__num_tracks
+                print 'MPQN:', self.__mpqn
+                print 'longest time delta: ', time_delta
+                print 'duration:', self.__duration
+        except:
+            self.__valid=False
 
     def __get_valid(self):
         return self.__valid
