@@ -73,9 +73,9 @@ class CalendarCellAttributes:
         self.labelfont=wxFont(14, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
-        self.timefont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
+        self.timefont=wxFont(8, wxSWISS, wxNORMAL, wxNORMAL )
         self.timeforeground=wxNamedColour("ORCHID")
-        self.entryfont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
+        self.entryfont=wxFont(9, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
         self.miltime=False
         self.initdone=True
