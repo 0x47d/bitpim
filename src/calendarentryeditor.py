@@ -235,7 +235,12 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         # validate and return T if so or F otherwise
         # check for valid date/time entries
         for w in (self.__w['start'], self.__w['end']):
-            if not w.IsValid():
+            if not w.IsValid() or w.IsEmpty():
+                # scold the user
+                dlg=wx.MessageDialog(self, "Invalid date/time entry !!", "Error Message",
+                                    wx.OK|wx.ICON_EXCLAMATION)
+                dlg.ShowModal()
+                dlg.Destroy()
                 w.SetFocus()
                 wx.Bell()
                 return False
@@ -642,6 +647,7 @@ class Editor(wx.Dialog):
         # save the current entry & exit
         if self.dirty:
             self.OnSaveButton(None)
+        self.setdirty(False)
         evt.Skip()
 
     def OnCancel(self, evt):
@@ -929,7 +935,7 @@ class DVDateTimeControl(wx.Panel):
             res.append(val)
         if len(res)==3:
             res += [0,0]
-        else:
+        elif len(res)==5:
             # fixup am/pm
             if str[-2]=='P' or str[-2]=='p':
                 if res[3]!=12: # 12pm is midday and left alone
@@ -941,6 +947,8 @@ class DVDateTimeControl(wx.Panel):
 
     def IsValid(self):
         return self.c.IsValid()
+    def IsEmpty(self):
+        return self.c.IsEmpty()
 
     def SetAllday(self, allday, v=None):
         if allday==self.__allday and v is None:
