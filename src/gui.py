@@ -357,7 +357,7 @@ class MainApp(wxApp):
         self.SetTopWindow(frame)
         self.SetExitOnFrameDelete(True)
 
-    def OnExit(self):
+    def OnExit(self): 
         sys.excepthook=sys.__excepthook__
         self.config.Flush()
 
@@ -562,6 +562,8 @@ class MainWindow(wxFrame):
         else:
             self.nb.SetSelection(sel)
 
+        EVT_CLOSE(self, self.OnClose)
+
     def OnExit(self,_=None):
         self.Close()
 
@@ -581,6 +583,7 @@ class MainWindow(wxFrame):
         assert isinstance(exception, SystemExit)
         # assume it worked
         self.Destroy()
+	wxGetApp().ExitMainLoop()
 
     # about and help
 
