@@ -51,7 +51,9 @@ def convertto8bitpng(pngdata, maxsize):
 
     # Convert this image to pnm
     pnm=common.gettempfilename("pnm")
-    os.system(pngtopnmbin + ' < '+png+' > '+pnm)
+    s='"'+pngtopnmbin+'"' + ' < '+png+' > '+pnm
+    os.system(s)
+    #self.log(s)
     os.remove(png)
 
     # Binary search to find largest # of colors with a file size still
@@ -61,10 +63,17 @@ def convertto8bitpng(pngdata, maxsize):
     ncolormin=1
     ncolortry=256
     ncolor=ncolortry
+    pnmq=common.gettempfilename("pnm")
 
     while size>maxsize or ncolormax-ncolor>1:
         ncolor=ncolortry
-        os.system(ppmquantbin+' '+`ncolortry`+' '+pnm+ '|'+pnmtopngbin + ' > '+png)
+        s='"'+ppmquantbin+'"'+' '+`ncolortry`+' '+pnm+ ' > '+pnmq
+        #self.log(s)
+        os.system(s)
+        s ='"'+pnmtopngbin+'"' + ' < ' + pnmq + ' > '+png
+        #self.log(s)
+        os.system(s)
+        os.remove(pnmq)
         f=open(png,"rb")
         pngquantdata=f.read()
         f.close()
