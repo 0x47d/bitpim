@@ -25,6 +25,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     desc="Samsung SCH-Axx phone"
 
+    MODEPHONEBOOK="modephonebook"
+
     __AT_str="AT"
     __OK_str="\r\nOK\r\n"
     __Error_str="\r\nERROR\r\n"
@@ -109,6 +111,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         return self._get_at_response()
 
     def is_online(self):
+        self.setmode(self.MODEPHONEBOOK)
         try:
 	    self.comm.sendatcommand("E0V1")
 	    return True
