@@ -847,13 +847,14 @@ class MainWindow(wx.Frame):
 
     def DisplayMessages(self, result):
         if not result.has_key('messages'):
-            print 'no messages'
             return
         m=result['messages']
         s=''
         for k in m:
             if len(k['text']):
                 s=s+'\r\n\r\n'+'Results from: '+k['name']+k['text']
+        # del this dict just to be sure
+        del result['messages']
         if not len(s):
             # empty string, nothing to display
             return
