@@ -331,31 +331,37 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             exceptions={}
 
         # Now read schedule
-        buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
-        sc=self.protocolclass.schedulefile()
-        sc.readfrombuffer(buf)
-        self.logdata("Calendar", buf.getdata(), sc)
-        for event in sc.events:
-            entry={}
-            entry['pos']=event.pos
-            if entry['pos']==-1: continue # blanked entry
-            # normal fields
-            for field in 'start','end','daybitmap','changeserial','snoozedelay','ringtone','description':
-                entry[field]=getattr(event,field)
-            # calculated ones
-            entry['repeat']=self._calrepeatvalues[event.repeat]
-            min=event.alarmminutes
-            hour=event.alarmhours
-            if min==100 or hour==100:
-                entry['alarm']=None # no alarm set
-            else:
-                entry['alarm']=hour*60+min
-            # Exceptions
-            if exceptions.has_key(event.pos):
-                entry['exceptions']=exceptions[event.pos]
-            res[event.pos]=entry
+        try:
+            buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
+            if len(buf.getdata())<2:
+                # file is empty, and hence same as non-existent
+                raise com_brew.BrewNoSuchFileException()
+            sc=self.protocolclass.schedulefile()
+            sc.readfrombuffer(buf)
+            self.logdata("Calendar", buf.getdata(), sc)
+            for event in sc.events:
+                entry={}
+                entry['pos']=event.pos
+                if entry['pos']==-1: continue # blanked entry
+                # normal fields
+                for field in 'start','end','daybitmap','changeserial','snoozedelay','ringtone','description':
+                    entry[field]=getattr(event,field)
+                # calculated ones
+                entry['repeat']=self._calrepeatvalues[event.repeat]
+                min=event.alarmminutes
+                hour=event.alarmhours
+                if min==100 or hour==100:
+                    entry['alarm']=None # no alarm set
+                else:
+                    entry['alarm']=hour*60+min
+                # Exceptions
+                if exceptions.has_key(event.pos):
+                    entry['exceptions']=exceptions[event.pos]
+                res[event.pos]=entry
 
-        assert sc.numactiveitems==len(res)
+            assert sc.numactiveitems==len(res)
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
         result['calendar']=res
         return result
 
