@@ -28,7 +28,7 @@ _notdigits=re.compile("[^0-9]*")
 _tendigits=re.compile("^[0-9]{10}$")
 
 
-def normalize(n):
+def normalise(n):
     nums="".join(re.split(_notdigits, n))
     if len(nums)==10:
         return nums
@@ -47,4 +47,4 @@ if __name__=='__main__':
           "19175551212", "9175551212", "123 456 7890", "123 456 7890 ext 17")
 
     for n in nums:
-        print "%s\n  norm: %s\n   fmt: %s\n" % (n, normalize(n), format(normalize(n)))
+        print "%s\n  norm: %s\n   fmt: %s\n" % (n, normalise(n), format(normalise(n)))
