@@ -1014,7 +1014,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     CHANGED=2
     DELETED=3
 
-    htmltemplate=["Not set - "+`i` for i in range(8)]
+    htmltemplate=["Not set - "+`i` for i in range(14)]
     
     def __init__(self, widget):
         self.main=widget
@@ -1093,7 +1093,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         if self.columns[col]=='Confidence':
             return '<font color="%s">%d</font>' % (colour, row[0])
 
-        # as an exercise in madness, try to redo this as a list comprehension
+        # Get values - note default of None
         imported,existing,result=None,None,None
         if row[1] is not None:
             imported=getdata(self.columns[col], self.main.importdata[row[1]], None)
@@ -1102,14 +1102,69 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         if row[3] is not None:
             result=getdata(self.columns[col], self.main.resultdata[row[3]], None)
 
-        # this code is both hacky and elegant!
-        idx=((imported is not None)<<2 ) + \
-            ((existing is not None)<<1 ) + \
-            (result is not None)
+        # The following code looks at the combinations of imported,
+        # existing and result with them being None and/or equalling
+        # each other.  Remember that the user could have
+        # editted/deleted an entry so the result may not match either
+        # the imported or existing value.  Each combination points to
+        # an index in the templates table.  Assertions are used
+        # extensively to ensure the logic is correct
 
-        # ::TODO:: don't give so much detail if the imported/existing/result
-        # match each other after doing a "lossy" comparison (eg the phone
-        # numbers 1234567890 and 1-234-6790 should be considered the same)
+        if imported is None and existing is None and result is None:
+            return ""  # idx=8 - shortcut
+
+        # matching function for this column
+        matchfn=lambda x,y: x==y
+
+        # if the result field is missing then value was deleted
+        if result is None:
+            # one of them must be present otherwise idx=8 above would have matched
+            assert  imported is not None or existing is not None
+            if imported is not None and existing is not None:
+                if matchfn(imported, existing):
+                    idx=13
+                else:
+                    idx=12
+            else:
+                if imported is None:
+                    assert existing is not None
+                    idx=11
+                else:
+                    assert existing is None
+                    idx=10
+            
+        else:
+            if imported is None and existing is None:
+                idx=9
+            else:
+                # we have a result - the first 8 entries need the following
+                # comparisons
+                if imported is not None:
+                    imported_eq_result= matchfn(imported,result)
+                if existing is not None:
+                    existing_eq_result= matchfn(existing,result)
+
+                # a table of all possible combinations of imported/exporting
+                # being None and imported_eq_result/existing_eq_result
+                if      imported is None          and    existing_eq_result:
+                    idx=0
+                elif    imported is None          and    not existing_eq_result:
+                    idx=1
+                elif    imported_eq_result        and    existing is None:
+                    idx=2
+                elif    not imported_eq_result    and    existing is None:
+                    idx=3
+                elif    imported_eq_result        and    existing_eq_result:
+                    idx=4
+                elif    imported_eq_result        and    not existing_eq_result:
+                    idx=5
+                elif    not imported_eq_result    and    existing_eq_result:
+                    idx=6
+                elif    not imported_eq_result    and    not existing_eq_result:
+                    idx=7
+                else:
+                    assert False, "This is unpossible!"
+                    return "FAILED"
 
         return self.htmltemplate[idx] % { 'imported': _htmlfixup(imported),
                                           'existing': _htmlfixup(existing),
@@ -1139,7 +1194,6 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
     def sizetwiddle(self):
         dlg=self.GetView().GetParent().GetParent()
-        print dlg
         w,h=dlg.GetSize()
         dlg.SetSize( (w-10, h-10) )
         dlg.SetSize( (w, h) )
@@ -1149,8 +1203,51 @@ def _htmlfixup(txt):
     return txt.replace("&", "&amp;").replace("<", "&gt;").replace(">", "&lt;") \
            .replace("\r\n", "<br>").replace("\r", "<br>").replace("\n", "<br>")
 
-ImportDataTable.htmltemplate[0]=""
-ImportDataTable.htmltemplate[7]='<font color="%(colour)s">%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
+###
+### 0 thru 7 inclusive have a result present
+###
+
+#  0 - imported is None,  existing equals result
+ImportDataTable.htmltemplate[0]='<font color="%(colour)s">%(result)s</font>'
+#  1 - imported is None,  existing not equal result
+
+#  2 - imported equals result,  existing is None
+ImportDataTable.htmltemplate[2]=ImportDataTable.htmltemplate[0]  # just display result
+#  3 - imported not equal result,  existing is None
+
+#  4 - imported equals result, existing equals result
+ImportDataTable.htmltemplate[4]=ImportDataTable.htmltemplate[0]  # just display result
+#  5 - imported equals result, existing not equals result
+ImportDataTable.htmltemplate[5]='<font color="%(colour)s"><font color="#00ff00">+</font>%(result)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
+#  6 - imported not equal result, existing equals result
+
+#  7 - imported not equal result, existing not equal result
+
+###
+### Two special cases
+###
+
+#  8 - imported, existing, result are all None
+ImportDataTable.htmltemplate[8]=""
+
+#  9 - imported, existing are None and result is present
+ImportDataTable.htmltemplate[9]='<font color="%(colour)s"><b>%(result)s</b></font>'
+
+###
+### From 10 onwards, there is no result field, but one or both of
+### imported/existing are present which means the user deleted the
+### resulting value
+###
+
+# 10 - imported is None and existing is present
+ImportDataTable.htmltemplate[10]='<font color="#ff0000"><strike>%(existing)s</strike></font>'
+# 11 - imported is present and existing is None
+ImportDataTable.htmltemplate[11]='<font color="#888888"><font size=-1><strike>%(imported)s</strike></font></font>' # slightly smaller
+# 12 - imported != existing
+ImportDataTable.htmltemplate[12]='<font color="%(colour)s"><b><font size=-1>Existing</font></b> <font color="#ff0000"><strike>%(existing)s</strike></font><br><b><font size=-1>Imported</font></b> <font color="#888888"><strike>%(imported)s</strike></font></font>'
+# 13 - imported equals existing
+ImportDataTable.htmltemplate[13]='<font color="#ff0000"><strike>%(existing)s</strike></font>'
+
 
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
