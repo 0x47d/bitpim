@@ -15,8 +15,6 @@ import time
 import cStringIO
 import sha
 
-import wx
-
 # BitPim modules
 import com_brew
 import com_phone

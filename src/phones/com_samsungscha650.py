@@ -24,7 +24,6 @@ import com_samsung
 import com_phone
 import p_samsungscha650
 import prototypes
-import pubsub
 
 class Phone(com_samsung.Phone):
 

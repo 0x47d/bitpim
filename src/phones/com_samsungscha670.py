@@ -26,8 +26,6 @@ import com_samsung
 import com_phone
 import p_samsungscha670
 import prototypes
-import pubsub
-
 
 
 class Phone(com_samsung.Phone):
@@ -159,9 +157,9 @@ class Phone(com_samsung.Phone):
         r={}
 	s=self.comm.sendatcommand("#PUGSN?")
 	for rt in s[1:]:
-	    this_r = split(rt, ",")
-	    r[atoi(this_r[0])] = { 'name': this_r[2], 'origin': 'builtin' }
-	    self.allringtones[atoi(this_r[0])] = this_r[2]
+	    this_r = rt.split(",")
+	    r[int(this_r[0])] = { 'name': this_r[2], 'origin': 'builtin' }
+	    self.allringtones[int(this_r[0])] = this_r[2]
 	return r
 
     def get_user_rt_index(self, r):		# IDs on phone needed for caller-ID
