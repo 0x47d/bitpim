@@ -1,6 +1,11 @@
-# Part of bitpim
-
-# $Id$
+### BITPIM
+###
+### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+###
+### This software is under the Artistic license.
+### http://www.opensource.org/licenses/artistic-license.php
+###
+### $Id$
 
 import serial
 import common
