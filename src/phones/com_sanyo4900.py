@@ -73,6 +73,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         ringpic=p_sanyo.ringerpicbuffer()
         ringpic.readfrombuffer(buf)
 
+        speedslot=[]
+        speedtype=[]
+        for i in range(sortstuff.numspeeddials):
+            speedslot.append(sortstuff.speeddialindex[i].pbslotandtype & 0xfff)
+            numtype=(sortstuff.speeddialindex[i].pbslotandtype>>12)-1
+            if(numtype >= 0 and numtype <= len(numbertypetab)):
+                speedtype.append(numbertypetab[numtype])
+            else:
+                speedtype.append("")
+
         numentries=sortstuff.slotsused
         self.log("There are %d entries" % (numentries,))
         
@@ -86,10 +96,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 self.log("Read entry "+`i`+" - "+res.entry.name)
 
                 entry=self.extractphonebookentry(res.entry, result)
+                # Speed dials
+                for j in range(len(speedslot)):
+                    if(speedslot[j]==req.slot):
+                        for k in range(len(entry['numbers'])):
+                            if(entry['numbers'][k]['type']==speedtype[j]):
+                                entry['numbers'][k]['speeddial']=j+2
+
                 # ringtones
                 entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
                 # wallpapers
                 entry['wallpapers']=[{'wallpaper': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
+                # Speed dial
                     
                 pbook[i]=entry 
                 self.progress(count, numentries, res.entry.name)
@@ -157,6 +175,23 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # "H" instead of "P".  However, phone saves this internally as "P".
         return re.sub("[^0-9PT#*]", "", str)
 
+    def fakesendsanyobuffer(self, buffer, startcommand, comment):
+        self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
+        desc="Writing "+comment
+        numblocks=len(buffer)/500
+        offset=0
+        command=startcommand
+        for offset in range(0, len(buffer), 500):
+            self.progress(offset/500, numblocks, desc)
+            req=p_sanyo.bufferpartupdaterequest()
+            req.header.command=command
+            block=buffer[offset:]
+            l=min(len(block), 500)
+            block=block[:l]
+            req.data=block
+            command+=1
+            self.fakesendpbcommand(req, p_sanyo.bufferpartresponse)
+        
     def fakesendpbcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
             self.setmode(self.MODEPHONEBOOK)
@@ -221,8 +256,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         self.log("Putting phone into write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=1 # Start update
-        res=self.fakesendpbcommand(req, p_sanyo.beginendupdateresponse)
+        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
 
+        time.sleep(1)
+        
         keys=pbook.keys()
         keys.sort()
         sortstuff.slotsused=len(keys)
@@ -244,22 +281,26 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             entry=self.makeentry(ii, data)
             req=p_sanyo.phonebookslotupdaterequest()
             req.entry=entry
-            res=self.fakesendpbcommand(req, p_sanyo.phonebookslotresponse)
-
+            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
+            time.sleep(.70)
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
             sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
 # Fill in Caller ID buffer
             for i in range(len(ii['numbers'])):
+                nindex=ii['numbertypes'][i]
+                speeddial=ii['speeddials'][i]
+                code=slot+((nindex+1)<<12)
+                if(speeddial>=2 and speeddial<=9):
+                    sortstuff.speeddialindex[speeddial-2]=code
                 if(callerid.numentries<callerid.maxentries):
                     phonenumber=ii['numbers'][i]
-                    nindex=ii['numbertypes'][i]
                     cidentry=self.makecidentry(phonenumber,slot,nindex)
                     callerid.items.append(cidentry)
                     callerid.numentries+=1
                     if(len(phonenumber)>sortstuff.longphonenumberlen):
                         if(nlongphonenumbers<sortstuff.numlongnumbers):
-                            sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=slot+((nindex+1)>>12)
+                            sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=code
 
             namemap[ii['name']]=slot
             if(len(ii['email'])):
@@ -307,21 +348,25 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         buffer=prototypes.buffer()
         sortstuff.writetobuffer(buffer)
         self.logdata("Write sort buffer", buffer.getvalue(), sortstuff)
-        # Write buffer.getvalue() to phone
-        buffer=prototypes.buffer()
-        callerid.writetobuffer(buffer)
-        self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
-        # Write buffer.getvalue() to phone
+        self.sendsanyobuffer(buffer.getvalue(),0x3c,"sort buffer")
+        time.sleep(.1)
+
         buffer=prototypes.buffer()
         ringpic.writetobuffer(buffer)
         self.logdata("Write ringer picture buffer", buffer.getvalue(), ringpic)
-        # Write buffer.getvalue() to phone
-
+        self.sendsanyobuffer(buffer.getvalue(),0x46,"ringer/pictures assignments")
+        time.sleep(.1)
         
+        buffer=prototypes.buffer()
+        callerid.writetobuffer(buffer)
+        self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
+        self.sendsanyobuffer(buffer.getvalue(),0x50,"callerid")
+        time.sleep(.1)
+
         self.log("Taking phone out of write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Stop update
-        res=self.fakesendpbcommand(req, p_sanyo.beginendupdateresponse)
+        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
         self.log("Please exit BITPIM and power cycle the phone")
         del data['phonephonebook']
 
@@ -332,7 +377,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         numonly=re.sub("^(\\d*).*$", "\\1", numstripped)
 
         cidentry=p_sanyo.calleridentry()
-        cidentry.pbslotandtype=slot+((nindex+1)>>12)
+        cidentry.pbslotandtype=slot+((nindex+1)<<12)
         cidentry.actualnumberlen=len(numonly)
         cidentry.numberfragment=numonly[-10:]
 
@@ -347,9 +392,9 @@ class Profile:
         assert len(list)==1
         return list[0]
 
-# LGVX4400 code, need to fix
-# Need to calculcate most string lengths.  Will truncate strings to
-# know maximum lengths.
+# Processes phone book for writing to Sanyo.  But does not leave phone book
+# in a bitpim compatible format.  Need to understand exactly what bitpim
+# is expecting the method to do.
     def convertphonebooktophone(self, helper, data):
         "Converts the data to what will be used by the phone"
         results={}
@@ -378,12 +423,17 @@ class Profile:
                 numbers=helper.getnumbers(entry['numbers'],1,7)
                 e['numbertypes']=[]
                 e['numbers']=[]
+                e['speeddials']=[]
                 for num in numbers:
                     typename=num['type']
                     for typenum,tnsearch in zip(range(100),numbertypetab):
                         if typename==tnsearch:
                             e['numbertypes'].append(typenum)
                             e['numbers'].append(num['number'])
+                            if(num.has_key('speeddial')):
+                                e['speeddials'].append(num['speeddial'])
+                            else:
+                                e['speeddials'].append(-1)
 
                             break
 
