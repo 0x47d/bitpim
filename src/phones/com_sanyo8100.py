@@ -26,7 +26,7 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo8100
     serialsname='scp8100'
     
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
@@ -41,7 +41,26 @@ class Phone(com_sanyo.Phone):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-    def savewallpapers(self, results, merge):
+    def getwallpapers(self, results):
+        # Test code to list files on phone
+        for idir in range(1,5):
+            req=self.protocolclass.sanyochangedir()
+            req.dirindex=idir
+            res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
+
+            req=self.protocolclass.sanyonumpicsrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
+            self.log("Directory "+`idir`+", File Count="+`res.count`)
+            nfiles=res.count
+            for ifile in range(nfiles):
+                req=self.protocolclass.sanyomediafilenamerequest()
+                req.index=ifile
+                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
+                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`)
+                
+        return
+                     
+            
         req=self.protocolclass.sanyomediaheader()
         req.command=0x10
         req.subcommand=0
