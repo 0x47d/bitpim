@@ -79,7 +79,11 @@ class Display(wx.ScrolledWindow):
         wx.EVT_RIGHT_DOWN(self, self.OnRightDown)
         if watermark is not None:
             wx.EVT_SCROLLWIN(self, self.OnScroll)
-        self.bgbrush=wx.TheBrushList.FindOrCreateBrush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.SOLID)
+
+        bgcolour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+        if guihelper.IsMac():
+            bgcolour=wx.WHITE
+        self.bgbrush=wx.TheBrushList.FindOrCreateBrush(bgcolour, wx.SOLID)
         if watermark:
             self.watermark=guihelper.getbitmap(watermark)
         else:
