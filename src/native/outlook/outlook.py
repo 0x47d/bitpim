@@ -15,6 +15,8 @@
 
 import win32com.client
 
+from pywintypes import com_error
+
 # This is the complete list of field names available
 ##    Account
 ##    AssistantName
@@ -199,11 +201,61 @@ def getcontacts(folder):
 
     return _getcontacts(folder, keys)
 
+def getfolderfromid(id, default=False):
+    """Returns a folder object from the supplied id
+
+    @param id: The id of the folder
+    @param default: If true and the folder can't be found, then return the default"""
+    onMAPI = getmapinamespace()
+    try:
+        folder=onMAPI.GetFolderFromID(id)
+    except com_error,e:
+        folder=None
+        
+    # ::TODO:: should be supplied default type (contacts, calendar etc)
+    if not folder:
+        folder=onMAPI.GetDefaultFolder(win32com.client.constants.olFolderContacts)
+    return folder
+
+def getfoldername(folder):
+    n=[]
+    while folder:
+        try:
+            n=[folder.Name]+n
+        except AttributeError:
+            break # namespace object has no 'Name'
+        folder=folder.Parent
+    return " / ".join(n)
+
+def getfolderid(folder):
+    return folder.EntryID
+
+def pickfolder():
+    return getmapinamespace().PickFolder()
+
+_outlookappobject=None
+def getoutlookapp():
+    global _outlookappobject
+    if _outlookappobject is None:
+        if __debug__:
+            # ensure stubs are generated in developer code
+            win32com.client.gencache.EnsureDispatch("Outlook.Application.9")
+        _outlookappobject=win32com.client.Dispatch("Outlook.Application.9")
+    return _outlookappobject
+
+_mapinamespaceobject=None
+def getmapinamespace():
+    global _mapinamespaceobject
+    if _mapinamespaceobject is None:
+        _mapinamespaceobject=getoutlookapp().GetNamespace("MAPI")
+    return _mapinamespaceobject
+
+
 if __name__=='__main__':
     oOutlookApp=win32com.client.Dispatch("Outlook.Application.9")
     onMAPI = oOutlookApp.GetNamespace("MAPI")
 
     res=onMAPI.PickFolder()
-
+    print res
     # print _getkeys(res)
     print getcontacts(res)

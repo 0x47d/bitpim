@@ -31,7 +31,6 @@ def GetPhonebookImports():
     res.append( ("CSV...", "Import a CSV file for the phonebook", OnFileImportCSV) )
     # Outlook
     try:
-        1/0 # disable outlook for this build
         import native.outlook
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
     except:
@@ -312,42 +311,45 @@ class ImportDialog(wx.Dialog):
             return
         self.needsupdate=False
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        wx.Yield() # so the cursor can be displayed
-        # reread the data
-        self.ReReadData()
-        # now filter the data if needed
-        if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
-            newdata=[]
-            for rownum in range(len(self.data)):
-                # generate a list of fields for which this row has data
-                fields=[]
-                # how many filters are required
-                req=0
-                # how many are present
-                present=0
-                for n in range(len(self.columns)):
-                    if len(self.data[rownum][n]):
-                        fields.append(self.columns[n])
-                for widget,filter in ( (self.wname, self.filternamecolumns),
-                                       (self.wnumber, self.filternumbercolumns),
-                                       (self.waddress, self.filteraddresscolumns),
-                                       (self.wemail, self.filteremailcolumns)
-                                       ):
-                    if widget.GetValue():
-                        req+=1
-                        for f in fields:
-                            if f in filter:
-                                present+=1
-                                break
-                    if req>present:
-                        break
-                if present==req:
-                    newdata.append(self.data[rownum])
-                
-            self.data=newdata
-                        
-        self.FillPreview()
-        wx.EndBusyCursor()
+        try:  # we need to ensure end busy
+            
+            wx.Yield() # so the cursor can be displayed
+            # reread the data
+            self.ReReadData()
+            # now filter the data if needed
+            if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
+                newdata=[]
+                for rownum in range(len(self.data)):
+                    # generate a list of fields for which this row has data
+                    fields=[]
+                    # how many filters are required
+                    req=0
+                    # how many are present
+                    present=0
+                    for n in range(len(self.columns)):
+                        if len(self.data[rownum][n]):
+                            fields.append(self.columns[n])
+                    for widget,filter in ( (self.wname, self.filternamecolumns),
+                                           (self.wnumber, self.filternumbercolumns),
+                                           (self.waddress, self.filteraddresscolumns),
+                                           (self.wemail, self.filteremailcolumns)
+                                           ):
+                        if widget.GetValue():
+                            req+=1
+                            for f in fields:
+                                if f in filter:
+                                    present+=1
+                                    break
+                        if req>present:
+                            break
+                    if present==req:
+                        newdata.append(self.data[rownum])
+
+                self.data=newdata
+
+            self.FillPreview()
+        finally:
+            wx.EndBusyCursor()
         
                 
     def FillPreview(self):
@@ -372,12 +374,15 @@ class ImportDialog(wx.Dialog):
         attr=wx.grid.GridCellAttr()
         attr.SetBackgroundColour(wx.GREEN)
         attr.SetFont(wx.Font(10,wx.SWISS, wx.NORMAL, wx.BOLD))
+        attr.SetReadOnly(not self.headerrowiseditable)
         self.preview.SetRowAttr(0,attr)
         # add each row
         oddattr=wx.grid.GridCellAttr()
         oddattr.SetBackgroundColour("OLDLACE")
+        oddattr.SetReadOnly(True)
         evenattr=wx.grid.GridCellAttr()
         evenattr.SetBackgroundColour("ALICE BLUE")
+        evenattr.SetReadOnly(True)
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
@@ -397,6 +402,7 @@ class ImportDialog(wx.Dialog):
 class ImportCSVDialog(ImportDialog):
 
     def __init__(self, filename, parent, id, title):
+        self.headerrowiseditable=True
         self.filename=filename
         self.UpdatePredefinedColumns()
         ImportDialog.__init__(self, parent, id, title)
@@ -602,6 +608,7 @@ class ImportCSVDialog(ImportDialog):
 class ImportOutlookDialog(ImportDialog):
 
     def __init__(self, parent, id, title, outlook):
+        self.headerrowiseditable=False
         self.outlook=outlook
         ImportDialog.__init__(self, parent, id, title)
 
@@ -616,17 +623,31 @@ class ImportOutlookDialog(ImportDialog):
         # label
         hbs.Add(wx.StaticText(self, -1, "Folder"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
-        self.folder=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-        hbs.Add(self.folder, 1, wx.EXPAND|wx.ALL, 2)
+        self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
         # browse button
         self.folderbrowse=wx.Button(self, wx.NewId(), "Browse ...")
         hbs.Add(self.folderbrowse, 0, wx.EXPAND|wx.ALL, 2)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, self.folderbrowse.GetId(), self.OnBrowse)
 
         # sort out folder
-        of=wx.GetApp().config.Read("outlookcontacts", "")
+        id=wx.GetApp().config.Read("outlook/contacts", "")
+        self.folder=self.outlook.getfolderfromid(id, True)
+        wx.GetApp().config.Write("outlook/contacts", self.outlook.getfolderid(self.folder))
+        self.folderctrl.SetValue(self.outlook.getfoldername(self.folder))
 
+    def OnBrowse(self, _):
+        p=self.outlook.pickfolder()
+        if p is None: return # user hit cancel
+        self.folder=p
+        wx.GetApp().config.Write("outlook/contacts", self.outlook.getfolderid(self.folder))
+        self.folderctrl.SetValue(self.outlook.getfoldername(self.folder))
+        # reread here
 
+    def ReReadData(self):
+        self.columns=["One", "Two", "Three", "Four", "Five"]
+        self.data=self.outlook.getcontacts(self.folder)
 
 def OnFileImportCSV(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
