@@ -15,8 +15,10 @@ VCARD is defined in RFC 2425 and 2426
 import sys
 import quopri
 import base64
-import common
+import codecs
 import cStringIO
+
+import common
 import nameparser
 import phonenumber
 
@@ -75,15 +77,20 @@ class VFile:
             line+=":"
 
         b4=line[:colon]
-        line=line[colon+1:].strip().decode("latin1")
+        line=line[colon+1:].strip()
 
         # upper case and split on semicolons
         items=b4.upper().split(";")
 
         newitems=[]
+        charset="LATIN-1"
         for i in items:
             # ::TODO:: probably delete anything preceding a '.'
             # (see 5.8.2 in rfc 2425)
+            # look for charset parameter
+            if i.startswith("CHARSET="):
+                charset = i[8:] or "LATIN-1"
+                continue
             # unencode anything that needs it
             if not i.startswith("ENCODING=") and not i=="QUOTED-PRINTABLE": # evolution doesn't bother with "ENCODING="
                 # ::TODO:: deal with backslashes, being especially careful with ones quoting semicolons
@@ -91,10 +98,11 @@ class VFile:
                 continue
             try:
                 if i=='QUOTED-PRINTABLE' or i=="ENCODING=QUOTED-PRINTABLE":
-                    # technically quoted printable is ascii only but some data is latin1 which is compatible
-                    line=quopri.decodestring(line).decode("latin1")
+                    # technically quoted printable is ascii only but we decode anyway since not all vcards comply
+                    line=quopri.decodestring(line)
                 elif i=='ENCODING=B':
                     line=base64.decodestring(line)
+                    charset=None
                 else:
                     raise VFileException("unknown encoding: "+i)
             except Exception,e:
@@ -105,6 +113,13 @@ class VFile:
         # convert line as in 5.8.4 of rfc 2425
         if len(newitems)==0:
             raise VFileException("Line contains no property: %s" % (line,))
+        # charset frigging
+        if charset is not None:
+            try:
+                decoder=codecs.getdecoder(charset)
+                line,_=decoder(line)
+            except LookupError:
+                raise VFileException("unknown character set '%s' in parameters %s" % (charset, b4))          
         if newitems==["BEGIN"] or newitems==["END"]:
             line=line.upper()
 
