@@ -321,6 +321,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
                   'LG-VX6000': 'com_lgvx6000',
+                  'LG-VX7000': 'com_lgvx7000',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'PM-8200': 'com_sanyo8200',

@@ -181,6 +181,7 @@ class LGIndexedMedia:
             c+=1
 
         # the maps
+        type=None
         for offset,indexfile,location,type,maxentries in maps:
             if type=="camera": break
             index=self.getindex(indexfile)
