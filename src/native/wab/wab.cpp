@@ -338,11 +338,19 @@ const char *property_name(unsigned id)
   return propbuffy;
 }
 
+
+static inline unsigned numdigits(unsigned i) { 
+  unsigned res=0;
+  while(++res,i)
+    i/=10;
+  return res;
+}
+
 static char *valuebuffy=NULL;
 
 const char *property_value(unsigned int type, const union _PV &value)
 {
-  const int buflen=65536;
+  const unsigned int buflen=65536;
   if (!valuebuffy)
     valuebuffy=(char*)malloc(buflen);
 
@@ -356,6 +364,37 @@ const char *property_value(unsigned int type, const union _PV &value)
     snprintf(valuebuffy, buflen, "string:%s", value.lpszA);
   else if (type==PT_BINARY)
     snprintf(valuebuffy, buflen, "binary:%lu,%lu", (unsigned long)value.bin.lpb, (unsigned long)value.bin.cb);
+  else if (type==PT_MV_STRING8)
+    {
+      unsigned spaceneeded=strlen("strings:");
+      for (unsigned i=0;i<value.MVszA.cValues;i++)
+	  spaceneeded+=numdigits(strlen(value.MVszA.lppszA[i]))+1+strlen(value.MVszA.lppszA[i])+1;
+      if (spaceneeded>buflen)
+	{
+	  free(valuebuffy);
+	  valuebuffy=(char*)malloc(spaceneeded);
+	}
+      char *pos=valuebuffy;
+      pos+=sprintf(valuebuffy, "strings:");
+      for (unsigned i=0;i<value.MVszA.cValues;i++)
+	  pos+=sprintf(pos,"%u:%s", strlen(value.MVszA.lppszA[i]), value.MVszA.lppszA[i]);
+    }
+  else if (type==PT_SYSTIME)
+    {
+      snprintf(valuebuffy, buflen, "binary:%lu,%lu", (unsigned long)&value, (unsigned long)8);
+      return valuebuffy;
+      SYSTEMTIME thetime={0};
+      sprintf(valuebuffy, "PT_SYSTIME:%lu %lu", value.ft.dwLowDateTime, value.ft.dwHighDateTime);
+      return valuebuffy;
+      if (!FileTimeToSystemTime(&value.ft, &thetime))
+	{
+	  errorme(0, "Failed to convert filetime to systime");
+	  return NULL;
+	}
+      sprintf(valuebuffy, "PT_SYSTIME:%d %d %d %d %d %d %d", thetime.wYear, thetime.wMonth, thetime.wDay,
+	      thetime.wHour, thetime.wMinute, thetime.wSecond, thetime.wMilliseconds);
+
+    }
 #define tt(t) else if (type==t) snprintf(valuebuffy, buflen, "%s:", #t)
   tt(PT_FLOAT);
   tt(PT_R4);
@@ -363,7 +402,6 @@ const char *property_value(unsigned int type, const union _PV &value)
   tt(PT_DOUBLE);
   tt(PT_CURRENCY);
   tt(PT_APPTIME);
-  tt(PT_SYSTIME);
   tt(PT_UNICODE);
   tt(PT_CLSID);
   tt(PT_I8);
@@ -376,7 +414,6 @@ const char *property_value(unsigned int type, const union _PV &value)
   tt(PT_MV_APPTIME);
   tt(PT_MV_SYSTIME);
   tt(PT_MV_BINARY);
-  tt(PT_MV_STRING8);
   tt(PT_MV_UNICODE);
   tt(PT_MV_CLSID);
   tt(PT_MV_I8);
