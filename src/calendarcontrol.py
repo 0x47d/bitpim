@@ -297,7 +297,7 @@ class Calendar(wxPanel):
     # All the horrible date code is an excellent case for metric time!
     ID_UP=1
     ID_DOWN=2
-    def __init__(self, parent, rows=9, id=-1):
+    def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
         sizer=RowColSizer()
         self.upbutt=wxButton(self, self.ID_UP, "^")
