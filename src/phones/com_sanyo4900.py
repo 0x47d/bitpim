@@ -366,6 +366,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Stop update
         res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse, writemode=True)
+        self.close()
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
