@@ -15,6 +15,8 @@
 #           07.10.2003  0.70 Write dump file in format for BITPIM analyzer
 #           14.10.2003  0.71 Fix formatting of bitpim dump
 #           30.10.2003  0.72 Minor Fixups
+#           31.10.2003  0.73 Also dump 1000, 4000, and 7000 byte buffers
+#                            for use by BITPIM analyzer.
 # 
 # 
 # Usage:
@@ -92,7 +94,7 @@
 #
 use Device::SerialPort;
 
-$scriptversion = "0.72 (30.10.2003)";
+$scriptversion = "0.73 (31.10.2003)";
 $devicename = "/dev/pcsphone";
 $expectedphonename = "SCP-4900";
 
@@ -486,6 +488,10 @@ while($bufp < $len) {
     $bufp += 16;
 }
 
+packetdump($bigchunk1,2);
+packetdump($bigchunk2,2);
+packetdump($bigchunk3,2);
+
 # Other things not read	that might be interesting
 # 0dc20bNN NN = 0-2.  Number in security 
 # 265200              Get Lock Code
@@ -569,7 +575,18 @@ sub packetdump {
 	 0x0bc2=>"securitynumber");
     my ($cmd1, $cmd2, $cmd3) = unpack("CCC",substr($packet,0,3));
     my $packdesc = "unknown";
-    if($cmd1==0x00) {
+
+    $len = length($packet);
+
+    if($direction == 2) {
+	if($len > 6900) {
+	    $packdesc = "calllerid";
+	} elsif ($len > 3900) {
+	    $packdesc = "pbsort";
+	} else {
+	    $packdesc = "ringerpic";
+	}
+    } elsif($cmd1==0x00) {
 	$packdesc = "firmware";
     } elsif ($cmd1==0x26) {
 	$packdesc = "phonenumber";
@@ -578,7 +595,7 @@ sub packetdump {
     } elsif ($cmd1==0x0d) {
 	if($cmd3==0x0f) {
 	    $packdesc = "bufferpart";
-	} elsif($cmd3 == 0x0c || $cmd == 0x0b) {
+	} elsif($cmd3 == 0x0c || $cmd3 == 0x0b) {
 	    my $cmd = $cmd3*256 + $cmd2;
 	    $packdesc = $packettype{$cmd} if $packettype{$cmd};
 	}
@@ -586,14 +603,15 @@ sub packetdump {
 
     printf $fh_dump ("%2.2d:%2.2d:%2.2d.000 %s:",$hour,$min,$sec,$model);
 
-    $len = length($packet);
-
     if($direction == 0) {
 	printf $fh_dump ("sanyo phonebook request Data - %d bytes\n",$len);
 	print $fh_dump "<\#! p_sanyo.${packdesc}request !\#>\n";
-    } else {
+    } elsif($direction == 1) {
 	printf $fh_dump ("sanyo phonebook response Data - %d bytes\n",$len-3);
 	print $fh_dump "<\#! p_sanyo.${packdesc}response !\#>\n";
+    } else {
+	printf $fh_dump ("sanyo phonebook buffer Data - %d bytes\n",$len);
+	print $fh_dump "<\#! p_sanyo.${packdesc}buffer !\#>\n";
     }
 
     if($direction == 1 && (substr($packet,$len-1,1) == "\x7e")) {
