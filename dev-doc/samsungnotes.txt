@@ -347,6 +347,7 @@ OK
 
 ==========================================================================
 SPH-A670 Verizon
+==========================================================================
 
 Fields in phonebook entry
        Name, Location#, Home, Office, Mobile, Pager, Fax, Alias, E-Mail,
@@ -463,6 +464,127 @@ Commas can be put in text fields with uncertain impact on AT#PBOKR. Double quote
  
 Vic Heintz
 
+==========================================================================
+SPH A-670 on Telus network (Canada)                    
+==========================================================================
+
+   Date: Mon, 06 Dec 2004 14:43:52 -0000
+   From: "Troy Strum" <tstrum@accesswave.ca>
+Subject: AT Codes... (Telus + a670)
+
+
+I ran all the possible "P" series AT codes against my phone (something
+like 500,000 of them) and I came up with about 31 of them. 
+
+Serial Settings: 115200, 8N1
+Turn on local echo: atz
+Turn on PCSync Mode: at#pmode=1
+If you screw up a command, just type "at" and hit enter.
+
+Interestingly, I noticed that when I tried to retrieve my phonebook, I
+at first had access to one contact (not the 17 I had). Then later, I
+had access to 2. This kept happening until I had 7 or so before I
+figured it out:
+
+at#pbsel responds with #PBSEL: 0,3,"1C2C3C"
+
+This is somehow an internal regiter that shows how many contacts are
+in the phonebook - and that started with 0,1,"1C" and worked up to
+0,17,"1C...17C". It's read-only. However, every time I did with
+"at#pmode=0" and then "at#pmode=1" it incremented. I ran that a few
+times and now I have access to all 17 - and it *seems* new contacts
+now show immediately without futzing, YMMV.
+
+Anyway, the codes:
+
+(where it's command:response_line1:response_line2:...)
+
+at#pbdyn?:#PBDYN: 555-555-5555::OK //My Cell Number
+at#pbgrr=?:#PBGRR: (0-4),10::OK
+at#pbokr=?:#PBOKR: (1-301),(0-4),20,32,32,0::OK //Read Contact
+at#pbokw=?:#PBOKW: (1-301),(0-4),20,32,32,0::OK //Write Contact (not
+tried)
+at#pbsel?:#PBSEL: 0,3,"1C2C3C"::OK //Documented above.
+at#pcbit?:#PCBIT: 1012,1,0,5,5,300,300,29,1,10,32,20,32,0::OK
+at#pcbnd?:#PCBND: 1::OK
+at#pckey?:#PCKEY: 0::OK
+at#pclnk?:#PCLNK: 0::OK
+at#pclnk=?:#PCLNK: (0-1)::OK
+at#pcmit?:#PCMIT:
+1001,1,4,0,0,0,0,0,4,12,1,128,80,0,12,1,0,0,0,0,12,0,0,0,0,0::OK
+at#pcout?:#PCOUT: 1::OK
+at#pcout=?:#PCOUT: (0-1)::OK
+at#pcpit?:#PCPIT: 1001,32,70,1,5,16,9,32,9::OK
+at#pcsit?:#PCSIT: 1001,0,0,0,0,255,94::OK
+at#pcuit?:#PCUIT: 1001,12,1000,0,10,0::OK
+at#pidyr=?:#PIDYR: (0-8),16::OK
+at#pidyw=?:#PIDYW: (0-8),16::OK
+at#pishr=?:#PISHR: (0-69),(0-4),32:100:0:10:30:60::OK
+at#pishw=?:#PISHW: (0-69),(0-4),32:100:0:10:30:60::OK
+at#pitdr=?:#PITDR: (0-8),32::OK
+at#pitdw=?:#PITDW: (0-8),32::OK
+at#pitim?:#PITIM: 19800106T000000::OK
+at#pmode?:#PMODE: 1::OK //Modem (0) or PCSync (1) Mode.
+at#pmode=?:#PMODE: (0-1)::OK 
+at#pmuna?:#PMUNA: 20041128T194340,S,"My Banner"::OK
+at#pmuna=?:#PMUNA: 30,1::OK
+at#psrmr?:#PSRMR: 4::OK
+at#psrmr=?:#PSRMR: (0-93)::OK
+at#pssel?:#PSSEL: 0,0,4::OK
+at#pugsn?:#PUGSN: (0-20):0,0,Ring 1:1,0,Ring 2:2,0,Ring 3:3,0,Ring
+4:4,0,Ring 5:5,0,Ring 6:6,0,Ring 7:7,0,Ring 8:8,0,Ring 9:9,0,Ring
+10:10,1,Fur Elise :11,1,Serenade:12,1,Rock:13,1,Too
+high:14,1,Carmen:15,1,Voice Volume:16,1,HFK Voice:17,1,Headset:18,1,HF
+
+Getting the phone book:
+
+Command: at#pbokr=18
+
+Response: #PBOKR:
+18,18,1,2,"DUMMY",1,0,9021111111,0,9022222222,0,9023333333,0,9024444444,
+0,9025555555,0,9026666666,0,,,"email1","email2",01/01/1976,20,20041205T233411
+
+Decyphered:
+
+memory_code (the 18 of at#pbokr=18)
+normal_code (the code which the phonebook displays)
+GROUP (See at#pbgrr=X (where X=0..4)
+RINGER (corresponds with at#pugsn? except downloads are always 20 too)
+"NAME"
+SPEED_DIAL_WHICH_# (0..6-home, business, cell, pager, fax, no label)
+0 (Seems always to be 0 in my phonebook?)
+HOME#
+is_secret (above # - 0 for not, 1 for secret)
+BUS#
+is_secret (above # - 0 for not, 1 for secret)
+CELL#
+is_secret (above # - 0 for not, 1 for secret)
+PAGER#
+is_secret (above # - 0 for not, 1 for secret)
+FAX#
+is_secret (above # - 0 for not, 1 for secret)
+NOLABEL#
+is_secret (above # - 0 for not, 1 for secret)
+? (Can't seem to set this anywhere)
+? (Can't seem to set this anywhere)
+"email1"
+"email2"
+birthday (mm/dd/yyyy)
+20 (Seems always to be 20 in my phonebook?)
+date (added or edited - YYYYMMDDTHHMMSS - where T is a literal T in
+the string)
+
+Setting the contact to secret seems to set all the is_secret fields to
+1, disabling sets them all to 0. 
+
+Before I added this entry, my previous entries were reverse order to
+memory_code and normal_code - I had 17 entries, and it was
+1..17,17..1. When I was finally able to access all my phone entries
+from AT commends, I added an 18th entry via the phone, and both codes
+matched. Strange. :)
+
+
+- Troy
 ==========================================================================
 SPH-A700 Sprint  (AKA MM-A700?)
 
