@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
+# This file is under the Python and BSD liceneses.  It incorporates
+# code from both the standard Python library and M2Crypto, which
+# was then modified to work properly.
+
 # My own implementation of xmlrpc (both server and client)
+
+# It has a silly name so it doesn't class with standard Python
+# and library module names
 
 # The standard Python implementation lacks any support for serving
 # over SSL, dealing with authentication on the server side, having
