@@ -585,9 +585,15 @@ def idaudio_PMD(f):
     #     19 "string" -- a version number that has some correlation with the pmd version number
     #
     #  Various other sections that cover the contents that don't matter for identification
-    if f.GetBytes(0,4)=="cmid" and f.GetBytes(13,5)=="vers\0":
-        verlen=f.GetByte(18)
-        verstr=f.GetBytes(19,verlen)
+    if f.GetBytes(0,4)=="cmid":
+        if f.GetBytes(13,5)=="vers\0":
+            verlen=f.GetByte(18)
+            verstr=f.GetBytes(19,verlen)
+        elif f.GetBytes(36,5)=="vers\0":
+            verlen=f.GetByte(41)
+            verstr=f.GetBytes(42,verlen)
+        else:
+            return None
 
         return AudioFileInfo(f, **{'format': 'PMD', 'fileversion': verstr, '_shortdescription': fmts_PMD} )
 
