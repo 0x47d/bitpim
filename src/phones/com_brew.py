@@ -479,7 +479,7 @@ def unescape(d):
         start=0
         while True:
             p=res.index("\x7d", start)
-            res[p:p+2]=chr(ord(res[p+1])+0x20)
+            res[p:p+2]=chr(ord(res[p+1])^0x20)
             start=p+1
     except ValueError:
         return "".join(res)
