@@ -1143,6 +1143,7 @@ class WorkerThread(WorkerThreadFramework):
     def rebootcheck(self, results):
         if __debug__: self.checkthread()
         if results.has_key('rebootphone'):
+            self.log("BitPim is rebooting your phone for changes to take effect")
             self.phonerebootrequest()
             self.clearcomm()
             
