@@ -22,6 +22,7 @@ import p_sanyo
 import prototypes
 import common
 import conversions
+import bpcalendar
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -492,7 +493,7 @@ class SanyoPhonebook:
             if k=='ringtones' or k=='wallpapers' or k=='numbertypes':
                 continue
             if k=='numbers':
-                for numberindex in range(7):
+                for numberindex in range(self.protocolclass.NUMPHONENUMBERS):
                     enpn=self.protocolclass.phonenumber()
                     e.numbers.append(enpn)
                     
@@ -917,27 +918,29 @@ class SanyoPhonebook:
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
             if(res.entry.flag):
-                self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
-                entry={}
-                entry['pos']=i
-                entry['changeserial']=res.entry.serial
-                if(len(res.entry.location) > 0):
-                    entry['description']=res.entry.eventname+"/"+res.entry.location
-                else:
-                   entry['description']=res.entry.eventname
-               
+                self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
+                entry=bpcalendar.CalendarEntry()
+                #entry.pos=i
+                entry.changeserial=res.entry.serial
+                entry.description=res.entry.eventname
+                entry.location=res.entry.location
                 starttime=res.entry.start
-                entry['start']=self.decodedate(starttime)
-                entry['end']=self.decodedate(res.entry.end)
-                entry['repeat']=self._calrepeatvalues[res.entry.period]
-                alarmtime=res.entry.alarm
-                entry['alarm']=(starttime-alarmtime)/60
-                if res.entry.ringtone==self.calendar_defaultringtone:
-                    entry['ringtone']=0
+                entry.start=self.decodedate(starttime)
+                entry.end=self.decodedate(res.entry.end)
+                entry.repeat=self._calrepeatvalues[res.entry.period]
+                if res.entry.alarm==0xffffffff:
+                    entry.alarm=res.entry.alarmdiff/60
                 else:
-                    entry['ringtone']=res.entry.ringtone
-                entry['snoozedelay']=0
-                calres[entry['pos']]=entry
+                    alarmtime=res.entry.alarm
+                    entry.alarm=(starttime-alarmtime)/60
+                ringtone=res.entry.ringtone
+                if ringtone in self.calendar_tonerange:
+                    ringtone-=self.calendar_toneoffset
+                if ringtone!=self.calendar_defaultringtone:
+                    if result['ringtone-index'].has_key(ringtone):
+                        entry.ringtone=result['ringtone-index'][ringtone]['name']
+                entry.snoozedelay=0
+                calres[entry.id]=entry
                 count+=1
 
         req=self.protocolclass.callalarmrequest()
@@ -945,22 +948,20 @@ class SanyoPhonebook:
             req.slot=i
             res=self.sendpbcommand(req, self.protocolclass.callalarmresponse)
             if(res.entry.flag):
-                self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum)
-                entry={}
-                entry['pos']=i+self.protocolclass._NUMEVENTSLOTS # Make unique
-                entry['changeserial']=res.entry.serial
-                entry['description']=res.entry.phonenum
+                self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum+", alarm ID "+`res.entry.ringtone`)
+                entry=bpcalendar.CalendarEntry()
+                #entry.pos=i+self.protocolclass._NUMEVENTSLOTS # Make unique
+                entry.changeserial=res.entry.serial
+                entry.description=res.entry.phonenum
                 starttime=res.entry.date
-                entry['start']=self.decodedate(starttime)
-                entry['end']=entry['start']
-                entry['repeat']=self._calrepeatvalues[res.entry.period]
-                entry['alarm']=0
-                if res.entry.ringtone==self.calendar_defaultringtone:
-                    entry['ringtone']=0
-                else:
-                    entry['ringtone']=res.entry.ringtone
-                entry['snoozedelay']=0
-                calres[entry['pos']]=entry
+                entry.start=self.decodedate(starttime)
+                entry.end=entry.start
+                entry.repeat=self._calrepeatvalues[res.entry.period]
+                entry.alarm=0
+                if res.entry.ringtone!=self.calendar_defaultringtone:
+                    entry.ringtone=result['ringtone-index'][res.entry.ringtone]['name']
+                entry.snoozedelay=0
+                calres[entry.id]=entry
                 count+=1
 
         result['calendar']=calres
@@ -989,16 +990,16 @@ class SanyoPhonebook:
         for k in keys:
             entry=cal[k]
             
-            descloc=entry['description']
+            descloc=entry.description
             self.progress(eventslot+callslot, progressmax, "Writing "+descloc)
 
             repeat=None
             for k,v in self._calrepeatvalues.items():
-                if entry['repeat']==v:
+                if entry.repeat==v:
                     repeat=k
                     break
             if repeat is None:
-                self.log(descloc+": Repeat type "+`entry['repeat']`+" not valid for this phone")
+                self.log(descloc+": Repeat type "+`entry.repeat`+" not valid for this phone")
                 repeat=0
 
             phonenum=re.sub("\-","",descloc)
@@ -1011,7 +1012,7 @@ class SanyoPhonebook:
                 e.phonenum_len=len(e.phonenum)
                 
 
-                timearray=list(entry['start'])+[0,0,0,0]
+                timearray=list(entry.start)+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
@@ -1024,10 +1025,13 @@ class SanyoPhonebook:
                 e.name="" # Could get this by reading phone book
                           # But it would take a lot more time
                 e.name_len=len(e.name)
-                if entry['ringtone']==0:
-                    e.ringtone=self.calendar_defaultringtone
-                else:
-                    e.ringtone=entry['ringtone']
+                #if entry.ringtone==0:
+                #    e.ringtone=self.calendar_defaultringtone
+                #else:
+                #    e.ringtone=entry.ringtone
+                # Use default ringtone for now
+                e.ringtone=self.calendar_defaultringtone
+                print "Setting ringtone "+`e.ringtone`
 
                 req=self.protocolclass.callalarmupdaterequest()
                 callslot+=1
@@ -1045,12 +1049,12 @@ class SanyoPhonebook:
                     eventname=descloc
                     location=''
             
-                e.eventname=eventname
+                e.eventname=descloc
                 e.eventname_len=len(e.eventname)
-                e.location=location
+                e.location=entry.location
                 e.location_len=len(e.location)
 
-                timearray=list(entry['start'])+[0,0,0,0]
+                timearray=list(entry.start)+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
@@ -1058,22 +1062,25 @@ class SanyoPhonebook:
                     e.flag=1 # In the future
                 e.start=starttimelocal-self._sanyoepochtounix
 
-                timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
-                e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
+                #timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
+                #e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
+                timearray=list(entry.end)+[0,0,0,0]
+                endtimelocal=time.mktime(timearray)-zonedif
+                e.end=endtimelocal-self._sanyoepochtounix
 
-                alarmdiff=entry.get('alarm',0)
-                if not alarmdiff:
+                alarmdiff=entry.alarm
+                if alarmdiff<0:
                     alarmdiff=0
                 alarmdiff=max(alarmdiff,0)*60
                 e.alarmdiff=alarmdiff
                 e.alarm=starttimelocal-self._sanyoepochtounix-alarmdiff
-                e.location=location
-                e.location_len=len(e.location)
 
-                if entry['ringtone']==0:
-                    e.ringtone=self.calendar_defaultringtone
-                else:
-                    e.ringtone=entry['ringtone']
+                #if entry['ringtone']==0:
+                #    e.ringtone=self.calendar_defaultringtone
+                #else:
+                #    e.ringtone=entry['ringtone']
+                e.ringtone=self.calendar_defaultringtone
+                print "Setting ringtone "+`e.ringtone`
 
 # What we should do is first find largest changeserial, and then increment
 # whenever we have one that is undefined or zero.
@@ -1083,8 +1090,11 @@ class SanyoPhonebook:
                 respc=self.protocolclass.eventresponse
 
             e.period=repeat
-            e.dom=entry['start'][2]
-            e.serial=entry.get('changeserial',0)
+            e.dom=entry.start[2]
+            if entry.id>=0 and entry.id<256:
+                e.serial=entry.id
+            else:
+                e.serial=0
             req.entry=e
             res=self.sendpbcommand(req, respc, writemode=True)
 
@@ -1134,8 +1144,6 @@ class SanyoPhonebook:
 
         self.progress(progressmax, progressmax, "Calendar write done")
 
-#        dict['calendar'] = cal
-#        Not mucking with passed in calendar yet
         dict['rebootphone'] = True
         return dict
 
@@ -1183,6 +1191,8 @@ class Profile(com_phone.Profile):
         )
     # which device classes we are.
     deviceclasses=("modem",)
+
+    BP_Calendar_Version=3
 
     def __init__(self):
         self.numbertypetab=numbertypetab
