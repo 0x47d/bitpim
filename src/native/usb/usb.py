@@ -143,10 +143,11 @@ class USBInterface:
             raise USBException()
 
         # grab the interface
-        print "claiming"
-        res=usb.usb_claim_interface(self.device.handle, self.number())
-        if res<0:
-            raise USBException()
+        for i in range(3):
+            print "claiming",i
+            res=usb.usb_claim_interface(self.device.handle, i)
+            if res<0:
+                raise USBException()
 
         # we now have the file
         return USBFile(self, epin, epout)
