@@ -106,6 +106,7 @@ import nameparser
 import bphtml
 import guiwidgets
 import phonenumber
+import helpids
 
 ###
 ### Phonebook entry display (Derived from HTML)
@@ -1548,6 +1549,8 @@ class ImportDialog(wx.Dialog):
         self.sortedColumn=1
         self.sortedColumnDescending=False
 
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_DLG_PBMERGEENTRIES))
+
     # ::TODO:: this method and the copy earlier should be merged into a single mixin
     def OnColumnHeaderPaint(self, evt):
         w = self.grid.GetGridColLabelWindow()
@@ -1720,7 +1723,7 @@ class ImportDialog(wx.Dialog):
         menu.Append(self.ID_REVERT_TO_IMPORTED, "Revert field to imported value")
         menu.Append(self.ID_CLEAR_FIELD, "Clear field")
         menu.AppendSeparator()
-        menu.Append(self.ID_IMPORTED_MISMATCH, "Imported entry mismatch")
+        menu.Append(self.ID_IMPORTED_MISMATCH, "Imported entry mismatch...")
         self.menu=menu
 
         wx.EVT_MENU(menu, self.ID_EDIT_ITEM, self.OnEditItem)
