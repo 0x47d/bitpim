@@ -413,7 +413,14 @@ Field	Value
 25	"di..."	Path to caller-id gallery image when flag above=3
 26	"20..."	Timestamp
 
-Note on field #24: this id seems to be mapped to image file in /nvm/nvm/brew_image. Mapping of the id to phonebook contact name appears to be in /nvm/nvm/dial_tbl
+Note on field #24:  This id seems to be mapped to image file name and path in /nvm/nvm/brew_image. Mapping of the id to phonebook contact name appears to be in /nvm/nvm/dial_tbl
+
+Here is the same phonebook entry after changing the caller-id image from a "Gallery" (digital cam) selection to a "My Image" (wallpaper) selection:
+
+at#pbokr=42
+#PBOKR: 42,10,3,18,"A test",2,0,5550000000,0,5551111111,0,5552222222,0,5553333333,0,5554444444,0,Alias  (48  chars),0,,,"Email (48 chars)",4,3,"",20041115T124103
+
+Note the flag is now 4 and the wallpaper id is now 3.
  
 Vic Heintz
 
