@@ -42,7 +42,11 @@ class BrewBadPathnameException(BrewCommandException):
 class BrewFileLockedException(BrewCommandException):
     def __init__(self, errnum=0x0b):
         BrewCommandException.__init__(self, errnum, "File is locked")
-    
+
+class BrewNameTooLongException(BrewCommandException):
+    def __init__(self, errnum=0x0d):
+        BrewCommandException.__init__(self, errnum, "Name is too long")
+
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,)
 
@@ -304,6 +308,8 @@ class BrewProtocol:
                     raise BrewBadPathnameException()
                 if err==0x0b:
                     raise BrewFileLockedException()
+                if err==0x0d:
+                    raise BrewNameTooLongException()
                 raise BrewCommandException(err)
         # parse data
         buffer=prototypes.buffer(data)
