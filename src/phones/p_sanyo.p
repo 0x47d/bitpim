@@ -1,7 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
-### Copyright (C) 2003 Stephen Wood <saw@genhomepage.com>
+### Copyright (C) 2003 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This software is under the Artistic license.
 ### http://www.opensource.org/licenses/artistic-license.php
@@ -213,6 +213,43 @@ PACKET messagerequest:
 
 PACKET messageresponse:
     * UNKNOWN unknown
+
+# Call History
+PACKET outgoingrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x3d} +header
+    2 UINT slot
+    500 UNKNOWN +pad
+
+PACKET incomingrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x3e} +header
+    2 UINT slot
+    500 UNKNOWN +pad
+
+PACKET missedrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x3f} +header
+    2 UINT slot
+    500 UNKNOWN +pad
+
+PACKET outgoingmiscrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x60} +header
+    2 UINT slot
+    500 UNKNOWN +pad
+
+PACKET incomingmiscrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x61} +header
+    2 UINT slot
+    500 UNKNOWN +pad
+
+PACKET missedmiscrequest:
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x62} +header
+    2 UINT slot
+    500 UNKNOWN +pad
 
 PACKET bufferpartrequest:
     * sanyoheader {'packettype': 0x0f} header
