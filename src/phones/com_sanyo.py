@@ -1056,17 +1056,23 @@ class SanyoPhonebook:
 
                 timearray=list(entry.start)+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
-                if(starttimelocal<now and repeat==0):
-                    e.flag=2 # In the past
+                if self.serialsname=='mm7400':
+                    e.flag=0xf0
                 else:
-                    e.flag=1 # In the future
+                    if(starttimelocal<now and repeat==0):
+                        e.flag=2 # In the past
+                    else:
+                        e.flag=1 # In the future
                 e.start=starttimelocal-self._sanyoepochtounix
 
                 #timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
                 #e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
-                timearray=list(entry.end)+[0,0,0,0]
-                endtimelocal=time.mktime(timearray)-zonedif
-                e.end=endtimelocal-self._sanyoepochtounix
+                try:
+                    timearray=list(entry.end)+[0,0,0,0]
+                    endtimelocal=time.mktime(timearray)-zonedif
+                    e.end=endtimelocal-self._sanyoepochtounix
+                except: # If no valid end date, make end
+                    e.end=e.start+60 #  one minute later 
 
                 alarmdiff=entry.alarm
                 if alarmdiff<0:
