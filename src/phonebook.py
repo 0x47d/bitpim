@@ -1109,47 +1109,50 @@ class PhoneWidget(wx.Panel):
 
 class ImportCellRenderer(wx.grid.PyGridCellRenderer):
     SCALE=0.8
-    def __init__(self, attr):
-        wx.grid.PyGridCellRenderer.__init__(self)
-        self.attr=attr
-        self.calc=False # we have to delay working out attributes since grid fills default ones in later
-        self.textcolour=None
 
-    def _calcattrs(self, attr):
-        assert self.attr.this==attr.this
-        self.font=attr.GetFont()
-        self.facename=attr.GetFont().GetFaceName()
-        self.facesize=attr.GetFont().GetPointSize()
-        #self.textcolour=attr.GetTextColour()
+    COLOURS=["HONEYDEW", "WHITE", "LEMON CHIFFON", "ROSYBROWN1"]
+    
+    def __init__(self, table):
+        wx.grid.PyGridCellRenderer.__init__(self)
+        self.calc=False
+        self.table=table
+
+    def _calcattrs(self):
+        grid=self.table.GetView()
+        self.font=grid.GetDefaultCellFont()
+        self.facename=self.font.GetFaceName()
+        self.facesize=self.font.GetPointSize()
+        self.textcolour=grid.GetDefaultCellTextColour()
+        self.brushes=[wx.Brush(wx.NamedColour(c)) for c in self.COLOURS]
+        self.pens=[wx.Pen(wx.NamedColour(c),1 , wx.SOLID) for c in self.COLOURS]
+        self.selbrush=wx.Brush(grid.GetSelectionBackground(), wx.SOLID)
+        self.selpen=wx.Pen(grid.GetSelectionBackground(), 1, wx.SOLID)
+        self.selfg=grid.GetSelectionForeground()
         self.calc=True
         
-    def _gettextcolour(self, grid, attr, isSelected):
-        if isSelected:
-            return grid.GetSelectionForeground()
-        if self.textcolour is None:
-            self.textcolour=attr.GetTextColour()
-        return self.textcolour
-
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
-        if not self.calc: self._calcattrs(attr)
-        assert self.attr.this==attr.this        
+        if not self.calc: self._calcattrs()
+
+        rowtype=self.table.GetRowType(row)
         dc.SetClippingRect(rect)
 
         # clear the background
         dc.SetBackgroundMode(wx.SOLID)
         if isSelected:
-            dc.SetBrush(wx.Brush(grid.GetSelectionBackground(), wx.SOLID))
-            dc.SetPen(wx.Pen(grid.GetSelectionBackground(), 1, wx.SOLID))
+            dc.SetBrush(self.selbrush)
+            dc.SetPen(self.selpen)
+            colour=self.selfg
         else:
-            dc.SetBrush(wx.Brush(attr.GetBackgroundColour(), wx.SOLID))
-            dc.SetPen(wx.Pen(attr.GetBackgroundColour(), 1, wx.SOLID))
+            dc.SetBrush(self.brushes[rowtype])
+            dc.SetPen(self.pens[rowtype])
+            colour=self.textcolour
 
         dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
 
         dc.SetBackgroundMode(wx.TRANSPARENT)
         dc.SetFont(self.font)
 
-        text = grid.GetTable().GetHtmlCellValue(row, col, self._gettextcolour(grid, attr, isSelected))
+        text = grid.GetTable().GetHtmlCellValue(row, col, colour)
         if len(text):
             bphtml.drawhtml(dc,
                             wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
@@ -1157,14 +1160,12 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
         dc.DestroyClippingRegion()
 
     def GetBestSize(self, grid, attr, dc, row, col):
-        assert self.attr.this==attr.this
-        if not self.calc: self._calcattrs(attr)
+        if not self.calc: self._calcattrs()
         text = grid.GetTable().GetHtmlCellValue(row, col)
-        if not len(text): return wx.Size(5,5)
+        if not len(text): return (5,5)
         return bphtml.getbestsize(dc, text, font=self.facename, size=self.facesize)
 
     def Clone(self):
-        print "CLONE CALLED"
         return ImportCellRenderer()
 
 
@@ -1175,24 +1176,12 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     DELETED=3
 
     htmltemplate=["Not set - "+`i` for i in range(15)]
-    
+
     def __init__(self, widget):
         self.main=widget
         self.rowkeys=[]
         wx.grid.PyGridTableBase.__init__(self)
         self.columns=['Confidence']+ImportColumns
-        self.addedattr=wx.grid.GridCellAttr()
-        self.addedattr.SetBackgroundColour("HONEYDEW")
-        self.addedattr.SetRenderer(ImportCellRenderer(self.addedattr))
-        self.unalteredattr=wx.grid.GridCellAttr()
-        self.unalteredattr.SetBackgroundColour("WHITE")
-        self.unalteredattr.SetRenderer(ImportCellRenderer(self.unalteredattr))
-        self.changedattr=wx.grid.GridCellAttr()
-        self.changedattr.SetBackgroundColour("LEMON CHIFFON")
-        self.changedattr.SetRenderer(ImportCellRenderer(self.changedattr))
-        self.deletedattr=wx.grid.GridCellAttr()
-        self.deletedattr.SetBackgroundColour("ROSYBROWN1")
-        self.deletedattr.SetRenderer(ImportCellRenderer(self.deletedattr))
 
     def GetRowData(self, row):
         """Returns a 4 part tuple as defined in ImportDialog.rowdata
@@ -1222,41 +1211,6 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         if row[1] is not None and row[2] is None:
             return self.ADDED
         return self.UNALTERED
-
-    def GetAttr(self, row, col, _):
-        try:
-            # it likes to ask for non-existent cells
-            row=self.GetRowData(row)
-        except:
-            return None
-        v=None
-        if row[3] is None:
-            v=self.DELETED
-        if v is None and (row[1] is not None and row[2] is not None):
-            v=self.CHANGED
-        if v is None and (row[1] is not None and row[2] is None):
-            v=self.ADDED
-        if v is None:
-            v=self.UNALTERED
-        r=[self.addedattr, self.unalteredattr, self.changedattr, self.deletedattr][v]
-        r.IncRef()
-        return r
-                
-    def GetValue(self, row, col):
-        try:
-            row=self.GetRowData(row)
-        except:
-            print "bad row", row
-            return "<error>"
-        
-        if self.columns[col]=='Confidence':
-            return row[0]
-
-        for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
-            if row[i] is not None:
-                return getdata(self.columns[col], ptr[row[i]], "")
-        assert False, "Can't get here"
-        return ""
 
     def GetValueWithNamedColumn(self, row, columnname):
         row=self.main.rowdata[self.rowkeys[row]]
@@ -1462,8 +1416,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         self.GetView().ClearSelection()
         self.main.OnCellSelect()
-        self.GetView().AutoSize()
-        wx.CallAfter(self.GetView().Fit)
+        workaroundyetanotherwxpythonbug(self.GetView().AutoSize)
+        wx.CallAfter(workaroundyetanotherwxpythonbug,self.GetView().Fit)
 
     OnDataUpdated=guihelper.BusyWrapper(OnDataUpdated)
 
@@ -1471,6 +1425,13 @@ def _htmlfixup(txt):
     if txt is None: return ""
     return txt.replace("&", "&amp;").replace("<", "&gt;").replace(">", "&lt;") \
            .replace("\r\n", "<br>").replace("\r", "<br>").replace("\n", "<br>")
+
+def workaroundyetanotherwxpythonbug(method, *args):
+    # grrr
+    try:
+        return method(*args)
+    except TypeError:
+        pass
 
 ###
 ### 0 thru 8 inclusive have a result present
@@ -1577,6 +1538,12 @@ class ImportDialog(wx.Dialog):
 
         self.grid=wx.grid.Grid(splitter, wx.NewId())
         self.table=ImportDataTable(self)
+        
+        # this is a work around for various wxPython/wxWidgets bugs
+        cr=ImportCellRenderer(self.table)
+        cr.IncRef()  # wxPython bug
+        self.grid.RegisterDataType("string", cr, None) # wxWidgets bug - it uses the string renderer rather than DefaultCellRenderer
+
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
         self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
         self.grid.SetRowLabelSize(0)
@@ -1584,6 +1551,7 @@ class ImportDialog(wx.Dialog):
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
         self.grid.EnableGridLines(False)
+
         wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self.grid, self.OnRightGridClick)
         wx.grid.EVT_GRID_SELECT_CELL(self.grid, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self.grid, self.OnCellDClick)
