@@ -73,6 +73,12 @@ class WallpaperView(guiwidgets.FileView):
         self.filenamechars=profile.WALLPAPER_FILENAME_CHARS
         self.convertextension=profile.WALLPAPER_CONVERT_FORMAT
         self.convertwxbitmaptype=self._bitmaptypemapping[self.convertextension.lower()]
+        if hasattr(profile,"OVERSIZE_PERCENTAGE"):
+            self.woversize_percentage=profile.OVERSIZE_PERCENTAGE
+            self.hoversize_percentage=profile.OVERSIZE_PERCENTAGE
+        else:
+            self.woversize_percentage=120
+            self.hoversize_percentage=120
         
     def OnListRequest(self, msg=None):
         l=[self._data['wallpaper-index'][x]['name'] for x in self._data['wallpaper-index']]
@@ -280,8 +286,8 @@ class WallpaperView(guiwidgets.FileView):
         if target==None: return # user didn't want to
         obj=img
         # if image is more than 20% bigger or 60% smaller than screen, resize
-        if img.GetWidth()>self.usewidth*120/100 or \
-           img.GetHeight()>self.useheight*120/100 or \
+        if img.GetWidth()>self.usewidth*self.woversize_percentage/100 or \
+           img.GetHeight()>self.useheight*self.hoversize_percentage/100 or \
            img.GetWidth()<self.usewidth*60/100 or \
            img.GetHeight()<self.useheight*60/100:
             obj=ScaleImageIntoBitmap(obj, self.usewidth, self.useheight, "FFFFFF") # white background ::TODO:: something more intelligent
