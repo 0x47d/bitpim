@@ -207,12 +207,15 @@ class RingerView(guiwidgets.FileView):
             if afi.size<=0: continue # zero length file or other issues
             newext,convertinfo=self.mainwindow.phoneprofile.QueryAudio(None, common.getext(file), afi)
             if convertinfo is not afi:
+                filedata=None
                 wx.EndBusyCursor()
                 try:
                     filedata=self.ConvertFormat(file, convertinfo)
                 finally:
                     # ensure they match up
                     wx.BeginBusyCursor()
+                if filedata is None:
+                    continue
             else:
                 filedata=open(file, "rb").read()
             self.thedir=self.mainwindow.ringerpath
@@ -235,11 +238,17 @@ class RingerView(guiwidgets.FileView):
         self.modified=True
 
     def ConvertFormat(self, file, convertinfo):
-        dlg=ConvertDialog(self, file, convertinfo)
+        if convertinfo.format=='MP3':
+            dlg=ConvertDialog(self, file, convertinfo)
+        elif convertinfo.format=='QCP':
+            dlg=ConvertMP3toQCP(self, file, convertinfo)
+        else:
+            # no can do
+            return None
         if dlg.ShowModal()==wx.ID_OK:
             res=dlg.newfiledata
         else:
-            assert False, "can't handle cancel yet"
+            res=None
         dlg.Destroy()
         return res
 
@@ -302,10 +311,31 @@ class ConvertDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, title="Convert Audio File")
         self.file=file
         self.convertinfo=convertinfo
+        self.afi=None
         self.mp3file=common.gettempfilename("mp3")
         self.workingmp3file=common.gettempfilename("mp3")
         self.wavfile=common.gettempfilename("wav")
         vbs=wx.BoxSizer(wx.VERTICAL)
+        # create the covert controls
+        self.create_convert_pane(vbs, file, convertinfo)
+        # and the crop controls
+        self.create_crop_panel(vbs)
+
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+        # Events
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
+        wx.EVT_TIMER(self, self.ID_TIMER, self.OnTimer)
+
+        # timers and sounds
+        self.sound=None
+        self.timer=wx.Timer(self, self.ID_TIMER)
+
+    def create_convert_pane(self, vbs, file, convertinfo):
         # convert bit
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Convert"), wx.VERTICAL)
         bs.Add(wx.StaticText(self, -1, "Input File: "+file), 0, wx.ALL, 5)
@@ -330,7 +360,16 @@ class ConvertDialog(wx.Dialog):
         bs.Add(wx.Button(self, self.ID_CONVERT, "Convert"), 0, wx.ALIGN_RIGHT|wx.ALL, 5)
 
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+        # Fill out fields
+        if convertinfo.format!="MP3": raise common.ConversionNotSupported("Can only convert to MP3")
+        self.type.SetStringSelection(convertinfo.format)
+        self.channels.SetStringSelection(`convertinfo.channels`)
+        self.bitrate.SetStringSelection(`convertinfo.bitrate`)
+        self.samplerate.SetStringSelection(`convertinfo.samplerate`)
+        # Events
+        wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
 
+    def create_crop_panel(self, vbs):
         # crop bit
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Crop"), wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -356,35 +395,13 @@ class ConvertDialog(wx.Dialog):
         bs.Add(hbs, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
 
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
-
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALL|wx.ALIGN_RIGHT, 5)
-
-        self.SetSizer(vbs)
-        vbs.Fit(self)
-
-        # Fill out fields
-        if convertinfo.format!="MP3": raise common.ConversionNotSupported("Can only convert to MP3")
-        self.type.SetStringSelection(convertinfo.format)
-        self.channels.SetStringSelection(`convertinfo.channels`)
-        self.bitrate.SetStringSelection(`convertinfo.bitrate`)
-        self.samplerate.SetStringSelection(`convertinfo.samplerate`)
-
-        # Events
-        wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
         wx.EVT_BUTTON(self, self.ID_PLAY, self.OnPlay)
         wx.EVT_BUTTON(self, self.ID_STOP, self.OnStop)
         wx.EVT_BUTTON(self, self.ID_DELETE_BEFORE, self.OnDeleteBefore)
         wx.EVT_BUTTON(self, self.ID_DELETE_AFTER, self.OnDeleteAfter)
-        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
-        wx.EVT_TIMER(self, self.ID_TIMER, self.OnTimer)
-
         wx.EVT_SCROLL_ENDSCROLL(self, self.OnUserSlider)
         wx.EVT_SCROLL_THUMBTRACK(self, self.OnUserSlider)
         wx.EVT_SCROLL_THUMBRELEASE(self, self.OnUserSlider)
-
-        # timers and sounds
-        self.sound=None
-        self.timer=wx.Timer(self, self.ID_TIMER)
 
     def OnConvert(self, _):
         try:
@@ -415,6 +432,9 @@ class ConvertDialog(wx.Dialog):
         self.positionlabel.SetLabel("%.1f secs" % (duration,))
 
     def OnPlay(self,_):
+        if self.afi is None:
+            # not converted yet
+            return
         self.OnStop()
         frames=self.afi.frames
         self.startpos=self.slider.GetValue()
@@ -459,31 +479,142 @@ class ConvertDialog(wx.Dialog):
         wx.CallAfter(self.UpdatePosition)
 
     def OnDeleteBefore(self, _):
+        if self.afi is None:
+            return
         self.OnStop()
         self.beginframe=self.slider.GetValue()
         self.UpdateCrop()
 
     def OnDeleteAfter(self, _):
+        if self.afi is None:
+            return
         self.OnStop()
         self.endframe=self.slider.GetValue()
         self.UpdateCrop()
+
+    def _removetempfiles(self):
+        for file in self.mp3file, self.workingmp3file, self.wavfile:
+            if os.path.exists(file):
+                os.remove(file)
         
     def OnOk(self, evt):
         self.OnStop()
         # make new data
-        frames=self.afi.frames
-        offset=frames[self.beginframe].offset
-        length=frames[self.endframe-1].nextoffset-offset
-
-        f=open(self.mp3file, "rb", 0)
-        f.seek(offset)
-        self.newfiledata=f.read(length)
-        f.close()
-
+        self.newfiledata=None
+        if self.afi is not None:
+            frames=self.afi.frames
+            offset=frames[self.beginframe].offset
+            length=frames[self.endframe-1].nextoffset-offset
+            try:
+                f=open(self.mp3file, "rb", 0)
+                f.seek(offset)
+                self.newfiledata=f.read(length)
+                f.close()
+            except:
+                pass
         # now remove files
-        for file in self.mp3file, self.workingmp3file, self.wavfile:
+        self._removetempfiles()
+        # use normal handler to quit dialog
+        evt.Skip()
+
+    def OnCancel(self, evt):
+        self.OnStop()
+        self._removetempfiles()
+        evt.Skip()
+
+class ConvertMP3toQCP(ConvertDialog):
+    def __init__(self, parent, file, convertinfo):
+        ConvertDialog.__init__(self, parent, file, convertinfo)
+        self.beginframe=self.endframe=0
+        tempfilename=common.gettempfilename('')
+        self.wavfile=tempfilename+'wav'
+        self.qcpfile=tempfilename+'qcp'
+        self.workingwavfile=common.gettempfilename('wav')
+        
+    def create_convert_pane(self, vbs, file, convertinfo):
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Convert MP3 to QCP"), wx.VERTICAL)
+        bs.Add(wx.StaticText(self, -1, "Input File: "+file), 0, wx.ALL, 5)
+        self.__status=wx.StaticText(self, -1, 'Status: None')
+        bs.Add(self.__status, 0, wx.ALL|wx.EXPAND, 5)
+        bs.Add(wx.Button(self, self.ID_CONVERT, "Convert"), 0, wx.ALIGN_RIGHT|wx.ALL, 5)
+        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+        # Events
+        wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
+
+    def OnConvert(self, _):
+        try:
+            wx.BeginBusyCursor()
+            self.__status.SetLabel('Status: conversion in progress, please wait ...')
+            kargc={ 'samplerate': 8000, 'channels': 1}
+            if self.endframe:
+                kargc['start']=self.beginframe
+                kargc['duration']=self.endframe-self.beginframe
+            conversions.convertmp3towav(self.file, self.wavfile, **kargc)
+            conversions.convertwavtoqcp(self.wavfile)
+            self.lengthlabel.SetLabel(str(os.stat(self.qcpfile).st_size))
+            self.afi=fileinfo.getpcmfileinfo(self.wavfile)
+            self.beginframe=0
+            self.endframe=self.afi.duration
+            self.UpdateCrop()
+        finally:
+            wx.EndBusyCursor()
+            self.__status.SetLabel('Status: Completed')
+
+    def UpdateCrop(self):
+        self.durationlabel.SetLabel("%.1f secs" % (self.endframe-self.beginframe,))
+        self.positionlabel.SetLabel(`0`)
+        self.slider.SetRange(self.beginframe, self.endframe)
+        self.slider.SetValue(self.beginframe)
+
+    def OnPlay(self,_):
+        if self.afi is None:
+            return
+        self.OnStop()
+        self.startpos=self.slider.GetValue()
+        duration=self.endframe-self.startpos
+        conversions.convertmp3towav(self.wavfile, self.workingwavfile,
+                                    start=self.startpos)
+        self.sound=wx.Sound(self.workingwavfile)
+        assert self.sound.IsOk()
+        res=self.sound.Play(wx.SOUND_ASYNC)
+        assert res
+        print 'duration:', duration
+        self.starttime=time.time()
+        self.endtime=self.starttime+duration
+        self.timer.Start(100, wx.TIMER_CONTINUOUS)
+
+    def UpdatePosition(self, curval=None):
+        if curval is None: curval=self.slider.GetValue()
+        self.positionlabel.SetLabel("%.1f secs" % (curval,))
+
+    def OnTimer(self,_):
+        now=time.time()
+        if now>self.endtime:
+            self.OnStop()
+            # assert wx.Sound.IsPlaying()==False
+            self.slider.SetValue(self.endframe)
+            self.UpdatePosition(self.endframe)
+            return
+        # work out where the slider should go
+        newval=self.startpos+(now-self.starttime)
+        self.slider.SetValue(newval)
+        self.UpdatePosition(newval)
+
+    def _removetempfiles(self):
+        ConvertDialog._removetempfiles(self)
+        for file in self.qcpfile, self.workingwavfile:
             if os.path.exists(file):
                 os.remove(file)
+
+    def OnOk(self, evt):
+        self.OnStop()
+        # make new data
+        try:
+            self.newfiledata=open(self.qcpfile, 'rb').read()
+        except:
+            self.newfiledata=None
+        # now remove files
+        self._removetempfiles()
 
         # use normal handler to quit dialog
         evt.Skip()

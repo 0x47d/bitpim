@@ -600,6 +600,35 @@ def idaudio_PMD(f):
 def fmts_PMD(afi):
     return "%s v %s" % (afi.format, afi.fileversion)
     
+def idaudio_PCM(f):
+    "Identify a PCM/WAV file"
+    if f.GetBytes(0, 4)!='RIFF' or f.GetBytes(8, 4)!='WAVE' or \
+       f.GetBytes(12, 4)!='fmt ' or f.GetLSBUint16(20)!=1:
+        return None
+    d={ 'format': 'PCM' }
+    d['size']=f.GetLSBUint32(4)
+    d['numchannels']=f.GetLSBUint16(22)
+    d['samplerate']=f.GetLSBUint32(24)
+    d['byterate']=f.GetLSBUint32(28)
+    d['blockalign']=f.GetLSBUint16(32)
+    d['bitspersample']=f.GetLSBUint16(34)
+    # compute the approximate duration
+    d['duration']=(d['size']-36.0)/(d['blockalign']*d['samplerate'])
+    return AudioFileInfo(f, **d)
+
+def fmts_PCM(afi):
+    return afi.format
+
+def fmt_PCM(afi):
+    res=['PCM/WAV']
+    res.append('%d KHz %d bits %s'%\
+               (afi.samplerate/1000, afi.bitspersample,\
+                ['None', 'Mono', 'Stereo'][afi.numchannels]))
+    return '\n'.join(res)
+
+def getpcmfileinfo(filename):
+    f=SafeFileWrapper(filename)
+    return idaudio_PCM(f)
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 def identify_audiofile(filename):

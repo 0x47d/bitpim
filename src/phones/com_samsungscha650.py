@@ -23,6 +23,7 @@ import com_brew
 import com_samsung
 import com_phone
 import conversions
+import fileinfo
 import p_samsungscha650
 import prototypes
 
@@ -574,6 +575,12 @@ class Profile(com_samsung.Profile):
 
     def convertphonebooktophone(self, helper, data):
         return data
+
+    def QueryAudio(self, origin, currentextension, afi):
+        # we don't modify any of these
+        if afi.format in ("MIDI", "QCP", "PMD"):
+            return currentextension, afi
+        return ('qcp', fileinfo.AudioFileInfo(afi, **{'format': 'QCP'}))
 
 class FileEntries:
     def __init__(self, phone, info):
