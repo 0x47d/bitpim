@@ -123,8 +123,6 @@ class GetPhoneDialog(wxDialog):
     # actions ("Pretty Name", "name used to query profile")
     actions = (  ("Get", "read"), )
 
-
-
     NOTREQUESTED=0
     MERGE=1
     OVERWRITE=2
@@ -223,6 +221,47 @@ class GetPhoneDialog(wxDialog):
             return False
         return True
 
+    def UpdateWithProfile(self, profile):
+        for cs in range(len(self.sources)):
+            source=self.sources[cs][1]
+            # we disable the checkbox
+            self.cb[cs].Enable(False)
+            # are any radio buttons enabled
+            count=0
+            for i in range(len(self.types)):
+                assert len(self.types)==2
+                if self.types[i][1]==self.MERGE:
+                    type="MERGE"
+                elif self.types[i][1]==self.OVERWRITE:
+                    type="OVERWRITE"
+                else:
+                    assert False
+                    continue
+                if self._dowesupport(source, self.actions[0][1], self.types[i][1]) and \
+                       profile.SyncQuery(source, self.actions[0][1], type):
+                    self.cb[cs].Enable(True)
+                    self.rb[cs*len(self.types)+i].Enable(True)
+                    if self.rb[cs*len(self.types)+i].GetValue():
+                        count+=1
+                else:
+                    self.rb[cs*len(self.types)+i].Enable(False)
+                    self.rb[cs*len(self.types)+i].SetValue(False)
+            if not self.cb[cs].IsEnabled():
+                # ensure checkbox is unchecked if not enabled
+                self.cb[cs].SetValue(False)
+            else:
+                # ensure one radio button is checked
+                if count!=1:
+                    done=False
+                    for i in range(len(self.types)):
+                        index=cs*len(self.types)+i
+                        if self.rb[index].IsEnabled():
+                            self.rb[index].SetValue(not done)
+                            done=False
+                            
+                
+
+
 class SendPhoneDialog(GetPhoneDialog):
     HELPID=helpids.ID_SEND_PHONE_DATA
 
@@ -232,10 +271,8 @@ class SendPhoneDialog(GetPhoneDialog):
     def __init__(self, frame, title, id=-1):
         GetPhoneDialog.__init__(self, frame, title, id)
 
-    # this is what BitPim itself supports - the phones may support a subset
-    _notsupported=(
-        ('phonebook', 'write', GetPhoneDialog.MERGE),
-        ('calendar', 'write', GetPhoneDialog.MERGE))
+    # this is what BitPim itself doesn't supports - the phones may support less
+    _notsupported=()
         
 
 ###
@@ -245,8 +282,8 @@ class SendPhoneDialog(GetPhoneDialog):
 class ConfigDialog(wxDialog):
     phonemodels={ 'LG-VX4400': 'com_lgvx4400',
                   'LG-VX6000': 'com_lgvx6000',
-                  'LG-TM520': 'com_lgtm520',
-                  'LG-VX10': 'com_lgtm520',
+                  # 'LG-TM520': 'com_lgtm520',
+                  # 'LG-VX10': 'com_lgtm520',
                   'SCP-4900': 'com_sanyo4900',
                   'SCP-5300': 'com_sanyo5300',
                   'SCP-8100': 'com_sanyo8100'}
@@ -390,8 +427,8 @@ class ConfigDialog(wxDialog):
         # phone model
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
         self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
+        self.mw.phoneprofile=self.mw.phonemodule.Profile()
         pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
-        # ::TODO:: add/remove tabs depending on what phone supports
         # ensure config is saved
         self.mw.config.Flush()
         
