@@ -780,7 +780,8 @@ class PhoneWidget(wx.Panel):
             d={}
         dlg=ImportDialog(self, d, importdata)
         result=None
-        if dlg.ShowModal()==wx.ID_OK:
+        # TEMPORARY WORKAROUND - DIALOG NOT DISPLAYED
+        if True or dlg.ShowModal()==wx.ID_OK:
             result=dlg.resultdata
         guiwidgets.save_size(dlg.config, "ImportDialog", dlg.GetRect())
         dlg.Destroy()
@@ -1066,6 +1067,10 @@ class ImportDialog(wx.Dialog):
         # each row to display showing what happened, with ids pointing into above data
         self.rowdata={}
 
+        ### TEMPORARY WORKAROUND - THIS DIALOG IS DISABLED UNTIL UI ISSUES CAN BE ADDRESSED
+        self.DoMerge()
+        return
+
         vbs=wx.BoxSizer(wx.VERTICAL)
         
         bg=self.GetBackgroundColour()
@@ -1171,7 +1176,9 @@ class ImportDialog(wx.Dialog):
             count+=1
         self.rowdata=row
         self.resultdata=results
-        self.table.OnDataUpdated()
+        # DISABLE CALL TEMPORARILY
+        if False:
+            self.table.OnDataUpdated()
         wx.EndBusyCursor()
 
     def MergeEntries(self, originalentry, importentry):
