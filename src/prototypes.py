@@ -711,5 +711,9 @@ class buffer:
     def getvalue(self):
         "Returns the buffer being built"
         return self._buffer.getvalue()
+
+    def getdata(self):
+        "Returns the data passed in"
+        return self._data
         
     
