@@ -360,7 +360,7 @@ PACKET t9response:
 PACKET calleridentry:
     2 UINT {'default': 0xffff} +pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
     1 UINT {'default': 0} +actualnumberlen "Length of the actual phone number"
-    10 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': ""} +numberfragment
+    10 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': "", 'terminator': None} +numberfragment
 
 PACKET calleridbuffer:
     "Index so that phone can show a name instead of number"
