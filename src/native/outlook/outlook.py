@@ -248,6 +248,8 @@ if __name__=='__main__':
     oOutlookApp=outlook_com.Application()
     onMAPI = oOutlookApp.GetNamespace("MAPI")
 
+    import guihelper # needed for common.strorunicode symbol
+
     res=onMAPI.PickFolder()
     print res
 
