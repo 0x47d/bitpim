@@ -318,7 +318,7 @@ class Phone:
         
     def saveringtones(self,data):
         return self.saveprettystuff(data, "user/sound/ringer", "dloadindex/brewRingerIndex.map",
-                                    'ringtone', 'user/sound/ringer')
+                                    'ringtone', 'ringtone-index')
 
 
     def _firstfree(self, index):
