@@ -19,7 +19,7 @@ from DSV import DSV
 # generate random length strings
 
 letters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-words=letters+" "
+words=letters+"    "
 digits="0123456789"
 phonenumber=digits+"()+ -#"
 wordsanddigits=words+digits
@@ -226,7 +226,7 @@ def random_calendar(minnumber=0, maxnumber=500):
 
         entry['end']=(y,m,d,random.randrange(0,24), random.randrange(0,60))
 
-        entry['description']=gen_string()
+        entry['description']=gen_string(choices=words)
             
         entry['repeat']=random.choice([None, "daily", "monfri", "weekly", "monthly", "yearly"])
 
