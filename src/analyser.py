@@ -22,6 +22,7 @@ import prototypes
 
 import p_lgvx4400
 import p_brew
+import p_lgtm520
 
 class Eventlist(wx.ListCtrl):
     "List control showing the various events"
