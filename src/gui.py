@@ -226,7 +226,7 @@ class MySplashScreen(wxSplashScreen):
             wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
                                     time,
                                     None, -1)
-            wx.EVT_CLOSE(self, self.OnClose)
+            EVT_CLOSE(self, self.OnClose)
             self.Show()
             app.Yield(True)
             global thesplashscreen
@@ -541,6 +541,7 @@ class MainWindow(wxFrame):
         if fv:
             menuBar.Check(ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
+            wxYield()
 
         # Populate all widgets from disk
         self.OnPopulateEverythingFromDisk()

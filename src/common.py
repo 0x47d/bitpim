@@ -141,3 +141,22 @@ class exceptionwrap:
                traceback.print_stack()
                traceback.print_exc()
                raise
+
+def readversionedindexfile(filename, dict, versionhandlerfunc, currentversion):
+     assert currentversion>0
+     execfile(filename, dict, dict)
+     if not dict.has_key('FILEVERSION'):
+          version=0
+     else:
+          version=dict['FILEVERSION']
+          del dict['FILEVERSION']
+     if version<currentversion:
+          versionhandlerfunc(dict, version)
+
+def writeversionindexfile(filename, dict, currentversion):
+     assert currentversion>0
+     f=open(filename, "w")
+     for key in dict:
+          f.write("result['%s']=%s\n" % (key, prettyprintdict(dict[key])))
+     f.write("FILEVERSION=%d\n" % (currentversion,))
+     f.close()

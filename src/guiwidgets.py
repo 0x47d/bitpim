@@ -40,6 +40,8 @@ import comdiagnose
 # we use a custom table class
 class PhoneDataTable(wxPyGridTableBase):
 
+    CURRENTFILEVERSION=1
+
     numbertypetab=( 'Home', 'Home2', 'Office', 'Office2', 'Mobile', 'Mobile2',
                     'Pager', 'Fax', 'Fax2', 'None' )
 
@@ -160,11 +162,11 @@ class PhoneDataTable(wxPyGridTableBase):
         for f in os.listdir(self.thedir):
             # delete them all!
             os.remove(os.path.join(self.thedir, f))
-        f=open(os.path.join(self.thedir, "index.idx"), "wb")
-        f.write("result['phonebook']="+`dict['phonebook']`+"\n")
+        d={}
+        d['phonebook']=dict['phonebook']
         if dict.has_key('groups'):
-            f.write("result['groups']="+`dict['groups']`+"\n")
-        f.close()
+            d['groups']=dict['groups']
+        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
 
     def getfromfs(self, dict):
@@ -177,7 +179,7 @@ class PhoneDataTable(wxPyGridTableBase):
             raise Exception("Bad directory for phonebook '"+self.thedir+"'")
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
             d={'result': {}}
-            execfile(os.path.join(self.thedir, "index.idx"), d, d)
+            common.readversionedindexfile(os.path.join(self.thedir, "index.idx"), d, self.versionupgrade, self.CURRENTFILEVERSION)
             dict.update(d['result'])
         else:
             dict['phonebook']={}
@@ -224,6 +226,19 @@ class PhoneDataTable(wxPyGridTableBase):
 
         if dict.has_key('groups'):
             self.buildgrouptypename(dict['groups'])
+
+    def versionupgrade(self, dict, version):
+        """Upgrade old data format read from disk
+
+        @param dict:  The dict that was read in
+        @param version: version number of the data on disk
+        """
+
+        # version 0 to 1 upgrade
+        if version==0:
+            version=1  # the are the same
+
+        # 1 to 2 etc
 
     def buildgrouptypename(self, dict):
         self.grouptypename=self.grouptypenamebase
@@ -868,6 +883,9 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         os.remove(os.path.join(self.thedir, name))
         self.OnRefresh()
 
+    def versionupgrade(self, dict, version):
+        raise Exception("not implemented")
+
     def OnProperties(self,_):
         raise Exception("not implemented")
     
@@ -885,7 +903,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.SetSingleStyle(wxLC_ICON, False)
         self.SetSingleStyle(wxLC_REPORT, True)
 
-    def genericpopulatefs(self, dict, key, indexkey):
+    def genericpopulatefs(self, dict, key, indexkey, version):
         try:
             os.makedirs(self.thedir)
         except:
@@ -902,13 +920,12 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             f=open(os.path.join(self.thedir, i), "wb")
             f.write(d[i])
             f.close()
-        d=dict[indexkey]
-        f=open(os.path.join(self.thedir, "index.idx"), "wb")
-        f.write("result['"+indexkey+"']="+`d`)
-        f.close()
+        d={}
+        d[indexkey]=dict[indexkey]
+        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
         return dict
 
-    def genericgetfromfs(self, result, key, indexkey):
+    def genericgetfromfs(self, result, key, indexkey, currentversion):
         try:
             os.makedirs(self.thedir)
         except:
@@ -920,7 +937,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             if file=='index.idx':
                 d={}
                 d['result']={}
-                execfile(os.path.join(self.thedir, file), d, d)
+                common.readversionedindexfile(os.path.join(self.thedir, file), d, self.versionupgrade, currentversion)
                 result.update(d['result'])
             elif file.lower() in self.skiplist:
                 # ignore windows detritus
@@ -950,6 +967,8 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 ###
 
 class RingerView(FileView):
+    CURRENTFILEVERSION=1
+    
     def __init__(self, mainwindow, parent, id=-1):
         FileView.__init__(self, mainwindow, parent, id)
         self.InsertColumn(2, "Length")
@@ -985,7 +1004,7 @@ class RingerView(FileView):
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.ringerpath
-        return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index')
+        return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index', self.CURRENTFILEVERSION)
             
     def populate(self, dict):
         self.DeleteAllItems()
@@ -1014,13 +1033,29 @@ class RingerView(FileView):
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.ringerpath
-        return self.genericgetfromfs(result, "ringtone", 'ringtone-index')
+        return self.genericgetfromfs(result, "ringtone", 'ringtone-index', self.CURRENTFILEVERSION)
+
+    def versionupgrade(self, dict, version):
+        """Upgrade old data format read from disk
+
+        @param dict:  The dict that was read in
+        @param version: version number of the data on disk
+        """
+
+        # version 0 to 1 upgrade
+        if version==0:
+            version=1  # the are the same
+
+        # 1 to 2 etc
+
         
 ###
 ###  Bitmaps
 ###
 
 class WallpaperView(FileView):
+    CURRENTFILEVERSION=1
+    
     def __init__(self, mainwindow, parent, id=-1):
         FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL)
         if gui.HasFullyFunctionalListView():
@@ -1140,11 +1175,29 @@ class WallpaperView(FileView):
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.wallpaperpath
-        return self.genericpopulatefs(dict, 'wallpaper', 'wallpaper-index')
+        return self.genericpopulatefs(dict, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.wallpaperpath
-        return self.genericgetfromfs(result, 'wallpaper', 'wallpaper-index')
+        return self.genericgetfromfs(result, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
+
+    def versionupgrade(self, dict, version):
+        """Upgrade old data format read from disk
+
+        @param dict:  The dict that was read in
+        @param version: version number of the data on disk
+        """
+
+        # version 0 to 1 upgrade
+        if version==0:
+            version=1  # the are the same
+
+        # 1 to 2 etc
+
+
+###
+### Various platform independent filename functions
+###
 
 def basename(name):
     if name.rfind('\\')>=0 or name.rfind('/')>=0:
@@ -1169,6 +1222,8 @@ def getext(name):
 class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
     used to edit the content of one particular day."""
+
+    CURRENTFILEVERSION=1
     
     def __init__(self, mainwindow, parent, id=-1):
         """constructor
@@ -1320,6 +1375,7 @@ class Calendar(calendarcontrol.Calendar):
         res['repeat']=None
         res['description']='New event'
         res['changeserial']=1
+        res['snoozedelay']=0
         res['alarm']=None
         res['?d']=0
         res['ringtone']=0
@@ -1391,9 +1447,10 @@ class Calendar(calendarcontrol.Calendar):
         for f in os.listdir(self.thedir):
             # delete them all!
             os.remove(os.path.join(self.thedir, f))
-        f=open(os.path.join(self.thedir, "index.idx"), "wb")
-        f.write("result['calendar']="+common.prettyprintdict(dict['calendar'])+"\n")
-        f.close()
+
+        d={}
+        d['calendar']=dict['calendar']
+        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
 
     def getfromfs(self, dict):
@@ -1413,11 +1470,24 @@ class Calendar(calendarcontrol.Calendar):
             raise Exception("Bad directory for calendar '"+self.thedir+"'")
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
             d={'result': {}}
-            execfile(os.path.join(self.thedir, "index.idx"), d, d)
+            common.readversionedindexfile(os.path.join(self.thedir, "index.idx"), d, self.versionupgrade, self.CURRENTFILEVERSION)
             dict.update(d['result'])
         else:
             dict['calendar']={}
         return dict
+
+    def versionupgrade(self, dict, version):
+        """Upgrade old data format read from disk
+
+        @param dict:  The dict that was read in
+        @param version: version number of the data on disk
+        """
+
+        # version 0 to 1 upgrade
+        if version==0:
+            version=1  # the are the same
+
+        # 1 to 2 etc
 
 
 class DayViewDialog(wxDialog):
@@ -1475,10 +1545,10 @@ class DayViewDialog(wxDialog):
         lbs.Add(hbs2, 0, wxEXPAND)
 
         self.fieldnames=('description', 'start', 'end', 'repeat',
-        'alarm', 'ringtone', '?d', 'changeserial')
+        'alarm', 'ringtone', '?d', 'changeserial', 'snoozedelay')
         
         self.fielddesc=( 'Description', 'Start', 'End', 'Repeat',
-        'Alarm', 'Ringtone', '?Internal', 'changeserial' )
+        'Alarm', 'Ringtone', '?Internal', 'changeserial', 'Snooze Delay' )
 
         # right hand bit with all fields
         gs=wxFlexGridSizer(-1,2,5,5)
