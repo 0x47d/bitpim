@@ -68,7 +68,7 @@ memos:
 numbers:
 
   - number     Phone number as ascii string
-  - type       'home', 'office', 'cell', 'fax', 'pager', 'none'  (if you have home2 etc, list
+  - type       'home', 'office', 'cell', 'fax', 'pager', 'data', 'none'  (if you have home2 etc, list
                them without the digits.  The second 'home' is implicitly home2 etc)
 
 serials:
