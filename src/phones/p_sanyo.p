@@ -249,3 +249,60 @@ PACKET t9request:
 PACKET t9response:
     * UNKNOWN unknown
 
+PACKET calleridentry:
+    2 UINT {'default': 0xffff} +pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
+    1 UINT +actualnumberlen "Length of the actual phone number"
+    10 STRING {'raiseonunterminatedread': False} +numberfragment
+
+PACKET calleridbuffer:
+    "Index so that phone can show a name instead of number"
+    # This 7000 byte buffer is formed from the concatenation of 500 bytes of
+    # payload from commands 0X 50 0F through 0X 5D 0F
+    P UINT {'constant': 500} maxentries
+    2 UINT numentries "Number phone numbers"
+    * LIST {'length': self.maxentries, 'elementclass':calleridentry} +items
+    498 UNKNOWN +pad
+
+PACKET ringerpicbuffer:
+    "Index of ringer and picture assignments"
+    # This 1000 byte buffer is formed from the concatenation of 500 bytes of
+    # payload from commands 0X 46 0F through 0X 47 0F
+    P UINT {'constant': 300} numpbslots "Number of phone book slots"
+    * LIST {'length': self.numpbslots} ringtones:
+        1 UINT ringtone "ringtone index"
+    * LIST {'length': self.numpbslots} wallpapers:
+        1 UINT wallpaper "walpaper index"
+    400 UNKNOWN +pad
+
+PACKET pbsortbuffer:
+    "Various arrays for sorting the phone book, speed dial, determining which"
+    # slots are in use, etc.
+    # This 4000 byte buffer is formed from the concatenation of 500 bytes of
+    # payload from commands 0X 3c 0F through 0X 43 0F
+    P UINT {'constant': 300} numpbslots "Number of phone book slots"
+    P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
+    P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
+    * LIST {'length': self.numpbslots} usedflags:
+        1 UINT used "1 of slot in use"
+    2 UINT slotsused
+    2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
+    2 UINT numemail "Num of slots with email"
+    2 UINT numsecret
+    * LIST {'length': self.numpbslots} firsttypes:
+        1 UINT firsttype "First phone number type in each slot"
+    * LIST {'length': self.numpbslots} sortorder:
+        2 UINT {'default': 0xffff} +pbslot
+    300 STRING {'terminator': None} firstletters
+    * LIST {'length': self.numpbslots} sortorder2: "Is this the same"
+        2 UINT {'default': 0xffff} +pbslot
+    * LIST {'length': self.numspeeddials} speeddialindex:
+        2 UINT {'default': 0xffff} +pbslotandtype
+    * LIST {'length': self.numlongnumbers} longnumbersindex:
+        2 UINT {'default': 0xffff} +pbslotandtype
+    * LIST {'length': self.numpbslots} emails: "List of slots with Email"
+        2 UINT {'default': 0xffff} +pbslot
+    300 STRING {'terminator': None} unknownstring1
+    * LIST {'length': self.numpbslots} urls: "List of slots with a URL"
+        2 UINT {'default': 0xffff} +pbslot
+    300 STRING {'terminator': None} unknownstring2 "Just guess at 300"
+    66 UNKNOWN +pad
