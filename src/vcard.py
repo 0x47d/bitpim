@@ -17,6 +17,7 @@ import quopri
 import base64
 import common
 import cStringIO
+import nameparser
 
 class VFileException(Exception):
     pass
@@ -647,14 +648,10 @@ def out_names(vals, formatter, limit=1):
     res=""
     for v in vals[:limit]:
         # full name
-        fn=v.get("full", "")
-        if len(fn):
-            res+=out_line("FN", None, fn, formatter)
-        # name
-        parts=("last", "first", "middle")
-        parts=[v.get(p, "") for p in parts]+["", ""] # last two are prefix and suffix
-        if max([len(p) for p in parts]):
-            res+=out_line("N", None, parts, formatter)
+        res+=out_line("FN", None, nameparser.formatsimplename(v), formatter)
+        # name parts
+        f,m,l=nameparser.getparts(v)
+        res+=out_line("N", None, (l,f,m,"",""), formatter)
         # nickname
         nn=v.get("nickname", "")
         if len(nn):
