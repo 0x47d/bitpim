@@ -356,7 +356,8 @@ class ConfigDialog(wxDialog):
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
         self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
         # ::TODO:: add/remove tabs depending on what phone supports
-                                       
+        # ensure config is saved
+        self.mw.config.Flush()
         
 
     def _fixup(self, path):
