@@ -204,7 +204,7 @@ class VCard:
         field then "email2" is returned, etc"""
         if name not in dict:
             return name
-        for i in range(2,999999):
+        for i in xrange(2,99999):
             if name+`i` not in dict:
                 return name+`i`
 
@@ -406,7 +406,7 @@ class VCard:
             return
         # we need to insert our value at the begining
         values=[value]
-        for suffix in [""]+range(2,100):
+        for suffix in [""]+range(2,99):
             if type+str(suffix) in result:
                 values.append(result[type+str(suffix)])
             else:
@@ -482,18 +482,21 @@ class VCard:
 
     def unquote(self, value):
         # ::TODO:: do this properly (deal with all backslashes)
-        value=value.replace(r"\;", ";")
-        value=value.replace(r"\,", ",")
-        value=value.replace(r"\n", "\n")
-        value=value.replace(r"\r\n", "\r\n")
-        # fixup strings that use Windows EOL
-        value=value.replace("\r\n", "\n")
-        # fixup apple strings
-        value=value.replace("\r", "\n")
-        return value
+        return value.replace(r"\;", ";") \
+               .replace(r"\,", ",") \
+               .replace(r"\n", "\n") \
+               .replace(r"\r\n", "\r\n") \
+               .replace("\r\n", "\n") \
+               .replace("\r", "\n")
 
     def splitandunquote(self, value, seperator=";"):
         # also need a splitandsplitandunquote since some ; delimited fields are then comma delimited
+
+        # short cut for normal case - no quoted seperators
+        if value.find("\\"+seperator)<0:
+            return [self.unquote(v) for v in value.split(seperator)]
+
+        # funky quoting, do it the slow hard way
         res=[]
         build=""
         v=0
@@ -530,7 +533,12 @@ class VCard:
         return str+"\n"
 
 if __name__=='__main__':
+    import bp
 
-    for vcard in VCards(VFile(open(sys.argv[1]))):
-        print vcard
+    def foo():
+        for vcard in VCards(VFile(open(sys.argv[1]))):
+            pass
+            # print vcard
+
+    bp.profile("vard.prof", "foo()")
         
