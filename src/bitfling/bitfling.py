@@ -110,7 +110,6 @@ class MyTaskBarIcon(parentclass):
             self.PopupMenu(self.menu)
 
     def OnLButtonUp(self, evt=None):
-        print "OnLButtonUp"
         if self.leftdownpos is None:
             return # cleared out by motion stuff
         if self.mw.IsShown():
@@ -120,7 +119,6 @@ class MyTaskBarIcon(parentclass):
             self.mw.Raise()
 
     def OnLeftDown(self, evt):
-        print "OnLeftDown"
         if guihelper.IsMSWindows():
             self.leftdownpos=0
         else:
@@ -748,14 +746,26 @@ class BitFlingService(XMLRPCService):
         self.gethandle(context, handle).write(data.data)
         return len(data.data)
 
+    def exp_devicesendatcommand(self, handle, atcommand, ignoreerror, context):
+        "Special handling for empty lists and exceptions"
+        try:
+            res=self.gethandle(context, handle).sendatcommand(atcommand.data, ignoreerror=ignoreerror)
+            if len(res)==0:
+                res=1
+        except:
+            res=0
+        return res
+    
     def exp_devicereaduntil(self, handle, char, numfailures, context):
         return Binary(self.gethandle(context, handle).readuntil(char.data, numfailures=numfailures))
 
     def exp_deviceread(self, handle, numchars, context):
         return Binary(self.gethandle(context, handle).read(numchars))
 
-    def exp_devicereadsome(self, handle, context):
-        return Binary(self.gethandle(context, handle).readsome())
+    def exp_devicereadsome(self, handle, numchars, context):
+        if numchars==-1:
+            numchars=None
+        return Binary(self.gethandle(context, handle).readsome(log=True,numchars=numchars))
 
     def exp_devicewritethenreaduntil(self, handle, data, char, numfailures, context):
         return Binary(self.gethandle(context, handle).writethenreaduntil(data.data, False, char.data, False, False, numfailures))

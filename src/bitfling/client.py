@@ -46,14 +46,17 @@ class client:
     def devicewrite(self, handle, data):
         return self.server.devicewrite(handle, Binary(data))
 
+    def devicesendatcommand(self, handle, atcommand, ignoreerror):
+        return self.server.devicesendatcommand(handle, Binary(atcommand), ignoreerror)
+    
     def devicereaduntil(self, handle, char, numfailures):
         return self.server.devicereaduntil(handle, Binary(char), numfailures).data
 
     def deviceread(self, handle, numchars):
         return self.server.deviceread(handle, numchars).data
 
-    def devicereadsome(self, handle):
-        return self.server.devicereadsome(handle).data
+    def devicereadsome(self, handle, numchars):
+        return self.server.devicereadsome(handle, numchars).data
 
     def devicewritethenreaduntil(self, handle, data, char, numfailures):
         return self.server.devicewritethenreaduntil(handle, Binary(data), Binary(char), numfailures).data
