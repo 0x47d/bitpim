@@ -210,6 +210,8 @@ class VCard:
 
     def _parse(self, lines, result):
         for field,value in lines:
+            if len(value.strip())==0: # ignore blank values
+                continue
             if '.' in field[0]:
                 f=field[0][field[0].find('.')+1:]
             else: f=field[0]
@@ -379,6 +381,8 @@ class VCard:
         ishome=False
         if "WORK" in types: iswork=True
         if "HOME" in types: ishome=True
+
+        if len(types)==0: ishome=True # special case when nothing else is specified
 
         if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
         if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
