@@ -23,4 +23,8 @@ if __name__ == '__main__':
     import sys  
     import gui
 
-    gui.run(sys.argv)
+    if False:
+        import profile
+        profile.run("gui.run(sys.argv)", "bpprof")
+    else:
+        gui.run(sys.argv)
