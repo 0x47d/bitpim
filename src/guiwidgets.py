@@ -58,13 +58,12 @@ class PhoneDataTable(wxPyGridTableBase):
                         2: {'name': 'Friends', 'icon': 2}, 3: {'name': 'Colleagues', 'icon': 3},
                         4: {'name': 'Business', 'icon': 4}, 5: {'name': 'School', 'icon': 5}, }
         self.buildgrouptypename(self.groupdict)
-
+ 
     def OnIdle(self, _):
         if self.needswrite:
-            print "updating filesystem"
+            print "updating filesystem for phonebook"
             self.populatefs(self.getdata({}))
             self.needswrite=False
-
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
@@ -294,6 +293,20 @@ class PhoneGrid(wxGrid):
         # self.AutoSize()
         EVT_IDLE(self, self.table.OnIdle)
         EVT_GRID_CELL_LEFT_DCLICK(self, self.OnLeftDClick) # see the demo
+        EVT_KEY_DOWN(self, self.OnKeyDown)
+
+    # we move to cell right on enter - pretty much copied from the demo
+    def OnKeyDown(self, event):
+        if event.KeyCode()!=WXK_RETURN:
+            event.Skip()
+            return
+        if event.ControlDown():
+            event.Skip()
+            return
+
+        self.DisableCellEditControl()
+        success=self.MoveCursorRight(event.ShiftDown())
+        # move to next row maybe?
 
     def OnLeftDClick(self, _):
         if self.CanEnableCellControl():
