@@ -1,3 +1,6 @@
 _genprops.h
 *.pyc
 *.pyo
+_pywabimpl.dll
+pywabimpl.cpp
+pywabimpl.py
