@@ -37,6 +37,10 @@ class PhoneBookCommandException(Exception):
         Exception.__init__(self, "Phonebook Command Error 0x%02x" % (errnum,))
         self.errnum=errnum
 
+
+    
+
+
 class Phone:
     "Talk to the LG VX4400 cell phone"
 
@@ -54,6 +58,7 @@ class Phone:
         self.mode=self.MODENONE
         self.seq=0
         self.retries=2  # how many retries when we get no response
+        self.sendpbcommand=common.exceptionwrap(self.sendpbcommand)
 
     def close(self):
         self.comm.close()
@@ -429,7 +434,7 @@ class Phone:
                 file=self.getfilecontents(directory+"/"+index[i])
                 stuff[index[i]]=file
             except:
-                pass # don't care if not found
+                self.log("It was in the index, but not on the filesystem")
         result[datakey]=stuff
 
         return result
@@ -717,19 +722,21 @@ class Phone:
             # might already be?
             self.sendbrewcommand(0x0c, "")
             return 1
-        except: pass
+        except commport.CommTimeout:
+            pass
         try:
             # try again at 38400
             self.comm.setbaudrate(38400)
             self.sendbrewcommand(0x0c, "")
             return 1
-        except: pass
+        except commport.CommTimeout:
+            pass
         self._setmodelgdmgo() # brute force into data mode
         try:
             # should work in lgdmgo mode
             self.sendbrewcommand(0x0c, "")
             return 1
-        except:
+        except commport.CommTimeout:
             return 0
 
     def _setmodelgdmgo(self):
@@ -743,7 +750,7 @@ class Phone:
                 self.comm.readsome()
                 self.comm.setbaudrate(38400) # dm mode is always 38400
                 return 1
-            except:
+            except commport.CommTimeout:
                 self.log("No response to setting DM mode")
         self.comm.setbaudrate(38400) # just in case it worked
         return 0
@@ -751,19 +758,22 @@ class Phone:
 
     def _setmodephonebook(self):
         try:
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
-        except: pass
+        except commport.CommTimeout:
+            pass
         try:
             self.comm.setbaudrate(38400)
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
-        except: pass
+        except commport.CommTimeout:
+            pass
         self._setmodelgdmgo()
         try:
-            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
-        except: pass
+        except commport.CommTimeout:
+            pass
         return 0
         
     def _setmodemodem(self):
@@ -775,12 +785,23 @@ class Phone:
             try:
                 self.comm.readsome()
                 return 1
-            except: pass
+            except commport.CommTimeout:
+                pass
         return 0        
 
     def checkresult(self, firstbyte, res):
         if res[0]!=firstbyte:
             return
+
+    def readsomeuntil(self, char):
+        data=self.comm.readsome()
+        if data[-1]!=char:
+            print "no match on second read for terminator"
+            assert False
+        fp=data.find(char)
+        assert fp>=0
+        data=data[fp+1:]
+        return data
 
     def sendpbcommand(self, cmd, data):
         if self.comm.configparameters is None or \
@@ -794,7 +815,7 @@ class Phone:
             # resend command
             self.log("Phonebook command timed out with partial data.  Retrying")
             self.comm.reset()
-            res=self._sendpbcommand(cmd,data)
+            res=self._sendpbcommand(cmd,data,usereadsome=True)
             x=res.find('\x7f')
             if x<0:
                 raise e
@@ -803,23 +824,28 @@ class Phone:
                 raise e
             return res
 
-    def _sendpbcommand(self, cmd, data, wantto=False):
+    def _sendpbcommand(self, cmd, data, usereadsome=False, wantto=False):
         d="\xff"+chr(cmd)+chr(self.seq&0xff)+data
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         self.seq+=1
         try:
-            d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
+            if usereadsome:
+                d=self.unescape(self.readsomeuntil(self.terminator))[:-3]
+            else:
+                d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
             self.comm.success=True
             if 0: # cmd!=0x15 and d[3]!="\x00":
                 raise PhoneBookCommandException(ord(d[3]))
             # ::TODO:: we should check crc
             return d
         except commport.CommTimeout, e:
+            print `e`
             if wantto:
                 raise e
             self.raisecommsexception("using the phonebook")
             return None # keep pychecker happy
+        
 
     def sendbrewcommand(self, cmd, data):
         if self.comm.configparameters is None or \
