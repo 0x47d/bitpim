@@ -176,7 +176,9 @@ def gethelpfilename():
 
 def getresourcefiles(wildcard):
     "Returns a list of filenames matching the wildcard in the resource directory"
-    return glob.glob(os.path.join(resourcedirectory, wildcard))
+    l=glob.glob(os.path.join(resourcedirectory, wildcard))
+    l.sort()
+    return l
 
 # Where to find bitmaps etc
 resourcedirectory=os.path.abspath(os.path.join(sys.path[0], 'resources'))
