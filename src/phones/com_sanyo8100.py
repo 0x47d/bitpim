@@ -26,6 +26,8 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo8100
     serialsname='scp8100'
     
+    builtinringtones=( 'Normal', 'None', 'Vibrate')
+
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
