@@ -42,10 +42,10 @@ if __name__ == '__main__':
 
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
-        if True:
-            profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")
-        else:
-            bitfling.bitfling.run(sys.argv)
+        #if True:
+        #    profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")
+        #else:
+        bitfling.bitfling.run(sys.argv)
     else:
         import gui
         gui.run(sys.argv)
