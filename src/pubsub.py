@@ -29,11 +29,13 @@ import weakref
 
 
 # Maintain the list of categories
-REQUEST_CATEGORIES=( 'request', 'categories' ) # i wanna know ...
+REQUEST_CATEGORIES=( 'request', 'categories' ) # no data
 ALL_CATEGORIES=( 'response', 'categories') # data is list of strings
 SET_CATEGORIES=( 'request', 'setcategories') # data is list of strings
 ADD_CATEGORY=( 'request', 'addcategory') # data is list of strings
 MERGE_CATEGORIES=( 'request', 'mergecategories') # data is list of strings
+ALL_WALLPAPERS=( 'response', 'wallpapers') # data is list of strings
+REQUEST_WALLPAPERS=( 'request', 'wallpapers') # no data
 
 ###
 ### Actual code using pubsub library
