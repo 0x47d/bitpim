@@ -167,11 +167,19 @@ def getbitmap(name):
 
     @rtype: wxBitmap
     """
+    return getimage(name).ConvertToBitmap()
+
+def getimage(name):
+    """Gets an image from the resource directory
+
+    @rtype: wx.Image
+    """
     for ext in ("", ".png", ".jpg"):
         if os.path.exists(getresourcefile(name+ext)):
-            return wx.Image(getresourcefile(name+ext)).ConvertToBitmap()
+            return wx.Image(getresourcefile(name+ext))
     print "You need to make "+name+".png"
-    return getbitmap('unknown')
+    return getimage('unknown')
+
 
 def getresourcefile(filename):
     """Returns name of file by adding it to resource directory pathname
