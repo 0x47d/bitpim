@@ -13,6 +13,7 @@
 import string
 import re
 import StringIO
+import os
 
 # wxPython modules
 import wx
@@ -68,11 +69,6 @@ class PreviewGrid(wx.grid.Grid):
 class ImportDialog(wx.Dialog):
     "The dialog for importing phonebook stuff"
 
-    delimiternames={
-        '\t': "Tab",
-        ' ': "Space",
-        ',': "Comma"
-        }
 
     # these are presented in the UI and are what the user can select.  additional
     # column names are available but not specified 
@@ -495,6 +491,12 @@ def _getpreviewformatted(value, column):
         return value.encode("ascii", 'xmlcharrefreplace')
 
 class ImportCSVDialog(ImportDialog):
+
+    delimiternames={
+        '\t': "Tab",
+        ' ': "Space",
+        ',': "Comma"
+        }
 
     def __init__(self, filename, parent, id, title):
         self.headerrowiseditable=True
@@ -1291,3 +1293,100 @@ def OnFileImportEvolutionContacts(parent):
     dlg.Destroy()
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
+
+
+###
+###   EXPORTS
+###
+
+def GetPhonebookExports():
+    res=[]
+    # Vcards - always possible
+    res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
+    
+    return res
+
+class ExportVCardDialog(wx.Dialog):
+
+    dialects= {"vCard v2.1": "_21", "vCard v3.0": "_30",  "Apple": "_apple"}
+    default_dialect="vCard v2.1"
+
+    def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE):
+        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
+
+        vbs=wx.BoxSizer(wx.VERTICAL)
+
+        bs=wx.BoxSizer(wx.HORIZONTAL)
+
+        bs.Add(wx.StaticText(self, -1, "File"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+        self.filenamectrl=wx.TextCtrl(self, -1, wx.GetApp().config.Read("vcard/export-file", "bitpim.vcf")) 
+        bs.Add(self.filenamectrl, 1, wx.ALL|wx.EXPAND, 5)
+        self.browsectrl=wx.Button(self, wx.NewId(), "Browse...")
+        bs.Add(self.browsectrl, 0, wx.ALL|wx.EXPAND, 5)
+        wx.EVT_BUTTON(self, self.browsectrl.GetId(), self.OnBrowse)
+
+        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs2=wx.BoxSizer(wx.VERTICAL)
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Dialect"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+        d=self.dialects.keys()
+        d.sort()
+        self.dialectctrl=wx.ComboBox(self, -1, style=wx.CB_DROPDOWN, choices=d)
+        default=wx.GetApp().config.Read("vcard/export-format", self.default_dialect)
+        if default not in d: default=self.default_dialect
+        self.dialectctrl.SetSelection(d.index(default))
+        hbs.Add(self.dialectctrl, 1, wx.ALL|wx.EXPAND, 5)
+        vbs2.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        self.whichctrl=wx.RadioBox(self, -1, "Entries", style=wx.RA_SPECIFY_ROWS, choices=["All", "Selected"])
+        vbs2.Add(self.whichctrl, 0, wx.EXPAND|wx.ALL, 5)
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(vbs2, 1, wx.EXPAND|wx.ALL, 5)
+
+        vbs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Fields"), wx.VERTICAL)
+        cb=[]
+        for c in ("Everything", "Phone Numbers", "Addresses", "Email Addresses"):
+            cb.append(wx.CheckBox(self, -1, c))
+            vbs2.Add(cb[-1], 0, wx.EXPAND|wx.ALL, 5)
+
+        hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 10)
+
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+
+    def OnBrowse(self, _):
+        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                          wildcard="vCard files (*.vcf)|*.vcf", style=wx.SAVE|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
+        dlg.Destroy()
+
+    def OnOk(self, _):
+        # do export
+
+        filename=self.filenamectrl.GetValue()
+        dialect=self.dialectctrl.GetValue()
+        
+        # save settings since we were succesful
+        wx.GetApp().config.Write("vcard/export-file", filename)
+        wx.GetApp().config.Write("vcard/export-format", dialect)
+        wx.GetApp().config.Flush()
+        self.EndModal(wx.ID_OK)
+
+
+
+def OnFileExportVCards(parent):
+    dlg=ExportVCardDialog(parent, -1, "Export phonebook to vCards")
+    dlg.ShowModal()
+    dlg.Destroy()

@@ -406,6 +406,7 @@ class MainWindow(wx.Frame):
         # menu.Append(guihelper.ID_FILESAVE, "&Save", "Save your work")
         menu.Append(guihelper.ID_FILEPRINT, "&Print...", "Print phonebook")
         # menu.AppendSeparator()
+        
         # imports
         impmenu=wx.Menu()
         for desc, help, func in importexport.GetPhonebookImports():
@@ -414,6 +415,16 @@ class MainWindow(wx.Frame):
             wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
         menu.AppendMenu(guihelper.ID_FILEIMPORT, "Import", impmenu)
+
+        # exports
+        expmenu=wx.Menu()
+        for desc, help, func in importexport.GetPhonebookExports():
+            x=wx.NewId()
+            expmenu.Append(x, desc, help)
+            wx.EVT_MENU(self, x, MenuCallback(func, self) )
+
+        menu.AppendMenu(guihelper.ID_FILEEXPORT, "Export", expmenu)
+
 
         if not guihelper.IsMac():
             menu.AppendSeparator()
