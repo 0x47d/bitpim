@@ -114,8 +114,8 @@ class PhoneDataTable(wxPyGridTableBase):
     def OnDelete(self, rows):
         # we do them in reverse order so that we don't have to worry about row numbers
         # changing under us
-        print "delete - rows chosen=",rows
-        print "keys b4", self._data.keys()
+        #print "delete - rows chosen=",rows
+        # print "keys b4", self._data.keys()
         rows.sort()
         rows.reverse()
         for row in rows:
@@ -126,10 +126,10 @@ class PhoneDataTable(wxPyGridTableBase):
             self.GetView().ProcessTableMessage(msg)
         if len(rows):
             self.needswrite=True
-        print "keys after", self._data.keys()
+        #print "keys after", self._data.keys()
 
     def OnAdd(self, currow):
-        print "add - keys b4", self._data.keys()
+        # print "add - keys b4", self._data.keys()
         self.sequence+=1
         while self.sequence in self._data:
             self.sequence+=1
@@ -143,7 +143,7 @@ class PhoneDataTable(wxPyGridTableBase):
         self.numrows+=1
         self.GetView().ProcessTableMessage(msg)
         self.needswrite=True
-        print "keys after", self._data.keys()
+        # print "keys after", self._data.keys()
 
     def getcolumn(self,name):
         if len(self.labels)==0:
@@ -524,10 +524,24 @@ class ConfigDialog(wxDialog):
         EVT_BUTTON(self, wxID_HELP, self.OnHelp)
         EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
         EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
+        EVT_BUTTON(self, wxID_OK, self.OnOK)
         
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
+
+    def OnOK(self, _):
+        # validate directory
+        dir=self.diskbox.GetValue()
+        try:
+            os.makedirs(dir)
+        except:
+            pass
+        if os.path.isdir(dir):
+            self.EndModal(wxID_OK)
+            return
+        wxTipWindow(self.diskbox, "No such directory - please correct")
+            
 
     def OnHelp(self, _):
         wxGetApp().displayhelpid(helpids.ID_SETTINGS_DIALOG)
@@ -628,6 +642,14 @@ class ConfigDialog(wxDialog):
             if self.diskbox.GetValue()==self.setme or \
                    self.commbox.GetValue()==self.setme:
                 return True
+        # does data directory exist?
+        try:
+            os.makedirs(self.diskbox.GetValue())
+        except:
+            pass
+        if not os.path.isdir(self.diskbox.GetValue()):
+            return True
+
         return False
 
     def ShowModal(self):
@@ -2323,7 +2345,6 @@ class AnotherDialog(wxDialog):
         # the buttons
         buttsizer=wxBoxSizer(wxHORIZONTAL)
         for label,id in buttons:
-            print label, id
             buttsizer.Add( wxButton(self, id, label), 0, wxALL|wxALIGN_CENTER, 5)
             if id!=wxID_HELP:
                 EVT_BUTTON(self, id, self.OnButton)
@@ -2341,7 +2362,6 @@ class AnotherDialog(wxDialog):
         vbs.Fit(self)
 
     def OnButton(self, event):
-        print event.GetId()
         self.EndModal(event.GetId())
 
     def icontoart(self, id):
