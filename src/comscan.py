@@ -244,7 +244,7 @@ def _comscanwindows():
                         
                     if klass is None:
                         continue
-                    if klass.lower()!="ports":
+                    if klass.lower()!="ports" and klass.lower()!="modem":
                         continue
 
                     # verify COM is followed by digits only
