@@ -111,7 +111,7 @@ class Phone:
             self.comm.write("AT\r\n")
             try:
                 self.comm.readsome()
-                return 1
+                return True
             except modeignoreerrortypes:
                 pass
-        return 0        
+        return False       
