@@ -797,22 +797,7 @@ class MainWindow(wx.Frame):
         convertors=[]
         todo=[]
         funcscb=[]
-        ### Phonebook
-        v=dlg.GetPhoneBookSetting()
-        if v!=dlg.NOTREQUESTED:
-            if v==dlg.OVERWRITE: 
-                self.phonewidget.getdata(data)
-                todo.append( (self.wt.writephonebook, "Phonebook") )
-            convertors.append(self.phonewidget.converttophone)
-            # writing will modify serials so we need to update
-            funcscb.append(self.phonewidget.updateserials)
-        ### Calendar
-        v=dlg.GetCalendarSetting()
-        if v!=dlg.NOTREQUESTED:
-            merge=True
-            if v==dlg.OVERWRITE: merge=False
-            self.calendarwidget.getdata(data)
-            todo.append( (self.wt.writecalendar, "Calendar", merge) )
+        
         ### Wallpaper
         v=dlg.GetWallpaperSetting()
         if v!=dlg.NOTREQUESTED:
@@ -825,6 +810,7 @@ class MainWindow(wx.Frame):
             self.wallpaperwidget.getdata(data, want)
             todo.append( (self.wt.writewallpaper, "Wallpaper", merge) )
             # funcscb.append( self.wallpaperwidget.populate )
+
         ### Ringtone
         v=dlg.GetRingtoneSetting()
         if v!=dlg.NOTREQUESTED:
@@ -837,6 +823,26 @@ class MainWindow(wx.Frame):
             self.ringerwidget.getdata(data, want)
             todo.append( (self.wt.writeringtone, "Ringtone", merge) )
             # funcscb.append( self.ringerwidget.populate )
+
+        ### Calendar
+        v=dlg.GetCalendarSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=True
+            if v==dlg.OVERWRITE: merge=False
+            self.calendarwidget.getdata(data)
+            todo.append( (self.wt.writecalendar, "Calendar", merge) )
+
+        ### Phonebook
+        v=dlg.GetPhoneBookSetting()
+        if v!=dlg.NOTREQUESTED:
+            if v==dlg.OVERWRITE: 
+                self.phonewidget.getdata(data)
+                todo.append( (self.wt.writephonebook, "Phonebook") )
+            convertors.append(self.phonewidget.converttophone)
+            # writing will modify serials so we need to update
+            funcscb.append(self.phonewidget.updateserials)
+
+
 
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
