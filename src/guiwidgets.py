@@ -32,7 +32,6 @@ import helpids
 import comscan
 import usbscan
 import comdiagnose
-import bpaudio
 import analyser
 import guihelper
 
@@ -517,9 +516,7 @@ class MyFileDropTarget(wxFileDropTarget):
         return self.target.OnDropFiles(x,y,filenames)
 
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
-
-
-    # be resilient to conversion failures in ringer
+    # ::TODO:: be resilient to conversion failures in ringer
     # ringer onluanch should convert qcp to wav
     
     # Files we should ignore
@@ -529,6 +526,9 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     NONE=0
     SELECTED=1
     ALL=2
+
+    # maximum length of a filename
+    maxlen=31
     
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT):
         wxListCtrl.__init__(self, parent, id, style=style)
@@ -538,7 +538,6 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.mainwindow=mainwindow
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
-        self.maxlen=255
         if (style&wxLC_REPORT)==wxLC_REPORT or guihelper.HasFullyFunctionalListView():
             # some can't do report and icon style
             self.InsertColumn(0, "Name")
@@ -638,25 +637,25 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         if isinstance(t, FileView):
             # changing target in dragndrop
             target=t
+        self.Freeze()
         for f in filenames:
             target.OnAddFile(f)
+        self.Thaw()
 
     def OnAdd(self, _=None):
         dlg=wxFileDialog(self, "Choose files", style=wxOPEN|wxMULTIPLE, wildcard=self.wildcard)
         if dlg.ShowModal()==wxID_OK:
+            self.Freeze()
             for file in dlg.GetPaths():
                 self.OnAddFile(file)
+            self.Thaw()
         dlg.Destroy()
 
     def OnAddFile(self,_):
         raise Exception("not implemented")
 
-    def OnRefresh(self, _=None):
-        self.Freeze()
-        result={}
-        self.getfromfs(result)
-        self.populate(result)
-        self.Thaw()
+    def OnRefresh(self,_=None):
+        self.populate(self._data)
 
     def OnDelete(self,_):
         names=self.GetSelectedItemNames()
@@ -747,107 +746,41 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             chop=len(filename)-self.maxlen
             filename=stripext(filename)[:-chop]+'.'+getext(filename)
         return os.path.join(self.thedir, filename)
-        
 
-###
-###  Midi
-###
-
-class RingerView(FileView):
-    CURRENTFILEVERSION=1
-    
-    def __init__(self, mainwindow, parent, id=-1):
-        FileView.__init__(self, mainwindow, parent, id)
-        self.InsertColumn(2, "Length")
-        self.InsertColumn(3, "Index")
-        self.InsertColumn(4, "Description")
-        il=wxImageList(32,32)
-        il.Add(guihelper.getbitmap("ringer"))
-        self.AssignImageList(il, wxIMAGE_LIST_NORMAL)
-        self._data={}
-        self._data['ringtone']={}
-        self._data['ringtone-index']={}
-
-        self.wildcard="MIDI files (*.mid)|*.mid|PureVoice Files (*.qcp)|*.qcp"
-        self.maxlen=19
-
-    def getdata(self, dict):
+    def genericgetdata(self,dict,want, mediapath, mediakey, mediaindexkey):
+        # this was originally written for wallpaper hence using the 'wp' variable
         dict.update(self._data)
+        names=None
+        if want==self.SELECTED:
+            names=self.GetSelectedItemNames()
+            if len(names)==0:
+                want=self.ALL
+        if want==self.ALL:
+            names=[]
+            for i in range(0,self.GetItemCount()):
+                names.append(self.GetItemText(i))
+
+        if names is not None:
+            wp={}
+            i=0
+            for name in names:
+                file=os.path.join(mediapath, name)
+                f=open(file, "rb")
+                data=f.read()
+                f.close()
+                wp[i]={'name': name, 'data': data}
+                for k in self._data[mediaindexkey]:
+                    if self._data[mediaindexkey][k]['name']==name:
+                        v=self._data[mediaindexkey][k].get("origin", "")
+                        if len(v):
+                            wp[i]['origin']=v
+                            break
+                i+=1
+            dict[mediakey]=wp
+                
         return dict
 
-    def OnAddFile(self, file):
-        self.thedir=self.mainwindow.ringerpath
-        if os.path.splitext(file)[1]=='.mid':
-            target=self.getshortenedbasename(file, 'mid')
-            if target==None: return # user didn't want to
-            f=open(file, "rb")
-            contents=f.read()
-            f.close()
-            f=open(target, "wb")
-            f.write(contents)
-            f.close()
-        else:
-            # ::TODO:: warn if not on Windows
-            target=self.getshortenedbasename(file, 'qcp')
-            if target==None: return # user didn't want to
-            qcpdata=bpaudio.converttoqcp(file)
-            f=open(target, "wb")
-            f.write(qcpdata)
-            f.close()
-            
-        self.OnRefresh()
 
-    def populatefs(self, dict):
-        self.thedir=self.mainwindow.ringerpath
-        return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index', self.CURRENTFILEVERSION)
-            
-    def populate(self, dict):
-        return
-        self.DeleteAllItems()
-        self._data={}
-        self._data['ringtone']=dict.get('ringtone', {}).copy()
-        self._data['ringtone-index']=dict.get('ringtone-index', {}).copy()
-        count=0
-        keys=dict['ringtone'].keys()
-        keys.sort()
-        for i in keys:
-            item={}
-            item['name']=i
-            item['data']=dict['ringtone'][i]
-            item['index']=-1
-            for ii in dict['ringtone-index']:
-                if dict['ringtone-index'][ii]==i:
-                    item['index']=ii
-                    break
-            self.InsertImageStringItem(count, item['name'], 0)
-            self.SetStringItem(count, 0, item['name'])
-            self.SetStringItem(count, 1, `len(item['data'])`)
-            if os.path.splitext(item['name'])[1]=='.qcp':
-                self.SetStringItem(count, 2, "2 seconds :-)")
-                self.SetStringItem(count, 3, `item['index']`)
-                self.SetStringItem(count, 4, "PureVoice file")
-            else:
-                self.SetStringItem(count, 2, "1 second :-)")
-                self.SetStringItem(count, 3, `item['index']`)
-                self.SetStringItem(count, 4, "Midi file")
-            count+=1
-
-    def getfromfs(self, result):
-        self.thedir=self.mainwindow.ringerpath
-        return self.genericgetfromfs(result, None, 'ringtone-index', self.CURRENTFILEVERSION)
-
-    def versionupgrade(self, dict, version):
-        """Upgrade old data format read from disk
-
-        @param dict:  The dict that was read in
-        @param version: version number of the data on disk
-        """
-
-        # version 0 to 1 upgrade
-        if version==0:
-            version=1  # the are the same
-
-        # 1 to 2 etc
 
 
 
