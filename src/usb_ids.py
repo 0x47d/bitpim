@@ -173,7 +173,7 @@ class VendorID(usbInfoObject):
 
 class DeviceID(usbInfoObject):
 	""" This class abstracts USB Device ID information	
-		It holds the description and a list of the Interface ID's
+	It holds the description and a list of the Interface ID's
 	"""	
 	def addInterface(self, interface):
 		""" Put this interface on our list """
@@ -196,9 +196,9 @@ class InterfaceID(usbInfoObject):
 class VendorList:
 	""" This class is responsible for the collection of vendor data
 		It allows you to ask for:
-			vendor info by VendorID
-			device info by VendorID/DeviceID
-			interface """
+		 - vendor info by VendorID
+		 - device info by VendorID/DeviceID
+		 - interface """
 	def __init__(self):
 		""" Prepare a dict to handle all of our children vendor objects """
 		self.vendorlist = {}
@@ -232,7 +232,7 @@ class VendorList:
 
 		# Now, decide how we were called, and return appropriately
 		if ((dID is None) and (iID is None)):
-			return self.vDesc
+			return (self.vDesc,)
 		elif (iID is None):
 			return (self.vDesc, self.dDesc)
 		else:
@@ -288,9 +288,9 @@ class USBClassProtocol(usbInfoObject):
 class USBClassList:
 	""" This class is responsible for the collection of USB Class data
 		It allows you to ask for:
-			USB Class info by Class ID
-			USB SubClass info by ClassID/SubclassID
-			USB Protocol info by ClassID/SubclassID/ProtocolID
+		 - USB Class info by Class ID
+		 - USB SubClass info by ClassID/SubclassID
+		 - USB Protocol info by ClassID/SubclassID/ProtocolID
 	"""
 	def __init__(self):
 		self.classlist = {}
@@ -323,7 +323,7 @@ class USBClassList:
 
 		# Now, decide how we were called, and return appropriately
 		if ((sID is None) and (pID is None)):
-			return self.cDesc
+			return (self.cDesc,)
 		elif (pID is None):
 			return (self.cDesc, self.sDesc)
 		else:
