@@ -669,15 +669,17 @@ class MainWindow(wxFrame):
                 merge=False
             self.phonewidget.importdata(results['phonebook'], results.get('categories', []), merge)
 
-        # wallpaper-index
-        if results.has_key('wallpaper-index'):
-            self.wallpaperwidget.updateindex(results['wallpaper-index'])
         # wallpaper
+        updwp=False # did we update the wallpaper
         if results['sync'].has_key('wallpaper'):
             v=results['sync']['wallpaper']
             if v=='MERGE': raise Exception("Not implemented")
+            updwp=True
             self.wallpaperwidget.populatefs(results)
             self.wallpaperwidget.populate(results)
+        # wallpaper-index
+        if not updwp and results.has_key('wallpaper-index'):
+            self.wallpaperwidget.updateindex(results['wallpaper-index'])
         # ringtone
         if results['sync'].has_key('ringtone'):
             v=results['sync']['ringtone']
