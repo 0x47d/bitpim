@@ -640,14 +640,7 @@ class FileEntries:
                     media[file_key]=self.__phone.getfilecontents(file_name)
                 except:
                     self.__phone.log('Failed to read file '+file_name)
-        idx_k=max(media_index.keys())+1
-        media_index[idx_k]={ 'name': 'video0.avi', 'origin': 'video' }
-        media['video0.avi']=open('video0.avi', 'rb').read()
-        idx_k+=1
-        media_index[idx_k]={ 'name': 'video1.avi', 'origin': 'video' }
-        media['video1.avi']=open('video1.avi', 'rb').read()
         result[self.__file_type]=media
-        result[self.__index_type]=media_index
         return result
 
     def save_media(self, result, dl_info):
