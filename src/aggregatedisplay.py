@@ -127,6 +127,7 @@ class Display(wx.ScrolledWindow):
         #
         # - wx sometimes misbehaves if the window height isn't set to an exact multiple of the
         #   VSCROLLPIXELS
+
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
         dc=wx.BufferedPaintDC(self, self._bufbmp)
@@ -170,8 +171,16 @@ class Display(wx.ScrolledWindow):
                 item=self.items[i][num]
                 dc.SetDeviceOrigin(3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth), posy)
                 dc.ResetBoundingBox()
-                item.Draw(dc, self.itemsize[i][0]+extrawidth, self.itemsize[i][1], self.selected[i][num])
-                self.boundingboxes[i][num]=(dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY())
+                bb=item.Draw(dc, self.itemsize[i][0]+extrawidth, self.itemsize[i][1], self.selected[i][num])
+                if bb is None:
+                    bb=dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY()
+                assert len(bb)==4
+                assert bb[0]>=0 and bb[0]<self.itemsize[i][0]+extrawidth
+                assert bb[1]>=0 and bb[1]<self.itemsize[i][1]
+                assert bb[2]>=bb[0] and bb[2]<=self.itemsize[i][0]+extrawidth
+                assert bb[3]>=bb[1] and bb[3]<=self.itemsize[i][1]
+            
+                self.boundingboxes[i][num]=bb
                 num+=1
             cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
                     
@@ -395,6 +404,14 @@ class Item(object):
         what was returned.  You should set the clipping region if
         necessary.
 
+        The main display code needs to know the bounding box for each item so that it can tell
+        when an item has been clicked on, as opposed to the white space surrounding an item.
+        By default it clears the bounding box and looks at what area you draw on in this
+        function.  If you return None, then that is what happens.
+
+        Instead you may also return a 4 item tuple of (minx, miny, maxx, maxy) and that
+        will be used.
+
         @param dc:  The device context to draw into
         @param width: maximum space to use
         @param height: maximum space to use
@@ -495,13 +512,17 @@ if __name__=="__main__":
                 dc.SetClippingRegion(0,0,width,height)
                 hdc=wx.html.HtmlDCRenderer()
                 hdc.SetDC(dc, 1)
-                hdc.SetSize(99999, 9999) # width is deliberately wide so that no wrapping happens
+                hdc.SetSize(9999, 9999) # width is deliberately wide so that no wrapping happens
                 hdc.SetHtmlText(self.genhtml(selected), '.', True)
                 hdc.Render(0,0)
                 del hdc
                 # restore scale hdc messes
                 dc.SetUserScale(*us)
                 dc.DestroyClippingRegion()
+
+                # Linux gets bounding box wrong, so we deliberately return actual size
+                if guihelper.IsGtk():
+                    return (0,0,width,height)
 
             def genhtml(self, selected):
                 if selected:
