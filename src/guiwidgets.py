@@ -1390,32 +1390,26 @@ class DayViewDialog(wxDialog):
 
         @return: An C{ANSWER_} constant
         """
-        dlg=wxMessageDialog(self, "Do you want to delete all the repeats?  Click Yes to remove all, No to delete just todays, or Cancel to make no changes",
-                            "Delete repeating event",
-                            wxYES_NO|wxCANCEL|wxNO_DEFAULT|wxICON_QUESTION)
-        res=dlg.ShowModal()
-        if res==wxID_YES:
-            return self.ANSWER_ORIGINAL
-        if res==wxID_NO:
-            return self.ANSWER_THIS
-        if res==wxID_CANCEL:
-            return self.ANSWER_CANCEL
+        return self._AskAboutRecurringEvent("Delete recurring event?", "Do you want to delete all the recurring events, or just this one?", "Delete")
 
     def AskAboutRepeatChange(self):
         """Asks the user if they wish to change the original (repeating) entry, or this instance
 
         @return: An C{ANSWER_} constant
         """
-        dlg=wxMessageDialog(self, "Do you want to change all the repeats?  Click Yes to change all, No to change just todays, or Cancel to make no changes",
-                            "Change repeating event",
-                            wxYES_NO|wxCANCEL|wxNO_DEFAULT|wxICON_QUESTION)
+        return self._AskAboutRecurringEvent("Change recurring event?", "Do you want to change all the recurring events, or just this one?", "Change")
+
+    def _AskAboutRecurringEvent(self, caption, text, prefix):
+        dlg=RecurringDialog(self, caption, text, prefix)
         res=dlg.ShowModal()
-        if res==wxID_YES:
-            return self.ANSWER_ORIGINAL
-        if res==wxID_NO:
+        dlg.Destroy()
+        if res==dlg.ID_THIS:
             return self.ANSWER_THIS
-        if res==wxID_CANCEL:
+        if res==dlg.ID_ALL:
+            return self.ANSWER_ORIGINAL
+        if res==dlg.ID_CANCEL:
             return self.ANSWER_CANCEL
+        assert False
 
     def OnListBoxItem(self, _=None):
         """Callback for when user clicks on an event in the listbox"""
@@ -1438,6 +1432,13 @@ class DayViewDialog(wxDialog):
 
     def OnSaveButton(self, _=None):
         """Callback for when user presses save"""
+
+        # check if the dates are ok
+        for x in 'start', 'end':
+            if not self.fields[x].IsValid():
+                self.fields[x].SetFocus()
+                wxBell()
+                return
 
         # whine if end is before start
         start=self.fields['start'].GetValue()
@@ -1707,8 +1708,7 @@ class DVDateTimeControl(wxPanel):
         f="EUDATETIMEYYYYMMDD.HHMM"
         wxPanel.__init__(self, parent, -1)
         self.c=wxMaskedTextCtrl(self, id, "",
-                                autoformat=f,
-                                validRequired=True)
+                                autoformat=f)
         bs=wxBoxSizer(wxHORIZONTAL)
         bs.Add(self.c,0,wxEXPAND)
         self.SetSizer(bs)
@@ -1732,13 +1732,14 @@ class DVDateTimeControl(wxPanel):
         v=v+[ap]
 
         # we have to supply what the user would type without the punctuation
-        # (try figuring that out from the "doc") and note the inconsitency
-        # with GetValue
+        # (try figuring that out from the "doc")
         str="%04d%02d%02d%02d%02d%s" % tuple(v)
         self.c.SetValue( str )
+        self.c.Refresh()
 
     def GetValue(self):
-        # the actual value including all punctuation is returned
+        # The actual value including all punctuation is returned
+        # GetPlainValue can get it with all digits run together
         str=self.c.GetValue()
         digits="0123456789"
 
@@ -1763,7 +1764,8 @@ class DVDateTimeControl(wxPanel):
 
         return res
 
-        
+    def IsValid(self):
+        return self.c.IsValid()
     
 class DVRepeatControl(wxChoice):
     """Shows the calendar repeat values"""
@@ -1805,7 +1807,70 @@ class DVTextControl(wxTextCtrl):
         if v is None: v=""
         wxTextCtrl.SetValue(self,v)
 
-        
+
+###
+### Dialog box for asking the user what they want to for a recurring event.
+### Used when saving changes or deleting entries in the DayViewDialog
+###
+
+class RecurringDialog(wxDialog):
+    """Ask the user what they want to do about a recurring event
+
+    You should only use this as a modal dialog.  ShowModal() will
+    return one of:
+
+      - ID_THIS:   change just this event
+      - ID_ALL:    change all events
+      - ID_CANCEL: user cancelled dialog"""
+    ID_THIS=1
+    ID_ALL=2
+    ID_CANCEL=3
+    ID_HELP=4 # hide from epydoc
+
+    def __init__(self, parent, caption, text, prefix):
+        """Constructor
+
+        @param parent: frame to parent this to
+        @param caption: caption of the dialog (eg C{"Change recurring event?"})
+        @param text: text displayed in the dialog (eg C{"This is a recurring event.  What would you like to change?"})
+        @param prefix: text prepended to the buttons (eg the button says " this" so the prefix would be "Change" or "Delete")
+        """
+        wxDialog.__init__(self, parent, -1, caption,
+                          style=wxCAPTION)
+
+        # eveything sits inside a vertical box sizer
+        vbs=wxBoxSizer(wxVERTICAL)
+
+        # the explanatory text
+        t=wxStaticText(self, -1, text)
+        vbs.Add(t, 1, wxEXPAND|wxALL,10)
+
+        # horizontal line
+        vbs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 3)
+
+        # buttons at bottom
+        buttonsizer=wxBoxSizer(wxHORIZONTAL)
+        for id, label in (self.ID_THIS,   "%s %s" % (prefix, "this")), \
+                         (self.ID_ALL,    "%s %s" % (prefix, "all")), \
+                         (self.ID_CANCEL, "Cancel"), \
+                         (self.ID_HELP,   "Help"):
+            b=wxButton(self, id, label)
+            EVT_BUTTON(self, id, self._onbutton)
+            buttonsizer.Add(b, 5, wxALIGN_CENTER|wxALL, 5)
+
+        # plumb in sizers
+        vbs.Add(buttonsizer, 0, wxEXPAND|wxALL,2)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+
+    def _onbutton(self, evt):
+        if evt.GetId()==self.ID_HELP:
+            pass # :::TODO::: some sort of help ..
+        else:
+            self.EndModal(evt.GetId())
+
 ###
 ### Copied from wxPython.lib.dialogs.  This one is different in that it
 ### uses a larger text control (standard one on windows is limited to
