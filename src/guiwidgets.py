@@ -584,8 +584,8 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
         self.maxlen=255
-        if style!=wxLC_REPORT and not gui.IsGtk():
-            # gtk can't do report and icon style
+        if style!=wxLC_REPORT and not gui.HasFullyFunctionalListView():
+            # some can't do report and icon style
             self.InsertColumn(0, "Name")
             self.InsertColumn(1, "Bytes", wxLIST_FORMAT_RIGHT)
             
@@ -851,7 +851,7 @@ class RingerView(FileView):
 class WallpaperView(FileView):
     def __init__(self, mainwindow, parent, id=-1):
         FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL)
-        if not gui.IsGtk():
+        if not gui.HasFullFunctionalListView():
             self.InsertColumn(2, "Size")
             self.InsertColumn(3, "Index")
         self._data={}
@@ -912,7 +912,7 @@ class WallpaperView(FileView):
                 dlg.ShowModal()
                 il.Add(wxNullBitmap)
             self.InsertImageStringItem(count, item['name'], count)
-            if not gui.IsGtk():
+            if not gui.HasFullFunctionalListView():
                 self.SetStringItem(count, 0, item['name'])
                 self.SetStringItem(count, 1, `len(item['data'])`)
                 self.SetStringItem(count, 2, "%d x %d" % (image.GetWidth(), image.GetHeight()))

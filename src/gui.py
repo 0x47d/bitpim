@@ -1128,6 +1128,12 @@ def dirname(str):
     if str.rfind('/')<0: return ""
     return str[:str.rfind('/')]
 
+def HasFullyFunctionalListView():
+    # can the list view be switched between icon view and report views
+    if IsWindows():
+        return True
+    return False
+
 def IsMSWindows():
     return wxPlatform=='__WXMSW__'
 
