@@ -523,6 +523,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for i in entry.emails:
             if len(i.email):
                 res['emails'].append( {'email': i.email} )
+        if not len(res['emails']): del res['emails'] # it was empty
         # urls
         if len(entry.url):
             res['urls']=[ {'url': entry.url} ]
