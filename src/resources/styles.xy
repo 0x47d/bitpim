@@ -12,28 +12,41 @@
 
 styles={}
 
-styles['table']='width="100%" cellpadding="5" cellspacing="0"'
+styles['table']={ '': ('width', "100%", 'cellpadding', "5", 'cellspacing', "0"),
+                  'td': ('valign', 'top')
+                  }
 
 # Panels are the rectangles containing each section.  The
 # styles are used in a TD tag
 
-styles['wallpaperpanel']='valign="top" bgcolor="#c2d4e6"'
-styles['ringtonepanel']='valign="top" bgcolor="#7f97d4"'
-styles['namepanel']='valign="center" align="center" bgcolor="#c2d4e6"'
-styles['categoryflagspanel']='valign="top" bgcolor="#91c37f"'
-styles['numberspanel']='valign="top" bgcolor="#7f97d4"'
-styles['urlpanel']='valign="top" bgcolor="#c2d4e6"'
-styles['memopanel']='valign="top" bgcolor="#91c37f"'
+styles['wallpaperpanel']={ '': ('bgcolor', "#c2d4e6", 'width', '72') }
+styles['ringtonepanel']= { '': ('bgcolor', "#7f97d4", 'width', '20') }
+styles['namepanel']={ '': ('valign', "center", 'align', "center", 'bgcolor', "#c2d4e6") }
+styles['categoryflagspanel']={ '': ('bgcolor', "#91c37f", 'width', '75') }
+styles['urlpanel']={'': ('bgcolor', "#c2d4e6") }
 
-styles['numberrow']=( 'valign="top" bgcolor="#99aabb"', 'valign="top" bgcolor="#bbaa99"' )
-styles['emailrow']=( 'valign="top" bgcolor="#aabb99"', 'valign="top" bgcolor="#d47f97"' )
-styles['address']=( 'valign="top" bgcolor="#c2d4e6"', 'valign="top" bgcolor="#7f97d4"')
+styles['numberroweven']={'': ('bgcolor', "#99aabb") }
+styles['numberrowodd']={ '': ('bgcolor', "#bbaa99") }
 
-# Individual text lines
-styles['name']='color="#0000ff" size="+1"'
-styles['category']='color="#123456"'
-styles['url']='color="#2727ee"'
-styles['addresstext']=''
+styles['emailroweven']={'': ('bgcolor', "#aabb99") }
+styles['emailrowodd']={ '': ('bgcolor', "#d47f97") }
+
+styles['memopanel']={ '': ('bgcolor', "#91c37f") }
+
+styles['addresseven']={ '': ('bgcolor', "#c2d4e6") } 
+styles['addressodd']={ '': ('bgcolor', "#7f97d4") }
+
+# Individual text items
+styles['url']={ '': ('color', "#2727ee") }
+# styles['addresstext']=''
+
+styles['name']={ '+font': ('color', "#0000ff", 'size', "+1"),
+                 '+b': () }
+styles['secret']={ '+font': ('size', '-2') }
+styles['category']={ '+font': ('color', "#123456") }
+styles['numbertype']={ 'td': ('width', '75', 'align', 'right'),
+                       '+b': () }
+styles['email']={ '+code': () }
 
 # Some functions used to make life easier
 def formatname(name):
@@ -82,8 +95,8 @@ def formataddress(address):
     res=""
     for field in "type", "company", "street", "street2", "city", "state", "postalcode", "country":
         if address.has_key(field):
-            res+=address[field]+"<br>"
+            res+=address[field]+"<br/>"
     return res
 
 def htmlify(string):
-    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
