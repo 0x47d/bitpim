@@ -8,13 +8,18 @@
 ### $Id$
 
 "Deals with vcard calendar import stuff"
+
+# system modules
 import copy
 import datetime
+
+# site modules
 import wx
 
+# local modules
 import bpcalendar
 import bptime
-import outlook_calendar
+import common_calendar
 import vcard
 
 #-------------------------------------------------------------------------------
@@ -93,7 +98,7 @@ class VCalendarImportData(object):
             return False
         if self.__filter['end'] is not None and \
            entry['end'][:3]>self.__filter['end'][:3] and \
-           entry['end'][:3]!=outlook_calendar.no_end_date[:3]:
+           entry['end'][:3]!=common_calendar.no_end_date[:3]:
             return False
         # check the catefory
         c=self.__filter['categories']
@@ -155,7 +160,7 @@ class VCalendarImportData(object):
                     ce.end=bp_t.get()[:1]+ce.end[1:]
             else:
                 # forever duration
-                ce.end=outlook_calendar.no_end_date
+                ce.end=common_calendar.no_end_date
         # add the list of exceptions
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])
@@ -366,18 +371,18 @@ def bp_repeat_str(dict, v):
     if v is None:
         return ''
     return v
-class VcalImportCalDialog(outlook_calendar.PreviewDialog):
+class VcalImportCalDialog(common_calendar.PreviewDialog):
     __column_labels=[
         ('description', 'Description', 400, None),
-        ('start', 'Start', 150, outlook_calendar.bp_date_str),
-        ('end', 'End', 150, outlook_calendar.bp_date_str),
+        ('start', 'Start', 150, common_calendar.bp_date_str),
+        ('end', 'End', 150, common_calendar.bp_date_str),
         ('repeat_type', 'Repeat', 80, bp_repeat_str),
-        ('alarm', 'Alarm', 80, outlook_calendar.bp_alarm_str),
-        ('categories', 'Category', 150, outlook_calendar.category_str)
+        ('alarm', 'Alarm', 80, common_calendar.bp_alarm_str),
+        ('categories', 'Category', 150, common_calendar.category_str)
         ]
     def __init__(self, parent, id, title):
         self.__oc=VCalendarImportData()
-        outlook_calendar.PreviewDialog.__init__(self, parent, id, title,
+        common_calendar.PreviewDialog.__init__(self, parent, id, title,
                                self.__column_labels,
                                self.__oc.get_display_data(),
                                config_name='import/calendar/vcaldialog')
@@ -431,7 +436,7 @@ class VcalImportCalDialog(outlook_calendar.PreviewDialog):
 
     def OnFilter(self, evt):
         cat_list=self.__oc.get_category_list()
-        dlg=outlook_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
+        dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
         dlg.set(self.__oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
             print dlg.get()
