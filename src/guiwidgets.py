@@ -30,6 +30,7 @@ import common
 import calendarcontrol
 import helpids
 import comscan
+import usbscan
 import comdiagnose
 import bpaudio
 import analyser
@@ -457,7 +458,7 @@ class CommPortDialog(wxDialog):
         self.tb.SetPage("<p><b>Refreshing</b> ...")
         self.lb.Clear()
         self.Update()
-        ports=comscan.comscan()
+        ports=comscan.comscan()+usbscan.usbscan()
         self.portinfo=comdiagnose.diagnose(ports)
         if len(self.portinfo):
             self.portinfo=[ ("Automatic", "auto",
