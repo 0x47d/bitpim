@@ -443,6 +443,10 @@ class PhoneWidget(wx.SplitterWindow):
         "Gets a wallpaper of type use"
         return self._findfirst(wallpapers, {'use': use}, 'wallpaper', default)
 
+    def getwallpaperindex(self, wallpapers, use, default):
+        "Gets a wallpaper index of type use"
+        return self._findfirst(wallpapers, {'use': use}, 'index', default)
+
     def getflag(self, flags, name, default):
         "Gets value of flag named name"
         for i in flags:
