@@ -1,11 +1,12 @@
-core.*
 *.pyc
 *.pyo
 apidoc
 bitpim-out.iss
 build
 check.out
+core.*
 dist
 i386
 pyxr
 setup.cfg
+tests
