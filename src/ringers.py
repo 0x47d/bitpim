@@ -599,6 +599,8 @@ class ConvertDialog(wx.Dialog):
         self.temporaryfiles.append(self.qcpfile)
 
     def qcpconvert(self):
+        # we verify the pvconv binary exists first
+        conversions.getpvconvbinary()
         # convert to wav first
         conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1)
         # then to qcp
