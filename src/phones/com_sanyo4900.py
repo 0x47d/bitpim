@@ -16,6 +16,8 @@ import time
 import cStringIO
 import sha
 
+from wxPython.wx import *
+
 # my modules
 import common
 import commport
@@ -494,7 +496,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             
             req=p_sanyo.eventupdaterequest()
             req.entry=e
-            res=self.sendpbcommand(req, p_sanyo.eventresponse)
+            res=self.sendpbcommand(req, p_sanyo.eventresponse, writemode=True)
 
             slot+=1
 
@@ -506,7 +508,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             setattr(e,'flag',0) # Unused slot
             req=p_sanyo.eventupdaterequest()
             req.entry=e
-            res=self.sendpbcommand(req, p_sanyo.eventresponse)
+            res=self.sendpbcommand(req, p_sanyo.eventresponse, writemode=True)
 
         self.progress(progressmax, progressmax, "Calendar write done")
 
@@ -608,6 +610,8 @@ class Profile:
         "Converts the data to what will be used by the phone"
         results={}
 
+        lastnamefirst=wxGetApp().config.ReadInt("lastnamefirst")
+
         slotsused={}
         for pbentry in data['phonebook']:
             entry=data['phonebook'][pbentry]
@@ -621,7 +625,7 @@ class Profile:
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=helper.getfullname(entry.get('names', []),1,1,16,lastnamefirst=True)[0]
+                e['name']=self.getfullname(entry.get('names', []),1,1,16,lastnamefirst)[0]
                 e['name_len']=len(e['name'])
 
                 serial1=helper.getserial(entry.get('serials', []), 'scp4900', data['uniqueserial'], 'serial1', -1)
