@@ -4,16 +4,18 @@
 <table ${styles['table']}>
 <tr>
 
-<td width="56" ${styles['wallpaperpanel']} >
+<td width="72" ${styles['wallpaperpanel']} >
 <py-open>for wallpaper in entry.get("wallpapers", []):</py-open>
-<img src="bpuserimage:${wallpaper['wallpaper']};width=48;height=48"
+<py-open>if wallpaper.get('wallpaper', None) is not None:</py-open>
+<img src="bpuserimage:${wallpaper['wallpaper']};width=64;height=64;bgcolor=c2d4e6"
 alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br>
+<py-close/>
 <py-close/>
 </td>
 
 <td width="20" ${styles['ringtonepanel']}>
 <py-open>for ringtone in entry.get("ringtones", []):</py-open>
-<img src="bpimage:ringer.png;width=16;height=16"
+<img src="bpimage:ringer.png;width=16;height=16;bgcolor=7f97db"
 alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <py-close/>
 </td>

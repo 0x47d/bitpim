@@ -193,7 +193,7 @@ class WallpaperView(guiwidgets.FileView):
             self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
                                                             img.GetHeight(), newwidth,
                                                             newheight))
-            img.Rescale(newwidth, newheight)
+            img.Rescale(int(newwidth), int(newheight))
             # figure where to place image to centre it
             posx=self.usewidth-(self.usewidth+newwidth)/2
             posy=self.useheight-(self.useheight+newheight)/2
@@ -264,9 +264,9 @@ class BPFSHandler(wx.FileSystemHandler):
             x=param.find('=')
             key=param[:x]
             value=param[x+1:]
-            try:
+            if key=='width' or key=='height':
                 p[key]=int(value)
-            except:
+            else:
                 p[key]=value
         if proto=="bpimage":
             return self.OpenBPImageFile(location, r, **p)
@@ -291,7 +291,7 @@ class BPFSImageFile(wx.FSFile):
     All files are internally converted to PNG
     """
 
-    def __init__(self, fshandler, location, name=None, img=None, width=32, height=32):
+    def __init__(self, fshandler, location, name=None, img=None, width=32, height=32, bgcolor=None):
         self.fshandler=fshandler
         self.location=location
 
@@ -304,15 +304,22 @@ class BPFSImageFile(wx.FSFile):
         sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
         newwidth=img.GetWidth()*sfactor/1.0
         newheight=img.GetHeight()*sfactor/1.0
-        img.Rescale(newwidth, newheight)
+        img.Rescale(int(newwidth), int(newheight))
 
         b=wx.EmptyBitmap(width, height)
         mdc=wx.MemoryDC()
         mdc.SelectObject(b)
-        # mdc.SetBackground(wx.TRANSPARENT_BRUSH)
-        mdc.SetBackground(wx.WHITE_BRUSH)
+        print bgcolor
+        if bgcolor is not None and  len(bgcolor)==6:
+            red=int(bgcolor[0:2],16)
+            green=int(bgcolor[2:4],16)
+            blue=int(bgcolor[4:6],16)
+            print "bg is",red,green,blue
+            mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(wx.Colour(red,green,blue), wx.SOLID))
+        else:
+            mdc.SetBackground(wx.TRANSPARENT_BRUSH)        
         mdc.Clear()
-        
+        mdc.SelectObject(b)
         mdc.DrawBitmap(img.ConvertToBitmap(), (width-img.GetWidth())/2, (height-img.GetHeight())/2, True)
         mdc.SelectObject(wx.NullBitmap)
         
