@@ -174,7 +174,7 @@ _getdatalist=[
     'Middle', ("names", 0, None, nameparser.getmiddle),
     'Last', ("names", 0, None, nameparser.getlast),
 
-    # numbers are inserted here
+    # phone numbers are inserted here
 
     'Category', ("categories", 0,  None, "category"),
     'Category2', ("categories", 1,  None, "category"),
@@ -858,6 +858,21 @@ class PhoneWidget(wx.Panel):
     def getnumbers(self, numbers, min, max):
         "Return at least min and at most max numbers from the numbers list"
         return self._getentries(numbers, min, max, "numbers")
+
+    def getnumber(self, numbers, type, count=1, default=""):
+        """Returns phone numbers of the type
+
+        @param numbers: The list of numbers
+        @param type: The type, such as cell, home, office
+        @param count: Which number to return (eg with type=home, count=2 the second
+                    home number is returned)
+        @param fallback: What is returned if there is no such number"""
+        for n in numbers:
+            if n['type']==type:
+                if count==1:
+                    return n['number']
+                count-=1
+        return default
 
     def getserial(self, serials, sourcetype, id, key, default):
         "Gets a serial if it exists"
