@@ -860,7 +860,7 @@ class FileEntries:
                     self.__phone.writefile(name, media[k]['data'])
                     media[k]['origin']=self.__origin
             except:
-                self.__phone.report('Failed to write file: '+media[k]['name'])
+                self.__phone.log('Failed to write file: '+media[k]['name'])
         return result
 
 class RingtoneIndex:
