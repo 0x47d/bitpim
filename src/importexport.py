@@ -220,7 +220,10 @@ class ImportDialog(wx.Dialog):
             if rec.has_key('Email Address'):
                 emails=[]
                 for e in rec['Email Address']:
-                    emails.append({'email': e})
+                    if isinstance(e, dict):
+                        emails.append(e)
+                    else:
+                        emails.append({'email': e})
                 del rec['Email Address']
                 entry['emails']=emails
             # addresses
@@ -411,17 +414,24 @@ class ImportDialog(wx.Dialog):
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
-                v=self.data[row][col]
-                try:
-                    s=str(v)
-                except UnicodeEncodeError:
-                    s=v.encode("ascii", 'xmlcharrefreplace')
+                s=_getpreviewformatted(self.data[row][col], self.columns[col])
                 if len(s):
                     self.preview.SetCellValue(row+1, col, s)
             self.preview.SetRowAttr(row+1, (evenattr,oddattr)[row%2])
         self.preview.AutoSizeColumns()
         self.preview.AutoSizeRows()
         self.preview.EndBatch()
+
+def _getpreviewformatted(value, column):
+    if isinstance(value, dict):
+        if column=="Email Address":
+            value="%s (%s)" %(value["email"], value["type"])
+        else:
+            print "don't know how to convert dict",value,"for preview column",column
+    try:
+        return str(value)
+    except UnicodeEncodeError:
+        return value.encode("ascii", 'xmlcharrefreplace')
 
 class ImportCSVDialog(ImportDialog):
 
@@ -868,7 +878,7 @@ class ImportVCardDialog(ImportDialog):
         "first name": "First Name",
         "middle name": "Middle Name",
         "categories": "Categories",
-
+        "email": "Email Address",
         }
     def __init__(self, filename, parent, id, title):
         self.headerrowiseditable=False
