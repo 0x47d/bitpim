@@ -339,7 +339,7 @@ class ConfigDialog(wx.Dialog):
                   'SPH-A620 (VGA1000)': 'com_samsungspha620',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
-                  #'SK6100' : 'com_sk6100', 
+                  'SK6100 (Pelephone)' : 'com_sk6100', 
                   'Other CDMA phone': 'com_othercdma',
                   }
 
