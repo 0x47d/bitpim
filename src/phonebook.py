@@ -509,10 +509,14 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         r.IncRef()
         return r
 
+thephonewidget=None  # track the instance
+
 class PhoneWidget(wx.Panel):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
     def __init__(self, mainwindow, parent, config):
+        global thephonewidget
+        thephonewidget=self
         wx.Panel.__init__(self, parent,-1)
         # keep this around while we exist
         self.categorymanager=CategoryManager
@@ -556,6 +560,9 @@ class PhoneWidget(wx.Panel):
 
     def SetColumns(self, columns):
         self.dt.SetColumns(columns)
+
+    def GetColumns(self):
+        return self.dt.columns
 
     def OnCategoriesUpdate(self, msg):
         if self.categories!=msg.data:
@@ -844,7 +851,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.main=widget
         self.rowkeys=[]
         wx.grid.PyGridTableBase.__init__(self)
-        self.columns=['Confidence', 'Name', 'Home', 'Email']
+        self.columns=['Confidence']+thephonewidget.GetColumns()
         self.addedattr=wx.grid.GridCellAttr()
         self.addedattr.SetBackgroundColour("HONEYDEW")
         self.unalteredattr=wx.grid.GridCellAttr()
@@ -1302,6 +1309,7 @@ class ColumnSelectorDialog(wx.Dialog):
     ID_DOWN=wx.NewId()
     ID_ADD=wx.NewId()
     ID_REMOVE=wx.NewId()
+    ID_DEFAULT=wx.NewId()
 
     def __init__(self, parent, config, phonewidget):
         wx.Dialog.__init__(self, parent, id=-1, title="Select Columns to view", style=wx.CAPTION|
@@ -1324,8 +1332,9 @@ class ColumnSelectorDialog(wx.Dialog):
         self.down=wx.Button(self, self.ID_DOWN, "Move Down")
         self.add=wx.Button(self, self.ID_ADD, "Show")
         self.remove=wx.Button(self, self.ID_REMOVE, "Don't Show")
+        self.default=wx.Button(self, self.ID_DEFAULT, "Default")
 
-        for b in self.up, self.down, self.add, self.remove:
+        for b in self.up, self.down, self.add, self.remove, self.default:
             bs.Add(b, 0, wx.ALL|wx.ALIGN_CENTRE, 10)
 
         hbs.Add(bs, 0, wx.ALL|wx.ALIGN_CENTRE, 5)
@@ -1371,7 +1380,7 @@ class ColumnSelectorDialog(wx.Dialog):
         wx.EVT_BUTTON(self, self.ID_REMOVE, self.OnRemove)
         wx.EVT_BUTTON(self, self.ID_UP, self.OnUp)
         wx.EVT_BUTTON(self, self.ID_DOWN, self.OnDown)
-
+        wx.EVT_BUTTON(self, self.ID_DEFAULT, self.OnDefault)
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
 
     def OnShowClicked(self, _=None):
@@ -1413,6 +1422,11 @@ class ColumnSelectorDialog(wx.Dialog):
                 self.show.SetSelection(it-1)
             else:
                 self.show.SetSelection(it)
+        self.OnShowClicked()
+
+    def OnDefault(self,_):
+        self.show.Set(DefaultColumns)
+        self.show.SetSelection(0)
         self.OnShowClicked()
 
     def OnUp(self, _):
