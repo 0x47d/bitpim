@@ -89,6 +89,22 @@ class ImportDialog(wx.Dialog):
                      "Business State", "Business Country/Region", "Business Web Page",
                      "Business Phone", "Business Fax", "Pager", "Company", "Notes", "Private",
                      "Category", "Categories"]
+    bp_columns=[
+                     # BitPim CSV fields
+                     'names_title', 'names_first', 'names_middle', 'names_last',
+                     'names_full', 'names_nickname',
+                     'addresses_type', 'addresses_company', 'addresses_street',
+                     'addresses_street2', 'addresses_city',
+                     'addresses_state', 'addresses_postalcode',
+                     'addresses_country',
+                     'numbers_number', 'numbers_type', 'numbers_speeddial',
+                     'emails_email', 'emails_type',
+                     'urls_url', 'urls_type',
+                     'categories_category',
+                     'ringtones_ringtone', 'ringtones_use',
+                     'wallpapers_wallpaper', 'wallpapers_use',
+                     'memos_memo', 'flags_secret'
+                     ]
     
     # used for the filtering - any of the named columns have to be present for the data row
     # to be considered to have that type of column
@@ -138,7 +154,7 @@ class ImportDialog(wx.Dialog):
     def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
-        
+        self.possiblecolumns+=self.bp_columns
         vbs=wx.BoxSizer(wx.VERTICAL)
         t,sz=self.gethtmlhelp()
         w=wx.html.HtmlWindow(self, -1, size=sz, style=wx.html.HW_SCROLLBAR_NEVER)
@@ -238,207 +254,256 @@ class ImportDialog(wx.Dialog):
             self.preview.SaveEditControlValue()
         self.OnClose()  # for some reason this isn't called automatically
         self.EndModal(wx.ID_OK)
+
+    def __build_entry(self, rec):
+        entry={}
+        # emails
+        emails=[]
+        if rec.has_key('Email Address'):
+            for e in rec['Email Address']:
+                if isinstance(e, dict):
+                    emails.append(e)
+                else:
+                    emails.append({'email': e})
+            del rec['Email Address']
+        if rec.has_key("Email Addresses"):
+            for e in rec['Email Addresses']:
+                emails.append({'email': e})
+            del rec["Email Addresses"]
+        if len(emails):
+            entry['emails']=emails
+        # addresses
+        for prefix,fields in \
+                ( ("Home", self.filterhomeaddresscolumns),
+                  ("Business", self.filterbusinessaddresscolumns)
+                  ):
+            addr={}
+            for k in fields:
+                if k in rec:
+                    # it has a field for this type
+                    shortk=k[len(prefix)+1:]
+                    addr['type']=prefix.lower()
+                    addr[self.addressmap[shortk]]=rec[k]
+                    del rec[k]
+            if len(addr):
+                if prefix=="Business" and rec.has_key("Company"):
+                    # fill in company info
+                    addr['type']=prefix.lower()
+                    addr['company']=rec["Company"]
+                if not entry.has_key("addresses"):
+                    entry["addresses"]=[]
+                entry["addresses"].append(addr)
+        # address (dict form of addresses)
+        if rec.has_key("Address"):
+            # ensure result key exists
+            if not entry.has_key("addresses"):
+                entry["addresses"]=[]
+            # find the company name
+            company=rec.get("Company", None)
+            for a in rec["Address"]:
+                if a["type"]=="business": a["company"]=company
+                addr={}
+                for k in ("type", "company", "street", "street2", "city", "state", "postalcode", "country"):
+                    v=a.get(k, None)
+                    if v is not None: addr[k]=v
+                entry["addresses"].append(addr)
+            del rec["Address"]
+        # numbers
+        numbers=[]
+        for field in self.filternumbercolumns:
+            if field!="Phone" and rec.has_key(field):
+                for val in rec[field]:
+                    numbers.append({'type': self.numbermap[field], 'number': phonenumber.normalise(val)})
+                del rec[field]
+        # phones (dict form of numbers)
+        if rec.has_key("Phone"):
+            mapping={"business": "office", "business fax": "fax", "home fax": "fax"}
+            for val in rec["Phone"]:
+                number={"type": mapping.get(val["type"], val["type"]),
+                        "number": phonenumber.normalise(val["number"])}
+                sd=val.get('speeddial', None)
+                if sd is not None:
+                    number.update({ 'speeddial': sd })
+                numbers.append(number)
+            del rec["Phone"]
+        if len(numbers):
+            entry["numbers"]=numbers
+                
+        # names
+        name={}
+        for field in self.filternamecolumns:
+            if field in rec:
+                name[self.namemap[field]]=rec[field]
+                del rec[field]
+        if len(name):
+            entry["names"]=[name]
+        # notes
+        if rec.has_key("Notes"):
+            notes=[]
+            for note in rec["Notes"]:
+                notes.append({'memo': note})
+            del rec["Notes"]
+            entry["memos"]=notes
+        # web pages
+        urls=[]
+        for type, key in ( (None, "Web Page"),
+                          ("home", "Home Web Page"),
+                          ("business", "Business Web Page")
+                          ):
+            if rec.has_key(key):
+                for url in rec[key]:
+                    if isinstance(url, dict):
+                        u=url
+                    else:
+                        u={'url': url}
+                        if type is not None:
+                            u['type']=type
+                    urls.append(u)
+                del rec[key]
+        if len(urls):
+            entry["urls"]=urls
+        # categories
+        cats=[]
+        if rec.has_key("Category"):
+            for cat in rec['Category']:
+                cats.append({'category': cat})
+            del rec["Category"]
+        if rec.has_key("Categories"):
+            # multiple entries in the field, semi-colon seperated
+            if isinstance(rec['Categories'], list):
+                for cat in rec['Categories']:
+                    cats.append({'category': cat})
+            else:
+                for cat in rec['Categories'].split(';'):
+                    cats.append({'category': cat})
+            del rec['Categories']
+        if len(cats):
+            entry["categories"]=cats
+        # wallpapers
+        l=[]
+        r=rec.get('Wallpapers', None)
+        if r is not None:
+            if isinstance(r, list):
+                l=[{'wallpaper': x, 'use': 'call' } for x in r]
+            else:
+                l=[{'wallpaper': x, 'use': 'call' } for x in r.split(';')]
+            del rec['Wallpapers']
+        if len(l):
+            entry['wallpapers']=l
+        # ringtones
+        l=[]
+        r=rec.get('Ringtones', None)
+        if r is not None:
+            if isinstance(r, list):
+                l=[{'ringtone': x, 'use': 'call'} for x in r]
+            else:
+                l=[{'ringtone': x, 'use': 'call'} for x in r.split(';')]
+            del rec['Ringtones']
+        if len(l):
+            entry['ringtones']=l
+        # flags
+        flags=[]
+        if rec.has_key("Private"):
+            private=True
+            # lets see how they have done false
+            if rec["Private"].lower() in ("false", "no", 0, "0"):
+                private=False
+            flags.append({'secret': private})
+            del rec["Private"]
+            
+        if len(flags):
+            entry["flags"]=flags
+
+        # unique serials
+        serial={}
+        for k in rec.keys():
+            if k.startswith("UniqueSerial-"):
+                v=rec[k]
+                del rec[k]
+                k=k[len("UniqueSerial-"):]
+                serial[k]=v
+        if len(serial):
+            assert serial.has_key("sourcetype")
+            if len(serial)>1: # ie more than just sourcetype
+                entry["serials"]=[serial]
+        # Did we forget anything?
+        # Company is part of other fields
+        if rec.has_key("Company"): del rec["Company"]
+        if len(rec):
+            raise Exception(
+                "Internal conversion failed to complete.\nStill to do: %s" % rec)
+        return entry
+
+    def __build_bp_entry(self, rec):
+        entry={}
+        for idx,col in enumerate(self.columns):
+            # build the entry from the colum data
+            key=col[:col.find('_')]
+            field=col[col.find('_')+1:]
+            v=rec[idx]
+            if not len(v):
+                v=None
+            if not entry.has_key(key):
+                entry[key]=[]
+            done=False
+            for field_idx,n in enumerate(entry[key]):
+                if not n.has_key(field):
+                    entry[key][field_idx][field]=v
+                    done=True
+                    break
+            if not done:
+                entry[key].append({ field: v })
+        # go through and delete all blanks fields/dicts
+        for k,e in entry.items():
+            for i1,d in enumerate(e):
+                for k2,item in d.items():
+                    if item is None:
+                        del entry[k][i1][k2]
+                    else:
+                        if k2=='speeddial':
+                            d[k2]=int(item)
+            l=[x for x in entry[k] if len(x)]
+            if len(l):
+                entry[k]=l
+            else:
+                del entry[k]
+        return entry
         
     def GetFormattedData(self):
         "Returns the data in BitPim phonebook format"
+        bp_csv=True
+        for c in self.columns:
+            if c=="<ignore>":
+                continue
+            if c not in self.bp_columns:
+                bp_csv=False
+                break
         res={}
         count=0
         for record in self.data:
-            # make a dict of the record
-            rec={}
-            for n in range(len(self.columns)):
-                if self.columns[n]=="<ignore>":
-                    continue
-                if record[n] is None or len(record[n])==0:
-                    continue
-                c=self.columns[n]
-                if c in self.filternumbercolumns or c in \
-                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone", "Address", "Email Address"]:
-                    # these are multivalued
-                    if not rec.has_key(c):
-                        rec[c]=[]
-                    rec[c].append(record[n])
-                else:
-                    rec[c]=record[n]
-            # entry is what we are building.  fields are removed from rec as we process them
-            entry={}
-            # emails
-            emails=[]
-            if rec.has_key('Email Address'):
-                for e in rec['Email Address']:
-                    if isinstance(e, dict):
-                        emails.append(e)
+            if bp_csv:
+                res[count]=self.__build_bp_entry(record)
+            else:                
+                # make a dict of the record
+                rec={}
+                for n in range(len(self.columns)):
+                    c=self.columns[n]
+                    if c=="<ignore>":
+                        continue
+                    if record[n] is None or len(record[n])==0:
+                        continue
+                    if c not in self.bp_columns:
+                        bp_csv=False
+                    if c in self.filternumbercolumns or c in \
+                       ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone", "Address", "Email Address"]:
+                        # these are multivalued
+                        if not rec.has_key(c):
+                            rec[c]=[]
+                        rec[c].append(record[n])
                     else:
-                        emails.append({'email': e})
-                del rec['Email Address']
-            if rec.has_key("Email Addresses"):
-                for e in rec['Email Addresses']:
-                    emails.append({'email': e})
-                del rec["Email Addresses"]
-            if len(emails):
-                entry['emails']=emails
-            # addresses
-            for prefix,fields in \
-                    ( ("Home", self.filterhomeaddresscolumns),
-                      ("Business", self.filterbusinessaddresscolumns)
-                      ):
-                addr={}
-                for k in fields:
-                    if k in rec:
-                        # it has a field for this type
-                        shortk=k[len(prefix)+1:]
-                        addr['type']=prefix.lower()
-                        addr[self.addressmap[shortk]]=rec[k]
-                        del rec[k]
-                if len(addr):
-                    if prefix=="Business" and rec.has_key("Company"):
-                        # fill in company info
-                        addr['type']=prefix.lower()
-                        addr['company']=rec["Company"]
-                    if not entry.has_key("addresses"):
-                        entry["addresses"]=[]
-                    entry["addresses"].append(addr)
-            # address (dict form of addresses)
-            if rec.has_key("Address"):
-                # ensure result key exists
-                if not entry.has_key("addresses"):
-                    entry["addresses"]=[]
-                # find the company name
-                company=rec.get("Company", None)
-                for a in rec["Address"]:
-                    if a["type"]=="business": a["company"]=company
-                    addr={}
-                    for k in ("type", "company", "street", "street2", "city", "state", "postalcode", "country"):
-                        v=a.get(k, None)
-                        if v is not None: addr[k]=v
-                    entry["addresses"].append(addr)
-                del rec["Address"]
-            # numbers
-            numbers=[]
-            for field in self.filternumbercolumns:
-                if field!="Phone" and rec.has_key(field):
-                    for val in rec[field]:
-                        numbers.append({'type': self.numbermap[field], 'number': phonenumber.normalise(val)})
-                    del rec[field]
-            # phones (dict form of numbers)
-            if rec.has_key("Phone"):
-                mapping={"business": "office", "business fax": "fax", "home fax": "fax"}
-                for val in rec["Phone"]:
-                    number={"type": mapping.get(val["type"], val["type"]),
-                            "number": phonenumber.normalise(val["number"])}
-                    sd=val.get('speeddial', None)
-                    if sd is not None:
-                        number.update({ 'speeddial': sd })
-                    numbers.append(number)
-                del rec["Phone"]
-            if len(numbers):
-                entry["numbers"]=numbers
-                    
-            # names
-            name={}
-            for field in self.filternamecolumns:
-                if field in rec:
-                    name[self.namemap[field]]=rec[field]
-                    del rec[field]
-            if len(name):
-                entry["names"]=[name]
-            # notes
-            if rec.has_key("Notes"):
-                notes=[]
-                for note in rec["Notes"]:
-                    notes.append({'memo': note})
-                del rec["Notes"]
-                entry["memos"]=notes
-            # web pages
-            urls=[]
-            for type, key in ( (None, "Web Page"),
-                              ("home", "Home Web Page"),
-                              ("business", "Business Web Page")
-                              ):
-                if rec.has_key(key):
-                    for url in rec[key]:
-                        if isinstance(url, dict):
-                            u=url
-                        else:
-                            u={'url': url}
-                            if type is not None:
-                                u['type']=type
-                        urls.append(u)
-                    del rec[key]
-            if len(urls):
-                entry["urls"]=urls
-            # categories
-            cats=[]
-            if rec.has_key("Category"):
-                for cat in rec['Category']:
-                    cats.append({'category': cat})
-                del rec["Category"]
-            if rec.has_key("Categories"):
-                # multiple entries in the field, semi-colon seperated
-                if isinstance(rec['Categories'], list):
-                    for cat in rec['Categories']:
-                        cats.append({'category': cat})
-                else:
-                    for cat in rec['Categories'].split(';'):
-                        cats.append({'category': cat})
-                del rec['Categories']
-            if len(cats):
-                entry["categories"]=cats
-            # wallpapers
-            l=[]
-            r=rec.get('Wallpapers', None)
-            if r is not None:
-                if isinstance(r, list):
-                    l=[{'wallpaper': x, 'use': 'call' } for x in r]
-                else:
-                    l=[{'wallpaper': x, 'use': 'call' } for x in r.split(';')]
-                del rec['Wallpapers']
-            if len(l):
-                entry['wallpapers']=l
-            # ringtones
-            l=[]
-            r=rec.get('Ringtones', None)
-            if r is not None:
-                if isinstance(r, list):
-                    l=[{'ringtone': x, 'use': 'call'} for x in r]
-                else:
-                    l=[{'ringtone': x, 'use': 'call'} for x in r.split(';')]
-                del rec['Ringtones']
-            if len(l):
-                entry['ringtones']=l
-            # flags
-            flags=[]
-            if rec.has_key("Private"):
-                private=True
-                # lets see how they have done false
-                if rec["Private"].lower() in ("false", "no", 0, "0"):
-                    private=False
-                flags.append({'secret': private})
-                del rec["Private"]
-                
-            if len(flags):
-                entry["flags"]=flags
-
-            # unique serials
-            serial={}
-            for k in rec.keys():
-                if k.startswith("UniqueSerial-"):
-                    v=rec[k]
-                    del rec[k]
-                    k=k[len("UniqueSerial-"):]
-                    serial[k]=v
-            if len(serial):
-                assert serial.has_key("sourcetype")
-                if len(serial)>1: # ie more than just sourcetype
-                    entry["serials"]=[serial]
-
-            # stash it away
-            res[count]=entry
-            # Did we forget anything?
-            # Company is part of other fields
-            if rec.has_key("Company"): del rec["Company"]
-            if len(rec):
-                raise Exception("Internal conversion failed to complete on %s\nStill to do: %s" % (record, rec))
+                        rec[c]=record[n]
+                # entry is what we are building.  fields are removed from rec as we process them
+                res[count]=self.__build_entry(rec)
             count+=1
         return res
 
@@ -1723,7 +1788,8 @@ def GetPhonebookExports():
     res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
     # eGroupware - always possible
     res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
-    
+    # CSV - always possible
+    res.append( ('CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
     return res
 
 class BaseExportDialog(wx.Dialog):
@@ -1864,6 +1930,88 @@ class ExportVCardDialog(BaseExportDialog):
         wx.GetApp().config.Flush()
         self.EndModal(wx.ID_OK)
 
+class ExportCSVDialog(BaseExportDialog):
+    __pb_keys=(
+        ('names', ('title', 'first', 'middle', 'last', 'full', 'nickname')),
+        ('addresses', ('type', 'company', 'street', 'street2', 'city',
+                       'state', 'postalcode', 'country')),
+        ('numbers', ('number', 'type', 'speeddial')),
+        ('emails', ('email', 'type')),
+        ('urls', ('url', 'type')),
+        ('categories', ('category',)),
+        ('ringtones', ('ringtone', 'use')),
+        ('wallpapers', ('wallpaper', 'use')),
+        ('memos', ('memo',)),
+        ('flags', ('secret',))
+        )
+        
+    def __init__(self, parent, title):
+        super(ExportCSVDialog, self).__init__(parent, title)
+        # make the ui
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        bs=wx.BoxSizer(wx.HORIZONTAL)
+        bs.Add(wx.StaticText(self, -1, "File"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+        self.filenamectrl=wx.TextCtrl(self, -1, "bitpim.csv")
+        bs.Add(self.filenamectrl, 1, wx.ALL|wx.EXPAND, 5)
+        self.browsectrl=wx.Button(self, wx.NewId(), "Browse...")
+        bs.Add(self.browsectrl, 0, wx.ALL|wx.EXPAND, 5)
+        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+        # selection GUI
+        vbs.Add(self.GetSelectionGui(self), 5, wx.EXPAND|wx.ALL, 5)
+        # the buttons
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        # event handlers
+        wx.EVT_BUTTON(self, self.browsectrl.GetId(), self.OnBrowse)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        # all done
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnBrowse(self, _):
+        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                          wildcard="CSV files (*.cvs)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
+        dlg.Destroy()
+    def OnOk(self, _):
+        # do export
+        filename=self.filenamectrl.GetValue()
+        print filename
+        # find out the length of each key
+        key_count={}
+        for e in self.__pb_keys:
+            key_count[e[0]]=0
+        for record in self.GetPhoneBookItems():
+            for k in record:
+                if key_count.has_key(k):
+                    key_count[k]=max(key_count[k], len(record[k]))
+        print key_count
+        f=open(filename, 'wt')
+        l=[]
+        for e in self.__pb_keys:
+            if key_count[e[0]]:
+                ll=[e[0]+'_'+x for x in e[1]]
+                l+=ll*key_count[e[0]]
+        f.write(','.join(l)+'\n')
+        for record in self.GetPhoneBookItems():
+            ll=[]
+            for e in self.__pb_keys:
+                key=e[0]
+                if key_count[key]:
+                    for i in range(key_count[key]):
+                        try:
+                            entry=record[key][i]
+                        except (KeyError, IndexError):
+                            entry={}
+                        for field in e[1]:
+                            ll.append('"'+str(entry.get(field, '')).replace('"', '')+'"')
+            f.write(','.join(ll)+'\n')
+        f.flush()
+        f.close()
+        self.EndModal(wx.ID_OK)
+        
 class ExporteGroupwareDialog(BaseExportDialog):
 
     ID_REFRESH=wx.NewId()
@@ -2174,5 +2322,10 @@ def OnFileExportVCards(parent):
 def OnFileExporteGroupware(parent):
     import native.egroupware
     dlg=ExporteGroupwareDialog(parent, "Export phonebook to eGroupware", native.egroupware)
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExportCSV(parent):
+    dlg=ExportCSVDialog(parent, "Export phonebook to CSV")
     dlg.ShowModal()
     dlg.Destroy()
