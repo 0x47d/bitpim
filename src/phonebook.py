@@ -441,13 +441,13 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
     def __init__(self, widget, columns):
         self.main=widget
         self.rowkeys=self.main._data.keys()
-        self.rowkeys.sort()
         wx.grid.PyGridTableBase.__init__(self)
         self.oddattr=wx.grid.GridCellAttr()
         self.oddattr.SetBackgroundColour("OLDLACE")
         self.evenattr=wx.grid.GridCellAttr()
         self.evenattr.SetBackgroundColour("ALICE BLUE")
         self.columns=columns
+        assert len(self.rowkeys)==0  # we can't sort here, and it isn't necessary because list is zero length
 
     def GetColLabelValue(self, col):
         return self.columns[col]
@@ -467,6 +467,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
             msg=None
         if msg is not None:
             self.GetView().ProcessTableMessage(msg)
+        self.Sort()
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSizeColumns()
@@ -488,7 +489,9 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSizeColumns()
 
-    def Sort(self, bycol, descending):
+    def Sort(self):
+        bycol=self.main.sortedColumn
+        descending=self.main.sortedColumnDescending
         l=[ (getdata(self.columns[bycol], self.main._data[key]), key) for key in self.rowkeys]
         l.sort()
         if descending:
@@ -547,6 +550,10 @@ class PhoneWidget(wx.Panel):
             cur=[c for c in cur if c in AvailableColumns]
         else:
             cur=DefaultColumns
+        # column sorter info
+        self.sortedColumn=0
+        self.sortedColumnDescending=False
+
         self.dt=PhoneDataTable(self, cur)
         self.table.SetTable(self.dt, False, wx.grid.Grid.wxGridSelectRows)
         self.table.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
@@ -572,9 +579,6 @@ class PhoneWidget(wx.Panel):
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
         wx.grid.EVT_GRID_LABEL_LEFT_CLICK(self.table, self.OnGridLabelLeftClick)
         wx.grid.EVT_GRID_LABEL_LEFT_DCLICK(self.table, self.OnGridLabelLeftClick)
-        self.sortedColumn=0
-        self.sortedColumnDescending=False
-        self.dt.Sort(self.sortedColumn, self.sortedColumnDescending)
 
     def OnColumnHeaderPaint(self, evt):
         w = self.table.GetGridColLabelWindow()
@@ -619,12 +623,20 @@ class PhoneWidget(wx.Panel):
         else:
             self.sortedColumn=col
             self.sortedColumnDescending=False
-        self.dt.Sort(self.sortedColumn, self.sortedColumnDescending)
+        self.dt.Sort()
         self.table.Refresh()
 
 
     def SetColumns(self, columns):
+        c=self.GetColumns()[self.sortedColumn]
         self.dt.SetColumns(columns)
+        if c in columns:
+            self.sortedColumn=columns.index(c)
+        else:
+            self.sortedColumn=0
+            self.sortedColumnDescending=False
+        self.dt.Sort()
+        self.table.Refresh()
 
     def GetColumns(self):
         return self.dt.columns
