@@ -1,8 +1,21 @@
 import pywabimpl
 
 class WABException(Exception):
-    def __init__(self):
-        Exception.__init__(pywabimpl.cvar.errorstring)
+    def __init__(self,str):
+        Exception.__init__(self,str)
+
+class MAPIException(Exception):
+    def __init__(self, code, str):
+        self.code=code
+        Exception.__init__(self,str)
+
+def doexception():
+    code=pywabimpl.cvar.errorcode
+    for i in dir(constants):
+        if (i.startswith('MAPI_E') or i.startswith('MAPI_W')) and \
+               getattr(constants,i)==code:
+            raise MAPIException(code, i)
+    raise WABException(pywabimpl.cvar.errorstring)
 
 constants=pywabimpl.constants
 
@@ -17,7 +30,7 @@ class WAB:
         # the wab library doesn't actually error on non-existent file
         self._wab=pywabimpl.Initialize(enableprofiles, filename)
         if self._wab is None:
-            raise WABException()
+            raise doexception()
 
     def rootentry(self):
         return pywabimpl.entryid()
@@ -25,7 +38,7 @@ class WAB:
     def getpabentry(self):
         pe=self._wab.getpab()
         if pe is None:
-            raise WABException()
+            raise doexception()
         return pe
 
     def getrootentry(self):
@@ -34,7 +47,7 @@ class WAB:
     def openobject(self, entryid):
         x=self._wab.openobject(entryid)
         if x is None:
-            raise WABException()
+            raise doexception()
         if x.gettype()==constants.MAPI_ABCONT:
             return Container(x)
         return x
@@ -58,15 +71,15 @@ class Table:
             for num,value in zip(range(len(props)), props):
                 p.setitem(num, value)
             if not self.obj.enablecolumns(p):
-                raise WABException()
+                raise doexception()
         else:
             if not self.obj.enableallcolumns():
-                raise WABException()
+                raise doexception()
 
     def next(self):
         row=self.obj.getnextrow()
         if row is None:
-            raise WABException()
+            raise doexception()
         if row.IsEmpty():
             raise StopIteration()
         # we return a dict, built from row
@@ -83,7 +96,7 @@ class Table:
     def count(self):
         i=self.obj.getrowcount()
         if i<0:
-            raise WABException()
+            raise doexception()
         return i
 
     def _convertvalue(self,key,v):
@@ -132,7 +145,7 @@ class Container:
         """
         x=self.obj.getcontentstable(flags)
         if x is None:
-            raise WABException()
+            raise doexception()
         return Table(x)
 
 
