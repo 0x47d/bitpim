@@ -46,15 +46,22 @@ class WallpaperView(guiwidgets.FileView):
             self.InsertColumn(3, "Origin")
         self._data={'wallpaper-index': {}}
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
-        self.usewidth=120
-        self.useheight=98
+        self.usewidth=self.mainwindow.phoneprofile.WALLPAPER_WIDTH
+        self.useheight=self.mainwindow.phoneprofile.WALLPAPER_HEIGHT
 
         self.addfilemenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_PASTE, self.OnPaste)
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(pubsub.REQUEST_WALLPAPERS, self, "OnListRequest")
+        pubsub.subscribe(pubsub.PHONE_MODEL_CHANGED, self, "OnPhoneModelChanged")
 
+    def OnPhoneModelChanged(self, msg):
+        phonemodule=msg.data
+        self.usewidth=phonemodule.Profile.WALLPAPER_WIDTH
+        self.useheight=phonemodule.Profile.WALLPAPER_HEIGHT
+        self.OnRefresh()
+        
     def OnListRequest(self, msg=None):
         l=[self._data['wallpaper-index'][x]['name'] for x in self._data['wallpaper-index']]
         l.sort()
