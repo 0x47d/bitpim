@@ -13,6 +13,7 @@ import tokenize
 import sys
 import token
 import cStringIO
+import os
 
 class protoerror(Exception):
 
@@ -59,7 +60,7 @@ class protogentokenizer:
     STATE_CONDITIONAL="STATE_CONDITIONAL"
     
     
-    def __init__(self, tokenizer, autogennamebase="_generated_"):
+    def __init__(self, tokenizer, autogennamebase):
         self.tokenizer=tokenizer
         self.pb=[]  # pushback list from what we are tokenizing
         self.state=[self.STATE_TOPLEVEL] # state stack
@@ -605,10 +606,11 @@ class codegen:
 
 
 if __name__=='__main__':
-    
+    fn=os.path.basename(sys.argv[0])
+    fn=os.path.splitext(fn)[0]
     f=open(sys.argv[1], "rt")
     tokens=tokenize.generate_tokens(f.readline)
-    tt=protogentokenizer(tokens)
+    tt=protogentokenizer(tokens, "_gen_"+fn)
     f2=open(sys.argv[2], "wt")
     cg=codegen(tt)
     f2.write(cg.gencode())
