@@ -457,58 +457,53 @@ class ImportDialog(wx.Dialog):
         if not self.needsupdate:
             return
         self.needsupdate=False
-        wx.BeginBusyCursor()
-        try:  # we need to ensure end busy
-            
-            wx.Yield() # so the cursor can be displayed
-            # reread the data
-            self.ReReadData()
-            # category filtering
-            if self.categorieswanted is not None:
-                newdata=[]
-                catfn=self.GetExtractCategoriesFunction()
-                for row in self.data:
-                    for cat in catfn(row):
-                        if cat in self.categorieswanted:
-                            newdata.append(row)
-                            break
-                self.data=newdata
-                    
-            # name/number/address/email filtering
-            if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
-                newdata=[]
-                for rownum in range(len(self.data)):
-                    # generate a list of fields for which this row has data
-                    fields=[]
-                    # how many filters are required
-                    req=0
-                    # how many are present
-                    present=0
-                    for n in range(len(self.columns)):
-                        v=self.data[rownum][n]
-                        if v is not None and len(v):
-                            fields.append(self.columns[n])
-                    for widget,filter in ( (self.wname, self.filternamecolumns),
-                                           (self.wnumber, self.filternumbercolumns),
-                                           (self.waddress, self.filteraddresscolumns),
-                                           (self.wemail, self.filteremailcolumns)
-                                           ):
-                        if widget.GetValue():
-                            req+=1
-                            for f in fields:
-                                if f in filter:
-                                    present+=1
-                                    break
-                        if req>present:
-                            break
-                    if present==req:
-                        newdata.append(self.data[rownum])
-                self.data=newdata
+        # reread the data
+        self.ReReadData()
+        # category filtering
+        if self.categorieswanted is not None:
+            newdata=[]
+            catfn=self.GetExtractCategoriesFunction()
+            for row in self.data:
+                for cat in catfn(row):
+                    if cat in self.categorieswanted:
+                        newdata.append(row)
+                        break
+            self.data=newdata
 
-            self.FillPreview()
-        finally:
-            wx.EndBusyCursor()
-        
+        # name/number/address/email filtering
+        if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
+            newdata=[]
+            for rownum in range(len(self.data)):
+                # generate a list of fields for which this row has data
+                fields=[]
+                # how many filters are required
+                req=0
+                # how many are present
+                present=0
+                for n in range(len(self.columns)):
+                    v=self.data[rownum][n]
+                    if v is not None and len(v):
+                        fields.append(self.columns[n])
+                for widget,filter in ( (self.wname, self.filternamecolumns),
+                                       (self.wnumber, self.filternumbercolumns),
+                                       (self.waddress, self.filteraddresscolumns),
+                                       (self.wemail, self.filteremailcolumns)
+                                       ):
+                    if widget.GetValue():
+                        req+=1
+                        for f in fields:
+                            if f in filter:
+                                present+=1
+                                break
+                    if req>present:
+                        break
+                if present==req:
+                    newdata.append(self.data[rownum])
+            self.data=newdata
+
+        self.FillPreview()
+
+    UpdateData=guihelper.BusyWrapper(UpdateData)
                 
     def FillPreview(self):
         self.preview.BeginBatch()

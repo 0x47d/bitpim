@@ -110,7 +110,33 @@ def getwxmimetype(filename):
     "Returns wx's mime type for the extension of filename, or None"
     return _wxmimemapping.get(getextension(filename.lower()), None)
 
+class BusyWrapper(object):
+    def __init__(self, method, cursor=None):
+        self.method=method
+        self.cursor=cursor
 
+    def __call__(self, *args, **kwargs):
+        if self.cursor is None:
+            # we can't do this in the constructor as the app object is available
+            self.cursor=wx.StockCursor(wx.CURSOR_WAIT)
+        wx.BeginBusyCursor(self.cursor)
+        try:
+            return self.method(*args, **kwargs)
+        finally:
+            wx.EndBusyCursor()
+
+    def __get__(self, *args):
+        return BusyWrapper(self.method.__get__(*args))
+
+def BusyWrapper(method):
+    def _busywrapper(*args, **kwargs):
+        wx.BeginBusyCursor()
+        try:
+            return method(*args, **kwargs)
+        finally:
+            wx.EndBusyCursor()
+
+    return _busywrapper
 
 # Filename functions.  These work on brew names which use forward slash /
 # as the directory delimiter.  The builtin Python functions can't be used

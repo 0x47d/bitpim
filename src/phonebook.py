@@ -1368,9 +1368,6 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                                           'colour': colour}
 
     def OnDataUpdated(self):
-        wx.BeginBusyCursor()
-        wx.Yield() # so the cursor can be displayed
-
         # update row keys
         newkeys=self.main.rowdata.keys()
         oldrows=self.rowkeys
@@ -1448,7 +1445,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.main.OnCellSelect()
         self.GetView().AutoSize()
         wx.CallAfter(self.GetView().Fit)
-        wx.EndBusyCursor()
+
+    OnDataUpdated=guihelper.BusyWrapper(OnDataUpdated)
 
 def _htmlfixup(txt):
     if txt is None: return ""
@@ -1681,8 +1679,6 @@ class ImportDialog(wx.Dialog):
         # had the terrible side effect of meaning that your original
         # data got modified even if you pressed cancel!
 
-        print "begin busy cursor"
-        wx.BeginBusyCursor()
         count=0
         row={}
         results={}
@@ -1752,8 +1748,8 @@ class ImportDialog(wx.Dialog):
         self.rowdata=row
         self.resultdata=results
         self.table.OnDataUpdated()
-        wx.EndBusyCursor()
-        print "end busy cursor"
+
+    DoMerge=guihelper.BusyWrapper(DoMerge)
 
     def MergeEntries(self, originalentry, importentry):
         "Take an original and a merge entry and join them together return a dict of the result"
@@ -2684,8 +2680,6 @@ class PhonebookPrintDialog(wx.Dialog):
         self.preview.SetPage(self.html)
 
     def GetCurrentHTML(self):
-        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        wx.Yield() # so the cursor can be displayed
         # Setup a nice environment pointing at this module
         vars={'phonebook': __import__(__name__) }
         # which data do we want?
@@ -2727,6 +2721,8 @@ class PhonebookPrintDialog(wx.Dialog):
             raise
         wx.EndBusyCursor()
         return html
+
+    GetCurrentHTML=guihelper.BusyWrapper(GetCurrentHTML)
 
     def OnPrintPreview(self, _):
         wx.GetApp().htmlprinter.PreviewText(self.html, scale=self.scale)
