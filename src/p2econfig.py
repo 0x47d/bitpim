@@ -8,12 +8,30 @@
 ### $Id$
 
 from distutils.core import setup
-
+import sys
 import py2exe
 import makedist
 import version
 
+# See http://starship.python.net/crew/theller/moin.cgi/WinShell
+import modulefinder
+import win32com
+for p in win32com.__path__[1:]:
+    modulefinder.AddPackagePath("win32com", p)
+for extra in ["win32com.shell"]:
+    __import__(extra)
+    m=sys.modules[extra]
+    for p in m.__path__[1:]:
+        modulefinder.AddPackagePath(extra, p)
+
+opts={
+    "py2exe":  {
+        "dll_excludes": [ "libeay32.dll", "libssl32.dll", "__m2crypto.pyd", "_ssl.pyd", "libusb0.dll"]
+    }
+}
+
 setup(name="bitpim",
+      options=opts,
       author=version.author,
       author_email=version.author_email,
       windows=[{
