@@ -791,7 +791,7 @@ class Profile:
     WALLPAPER_CONVERT_FORMAT="bmp"
     
     # which usb ids correspond to us
-    usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB interface
+    usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
         ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
         )
