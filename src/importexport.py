@@ -53,12 +53,25 @@ class ImportCSVDialog(wx.Dialog):
                      "Business State", "Business Country/Region", "Business Web Page",
                      "Business Phone", "Business Fax", "Pager", "Company", "Notes"]
     
+    # used for the filtering - any of the named columns have to be present for the data row
+    # to be considered to have that type of column
+    filternamecolumns=["First Name", "Last Name", "Middle Name", "Name", "Nickname"]
     
-    columneditor=wx.grid.GridCellChoiceEditor(possiblecolumns, False)
+    filternumbercolumns=["Home Phone", "Home Fax", "Mobile Phone", "Business Phone",
+                         "Business Fax", "Pager"]
+
+    filteraddresscolumns=["Home Street", "Home City", "Home Postal Code", "Home State",
+                          "Home Country/Region", "Business Street", "Business City",
+                          "Business Postal Code", "Business State", "Business Country/Region"]
+
+    filteremailcolumns=["Email address"]
+                          
+    
 
     def __init__(self, filename, parent, id, title, style=wx.CAPTION|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style, size=(640,480))
+
         self.UpdatePredefinedColumns()
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, "Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  Verify they are correct.  You need to select what each column is, or select one of the predefined defaults." % (filename,), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP), 0, wx.EXPAND|wx.ALL,5)
@@ -70,8 +83,6 @@ class ImportCSVDialog(wx.Dialog):
         self.qualifier=DSV.guessTextQualifier(self.rawdata)
         self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
         self.delimiter= DSV.guessDelimiter(self.data)
-        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier)
-        self.FigureOutColumns()
         # Delimter and Qualifier row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL, 2)
@@ -94,8 +105,10 @@ class ImportCSVDialog(wx.Dialog):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL,2)
         self.wname=wx.CheckBox(self, wx.NewId(), "a name")
+        self.wname.SetValue(True)
         hbs.Add(self.wname, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
         self.wnumber=wx.CheckBox(self, wx.NewId(), "a number")
+        self.wnumber.SetValue(True)
         hbs.Add(self.wnumber, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
         self.waddress=wx.CheckBox(self, wx.NewId(), "an address")
         hbs.Add(self.waddress, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,7)
@@ -112,50 +125,151 @@ class ImportCSVDialog(wx.Dialog):
         # Static line and buttons
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
         vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
-        wx.CallAfter(self.FillPreview)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
+        for w in self.wname, self.wnumber, self.waddress, self.wemail:
+            wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
+        wx.grid.EVT_GRID_CELL_CHANGE(self, self.OnGridCellChanged)
+        wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
+        self.DataNeedsUpdate()
+
+    def DataNeedsUpdate(self, _=None):
+        "The preview data needs to be updated"
+        self.needsupdate=True
+        wx.CallAfter(self.UpdateData)
+
+    def OnGridCellChanged(self, event):
+        "Called when the user has changed one of the columns"
+        self.columns[event.GetCol()]=self.preview.GetCellValue(0, event.GetCol())
+        self.wcolumnsname.SetValue("Custom")
+        self.wsave.Enable(True)
+        if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
+            self.DataNeedsUpdate()
+
+    def OnDelimiterChanged(self, _):
+        "Called when the user has changed the delimiter"
+        text=self.wdelimiter.GetValue()
+        if hasattr(self, "lastwdelimitervalue") and self.lastwdelimitervalue==text:
+            print "on delim changed ignored"
+            return
+        print "on delim changed", text
+
+        if len(text)!=1:
+            if text in self.delimiternames.values():
+                for k in self.delimiternames:
+                    if self.delimiternames[k]==text:
+                        text=k
+            else:
+                if len(text)==0:
+                    text="Comma"
+                else:
+                    text=text[-1]
+                    if text in self.delimiternames:
+                        text=self.delimiternames[text]
+                self.wdelimiter.SetValue(text)
+        self.delimiter=text
+        self.columns=None
+        self.DataNeedsUpdate()
+        # these calls cause another OnDelimiterChanged callback to happen, so we have to stop the loop
+        self.lastwdelimitervalue=self.wdelimiter.GetValue()
+        wx.CallAfter(self.wdelimiter.SetInsertionPointEnd)
+        wx.CallAfter(self.wdelimiter.SetMark, 0,len(self.wdelimiter.GetValue()))
+
+        
+    def UpdateData(self):
+        "Actually update the preview data"
+        if not self.needsupdate:
+            return
+        self.needsupdate=False
+        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.Yield() # so the cursor can be displayed
+        # reread the data
+        self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
+        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
+        self.FigureOutColumns()
+        # now filter the data if needed
+        if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
+            newdata=[]
+            for rownum in range(len(self.data)):
+                # generate a list of fields for which this row has data
+                fields=[]
+                # how many filters are required
+                req=0
+                # how many are present
+                present=0
+                for n in range(len(self.columns)):
+                    if len(self.data[rownum][n]):
+                        fields.append(self.columns[n])
+                for widget,filter in ( (self.wname, self.filternamecolumns),
+                                       (self.wnumber, self.filternumbercolumns),
+                                       (self.waddress, self.filteraddresscolumns),
+                                       (self.wemail, self.filteremailcolumns)
+                                       ):
+                    if widget.GetValue():
+                        req+=1
+                        for f in fields:
+                            if f in filter:
+                                present+=1
+                                break
+                    if req>present:
+                        break
+                if present==req:
+                    newdata.append(self.data[rownum])
+                
+            self.data=newdata
+                        
+        self.FillPreview()
+        wx.EndBusyCursor()
+        
                 
     def FillPreview(self):
-        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         self.preview.BeginBatch()
-        self.preview.DeleteCols(0,self.preview.GetNumberCols())
+        if self.preview.GetNumberCols():
+            self.preview.DeleteCols(0,self.preview.GetNumberCols())
         self.preview.DeleteRows(0,self.preview.GetNumberRows())
         self.preview.ClearGrid()
+        
         numrows=len(self.data)
-        numcols=max(map(lambda x: len(x), self.data))
-        print numrows,numcols
-        self.preview.AppendRows(numrows+1)
+        if numrows:
+            numcols=max(map(lambda x: len(x), self.data))
+        else:
+            numcols=len(self.columns)
+        # add header row
+        self.preview.AppendRows(1)
         self.preview.AppendCols(numcols)
+        for col in range(numcols):
+            self.preview.SetCellValue(0, col, self.columns[col])
+            self.preview.SetCellEditor(0, col, wx.grid.GridCellChoiceEditor(self.possiblecolumns, False))
+        # add each row
         for row in range(numrows):
+            self.preview.AppendRows(1)
             for col in range(numcols):
                 self.preview.SetCellValue(row+1, col, str(self.data[row][col]))
                 self.preview.SetReadOnly(row+1, col, True)
-        while len(self.columns)<numcols:
-            self.columns.append("<ignore>")
-        self.columns=self.columns[:numcols]
-        for col in range(numcols):
-            if col==3:
-                print self.columns[3]
-            self.preview.SetCellValue(0, col, self.columns[col])
-            self.preview.SetCellEditor(0, col, self.columneditor)
         self.preview.AutoSizeColumns()
         self.preview.AutoSizeRows()
         self.preview.EndBatch()
-        wx.EndBusyCursor()
 
     def FigureOutColumns(self):
-        "Initialize the colums variable, using header row if there is one"
+        "Initialize the columns variable, using header row if there is one"
         numcols=max(map(lambda x: len(x), self.data))
-        if not hasattr(self, "columns"):
+        # normalize number of columns
+        for row in self.data:
+            while len(row)<numcols:
+                row.append('')
+        guesscols=False
+        if not hasattr(self, "columns") or self.columns is None:
             self.columns=["<ignore>"]*numcols
-        if not DSV.guessHeaders(self.data):
-            return
+            guesscols=True
         while len(self.columns)<numcols:
             self.columns.append("<ignore>")
         self.columns=self.columns[:numcols]
+        if not DSV.guessHeaders(self.data):
+            return
         headers=self.data[0]
         self.data=self.data[1:]
+        if not guesscols:
+            return
         mungedcolumns=[]
         for c in self.possiblecolumns:
             mungedcolumns.append("".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", c.lower())))
@@ -165,16 +279,11 @@ class ImportCSVDialog(wx.Dialog):
                 self.columns[col]=header
                 continue
             h="".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", header.lower()))
-            print h
             
             if h in mungedcolumns:
                 self.columns[col]=self.possiblecolumns[mungedcolumns.index(h)]
-                print `self.columns[col]`
                 continue
-            else:
-                print mungedcolumns
-        print self.columns
-                
+            # here is where we would do some mapping
 
     def PrettyDelimiter(self, delim):
         "Returns a pretty version of the delimiter (eg Tab, Space instead of \t, ' ')"
