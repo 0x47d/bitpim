@@ -58,8 +58,15 @@ class Profile(com_sanyonewer.Profile):
     protocolclass=p_sanyo7400
     serialsname='mm7400'
 
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('wallpaper', 'write', 'MERGE'),
+        ('ringtone', 'write', 'MERGE'),
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+    )
+
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
         self.numbertypetab=numbertypetab
-
-        # NOTE: Calendar alarm 35 is Foster Ky. Home.
