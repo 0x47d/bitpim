@@ -93,6 +93,9 @@ class Session:
                 raise StopIteration()
             offset+=len(contacts)
 
+    def writecontact(self, contact):
+        return self.sp.addressbook.boaddressbook.write(contact)
+
     def getcontactspbformat(self):
         "returns contacts in a format suitable for the BitPim phonebook importer"
         # eGroupware gives a nice shine in the UI, but the underlying data is
@@ -161,7 +164,10 @@ class Session:
             
 if __name__=='__main__':
     import sys
+    import common
     s=getsession(*sys.argv[1:])
     for n,i in enumerate(s.getcontacts()):
-        print n,i.get('id',""),i.get('n_given', ""),i.get('n_family', "")
+        print n,common.prettyprintdict(i)
+        
+        #print n,i.get('id',""),i.get('n_given', ""),i.get('n_family', "")
     
