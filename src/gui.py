@@ -36,6 +36,8 @@ import helpids
 import comdiagnose
 import phonebook
 import importexport
+import wallpaper
+import guihelper
 
 ###
 ### Used to check our threading
@@ -43,61 +45,6 @@ import importexport
 mainthreadid=thread.get_ident()
 helperthreadid=-1 # set later
 
-###
-### The various IDs we use.  Code below munges the integers into sequence
-###
-
-# Main menu items
-
-ID_FILENEW=1
-ID_FILEOPEN=1
-ID_FILESAVE=1
-ID_FILEIMPORT=1
-ID_FILEPRINT=1
-ID_FILEPRINTPREVIEW=1
-ID_FILEEXIT=1
-ID_EDITADDENTRY=1
-ID_EDITDELETEENTRY=1
-ID_EDITSETTINGS=1
-ID_DATAGETPHONE=1
-ID_DATASENDPHONE=1
-ID_VIEWLOGDATA=1
-ID_VIEWFILESYSTEM=1
-ID_HELPHELP=1
-ID_HELPCONTENTS=1
-ID_HELPTOUR=1
-ID_HELPABOUT=1
-
-# alter files viewer modes
-ID_FV_ICONS=1
-ID_FV_LIST=1
-
-# file/filesystem viewer context menus
-ID_FV_SAVE=1
-ID_FV_HEXVIEW=1
-ID_FV_OVERWRITE=1
-ID_FV_NEWSUBDIR=1
-ID_FV_NEWFILE=1
-ID_FV_DELETE=1
-ID_FV_OPEN=1
-ID_FV_RENAME=1
-ID_FV_REFRESH=1
-ID_FV_PROPERTIES=1
-ID_FV_ADD=1
-ID_FV_BACKUP=1
-ID_FV_BACKUP_TREE=1
-ID_FV_RESTORE=1
-ID_FV_PASTE=1
-
-# keep map around
-idmap={}
-# Start at 2 (if anything ends up being one then this code didn't spot it
-idnum=2
-for idmapname in locals().keys():
-    if len(idmapname)>3 and idmapname[0:3]=='ID_':
-        locals()[idmapname]=idnum
-        idmap[idnum]=idmapname
-        idnum+=1
 
 
 ###
@@ -278,7 +225,7 @@ class MySplashScreen(wxSplashScreen):
 
     def _gimmethedamnsizeirequested(self, ps, family, style, weight):
         # on Linux we have to ask for bigger than we want
-        if IsGtk():
+        if guihelper.IsGtk():
             ps=ps*1.6
         font=wxTheFontList.FindOrCreateFont(ps, family, style, weight)
         return font
@@ -311,7 +258,7 @@ class MainApp(wxApp):
 
         # Establish config stuff
         cfgstr='bitpim'
-        if IsMSWindows():
+        if guihelper.IsMSWindows():
             cfgstr="BitPim"  # nicely capitalized on Windows
         self.config=wxConfig(cfgstr, style=wxCONFIG_USE_LOCAL_FILE)
 
@@ -344,7 +291,7 @@ class MainApp(wxApp):
         wxFileSystem_AddHandler(wxZipFSHandler())
         # Get the help working
         self.helpcontroller=wxHtmlHelpController()
-        self.helpcontroller.AddBook(gethelpfilename()+".htb")
+        self.helpcontroller.AddBook(guihelper.gethelpfilename()+".htb")
         self.helpcontroller.UseConfig(self.config, "help")
 
         # now context help
@@ -422,44 +369,44 @@ class MainWindow(wxFrame):
         menuBar = wxMenuBar()
         self.SetMenuBar(menuBar)
         menu = wxMenu()
-        # menu.Append(ID_FILENEW,  "&New", "Start from new")
-        # menu.Append(ID_FILEOPEN, "&Open", "Open a file")
-        # menu.Append(ID_FILESAVE, "&Save", "Save your work")
+        # menu.Append(guihelper.ID_FILENEW,  "&New", "Start from new")
+        # menu.Append(guihelper.ID_FILEOPEN, "&Open", "Open a file")
+        # menu.Append(guihelper.ID_FILESAVE, "&Save", "Save your work")
         #menu.AppendSeparator()
-        #menu.Append(ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
-        #menu.Append(ID_FILEPRINT, "&Print", "Print")
-        menu.Append(ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
+        #menu.Append(guihelper.ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
+        #menu.Append(guihelper.ID_FILEPRINT, "&Print", "Print")
+        menu.Append(guihelper.ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
         menu.AppendSeparator()
-        menu.Append(ID_FILEEXIT, "E&xit", "Close down this program")
+        menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wxMenu()
-        menu.Append(ID_EDITADDENTRY, "Add...", "Add an item")
-        menu.Append(ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
-        if HasFullyFunctionalListView():
+        menu.Append(guihelper.ID_EDITADDENTRY, "Add...", "Add an item")
+        menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
+        if guihelper.HasFullyFunctionalListView():
             menu.AppendSeparator()
-            menu.Append(ID_FV_ICONS, "View as Images", "Show items as images")
-            menu.Append(ID_FV_LIST, "View As List", "Show items as a report")
+            menu.Append(guihelper.ID_FV_ICONS, "View as Images", "Show items as images")
+            menu.Append(guihelper.ID_FV_LIST, "View As List", "Show items as a report")
         menu.AppendSeparator()
-        menu.Append(ID_EDITSETTINGS, "&Settings", "Edit settings")
+        menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
         menuBar.Append(menu, "&Edit");
 
         menu=wxMenu()
-        menu.Append(ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
-        menu.Append(ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
+        menu.Append(guihelper.ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
+        menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
         menuBar.Append(menu, "&Data")
 
         menu=wxMenu()
-        menu.AppendCheckItem(ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
-        menu.AppendCheckItem(ID_VIEWFILESYSTEM, "View filesystem", "View filesystem on the phone")
+        menu.AppendCheckItem(guihelper.ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
+        menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View filesystem", "View filesystem on the phone")
         menuBar.Append(menu, "&View")
         
 
         menu=wxMenu()
-        menu.Append(ID_HELPHELP, "&Help", "Help for the panel you are looking at")
-        menu.Append(ID_HELPTOUR, "&Tour", "Tour of BitPim")
-        menu.Append(ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
+        menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
+        menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
+        menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
         menu.AppendSeparator()
-        menu.Append(ID_HELPABOUT, "&About", "Display program information")
+        menu.Append(guihelper.ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
 
         
@@ -472,18 +419,18 @@ class MainWindow(wxFrame):
         # work around a bug on Linux that returns random (large) numbers
         if sz[0]<10 or sz[0]>100: sz=wxSize(32,32)
 
-        if HasFullyFunctionalListView():
+        if guihelper.HasFullyFunctionalListView():
             # The art names are the opposite way round than people would normally describe ...
-            self.tb.AddLabelTool(ID_FV_LIST, "List", wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
+            self.tb.AddLabelTool(guihelper.ID_FV_LIST, "List", wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
                                   shortHelp="List View", longHelp="View items as a list")
-            self.tb.AddLabelTool(ID_FV_ICONS, "Images", wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
+            self.tb.AddLabelTool(guihelper.ID_FV_ICONS, "Images", wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
                                   shortHelp="Icon View", longHelp="View items as icons")
             self.tb.AddSeparator()
 
         # add and delete tools
-        self.tb.AddLabelTool(ID_EDITADDENTRY, "Add", wxArtProvider_GetBitmap(wxART_ADD_BOOKMARK, wxART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wxArtProvider_GetBitmap(wxART_ADD_BOOKMARK, wxART_TOOLBAR, sz),
                               shortHelp="Add", longHelp="Add an item")
-        self.tb.AddLabelTool(ID_EDITDELETEENTRY, "Delete", wxArtProvider_GetBitmap(wxART_DEL_BOOKMARK, wxART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wxArtProvider_GetBitmap(wxART_DEL_BOOKMARK, wxART_TOOLBAR, sz),
                               shortHelp="Delete", longHelp="Delete item")
             
         # You have to make this call for the toolbar to draw itself properly
@@ -495,21 +442,21 @@ class MainWindow(wxFrame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
-        EVT_MENU(self, ID_FILEIMPORT, self.OnFileImport)
-        EVT_MENU(self, ID_FILEEXIT, self.OnExit)
-        EVT_MENU(self, ID_EDITSETTINGS, self.OnEditSettings)
-        EVT_MENU(self, ID_DATAGETPHONE, self.OnDataGetPhone)
-        EVT_MENU(self, ID_DATASENDPHONE, self.OnDataSendPhone)
-        EVT_MENU(self, ID_VIEWLOGDATA, self.OnViewLogData)
-        EVT_MENU(self, ID_VIEWFILESYSTEM, self.OnViewFilesystem)
-        EVT_MENU(self, ID_FV_LIST, self.OnFileViewList)
-        EVT_MENU(self, ID_FV_ICONS, self.OnFileViewIcons)
-        EVT_MENU(self, ID_EDITADDENTRY, self.OnEditAddEntry)
-        EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
-        EVT_MENU(self, ID_HELPABOUT, self.OnHelpAbout)
-        EVT_MENU(self, ID_HELPHELP, self.OnHelpHelp)
-        EVT_MENU(self, ID_HELPCONTENTS, self.OnHelpContents)
-        EVT_MENU(self, ID_HELPTOUR, self.OnHelpTour)
+        EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
+        EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
+        EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
+        EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
+        EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
+        EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
+        EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
+        EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
+        EVT_MENU(self, guihelper.ID_FV_ICONS, self.OnFileViewIcons)
+        EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
+        EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
+        EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
+        EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
+        EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
+        EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -542,7 +489,7 @@ class MainWindow(wxFrame):
         ### notebook tabs
         self.phonewidget=phonebook.PhoneWidget(self, self.nb)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
-        self.wallpaperwidget=guiwidgets.WallpaperView(self, self.nb)
+        self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
         self.ringerwidget=guiwidgets.RingerView(self, self.nb)
         self.nb.AddPage(self.ringerwidget, "Ringers")
@@ -557,12 +504,12 @@ class MainWindow(wxFrame):
         # Final widgets that depend on config
         lv=self.config.ReadInt("viewlogdata", 0)
         if lv:
-            menuBar.Check(ID_VIEWLOGDATA, 1)
+            menuBar.Check(guihelper.ID_VIEWLOGDATA, 1)
             self.OnViewLogData(None)
 
         fv=self.config.ReadInt("viewfilesystem", 0)
         if fv:
-            menuBar.Check(ID_VIEWFILESYSTEM, 1)
+            menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
             wxYield()
 
@@ -868,17 +815,17 @@ class MainWindow(wxFrame):
         else: enableedit=False
 
         # Toolbar
-        if HasFullyFunctionalListView():
-            self.GetToolBar().EnableTool(ID_FV_ICONS, enablefv)
-            self.GetToolBar().EnableTool(ID_FV_LIST, enablefv)
-        self.GetToolBar().EnableTool(ID_EDITADDENTRY, enableedit)
-        self.GetToolBar().EnableTool(ID_EDITDELETEENTRY, enableedit)
+        if guihelper.HasFullyFunctionalListView():
+            self.GetToolBar().EnableTool(guihelper.ID_FV_ICONS, enablefv)
+            self.GetToolBar().EnableTool(guihelper.ID_FV_LIST, enablefv)
+        self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enableedit)
+        self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enableedit)
         # menu items
-        if HasFullyFunctionalListView():
-            self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
-            self.GetMenuBar().Enable(ID_FV_LIST, enablefv)
-        self.GetMenuBar().Enable(ID_EDITADDENTRY, enableedit)
-        self.GetMenuBar().Enable(ID_EDITDELETEENTRY, enableedit)
+        if guihelper.HasFullyFunctionalListView():
+            self.GetMenuBar().Enable(guihelper.ID_FV_ICONS, enablefv)
+            self.GetMenuBar().Enable(guihelper.ID_FV_LIST, enablefv)
+        self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enableedit)
+        self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enableedit)
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):
@@ -1253,35 +1200,35 @@ class FileSystemView(wxTreeListCtrl):
         EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
 
         self.filemenu=wxMenu()
-        self.filemenu.Append(ID_FV_SAVE, "Save ...")
-        self.filemenu.Append(ID_FV_HEXVIEW, "Hexdump")
+        self.filemenu.Append(guihelper.ID_FV_SAVE, "Save ...")
+        self.filemenu.Append(guihelper.ID_FV_HEXVIEW, "Hexdump")
         self.filemenu.AppendSeparator()
-        self.filemenu.Append(ID_FV_DELETE, "Delete")
-        self.filemenu.Append(ID_FV_OVERWRITE, "Overwrite ...")
+        self.filemenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.filemenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite ...")
 
         self.dirmenu=wxMenu()
-        self.dirmenu.Append(ID_FV_NEWSUBDIR, "Make subdirectory ...")
-        self.dirmenu.Append(ID_FV_NEWFILE, "New File ...")
+        self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
+        self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
         self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(ID_FV_BACKUP, "Backup directory ...")
-        self.dirmenu.Append(ID_FV_BACKUP_TREE, "Backup entire tree ...")
-        self.dirmenu.Append(ID_FV_RESTORE, "Restore ...")
+        self.dirmenu.Append(guihelper.ID_FV_BACKUP, "Backup directory ...")
+        self.dirmenu.Append(guihelper.ID_FV_BACKUP_TREE, "Backup entire tree ...")
+        self.dirmenu.Append(guihelper.ID_FV_RESTORE, "Restore ...")
         self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(ID_FV_REFRESH, "Refresh")
+        self.dirmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
         self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(ID_FV_DELETE, "Delete")
+        self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
 
-        EVT_MENU(self.filemenu, ID_FV_SAVE, self.OnFileSave)
-        EVT_MENU(self.filemenu, ID_FV_HEXVIEW, self.OnHexView)
-        EVT_MENU(self.filemenu, ID_FV_DELETE, self.OnFileDelete)
-        EVT_MENU(self.filemenu, ID_FV_OVERWRITE, self.OnFileOverwrite)
-        EVT_MENU(self.dirmenu, ID_FV_NEWSUBDIR, self.OnNewSubdir)
-        EVT_MENU(self.dirmenu, ID_FV_NEWFILE, self.OnNewFile)
-        EVT_MENU(self.dirmenu, ID_FV_DELETE, self.OnDirDelete)
-        EVT_MENU(self.dirmenu, ID_FV_BACKUP, self.OnBackupDirectory)
-        EVT_MENU(self.dirmenu, ID_FV_BACKUP_TREE, self.OnBackupTree)
-        EVT_MENU(self.dirmenu, ID_FV_RESTORE, self.OnRestore)
-        EVT_MENU(self.dirmenu, ID_FV_REFRESH, self.OnDirRefresh)
+        EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
+        EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
+        EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
+        EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
         EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
         EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
@@ -1695,95 +1642,3 @@ class RestoreDialog(wxDialog):
         self.Show(False)
         self.Destroy()
 
-###
-### Various functions not attached to classes
-###
-
-# Filename functions.  These work on brew names which use forward slash /
-# as the directory delimiter.  The builtin Python functions can't be used
-# as they are platform specific (eg they use \ on Windows)
-
-def getextension(str):
-    """Returns the extension of a filename (characters after last period)
-
-    An empty string is returned if the file has no extension.  The period
-    character is not returned"""
-    str=basename(str)
-    if str.rfind('.')>=0:
-        return str[str.rfind('.')+1:]
-    return ""
-
-def basename(str):
-    """Returns the last part of the name (everything after last /)"""
-    if str.rfind('/')<0: return str
-    return str[str.rfind('/')+1:]
-
-def dirname(str):
-    """Returns everything before the last / in the name""" 
-    if str.rfind('/')<0: return ""
-    return str[:str.rfind('/')]
-
-def HasFullyFunctionalListView():
-    """Can the list view widget be switched between icon view and report views
-
-    @rtype: Bool"""
-    if IsMSWindows():
-        return True
-    return False
-
-def IsMSWindows():
-    """Are we running on Windows?
-
-    @rtype: Bool"""
-    return wxPlatform=='__WXMSW__'
-
-def IsGtk():
-    """Are we running on GTK (Linux)
-
-    @rtype: Bool"""
-    return wxPlatform=='__WXGTK__'
-
-def getbitmap(name):
-    """Gets a bitmap from the resource directory
-
-    @rtype: wxBitmap
-    """
-    for ext in ("", ".png", ".jpg"):
-        if os.path.exists(getresourcefile(name+ext)):
-            return wxImage(getresourcefile(name+ext)).ConvertToBitmap()
-    print "You need to make "+name+".png"
-    return getbitmap('unknown')
-
-def getresourcefile(filename):
-    """Returns name of file by adding it to resource directory pathname
-
-    No attempt is made to verify the file exists
-    @rtype: string
-    """
-    return os.path.join(resourcedirectory, filename)
-
-def gethelpfilename():
-    """Returns what name we use for the helpfile
-
-    Without trailing extension as wxBestHelpController figures that out"""
-
-    # we look in a help subdirectory first which is
-    # present in the developer tree
-    j=os.path.join
-    paths=( (j(resourcedirectory, "..", "help"), True),
-            (resourcedirectory, False) )
-
-    for p,mention in paths:
-        if os.path.isfile(j(p, "bitpim.htb")):
-            if mention:
-                print "Using help file from "+p
-            return j(p, "bitpim")
-
-    assert False
-
-def getresourcefiles(wildcard):
-    "Returns a list of filenames matching the wildcard in the resource directory"
-    return glob.glob(os.path.join(resourcedirectory, wildcard))
-
-# Where to find bitmaps etc
-resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))

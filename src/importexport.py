@@ -21,8 +21,8 @@ import wx.html
 from DSV import DSV
 
 # My modules
-import gui
 import common
+import guihelper
 
 class PreviewGrid(wx.grid.Grid):
 
@@ -246,7 +246,7 @@ class ImportCSVDialog(wx.Dialog):
             return
         self.wsave.Enable(False)
         str=self.wcolumnsname.GetValue()
-        for file in gui.getresourcefiles("*.pdc"):
+        for file in guihelper.getresourcefiles("*.pdc"):
             f=open(file, "rt")
             desc=f.readline().strip()
             if desc==str:
@@ -502,7 +502,7 @@ class ImportCSVDialog(wx.Dialog):
         line of the file is the description, and each remaining line corresponds to a
         column"""
         self.predefinedcolumns=[]
-        for i in gui.getresourcefiles("*.pdc"):
+        for i in guihelper.getresourcefiles("*.pdc"):
             f=open(i, "rt")
             self.predefinedcolumns.append(f.readline().strip())
             f.close()

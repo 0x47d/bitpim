@@ -90,12 +90,9 @@ import wx.html
 import wx.stc
 
 # My imports
-import gui
 import common
 import xyaptu
-
-
-
+import guihelper
 
 ###
 ###  Enhanced HTML Widget
@@ -230,9 +227,9 @@ class PhoneWidget(wx.SplitterWindow):
         self.table.SetMargins(1,0)
         self.preview=HTMLWindow(self, -1) 
         self.SplitVertically(self.table, self.preview, -300)
-        self.stylesfile=gui.getresourcefile("styles.xy")
+        self.stylesfile=guihelper.getresourcefile("styles.xy")
         self.stylesfilestat=None
-        self.pblayoutfile=gui.getresourcefile("pblayout.xy")
+        self.pblayoutfile=guihelper.getresourcefile("pblayout.xy")
         self.pblayoutfilestat=None
         self.xcp=None
         self.xcpstyles=None
@@ -497,7 +494,7 @@ class BPFSHandler(wx.FileSystemHandler):
         return None
 
     def OpenBPImageFile(self, location, name, **kwargs):
-        f=gui.getresourcefile(name)
+        f=guihelper.getresourcefile(name)
         if not os.path.isfile(f):
             print f,"doesn't exist"
             return None
