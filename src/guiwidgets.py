@@ -369,7 +369,9 @@ class LogWindow(wxPanel):
             self.outstandingtext=""
 
     def log(self, str):
-        self.outstandingtext+=str+"\r\n"
+        now=time.time()
+        t=time.localtime(now)
+        self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
     def logdata(self, str, data):
         self.log("%s - Data %d bytes" % (str, len(data),))
@@ -505,7 +507,7 @@ class ConfigDialog(wxDialog):
                 path=os.path.expanduser("~/.bitpim-files")
             self.diskbox.SetValue(path)
         if self.commbox.GetValue()==self.setme:
-            if gui.IsMSWindows(): # we want subdir of my documents on windows
+            if gui.IsMSWindows(): 
                 comm="com4"
             else:
                 comm="/dev/usb/ttyUSB0"
@@ -1219,8 +1221,9 @@ class DayViewDialog(wxDialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
-        self.entries={}
-        self.entrymap=[]
+
+        # delete is disabled until an item is selected
+        self.FindWindowById(self.ID_DELETE).Enable(False)
 
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
@@ -1234,8 +1237,14 @@ class DayViewDialog(wxDialog):
         self.dirty=None
         self.ignoredirty=False 
         self.setdirty(False)
-        # delete is disabled until an item is selected
-        self.FindWindowById(self.ID_DELETE).Enable(False)
+
+        # Tracking of the entries in the listbox.  Each entry is a dict. Entries are just the
+        # entries in a random order.  entrymap 
+        
+        self.entries={}
+        self.entrymap=[]
+
+
 
     def OnListBoxItem(self, _):
         self.updatefields(self.entrymap[self.listbox.GetSelection()])
@@ -1286,7 +1295,10 @@ class DayViewDialog(wxDialog):
             self.listbox.Append(str)
 
         # make entrymap only be entries
-        self.entrymap=[x[3] for x in self.entrymap] 
+        self.entrymap=[x[3] for x in self.entrymap]
+
+        print `self.entrymap`
+        print `self.entries`
 
     def updatefields(self, entry):
         self.ignoredirty=True
