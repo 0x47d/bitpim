@@ -106,7 +106,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     def getmediaindex(self, builtins, maps, results, key):
         """Gets the media (wallpaper/ringtone) index
 
-        @param builtins: the builtin liston the phone
+        @param builtins: the builtin list on the phone
         @param results: places results in this dict
         @param maps: the list of index files and locations
         @param key: key to place results in
@@ -130,7 +130,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         # camera must be last
         if type=="camera":
-            # (we don't do verify on the camera since we assume it is always correct)
             index=self.getcameraindex()
             for i in index:
                 media[i+offset]=index[i]
@@ -268,8 +267,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for i in keys:
             progresscur+=1
             ii=pbook[self._findserial(existingpbook[i]['serial1'], pbook)]
-            self.log("Writing entry "+`i`+" - "+ii['name'])
-            self.progress(progresscur, progressmax, "Writing "+ii['name'])
+            self.log("Rewriting entry "+`i`+" - "+ii['name'])
+            self.progress(progresscur, progressmax, "Rewriting "+ii['name'])
             entry=self.makeentry(counter, ii, data)
             counter+=1
             existingserials.append(existingpbook[i]['serial1'])
