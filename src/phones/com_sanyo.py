@@ -329,14 +329,6 @@ class SanyoPhonebook:
             setattr(e,k,entry[k])
         return e
 
-    def phonize(self, str):
-        """Convert the phone number into something the phone understands
-
-        All digits, P, T, * and # are kept, everything else is removed"""
-        # Note: when looking at phone numbers on the phone, you will see
-        # "H" instead of "P".  However, phone saves this internally as "P".
-        return re.sub("[^0-9PT#*]", "", str)
-
     def savephonebook(self, data):
         # Overwrite the phonebook in the phone with the data.
         # As we write the phone book slots out, we need to build up
@@ -422,7 +414,7 @@ class SanyoPhonebook:
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
             if(len(ii['numbers'])):
-                sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
+                sortstuff.firsttypes[slot].firsttype=min(ii['numbertypes'])+1
             else:
                 if(len(ii['email'])):
                     sortstuff.firsttypes[slot].firsttype=8
@@ -434,7 +426,9 @@ class SanyoPhonebook:
 # Fill in Caller ID buffer
 # Want to move this out of this loop.  Callerid buffer is 500 numbers, but
 # can potentially hold 2100 numbers.  Would like to preferentially put the
-# first number for each name in this buffer
+# first number for each name in this buffer.
+# If more than 500 numbers are in phone, the phone won't let you add
+# any more. So we should probably respect this limit.
             for i in range(len(ii['numbers'])):
                 nindex=ii['numbertypes'][i]
                 speeddial=ii['speeddials'][i]
@@ -774,6 +768,14 @@ class SanyoPhonebook:
         }
 
 
+def phonize(str):
+    """Convert the phone number into something the phone understands
+
+    All digits, P, T, * and # are kept, everything else is removed"""
+    # Note: when looking at phone numbers on the phone, you will see
+    # "H" instead of "P".  However, phone saves this internally as "P".
+    return re.sub("[^0-9PT#*]", "", str)
+
 class Profile:
     serialsname='sanyo'
 
@@ -932,12 +934,17 @@ class Profile:
                     typesused[typename]=1
                     for typenum,tnsearch in zip(range(100),numbertypetab):
                         if typename==tnsearch:
-                            e['numbertypes'].append(typenum)
-                            e['numbers'].append(num['number'])
+                            number=phonize(num['number'])
+                            if len(number)>48: # get this number from somewhere sensible
+                                # :: TODO:: number is too long and we have to either truncate it or ignore it?
+                                number=number[:48]
+                            e['numbers'].append(number)
                             if(num.has_key('speeddial')):
                                 e['speeddials'].append(num['speeddial'])
                             else:
                                 e['speeddials'].append(-1)
+
+                            e['numbertypes'].append(typenum)
 
                             break
 
@@ -950,8 +957,12 @@ class Profile:
                             break
                     else:
                         break
+                    number=phonize(num['number'])
+                    if len(number)>48: # get this number from somewhere sensible
+                        # :: TODO:: number is too long and we have to either truncate it or ignore it?
+                        number=number[:48]
+                    e['numbers'].append(number)
                     e['numbertypes'].append(trytype)
-                    e['numbers'].append(num['number'])
                     if(num.has_key('speeddial')):
                         e['speeddials'].append(num['speeddial'])
                     else:
