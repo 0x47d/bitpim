@@ -134,7 +134,7 @@ class Display(wx.ScrolledWindow):
 
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
-        dc=wx.BufferedPaintDC(self, self._bufbmp)
+        dc=wx.BufferedPaintDC(self, self._bufbmp, style=wx.BUFFER_VIRTUAL_AREA)
         try:
             self.DoPaint(dc)
         except:
