@@ -35,35 +35,3 @@ _MAXEMAILLEN=48
     
 %}
 
-PACKET sanyomediaheader:
-    2 UINT {'constant': 0xfa} +fa
-    1 UINT {'default': 0x05} +faset
-    2 UINT command
-    2 UNKNOWN +pad
-
-PACKET sanyosendfilename:
-    * sanyomediaheader {'command': 0xffa1} +header
-    1 UINT {'constant': 0x20} +payloadsize
-    32 STRING {'default': ""} +filename
-
-PACKET sanyosendfilesize:
-    * sanyomediaheader {'command': 0xffc1} +header
-    1 UINT {'constant': 0x20} +payloadsize
-    1 UNKNOWN +pad1
-    2 UINT filesize
-    29 UNKNOWN +pad2 
-
-PACKET sanyosendfilefragment:
-    * sanyomediaheader +header
-    1 UINT {'constant': 0x20} +payloadsize
-    32 DATA data
-
-PACKET sanyosendfileterminator:
-    * sanyomediaheader {'command': 0xffe1} +header
-    1 UINT {'constant': 0x20} +payloadsize
-    32 UNKNOWN +pad
-
-PACKET sanyosendfileresponse:
-    * sanyomediaheader +header
-    1 UINT payloadsize
-    32 UNKNOWN pad
