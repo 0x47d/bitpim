@@ -363,8 +363,7 @@ class MainWindow(wxFrame):
         self.Show()
 
         ### Double check our size is meaningful, and make bigger
-        ### if necessary (especially needed on Mac)
-        print "XXXXXXXXXXX", self.GetSize()
+        ### if necessary (especially needed on Mac and Linux)
         if min(self.GetSize())<250:
             self.SetSize( (640, 480) )
 
