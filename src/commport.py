@@ -134,14 +134,14 @@ class CommConnection:
             self.log("Port speed "+`rate`+" not supported")
             return False
 
-    def write(self, data, log=1):
+    def write(self, data, log=True):
         self.writerequests+=1
         if log:
             self.logdata("Writing", data)
         self.ser.write(data)
         self.writebytes+=len(data)
 
-    def read(self, numchars=1, log=1):
+    def read(self, numchars=1, log=True):
         self.readrequests+=1
         res=self.ser.read(numchars)
         if log:
@@ -149,7 +149,7 @@ class CommConnection:
         self.readbytes+=len(res)
         return res
 
-    def readsome(self, log=1):
+    def readsome(self, log=True):
         self.readrequests+=1
         res=""
         while 1:
@@ -169,10 +169,10 @@ class CommConnection:
             self.logdata("Reading remaining data", res)
         return res
 
-    def readuntil(self, char, log=1):
+    def readuntil(self, char, log=True, logsuccess=True):
         # Keeps reading until it hits char
         self.readrequests+=1
-        if log:
+        if False: # don't log this anymore
             self.logdata("Begin reading until 0x%02x" % (ord(char),), None)
 
         # set to non-zero for retries on timeouts
@@ -197,7 +197,7 @@ class CommConnection:
             res=res+res2
 
         self.readbytes+=len(res)
-        if log:
+        if logsuccess:
             self.logdata("Read completed", res)
         return res
         
