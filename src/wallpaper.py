@@ -55,6 +55,11 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(pubsub.REQUEST_WALLPAPERS, self, "OnListRequest")
         pubsub.subscribe(pubsub.PHONE_MODEL_CHANGED, self, "OnPhoneModelChanged")
+        wx.EVT_SIZE(self, self.OnSize)
+
+    def OnSize(self, event):
+        self.Arrange()
+        event.Skip()
 
     def OnPhoneModelChanged(self, msg):
         phonemodule=msg.data
