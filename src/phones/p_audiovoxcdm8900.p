@@ -19,28 +19,22 @@ BOOL=BOOLlsb
 
 %}
 
-# This phone uses the incoming buffer for outgoing buffers.  For
-# example, if you send a request that is padded to 1234 bytes long
-# then the result comes back in a 1234 byte buffer.
-
 PACKET pbslotsrequest:
     "Get a list of which slots are used"
     1 UINT {'constant': 0x85} +cmd
-    300 DATA {'default': ""} +padding  # space for 300 phone entries
 
 PACKET pbslotsresponse:
     1 UINT {'constant': 0x85} cmd
-    300 DATA present  # one byte per entry number, a non-zero value indicating entry is present
+    #  each byte is a bitmask of which fields are set although we defer to the actual entries to find that out
+    * DATA present  "a non-zero value indicates a slot is present"
 
 PACKET readpbentryrequest:
     1 UINT {'constant': 0x83} +cmd
-    2 UINT entrynumber
-    1 UINT {'constant': 0} +errorcode "?"
-    340 DATA {'default': ""} +padding
+    2 UINT slotnumber
 
 PACKET readpbentryresponse:
     1 UINT {'constant': 0x83} +cmd
-    2 UINT entrynumber
+    2 UINT slotnumber
     1 UINT secret "non-zero if entry is secret/locked"
     1 UINT group   
     2 UINT previous "index number for previous entry"
@@ -65,7 +59,7 @@ PACKET readlockcoderequest:
     1 UINT {'constant': 0x26} +cmd
     1 UINT {'constant': 0x52} +cmd2
     1 UINT {'constant': 0x00} +cmd3
-    130 DATA +padding
+    130 DATA +padding # this may not be necessary
 
 PACKET readlockcoderesponse:
     1 UINT {'constant': 0x26} cmd

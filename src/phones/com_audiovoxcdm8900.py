@@ -69,7 +69,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         numentries=len(slots)
         for i in range(numentries):
             req=self.protocolclass.readpbentryrequest()
-            req.entrynumber=slots[i]
+            req.slotnumber=slots[i]
             res=self.sendpbcommand(req, self.protocolclass.readpbentryresponse)
             self.log("Read entry "+`i`+" - "+res.name)
             entry=self.extractphonebookentry(res, result)
