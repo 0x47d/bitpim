@@ -67,7 +67,7 @@ class Phone:
         @param message: The message to display
         @param wait:  Should this function block until the user confirms the message
         """
-        assert wait == False
+        assert not wait
         assert self.logtarget
         self.logtarget.log("<!= alert wait=%s =!>%s: %s" % (`wait`, self.desc, message))
 
