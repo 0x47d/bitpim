@@ -11,35 +11,6 @@
 
 # This design is with apologies to Alan Cooper
 
-"""To use this control, you should subclass Calendar.  You need to
-implement the following methods:
-
-OnGetEntries(self, year, month, day):
-
-    Return a list of entries for the specified y,m,d.  The format is
-    ( (hour,min,desc), (hour,min,desc)... )  Hour should be in 24 hour
-    format.  You should sort the entries.
-
-    Note that Calendar does not cache any results so you will be
-    asked for the same dates as the user scrolls around.
-
-OnEdit(self, year, month, day):
-
-    The user wishes to edit the y,m,d.
-
-The following methods you may want to call at some point:
-
-RefreshEntry(year, month, day):
-
-    Causes that date's entries to be refreshed.  Note that your OnGetEntries
-    will only be called if the date is currently visible.
-
-RefreshAllEntries():
-
-    Call this if you have completely changed all your data.  OnGetEntries
-    will be called for each visible day.
-    
-"""
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
@@ -396,6 +367,20 @@ class CalendarLabel(wxWindow):
 
 
 class Calendar(wxPanel):
+    """To use this control, you should subclass Calendar.  You need to
+    implement the following methods:
+
+    L{OnGetEntries}
+    L{OnEdit}
+
+    The following methods you may want to call at some point:
+
+    L{RefreshEntry}
+    L{RefreshAllEntries}
+
+    
+"""
+
     # All the horrible date code is an excellent case for metric time!
     ID_UP=1
     ID_DOWN=2
@@ -557,6 +542,10 @@ class Calendar(wxPanel):
           self.ensureallpainted()
 
     def isvisible(self, year, month, day):
+       """Tests if the date is visible to the user
+
+       @rtype: Bool
+       """
        y,m,d=self.rows[0][0].year, self.rows[0][0].month, self.rows[0][0].day
        if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
            return False
@@ -566,11 +555,20 @@ class Calendar(wxPanel):
        return True
 
     def RefreshEntry(self, year, month, day):
+       """Causes that date's entries to be refreshed.
+
+       Call this if you have changed the data for one day.
+       Note that your OnGetEntries will only be called if the date is
+       currently visible."""
        if self.isvisible(year,month,day):
            # ::TODO:: find correct cell and only update that
            self.RefreshAllEntries()
    
     def RefreshAllEntries(self):
+       """Call this if you have completely changed all your data.
+
+       OnGetEntries will be called for each visible day."""
+
        for row in self.rows:
            for cell in row:
                cell.setentries(self.OnGetEntries(cell.year, cell.month, cell.day))
@@ -624,6 +622,16 @@ class Calendar(wxPanel):
     # Implementations here ar to make it be a nice demo if not subclassed
     
     def OnGetEntries(self, year, month, day):
+        """Return a list of entries for the specified y,m,d.
+
+        B{You must implement this method in a derived class}
+
+        The format is ( (hour,min,desc), (hour,min,desc)... )  Hour
+        should be in 24 hour format.  You should sort the entries.
+
+        Note that Calendar does not cache any results so you will be
+        asked for the same dates as the user scrolls around."""
+        
         return (
             (1, 88, "Early morning"),
             (10,15, "Some explanatory text" ),
@@ -635,6 +643,10 @@ class Calendar(wxPanel):
             )
 
     def OnEdit(self, year, month, day):
+        """The user wishes to edit the entries for the specified date
+
+        B{You should implement this method in a derived class}
+        """
         print "The user wants to edit %04d-%02d-%02d" % (year,month,day)
 
 
