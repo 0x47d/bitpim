@@ -413,8 +413,30 @@ class HtmlEasyPrinting:
         guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
         event.Skip()
 
-# some seriously nasty coding ...
 def getbestsize(dc, html, basepath="", scale=1.0):
+    a=getbestsize1(dc, html, basepath, scale)
+    b=getbestsize2(dc, html, basepath, scale)
+    print a,b
+    return b
+
+# some seriously nasty coding ...
+def getbestsize2(dc, html, basepath="", scale=1.0):
+    if html is None or html=="":
+        return wx.Size(10,10)
+
+    bmp=wx.EmptyBitmap(1,1)
+    mdc=wx.MemoryDC()
+    mdc.SelectObject(bmp)
+    hdc=wx.html.HtmlDCRenderer()
+    hdc.SetFonts("", "", getbasefontsizes(scale))
+    hdc.SetDC(mdc, 1)
+    hdc.SetSize(99999, 99999)
+    hdc.SetHtmlText(html, basepath)
+    hdc.Render(0, 0, 0, False)
+    return wx.Size(mdc.MaxX(), mdc.MaxY())
+    
+    
+def getbestsize1(dc, html, basepath="", scale=1.0):
     """Returns the best size for the html text using the supplied dc
 
     @param html: html source
