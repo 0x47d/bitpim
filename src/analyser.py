@@ -29,6 +29,7 @@ import p_lgvx6000
 import p_sanyo
 import p_sanyo4900
 import p_sanyo5300
+import p_sanyo5500
 import p_sanyo8100
 
 import hexeditor
