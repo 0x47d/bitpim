@@ -36,6 +36,8 @@ containerelements method:
 
 from __future__ import generators
 
+import cStringIO
+
 class ProtogenException(Exception):
     """Base class for exceptions encountered with data marshalling"""
     def __init__(self, *args, **kwargs):
@@ -255,6 +257,8 @@ class STRING(BaseProtogenClass):
         @keyword raiseontruncate: (Default True) raise L{ValueLengthException} if the supplied
              value is too large to fit within sizeinbytes.
         @keyword value: (Optional) Value
+        @keyword pascal: (Default False) The string is preceded with one byte giving the length
+                         of the string (including terminator if there is one)
         """
         super(STRING, self).__init__(*args, **kwargs)
         
@@ -266,6 +270,7 @@ class STRING(BaseProtogenClass):
         self._raiseonunterminatedread=True
         self._raiseontruncate=True
         self._value=None
+        self._pascal=False
 
         if self._ismostderived(STRING):
             self._update(args,kwargs)
@@ -273,7 +278,7 @@ class STRING(BaseProtogenClass):
     def _update(self, args, kwargs):
         super(STRING,self)._update(args, kwargs)
 
-        self._consumekw(kwargs, ("constant", "terminator", "pad",
+        self._consumekw(kwargs, ("constant", "terminator", "pad", "pascal",
         "sizeinbytes", "default", "raiseonunterminatedread", "value"))
         self._complainaboutunusedargs(STRING,kwargs)
 
@@ -305,6 +310,9 @@ class STRING(BaseProtogenClass):
 
     def readfrombuffer(self, buffer):
         self._bufferstartoffset=buffer.getcurrentoffset()
+
+        if self._pascal:
+            self._sizeinbytes=buffer.getnextbyte()
 
         if self._sizeinbytes is not None:
             # fixed size
@@ -342,6 +350,11 @@ class STRING(BaseProtogenClass):
             raise ValueNotSetException()
                 
         self._bufferstartoffset=buffer.getcurrentoffset()
+        if self._pascal:
+            l=len(self._value)
+            if self._terminator is not None:
+                l+=1
+            buffer.appendbyte(l)
         buffer.appendbytes(self._value)
         l=len(self._value)
         if self._terminator is not None:
@@ -688,5 +701,8 @@ class buffer:
         self._offset+=len(bytes)
         assert self._offset==len(self._buffer.getvalue())
 
+    def getvalue(self):
+        "Returns the buffer being built"
+        return self._buffer.getvalue()
         
     
