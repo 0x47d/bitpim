@@ -17,15 +17,15 @@ class CommTimeout(Exception):
         self.partial=partial
 
 class CommConnection:
-    def __init__(self, logtarget, port, baud=115200, timeout=3, rtscts=0):
+    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0, softwareflow=0):
         self.logtarget=logtarget
         self.port=port
-        self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d" %
-                 (port, baud, float(timeout), rtscts) )
+        self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
+                 (port, baud, float(timeout), hardwareflow, softwareflow) )
         # we try twice since some platforms fail the first time
         for dummy in range(2):
             try:
-                self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=rtscts)
+                self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
                 self.log("Connection suceeded")
                 return
             except serial.serialutil.SerialException,e:
@@ -82,16 +82,23 @@ class CommConnection:
         if log:
             self.logdata("Begin reading until", char)
 
+        # set to non-zero for retries on timeouts
+        numfailures=0
         res=''
         while len(res)==0 or res[-1]!=char:
             b=self.ser.inWaiting()
             if b<1: b=1
             res2=self.read(b,0)
             if len(res2)<1:
-                if log:
-                    self.log("Timed out waiting for %02x - %d bytes read" % 
-                             (ord(char), len(res)))
-                raise CommTimeout(partial=res)
+                if numfailures==0:
+                    if log:
+                        self.log("Timed out waiting for %02x, requested bytes %d  - %d bytes read" % 
+                                 (ord(char), b, len(res)))
+                        self.logdata("Incomplete read was", res)
+                    raise CommTimeout(partial=res)
+                else:
+                    numfailures-=1
+                    self.log("Timed out - trying again")
             res=res+res2
 
         if log:
