@@ -1235,11 +1235,12 @@ class FileView(wx.Panel):
         if len(newext):
             filename=stripext(filename)
         filename="".join([x for x in filename if x in self.filenamechars])
+        filename=filename.replace("  "," ").replace("  ", " ")  # remove double spaces
         if len(newext):
             filename+='.'+newext
         if len(filename)>self.maxlen:
             chop=len(filename)-self.maxlen
-            filename=stripext(filename)[:-chop]+'.'+getext(filename)
+            filename=stripext(filename)[:-chop].strip()+'.'+getext(filename)
         return os.path.join(self.thedir, filename)
 
     def genericgetdata(self,dict,want, mediapath, mediakey, mediaindexkey):
