@@ -242,6 +242,11 @@ def formatexception(excinfo=None, lastframes=8):
                     continue
                print >>s,"%15s = " % (key,),
                try:
+                    if type(value)==type({}):
+                         kk=value.keys()
+                         kk.sort()
+                         print >>s, "Keys",kk
+                         print >>s, "%15s   " % ("",) ,
                     print >>s,`value`[:80]
                except:
                     print >>s,"(Exception occurred printing value)"
