@@ -419,24 +419,25 @@ class MainWindow(wxFrame):
 
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
-        self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxTB_TEXT|wxTB_FLAT)
+        self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxTB_TEXT)
+        #self.tb.SetToolBitmapSize(wxSize(32,32))
         sz=self.tb.GetToolBitmapSize()
         # work around a bug on Linux that returns random (large) numbers
         if sz[0]<10 or sz[0]>100: sz=wxSize(32,32)
 
         if HasFullyFunctionalListView():
             # The art names are the opposite way round than people would normally describe ...
-            self.tb.AddSimpleTool(ID_FV_LIST, wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
-                                  "List View", "View items as a list")
-            self.tb.AddSimpleTool(ID_FV_ICONS, wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
-                                  "Icon View", "View items as icons")
+            self.tb.AddLabelTool(ID_FV_LIST, "List", wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
+                                  shortHelp="List View", longHelp="View items as a list")
+            self.tb.AddLabelTool(ID_FV_ICONS, "Images", wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
+                                  shortHelp="Icon View", longHelp="View items as icons")
             self.tb.AddSeparator()
 
         # add and delete tools
-        self.tb.AddSimpleTool(ID_EDITADDENTRY, wxArtProvider_GetBitmap(wxART_ADD_BOOKMARK, wxART_TOOLBAR, sz),
-                              "Add", "Add an item")
-        self.tb.AddSimpleTool(ID_EDITDELETEENTRY, wxArtProvider_GetBitmap(wxART_DEL_BOOKMARK, wxART_TOOLBAR, sz),
-                              "Delete", "Delete item")
+        self.tb.AddLabelTool(ID_EDITADDENTRY, "Add", wxArtProvider_GetBitmap(wxART_ADD_BOOKMARK, wxART_TOOLBAR, sz),
+                              shortHelp="Add", longHelp="Add an item")
+        self.tb.AddLabelTool(ID_EDITDELETEENTRY, "Delete", wxArtProvider_GetBitmap(wxART_DEL_BOOKMARK, wxART_TOOLBAR, sz),
+                              shortHelp="Delete", longHelp="Delete item")
             
         # You have to make this call for the toolbar to draw itself properly
         self.tb.Realize()
