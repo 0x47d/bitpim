@@ -88,7 +88,6 @@ as a proper class (and the demo is now converted to just use it.)
             return
         sppu_x, sppu_y = self.GetScrollPixelsPerUnit()
         vs_x, vs_y   = self.GetViewStart()
-        print "viewstart", vs_x, vs_y
         new_vs_x, new_vs_y = -1, -1
 
         widget=child
@@ -118,7 +117,6 @@ as a proper class (and the demo is now converted to just use it.)
             diff = (cpos.y + csz.height - self.GetClientSize().height) / sppu_y
             new_vs_y = vs_y + diff + 1
 
-        print "adjust",new_vs_x, new_vs_y
         # if we need to adjust
         if new_vs_x != -1 or new_vs_y != -1:
             self.Scroll(new_vs_x, new_vs_y)
