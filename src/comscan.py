@@ -293,7 +293,7 @@ def _comscanlinux(maxnum=9):
     f.close()
 
     # device nodes we have seen so we don't repeat them in listing
-    devcache=[] 
+    devcache={}
     
     resultscount=0
     results={}
@@ -310,22 +310,13 @@ def _comscanlinux(maxnum=9):
             res={}
             res['name']=name
             res['description']=description+" ("+name+")"
+            dev=os.stat(name).st_rdev
             try:
                 f=open(name, "rw")
                 f.close()
                 res['available']=True
-                # I get a kernel panic without this sleep
-                # Seems like Linux has nasty bugs if you do networking shortly after accessing
-                # usb/serial cable
-                if name.lower().find("usb")>0:
-                    time.sleep(1)
             except:
                 res['available']=False
-            # look into the device stuff
-            dev=os.stat(name).st_rdev
-            if dev in devcache:
-                continue
-            devcache.append(dev)
             # linux specific, and i think they do funky stuff on kernel 2.6
             # there is no way to get these 'normally' from the python library
             major=(dev>>8)&0xff
@@ -333,9 +324,24 @@ def _comscanlinux(maxnum=9):
             res['device']=(major, minor)
             if drivers.has_key(major):
                 res['driver']=drivers[major]
-            
-            results[resultscount]=res
-            resultscount+=1
+
+            if res['available']:
+                if dev not in devcache or not devcache[dev][0]['available']:
+                    results[resultscount]=res
+                    resultscount+=1
+                    devcache[dev]=[res]
+                continue
+            # not available, so add
+            try:
+                devcache[dev].append(res)
+            except:
+                devcache[dev]=[res]
+    # add in one failed device type per major/minor
+    for dev in devcache:
+        if devcache[dev][0]['available']:
+            continue
+        results[resultscount]=devcache[dev][0]
+        resultscount+=1
     return results
 
 
