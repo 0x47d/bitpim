@@ -23,6 +23,7 @@ import zlib
 import base64
 import thread
 import Queue
+import shutil
 
 # wx. modules
 import wx
@@ -954,6 +955,7 @@ class FileView(bpmedia.MediaDisplayer):
 
         self.menu=wx.Menu()
         self.menu.Append(guihelper.ID_FV_OPEN, "Open")
+        self.menu.Append(guihelper.ID_FV_SAVE, "Save ...")
         self.menu.AppendSeparator()
         self.menu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.menu.AppendSeparator()
@@ -967,9 +969,12 @@ class FileView(bpmedia.MediaDisplayer):
         wx.EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_SAVE, self.OnSave)
         #wx.EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
         wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        # these are triggered from the HTML pane
         wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_BUTTON(self, guihelper.ID_FV_SAVE, self.OnSave)
 
         self.SetRightClickMenus(self.menu, self.addfilemenu)
 
@@ -998,6 +1003,23 @@ class FileView(bpmedia.MediaDisplayer):
                     os.remove(item['file'])
             self.RemoveFromIndex([item['name'] for item in context])
             self.OnRefresh()
+
+    def OnSave(self, _):
+        items=self.GetAllSelectedItems()
+        if len(items)==1:
+            ext=getext(items[0]['name'])
+            if ext=="": ext="*"
+            else: ext="*."+ext
+            dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0]['name'], style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+            if dlg.ShowModal()==wx.ID_OK:
+                shutil.copyfile(items[0]['file'], dlg.GetFilename())
+            dlg.Destroy()
+        else:
+            dlg=wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
+            if dlg.ShowModal()==wx.ID_OK:
+                for item in items:
+                    shutil.copyfile(item['file'], os.path.join(dlg.GetPath(), basename(item['file'])))
+            dlg.Destroy()
 
     def OnDelete(self,_):
         items=self.GetAllSelectedItems()
