@@ -77,6 +77,10 @@ class Phone:
 
     def getphonebook(self,result):
         pbook={}
+        # Bug in the phone.  if you repeatedly read the phone book it starts
+        # returning a random number as the number of entries.  We get around
+        # this by switching into brew mode which clears that.
+        self.setmode(self.MODEBREW)
         self.setmode(self.MODEPHONEBOOK)
         self.log("Reading number of phonebook entries")
         res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
@@ -96,11 +100,61 @@ class Phone:
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
-        # Bug in the phone.  if you repeatedly read the phone book it starts
-        # returning a random number as the number of entries.  We get around
-        # this by switching into brew mode which clears that.
-        self.setmode(self.MODEBREW)
         return pbook
+
+    def savephonebook(self, data):
+        print "savephonebookcalled"
+        # to write the phone book, we scan through all existing entries
+        # and record their record number and serials.
+        # we then write out our records, usng overwrite or append
+        # commands as necessary
+        # finally we clear out any remaining entries
+        existingpbook={}
+        self.setmode(self.MODEPHONEBOOK)
+        self.log("Reading number of phonebook entries before writing")
+        res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
+        ### Response 0x11
+        # Byte 0x12 is number of entries
+        numexistingentries=ord(res[0x12])
+        progressmax=numexistingentries+len(data['phonebook'].keys())
+        progresscur=0
+        self.log("There are %d existing entries" % (numexistingentries,))
+        for i in range(0, numexistingentries):
+            ### Read current entry
+            self.log("Reading entry "+`i`)
+            res=self.sendpbcommand(0x13, "\x01\x00\x00\x00\x00\x00\x00")
+            entry={ 'number':  readlsb(res[0xe:0xf]), 'serial1':  readlsb(res[0x04:0x08]),
+                    'serial2': readlsb(res[0xa:0xe])}
+            existingpbook[i]=entry 
+            self.progress(progresscur, progressmax, "existing "+`progresscur`)
+            #### Advance to next entry
+            self.sendpbcommand(0x12, "\x01\x00\x00\x00\x00\x00\x00")
+            progresscur+=1
+        # go back to begining again
+        # existingpbook contains entries from the existing phonebook on the phone
+        res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
+        pbook=data['phonebook']
+        entries=pbook.keys()
+        entries.sort()
+        numentries=len(pbook.keys())
+        for i in range(0, max(numentries,numexistingentries)):
+            progresscur+=1
+            if i>numentries:
+                ii=existingpbook[i]
+                # no idea what the \x06 is about
+                data="\x01"+makelsb(ii['serial1'],4)+ \
+                      "\0x06\x00" + \
+                      makelsb(ii['serial2'],4) + \
+                      makelsb(ii['number'],2)
+                self.sendpbcommand(0x05, data)
+                self.progress(progresscur, progressmax, "removing "+`i`)
+                continue
+            entry=self.makeentry(i, pbook[entries[i]], data)
+            if i>numentries:
+                cmd=0x03 # append
+            else: cmd=0x04 # overwrite
+            self.progress(progresscur, progressmax, "Writing "+pbook[entries[i]]['name'])
+            self.sendpbcommand(cmd, entry)
 
     def getcalendar(self,result):
         self.setmode(self.MODEBREW)
@@ -128,9 +182,7 @@ class Phone:
         result['wallpaper-index']=index
         return result
 
-    def savephonebook(self, data):
-        print "savephonebookcalled"
-        pass # :::TODO:::
+
 
     def savewallpapers(self, data):
         self.setmode(self.MODEBREW)
@@ -170,6 +222,10 @@ class Phone:
 
     def saveringtones(self, data):
         self.setmode(self.MODEBREW)
+        try: self.mkdir("user")
+        except: pass
+        try: self.mkdir("user/sound")
+        except: pass
         try: self.mkdir("user/sound/ringer")
         except: pass
         entries=self.getfilesystem("user/sound/ringer")
@@ -215,7 +271,11 @@ class Phone:
         # we have to retreive both the midis and the index file
         ringers={}
         self.setmode(self.MODEBREW)
-        entries=self.getfilesystem("user/sound/ringer")
+        try:
+            entries=self.getfilesystem("user/sound/ringer")
+        except BrewNoSuchDirectoryException:
+            entries={}
+            
         for file in entries:
             f=entries[file]
             if f['type']=='file':
@@ -680,6 +740,118 @@ class Phone:
                 res['type'+`i`]=""
         return res
 
+    def makeentry(self, num, entry, dict):
+        res=""
+        # skip first four bytes - they are part of command
+        res+="aaaa"  # added to help assertions
+        
+        # bytes 4-7 serial1
+        assert len(res)==4
+        res+=makelsb(entry['serial1'], 4)
+
+        # bytes 8-9  unknown - always 0202
+        assert len(res)==8
+        res+=makelsb(0x0202, 2)
+
+        # bytes a-d serial2
+        assert len(res)==0x0a
+        res+=makelsb(entry['serial2'], 4)
+
+        # byte e is entry number
+        # we ignore what user supplied
+        assert len(res)==0xe
+        res+=makelsb(num,1)
+
+        # byte f is unknown - always 0
+        assert len(res)==0xf
+        res+=makelsb(0, 1)
+
+        # Bytes 10-26 null terminated name
+        assert len(res)==0x10
+        res+=makestring(entry['name'], 22)
+
+        # Byte 27 group
+        assert len(res)==0x27
+        res+=makelsb(entry['group'], 1)
+        
+        # byte 28 some sort of number - always 0
+        assert len(res)==0x28
+        res+=makelsb(0, 1)
+
+        # bytes 29-59 null terminated email1
+        assert len(res)==0x29
+        res+=makestring(entry['email1'], 55)
+
+        # bytes 5a-8a null terminated email2
+        assert len(res)==0x5a
+        res+=makestring(entry['email2'], 55)
+
+        # bytes 8b-bb null terminated email3
+        assert len(res)==0x8b
+        res+=makestring(entry['email3'], 55)
+
+        # bytes bc-ec null terminated url
+        assert len(res)==0xbc
+        res+=makestring(entry['url'], 49)
+
+        # byte ed is ringtone
+        assert len(res)==0xed
+        res+=makelsb(entry['ringtone'], 1)
+
+        # byte ee is message ringtone
+        assert len(res)==0xee
+        res+=makelsb(entry['msgringtone'], 1)
+
+        # byte ef is secret
+        assert len(res)==0xef
+        if entry['secret']:
+            res+="\x01"
+        else: res+="\x00"
+        
+        # bytes f0-110 null terminated memo
+        assert len(res)==0xf0
+        res+=makestring(entry['memo'], 33)
+
+        # byte 111 - always zero or one entry is 0x0d
+        assert len(res)==0x111
+        res+=makelsb(0,1)
+        
+        # bytes 112-116 are phone number types
+        assert len(res)==0x112
+        for n in range(1,6):
+            res+=makelsb( entry['type'+`n`], 1)
+
+        # bytes 117-147 number 1
+        assert len(res)==0x117
+        res+=makestring(entry['number1'], 49)
+
+        # bytes 148-178 number 2
+        assert len(res)==0x148
+        res+=makestring(entry['number2'], 49)
+
+        # bytes 179-1a9 number 3
+        assert len(res)==0x179
+        res+=makestring(entry['number3'], 49)
+        
+        # bytes 1aa-1da number 4
+        assert len(res)==0x1aa
+        res+=makestring(entry['number4'], 49)
+
+        # bytes 1db-20b number 5
+        assert len(res)==0x1db
+        res+=makestring(entry['number5'], 49)
+
+        # bytes 20c-210 five zeros
+        assert len(res)==0x20c
+        res+=makelsb(0, 5)
+
+
+        # done
+        assert len(res)==0x211
+
+        return res[4:]  # chop off cosmetic first bit
+    
+
     numbertypetab=( 'Home', 'Home2', 'Office', 'Office2', 'Mobile', 'Mobile2',
                     'Pager', 'Fax', 'Fax2', 'None' )
 
@@ -762,5 +934,5 @@ def brewbasename(str):
 # 0x07   quit (phone will restart)
 # 0x06   ? parameters maybe
 # 0x05   delete entry
-# 0x04   write entry
-# 0x03   append entry
+# 0x04   write entry  (advances to next entry)
+# 0x03   append entry  (advances to next entry)
