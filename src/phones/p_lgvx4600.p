@@ -49,26 +49,26 @@ PACKET mediadesc:
 # need to modify com_lgvx4600 to give a different truncateat parameter
 # in the convertphonebooktophone method
 PACKET pbentry:
-    P  UINT {'constant': 3} numberofemails
+    P  UINT {'constant': 1} numberofemails
     P  UINT {'constant': 5} numberofphonenumbers
     4  UINT serial1
-    2  UINT {'constant': 0x0222} +entrysize
+    2  UINT {'constant': 0x0190} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': self.numberofemails} +emails:
-        49 STRING {'raiseonunterminatedread': False} email
-    49 STRING {'raiseonunterminatedread': False} url
+        73 STRING {'raiseonunterminatedread': False} email
+    72 STRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    65 STRING {'raiseonunterminatedread': False} memo
-    1  UINT wallpaper
+    49 STRING {'raiseonunterminatedread': False} memo
+    2  UINT wallpaper
     * LIST {'length': self.numberofphonenumbers} +numbertypes:
         1 UINT numbertype
     * LIST {'length': self.numberofphonenumbers} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        33 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 PACKET pbreadentryresponse:
