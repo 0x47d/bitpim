@@ -17,6 +17,8 @@ import wx
 
 import common
 
+class ConversionFailed(Exception): pass
+
 helperdir=sys.path[0]
 if os.path.isfile(helperdir):
     helperdir=os.path.dirnamer(helperdir)
@@ -182,7 +184,12 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     ffmpeg=gethelperbinary("ffmpeg")
     mp3file=common.gettempfilename("mp3")
     try:
-        run(ffmpeg, "-i", shortfilename(inputfilename), "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
+        try:
+            run(ffmpeg, "-i", shortfilename(inputfilename), "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
+        except common.CommandExecutionFailed:
+            # we get this exception on bad parameters, or any other
+            # issue so we assume bad parameters for the moment.
+            raise ConversionFailed()
         return open(mp3file, "rb").read()
     finally:
         try: os.remove(mp3file)
