@@ -17,7 +17,8 @@ class CommTimeout(Exception):
         self.partial=partial
 
 class CommConnection:
-    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0, softwareflow=0, autolistfunc=None):
+    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
+                 softwareflow=0, autolistfunc=None, configparameters=None):
         self.ser=None
         self.port=port
         self.logtarget=logtarget
@@ -25,6 +26,7 @@ class CommConnection:
         self.success=False
         self.ports=None
         self.autolistfunc=autolistfunc
+        self.configparameters=configparameters
         self.params=(baud,timeout,hardwareflow,softwareflow)
         assert port!="auto" or (port=="auto" and autolistfunc is not None)
         if autolistfunc is not None:
@@ -55,9 +57,11 @@ class CommConnection:
         # we try twice since some platforms fail the first time
         for dummy in range(2):
             try:
+                self.close()
                 self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
                 self.log("Open of comm port suceeded")
                 self.port=port
+                self.clearcounters()
                 return
             except serial.serialutil.SerialException,e:
                 ex=common.CommsOpenFailure(port, e.__str__())
@@ -65,6 +69,9 @@ class CommConnection:
         self.log("Open of comm port failed")
         raise ex
 
+    def reset(self):
+        self._openport(self.port, *self.params)
+        
     def _refreshautoports(self):
         # ensure we close current port first
         self.close()

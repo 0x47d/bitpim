@@ -477,6 +477,7 @@ class ConfigDialog(wxDialog):
     setme="<setme>"
     ID_DIRBROWSE=1
     ID_COMBROWSE=2
+    ID_RETRY=3
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
         wxDialog.__init__(self, frame, id, title,
                           style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
@@ -493,6 +494,13 @@ class ConfigDialog(wxDialog):
         self.commbox=wxTextCtrl(self, -1, self.setme)
         gs.Add( self.commbox, 0, wxEXPAND)
         gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
+
+        gs.Add( wxStaticText(self, -1, "Retry on timeout"), 0, wxCENTER )
+        self.retry=wxCheckBox(self, self.ID_RETRY, "")
+        gs.Add( self.retry, 0, wxCENTER)
+
+        # NB: no 3 column control
+                
 
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
@@ -545,6 +553,7 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(self.mw.config.Read("path", ""))
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
+        self.retry.SetValue( self.mw.config.ReadInt('commretryontimeout', True))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -563,6 +572,7 @@ class ConfigDialog(wxDialog):
         if self.commbox.GetValue()==self.setme:
             comm="auto"
             self.commbox.SetValue(comm)
+        self.retry.SetValue( self.mw.config.ReadInt('commretryontimeout', True))
 
     def updatevariables(self):
         path=self.diskbox.GetValue()
@@ -576,6 +586,17 @@ class ConfigDialog(wxDialog):
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
         if self.mw.wt is not None:
             self.mw.wt.clearcomm()
+        # comm parameters (retry, timeouts, flow control etc)
+        commparm={}
+        commparm['retryontimeout']=self.retry.GetValue()
+        self.mw.config.WriteInt('commretryontimeout', self.retry.GetValue())
+        # the others we don't have in config dialog
+        commparm['timeout']=self.mw.config.ReadInt('commtimeout', 3)
+        commparm['hardwareflow']=self.mw.config.ReadInt('commhardwareflow', False)
+        commparm['softwareflow']=self.mw.config.ReadInt('commsoftwareflow', False)
+        commparm['baud']=self.mw.config.ReadInt('commbaud', 115200)
+        self.mw.commparams=commparm
+        
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to

@@ -171,7 +171,7 @@ class WorkerThreadFramework(threading.Thread):
         global helperthreadid
         helperthreadid=thread.get_ident()
         first=1
-        while 1:
+        while True:
             if not first:
                 wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.endbusycb))
             else:
@@ -911,8 +911,13 @@ class WorkerThread(WorkerThreadFramework):
                 autofunc=comdiagnose.autoguessports
             else:
                 autofunc=None
-            # ::TODO:: allow config of timeout, hardware and software flow control
-            comport=commport.CommConnection(self, self.dispatchto.commportsetting, autolistfunc=autofunc)
+            comcfg=self.dispatchto.commparams
+            comport=commport.CommConnection(self, self.dispatchto.commportsetting, autolistfunc=autofunc,
+                                            baud=comcfg['baud'], timeout=comcfg['timeout'],
+                                            hardwareflow=comcfg['hardwareflow'],
+                                            softwareflow=comcfg['softwareflow'],
+                                            configparameters=comcfg)
+                
             try:
                 import com_lgvx4400
                 self.commphone=com_lgvx4400.Phone(self, comport)

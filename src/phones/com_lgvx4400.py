@@ -781,28 +781,74 @@ class Phone:
     def checkresult(self, firstbyte, res):
         if res[0]!=firstbyte:
             return
-        
+
     def sendpbcommand(self, cmd, data):
+        if self.comm.configparameters is None or \
+           not self.comm.configparameters['retryontimeout']:
+            return self._sendpbcommand(cmd, data)
+        try:
+            return self._sendpbcommand(cmd, data, wantto=True)
+        except commport.CommTimeout, e:
+            if e.partial is None or len(e.partial)==0:
+                raise e
+            # resend command
+            self.log("Phonebook command timed out with partial data.  Retrying")
+            self.comm.reset()
+            res=self._sendpbcommand(cmd,data)
+            x=res.find('\x7f')
+            if x<0:
+                raise e
+            res=res[x+1]
+            if len(res)==0:
+                raise e
+            return res
+
+    def _sendpbcommand(self, cmd, data, wantto=False):
         d="\xff"+chr(cmd)+chr(self.seq&0xff)+data
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         self.seq+=1
         try:
             d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
+            self.comm.success=True
             if 0: # cmd!=0x15 and d[3]!="\x00":
                 raise PhoneBookCommandException(ord(d[3]))
             # ::TODO:: we should check crc
             return d
-        except commport.CommTimeout:
+        except commport.CommTimeout, e:
+            if wantto:
+                raise e
             self.raisecommsexception("using the phonebook")
             return None # keep pychecker happy
 
     def sendbrewcommand(self, cmd, data):
+        if self.comm.configparameters is None or \
+           not self.comm.configparameters['retryontimeout']:
+            return self._sendbrewcommand(cmd, data)
+        try:
+            return self._sendbrewcommand(cmd, data, wantto=True)
+        except commport.CommTimeout, e:
+            if e.partial is None or len(e.partial)==0:
+                raise e
+            # resend command
+            self.log("Brew command timed out with partial data.  Retrying")
+            self.comm.reset()
+            res=self._sendbrewcommand(cmd,data)
+            x=res.find('\x7f')
+            if x<0:
+                raise e
+            res=res[x+1]
+            if len(res)==0:
+                raise e
+            return res
+
+    def _sendbrewcommand(self, cmd, data, wantto=False):
         d="\x59"+chr(cmd)+data
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         try:
             d=self.unescape(self.comm.readuntil(self.terminator))
+            self.comm.success=True
             # ::TODO:: we should check crc
             if d[2]!="\x00":
                 err=ord(d[2])
@@ -814,7 +860,9 @@ class Phone:
                     raise BrewNoSuchFileException()
                 raise BrewCommandException(err)
             return d
-        except commport.CommTimeout:
+        except commport.CommTimeout,e:
+            if wantto:
+                raise e
             self.raisecommsexception("manipulating the filesystem")
             return None # keep pychecker happy
         
