@@ -6,6 +6,16 @@ below.  Specific permission is granted for this code to be linked to
 OpenSSL (this is necessary becuse the OpenSSL license is not
 GPL-compatible).
 
+   In addition, as a special exception, the BitPim copyright holders
+   give permission to link the code of this program with the OpenSSL
+   library (or with modified versions of OpenSSL), and distribute
+   linked combinations including the two. You must obey the GNU
+   General Public License in all respects for all of the code used
+   other than OpenSSL. If you modify any files, you may extend this
+   exception to your version of the file, but you are not obligated to
+   do so. If you do not wish to do so, delete this exception statement
+   from your version.
+
 Please also note that some code is taken from other projects with a
 GPL compatible license.  This is noted in the specific files.
 
