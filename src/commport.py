@@ -21,11 +21,16 @@ class CommConnection:
         self.port=port
         self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d" %
                  (port, baud, float(timeout), rtscts) )
-        try:
-            self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=rtscts)
-        except serial.serialutil.SerialException,e:
-            raise common.CommsOpenFailure(port, e.__str__())
-        self.log("Connection suceeded")
+        # we try twice since some platforms fail the first time
+        for dummy in range(2):
+            try:
+                self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=rtscts)
+                self.log("Connection suceeded")
+                return
+            except serial.serialutil.SerialException,e:
+                ex=common.CommsOpenFailure(port, e.__str__())
+        raise ex
+
 
     def log(self, str):
         if self.logtarget:
