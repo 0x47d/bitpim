@@ -1109,16 +1109,30 @@ class PhoneWidget(wx.Panel):
 
 class ImportCellRenderer(wx.grid.PyGridCellRenderer):
     SCALE=0.8
-    def __init__(self):
+    def __init__(self, attr):
         wx.grid.PyGridCellRenderer.__init__(self)
+        self.attr=attr
+        self.calc=False # we have to delay working out attributes since grid fills default ones in later
+        self.textcolour=None
 
+    def _calcattrs(self, attr):
+        assert self.attr.this==attr.this
+        self.font=attr.GetFont()
+        self.facename=attr.GetFont().GetFaceName()
+        self.facesize=attr.GetFont().GetPointSize()
+        #self.textcolour=attr.GetTextColour()
+        self.calc=True
+        
     def _gettextcolour(self, grid, attr, isSelected):
         if isSelected:
             return grid.GetSelectionForeground()
-        return attr.GetTextColour()
+        if self.textcolour is None:
+            self.textcolour=attr.GetTextColour()
+        return self.textcolour
 
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
-
+        if not self.calc: self._calcattrs(attr)
+        assert self.attr.this==attr.this        
         dc.SetClippingRect(rect)
 
         # clear the background
@@ -1133,19 +1147,24 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
         dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
 
         dc.SetBackgroundMode(wx.TRANSPARENT)
-        dc.SetFont(attr.GetFont())
+        dc.SetFont(self.font)
 
         text = grid.GetTable().GetHtmlCellValue(row, col, self._gettextcolour(grid, attr, isSelected))
-        bphtml.drawhtml(dc,
-                        wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
-                        text, font=attr.GetFont().GetFaceName(), size=attr.GetFont().GetPointSize())
+        if len(text):
+            bphtml.drawhtml(dc,
+                            wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
+                            text, font=self.facename, size=self.facesize)
         dc.DestroyClippingRegion()
 
     def GetBestSize(self, grid, attr, dc, row, col):
+        assert self.attr.this==attr.this
+        if not self.calc: self._calcattrs(attr)
         text = grid.GetTable().GetHtmlCellValue(row, col)
-        return bphtml.getbestsize(dc, text, font=attr.GetFont().GetFaceName(), size=attr.GetFont().GetPointSize())
+        if not len(text): return wx.Size(5,5)
+        return bphtml.getbestsize(dc, text, font=self.facename, size=self.facesize)
 
     def Clone(self):
+        print "CLONE CALLED"
         return ImportCellRenderer()
 
 
@@ -1164,16 +1183,16 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.columns=['Confidence']+ImportColumns
         self.addedattr=wx.grid.GridCellAttr()
         self.addedattr.SetBackgroundColour("HONEYDEW")
-        self.addedattr.SetRenderer(ImportCellRenderer())
+        self.addedattr.SetRenderer(ImportCellRenderer(self.addedattr))
         self.unalteredattr=wx.grid.GridCellAttr()
         self.unalteredattr.SetBackgroundColour("WHITE")
-        self.unalteredattr.SetRenderer(ImportCellRenderer())
+        self.unalteredattr.SetRenderer(ImportCellRenderer(self.unalteredattr))
         self.changedattr=wx.grid.GridCellAttr()
         self.changedattr.SetBackgroundColour("LEMON CHIFFON")
-        self.changedattr.SetRenderer(ImportCellRenderer())
+        self.changedattr.SetRenderer(ImportCellRenderer(self.changedattr))
         self.deletedattr=wx.grid.GridCellAttr()
         self.deletedattr.SetBackgroundColour("ROSYBROWN1")
-        self.deletedattr.SetRenderer(ImportCellRenderer())
+        self.deletedattr.SetRenderer(ImportCellRenderer(self.deletedattr))
 
     def GetRowData(self, row):
         """Returns a 4 part tuple as defined in ImportDialog.rowdata
