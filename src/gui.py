@@ -14,6 +14,8 @@ import thread, threading
 import Queue
 import time
 import os
+import cStringIO
+import zipfile
 
 # wxPython modules
 from wxPython.wx import *
@@ -76,7 +78,9 @@ ID_FV_RENAME=1
 ID_FV_REFRESH=1
 ID_FV_PROPERTIES=1
 ID_FV_ADD=1
-
+ID_FV_BACKUP=1
+ID_FV_BACKUP_TREE=1
+ID_FV_RESTORE=1
 
 # keep map around
 idmap={}
@@ -1047,11 +1051,87 @@ class WorkerThread(WorkerThreadFramework):
         self.setupcomm()
         return self.commphone.rmdir(path)
 
+    def rmdirs(self,path):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        self.progressminor(0,1, "Listing child files and directories")
+        all=self.dirlisting(path, 100)
+        keys=all.keys()
+        keys.sort()
+        keys.reverse()
+        count=0
+        for k in keys:
+            self.progressminor(count, len(keys), "Deleting "+k)
+            count+=1
+            if all[k]['type']=='directory':
+                self.rmdir(k)
+            else:
+                self.rmfile(k)
+        self.rmdir(path)
+
+
+    # backups etc
+    def getbackup(self,path,recurse=0):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        self.progressmajor(0,0,"Listing files")
+        files=self.dirlisting(path, recurse)
+        if len(path)<=1:
+            strip=1 # root dir
+        else:
+            strip=len(path)+1 # child
+
+        keys=files.keys()
+        keys.sort()
+        
+        op=cStringIO.StringIO()
+        zip=zipfile.ZipFile(op, "w", zipfile.ZIP_DEFLATED)
+
+        count=0
+        for k in keys:
+            count+=1
+            if files[k]['type']!='file':
+                continue
+            self.progressmajor(count, len(keys)+1, "Getting files")
+            # get the contents
+            contents=self.getfile(k)
+            # add to zip file
+            zi=zipfile.ZipInfo()
+            zi.filename=k[strip:]
+            zi.date_time=(0,0,0,0,0,0)
+            # zi.comment=k
+            zi.compress_type=zipfile.ZIP_DEFLATED
+            zip.writestr(zi, contents)
+        zip.close()
+
+        return op.getvalue()
+    
+    def restorefiles(self, files):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+
+        results=[]
+
+        seendirs=[]
+
+        count=0
+        for name, contents in files:
+            self.progressmajor(count, len(files), "Restoring files")
+            count+=1
+            d=dirname(name)
+            if d not in seendirs:
+                seendirs.append(d)
+                self.commphone.mkdirs(d)
+            self.writefile(name, contents)
+            results.append( (True, name) )
+
+        return results
+
 
 class FileSystemView(wxTreeListCtrl):
 
     # the gizmos.py shipped with wxPython 2.4.1.2 has wrong implementation
-    # of these two methods.  We have fixed versions here.  They will be removed
+    # of these three methods.  We have fixed versions here.  They will be removed
     # when a later version of wxPython ships
     def GetFirstChild(self, *_args, **_kwargs):
         val = gizmosc.wxTreeListCtrl_GetFirstChild(self, *_args, **_kwargs)
@@ -1059,22 +1139,32 @@ class FileSystemView(wxTreeListCtrl):
     def GetNextChild(self, *_args, **_kwargs):
         val = gizmosc.wxTreeListCtrl_GetNextChild(self, *_args, **_kwargs)
         return val
+    def HitTest(self, pt):
+        val1, val2, val3 = gizmosc.wxTreeListCtrl_HitTest(self, wxPoint(pt.x, pt.y+self._BIAS))
+        val1 = wxTreeItemIdPtr(val1)
+        val1.thisown = 1
+        return (val1, val2, val3)
     
     
     # we have to add None objects to all nodes otherwise the tree control refuses
     # sort (somewhat lame imho)
     def __init__(self, mainwindow, parent, id=-1):
+        self.datacolumn=False # used for debugging and inspection of values
+        self._BIAS=0
         wxTreeListCtrl.__init__(self, parent, id, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
         self.AddColumn("Name")
         self.AddColumn("Size")
         self.AddColumn("Date")
-        self.AddColumn("Extra Stuff")
         self.SetMainColumn(0)
         self.SetColumnWidth(0, 300)
-        self.SetColumnWidth(3, 400)
+        self.SetColumnWidth(2, 200)
+        if self.datacolumn:
+            self.AddColumn("Extra Stuff")
+            self.SetColumnWidth(3, 400)
         self.SetColumnAlignment(1, wxLIST_FORMAT_RIGHT)
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
+        self._BIAS=self.GetBoundingRect(self.root).GetHeight()+self.GetSpacing()
         self.SetPyData(self.root, None)
         self.SetItemHasChildren(self.root, True)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
@@ -1093,6 +1183,10 @@ class FileSystemView(wxTreeListCtrl):
         self.dirmenu.Append(ID_FV_NEWSUBDIR, "Make subdirectory ...")
         self.dirmenu.Append(ID_FV_NEWFILE, "New File ...")
         self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(ID_FV_BACKUP, "Backup directory ...")
+        self.dirmenu.Append(ID_FV_BACKUP_TREE, "Backup entire tree ...")
+        self.dirmenu.Append(ID_FV_RESTORE, "Restore ...")
+        self.dirmenu.AppendSeparator()
         self.dirmenu.Append(ID_FV_REFRESH, "Refresh")
         self.dirmenu.AppendSeparator()
         self.dirmenu.Append(ID_FV_DELETE, "Delete")
@@ -1104,15 +1198,17 @@ class FileSystemView(wxTreeListCtrl):
         EVT_MENU(self.dirmenu, ID_FV_NEWSUBDIR, self.OnNewSubdir)
         EVT_MENU(self.dirmenu, ID_FV_NEWFILE, self.OnNewFile)
         EVT_MENU(self.dirmenu, ID_FV_DELETE, self.OnDirDelete)
+        EVT_MENU(self.dirmenu, ID_FV_BACKUP, self.OnBackupDirectory)
+        EVT_MENU(self.dirmenu, ID_FV_BACKUP_TREE, self.OnBackupTree)
+        EVT_MENU(self.dirmenu, ID_FV_RESTORE, self.OnRestore)
         EVT_MENU(self.dirmenu, ID_FV_REFRESH, self.OnDirRefresh)
-        EVT_RIGHT_DOWN(self, self.OnRightDown)
-        EVT_RIGHT_UP(self, self.OnRightUp)
-        EVT_LIST_ITEM_RIGHT_CLICK(self, id, self.OnRightUp)
+        EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
+        EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
     def OnRightUp(self, event):
         pt = event.GetPosition();
-        item, flags = self.HitTest(pt)
-        if flags & ( wxTREE_HITTEST_ONITEMBUTTON|wxTREE_HITTEST_ONITEMICON|wxTREE_HITTEST_ONITEMINDENT|wxTREE_HITTEST_ONITEMLABEL):
+        item, flags,unknown = self.HitTest(pt)
+        if flags:
             # is it a file or a directory
             path=self.itemtopath(item)
             if path in self.dirhash:
@@ -1124,7 +1220,7 @@ class FileSystemView(wxTreeListCtrl):
     def OnRightDown(self,event):
         # You have to capture right down otherwise it doesn't feed you right up
         pt = event.GetPosition();
-        item, flags = self.HitTest(pt)
+        item, flags, unknown = self.HitTest(pt)
         try:
             self.SelectItem(item)
         except:
@@ -1176,9 +1272,10 @@ class FileSystemView(wxTreeListCtrl):
             if result[file]['type']=='file':
                 self.dirhash[result[file]['name']]=0
                 self.SetItemHasChildren(found, False)
-                self.SetItemText(found, `result[file]['size']`, 1)
-                self.SetItemText(found, `result[file]['date']`, 2)
-                self.SetItemText(found, result[file]['data'], 3)
+                self.SetItemText(found, `result[file]['size']  `, 1)
+                self.SetItemText(found, "  "+result[file]['date'][1], 2)
+                if self.datacolumn:
+                    self.SetItemText(found, result[file]['data'], 3)
             else: # it is a directory
                 self.dirhash[result[file]['name']]=1
                 self.SetItemHasChildren(found, True)
@@ -1212,7 +1309,7 @@ class FileSystemView(wxTreeListCtrl):
             f.write(contents)
             f.close()
         dlg.Destroy()
-        
+
     def OnHexView(self, _):
         path=self.itemtopath(self.GetSelection())
         mw=self.mainwindow
@@ -1304,13 +1401,124 @@ class FileSystemView(wxTreeListCtrl):
     def OnDirDelete(self, _):
         path=self.itemtopath(self.GetSelection())
         mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.rmdir, path),
+        mw.MakeCall( Request(mw.wt.rmdirs, path),
                      Callback(self.OnDirDeleteResults, dirname(path)) )
         
     def OnDirDeleteResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         self.OnDirListing(parentdir)
+
+    def OnBackupTree(self, _):
+        self.OnBackup(recurse=100)
+
+    def OnBackupDirectory(self, _):
+        self.OnBackup()
+
+    def OnBackup(self, recurse=0):
+        path=self.itemtopath(self.GetSelection())
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.getbackup, path, recurse),
+                     Callback(self.OnBackupResults, path) )
+
+    def OnBackupResults(self, path, exception, backup):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        bn=basename(path)
+        if len(bn)<1:
+            bn="root"
+        bn+=".zip"
+        ext="Zip files|*.zip|All Files|*"
+        dlg=wxFileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                             style=wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR)
+        if dlg.ShowModal()==wxID_OK:
+            f=open(dlg.GetPath(), "wb")
+            f.write(backup)
+            f.close()
+        dlg.Destroy()
+
+    def OnRestore(self, _):
+        ext="Zip files|*.zip|All Files|*"
+        path=self.itemtopath(self.GetSelection())
+        bn=basename(path)
+        if len(bn)<1:
+            bn="root"
+        bn+=".zip"
+        ext="Zip files|*.zip|All Files|*"
+        dlg=wxFileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
+                             style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
+        if dlg.ShowModal()!=wxID_OK:
+            return
+        name=dlg.GetPath()
+        if not zipfile.is_zipfile(name):
+            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" is not a valid zipfile.", "Zip file required",
+                                               lambda _: wxGetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
+                                               style=wxOK|wxICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+        zipf=zipfile.ZipFile(name, "r")
+        xx=zipf.testzip()
+        if xx is not None:
+            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" has corrupted contents.  Use a repair utility to fix it",
+                                               "Zip file corrupted",
+                                               lambda _: wxGetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
+                                               style=wxOK|wxICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+
+        dlg=RestoreDialog(self.mainwindow, "Restore files", zipf, path, self.OnRestoreOK)
+        dlg.Show(True)
+
+    def OnRestoreOK(self, zipf, names, parentdir):
+        if len(names)==0:
+            wxMessageBox("You didn't select any files to restore!", "No files selected",
+                         wxOK|wxICON_EXCLAMATION)
+            return
+        l=[]
+        for zipname, fsname in names:
+            l.append( (fsname, zipf.read(zipname)) )
+
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.restorefiles, l),
+                     Callback(self.OnRestoreResults, parentdir) )
+
+    def OnRestoreResults(self, parentdir, exception, results):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        ok=filter(lambda s: s[0], results)
+        fail=filter(lambda s: not s[0], results)
+
+        if len(parentdir):
+            dirs=[]
+            for _, name in results:
+                while(len(name)>len(parentdir)):
+                    name=dirname(name)
+                    if name not in dirs:
+                        dirs.append(name)
+            dirs.sort()
+            for d in dirs:
+                self.OnDirListing(d)
+
+        self.OnDirListing(parentdir)
+
+        if len(ok) and len(fail)==0:
+            dlg=wxMessageDialog(mw, "All files restored ok", "All files restored",
+                                wxOK|wxICON_INFORMATION)
+            dlg.Show(True)
+            return
+        if len(fail) and len(ok)==0:
+            wxMessageBox("All files failed to restore", "No files restored",
+                         wxOK|wxICON_ERROR)
+            return
+
+        op="Failed to restore some files.  Check the log for reasons.:\n\n"
+        for s,n in fail:
+            op+="   "+n+"\n"
+
+        wxMessageBox(op, "Some restores failed", wxOK|wxICON_ERROR)
+            
 
     def OnDirRefresh(self, _):
         path=self.itemtopath(self.GetSelection())
@@ -1350,6 +1558,61 @@ class FileSystemView(wxTreeListCtrl):
             node=self.AppendItem(node, dirs[n])
             self.SetPyData(node, None)
         return node
+
+class RestoreDialog(wxDialog):
+    """A dialog that lists all the files that will be restored"""
+    
+    def __init__(self, parent, title, zipf, path, okcb):
+        """Constructor
+
+        @param prefix: Placed before names in the archive.  Should not include a
+                       trailing slash.
+        """
+        wxDialog.__init__(self, parent, -1, title, style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+        vbs=wxBoxSizer(wxVERTICAL)
+        vbs.Add( wxStaticText(self, -1, "Choose files to restore"), 0, wxALIGN_CENTRE|wxALL, 5)
+
+        nl=zipf.namelist()
+        nl.sort()
+
+        prefix=path
+        if len(prefix)<=1:
+            prefix=""
+        else:
+            prefix+="/"
+
+        nnl=map(lambda i: prefix+i, nl)
+
+        self.clb=wxCheckListBox(self, -1, choices=nnl, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB, size=wxSize(200,300))
+
+        for i in range(len(nnl)):
+            self.clb.Check(i, True)
+
+        vbs.Add( self.clb, 1, wxEXPAND|wxALL, 5)
+
+        vbs.Add(wxStaticLine(self, -1, style=wxLI_HORIZONTAL), 0, wxEXPAND|wxALL, 5)
+
+        vbs.Add(self.CreateButtonSizer(wxOK|wxCANCEL|wxHELP), 0, wxALIGN_CENTER|wxALL, 5)
+    
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+        EVT_BUTTON(self, wxID_HELP, lambda _: wxGetApp().displayhelpid(helpids.ID_RESTOREDIALOG))
+        EVT_BUTTON(self, wxID_OK, self.OnOK)
+        self.okcb=okcb
+        self.zipf=zipf
+        self.nl=zip(nl, nnl)
+        self.path=path
+
+    def OnOK(self, _):
+        names=[]
+        for i in range(len(self.nl)):
+            if self.clb.IsChecked(i):
+                names.append(self.nl[i])
+        self.okcb(self.zipf, names, self.path)
+        self.Show(False)
+        self.Destroy()
 
 ###
 ### Various functions not attached to classes
