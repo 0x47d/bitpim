@@ -9,12 +9,16 @@
 
 """Communicate with the LG VX4400 cell phone"""
 
-import common
-import commport
-import copy
+# standard modules
 import re
 import time
 import cStringIO
+import sha
+
+# my modules
+import common
+import commport
+import copy
 import p_lgvx4400
 import com_brew
 import com_phone
@@ -51,6 +55,58 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.mode=self.MODENONE
         self.pbseq=0
         self.retries=2  # how many retries when we get no response
+
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI.
+
+        Currently this is:
+
+        - 'uniqueserial'     a unique serial number representing the phone
+        - 'groups'           the phonebook groups
+        - 'wallpaper-index'  map index numbers to names
+        - 'ringtone-index'   map index numbers to ringtone names
+        """
+        # use a hash of ESN and other stuff (being paranoid)
+        self.log("Retrieving fundamental phone information")
+        self.log("Phone serial number")
+        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
+        # now read groups
+        self.log("Reading group information")
+        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
+        g=p_lgvx4400.pbgroups()
+        g.readfrombuffer(buf)
+        self.logdata("Groups read", buf.getdata(), g)
+        groups={}
+        for i in range(g.numgroups):
+            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
+        results['groups']=groups
+        # wallpaper index
+        self.log("Reading wallpaper indices")
+        buf=prototypes.buffer(self.getfilecontents("dloadindex/brewImageIndex.map"))
+        g=p_lgvx4400.indexfile()
+        g.readfrombuffer(buf)
+        self.logdata("Wallpaper indices read", buf.getdata(), g)
+        papers={}
+        for i in range(g.maxitems):
+            print g.items[i].index, g.items[i].name
+            if g.items[i].index!=0xffff:
+                papers[g.items[i].index]=g.items[i].name
+        results['wallpaper-index']=papers
+        # ringtone index
+        self.log("Reading ringtone indices")
+        buf=prototypes.buffer(self.getfilecontents("dloadindex/brewRingerIndex.map"))
+        g=p_lgvx4400.indexfile()
+        g.readfrombuffer(buf)
+        self.logdata("Ringtone indices read", buf.getdata(), g)
+        ringers={}
+        for i in range(g.maxitems):
+            if g.items[i].index!=0xffff:
+                ringers[g.items[i].index]=g.items[i].name
+        results['ringtone-index']=ringers
+        self.log("Fundamentals retrieved")
+        self.log(common.prettyprintdict(results))
+        return results
+        
         
     def getphoneinfo(self, results):
         "Extracts manufacturer and version information in modem mode"
@@ -101,14 +157,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
-        # now read groups
-        self.log("Reading group information")
-        res=self.getfilecontents("pim/pbgroup.dat")
-        groups={}
-        for i in range(0, len(res), 24):
-            groups[i/24]={ 'icon': readlsb(res[i]), 'name': readstring(res[i+1:i+24]) }
-        result['groups']=groups
-        self.log(`groups`)
         return pbook
 
     def savephonebook(self, data):

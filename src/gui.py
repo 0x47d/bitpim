@@ -718,6 +718,7 @@ class MainWindow(wxFrame):
         if dlg.ShowModal()!=wxID_OK:
             return
         data={}
+        convertors=[]
         todo=[]
         funcscb=[]
         ### Calendar
@@ -760,10 +761,27 @@ class MainWindow(wxFrame):
             if v==dlg.OVERWRITE: 
                 self.phonewidget.getdata(data)
                 todo.append( (self.wt.writephonebook, "Phonebook") )
+            convertors.append(self.ringerwidget.convertophone)
+            # writing will modify data (especially index) so
+            # we repopulate on return
+            funcscb.append( self.phonewidget.populatefs )
+            funcscb.append( self.phonewidget.populate )
 
+        self.MakeCall(Request(self.wt.getfundamentals),
+                      Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors))
+
+    def OnDataSendPhoneGotFundamentals(self,data,todo,convertors, exception, results):
+        if self.HandleException(exception): return
+        data.update(results)
+        # call each widget to update fundamentals
+        for widget in self.calendar, self.wallpaper, self.ringerwidget, self.phonewidget:
+            widget.updatefundamentals(data)
+        # call convertors
+        for f in convertors:
+            f(data)
+        # Now scribble to phone
         self.MakeCall(Request(self.wt.senddata, data, todo),
                       Callback(self.OnDataSendPhoneResults, funcscb))
-
 
     def OnDataSendPhoneResults(self, funcscb, exception, results):
         if self.HandleException(exception): return
@@ -977,11 +995,17 @@ class WorkerThread(WorkerThreadFramework):
                 comport.close()
                 raise
 
+    def getfundamentals(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        results={}
+        self.commphone.getfundamentals(results)
+        return results
 
     def getdata(self, req):
         if __debug__: self.checkthread()
         self.setupcomm()
-        results={}
+        results=self.getfundamentals()
         willcall=[]
         sync={}
         for i in (

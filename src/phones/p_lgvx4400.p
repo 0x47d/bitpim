@@ -59,4 +59,20 @@ PACKET pbentry:
     * LIST {'length': self.numberofphonenumbers} numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN unknown20c
+
+PACKET pbgroups:
+    P UINT {'constant': 10} numgroups
+    * LIST {'length': self.numgroups} groups:
+        1 UINT icon
+        23 STRING name
+
+PACKET indexfile:
+    # A bit of a silly design again.  Entries with an index of 0xffff are
+    # 'blank'.  Thus it is possible for numactiveitems and the actual
+    # number of valid entries to be mismatched.
+    P UINT {'constant': 30} maxitems
+    2 UINT numactiveitems
+    * LIST {'length': self.maxitems} +items:
+        2 UINT {'default': 0xffff} +index
+        40 STRING {'default': ""} +name
     
