@@ -40,6 +40,12 @@ if __debug__:
 if __name__ == '__main__':
     import sys  
     import encodings.utf_8
+
+    # in production builds we don't need the stupid warnings
+    if not __debug__:
+        import warnings
+        def ignorer(*args, **kwargs): pass
+        warnings.showwarning=ignorer
     
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
