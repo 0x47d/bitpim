@@ -323,7 +323,7 @@ class PhoneGrid(wxGrid):
 
         self.DisableCellEditControl()
         success=self.MoveCursorRight(event.ShiftDown())
-        # move to next row maybe?
+        # ::TODO:: move to next row if success is false
 
     def OnLeftDClick(self, _):
         if self.CanEnableCellControl():
@@ -399,7 +399,10 @@ class GetPhoneDialog(wxDialog):
     NOTREQUESTED=0
     MERGE=1
     OVERWRITE=2
-    
+
+
+    # ::TODO:: ok button should be grayed out unless at least one category is
+    # picked
     def __init__(self, frame, title, id=-1):
         wxDialog.__init__(self, frame, id, title,
                           style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE)
@@ -2152,7 +2155,6 @@ class AlertDialogWithHelp(wxDialog):
 
 if __name__=='__main__':
     def func(_): print "helpfunc called"
-    from wxPython.wx import *
     app=wxPySimpleApp()
     dlg=wxMessageDialog(None, "Test of builtin", "builtin", wxOK|wxHELP|wxICON_INFORMATION)
     dlg.ShowModal()
