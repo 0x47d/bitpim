@@ -84,6 +84,8 @@ as a proper class (and the demo is now converted to just use it.)
 
 
     def MakeChildVisible(self, child):
+        if child is self: # bizarrely this gets called
+            return
         sppu_x, sppu_y = self.GetScrollPixelsPerUnit()
         vs_x, vs_y   = self.GetViewStart()
         print "viewstart", vs_x, vs_y
