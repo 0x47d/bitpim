@@ -1033,7 +1033,7 @@ class WorkerThread(WorkerThreadFramework):
             import commport
             if self.dispatchto.commportsetting is None or \
                len(self.dispatchto.commportsetting)==0:
-                raise common.CommsNeedConfiguring("LGVX4400", "Comm port not configured")
+                raise common.CommsNeedConfiguring("Comm port not configured", "DEVICE")
 
             if self.dispatchto.commportsetting=="auto":
                 autofunc=comdiagnose.autoguessports
