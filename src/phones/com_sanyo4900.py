@@ -36,6 +36,8 @@ class Phone(com_sanyo.Phone):
                        'Birds', 'Toy Box' )
                       
     calendar_defaultringtone=0
+    calendar_tonerange=xrange(100,100)
+    calendar_toneoffset=0
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
@@ -45,8 +47,8 @@ class Phone(com_sanyo.Phone):
 
 class Profile(com_sanyo.Profile):
 
-    protocolclass=p_sanyo4900
-    serialsname='scp4900'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=128
@@ -54,4 +56,3 @@ class Profile(com_sanyo.Profile):
     
     def __init__(self):
         com_sanyo.Profile.__init__(self)
-
