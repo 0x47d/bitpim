@@ -1,8 +1,25 @@
 #
 # Test data for usb_ids.py
 #
+
+# phones
 1004  LG Electroncs
-	6000  LG VX6000 Phone
-		00  Config Interface
-		01  USB Modem Interface
-		02  Vendor Specific Interface
+	6000  VX4400/VX6000 Phone
+		01  Modem Interface
+		02  Diagnostics Interface
+0474  Sanyo
+	0701  SCP 4900 Phone
+		01  Modem/Diagnostics Interface
+
+# USB to serial cables
+
+067b  FutureDial cable (Prolific Technology chip)
+	2303  USB to serial convertor
+		00  Serial connection
+
+0403  LG Cable (FTDI chip)
+	6001  USB to serial convertor
+		00  Serial connection
+
+
+	
