@@ -810,6 +810,7 @@ class SanyoPhonebook:
         
 
     # Error codes
+    # 0x13 Unknown command
     # 0x14 Bad media command
     # 0x6d on sendfileterminator
     # 0x65 not in sync mode on sendfilename
@@ -822,6 +823,15 @@ class SanyoPhonebook:
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         desc="Writing "+name
 
+        # The newer phones can be put in PC Sync mode with these commands
+        if hasattr(self.protocolclass,"sanyomediathingyrequest"):
+            req=self.protocolclass.sanyomediathingyrequest()
+            req.faset = 0x10
+            res=self.sendpbcommand(req, self.protocolclass.sanyomediathingyresponse)
+            time.sleep(10.0)
+            req.faset = 0x13
+            res=self.sendpbcommand(req, self.protocolclass.sanyomediathingyresponse)
+        
 	req=self.protocolclass.sanyosendfilename()
 	req.filename=name
         res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, returnerror=True)
@@ -1134,8 +1144,10 @@ def phonize(str):
 class Profile(com_phone.Profile):
     serialsname='sanyo'
 
-    WALLPAPER_WIDTH=90
-    WALLPAPER_HEIGHT=96
+    WALLPAPER_WIDTH=120
+    WALLPAPER_HEIGHT=128
+    OVERSIZE_PERCENTAGE=100
+    
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
@@ -1159,6 +1171,8 @@ class Profile(com_phone.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'OVERWRITE'),
         )
 
 ### Some drop in replacement routines for phonebook.py that can be moved
