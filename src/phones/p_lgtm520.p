@@ -2,8 +2,8 @@
 ###
 ### Copyright (C) 2003 Scott Craig <scott.craig@shaw.ca>
 ###
-### This software is under the Artistic license.
-### http://www.opensource.org/licenses/artistic-license.php
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 
 
