@@ -1002,11 +1002,15 @@ class MainWindow(wx.Frame):
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
-                id(self.wallpaperwidget): guihelper.ART_ADD_WALLPAPER,
-                id(self.phonewidget): guihelper.ART_ADD_CONTACT}
+                   id(self.wallpaperwidget): guihelper.ART_ADD_WALLPAPER,
+                   id(self.phonewidget): guihelper.ART_ADD_CONTACT,
+                   id(self.memowidget): guihelper.ART_ADD_MEMO,
+                   }
         mapbmpdelete={id(self.ringerwidget): guihelper.ART_DEL_RINGER,
-                   id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
-                   id(self.phonewidget): guihelper.ART_DEL_CONTACT}
+                      id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
+                      id(self.phonewidget): guihelper.ART_DEL_CONTACT,
+                      id(self.memowidget): guihelper.ART_DEL_MEMO,
+                      }
         bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooladd.SetNormalBitmap(bmpadd)
         bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
