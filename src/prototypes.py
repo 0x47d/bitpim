@@ -398,7 +398,98 @@ class STRING(BaseProtogenClass):
             raise ValueNotSetException()
         return self._value
 
+class COUNTEDBUFFEREDSTRING(BaseProtogenClass):
+    """A string as used on Audiovox.  There is a one byte header saying how long the string
+    is, followed by the string in a fixed sized buffer"""
+    def __init__(self, *args, **kwargs):
+        """
+        A string value can be specified to this constructor, or in the value keyword arg.
 
+        @keyword constant: (Optional) A constant value.  All reads must have this value
+        @keyword pad: (Default=32 - space) When writing, what to pad the rest of the buffer with
+        @keyword default: (Optional) Our default value
+        @keyword raiseontruncate: (Default True) raise L{ValueLengthException} if the supplied
+             value is too large to fit within the buffer.
+        @keyword value: (Optional) Value
+        @keyword sizeinbytes: (Mandatory) Size of the buffer, including the count byte
+        """
+        super(COUNTEDBUFFEREDSTRING,self).__init__(*args, **kwargs)
+
+        self._constant=None
+        self._pad=32
+        self._sizeinbytes=None
+        self._default=None
+        self._raiseontruncate=True
+        self._value=None
+
+        if self._ismostderived(COUNTEDBUFFEREDSTRING):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(COUNTEDBUFFEREDSTRING,self)._update(args, kwargs)
+
+        self._consumekw(kwargs, ("constant", "pad", "sizeinbytes", "default", "raiseontruncate", "value"))
+        self._complainaboutunusedargs(COUNTEDBUFFEREDSTRING,kwargs)
+        # Set our value if one was specified
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            self._value=str(args[0])
+            if self._constant is not None and self._constant!=self._value:
+                raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+        if self._value is None and self._default is not None:
+            self._value=self._default
+
+        if self._sizeinbytes is None:
+            raise ValueError("sizeinbytes must be specified for COUNTEDBUFFEREDSTRING")
+
+        if self._value is not None:
+            l=len(self._value)
+            if l>self._sizeinbytes-1:
+                if self._raiseontruncate:
+                    raise ValueLengthException(l, self._sizeinbytes-1)
+                    
+                self._value=self._value[:self._sizeinbytes-1]
+
+    def readfrombuffer(self, buf):
+        assert self._sizeinbytes is not None
+        self._bufferstartoffset=buf.getcurrentoffset()
+
+        strlen=buf.getnextbyte()
+        if strlen>self._sizeinbytes-1:
+            raise ValueError("counter specifies size of %d which is greater than remaining stringbuffer size of %d!" % (strlen, self._sizeinbytes-1))
+        self._value=buf.getnextbytes(self._sizeinbytes-1) # -1 due to counter byte
+        self._value=self._value[:strlen]
+        if self._constant is not None and self._value!=self._constant:
+            raise ValueError("The value read was not the constant")
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        assert self._sizeinbytes is not None
+        if self._value is None:
+            raise ValueNotSetException()
+
+        self._bufferstartoffset=buf.getcurrentoffset()
+        buf.appendbyte(len(self._value))
+        buf.appendbytes(self._value)
+        if len(self._value)+1<self._sizeinbytes:
+            buf.appendbytes(chr(self._pad)*(self._sizeinbytes-1-len(self._value)))
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def packetsize(self):
+        assert self._sizeinbytes is not None
+        return self._sizeinbytes
+
+    def getvalue(self):
+        """Returns the string we are"""
+        if self._value is None:
+            raise ValueNotSetException()
+        return self._value
+            
 class DATA(BaseProtogenClass):
     "A block of bytes"
     def __init__(self, *args, **kwargs):
