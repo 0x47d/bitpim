@@ -11,6 +11,8 @@
 
 import os
 
+import midifile
+
 class FailedFile:
     def GetBytes(*args):   return None
     def GetLSBUint32(*args): return None
@@ -37,7 +39,7 @@ class SafeFileWrapper:
     def GetBytes(self, offset, length):
         if offset+length<len(self.data):
             return self.data[offset:offset+length]
-        if offset+length>=self.size:
+        if offset+length>self.size:
             return None
         self.file.seek(offset)
         res=self.file.read(length)
@@ -316,18 +318,18 @@ def idaudio_MIDI(f):
     # You can't work out the length without working out
     # which track is the longest which you have to do by
     # parsing each note.
-    if f.GetBytes(0,4)=="MThd" and f.GetMSBUint32(4)==6:
-        d={'format': "MIDI"}
-        d['type']=f.GetMSBUint16(8)
-        d['numtracks']=f.GetMSBUint16(10)
-        d['division']=f.GetMSBUint16(12)
-        d['_shortdescription']=fmts_MIDI
-        d['mimetypes']=['audio/x-midi', 'audio/midi']
-        for i in d.itervalues():
-            if i is None:  return None
-        afi=AudioFileInfo(f,**d)
-        return afi
-    return None
+    m=midifile.MIDIFile(f)
+    if not m.valid:
+        return None
+    d={'format': "MIDI"}
+    d['type']=m.type
+    d['numtracks']=m.num_tracks
+    d['duration']=m.duration
+    d['_shortdescription']=fmts_MIDI
+    for i in d.itervalues():
+        if i is None:  return None
+    afi=AudioFileInfo(f,**d)
+    return afi
 
 def fmts_MIDI(afi):
     res=[]
@@ -335,6 +337,7 @@ def fmts_MIDI(afi):
     res.append( "type "+`afi.type`)
     if afi.type!=0 and afi.numtracks>1:
         res.append("(%d tracks)" % (afi.numtracks,))
+    res.append('%0.1f seconds'%afi.duration)
     # res.append("%04x" % (afi.division,))
     return " ".join(res)
 
@@ -370,6 +373,22 @@ def idaudio_MP3(f, returnframes=False):
         header=f.GetMSBUint32(offset)
     else:
         offset=0
+    # locate the 1st sync frame
+    found_sync=False
+    while offset<(f.size/2):
+        # if we can't find it half way into the file, it ain't there
+        # looking for the 1st 8-ones
+        if f.GetByte(offset)==0xff:
+            # and the next 3-ones
+            if (f.GetByte(offset+1)&0xe0)==0xe0:
+                found_sync=True
+                break
+        offset+=1
+    if __debug__:
+        print 'found_sync:', found_sync, ', offset:', offset
+    # not and MP3 file
+    if not found_sync:
+        return
 
     frames=[]
     while offset<f.size:
@@ -500,7 +519,10 @@ class MP3Frame:
         if self.layer==1:
             self.framelength=(12000*self.bitrate/self.samplerate+self.padding)*4
         else:
-            self.framelength=144000*self.bitrate/self.samplerate+self.padding
+            if self.version==1:
+                self.framelength=144000*self.bitrate/self.samplerate+self.padding
+            else:
+                self.framelength=72000*self.bitrate/self.samplerate+self.padding
         self.duration=self.framelength*8*1.0/(self.bitrate*1000)
         self.private=_getbits(8,1,header)
         self.channelmode=_getbits(7,2,header)
@@ -517,7 +539,10 @@ class MP3Frame:
 
         self.offset=offset
         self.nextoffset=offset+self.framelength
-        if f.GetByte(self.nextoffset)!=0xff:
+        b=f.GetByte(self.nextoffset)
+        if b is not None and b!=0xff:
+            if __debug__:
+                print 'Out of sync, backing up 1 byte'
             # sometimes this ends up being off by one and I can't figure out why
             if f.GetBytes(self.nextoffset-1,2)=="\xff\xf3":
                 self.nextoffset-=1
