@@ -13,6 +13,7 @@
 
 # standard modules
 import os
+import sys
 import time
 import copy
 import cStringIO
@@ -435,6 +436,8 @@ class ConfigDialog(wx.Dialog):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
         if self.mw.config.Read("phonetype", "") in self.phonemodels:
             self.phonebox.SetValue(self.mw.config.Read("phonetype"))
+        if self.bitflingenabled is not None:
+            self.bitflingenabled.SetValue(self.mw.config.ReadInt("bitfling/enabled", 0))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -475,6 +478,10 @@ class ConfigDialog(wx.Dialog):
         self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
         self.mw.phoneprofile=self.mw.phonemodule.Profile()
         pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
+        #  bitfling
+        if self.bitflingenabled is not None:
+            self.mw.bitflingenabled=self.bitflingenabled.GetValue()
+            self.mw.config.WriteInt("bitfling/enabled", self.mw.bitflingenabled)
         # ensure config is saved
         self.mw.config.Flush()
         
@@ -678,7 +685,7 @@ class BitFlingSettingsDialog(wx.Dialog):
     ID_HOST=wx.NewId()
     ID_PORT=wx.NewId()
     ID_TEST=wx.NewId()
-    passwordsentinel="\x01\x02\x03\x04\x05\x06\x07\x08"
+    passwordsentinel="@+_-3@<,"
 
     def __init__(self, parent, config):
         wx.Dialog.__init__(self, parent, -1, "Edit BitFling settings", style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -742,8 +749,16 @@ class BitFlingSettingsDialog(wx.Dialog):
         self.config.WriteInt("bitfling/port", port)
 
     def OnTest(self,_):
-        res=bitflingscan.flinger.connect(*self.GetSettings())
-        print "OnTest got back "+`res`
+        try:
+            res=bitflingscan.flinger.connect(*self.GetSettings())
+            dlg=wx.MessageDialog(self, "Succeeded. It is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+        except:
+            res="Failed: %s: %s" % sys.exc_info()[:2]
+            dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
 
 ###
 ### File viewer
