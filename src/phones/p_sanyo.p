@@ -62,11 +62,14 @@ PACKET statusrequest:
 PACKET statusresponse:
     P UINT {'constant': 0x0} readyvalue
     1 UINT command
-    7 UNKNOWN dunno1
-    1 UINT flag1
+    3 UNKNOWN dunno1
+    4 UINT esn
+    1 UINT flag0
     14 UNKNOWN dunno2
     1 UINT ready
     1 UINT dunno3
+    1 UINT flag2
+    6 UINT dunno4
     1 UINT flag3
     * UNKNOWN unknown
     
