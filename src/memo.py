@@ -200,7 +200,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             gs.Add(w, 0, wx.EXPAND|wx.BOTTOM, 5)
             n[self.__w_index]=w
         # event handlers
-        wx.EVT_CHECKBOX(self, self.__fields[1][self.__w_index].GetId(),
+        wx.EVT_CHECKBOX(self, self.__fields[2][self.__w_index].GetId(),
                         self.OnMakeDirty)
         # all done
         self.SetSizer(gs)
