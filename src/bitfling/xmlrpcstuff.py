@@ -71,8 +71,7 @@ class ServerChannel(paramiko.Channel):
             xml=self.readall(length)
             response=conn.processxmlrpcrequest(xml, self.get_transport().peeraddr,
                                            self.get_transport().bf_auth_username)
-            self.sendall( "%08d" % (len(response),))
-            self.sendall(response)
+            self.sendall( ("%08d" % (len(response),))+response)
 
 class ServerTransport(paramiko.Transport):
 
@@ -401,7 +400,7 @@ class Server(threading.Thread):
         if __debug__ and TRACE: print "%s %s (user=%s, client=%s)" % (method, `tuple(params)`, username, `clientaddr`)
         if method=='add' and len(params)==2:
             return params[0]+params[1]
-        raise Exception("Unknown method "+method)
+        raise xmlrpclib.Fault(10, "Unknown method "+method)
 
 # Copied from xmlrpclib.  This version is slightly modified to be derived from
 # object.  The reason is that if you print a _Method object, then the __str__
@@ -449,9 +448,10 @@ class ServerProxy:
         event.wait(15)
         if not t.is_active():
             raise Exception("No SSH on the other end: %s/%d" % (self.__host, self.__port) )
-        keytype, hostkey=t.get_remote_server_key()
+        key=t.get_remote_server_key()
+        
         if self.__certverifier is not None:
-            res=self.__certverifier( (self.__host, self.__port), keytype, hostkey)
+            res=self.__certverifier( (self.__host, self.__port), key)
             if not res:
                 raise CertificateNotAcceptedException("Certificate not accepted for  %s @ %s:%d" % (self.__username, self.__host, self.__port))
         event=threading.Event()
@@ -483,8 +483,7 @@ class ServerProxy:
     def __send(self, methodname, args):
         self.__ensure_channel()
         request=xmlrpclib.dumps(args, methodname, encoding=None) #  allow_none=False (allow_none is py2.3+)
-        self.__channel.sendall( "%08d" % (len(request),))
-        self.__channel.sendall(request)
+        self.__channel.sendall( ("%08d" % (len(request),))+request)
         resplen=self.__recvall(self.__channel, 8)
         resplen=int(resplen)
         response=self.__recvall(self.__channel, resplen)

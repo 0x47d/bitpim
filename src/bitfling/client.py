@@ -19,10 +19,10 @@ import xmlrpcstuff
 class client:
     "A BitFling client"
 
-    # although we could just inherit straight from
-    # ServerProxy, this code is here to help ensure
-    # calling convention, and in the future deal with
-    # backwards compatibility issues
+    # Although we could just inherit straight from ServerProxy, this
+    # code is here to help ensure calling convention, and in the
+    # future deal with backwards compatibility issues.  We also deal
+    # with XMLRPC specific issues such as marshalling binary data
     
     def __init__(self, username, password, host, port, certverifier=None):
         "The URL should include username and password if any"
@@ -47,7 +47,7 @@ class client:
         return self.server.devicewrite(handle, Binary(data))
 
     def devicereaduntil(self, handle, char, numfailures):
-        return self.server.devicereaduntil(handle, char, numfailures).data
+        return self.server.devicereaduntil(handle, Binary(char), numfailures).data
 
     def deviceread(self, handle, numchars):
         return self.server.deviceread(handle, numchars).data
@@ -56,4 +56,4 @@ class client:
         return self.server.devicereadsome(handle).data
 
     def devicewritethenreaduntil(self, handle, data, char, numfailures):
-        return self.server.devicewritethenreaduntil(handle, Binary(data), char, numfailures).data
+        return self.server.devicewritethenreaduntil(handle, Binary(data), Binary(char), numfailures).data

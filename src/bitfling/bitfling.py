@@ -402,6 +402,7 @@ class MainWindow(wx.Frame):
         wx.GetApp().SetAppName(cfgstr)
         wx.GetApp().SetVendorName(cfgstr)
 
+        self.setuphelp()
         
         wx.EVT_CLOSE(self, self.CloseRequested)
 
@@ -413,9 +414,9 @@ class MainWindow(wx.Frame):
         bs.Add(self.nb, 1, wx.EXPAND|wx.ALL, 5)
         bs.Add(wx.StaticLine(panel, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
 
-        gs=wx.GridSizer(1,3, 5, 5)
+        gs=wx.GridSizer(1,4, 5, 5)
 
-        for name in ("Rescan", "Hide", "Exit" ):
+        for name in ("Rescan", "Hide", "Help", "Exit" ):
             but=wx.Button(panel, wx.NewId(), name)
             setattr(self, name.lower(), but)
             gs.Add(but)
@@ -429,12 +430,9 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.configpanel, "Configuration")
         self.lw=guihelper.LogWindow(self.nb)
         self.nb.AddPage(self.lw, "Log")
-        html=wx.html.HtmlWindow(self.nb, -1)
-        wx.CallAfter(html.LoadPage, guihelper.getresourcefile("bitfling.html"))
-        self.nb.AddPage(html, "Help")
-
 
         wx.EVT_BUTTON(self, self.hide.GetId(), self.OnHideButton)
+        wx.EVT_BUTTON(self, self.help.GetId(), self.OnHelpButton)
         wx.EVT_BUTTON(self, self.exit.GetId(), self.OnExitButton)
 
         EVT_XMLSERVER(self, self.OnXmlServerEvent)
@@ -442,7 +440,23 @@ class MainWindow(wx.Frame):
         self.xmlrpcserver=None
         wx.CallAfter(self.StartIfICan)
 
+    def setuphelp(self):
+        """Does all the nonsense to get help working"""
+        import wx.html
+        # htmlhelp isn't correctly wrapper in wx package
+        from wxPython.htmlhelp import wxHtmlHelpController
+        # Add the Zip filesystem
+        wx.FileSystem_AddHandler(wx.ZipFSHandler())
+        # Get the help working
+        self.helpcontroller=wxHtmlHelpController()
+        self.helpcontroller.AddBook(guihelper.getresourcefile("bitpim.htb"))
+        self.helpcontroller.UseConfig(self.config, "help")
 
+        # now context help
+        # (currently borken)
+        # self.helpprovider=wx.HelpControllerHelpProvider(self.helpcontroller)
+        # wx.HelpProvider_Set(provider)
+        
     def IsConnectionAllowed(self, peeraddr, username=None, password=None):
         """Verifies if a connection is allowed
 
@@ -576,6 +590,10 @@ class MainWindow(wx.Frame):
     def OnHideButton(self, _):
         self.Show(False)
 
+    def OnHelpButton(self, _):
+        import helpids
+        self.helpcontroller.Display(helpids.ID_BITFLING)
+
     def Log(self, text):
         if thread.get_ident()!=guithreadid:
             wx.PostEvent(self, XmlServerEvent(cmd="log", data=text))
@@ -613,9 +631,16 @@ class MainWindow(wx.Frame):
     def StartIfICan(self):
         certfile=self.GetCertificateFilename()
         if not os.path.isfile(certfile):
-            bi=wx.BusyInfo("Creating host certificate & keys")
-            ret=generate_certificate(certfile)
-            del bi
+            wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+            bi=wx.BusyInfo("Creating BitFling host certificate and keys")
+            try:
+                generate_certificate(certfile)
+                if not os.path.isfile(certfile):
+                    # ::TODO:: report that we failed
+                    certfile=None
+            finally:
+                del bi
+                wx.EndBusyCursor()
         port=self.config.ReadInt("port", 12652)
         if port<1 or port>65535: port=None
         host=self.config.Read("bindaddress", "")
@@ -634,13 +659,9 @@ class MainWindow(wx.Frame):
         
 
 def generate_certificate(outfile):
-    if guihelper.IsMSWindows():
-        cmd=guihelper.getresourcefile("ssh-keygen.exe")
-    else:
-        cmd="ssh-keygen"
+    key=paramiko.DSSKey.generate()
+    key.write_private_key_file(outfile, None)
 
-    ret=guihelper.run (cmd, "-q", "-t", "dsa", "-f", outfile, "-N", "")
-    return ret
 
 
 class XMLRPCService(xmlrpcstuff.Server):
@@ -714,7 +735,7 @@ class BitFlingService(XMLRPCService):
         return len(data.data)
 
     def exp_devicereaduntil(self, handle, char, numfailures, context):
-        return Binary(self.gethandle(context, handle).readuntil(char, numfailures=numfailures))
+        return Binary(self.gethandle(context, handle).readuntil(char.data, numfailures=numfailures))
 
     def exp_deviceread(self, handle, numchars, context):
         return Binary(self.gethandle(context, handle).read(numchars))
@@ -723,7 +744,7 @@ class BitFlingService(XMLRPCService):
         return Binary(self.gethandle(context, handle).readsome())
 
     def exp_devicewritethenreaduntil(self, handle, data, char, numfailures, context):
-        return self.gethandle(context, handle).writethenreaduntil(data.data, False, char, False, False, numfailures)
+        return Binary(self.gethandle(context, handle).writethenreaduntil(data.data, False, char.data, False, False, numfailures))
 
 def run(args):
     theApp=wx.PySimpleApp()
