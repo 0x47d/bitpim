@@ -354,9 +354,17 @@ class LogWindow(wxPanel):
         self.SetSizer(self.sizer)
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
-        
+        EVT_IDLE(self, self.OnIdle)
+        self.outstandingtext=""
+
+
+    def OnIdle(self,_):
+        if len(self.outstandingtext):
+            self.tb.AppendText(self.outstandingtext)
+            self.outstandingtext=""
+
     def log(self, str):
-        self.tb.AppendText(str+"\r\n")
+        self.outstandingtext+=str+"\r\n"
 
     def logdata(self, str, data):
         self.log("%s - Data %d bytes" % (str, len(data),))
