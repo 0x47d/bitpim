@@ -147,6 +147,7 @@ class Phone:
         # We then write out our records, usng overwrite or append
         # commands as necessary
         existingpbook={}
+        self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
         # similar loop to reading
