@@ -1,6 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2004 Adit Panchal <apanchal@bastula.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -1194,8 +1195,10 @@ class ImportDialog(wx.Dialog):
                 result["names"]=[r]
             elif key=="numbers":
                 result['numbers']=mergenumberlists(o['numbers'], i['numbers'])
+            elif key=="urls":
+                result['urls']=mergefields(o['urls'], i['urls'], 'url', cleaner=cleanurl)
             else:
-                result[key]=o[key]+i[key]
+                result[key]=common.list_union(o[key], i[key])
 
         return result
         
@@ -1307,6 +1310,10 @@ def comparenames(s,a):
     r=(sm.ratio()-0.6)*10
     return r
 
+urlprefix=re.compile("^(http://)?(www.)?")
+def cleanurl(url):
+    "Returns lowercase url with the ""http://www."" prefix removed"
+    return default_cleaner(re.sub(urlprefix, "", url).lower())
 
 nondigits=re.compile("[^0-9]")
 def cleannumber(num):
@@ -1436,6 +1443,103 @@ def mergenumberlists(orig, imp):
         res.append(i)
 
     return res
+
+def default_cleaner(param):
+    """Clean fields for merging.  In particular * characters have to be
+    removed since winkler uses them internally"""
+    # ::TODO:: reimplment winkler and use a different special character such as an unprintable one
+    return param.replace("*", "")
+
+def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
+    """Return the results of merging two lists of fields
+
+    We compare the fields. If they are the same, then the original is kept
+    (since the name is the same, and the original most likely has the 
+    correct punctuation).
+
+    Otherwise the imported entries overwrite the originals
+    """
+    # results start with existing entries
+    res=[]
+    res.extend(orig[:])
+    # look through each imported field
+    for i in imp:
+        print i
+
+        impfield=cleaner(i[field])
+        
+        found=False
+        for r in res:
+            # if the imported entry is similar or the same as the
+            # original entry, then we stop
+            
+            # add code for short or long lengths
+            # since cell phones usually have less than 16-22 chars max per field
+
+            resfield=cleaner(r[field])
+
+            if (comparestrings(resfield, impfield) > threshold):
+                # an existing entry was matched so we stop
+                found=True
+                
+                # since new item matches, we don't need to replace the
+                # original value, but we should update the type of item
+                # to reflect the imported value
+                # for example home --> business
+                if i.has_key('type'):
+                    r['type'] = i['type']
+                
+                # break out of original item loop
+                break
+        
+        # if we have found the item to be imported, we can move to the next one         
+        if found:
+            continue
+
+        # since there is no matching item, we will replace the existing item
+        # if a matching type exists
+        found=False
+        for r in res:
+            if (i.has_key('type') and r.has_key('type')):
+                if i['type']==r['type']:
+                    r[field]=i[field]
+                    found=True
+                    break
+        if found:
+            continue
+        # add new item on the end if there no matching type
+        res.append(i)
+
+    return res
+
+try:
+    # Try to use febrl's winkler ...
+    import stringcmp
+    stringcmp.winkler
+
+    def comparestrings(origfield, impfield):
+        """ Compares two strings and returns the score using 
+        winkler routine from Febrl (stringcmp.py)
+        built-in difflib (if stringcmp.py isn't available).
+        
+        Return value is between 0.0 and 1.0, where 0.0 means no similarity
+        whatsoever, and 1.0 means the strings match exactly."""
+        return stringcmp.winkler(origfield, impfield)
+
+except:
+    # fallback on difflib
+    import difflib
+    def comparestrings(origfield, impfield):
+        """ Compares two strings and returns the score using either the
+        winkler routine from Febrl (stringcmp.py) or Python's
+        built-in difflib (if stringcmp.py isn't available).
+        
+        Return value is between 0.0 and 1.0, where 0.0 means no similarity
+        whatsoever, and 1.0 means the strings match exactly."""
+        sm=difflib.SequenceMatcher()
+        sm.set_seq1(origfield)
+        sm.set_seq2(impfield)
+        return sm.ratio()
 
 class ColumnSelectorDialog(wx.Dialog):
     "The dialog for selecting what columns you want to view"
