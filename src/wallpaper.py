@@ -348,7 +348,10 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
     @param useheight: the height of the new image
     @param bgcolor: the background colour as a string ("ff0000" is red etc).  If this
                     is none then the background is made transparent"""
-    bitmap=wx.EmptyBitmap(usewidth, useheight, 24)
+    if bgcolor is None:
+        bitmap=wx.EmptyBitmap(usewidth, useheight, 24) # have to use 24 bit for transparent background
+    else:
+        bitmap=wx.EmptyBitmap(usewidth, useheight)
     mdc=wx.MemoryDC()
     mdc.SelectObject(bitmap)
     # scale the source. 
