@@ -34,7 +34,9 @@ if x[1]<10:  # ie .6 not .62
     x[1]=x[1]*10
 assert x[1]>=10 and x[1]<=99
 x.append(x[1]%10)
-x[1]=x[1]/10
+# we don't normalise (ie 0.6 is left as 0.60 because 0.62 was shipped as 0.62.0.0 and 0.7 as 0.7.0.0 is less than that)
+# we can only fix this once the major version number changes
+# x[1]=x[1]/10
 if testver:
     x.append(testver)
 else:
