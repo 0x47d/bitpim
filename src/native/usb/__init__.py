@@ -9,5 +9,8 @@
 
 # Keep python happy that this is a module
 
-import usb
+# bring everything into ournamespace
+from  usb import *
+
+# if this is unavailable, the above would have failed anyway
 import libusb

@@ -13,7 +13,6 @@ version="7 December 2003"
 
 try:
     import native.usb as usb
-    usb=usb.usb
 except ImportError:
     usb=None
 

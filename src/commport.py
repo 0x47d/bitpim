@@ -14,7 +14,6 @@ import common
 import time
 try:
     import native.usb as usb
-    usb=usb.usb
 except:
     usb=None
 
