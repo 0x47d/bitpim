@@ -71,6 +71,18 @@ class Session:
                     item[k]=datetime.datetime(*v)
             yield item
 
+    def doescontactexist(self, id):
+        try:
+            self.sp.addressbook.boaddressbook.read({'id': id})
+            return True
+        except xmlrpclib.Fault:
+            # in theory only fault 10 - Entry does not (longer) exist!
+            # should be looked for.  Unfortunately egroupware has a
+            # bug and returns fault 9 - Access denied if the id
+            # doesn't exist.  So we consider any failure to mean
+            # that the id doesn't exist.  Reported as SF bug #1057984
+            return False
+
     def getcontacts(self):
         "returns all contacts"
         # internally we read them a group at a time
@@ -166,6 +178,7 @@ if __name__=='__main__':
     import sys
     import common
     s=getsession(*sys.argv[1:])
+    print s.getcategories()
     for n,i in enumerate(s.getcontacts()):
         print n,common.prettyprintdict(i)
         
