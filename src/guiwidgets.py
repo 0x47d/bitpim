@@ -412,9 +412,11 @@ class LogWindow(wxPanel):
         if data is not None:
             hd="Data - "+`len(data)`+" bytes\n"
             if klass is not None:
-                if getattr(klass, "__class__") is not None:
+                try:
+                    hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+                except:
                     klass=klass.__class__
-                hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+                    hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
             hd+=common.datatohexstring(data)
         self.log("%s %s" % (str, hd))
 
@@ -2341,7 +2343,7 @@ class ExceptionDialog(MyFixedScrolledMessageDialog):
         s=StringIO.StringIO()
         s.write("An unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
         if hasattr(exception, 'gui_exc_info'):
-            s.write(common.formatexception(*(exception.gui_exc_info)))
+            s.write(common.formatexception(exception.gui_exc_info))
         else:
             s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
 
