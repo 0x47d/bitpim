@@ -23,19 +23,25 @@ import guiwidgets
 no_end_date=(4000, 1, 1, 0, 0)
 
 def bp_date_str(dict, v):
-    if dict.get('allday', False):
-        return '%04d-%02d-%02d'%v[:3]
-    else:
-        return '%04d-%02d-%02d  %02d:%02d'% v
+    try:
+        if dict.get('allday', False):
+            return '%04d-%02d-%02d'%v[:3]
+        else:
+            return '%04d-%02d-%02d  %02d:%02d'% v
+    except:
+        return ''
 
 def bp_alarm_str(dict, v):
-    if dict.get('alarm', False):
-        v=dict.get('alarm_value', 0)
-        if v:
-            return '-%d min'%v
+    try:
+        if dict.get('alarm', False):
+            v=dict.get('alarm_value', 0)
+            if v:
+                return '-%d min'%v
+            else:
+                return 'Ontime'
         else:
-            return 'Ontime'
-    else:
+            return ''
+    except:
         return ''
 
 def category_str(dict, v):

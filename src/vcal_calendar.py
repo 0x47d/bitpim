@@ -22,6 +22,8 @@ import bptime
 import common_calendar
 import vcard
 
+module_debug=False
+
 #-------------------------------------------------------------------------------
 class vCalendarFile(object):
     def __init__(self, file_name=None):
@@ -139,28 +141,27 @@ class VCalendarImportData(object):
         if rp_end is not None:
             # end date specified
             ce.end=rp_end[:3]+ce.end[3:]
-        elif rp_num is not None:
+        elif rp_num is not None and rp_num:
             # num of occurrences specified
-            if rp_num:
-                if rp_type=='daily':
-                    bp_t=bptime.BPTime(ce.start)+ \
-                          datetime.timedelta(rp_interval*(rp_num-1))
-                    ce.end=bp_t.get()[:3]+ce.end[3:]
-                elif rp_type=='weekly':
-                    bp_t=bptime.BPTime(ce.start)+ \
-                          datetime.timedelta(7*rp_interval*(rp_num-1))
-                    ce.end=bp_t.get()[:3]+ce.end[3:]
-                elif rp_type=='monthly':
-                    bp_t=bptime.BPTime(ce.start)+ \
-                          datetime.timedelta(30*(rp_num-1))
-                    ce.end=bp_t.get()[:2]+ce.end[2:]
-                else:                    
-                    bp_t=bptime.BPTime(ce.start)+ \
-                          datetime.timedelta(365*(rp_num-1))
-                    ce.end=bp_t.get()[:1]+ce.end[1:]
-            else:
-                # forever duration
-                ce.end=common_calendar.no_end_date
+            if rp_type=='daily':
+                bp_t=bptime.BPTime(ce.start)+ \
+                      datetime.timedelta(rp_interval*(rp_num-1))
+                ce.end=bp_t.get()[:3]+ce.end[3:]
+            elif rp_type=='weekly':
+                bp_t=bptime.BPTime(ce.start)+ \
+                      datetime.timedelta(7*rp_interval*(rp_num-1))
+                ce.end=bp_t.get()[:3]+ce.end[3:]
+            elif rp_type=='monthly':
+                bp_t=bptime.BPTime(ce.start)+ \
+                      datetime.timedelta(30*(rp_num-1))
+                ce.end=bp_t.get()[:2]+ce.end[2:]
+            else:                    
+                bp_t=bptime.BPTime(ce.start)+ \
+                      datetime.timedelta(365*(rp_num-1))
+                ce.end=bp_t.get()[:1]+ce.end[1:]
+        else:
+            # forever duration
+            ce.end=common_calendar.no_end_date
         # add the list of exceptions
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])
@@ -176,11 +177,17 @@ class VCalendarImportData(object):
             ce.priority=v
         if e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
-        ce.start=e.get('start', None)
-        ce.end=e.get('end', None)
-        if ce.start is None and ce.end is not None:
+        ce_start=e.get('start', None)
+        ce_end=e.get('end', None)
+        if ce_start is None and ce_end is None:
+            raise ValueError, "No start or end datetime"
+        if ce_start is not None:
+            ce.start=ce_start
+        if ce_end is not None:
+            ce.end=ce_end
+        if ce_start is None:
             ce.start=ce.end
-        elif ce.end is None and ce.start is not None:
+        elif ce_end is None:
             ce.end=ce.start
         ce.notes=e.get('notes', None)
         v=[]
@@ -193,10 +200,14 @@ class VCalendarImportData(object):
     def get(self):
         res={}
         for k in self.__data:
-            if self.__accept(k):
-                ce=bpcalendar.CalendarEntry()
-                self.__populate_entry(k, ce)
-                res[ce.id]=ce
+            try:
+                if self.__accept(k):
+                    ce=bpcalendar.CalendarEntry()
+                    self.__populate_entry(k, ce)
+                    res[ce.id]=ce
+            except:
+                if module_debug:
+                    raise
         return res
 
     def get_category_list(self):
@@ -271,41 +282,35 @@ class VCalendarImportData(object):
         try:
             # acceptable format: MD1 <day number> <end date | #duration>
             s=v['value'].split(' ')
-            if len(s)>3 or s[0]!='MD1':
+            if s[0]!='MD1':
                 return False
-            if len(s)==3:
-                # day-of-month specified
-                dom=int(s[1])
-                dd['start']=dd['start'][:2]+(dom,)+dd['start'][3:]
-                dd['end']=dd['end'][:2]+(dom,)+dd['end'][3:]
             n=s[-1]
-            if n[0].isdigit():
+            if len(n)>7 and n[:8].isdigit():
+                # end date/time specified
                 dd['repeat_end']=bptime.BPTime(n).get()
             elif n[0]=='#':
                 dd['repeat_num']=int(n[1:])
             dd['repeat_type']='monthly'
             return True
         except:
+            if module_debug: raise
             return False
     def __process_yearly_rule(self, v, dd):
         try:
             # acceptable format YM1 <Month number> <end date | #duration>
             s=v['value'].split(' ')
-            if len(s)>3 or s[0]!='YM1':
+            if s[0]!='YM1':
                 return False
-            if len(s)==3:
-                # month-of-year specified
-                moy=int(s[1])
-                dd['start']=dd['start'][:1]+(moy,)+dd['start'][2:]
-                dd['end']=dd['end'][:1]+(moy,)+dd['end'][2:]
             n=s[-1]
-            if n[0].isdigit():
+            if len(n)>7 and n[:8].isdigit():
+                # end date/time specified
                 dd['repeat_end']=bptime.BPTime(n).get()
             elif n[0]=='#':
                 dd['repeat_num']=int(n[1:])
             dd['repeat_type']='yearly'
             return True
         except:
+            if module_debug: raise
             return False
     
     def __conv_repeat(self, v, dd):
@@ -337,9 +342,10 @@ class VCalendarImportData(object):
                             dd[j[1]]=j[2](k, dd)
                         else:
                             dd[j[1]]=k['value']
+                if module_debug: print dd
                 d.append(dd)
             except:
-                pass
+                if module_debug: raise
 
     def get_display_data(self):
         cnt=0
