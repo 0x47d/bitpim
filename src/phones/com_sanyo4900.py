@@ -132,8 +132,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 continue
             if k=='numbers':
                 for item in entry[k]:
-                    item.number=self.phonize(item.number)
-                    item.number_len=len(item.number)
+                    numberindex=item.numberindex
+                    e.numbers[numberindex].number=self.phonize(item.number)
+                    e.numbers[numberindex].number_len=len(e.numbers[numberindex].number)
+                continue
             # everything else we just set
             setattr(e,k,entry[k])
         return e
@@ -163,16 +165,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         
         pbook=data['phonebook']
         self.log("Putting phone into write mode")
-        req=p_sanyo.beginupdaterequest()
+        req=p_sanyo.beginendupdaterequest()
         req.beginend=1 # Start update
-#        res=self.sendpbcommand(req, p_sanyo.beginupdateresponse)
+#        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
 
         keys=pbook.keys()
         keys.sort()
 
         progrsscur=0
-        progressmax=keys+2+8+14 # Include the buffers
-        self.log("Writing %d entries to phone" % (keys,))
+        progressmax=len(keys)+2+8+14 # Include the buffers
+        self.log("Writing %d entries to phone" % (len(keys),))
         for i in keys:
             ii=pbook[i]
             slot=ii['serial1'] # Or should we just use i for the slot
@@ -194,9 +196,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         
         
         self.log("Taking phone out of write mode")
-        req=p_sanyo.beginupdaterequest()
+        req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Start update
-#        res=self.sendpbcommand(req, p_sanyo.beginupdateresponse)
+#        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
         self.log("Please exit BITPIM and power cycle the phone")
             
 class Profile:
@@ -221,7 +223,7 @@ class Profile:
                 e['name']=helper.getfullname(entry['names'],1,1,16)[0]
 
 
-                e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), 3, "")
+                e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), "")
                 e['email_len']=len(e['email'])
 
                 e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
@@ -229,18 +231,17 @@ class Profile:
 # Could put memo in email or url
 
 # Just copy numbers with exact matches now.  Later try to fit in entries
-# that don't match into ununused places.
+# that don't match (or duplicates of a type) into ununused places.
                 numbers=helper.getnumbers(entry['numbers'],1,7)
+                e['numbertypes']=[]
                 e['numbers']=[]
                 for num in numbers:
                     type=num['type']
                     for i,t in zip(range(100),numbertypetab):
                         if type==t:
-                            e['numbers'][i].number=numbers[i].number
-                            e['numbers'][i].number_len=len(numbers[i].number)
-                        else:
-                            e['numbers'][i].number=""
-                            e['numbers'][i].number_len=0
+                            e['numbertypes'].append(i)
+                            break
+                    e['numbers'].append(num['number'])
 
                 serial1=helper.getserial(entry['serials'], 'sanyo4900', data['uniqueserial'], 'serial1', 0)
                 serial2=helper.getserial(entry['serials'], 'sanyo4900', data['uniqueserial'], 'serial2', serial1)
