@@ -1226,8 +1226,9 @@ class EntryMatcher:
                 else:
                     # ignore it
                     count-=1
-                
-            res.append( ( int(score*100/count), i ) )
+
+            if count:
+                res.append( ( int(score*100/count), i ) )
 
         res.sort()
         res.reverse()
