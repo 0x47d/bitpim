@@ -643,7 +643,7 @@ class MainWindow(wxFrame):
         dlg.Destroy()
         if path is None:
             return
-        importexport.OnImportCSVPhoneBook(self, path)
+        importexport.OnImportCSVPhoneBook(self, self.phonewidget, path)
 
     ### 
     ### Main bit for getting stuff from phone
