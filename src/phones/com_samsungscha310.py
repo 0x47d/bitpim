@@ -28,6 +28,7 @@ class Phone(com_samsung.Phone):
     desc="SCH-A310"
     serialsname='scha310'
 
+    __enable_reporting=True
     __groups_range=xrange(5)
     __phone_entries_range=xrange(1,501)
     __pb_max_entries=23
