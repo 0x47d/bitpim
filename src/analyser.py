@@ -183,7 +183,7 @@ class Analyser(wx.Frame):
                     except Exception,e:
                         v="<Exception: "+e.__str__()+">"
                     s+=": "
-                    if isinstance(v, int) and not isinstance(v, bool):
+                    if isinstance(v, int) and not isinstance(v, type(True)):
                         s+="%d 0x%x" % (v,v)
                     else:
                         s+=`v`
@@ -209,8 +209,6 @@ class Analyser(wx.Frame):
             start,end=self.tree.GetPyData(item)
         except:
             return
-        begin=self.hex.XYToPosition(0, self.dataline+start/16)
-        self.hex.ShowPosition(begin)
         offset=start
         while offset<end:
             line=self.hex.XYToPosition(0,self.dataline+offset/16)
@@ -229,7 +227,9 @@ class Analyser(wx.Frame):
             self.hex.SetStyle(line+9+offsetmod*3, line+9+(offsetmod+howmany)*3-1, self.highlightstyle)
             # and now the chars
             self.hex.SetStyle(line+61+offsetmod,  line+61+(offsetmod+howmany), self.highlightstyle)
-            return # alls done
+            break  # alls done
+        begin=self.hex.XYToPosition(0, self.dataline+start/16)
+        self.hex.ShowPosition(begin)
 
     def errorme(self, desc, exception=None):
         "Put exception information into the hex pane and output traceback to console"
