@@ -24,14 +24,14 @@ from p_lgvx4400 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-_NUMSPEEDDIALS=100
-_FIRSTSPEEDDIAL=2
-_LASTSPEEDDIAL=99
-_NUMPHONEBOOKENTRIES=500
-_MAXCALENDARDESCRIPTION=38
+NUMSPEEDDIALS=100
+FIRSTSPEEDDIAL=2
+LASTSPEEDDIAL=99
+NUMPHONEBOOKENTRIES=500
+MAXCALENDARDESCRIPTION=38
 
-_NUMEMAILS=3
-_NUMPHONENUMBERS=5
+NUMEMAILS=3
+NUMPHONENUMBERS=5
 %}
 
 
@@ -40,7 +40,7 @@ PACKET speeddial:
     1 UINT {'default': 0xff} +number
 
 PACKET speeddials:
-    * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
+    * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
@@ -67,7 +67,7 @@ PACKET pbentry:
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': _NUMEMAILS} +emails:
+    *  LIST {'length': NUMEMAILS} +emails:
         49 STRING {'raiseonunterminatedread': False} email
     49 STRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
@@ -75,9 +75,9 @@ PACKET pbentry:
     1  BOOL secret
     65 STRING {'raiseonunterminatedread': False} memo
     1  UINT wallpaper
-    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
+    * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': _NUMPHONENUMBERS} +numbers:
+    * LIST {'length': NUMPHONENUMBERS} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 

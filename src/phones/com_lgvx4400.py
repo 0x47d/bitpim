@@ -112,13 +112,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         # Read speed dials first
         speeds={}
         try:
-            if self.protocolclass._NUMSPEEDDIALS:
+            if self.protocolclass.NUMSPEEDDIALS:
                 self.log("Reading speed dials")
                 buf=prototypes.buffer(self.getfilecontents("pim/pbspeed.dat"))
                 sd=self.protocolclass.speeddials()
                 sd.readfrombuffer(buf)
-                for i in range(self.protocolclass._FIRSTSPEEDDIAL, self.protocolclass._LASTSPEEDDIAL+1):
-                    if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass._NUMPHONEBOOKENTRIES:
+                for i in range(self.protocolclass.FIRSTSPEEDDIAL, self.protocolclass.LASTSPEEDDIAL+1):
+                    if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass.NUMPHONEBOOKENTRIES:
                         continue
                     l=speeds.get(sd.speeddials[i].entry, [])
                     l.append((i, sd.speeddials[i].number))
@@ -381,7 +381,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             self.progress(progressmax, progressmax, "Finished scanning")
             print "new speed dials is",newspeeds
             req=self.protocolclass.speeddials()
-            for i in range(self.protocolclass._NUMSPEEDDIALS):
+            for i in range(self.protocolclass.NUMSPEEDDIALS):
                 sd=self.protocolclass.speeddial()
                 if i in newspeeds:
                     sd.entry=newspeeds[i][0]
@@ -493,7 +493,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             for field in 'start', 'end', 'daybitmap', 'changeserial', 'snoozedelay','ringtone','description':
                 v=entry[field]
                 if field == "description":
-                    v=v[:self.protocolclass._MAXCALENDARDESCRIPTION]
+                    v=v[:self.protocolclass.MAXCALENDARDESCRIPTION]
                 setattr(data,field,v)
             # And now the special ones
             repeat=None
@@ -600,7 +600,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         if  'memo' in entry.getfields() and len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
-        if entry.wallpaper!=self.protocolclass._NOWALLPAPER:
+        if entry.wallpaper!=self.protocolclass.NOWALLPAPER:
             try:
                 paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
                 res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
@@ -610,13 +610,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             
         # ringtones
         res['ringtones']=[]
-        if 'ringtone' in entry.getfields() and entry.ringtone!=self.protocolclass._NORINGTONE:
+        if 'ringtone' in entry.getfields() and entry.ringtone!=self.protocolclass.NORINGTONE:
             try:
                 tone=fundamentals['ringtone-index'][entry.ringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'call'})
             except:
                 print "can't find ringtone for index",entry.ringtone
-        if 'msgringtone' in entry.getfields() and entry.msgringtone!=self.protocolclass._NOMSGRINGTONE:
+        if 'msgringtone' in entry.getfields() and entry.msgringtone!=self.protocolclass.NOMSGRINGTONE:
             try:
                 tone=fundamentals['ringtone-index'][entry.msgringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'message'})
@@ -627,7 +627,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     
         # numbers
         res['numbers']=[]
-        for i in range(self.protocolclass._NUMPHONENUMBERS):
+        for i in range(self.protocolclass.NUMPHONENUMBERS):
             num=entry.numbers[i].number
             type=entry.numbertypes[i].numbertype
             if len(num):
@@ -645,9 +645,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         return res
 
     def _findmediainindex(self, index, name, pbentryname, type):
-        if type=="ringtone": default=self.protocolclass._NORINGTONE
-        elif type=="message ringtone": default=self.protocolclass._NOMSGRINGTONE
-        elif type=="wallpaper": default=self.protocolclass._NOWALLPAPER
+        if type=="ringtone": default=self.protocolclass.NORINGTONE
+        elif type=="message ringtone": default=self.protocolclass.NOMSGRINGTONE
+        elif type=="wallpaper": default=self.protocolclass.NOWALLPAPER
         else:
             assert False, "unknown type "+type
             
@@ -783,7 +783,7 @@ class Profile(com_phone.Profile):
         self.normalisegroups(helper, data)
 
         for pbentry in data['phonebook']:
-            if len(results)==self.protocolclass._NUMPHONEBOOKENTRIES:
+            if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
                 break
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
@@ -815,8 +815,8 @@ class Profile(com_phone.Profile):
                         e['group']=0
 
                 # email addresses
-                emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass._NUMEMAILS,48)
-                e['emails']=helper.filllist(emails, self.protocolclass._NUMEMAILS, "")
+                emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass.NUMEMAILS,48)
+                e['emails']=helper.filllist(emails, self.protocolclass.NUMEMAILS, "")
 
                 # url
                 e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
@@ -828,7 +828,7 @@ class Profile(com_phone.Profile):
                 # there must be at least one email address or phonenumber
                 minnumbers=1
                 if len(emails): minnumbers=0
-                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass._NUMPHONENUMBERS)
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for numindex in range(len(numbers)):
@@ -861,8 +861,8 @@ class Profile(com_phone.Profile):
                     e['numbers'].append(number)
                     # deal with speed dial
                     sd=num.get("speeddial", -1)
-                    if self.protocolclass._NUMSPEEDDIALS:
-                        if sd>=self.protocolclass._FIRSTSPEEDDIAL and sd<=self.protocolclass._LASTSPEEDDIAL:
+                    if self.protocolclass.NUMSPEEDDIALS:
+                        if sd>=self.protocolclass.FIRSTSPEEDDIAL and sd<=self.protocolclass.LASTSPEEDDIAL:
                             speeds[sd]=(e['bitpimserial'], numindex)
 
                 e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
@@ -881,7 +881,7 @@ class Profile(com_phone.Profile):
             except helper.ConversionFailed:
                 continue
 
-        if self.protocolclass._NUMSPEEDDIALS:
+        if self.protocolclass.NUMSPEEDDIALS:
             data['speeddials']=speeds
         data['phonebook']=results
         return data

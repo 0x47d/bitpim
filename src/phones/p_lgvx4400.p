@@ -20,18 +20,18 @@ from p_lg import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-_NUMSPEEDDIALS=100
-_FIRSTSPEEDDIAL=1
-_LASTSPEEDDIAL=99
-_NUMPHONEBOOKENTRIES=200
-_MAXCALENDARDESCRIPTION=38
+NUMSPEEDDIALS=100
+FIRSTSPEEDDIAL=1
+LASTSPEEDDIAL=99
+NUMPHONEBOOKENTRIES=200
+MAXCALENDARDESCRIPTION=38
 
-_NUMEMAILS=3
-_NUMPHONENUMBERS=5
+NUMEMAILS=3
+NUMPHONENUMBERS=5
 
-_NORINGTONE=0
-_NOMSGRINGTONE=0
-_NOWALLPAPER=0
+NORINGTONE=0
+NOMSGRINGTONE=0
+NOWALLPAPER=0
 
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
@@ -43,7 +43,7 @@ PACKET speeddial:
     1 UINT {'default': 0xff} +number
 
 PACKET speeddials:
-    * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
+    * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 PACKET pbreadentryresponse:
     "Results of reading one entry"
@@ -70,7 +70,7 @@ PACKET pbentry:
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': _NUMEMAILS} +emails:
+    *  LIST {'length': NUMEMAILS} +emails:
         49 STRING {'raiseonunterminatedread': False} email
     49 STRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
@@ -78,9 +78,9 @@ PACKET pbentry:
     1  BOOL secret
     33 STRING {'raiseonunterminatedread': False} memo
     1  UINT wallpaper
-    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
+    * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': _NUMPHONENUMBERS} +numbers:
+    * LIST {'length': NUMPHONENUMBERS} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 

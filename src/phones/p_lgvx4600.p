@@ -24,14 +24,14 @@ from p_lgvx4400 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-_NUMSPEEDDIALS=100
-_FIRSTSPEEDDIAL=1
-_LASTSPEEDDIAL=99
-_NUMPHONEBOOKENTRIES=500
-_MAXCALENDARDESCRIPTION=38
+NUMSPEEDDIALS=100
+FIRSTSPEEDDIAL=1
+LASTSPEEDDIAL=99
+NUMPHONEBOOKENTRIES=500
+MAXCALENDARDESCRIPTION=38
 
-_NUMEMAILS=1
-_NUMPHONENUMBERS=5
+NUMEMAILS=1
+NUMPHONENUMBERS=5
 
 %}
 
@@ -61,16 +61,16 @@ PACKET pbentry:
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': _NUMEMAILS} +emails:
+    *  LIST {'length': NUMEMAILS} +emails:
         73 STRING {'raiseonunterminatedread': False} email
     72 STRING {'raiseonunterminatedread': False} url
     2  UINT ringtone                                     "ringtone index for a call"
     1  BOOL secret
     49 STRING {'raiseonunterminatedread': False} memo
     2  UINT wallpaper
-    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
+    * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': _NUMPHONENUMBERS} +numbers:
+    * LIST {'length': NUMPHONENUMBERS} +numbers:
         33 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
