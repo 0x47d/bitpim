@@ -61,6 +61,8 @@ class flinger:
         self.certverifier=certverifier
 
     def scan(self):
+        if not IsBitFlingEnabled():
+            return []
         if not self.isconfigured():
             return []
         self._configure()
