@@ -132,11 +132,7 @@ class Phone:
             #### Advance to next entry
             self.sendpbcommand(0x12, "\x01\x00\x00\x00\x00\x00\x00")
             progresscur+=1
-        # go back to begining again
-        # existingpbook contains entries from the existing phonebook on the phone
-        self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
-        self.setmode(self.MODEPHONEBOOK)
-        res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
+        # we have now looped around back to begining
         pbook=data['phonebook']
         entries=pbook.keys()
         entries.sort()
@@ -150,13 +146,17 @@ class Phone:
                       "\0x06\x00" + \
                       makelsb(ii['serial2'],4) + \
                       makelsb(ii['number'],2)
+                self.log("Deleting entry "+`i`)
                 self.sendpbcommand(0x05, data)
                 self.progress(progresscur, progressmax, "removing "+`i`)
                 continue
             entry=self.makeentry(i, pbook[entries[i]], data)
-            if i>numentries:
+            if i>=numexistingentries:
                 cmd=0x03 # append
-            else: cmd=0x04 # overwrite
+                self.log("Appending entry "+`i`+" - "+pbook[entries[i]]['name'])
+            else:
+                cmd=0x04 # overwrite
+                self.log("Overwriting entry "+`i`+" with "+pbook[entries[i]]['name'])
             self.progress(progresscur, progressmax, "Writing "+pbook[entries[i]]['name'])
             self.sendpbcommand(cmd, "\x01"+entry)
 
@@ -490,20 +490,17 @@ class Phone:
 
     def _setmodephonebook(self):
         try:
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
-            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         try:
             self.comm.setbaudrate(38400)
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
-            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         self._setmodelgdmgo()
         try:
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
-            self.sendpbcommand(0x06, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         return 0
