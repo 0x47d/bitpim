@@ -64,12 +64,14 @@ PACKET pbentry:
     * UNKNOWN +unknown20c
 
 PACKET pbgroups:
+    "Phonebook groups"
     P UINT {'constant': 10} numgroups
     * LIST {'length': self.numgroups} groups:
         1 UINT icon
         23 STRING name
 
 PACKET indexfile:
+    "Used for tracking wallpaper and ringtones"
     # A bit of a silly design again.  Entries with an index of 0xffff are
     # 'blank'.  Thus it is possible for numactiveitems and the actual
     # number of valid entries to be mismatched.
@@ -78,4 +80,43 @@ PACKET indexfile:
     * LIST {'length': self.maxitems} +items:
         2 UINT {'default': 0xffff} +index
         40 STRING {'default': ""} +name
-    
+
+###
+### The calendar
+###
+#
+#   The calendar consists of one file listing events and an exception
+#   file that lists exceptions.  These exceptions suppress a particular
+#   instance of a repeated event.  For example, if you setup something
+#   to happen monthly, but changed the 1st february event, then the
+#   schedule will contain the repeating event, and the 1st feb one,
+#   and the suppresions/exceptions file will point to the repeating
+#   event and suppress the 1st feb.
+#   The phone uses the position within the file to give an event an id
+
+PACKET scheduleexception:
+    4 UINT pos "Refers to event id (position in schedule file) that this suppresses"
+    1 UINT day
+    1 UINT month
+    2 UINT year
+
+PACKET scheduleexceptionfile:
+    * LIST {'elementclass': scheduleexception} +items
+
+PACKET scheduleevent:
+    4 UINT pos "position within file, used as an event id"
+    4 LGCALDATE start
+    4 LGCALDATE end
+    1 UINT repeat
+    3 UINT daybitmap  "which days a weekly repeat event happens on"
+    1 UINT alarmminutes  "a value of 100 indicates not set"
+    1 UINT alarmhours    "a value of 100 indicates not set"
+    1 UINT changeserial
+    1 UINT snoozedelay   "in minutes"
+    1 UINT ringtone
+    39 STRING description
+
+
+PACKET schedulefile:
+    2 UINT numactiveitems
+    * LIST {'elementclass': scheduleevent} +events
