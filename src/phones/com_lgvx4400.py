@@ -23,6 +23,7 @@ import com_brew
 import com_phone
 import com_lg
 import prototypes
+import fileinfo
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIndexedMedia):
     "Talk to the LG VX4400 cell phone"
@@ -902,3 +903,14 @@ class Profile(com_phone.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         )
 
+    def QueryAudio(self, origin, currentextension, afi):
+        # we don't modify any of these
+        if afi.format in ("MIDI", "QCP", "PMD"):
+            return currentextension, afi
+        # examine mp3
+        if afi.format=="MP3":
+            if afi.channels==1 and 8<=afi.bitrate<=64 and 16000<=afi.samplerate<=22050:
+                return currentextension, afi
+        # convert it
+        # this gets you about 6 seconds
+        return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 64, 'samplerate': 22050}))
