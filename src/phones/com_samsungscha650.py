@@ -33,6 +33,7 @@ class Phone(com_samsung.Phone):
     desc="SCH-A650"
     serialsname='scha650'
 
+    __enable_reporting=True
     __groups_range=xrange(5)
     __phone_entries_range=xrange(1,501)
     __pb_max_entries=25
@@ -61,14 +62,13 @@ class Phone(com_samsung.Phone):
     __pb_max_name_len=22
     __pb_max_number_len=32
     __pb_max_emails=1
-    
     builtinringtones=( 'Inactive',
                        'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
                        'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
                        'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10')
-    # 'type name', 'type index name', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'user/sound/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'nvm/brew/shared', 19, 20)
+    # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'user/sound/ringer', 19, 20)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'nvm/brew/shared', 19, 20)
         
     def __init__(self, logtarget, commport):
 
@@ -605,8 +605,8 @@ class Phone(com_samsung.Phone):
     def savewallpapers(self, result, merge):
         self.reportinit('Save Wallpapers', result)
         m=FileEntries(self, self.__wallpaper_info)
-        result['rebootphone']=1
         r=m.save_media(result)
+        result['rebootphone']=1
         self.report('\r\nBITPIM is now restting your phone.')
         return r
 
@@ -646,13 +646,15 @@ class Profile(com_samsung.Profile):
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
-        self.__file_type, self.__index_type, self.__path, self.__max_file_len, self.__max_file_count=info
+        self.__file_type, self.__index_type, self.__origin, self.__path, self.__max_file_len, self.__max_file_count=info
     def get_media(self, result):
         self.__phone.log('Getting media for type '+self.__file_type)
         media={}
         idx={}
         if result.has_key(self.__index_type):
             idx=result[self.__index_type]
+        if result.has_key(self.__file_type):
+            media=result[self.__file_type]
         file_cnt, idx_k=0, len(idx)
         path_len=len(self.__path)+1
         try:
@@ -662,7 +664,7 @@ class FileEntries:
                     index=k[path_len:]
                     # print k, index
                     media[index]=self.__phone.getfilecontents(k)
-                    idx[idx_k]={ 'name': index, 'origin': self.__file_type }
+                    idx[idx_k]={ 'name': index, 'origin': self.__origin }
                     idx_k+=1
                     file_cnt += 1
                 except:
@@ -704,8 +706,10 @@ class FileEntries:
             # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
             for k1 in media:
+                if media[k1].has_key('origin') and media[k1]['origin']!=self.__origin:
+                    continue
                 # self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
-                if media[k1]['name']==name:
+                if media[k1]['name']==name and media[k1]['origin']==self.__origin:
                     found=True
                     break
             if not found:
@@ -719,6 +723,8 @@ class FileEntries:
         # writing new/existing files
         for k in media:
             try:
+                if media[k].has_key('origin') and media[k]['origin'] != self.__origin:
+                    continue
                 name=self.__path+'/'+media[k]['name']
                 if name in dir_l:
                     self.__phone.log('File '+name+' exists')
@@ -726,6 +732,7 @@ class FileEntries:
                     self.__phone.log('Writing file '+name)
                     self.__phone.report('Adding file '+media[k]['name'])
                     self.__phone.writefile(name, media[k]['data'])
+                    media[k]['origin']=self.__origin
             except:
                 self.__phone.log('Failed to write file: '+name)
                 self.__phone.report('Failed to write file: '+media[k]['name'])
