@@ -271,13 +271,13 @@ class ImportDialog(wx.Dialog):
             for field in self.filternumbercolumns:
                 if field!="Phone" and rec.has_key(field):
                     for val in rec[field]:
-                        numbers.append({'type': self.numbermap[field], 'number': val})
+                        numbers.append({'type': self.numbermap[field], 'number': phonenumber.normalise(val)})
                     del rec[field]
             # phones (dict form of numbers)
             if rec.has_key("Phone"):
                 mapping={"business": "office", "business fax": "fax", "home fax": "fax"}
                 for val in rec["Phone"]:
-                    numbers.append({"type": mapping.get(val["type"], val["type"]), "number": val["number"]})
+                    numbers.append({"type": mapping.get(val["type"], val["type"]), "number": phonenumber.normalise(val["number"])})
                 del rec["Phone"]
             if len(numbers):
                 entry["numbers"]=numbers
@@ -464,7 +464,7 @@ def _getpreviewformatted(value, column):
         elif column=="Web Page":
             value="%s (%s)" %(value["url"], value["type"])
         elif column=="Phone":
-            value="%s (%s)" %(value["number"], value["type"])
+            value="%s (%s)" %(phonenumber.format(value["number"]), value["type"])
         elif column=="Address":
             v=[]
             for f in ("pobox", "street", "street2", "city", "state", "postalcode", "country"):

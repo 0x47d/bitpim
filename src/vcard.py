@@ -18,6 +18,7 @@ import base64
 import common
 import cStringIO
 import nameparser
+import phonenumber
 
 class VFileException(Exception):
     pass
@@ -394,7 +395,7 @@ class VCard:
         if len(types)==0 or types==["PREF"]: iswork=True # special case when nothing else is specified
     
         
-
+        value=phonenumber.normalise(value)
         if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
         if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
         if not iswork and not ishome and "FAX" in types:
@@ -710,7 +711,7 @@ def out_tel(vals, formatter):
     res=""
     first=True
     for v in vals:
-        res+=out_line("TEL", ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])], v['number'], formatter)
+        res+=out_line("TEL", ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])], phonenumber.format(v['number']), formatter)
         first=False
     return res
 
