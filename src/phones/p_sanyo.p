@@ -96,6 +96,7 @@ PACKET ownerinforesponse:
     179 UNKNOWN pad
     
 PACKET eventrequest:
+    P UINT {'constant': 100} maxevents "Number of event slots"
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x23} +header
     1 UINT slot
@@ -107,25 +108,31 @@ PACKET evententry:
     14 STRING {'raiseonunterminatedread': False} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
-    4 UINT startdate "# seconds since Jan 1, 1980 approximately"
-    4 UINT stopdate
+    4 UINT start "# seconds since Jan 1, 1980 approximately"
+    4 UINT end
     14 STRING {'raiseonunterminatedread': False} location
     7 UNKNOWN +pad2
     1 UINT location_len
     1 UINT alarm_type "0: Beep, 1: Voice, 2: Silent"
-    1 UINT dunno1
-    1 UINT dunno2
-    2 UINT dunno3 "Guess which are 1 and which are 2 byte numbers"
+    1 UINT {'default': 0} +dunno1
+    1 UINT {'default': 0} +dunno2
+    2 UINT {'default': 0} +dunno3 "Guess which are 1 and which are 2 byte numbers"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
-    4 UINT alarmdate
-    1 UINT dunno4
+    4 UINT alarm
+    1 UINT {'default': 0} +dunno4
 
 PACKET eventresponse:
     * sanyoheader header
     * evententry entry
     436 UNKNOWN pad
 
+PACKET eventupdaterequest:
+    * sanyoheader {'readwrite': 0x0e,
+                   'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    436 UNKNOWN +pad
+        
 PACKET callalarmrequest:
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x24} +header
