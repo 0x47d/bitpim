@@ -647,24 +647,27 @@ class FileViewNew(bpmedia.MediaDisplayer):
         self.menu.AppendSeparator()
         self.menu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
-        self.menu.Append(guihelper.ID_FV_PROPERTIES, "Properties")
+
 
         self.addfilemenu=wx.Menu()
         self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
         self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        #EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        #EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
         #EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
         #EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
         wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
-        #EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
 
-
+        self.SetRightClickMenus(self.menu, self.addfilemenu)
 
     def OnDelete(self,_):
-        print "OnDelete called"
+        names=self.GetSelectedItemNames()
+        for name in names:
+            os.remove(os.path.join(self.thedir, name))
+        self.RemoveFromIndex(names)
+        self.OnRefresh()
 
     def genericpopulatefs(self, dict, key, indexkey, version):
         try:
@@ -722,6 +725,9 @@ class FileViewNew(bpmedia.MediaDisplayer):
 
     def OnRefresh(self,_=None):
         self.populate(self._data)
+
+    def GetSelectedItemNames(self):
+        return [i['name'] for i in self.GetAllSelectedItems()]
 
 
 class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
