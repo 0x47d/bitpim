@@ -14,7 +14,7 @@ import time
 name="BitFling"
 version="0.1"
 release=0  # when rereleases of the same version happen, this gets incremented
-testver=1  # value of zero is non-test build
+testver=2  # value of zero is non-test build
 
 versionstring=version
 if testver>0:
