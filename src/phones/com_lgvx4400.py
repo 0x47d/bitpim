@@ -22,6 +22,13 @@ import com_lg
 import prototypes
 
 
+
+### default groups
+##        self.groupdict={0: {'name': 'No Group', 'icon': 0}, 1: {'name': 'Family', 'icon': 1},
+##                        2: {'name': 'Friends', 'icon': 2}, 3: {'name': 'Colleagues', 'icon': 3},
+##                        4: {'name': 'Business', 'icon': 4}, 5: {'name': 'School', 'icon': 5}, }
+
+        
 class PhoneBookCommandException(Exception):
     def __init__(self, errnum):
         Exception.__init__(self, "Phonebook Command Error 0x%02x" % (errnum,))
@@ -85,13 +92,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=p_lgvx4400.pbreadentryrequest()
             res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
-            # ::temporary code::
-            buf=prototypes.buffer()
-            res.writetobuffer(buf)
-            res=buf.getvalue()
             entry=self.extractphonebookentry(res)
             pbook[i]=entry 
-            self.progress(i, numentries, entry['name'])
+            self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=p_lgvx4400.pbnextentryrequest()
             self.newsendpbcommand(req, p_lgvx4400.pbnextentryresponse)
@@ -531,7 +534,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 if not self.comm.setbaudrate(baud):
                     continue
             try:
-                self.comm.write("AT$QCDMG\r\n")
+                self.comm.write("AT$LGDMGO\r\n")
             except:
                 self.mode=self.MODENONE
                 self.comm.shouldloop=True
@@ -651,102 +654,43 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             self.raisecommsexception("using the phonebook")
             return None # keep pychecker happy
         
-
-        
-
-
-    def extractphonebookentry(self, packet):
-        # currently work with first four bytes on data (ff cmd seq flag) to
-        # make working with hexdumps easier.  this will be fixed later on
-        # note that python subscripting is 'off by one' (upper bounds is
-        # NOT included)
+    numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
+                    'pager', 'fax', 'fax2', 'none' )
+    
+    def extractphonebookentry(self, record):
+        """Return a phonebook entry in BitPim format"""
+        entry=record.entry
         res={}
-
-        # bytes 0-3  ff cmd seq flag
-        # pass
-
-        # bytes 4-7 serial
-        res['serial1']=readlsb(packet[4:8])
-
-        # bytes 8-9  entry size => 0x0202
-        # res['?offset008']=readlsb(packet[8:0xa])
-
-        # bytes a-d another serial
-        res['serial2']=readlsb(packet[0xa:0xe])
-
-        # byte e is entry number - we don't expose
-        # res['#']=readlsb(packet[0xe:0xf])
-
-        # byte f is unknown
-        res['?offset00f']=readlsb(packet[0xf:0x10])
-
-        # Bytes 10-26 null padded name
-        res['name']=readstring(packet[0x10:0x27])
-
-        # Byte 27 group
-        b=packet[0x27]
-        res['group']=ord(b)
-
-        # byte 28 some sort of number
-        res['?offset028']=readlsb(packet[0x28:0x29])
-
-        # bytes 29-59 null padded email1
-        res['email1']=readstring(packet[0x29:0x60])
-
-        # bytes 5a-8a null padded email2
-        res['email2']=readstring(packet[0x5a:0x8b])
-
-        # bytes 8b-bb null padded email3
-        res['email3']=readstring(packet[0x8b:0xbc])
-
-        # bytes bc-ec null padded url
-        res['url']=readstring(packet[0xbc:0xed])
-
-        # byte ed is ringtone
-        b=packet[0xed]
-        res['ringtone']=ord(b)
-
-        # byte ee is message ringtone
-        b=packet[0xee]
-        res['msgringtone']=ord(b)
-
-        # byte ef is secret
-        b=ord(packet[0xef])
-        res['secret']=b
-
-        # bytes f0-110 null padded memo
-        res['memo']=readstring(packet[0xf0:0x111])
-
-        # byte 111
-        res['?offset111']=readlsb(packet[0x111:0x112])
-        
-        # bytes 112-116 are phone number types
-        n=0
-        for b in packet[0x112:0x117]:
-            n+=1
-            res['type'+chr(n+ord('0'))]=ord(b)
-                
-
-        # bytes 117-147 number 1
-        res['number1']=readstring(packet[0x117:0x148])
-
-        # bytes 148-178 number 2
-        res['number2']=readstring(packet[0x148:0x179])
-
-        # bytes 179-1a9 number 3
-        res['number3']=readstring(packet[0x179:0x1aa])
-
-        # bytes 1aa-1da number 4
-        res['number4']=readstring(packet[0x1aa:0x1db])
-
-        # bytes 1db-20b
-        res['number5']=readstring(packet[0x1db:0x20c])
-
-        # bytes 20c-210
-        res['?offset20c']=readlsb(packet[0x20c:0x211])
-
+        # serials
+        res['serials']=[ {'sourcetype': 'lgvx4400', 'serial1': entry.serial1, 'serial2': entry.serial2 } ] # ::TODO:: sourceuniqueid
+        # only one name
+        res['names']=[ {'full': entry.name} ]
+        # only one category
+        res['categories']=[ {'category': entry.group} ] # ::TODO:: turn this into string
+        # emails
+        res['emails']=[]
+        for i in entry.emails:
+            if len(i.email):
+                res['emails'].append( {'email': i.email} )
+        # urls
+        res['urls']=[ {'url': entry.url} ]
+        # ringtones
+        res['ringtones']=[ {'ringtone': entry.ringtone, 'use': 'call'}, {'ringtone': entry.msgringtone, 'use': 'message' } ] # ::TODO:: turn these into strings
+        # private
+        res['flags']=[ {'secret': entry.secret } ]
+        # memos
+        res['memos']=[ {'memo': entry.memo } ]
+        # wallpapers
+        res['wallpapers']=[ {'wallpaper': entry.wallpaper, 'use': 'call'} ]
+        # numbers
+        res['numbers']=[]
+        for i in range(entry.numberofphonenumbers):
+            num=entry.numbers[i].number
+            type=entry.numbertypes[i].numbertype
+            if len(num):
+                res['numbers'].append({'number': num, 'type': self.numbertypetab[type]})
         return res
-
+                    
     def makeentry(self, num, entry, dict):
         # ::TODO:: we need to update fields in entry/dict
         # eg when removing non-numerics from phone numbers
