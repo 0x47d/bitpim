@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+### BITPIM
+###
+### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+###
+### This software is under the Artistic license.
+### http://www.opensource.org/licenses/artistic-license.php
+###
+### $Id$
+
+# This design is with aplogies to Alan Cooper
+
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
 import calendar
@@ -11,7 +22,7 @@ class CalendarCellAttributes:
         self.labelfont=wxFont(20, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
-        self.timefont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
+        self.timefont=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
         self.timeforeground=wxNamedColour("ORCHID")
         self.entryfont=wxFont(15, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
@@ -43,9 +54,9 @@ class CalendarCell(wxWindow):
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wxSIMPLE_BORDER):
         wxWindow.__init__(self, parent, id, style=style)
         self.attr=attr
-        self.day=13
-        self.year=-1
-        self.month=-1
+        self.day=33
+        self.year=2033
+        self.month=3
         self.buffer=None
         self.needsupdate=True
 
@@ -61,7 +72,11 @@ class CalendarCell(wxWindow):
 
         EVT_PAINT(self, self.OnPaint)
         EVT_SIZE(self, self.OnSize)
+        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.OnSize(None)
+
+    def OnEraseBackground(self, _):
+        pass
 
     def setdate(self, year, month, day):
         self.year=year
@@ -81,6 +96,8 @@ class CalendarCell(wxWindow):
         if self.buffer is None or \
            self.buffer.GetWidth()!=self.width or \
            self.buffer.GetHeight()!=self.height:
+            if self.buffer is not None:
+                del self.buffer
             self.buffer=wxEmptyBitmap(self.width, self.height)
 
         mdc=wxMemoryDC()
@@ -172,12 +189,115 @@ class CalendarCell(wxWindow):
                 dc.SetUserScale(0.9*scale*factory, 0.9*scale*factorx)
             else:
                 break
+
+class CalendarLabel(wxWindow):
+    # This is the label on the left of the day cells that shows
+    # the month (rotated text)
+    def __init__(self, parent, cells, id=-1):
+        wxWindow.__init__(self, parent, id)
+        self.needsupdate=True
+        self.buffer=None
+        self.cells=cells
+        EVT_PAINT(self, self.OnPaint)
+        EVT_SIZE(self, self.OnSize)
+        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        self.setfont(wxFont(20, wxSWISS, wxNORMAL, wxBOLD ))
+        self.settextcolour(wxNamedColour("ORCHID"))
+        self.OnSize(None)
+
+    def OnEraseBackground(self, _):
+        pass
+
+    def OnSize(self, _=None):
+        self.width, self.height = self.GetClientSizeTuple()
+        self.needsupdate=True
         
+    def OnPaint(self, _=None):
+        if self.needsupdate:
+            self.needsupdate=False
+            self.redraw()
+        dc=wxPaintDC(self)
+        dc.DrawBitmap(self.buffer, 0, 0, False)
+
+    def setfont(self, font):
+        self.font=font
+
+    def settextcolour(self, colour):
+        self.colour=colour
+
+    def changenotify(self):
+        self.needsupdate=True
+        self.Refresh()
+
+    def redraw(self):
+        if self.buffer is None or \
+           self.buffer.GetWidth()!=self.width or \
+           self.buffer.GetHeight()!=self.height:
+            if self.buffer is not None:
+                del self.buffer
+            self.buffer=wxEmptyBitmap(self.width, self.height)
+
+        mdc=wxMemoryDC()
+        mdc.SelectObject(self.buffer)
+        mdc.SetBackground(wxTheBrushList.FindOrCreateBrush(self.GetBackgroundColour(), wxSOLID))
+        mdc.Clear()
+        self.draw(mdc)
+        mdc.SelectObject(wxNullBitmap)
+        del mdc
+
+    def draw(self, dc):
+        # find the lines for each cell
+        row=0
+        while row<len(self.cells):
+            month=self.cells[row].month
+            endrow=row
+            for r2 in range(row+1,len(self.cells)):
+                if month==self.cells[r2].month:
+                    endrow=r2
+                else:
+                    break
+            # row is begining row, endrow is end, inclusive
+
+            # find the space available.  we do lots of lovely math
+            # in order to translate the coordinates from the rows
+            # into our window
+            x=0
+            y=self.cells[row].GetPositionTuple()[1]-self.cells[0].GetPositionTuple()[1]
+            w=self.width
+            h=self.cells[endrow].GetPositionTuple()[1]+self.cells[endrow].GetRect().height \
+               -self.cells[row].GetPositionTuple()[1]
+
+            
+            print x,y,w,h
+
+            dc.DestroyClippingRegion()
+            dc.SetClippingRegion(x,y,w,h)
+            dc.SetPen(wxThePenList.FindOrCreatePen("BLACK", 3, wxSOLID))
+            # draw line at top and bottom
+            if row!=0:
+                dc.DrawLine(x, y, x+w, y)
+            if endrow!=len(self.cells)-1:
+                dc.DrawLine(x, y+h, x+w, y+h)
+            month=calendar.month_name[month]
+            dc.SetFont(self.font)
+            dc.SetTextForeground(self.colour)
+            tw,th=dc.GetTextExtent(month)
+            # Now figure out where to draw it
+            if tw<h:
+                # it fits, so centre
+                dc.DrawRotatedText(month, w/2-th/2, y + h/2 + tw/2, 90)
+                
+
+
+            # Loop around
+            row=endrow+1
+
+
 class Calendar(wxPanel):
     # All the horrible date code is an excellent case for metric time!
     ID_UP=1
     ID_DOWN=2
-    def __init__(self, parent, rows=5, id=-1):
+    def __init__(self, parent, rows=9, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
         sizer=RowColSizer()
         self.upbutt=wxButton(self, self.ID_UP, "^")
@@ -187,7 +307,8 @@ class Calendar(wxPanel):
         p=1
         calendar.setfirstweekday(calendar.SUNDAY)
         for i in ( "Sun", "Mon", "Tue", "Wed" , "Thu", "Fri", "Sat" ):
-           sizer.Add(  wxStaticText( self, -1, i), flag=wxALIGN_CENTER_VERTICAL|wxALIGN_CENTER_HORIZONTAL  , row=1, col=p)
+           sizer.Add(  wxStaticText( self, -1, i, style=wxALIGN_CENTER|wxALIGN_CENTER_VERTICAL),
+                       flag=wxALIGN_CENTER_VERTICAL|wxALIGN_CENTER_HORIZONTAL|wxEXPAND, row=1, col=p)
            sizer.AddGrowableCol(p)
            p+=1
         self.numrows=rows
@@ -197,11 +318,17 @@ class Calendar(wxPanel):
             self.rows.append( self.makerow(sizer, i+2) )
         self.downbutt=wxButton(self, self.ID_DOWN, "V")
         sizer.Add(self.downbutt, flag=wxEXPAND, row=2+rows, col=0, colspan=8)
+        self.label=CalendarLabel(self, map(lambda x: x[0], self.rows))
+        sizer.Add(self.label, flag=wxEXPAND, row=2, col=0, rowspan=self.numrows)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
 #        EVT_BUTTON(self, self.ID_UP, self.OnUp)
         EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
-        
+        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+
+
+    def OnEraseBackground(self, _):
+        pass
 
     def makerow(self, sizer, row):
         res=[]
@@ -217,6 +344,7 @@ class Calendar(wxPanel):
                 y,m,d=self.rows[row][0].getdate()
                 y,m,d=normalizedate(y,m,d+7)
                 self.updaterow(row, y,m,d)
+        self.label.changenotify()
         
 
     def setday(self, year, month, day):
@@ -306,7 +434,6 @@ def normalizedate(year, month, day):
         day=num-day
     else:
         num=calendar.monthrange(year, month)[1]
-        print num
         if day>num:
             month+=1
             if month>12:
