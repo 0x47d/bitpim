@@ -550,7 +550,32 @@ def fmt_QCP(afi):
     res.append("QCP File Version %d.%d" % (afi.qcpmajor, afi.qcpminor))
     
     return "\n".join(res)
-                  
+
+def idaudio_PMD(f):
+    "Identify a PMD/CMX file"
+    # There are no specs for this file format.  From 10 minutes of eyeballing, it seems like below.
+    # Each section is a null terminated string followed by a byte saying how long the data is.
+    # The length is probably some sort of variable length encoding such as the high bit indicating
+    # the last byte and using 7 bits.
+    #
+    # offset contents -- comment
+    #      0 cmid     -- file type id
+    #      4 \0\0     -- no idea
+    #      6 7*?      -- file lengths and pointers
+    #     13 vers\0   -- version section
+    #     18 \x04     -- length of version section
+    #     19 "string" -- a version number that has some correlation with the pmd version number
+    #
+    #  Various other sections that cover the contents that don't matter for identification
+    if f.GetBytes(0,4)=="cmid" and f.GetBytes(13,5)=="vers\0":
+        verlen=f.GetByte(18)
+        verstr=f.GetBytes(19,verlen)
+
+        return AudioFileInfo(f, **{'format': 'PMD', 'fileversion': verstr, '_shortdescription': fmts_PMD} )
+
+def fmts_PMD(afi):
+    return "%s v %s" % (afi.format, afi.fileversion)
+    
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 def identify_audiofile(filename):
