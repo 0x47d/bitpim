@@ -54,18 +54,17 @@ class Phone(com_samsung.Phone):
                     {'pager': __pb_pager_num},
                     {'fax': __pb_fax_num},
                     {'none': __pb_no_label_num})
-    __cal_entries_range=xrange(20)
-    __cal_num_of_read_fields=7
-    __cal_num_of_write_fields=6
-    __cal_entry=0
-    __cal_start_datetime=1
-    __cal_end_datetime=2
-    __cal_datetime_stamp=3
-    __cal_alarm_type=4
-    __cal_read_name=6
-    __cal_write_name=5
-    __cal_alarm_values={
-        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    __pb_max_name_len=22
+    __pb_max_number_len=32
+    __pb_max_emails=1
+    builtinringtones=( 'Inactive',
+                       'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
+                       'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
+                       'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10',
+                       'Melody 11', 'Melody 12', 'Melody 13', 'Melody 14', 'Melody 15',
+                       'Melody 16')
+
+    __cal_end_datetime_value=None
 
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
@@ -212,11 +211,27 @@ class Phone(com_samsung.Phone):
 
     def savephonebook(self, data):
         "Saves out the phonebook"
+        self.reportinit('Save Phonebook', data)
         if not self.is_online():
+            self.report('Failed to talk to phone, operation aborted')
             self.log("Failed to talk to phone")
             return data
 
         pb_book=data['phonebook']
+        pb_groups=data['groups']
+        self.log('Validating phonebook entries.')
+        if len(pb_book)>len(self.__phone_entries_range):
+            self.report('Too many phone entries')
+            return data
+        for k in pb_book:
+            if not self.__validate_entry(pb_book[k], pb_groups):
+                self.report('Invalid entry, Save Phonebook aborted.')
+                return data
+        if self._has_duplicate_speeddial(pb_book):
+            self.report('Duplicate speed dial entries exist, Save Phonebook aborted')
+            return data
+        self.log('All entries validated')
+
         pb_locs=[False]*(len(self.__phone_entries_range)+1)
         pb_mem=[False]*len(pb_locs)
 
@@ -226,9 +241,6 @@ class Phone(com_samsung.Phone):
 
         # check and adjust for speeddial changes
         self.log("Processing speeddial data")
-        if self._has_duplicate_speeddial(pb_book):
-            self.log("Duplicate speed dial entries exist.  Write aborted")
-            return data
         for k in pb_book:
             self._update_speeddial(pb_book[k])
 
@@ -249,6 +261,7 @@ class Phone(com_samsung.Phone):
                 self.log("Deleted item: "+current_pb[k1]['names'][0]['full'])
                 # delete the entries from data and the phone
                 self.progress(0, 10, "Deleting "+current_pb[k1]['names'][0]['full'])
+                self.report('Deleting entry: '+current_pb[k1]['names'][0]['full'])
                 self._del_phone_entry(current_pb[k1])
         mem_idx, loc_idx = 1,1
 
@@ -256,7 +269,7 @@ class Phone(com_samsung.Phone):
         self.log("Processing new & updated entries")
         serials_update=[]
         progresscur, progressmax=1,len(pb_book)
-        groups, ringtone_index=data['groups'], data['ringtone-index']
+        ringtone_index=data['ringtone-index']
         for k in pb_book:
             e=pb_book[k]
             if not self._has_serial1(e):
@@ -280,10 +293,12 @@ class Phone(com_samsung.Phone):
 
                 e['serials'].append(s1)
                 self.log("New entries: Name: "+e['names'][0]['full']+", s1: "+`loc_idx`+", s2: "+`mem_index`)
+                self.report('Adding new entry: '+e['names'][0]['full'])
                 serials_update.append((self._bitpim_serials(e), s1))
             self.progress(progresscur, progressmax, "Updating "+e['names'][0]['full'])
-            if not self._write_phone_entry(e, groups, ringtone_index):
+            if not self._write_phone_entry(e, pb_groups, ringtone_index):
                 self.log("Failed to save entry: "+e['names'][0]['full'])
+                self.report('Failed to save entry: '+e['names'][0]['full'])
             progresscur += 1
 
         # update existing and new entries
@@ -293,6 +308,76 @@ class Phone(com_samsung.Phone):
 
         return data
 
+
+    # validate a phonebook entry, return True if good, False otherwise
+    def __validate_entry(self, pb_entry, pb_groups):
+        try:
+            # validate name & alias
+            name=pb_entry['names'][0]['full']
+            if '"' in name:
+                self.report(name+': name cannot have any ["].')
+                return False
+            if not len(name) or len(name)>self.__pb_max_name_len:
+                self.report(name+': name is too long.')
+                return False
+            # validate numbers
+            has_number_or_email=False
+            if pb_entry.has_key('numbers'):
+                for n in pb_entry['numbers']:
+                    if len(self.phonize(n['number']))>self.__pb_max_number_len:
+                        self.report(n['number']+': number is too long.')
+                        return False
+                    try:
+                        self._get_number_type(n['type'])
+                    except:
+                        self.report(n['number']+': setting type to home.')
+                        n['type']='home'
+                    has_number_or_email=True
+            # validate emails
+            if pb_entry.has_key('emails'):
+                if len(pb_entry['emails'])>self.__pb_max_emails:
+                    self.report(name+': Each entry can only have %d emails.'%str(self.__pb_max_emails))
+                    return False
+                email=pb_entry['emails'][0]['email']
+                if '"' in email:
+                    self.report(email+': email cannot have any ["].')
+                    return False
+                if len(email)>self.__pb_max_number_len:
+                    self.report(email+': email is too long.')
+                    return False
+                has_number_or_email=True
+            if not has_number_or_email:
+                self.report(name+': Entry has no numbers or emails')
+                return False
+            # validate groups
+            found=False
+            if pb_entry.has_key('categories') and len(pb_entry['categories']):
+                pb_cat=pb_entry['categories'][0]['category']
+                for k in pb_groups:
+                    if pb_groups[k]['name']==pb_cat:
+                        found=True
+                        break
+            if not found:
+                self.report(name+': category set to '+pb_groups[0]['name'])
+                pb_entry['categories']=[{'category': pb_groups[0]['name']}]
+            # validate ringtones
+            found=False
+            if pb_entry.has_key('ringtones') and len(pb_entry['ringtones']):
+                pb_rt=pb_entry['ringtones'][0]['ringtone']
+                # can only set to builtin-ringtone
+                for k in self.builtinringtones:
+                    if k==pb_rt:
+                        found=True
+                        break
+            if not found:
+                self.report(name+': ringtone set to '+self.builtinringtones[0])
+                pb_entry['ringtones']=[{'ringtone': self.builtinringtones[0],
+                                        'use': 'call' }]
+            # everything's cool
+            return True
+        except:
+            raise
+        
     def _has_duplicate_speeddial(self, pb_book):
         b=[False]*(self.__pb_max_speeddials+1)
         for k in pb_book:
@@ -462,7 +547,7 @@ class Phone(com_samsung.Phone):
         e[self.__pb_date_time_stamp]=self.get_time_stamp()
 
         # final check to determine if this entry has changed.
-        # if it has not then do nothing an just return
+        # if it has not then do nothing and just return
 
         ee=self.get_phone_entry(atoi(e[self.__pb_entry]))
         if len(ee):
