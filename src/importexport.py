@@ -11,6 +11,7 @@
 
 # System modules
 import string
+import re
 
 # wxPython modules
 import wx
@@ -23,12 +24,15 @@ from DSV import DSV
 # My modules
 import common
 import guihelper
+import vcard
 
 # control
 def GetPhonebookImports():
     res=[]
     # CSV - always possible
     res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
+    # Vcards - always possible
+    res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Outlook
     try:
         import native.outlook
@@ -196,7 +200,7 @@ class ImportDialog(wx.Dialog):
             for n in range(len(self.columns)):
                 if self.columns[n]=="<ignore>":
                     continue
-                if len(record[n])==0:
+                if record[n] is None or len(record[n])==0:
                     continue
                 c=self.columns[n]
                 if c in self.filternumbercolumns or c in self.filteremailcolumns or c in \
@@ -344,7 +348,8 @@ class ImportDialog(wx.Dialog):
                     # how many are present
                     present=0
                     for n in range(len(self.columns)):
-                        if len(self.data[rownum][n]):
+                        v=self.data[rownum][n]
+                        if v is not None and len(v):
                             fields.append(self.columns[n])
                     for widget,filter in ( (self.wname, self.filternamecolumns),
                                            (self.wnumber, self.filternumbercolumns),
@@ -891,14 +896,121 @@ class ImportEvolutionDialog(ImportDialog):
         self.DataNeedsUpdate()
 
     def ReReadData(self):
-        # this can take a really long time if the user doesn't spot the dialog
-        # asking for permission to access email addresses :-)
         items=self.evolution.getcontacts(self.folder)
 
         self.columns=["vcard"]
         self.data=[]
         for item in items:
             self.data.append([item])
+
+class ImportVCardDialog(ImportDialog):
+    keymapper={
+        "name": "Name",
+        "notes": "Notes",
+        "uid": "UniqueSerial-uid",
+        "last name": "Last Name",
+        "first name": "First Name",
+        "middle name": "Middle Name",
+        "categories": "Categories",
+
+        }
+    def __init__(self, filename, parent, id, title):
+        self.headerrowiseditable=False
+        self.filename=filename
+        self.vcardcolumns,self.vcarddata=None,None
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing vCard Contacts.  Verify the data and perform any filtering necessary.</body></html>' % (bg.Red(), bg.Green(), bg.Blue()), \
+                (600,30)
+
+    def getcontrols(self, vbs):
+        # no extra controls
+        return
+
+    def ReReadData(self):
+        if self.vcardcolumns is None or self.vcarddata is None:
+                self.vcardcolumns,self.vcarddata=self.parsevcards(open(self.filename, "rU"))
+        self.columns=self.vcardcolumns
+        self.data=self.vcarddata
+
+    def parsevcards(self, file):
+        # returns columns, data
+        data=[]
+        keys={}
+        for vc in vcard.VCards(vcard.VFile(file)):
+            v=vc.getdata()
+            data.append(v)
+            for k in v: keys[k]=1
+        keys=keys.keys()
+        # sort them into a natural order
+        self.sortkeys(keys)
+        # remove the ones we have no mapping for
+        if __debug__:
+            for k in keys:
+                if _getstringbase(k)[0] not in self.keymapper:
+                    print "vcard import: no map for key "+k
+        keys=[k for k in keys if _getstringbase(k)[0] in self.keymapper]
+        columns=[self.keymapper[_getstringbase(k)[0]] for k in keys]
+        # build up defaults
+        defaults=[]
+        for c in columns:
+            if c in self.possiblecolumns:
+                defaults.append("")
+            else:
+                defaults.append(None)
+        # do some data munging
+        newdata=[]
+        for row in data:
+            line=[]
+            for i,k in enumerate(keys):
+                line.append(row.get(k, defaults[i]))
+            newdata.append(line)
+
+        # return our hard work
+        return columns, newdata
+
+    # name parts, name, nick, emails, urls, phone, addresses, categories, memos
+    # things we ignore: title, prefix, suffix, organisational unit
+    _preferredorder=["first name", "middle name", "last name", "name", "nickname",
+                     "phone", "address", "email", "url", "organisation", "categories", "notes"]
+
+    def sortkeys(self, keys):
+        po=self._preferredorder
+
+        def funkycmpfunc(x, y, po=po):
+            x=_getstringbase(x)
+            y=_getstringbase(y)
+            if x==y: return 0
+            if x[0]==y[0]: # if the same base, use the number to compare
+                return cmp(x[1], y[1])
+
+            # find them in the preferred order list
+            # (for some bizarre reason python doesn't have a method corresponding to
+            # string.find on lists or tuples, and you only get index on lists
+            # which throws an exception on not finding the item
+            try:
+                pos1=po.index(x[0])
+            except ValueError: pos1=-1
+            try:
+                pos2=po.index(y[0])
+            except ValueError: pos2=-1
+
+            if pos1<0 and pos2<0:   return cmp(x[0], y[0])
+            if pos1<0 and pos2>=0:  return 1
+            if pos2<0 and pos1>=0:  return -1
+            assert pos1>=0 and pos2>=0
+            return cmp(pos1, pos2)
+
+        keys.sort(funkycmpfunc)
+
+
+def _getstringbase(v):
+    mo=re.match(r"^(.*?)(\d+)$", v)
+    if mo is None: return (v,1)
+    return mo.group(1), int(mo.group(2))
 
 
 def OnFileImportCSVContacts(parent):
@@ -919,6 +1031,26 @@ def OnFileImportCSVContacts(parent):
     dlg.Destroy()
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
+
+def OnFileImportVCards(parent):
+    dlg=wx.FileDialog(parent, "Import vCards file",
+                      wildcard="vCard files (*.vcf)|*.vcf|All files|*",
+                      style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+    path=None
+    if dlg.ShowModal()==wx.ID_OK:
+        path=dlg.GetPath()
+        dlg.Destroy()
+    if path is None:
+        return
+
+    dlg=ImportVCardDialog(path, parent, -1, "Import vCard file")
+    data=None
+    if dlg.ShowModal()==wx.ID_OK:
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
+    if data is not None:
+        parent.phonewidget.importdata(data, merge=True)
+    
         
 def OnFileImportOutlookContacts(parent):
     import native.outlook
