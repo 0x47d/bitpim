@@ -538,7 +538,7 @@ class BPFSImageFile(wx.FSFile):
         del file
         os.remove(f)
 
-        s=cStringIO.StringIO(data)
+        s=wx.InputStream(cStringIO.StringIO(data))
         
         wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
 
