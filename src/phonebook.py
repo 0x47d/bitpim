@@ -139,9 +139,9 @@ class PhoneEntryDetailsView(HTMLWindow):
 
     def __init__(self, parent, id, stylesfile, layoutfile):
         HTMLWindow.__init__(self, parent, id)
-        self.stylesfile=guihelper.getresourcefile("styles.xy")
+        self.stylesfile=guihelper.getresourcefile(stylesfile)
         self.stylesfilestat=None
-        self.pblayoutfile=guihelper.getresourcefile("pblayout.xy")
+        self.pblayoutfile=guihelper.getresourcefile(layoutfile)
         self.pblayoutfilestat=None
         self.xcp=None
         self.xcpstyles=None
@@ -474,3 +474,80 @@ class PhoneWidget(wx.SplitterWindow):
                 return i[name]
         return default
 
+    def importdata(self, importdata):
+        dlg=ImportDialog(self, self._data, importdata)
+        dlg.ShowModal()
+        print dlg.resultdata()
+
+
+class ImportDialog(wx.Dialog):
+    "The dialog for mixing new (imported) data with existing data"
+
+    def __init__(self, parent, existingdata, importdata):
+        wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE,
+                           size=(740,680))
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        
+        bg=self.GetBackgroundColour()
+        w=wx.html.HtmlWindow(self, -1, size=wx.Size(600,50), style=wx.html.HW_SCROLLBAR_NEVER)
+        w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Your data is being imported and BitPim is showing what will happen below so you can confirm its actions.</body></html>' % (bg.Red(), bg.Green(), bg.Blue()))
+        vbs.Add(w, 0, wx.EXPAND|wx.ALL, 5)
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Show entries"), 0, wx.EXPAND|wx.ALL,3)
+
+        self.cbadded=wx.CheckBox(self, wx.NewId(), "Added")
+        self.cbchanged=wx.CheckBox(self, wx.NewId(), "Changed")
+        self.cbdeleted=wx.CheckBox(self, wx.NewId(), "Deleted")
+
+        for i in self.cbadded, self.cbchanged, self.cbdeleted:
+            i.SetValue(True)
+            hbs.Add(i, 0, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, 7)
+
+        hbs.Add(wx.StaticText(self, -1, " "), 0, wx.EXPAND|wx.LEFT, 10)
+
+        self.details=wx.CheckBox(self, wx.NewId(), "Details")
+        self.details.SetValue(True)
+        hbs.Add(self.details, 0, wx.EXPAND|wx.LEFT, 5)
+
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        hsplit=wx.SplitterWindow(self,-1)
+
+        self.resultpreview=PhoneEntryDetailsView(hsplit, -1, "styles.xy", "pblayout.xy")
+
+        vsplit=wx.SplitterWindow(hsplit, -1)
+
+        self.grid=wx.grid.Grid(vsplit, -1)
+
+        hhsplit=wx.SplitterWindow(vsplit, -1)
+
+        self.origpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
+        self.importpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
+
+        hhsplit.SplitVertically(self.origpreview, self.importpreview, 0)
+        vsplit.SplitHorizontally(self.grid, hhsplit, -200)
+        hsplit.SplitVertically(vsplit, self.resultpreview, -250)
+
+        # save these for OnDetailChanged
+        self.vsplit=vsplit
+        self.hhsplit=hhsplit
+        self.vsplitpos=-200
+
+        vbs.Add(hsplit, 1, wx.EXPAND|wx.ALL,5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+
+        wx.EVT_CHECKBOX(self, self.details.GetId(), self.OnDetailChanged)
+
+    def OnDetailChanged(self, _):
+        if self.details.GetValue():
+            self.vsplit.SplitHorizontally(self.grid, self.hhsplit, -self.vsplitpos)
+        else:
+            self.vsplitpos=self.vsplit.GetSashPosition()
+            self.vsplit.Unsplit()
