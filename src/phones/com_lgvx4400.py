@@ -24,11 +24,6 @@ import com_phone
 import com_lg
 import prototypes
 
-
-
-numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
-                    'pager', 'fax', 'fax2', 'none' )
-
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIndexedMedia):
     "Talk to the LG VX4400 cell phone"
 
@@ -340,7 +335,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                                 if xx[0]==bps:
                                     found=True
                                     newspeeds[sd]=(res.entry.entrynumber, xx[1])
-                                    nt=numbertypetab[res.entry.numbertypes[xx[1]].numbertype]
+                                    nt=self.protocolclass.numbertypetab[res.entry.numbertypes[xx[1]].numbertype]
                                     self.log("Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
                                     self.progress(progresscur, progressmax, "Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
                     if not found:
@@ -608,11 +603,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     
         # numbers
         res['numbers']=[]
-        for i in range(entry.numberofphonenumbers):
+        for i in range(self.protocolclass._NUMPHONENUMBERS):
             num=entry.numbers[i].number
             type=entry.numbertypes[i].numbertype
             if len(num):
-                t=numbertypetab[type]
+                t=self.protocolclass.numbertypetab[type]
                 if t[-1]=='2':
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
@@ -791,7 +786,7 @@ class Profile(com_phone.Profile):
 
                 # email addresses
                 emails=helper.getemails(entry.get('emails', []) ,0,3,48)
-                e['emails']=helper.filllist(emails, 3, "")
+                e['emails']=helper.filllist(emails, self.protocolclass._NUMEMAILS, "")
 
                 # url
                 e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
@@ -803,7 +798,7 @@ class Profile(com_phone.Profile):
                 # there must be at least one email address or phonenumber
                 minnumbers=1
                 if len(emails): minnumbers=0
-                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,5)
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass._NUMPHONENUMBERS)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for numindex in range(len(numbers)):
@@ -819,7 +814,7 @@ class Profile(com_phone.Profile):
                     e['numbers'].append(number)
                     # deal with type
                     type=num['type']
-                    for i,t in zip(range(100),numbertypetab):
+                    for i,t in enumerate(self.protocolclass.numbertypetab):
                         if type==t:
                             # some voodoo to ensure the second home becomes home2
                             if i in e['numbertypes'] and t[-1]!='2':

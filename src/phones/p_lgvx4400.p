@@ -25,6 +25,13 @@ _FIRSTSPEEDDIAL=1
 _LASTSPEEDDIAL=99
 _NUMPHONEBOOKENTRIES=200
 _MAXCALENDARDESCRIPTION=38
+
+_NUMEMAILS=3
+_NUMPHONENUMBERS=5
+
+numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
+                    'pager', 'fax', 'fax2', 'none' )
+
 %}
 
 PACKET speeddial:
@@ -53,15 +60,13 @@ PACKET pbappendentryrequest:
 # need to modify com_lgvx4400 to give a different truncateat parameter
 # in the convertphonebooktophone method
 PACKET pbentry:
-    P  UINT {'constant': 3} numberofemails
-    P  UINT {'constant': 5} numberofphonenumbers
     4  UINT serial1
     2  UINT {'constant': 0x0202} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': self.numberofemails} +emails:
+    *  LIST {'length': _NUMEMAILS} +emails:
         49 STRING {'raiseonunterminatedread': False} email
     49 STRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
@@ -69,9 +74,9 @@ PACKET pbentry:
     1  BOOL secret
     33 STRING {'raiseonunterminatedread': False} memo
     1  UINT wallpaper
-    * LIST {'length': self.numberofphonenumbers} +numbertypes:
+    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': self.numberofphonenumbers} +numbers:
+    * LIST {'length': _NUMPHONENUMBERS} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 

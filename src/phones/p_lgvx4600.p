@@ -29,6 +29,10 @@ _FIRSTSPEEDDIAL=1
 _LASTSPEEDDIAL=99
 _NUMPHONEBOOKENTRIES=500
 _MAXCALENDARDESCRIPTION=38
+
+_NUMEMAILS=1
+_NUMPHONENUMBERS=5
+
 %}
 
 # desc file used for wallpaper and ringtone indices
@@ -51,24 +55,22 @@ PACKET mediadesc:
 # need to modify com_lgvx4600 to give a different truncateat parameter
 # in the convertphonebooktophone method
 PACKET pbentry:
-    P  UINT {'constant': 1} numberofemails
-    P  UINT {'constant': 5} numberofphonenumbers
     4  UINT serial1
     2  UINT {'constant': 0x0190} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': self.numberofemails} +emails:
+    *  LIST {'length': _NUMEMAILS} +emails:
         73 STRING {'raiseonunterminatedread': False} email
     72 STRING {'raiseonunterminatedread': False} url
     2  UINT ringtone                                     "ringtone index for a call"
     1  BOOL secret
     49 STRING {'raiseonunterminatedread': False} memo
     2  UINT wallpaper
-    * LIST {'length': self.numberofphonenumbers} +numbertypes:
+    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': self.numberofphonenumbers} +numbers:
+    * LIST {'length': _NUMPHONENUMBERS} +numbers:
         33 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 

@@ -29,6 +29,13 @@ _FIRSTSPEEDDIAL=2
 _LASTSPEEDDIAL=99
 _NUMPHONEBOOKENTRIES=500
 _MAXCALENDARDESCRIPTION=38
+
+_NUMEMAILS=2
+_NUMPHONENUMBERS=5
+
+# The numbertype tab is different than all other LG phones
+numbertypetab= ( None, 'cell', 'home', 'office', 'cell2', 'fax' )
+
 %}
 
 PACKET speeddial:
@@ -64,25 +71,23 @@ PACKET campicsdat:
 # All STRINGS have raiseonterminatedread as False since the phone does
 # occassionally leave out the terminator byte
 # Note if you change the length of any of these fields, you also
-# need to modify com_lgvx4500 to give a different truncateat parameter
+# need to modify com_lgvx7000 to give a different truncateat parameter
 # in the convertphonebooktophone method
 PACKET pbentry:
-    P  UINT {'constant': 2} numberofemails
-    P  UINT {'constant': 5} numberofphonenumbers
     4  UINT serial1
-    2  UINT entrysize
+    2  UINT {'constant': 0x181} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
-    *  LIST {'length': self.numberofemails} +emails:
+    *  LIST {'length': _NUMEMAILS} +emails:
         49 STRING {'raiseonunterminatedread': False} email
     2  UINT ringtone                                     "ringtone index for a call"
     2  UINT msgringtone                                  "ringtone index for a text message"
     2  UINT wallpaper
-    * LIST {'length': self.numberofphonenumbers} +numbertypes:
+    * LIST {'length': _NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
-    * LIST {'length': self.numberofphonenumbers} +numbers:
+    * LIST {'length': _NUMPHONENUMBERS} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown
 
