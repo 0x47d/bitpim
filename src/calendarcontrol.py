@@ -112,6 +112,7 @@ class CalendarCell(wxWindow):
                     if h==0: h=12
                 if h<10: text+=" "
                 text+="%d:%02d" % (h,m)
+                print "x=",x,"timey=",timey
                 dc.DrawText(text, x, timey)
                 x+=timespace
                 x+=space
