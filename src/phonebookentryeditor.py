@@ -11,7 +11,7 @@ import wx
 from  wxPython.lib.grids import wxFlexGridSizer
 import fixedscrolledpanel
 import pubsub
-import phonebook
+import bphtml
 
 """The dialog for editing a phonebook entry"""
 
@@ -36,7 +36,7 @@ class RingtoneEditor(wx.Panel):
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
-        self.preview=phonebook.HTMLWindow(self, -1)
+        self.preview=bphtml.HTMLWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
         self.type.SetSelection(0)
@@ -138,7 +138,7 @@ class WallpaperEditor(wx.Panel):
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
-        self.preview=phonebook.HTMLWindow(self, -1)
+        self.preview=bphtml.HTMLWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
         self.type.SetSelection(0)

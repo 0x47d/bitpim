@@ -985,7 +985,7 @@ class MyStatusBar(wxStatusBar):
         EVT_IDLE(self, self.OnIdle)
         self.gauge=wxGauge(self, 1000, 1)
         self.SetFieldsCount(4)
-        self.SetStatusWidths( [200, -5, 180, -20] )
+        self.SetStatusWidths( [200, 180, -1, -4] )
         self.Reposition()
 
     def OnSize(self,_):
@@ -1002,8 +1002,8 @@ class MyStatusBar(wxStatusBar):
                 pass
 
     def Reposition(self):
-        rect=self.GetFieldRect(2)
-        self.gauge.SetPosition(wxPoint(rect.x+2, rect.y+2))
+        rect=self.GetFieldRect(1)
+        self.gauge.SetPosition(wxPoint(rect.x+2, rect.y+4))
         self.gauge.SetSize(wxSize(rect.width-4, rect.height-4))
         self.sizeChanged = False
 
@@ -1018,7 +1018,7 @@ class MyStatusBar(wxStatusBar):
             str="%d/%d %s" % (pos+1, max, desc)
         else:
             str=desc
-        self.SetStatusText(str,1)
+        self.SetStatusText(str,2)
 
 ###
 ###  A MessageBox with a help button

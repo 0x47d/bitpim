@@ -83,7 +83,6 @@ serials:
 # Standard imports
 import os
 import cStringIO
-import webbrowser
 import difflib
 import re
 import time
@@ -102,78 +101,16 @@ import guihelper
 import phonebookentryeditor
 import pubsub
 import nameparser
-
-###
-###  Enhanced HTML Widget
-###
-
-class HTMLWindow(wx.html.HtmlWindow):
-    """BitPim customised HTML Window
-
-    Some extras on this:
-    
-       - You can press Ctrl-Alt-S to get a source view
-       - Clicking on a link opens a window in your browser
-       - Shift-clicking on a link copies it to the clipboard
-    """
-    def __init__(self, parent, id, relsize=0.7):
-        # default sizes on windows
-        basefonts=[7,8,10,12,16,22,30]
-        # defaults on linux
-        if guihelper.IsGtk():
-            basefonts=[10,13,17,20,23,27,30]
-        wx.html.HtmlWindow.__init__(self, parent, id)
-        wx.EVT_KEY_UP(self, self.OnKeyUp)
-        self.thetext=""
-        if relsize!=1:
-            self.SetFonts("", "", [int(sz*relsize) for sz in basefonts])
-
-##    def OnCellMouseHover(self, cell, x, y):
-##        print cell
-##        print dir(cell)
-##        print cell.GetId()
-
-    def OnLinkClicked(self, event):
-        # see ClickableHtmlWindow in wxPython source for inspiration
-        # :::TODO::: redirect bitpim images and audio to correct
-        # player
-        if event.GetEvent().ShiftDown():
-            wx.TheClipboard.Open()
-            wx.TheClipboard.SetData(event.GetHref())
-            wx.TheClipboard.Close()
-        else:
-            webbrowser.open(event.GetHref())
-
-    def SetPage(self, text):
-        self.thetext=text
-        wx.html.HtmlWindow.SetPage(self,text)
-
-    def OnKeyUp(self, evt):
-        keycode=evt.GetKeyCode()        
-        if keycode==ord('S') and evt.ControlDown() and evt.AltDown():
-            vs=ViewSourceFrame(None, self.thetext)
-            vs.Show(True)
-            evt.Skip()
-
-###
-###  View Source Window
-###            
-
-class ViewSourceFrame(wx.Frame):
-    def __init__(self, parent, text, id=-1):
-        wx.Frame.__init__(self, parent, id, "HTML Source")
-        stc=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
-        stc.AppendText(text)
-
+import bphtml
 
 ###
 ### Phonebook entry display (Derived from HTML)
 ###
 
-class PhoneEntryDetailsView(HTMLWindow):
+class PhoneEntryDetailsView(bphtml.HTMLWindow):
 
     def __init__(self, parent, id, stylesfile, layoutfile):
-        HTMLWindow.__init__(self, parent, id)
+        bphtml.HTMLWindow.__init__(self, parent, id)
         self.stylesfile=guihelper.getresourcefile(stylesfile)
         self.stylesfilestat=None
         self.pblayoutfile=guihelper.getresourcefile(layoutfile)
@@ -1667,7 +1604,7 @@ class PhonebookPrintDialog(wx.Dialog):
 
         # bottom half - preview
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Preview"), wx.VERTICAL)
-        self.preview=HTMLWindow(self, -1)
+        self.preview=bphtml.HTMLWindow(self, -1)
         bs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 2)
 
         # wrap up bottom row
