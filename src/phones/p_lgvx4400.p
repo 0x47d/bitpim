@@ -22,13 +22,24 @@ BOOL=BOOLlsb
 
 %}
 
-# All STRINGS have raiseonterminatedread as False since the phone does
-# occassionally leave out the terminator byte
 PACKET pbreadentryresponse:
     "Results of reading one entry"
+    *  pbheader header
+    *  pbentry  entry
+
+PACKET pbupdateentryrequest:
+    * pbheader {'command': 0x04, 'flag': 0x01} +header
+    * pbentry +entry
+
+PACKET pbappendentryrequest:
+    * pbheader {'command': 0x03, 'flag': 0x01} +header
+    * pbentry +entry
+
+# All STRINGS have raiseonterminatedread as False since the phone does
+# occassionally leave out the terminator byte
+PACKET pbentry:
     P  UINT {'constant': 3} numberofemails
     P  UINT {'constant': 5} numberofphonenumbers
-    *  pbheader header
     4  UINT serial1
     2  UINT {'constant': 0x0202} entrysize
     4  UINT serial2
@@ -48,4 +59,4 @@ PACKET pbreadentryresponse:
     * LIST {'length': self.numberofphonenumbers} numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN unknown20c
-        
+    

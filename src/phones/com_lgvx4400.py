@@ -84,7 +84,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             ### Read current entry
             req=p_lgvx4400.pbreadentryrequest()
             res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
-            self.log("Read entry "+`i`+" - "+res.name)
+            self.log("Read entry "+`i`+" - "+res.entry.name)
             # ::temporary code::
             buf=prototypes.buffer()
             res.writetobuffer(buf)
@@ -130,12 +130,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=p_lgvx4400.pbreadentryrequest()
             res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             
-            entry={ 'number':  res.entrynumber, 'serial1':  res.serial1,
-                    'serial2': res.serial2, 'name': res.name}
+            entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1,
+                    'serial2': res.entry.serial2, 'name': res.entry.name}
             assert entry['serial1']==entry['serial2'] # always the same
             self.log("Reading entry "+`i`+" - "+entry['name'])            
             existingpbook[i]=entry 
-            self.progress(progresscur, progressmax, "existing "+`progresscur`)
+            self.progress(progresscur, progressmax, "existing "+entry['name'])
             #### Advance to next entry
             req=p_lgvx4400.pbnextentryrequest()
             self.newsendpbcommand(req, p_lgvx4400.pbnextentryresponse)
@@ -165,7 +165,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req.serial2=ii['serial2']
             req.entrynumber=ii['number']
             self.newsendpbcommand(req, p_lgvx4400.pbdeleteentryresponse)
-            self.progress(progresscur, progressmax, "Deleting "+`i`)
+            self.progress(progresscur, progressmax, "Deleting "+ii['name'])
             # also remove them from existingpbook
             del existingpbook[i]
 

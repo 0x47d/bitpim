@@ -93,4 +93,21 @@ PACKET pbdeleteentryresponse:
     * pbheader header
     * UNKNOWN dunno
 
+# PACKET pbupdateentryrequest is specific to each model phone
+
+PACKET pbupdateentryresponse:
+    * pbheader header
+    * UNKNOWN dunno
+
+# PACKET pbappendentryrequest is specific to each model phone
+
+PACKET pbappendentryresponse:
+    * pbheader header
+    4 UINT newserial
+    2 UINT dunno
+    * UNKNOWN dunno2
+
+
+    
+
 
