@@ -28,13 +28,20 @@ import guihelper
 def GetPhonebookImports():
     res=[]
     # CSV - always possible
-    res.append( ("CSV...", "Import a CSV file for the phonebook", OnFileImportCSV) )
+    res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     # Outlook
     try:
         import native.outlook
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
     except:
         pass
+    # Evolution
+    try:
+        import native.evolution
+        res.append( ("Evolution Contacts...", "Import Evolution contacts for the phonebook", OnFileImportEvolutionContacts) )
+    except ImportError:
+        pass
+    
     return res
     
 
@@ -843,7 +850,58 @@ class ImportOutlookDialog(ImportDialog):
                 row.append(v)
             self.data.append(row+moredata)
 
-def OnFileImportCSV(parent):
+class ImportEvolutionDialog(ImportDialog):
+    def __init__(self, parent, id, title, evolution):
+        self.headerrowiseditable=False
+        self.evolution=evolution
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing Evolution Contacts.  Select the folder to import, and do any filtering necessary.</body></html>' % (bg.Red(), bg.Green(), bg.Blue()), \
+                (600,30)
+
+    def getcontrols(self, vbs):
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        # label
+        hbs.Add(wx.StaticText(self, -1, "Folder"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        # where the folder name goes
+        self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
+        # browse button
+        self.folderbrowse=wx.Button(self, wx.NewId(), "Browse ...")
+        hbs.Add(self.folderbrowse, 0, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, self.folderbrowse.GetId(), self.OnBrowse)
+
+        # sort out folder
+        id=wx.GetApp().config.Read("evolution/contacts", "")
+        self.folder=self.evolution.getfolderfromid(id, True)
+        print "folder is",self.folder
+        wx.GetApp().config.Write("evolution/contacts", self.evolution.getfolderid(self.folder))
+        self.folderctrl.SetValue(self.evolution.getfoldername(self.folder))
+
+    def OnBrowse(self, _):
+        p=self.evolution.pickfolder(self.folder)
+        if p is None: return # user hit cancel
+        self.folder=p
+        wx.GetApp().config.Write("evolution/contacts", self.evolution.getfolderid(self.folder))
+        self.folderctrl.SetValue(self.evolution.getfoldername(self.folder))
+        self.DataNeedsUpdate()
+
+    def ReReadData(self):
+        # this can take a really long time if the user doesn't spot the dialog
+        # asking for permission to access email addresses :-)
+        items=self.evolution.getcontacts(self.folder)
+
+        self.columns=["vcard"]
+        self.data=[]
+        for item in items:
+            self.data.append([item])
+
+
+def OnFileImportCSVContacts(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
                       wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
                       style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
@@ -870,5 +928,15 @@ def OnFileImportOutlookContacts(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     native.outlook.releaseoutlook()
+    if data is not None:
+        parent.phonewidget.importdata(data, merge=True)
+
+def OnFileImportEvolutionContacts(parent):
+    import native.evolution
+    dlg=ImportEvolutionDialog(parent, -1, "Import Evolution Contacts", native.evolution)
+    data=None
+    if dlg.ShowModal()==wx.ID_OK:
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
