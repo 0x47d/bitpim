@@ -14,6 +14,7 @@ import os
 import midifile
 
 class FailedFile:
+    data=""
     def GetBytes(*args):   return None
     def GetLSBUint32(*args): return None
     def GetLSBUint16(*args): return None
@@ -372,24 +373,21 @@ def idaudio_MP3(f, returnframes=False):
         offset=10+sz
         idv3present=True
         header=f.GetMSBUint32(offset)
+    elif header is None:
+        return None
     else:
         offset=0
+
     # locate the 1st sync frame
-    found_sync=False
-    while offset<(f.size/2):
-        # if we can't find it half way into the file, it ain't there
-        # looking for the 1st 8-ones
-        if f.GetByte(offset)==0xff:
-            # and the next 3-ones
-            if (f.GetByte(offset+1)&0xe0)==0xe0:
-                found_sync=True
-                break
-        offset+=1
-    if __debug__:
-        print 'found_sync:', found_sync, ', offset:', offset
-    # not and MP3 file
-    if not found_sync:
-        return
+    while True:
+        v=f.GetMSBUint16(offset)
+        if v is None: return None
+        if v&0xffe0==0xffe0:
+            break
+        offset=f.data.find("\xff", offset+1)
+        if offset<0:
+            # not an mp3 file or sync is way later in
+            return None
 
     frames=[]
     while offset<f.size:
@@ -537,17 +535,8 @@ class MP3Frame:
         self.original=_getbits(2,1, header)
         self.emphasis=_getbits(1,2, header)
 
-
         self.offset=offset
         self.nextoffset=offset+self.framelength
-        b=f.GetByte(self.nextoffset)
-        if b is not None and b!=0xff:
-            if __debug__:
-                print 'Out of sync, backing up 1 byte'
-            # sometimes this ends up being off by one and I can't figure out why
-            if f.GetBytes(self.nextoffset-1,2)=="\xff\xf3":
-                self.nextoffset-=1
-                self.framelength-=1
         self.OK=True
 
 def idaudio_QCP(f):
