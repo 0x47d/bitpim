@@ -193,9 +193,9 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         gs.AddGrowableCol(1)
         for n in self.__fields:
             gs.Add(wx.StaticText(self, -1, n[self.__label_index],
-                                 style=wx.ALIGN_LEFT))
+                                 style=wx.ALIGN_LEFT),0, wx.EXPAND|wx.BOTTOM, 5)
             w=n[self.__class_index](self, -1)
-            gs.Add(w, 0, wx.EXPAND, 0)
+            gs.Add(w, 0, wx.EXPAND|wx.BOTTOM, 5)
             n[self.__w_index]=w
         # event handlers
         wx.EVT_CHECKBOX(self, self.__fields[1][self.__w_index].GetId(),
@@ -252,8 +252,9 @@ class MemoWidget(wx.Panel):
         # horizontal sizer for the listbox and tabs
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the list box
-        self.__item_list=wx.ListBox(self, wx.NewId(), style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        hbs.Add(self.__item_list, 0, wx.EXPAND|wx.BOTTOM, border=5)
+        self.__item_list=wx.ListBox(self, wx.NewId(), size=(300,-1),
+                                    style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+        hbs.Add(self.__item_list, 1, wx.EXPAND|wx.BOTTOM, border=5)
         # the detailed info pane
         vbs1=wx.BoxSizer(wx.VERTICAL)
         self.__items=(
@@ -264,9 +265,9 @@ class MemoWidget(wx.Panel):
         self.__w=[]
         for n in self.__items:
             w=n[0](self, -1)
-            vbs1.Add(w, n[1], wx.EXPAND,wx.ALL, 10)
+            vbs1.Add(w, n[1], wx.EXPAND|wx.ALL, 5)
             self.__w.append(w)
-        hbs.Add(vbs1, 1, wx.EXPAND|wx.ALL, border=5)
+        hbs.Add(vbs1, 2, wx.EXPAND|wx.ALL, border=5)
         self.__general_editor_w=self.__w[0]
         self.__cat_editor_w=self.__w[1]
         self.__memo_editor_w=self.__w[2]
