@@ -965,6 +965,7 @@ class MainWindow(wx.Frame):
         self.GetStatusBar().progressmajor(pos, max, desc)
 
     def OnLog(self, str):
+        str=common.strorunicode(str)
         self.lw.log(str)
         if self.lwdata is not None:
             self.lwdata.log(str)
