@@ -46,9 +46,22 @@ class Table:
     def __iter__(self):
         return self
 
-    def enableallcolumns(self):
-        if not self.obj.enableallcolumns():
-            raise WABException()
+    def enableallcolumns(self, bruteforce=False):
+        if bruteforce:
+            props=[]
+            for i in dir(constants):
+                if i.startswith('PR_'):
+                    if i.endswith("_A") or i.endswith("_W"):
+                        continue
+                    props.append(getattr(constants,i))
+            p=pywabimpl.proptagarray(len(props))
+            for num,value in zip(range(len(props)), props):
+                p.setitem(num, value)
+            if not self.obj.enablecolumns(p):
+                raise WABException()
+        else:
+            if not self.obj.enableallcolumns():
+                raise WABException()
 
     def next(self):
         row=self.obj.getnextrow()
@@ -63,7 +76,8 @@ class Table:
             if len(k)==0:
                 continue
             v=self._convertvalue(k, row.getpropertyvalue(i))
-            res[k]=v
+            if v is not None:
+                res[k]=v
         return res
 
     def count(self):
@@ -91,7 +105,7 @@ class Table:
             v=v.split(',')
             return self.obj.makebinarystring(int(v[0]), int(v[1]))
         print "Dunno how to handle key %s type %s value %s" % (key,t,v)
-        return None
+        return "%s:%s" % (t,v)
 
 class Container:
 
@@ -123,11 +137,19 @@ if __name__=='__main__':
         print container['PR_DISPLAY_NAME']
         people=wab.openobject(container['PR_ENTRYID'])
         items=people.items()
-        items.enableallcolumns()
-        for i in items:
-            print i
-            pass
+        items.enableallcolumns(True) # we use brute force since the correct WAB way doesn't work
         
+        for i in items:
+            print " ",i['PR_DISPLAY_NAME']
+            keys=i.keys()
+            keys.sort()
+            for k in keys:
+                if k=='PR_DISPLAY_NAME':
+                    continue
+                s="    "+k+"  "+`i[k]`
+                if len(s)>78:
+                    s=s[:78]
+                print s
 
     
     
