@@ -356,9 +356,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         callerid.writetobuffer(buffer)
         self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
         self.sendsanyobuffer(buffer.getvalue(),callerid.startcommand,"callerid")
-
         time.sleep(1.0)
-
 
         data['phonebook']=newphonebook
         del data['phonephonebook']
@@ -648,14 +646,18 @@ class Profile:
                 e['url_len']=len(e['url'])
 # Could put memo in email or url
 
-# Just copy numbers with exact matches now.  Later try to fit in entries
-# that don't match (or duplicates of a type) into ununused places.
                 numbers=helper.getnumbers(entry.get('numbers', []),0,7)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 e['speeddials']=[]
+                unusednumbers=[] # Hold duplicate types here
+                typesused={}
                 for num in numbers:
                     typename=num['type']
+                    if(typesused.has_key(typename)):
+                        unusednumbers.append(num)
+                        continue
+                    typesused[typename]=1
                     for typenum,tnsearch in zip(range(100),numbertypetab):
                         if typename==tnsearch:
                             e['numbertypes'].append(typenum)
@@ -666,6 +668,22 @@ class Profile:
                                 e['speeddials'].append(-1)
 
                             break
+
+# Now stick the unused numbers in unused types
+                trytype=len(numbertypetab)
+                for num in unusednumbers:
+                    while trytype>0:
+                        trytype-=1
+                        if not typesused.has_key(numbertypetab[trytype]):
+                            break
+                    else:
+                        break
+                    e['numbertypes'].append(trytype)
+                    e['numbers'].append(num['number'])
+                    if(num.has_key('speeddial')):
+                        e['speeddials'].append(num['speeddial'])
+                    else:
+                        e['speeddials'].append(-1)
 
 
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
