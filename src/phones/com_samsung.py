@@ -87,30 +87,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.comm.ser.setTimeout(i)
         return s
 
-    def _send_at_cmd(self, cmd_str):
-
-        self.comm.write(str(self.__AT_str+cmd_str+"\r"))
-
-        return self._get_at_response()
-
     def is_online(self):
         self.setmode(self.MODEPHONEBOOK)
         try:
 	    self.comm.sendatcommand("E0V1")
-	    return True
-        except commport.ATError:
-	    return False
-
-    def pmode_on(self):
-        try:
-	    self.comm.sendatcommand("#PMODE=1")
-	    return True
-        except commport.ATError:
-	    return False
-
-    def pmode_off(self):
-        try:
-	    self.comm.sendatcommand("#PMODE=0")
 	    return True
         except commport.ATError:
 	    return False
@@ -207,14 +187,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         i=0
         while i<len(e):
             item=e[i]
-            mo=re.match('^"?(.*?)"?$',item)
-            item=mo.group(1)
             item=item.replace("}\002",'"')
             item=item.replace("}]","}")
             e[i]=item
             i+=1
             
         return e
+
+    def samsungescape(self, s):
+        """Escape double quotes and }'s in a string"""
+        #s=s.replace("}","}]")
+        #s=s.replace('"','}\002')
+        return s
         
     def csvsplit(self, line):
         """Parse a Samsung comma separated list."""
@@ -378,7 +362,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 c['alarm']=self.__cal_alarm_values['0']
 
             # Name
-            e[self.__cal_write_name]='"'+c['description']+'"'
+            e[self.__cal_write_name]='"'+self.samsungescape(c['description'])+'"'
 
             # and save it
             self.progress(cal_cnt+1, l, "Updating "+c['description'])
