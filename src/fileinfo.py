@@ -281,7 +281,7 @@ def identify_imagefile(filename):
         obj=f(fo)
         if obj is not None:
             return thefileinfocache.set(filename,obj)
-    return thefileinfocache.set(file,ImgFileInfo(fo))
+    return thefileinfocache.set(filename,ImgFileInfo(fo))
 
 class AudioFileInfo:
     "Wraps information about an audio file"
