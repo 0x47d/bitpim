@@ -638,6 +638,8 @@ class MemoList(object):
         text=''
         for i in self.__range_entries:
             try:
+                self.__phone.progress(i, self.__max_num_entries,
+                                      'Reading Memo Entry: '+str(i))
                 s=self.__phone.get_memo_entry(i)
                 if len(s)!=self.__max_num_of_fields:
                     continue
@@ -683,6 +685,8 @@ class MemoList(object):
                 entry_str[self.__write_entry_index]=`count`
                 entry_str[self.__write_date_index]=self.__phone.get_time_stamp()
                 entry_str[self.__write_text_index]='"'+sub_text+'"'
+                self.__phone.progress(count, self.__max_num_entries,
+                                      'Writing Memo Entry: '+str(count))
                 if self.__phone.save_memo_entry(','.join(entry_str)):
                     self.__phone.log('Sent memo %s to the phone'%subj)
                     count+=1
@@ -690,6 +694,8 @@ class MemoList(object):
                     self.__phone.log("Failed to send memo"+subj)
         # clear out the rest of the slots
         for k in xrange(count, self.__max_num_entries):
+            self.__phone.progress(k, self.__max_num_entries,
+                                  'Deleing Memo Entry: '+str(k))
             self.__phone.save_memo_entry(`k`)
 
     def set(self, data):

@@ -545,7 +545,6 @@ class Phone(com_samsung.Phone):
         return r
 
     def getmemo(self, result):
-        print 'getmemo'
         self.setmode(self.MODEPHONEBOOK)
         m=com_samsung.MemoList(self)
         m.read()
@@ -555,7 +554,6 @@ class Phone(com_samsung.Phone):
         return m_dict
 
     def savememo(self, result, merge):
-        print 'savememo'
         self.setmode(self.MODEPHONEBOOK)
         m=com_samsung.MemoList(self)
         r=result.get('memo', {})
