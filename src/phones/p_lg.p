@@ -108,7 +108,17 @@ PACKET pbappendentryresponse:
     2 UINT dunno
     * UNKNOWN dunno2
 
-
-    
-
-
+# Some notes
+#
+# phonebook command numbers
+#
+# 0x15   get phone info (returns stuff about vx400 connector)
+# 0x00   start sync (phones display changes)
+# 0x11   select phonebook (goes back to first entry, returns how many left)
+# 0x12   advance one entry
+# 0x13   get current entry
+# 0x07   quit (phone will restart)
+# 0x06   ? parameters maybe
+# 0x05   delete entry
+# 0x04   write entry  (advances to next entry)
+# 0x03   append entry  (advances to next entry)
