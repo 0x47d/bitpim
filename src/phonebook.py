@@ -98,6 +98,7 @@ import common
 import xyaptu
 import guihelper
 import phonebookentryeditor
+import pubsub
 
 ###
 ###  Enhanced HTML Widget
@@ -140,7 +141,6 @@ class HTMLWindow(wx.html.HtmlWindow):
     def OnKeyUp(self, evt):
         keycode=evt.GetKeyCode()        
         if keycode==ord('S') and evt.ControlDown() and evt.AltDown():
-            print "got ctrl alt s"
             vs=ViewSourceFrame(None, self.thetext)
             vs.Show(True)
             evt.Skip()
@@ -273,7 +273,53 @@ def formatsimplename(name):
             res+=l
         return res
     return name['nickname']
+
         
+class CategoryManager:
+
+    # this is only used to prevent the pubsub module
+    # from being GC while any instance of this class exists
+    __publisher=pubsub.Publisher
+
+    def __init__(self):
+        self.categories=[]
+        pubsub.subscribe(pubsub.REQUEST_CATEGORIES, self, "OnListRequest")
+        pubsub.subscribe(pubsub.SET_CATEGORIES, self, "OnSetCategories")
+        pubsub.subscribe(pubsub.MERGE_CATEGORIES, self, "OnMergeCategories")
+        pubsub.subscribe(pubsub.ADD_CATEGORY, self, "OnAddCategory")
+
+    def OnListRequest(self, msg=None):
+        print "publish all categories", self.categories
+        # nb we publish a copy of the list, not the real
+        # thing.  otherwise other code inadvertently modifies it!
+        pubsub.publish(pubsub.ALL_CATEGORIES, self.categories[:])
+
+    def OnAddCategory(self, msg):
+        name=msg.data
+        if name in self.categories:
+            return
+        self.categories.append(name)
+        self.categories.sort()
+        self.OnListRequest()
+
+    def OnSetCategories(self, msg):
+        cats=msg.data[:]
+        self.categories=cats
+        self.categories.sort()
+        self.OnListRequest()
+
+    def OnMergeCategories(self, msg):
+        cats=msg.data[:]
+        newcats=self.categories[:]
+        for i in cats:
+            if i not in newcats:
+                newcats.append(i)
+        newcats.sort()
+        if newcats!=self.categories:
+            self.categories=newcats
+            self.OnListRequest()
+
+CategoryManager=CategoryManager() # shadow out class name
 
 ###
 ### We use a table for speed
@@ -299,7 +345,6 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         newkeys=self.main._data.keys()
         newkeys.sort()
         oldrows=self.rowkeys
-        print oldrows
         self.rowkeys=newkeys
         lo=len(oldrows)
         ln=len(self.rowkeys)
@@ -343,11 +388,13 @@ class PhoneWidget(wx.Panel):
     CURRENTFILEVERSION=2
     def __init__(self, mainwindow, parent):
         wx.Panel.__init__(self, parent,-1)
+        # keep this around while we exist
+        self.categorymanager=CategoryManager
         self.SetBackgroundColour("ORANGE")
         split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
-        self.groupdict={}
+        self.groups=[]
         self.modified=False
         self.table=wx.grid.Grid(split, wx.NewId())
         self.table.EnableGridLines(False)
@@ -370,7 +417,14 @@ class PhoneWidget(wx.Panel):
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
+        pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnCategoriesUpdate")
 
+
+    def OnCategoriesUpdate(self, msg):
+        if self.groups!=msg.data:
+            print "categories updated"
+            self.groups=msg.data[:]
+            self.modified=True
 
     def OnIdle(self, _):
         "We save out changed data"
@@ -440,7 +494,7 @@ class PhoneWidget(wx.Panel):
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
-        dict['groups']=self.groupdict.copy()
+        dict['groups']=self.groups[:]
         return dict
 
 
@@ -460,6 +514,7 @@ class PhoneWidget(wx.Panel):
             wx.MessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wx.OK|wx.ICON_EXCLAMATION)
             version=2
             dict['phonebook']={}
+            dict['groups']={}
             
     def clear(self):
         self._data={}
@@ -479,11 +534,18 @@ class PhoneWidget(wx.Panel):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
+            dict['groups']={}
         return dict
 
     def populate(self, dict):
         self.clear()
+        pubsub.publish(pubsub.MERGE_CATEGORIES, dict.get('groups', []))
         pb=dict['phonebook']
+        cats=[]
+        for i in pb:
+            for cat in pb[i].get('categories', []):
+                cats.append(cat['category'])
+        pubsub.publish(pubsub.MERGE_CATEGORIES, cats)                
         k=pb.keys()
         k.sort()
         self.clear()
@@ -504,6 +566,9 @@ class PhoneWidget(wx.Panel):
             os.remove(os.path.join(self.thedir, f))
         d={}
         d['phonebook']=dict['phonebook']
+        if len(dict.get('groups', [])):
+            d['groups']=dict['groups']
+        
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
     
@@ -613,7 +678,7 @@ class PhoneWidget(wx.Panel):
                 return i[name]
         return default
 
-    def importdata(self, importdata, merge=True):
+    def importdata(self, importdata, groupinfo=[], merge=True):
         if merge:
             d=self._data
         else:
@@ -626,6 +691,7 @@ class PhoneWidget(wx.Panel):
         if result is not None:
             d={}
             d['phonebook']=result
+            d['groups']=groupinfo
             self.populatefs(d)
             self.populate(d)
             
