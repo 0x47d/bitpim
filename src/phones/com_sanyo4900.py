@@ -20,8 +20,6 @@ from wxPython.wx import *
 
 # my modules
 import common
-import commport
-import copy
 import p_sanyo
 import com_brew
 import com_phone
@@ -449,7 +447,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             if repeat is None:
                 self.log(descloc+": Repeat type "+`entry['repeat']`+" not valid for this phone")
                 repeat=0
-            setattr(e, 'period', repeat)
+            e.period=repeat
 
             descloc=entry['description']
             self.progress(slot, progressmax, "Writing "+descloc)
@@ -463,35 +461,35 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 eventname=descloc
                 location=''
             
-            setattr(e,'eventname',eventname)
-            setattr(e,'eventname_len',len(e.eventname))
-            setattr(e,'location',location)
-            setattr(e,'location_len',len(e.location))
+            e.eventname=eventname
+            e.eventname_len=len(e.eventname)
+            e.location=location
+            e.location_len=len(e.location)
             now=time.mktime(time.localtime(time.time()))
 
-            setattr(e,'dom',entry['start'][2])
+            e.dom=entry['start'][2]
 
             timearray=entry['start']+(0,0,0,0)
             starttimelocal=time.mktime(timearray)
             if(starttimelocal<now and repeat==0):
-                setattr(e,'flag',2) # In the past
+                e.flag=2 # In the past
             else:
-                setattr(e,'flag',1) # In the future
-            setattr(e,'start',starttimelocal-self._sanyoepochtounix)
+                e.flag=1 # In the future
+            e.start=starttimelocal-self._sanyoepochtounix
 
             timearray=entry.get('end', entry['start'])+(0,0,0,0)
-            setattr(e,'end',time.mktime(timearray)-self._sanyoepochtounix)
+            e.end=time.mktime(timearray)-self._sanyoepochtounix
 
             alarmdiff=entry.get('alarm',0)
-            setattr(e,'alarm',starttimelocal-self._sanyoepochtounix-60*alarmdiff)
-            setattr(e,'location',location)
-            setattr(e,'location_len',len(e.location))
+            e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
+            e.location=location
+            e.location_len=len(e.location)
 
-            setattr(e,'alarm_type',entry.get('ringtone',0))
+            e.alarm_type=entry.get('ringtone',0)
 
 # What we should do is first find largest changeserial, and then increment
 # whenever we have one that is undefined or zero.
-            setattr(e, 'serial', entry.get('changeserial',0))
+            e.serial=entry.get('changeserial',0)
                                     
             
             req=p_sanyo.eventupdaterequest()
@@ -504,8 +502,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         for slot in range(slot,p_sanyo._NUMEVENTSLOTS):
             self.progress(slot, progressmax, "Writing unused")
             self.log("Write calendar slot "+`slot`+ " - Unused")
-            setattr(e,'slot',slot)
-            setattr(e,'flag',0) # Unused slot
+            e.slot=slot
+            e.flag=0 # Unused slot
             req=p_sanyo.eventupdaterequest()
             req.entry=e
             res=self.sendpbcommand(req, p_sanyo.eventresponse, writemode=True)
