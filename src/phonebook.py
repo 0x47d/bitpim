@@ -109,10 +109,17 @@ class HTMLWindow(wx.html.HtmlWindow):
        - Clicking on a link opens a window in your browser
        - Shift-clicking on a link copies it to the clipboard
     """
-    def __init__(self, parent, id):
+    def __init__(self, parent, id, relsize=0.7):
+        # default sizes on windows
+        basefonts=[7,8,10,12,16,22,30]
+        # defaults on linux
+        if guihelper.IsGtk():
+            basefonts=[10,13,17,20,23,27,30]
         wx.html.HtmlWindow.__init__(self, parent, id)
         wx.EVT_KEY_UP(self, self.OnKeyUp)
         self.thetext=""
+        if relsize!=1:
+            self.SetFonts("", "", [int(sz*relsize) for sz in basefonts])
 
     def OnLinkClicked(self, event):
         # see ClickableHtmlWindow in wxPython source for inspiration
@@ -329,9 +336,8 @@ class PhoneWidget(wx.Panel):
         self.table=wx.grid.Grid(split, -1)
         self.table.EnableGridLines(False)
         self.dt=PhoneDataTable(self)
-        # 1 is GridSelectRows.  The symbol pathologically refused to be defined
-        self.table.SetTable(self.dt, False, 1)
-        self.table.SetSelectionMode(1)
+        self.table.SetTable(self.dt, False, wx.grid.Grid.wxGridSelectRows)
+        self.table.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
         self.table.SetRowLabelSize(0)
         self.table.EnableEditing(False)
         self.table.EnableDragRowSize(False)
@@ -688,9 +694,8 @@ class ImportDialog(wx.Dialog):
         self.grid=wx.grid.Grid(vsplit, -1)
         self.grid.EnableGridLines(False)
         self.table=ImportDataTable(self)
-        # 1 is GridSelectRows.  The symbol pathologically refused to be defined
-        self.grid.SetTable(self.table, False, 1)
-        self.grid.SetSelectionMode(1)
+        self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
+        self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
         self.grid.SetRowLabelSize(0)
         self.grid.EnableDragRowSize(False)
         self.grid.EnableEditing(False)
