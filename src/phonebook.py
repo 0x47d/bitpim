@@ -2749,4 +2749,4 @@ class PhonebookPrintDialog(wx.Dialog):
 
 
 def htmlify(string):
-    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+    return common.strorunicode(string).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
