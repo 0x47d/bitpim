@@ -178,7 +178,11 @@ class Phone(com_sanyo.Phone):
 
     # Error codes
     # 0x6d on sendfileterminator
-    # 
+    # 0x65 not in sync mode on sendfilename
+    # 0x6a on sendfilefragment when buffer full, for ringers  6 max?
+    # 0x6c on sendfilefragment when full of pictures         11 max?
+    # 0x69 on sendfilefragment.  Invalid file type.  PNG works, jpg, bmp don't
+    # 0x68 on sendfilefragment.  Bad picture size
     def writesanyofile(self, name, contents):
         start=time.time()
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
@@ -186,8 +190,23 @@ class Phone(com_sanyo.Phone):
 
 	req=self.protocolclass.sanyosendfilename()
 	req.filename=name
-        self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse)
-
+        res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, returnerror=True)
+        if 'errorcode' in res.getfields():
+            if res.errorcode==0x65:
+                self.alert("Please put your phone into PC Sync Mode", False)
+            else:
+                raise SanyoCommandException(res.errorcode)
+            # Wait about 5 minutes before giving up
+            waitcount=300
+            while waitcount>0:
+                time.sleep(1.0)
+                res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, returnerror=True)
+                if not 'errorcode' in res.getfields():
+                    break
+                waitcount-=1
+            if waitcount==0:
+                raise SanyoCommandException(res.errorcode)
+                
         req=self.protocolclass.sanyosendfilesize()
         req.filesize=len(contents)
         self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse)
@@ -223,8 +242,10 @@ class Profile(com_sanyo.Profile):
     serialsname='scp4900'
 
         
-    WALLPAPER_WIDTH=112
-    WALLPAPER_HEIGHT=120
+    # WALLPAPER_WIDTH=112
+    # WALLPAPER_HEIGHT=120
+    WALLPAPER_WIDTH=90
+    WALLPAPER_HEIGHT=96
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
     WALLPAPER_CONVERT_FORMAT="png"
@@ -237,8 +258,8 @@ class Profile(com_sanyo.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        # ('wallpaper', 'write', 'OVERWRITE'),
-        # ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'OVERWRITE'),
         )
 
 
