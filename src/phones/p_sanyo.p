@@ -42,11 +42,11 @@ PACKET firmwareresponse:
 
 PACKET beginendupdaterequest:
     1 UINT {'constant': 0x29} +command
-    1 UINT beginend
+    2 UINT beginend
 
 PACKET beginendupdateresponse:
     1 UINT command
-    1 UINT beginend
+    2 UINT beginend
 
 PACKET phonenumberrequest:
     1 UINT {'constant': 0x26} +command1
@@ -296,7 +296,7 @@ PACKET bufferpartresponse:
     2 UNKNOWN pad
 
 PACKET bufferpartupdaterequest:
-    * sanyoheader {'readwrite': 0x0e, 'packettype': 0x0f} header
+    * sanyoheader {'readwrite': 0x0e, 'packettype': 0x0f} +header
     500 DATA data
     2 UNKNOWN +pad
         
