@@ -171,95 +171,67 @@ usbdb=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400 -internal USB 
         )
 
 def islikelyport(port, phonemodule):
+    return islikelyportscore(port, phonemodule)>=0
+
+def islikelyportscore(port, phonemodule):
+    """Returns a port score.
+
+    @return: -1 if no match, 0 best match, 1 next etc
+    """
 
     usbids=phonemodule.Profile.usbids
     deviceclasses=phonemodule.Profile.deviceclasses
 
     # it must be the right class
     if port.has_key("class") and port["class"] not in deviceclasses:
-        return False
+        return -1
 
+    score=0
     # check the usbids
     for vid,pid,iface in usbids:
+        score+=1
         if port.has_key("libusb"):
             if port['usb-vendor#']==vid and \
                    port['usb-product#']==pid and \
                    port['usb-interface#']==iface:
-                return True
+                return score
         if port.has_key('hardwareinstance'):
             v=port['hardwareinstance'].lower()
             str="vid_%04x&pid_%04x" % (vid,pid)
             if v.find(str)>=0:
-                return True
+                return score
 
+    score+=10
     # did it have a usb id that didn't match?
     if port.has_key("libusb"):
-        return false
+        return -1
 
     # did the hardware instance have usb info?
     if port.has_key("hardwareinstance") and \
        re.search("vid_([0-9a-f]){4}&pid_([0-9a-f]){4}", port['hardwareinstance'], re.I) is not None:
-        return False
+        return -1
 
     # are we on non-windows platform?  if so, just be happy if 'usb' is in the name or the driver name
     if sys.platform!='win32' and ( \
         port['name'].lower().find('usb')>0 or port.get("driver","").lower().find('usb')>=0):
-        return True
+        return score
 
     # ok, not then
-    return False
+    return -1
             
-def autoguessports():
+def autoguessports(phonemodule):
     """Returns a list of ports (most likely first) for finding the phone on"""
+    # this function also demonsrates the use of list comprehensions :-)
     res=[]
     # we only care about available ports
-    ports=filter(lambda x: x['available'], comscan.comscan())
-    ports=ports+filter(lambda x: x['available'], usbscan.usbscan())
-    
-    # some special cases
-    np=[]
-    for p in ports:
-        if p.has_key('hardwareinstance'):
-            v=p['hardwareinstance'].lower()
-            if v.find("lgatcr")>=0:
-                res.append(p)
-                continue
-        np.append(p)
-    ports=np
+    ports=[(islikelyportscore(port, phonemodule), port) for port in comscan.comscan()+usbscan.usbscan() if port['available']]
+    # sort on score
+    ports.sort()
+    # return all ones with score >=0
+    return [ (port['name'], port) for score,port in ports if score>=0]
 
-    # look through usbdb
-    for vid,pid,iface in usbdb:
-        np=[]
-        for p in ports:
-            if p.has_key("libusb"):
-                if p['usb-vendor#']==vid and \
-                   p['usb-product#']==pid and \
-                   p['usb-interface#']==iface:
-                    res.append(p)
-                    continue
-                np.append(p)
-                continue
-            if p.has_key('hardwareinstance'):
-                v=p['hardwareinstance'].lower()
-                str="vid_%04x&pid_%04x" % (vid,pid)
-                if v.find(str)>=0:
-                    res.append(p)
-                    continue
-            np.append(p)
-        ports=np
 
-    # at the end, we now have res containing a list of ports we
-    # recommend, and ports containing a list of remaining available
-    # ports
 
-    if sys.platform!='win32' and len(res)==0:
-        # not windows, so we just add anything that has 'usb' in it for the name or driver
-        for p in ports:
-            if p['name'].lower().find('usb')>0 or p.get("driver","").lower().find('usb')>=0:
-                res.append(p)
-
-    # return ['com17', 'com1']+map(lambda x: x['name'], res)+['com12', 'com2']
-    return map(lambda x: (x['name'], x), res)
 
 if __name__=='__main__':
-    print autoguessports()
+    print autoguessports(__import__("com_lgvx4400"))
