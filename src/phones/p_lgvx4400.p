@@ -63,11 +63,14 @@ PACKET pbentry:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
+PACKET pbgroup:
+    "A single group"
+    1 UINT icon
+    23 STRING name
+
 PACKET pbgroups:
     "Phonebook groups"
-    * LIST +groups:
-        1 UINT icon
-        23 STRING name
+    * LIST {'elementclass': pbgroup} +groups
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
