@@ -791,7 +791,7 @@ class Editor(wx.Dialog):
     # called from various widget update callbacks
     def OnMakeDirty(self, _=None):
         """A public function you can call that will set the dirty flag"""
-        if self.dirty or self.ignoredirty:
+        if self.dirty or self.ignoredirty or not self.IsShown():
             # already dirty, no need to make it worse
             return
         self.setdirty(True)
@@ -878,6 +878,7 @@ class DVDateTimeControl(wx.Panel):
         wx.Panel.__init__(self, parent, -1)
         self.c=wx.lib.masked.textctrl.TextCtrl(\
             self, id, "", autoformat=self.__datetime_format,
+            emptyInvalid=True,
             emptyBackgroundColour='Red',
             invalidBackgroundColour='Red')
         bs=wx.BoxSizer(wx.HORIZONTAL)
