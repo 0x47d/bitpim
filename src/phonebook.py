@@ -645,9 +645,9 @@ class PhoneWidget(wx.Panel):
             entry=self._data[k]
             found=False
             for s in entry.get("serials", []):
-                if s.get("sourcetype", "")=="bitpim":
+                if s["sourcetype"]=="bitpim":
                     assert s["id"] not in d
-                    d[s["id"]]=0
+                    d[s["id"]]=entry
                     found=True
                     break
             if not found:
@@ -656,8 +656,10 @@ class PhoneWidget(wx.Panel):
                 num.update(`rand2.random()`)
                 if "serials" not in entry: entry["serials"]=[]
                 entry["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
+                if __debug__:
+                    print "assigning bpserialid", num.hexdigest()
                 assert num.hexdigest() not in d
-                d[num.hexdigest()]=0
+                d[num.hexdigest()]=entry
 
     def updateserials(self, results):
         "update the serial numbers after having written to the phone"
@@ -1679,50 +1681,79 @@ class ImportDialog(wx.Dialog):
         # had the terrible side effect of meaning that your original
         # data got modified even if you pressed cancel!
 
+        print "begin busy cursor"
         wx.BeginBusyCursor()
         count=0
         row={}
         results={}
 
-        em=EntryMatcher(self.importdata, self.existingdata)
-        usedexistingkeys=[]
-        for i in self.importdata.keys():
-            # does it match existing entry
-            matches=em.bestmatches(i)
-            if len(matches):
-                # ::TODO:: potentially remember the other matches?
-                confidence, existingid=matches[0]
+        em=EntryMatcher(self.existingdata, self.importdata)
+        usedimportkeys=[]
+        for existingid in self.existingdata.keys():
+            # does it match any imported  entry
+            merged=False
+            for confidence, importid in em.bestmatches(existingid, limit=1):
                 if confidence>90:
+                    if importid in usedimportkeys:
+                        # someone else already used this import, lets find out who was the better match
+                        for i in row:
+                            if row[i][1]==importid:
+                                break
+                        if confidence<row[i][0]:
+                            break # they beat us so this existing passed on an importmatch
+                        # we beat the other existing - undo their merge
+                        assert i==row[i][3]
+                        row[i]=("", None, row[i][2], row[i][3])
+                        results[i]=copy.deepcopy(self.existingdata[row[i][2]])
+                        
                     results[count]=self.MergeEntries(copy.deepcopy(self.existingdata[existingid]),
-                                                     copy.deepcopy(self.importdata[i]))
-                    # did the imported data have no effect?
-                    checkresult=results[count].copy()
-                    checkexisting=self.existingdata[existingid].copy()
-                    # we allow for silent update of serials
-                    if "serials" in checkresult: del checkresult["serials"]
-                    if "serials" in checkexisting: del checkexisting["serials"]
-                    if checkexisting==checkresult:
-                        # imported had no effect on result, so pretend import never existed
-                        row[count]=("", None, existingid, count)
-                    else:
-                        row[count]=(confidence, i, existingid, count)
+                                                     copy.deepcopy(self.importdata[importid]))
+                    row[count]=(confidence, importid, existingid, count)
                     # update counters etc
                     count+=1
-                    usedexistingkeys.append(existingid)
-                    continue
-            # nope, so just add it
-            results[count]=copy.deepcopy(self.importdata[i])
-            row[count]=("", i, None, count)
+                    usedimportkeys.append(importid)
+                    merged=True
+                    break # we are happy with this match
+            if not merged:
+                results[count]=copy.deepcopy(self.existingdata[existingid])
+                row[count]=("", None, existingid, count)
+                count+=1
+
+        # which imports went unused?
+        for importid in self.importdata:
+            if importid in usedimportkeys: continue
+            results[count]=copy.deepcopy(self.importdata[importid])
+            row[count]=("", importid, None, count)
             count+=1
-        for i in self.existingdata:
-            if i in usedexistingkeys: continue
-            results[count]=copy.deepcopy(self.existingdata[i])
-            row[count]=("", None, i, count)
-            count+=1
+
+        # scan thru the merged ones, and see if anything actually changed
+        for r in row:
+            _, importid, existingid, resid=row[r]
+            if importid is not None and existingid is not None:
+                checkresult=results[resid]
+                checkexisting=self.existingdata[existingid]
+                # we don't care about serials changing ...
+                if "serials" in checkresult: del checkresult["serials"]
+                if "serials" in checkexisting: del checkexisting["serials"]
+                
+                # another sort of false positive is if the name field
+                # has "full" defined in existing and "first", "last"
+                # in import, and the result ends up with "full",
+                # "first" and "last" which looks different than
+                # existing so it shows up us a change in the UI
+                # despite the fact that it hasn't really changed if
+                # full and first/last are consistent with each other.
+                # Currently we just ignore this situation.
+                
+                if checkresult == checkexisting:
+                    # lets pretend there was no import
+                    row[r]=("", None, existingid, resid)
+
         self.rowdata=row
         self.resultdata=results
         self.table.OnDataUpdated()
         wx.EndBusyCursor()
+        print "end busy cursor"
 
     def MergeEntries(self, originalentry, importentry):
         "Take an original and a merge entry and join them together return a dict of the result"
@@ -1921,7 +1952,7 @@ class ImportDialog(wx.Dialog):
                     confidence,importkey,existingkey,resultkey=self.table.GetRowData(r)
                     if existingkey==ekey:
                         if importkey is not None:
-                            wx.MessageBox("The new match already has an imported entry matching it!", wx.OK|wx.ICON_EXCLAMATION)
+                            wx.MessageBox("The new match already has an imported entry matching it!", "Already matched", wx.OK|wx.ICON_EXCLAMATION, self)
                             return
                         # clear out old match
                         del self.rowdata[self.table.rowkeys[self.grid.GetGridCursorRow()]]
