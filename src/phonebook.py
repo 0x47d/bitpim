@@ -1083,13 +1083,13 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             print "bad row", row
             return "&gt;error&lt;"
 
-        if self.columns[col]=='Confidence':
-            return `row[0]`
-
         if colour is None:
             colour="#000000" # black
         else:
             colour="#%02X%02X%02X" % (colour.Red(), colour.Green(), colour.Blue())
+
+        if self.columns[col]=='Confidence':
+            return '<font color="%s">%d</font>' % (colour, row[0])
 
         # as an exercise in madness, try to redo this as a list comprehension
         imported,existing,result=None,None,None
@@ -1133,10 +1133,20 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSize()
 
+        # due to an interaction bug between the grid and the splitter, we twiddle the
+        # size of the dialog which causes them to layout properly
+        
+        self.GetView().Fit()
+        dlg=self.GetView().GetParent().GetParent()
+        w,h=dlg.GetSize()
+        dlg.SetSize( (w+1, h+1) )
+        dlg.SetSize( (w, h) )
+        
+
 def _htmlfixup(txt):
     if txt is None: return ""
     return txt.replace("&", "&amp;").replace("<", "&gt;").replace(">", "&lt;") \
-           .replace("\r\n", "<br/>").replace("\r", "<br/>").replace("\n", "<br/>")
+           .replace("\r\n", "<br>").replace("\r", "<br>").replace("\n", "<br>")
 
 ImportDataTable.htmltemplate[0]=""
 ImportDataTable.htmltemplate[7]='<font color="%(colour)s">%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
@@ -1180,9 +1190,7 @@ class ImportDialog(wx.Dialog):
 
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        splitterstyle=wx.SP_3D|wx.SP_LIVE_UPDATE
-
-        splitter=wx.SplitterWindow(self,-1, style=splitterstyle)
+        splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         splitter.SetMinimumPaneSize(20)
 
         self.grid=wx.grid.Grid(splitter, -1)
@@ -1197,7 +1205,7 @@ class ImportDialog(wx.Dialog):
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
-        splitter.SplitVertically(self.grid, self.resultpreview, -250)
+        splitter.SplitVertically(self.grid, self.resultpreview, -200)
 
         vbs.Add(splitter, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
@@ -1210,7 +1218,6 @@ class ImportDialog(wx.Dialog):
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
 
-        vbs.Fit(self)
         self.config = parent.mainwindow.config
         guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
 
