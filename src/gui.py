@@ -17,7 +17,6 @@ import os
 import cStringIO
 import zipfile
 import re
-import glob
 
 # wxPython modules
 from wxPython.wx import *

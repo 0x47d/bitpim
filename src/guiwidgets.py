@@ -31,7 +31,6 @@ import calendarcontrol
 import helpids
 import comscan
 import comdiagnose
-import brewcompressedimage
 import bpaudio
 import analyser
 import guihelper
