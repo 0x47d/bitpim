@@ -113,28 +113,24 @@ import phonenumber
 
 class PhoneEntryDetailsView(bphtml.HTMLWindow):
 
-    def __init__(self, parent, id, stylesfile, layoutfile):
+    def __init__(self, parent, id, stylesfile="styles.xy", layoutfile="pblayout.xy"):
         bphtml.HTMLWindow.__init__(self, parent, id)
         self.stylesfile=guihelper.getresourcefile(stylesfile)
-        self.stylesfilestat=None
         self.pblayoutfile=guihelper.getresourcefile(layoutfile)
-        self.pblayoutfilestat=None
         self.xcp=None
         self.xcpstyles=None
         self.ShowEntry({})
 
     def ShowEntry(self, entry):
-        if self.xcp is None or self.pblayoutfilestat!=os.stat(self.pblayoutfile):
+        if self.xcp is None:
             f=open(self.pblayoutfile, "rt")
             template=f.read()
             f.close()
-            self.pblayoutfilestat=os.stat(self.pblayoutfile)
             self.xcp=xyaptu.xcopier(None)
             self.xcp.setupxcopy(template)
-        if self.xcpstyles is None or self.stylesfilestat!=os.stat(self.stylesfile):
+        if self.xcpstyles is None:
             self.xcpstyles={}
             execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
-            self.stylesfilestat=os.stat(self.stylesfile)
         self.xcpstyles['entry']=entry
         text=self.xcp.xcopywithdns(self.xcpstyles)
         try:
@@ -167,9 +163,16 @@ def formataddress(address):
 def formattypenumber(number):
     t=number['type']
     t=t[0].upper()+t[1:]
-    return "%s (%s)" % (phonenumber.format(number['number']), t)
+    sd=number.get("speeddial", None)
+    if sd is None:
+        return "%s (%s)" % (phonenumber.format(number['number']), t)
+    return "%s [%d] (%s)" % (phonenumber.format(number['number']), sd, t)
 
-formatnumber=lambda number: phonenumber.format(number['number'])
+def formatnumber(number):
+    sd=number.get("speeddial", None)
+    if sd is None:
+        return phonenumber.format(number['number'])
+    return "%s [%d]" % (phonenumber.format(number['number']), sd)
 
 # this is specified here as a list so that we can get the
 # keys in the order below for the settings UI (alpha sorting
@@ -760,9 +763,9 @@ class PhoneWidget(wx.Panel):
         return [self.dt.rowkeys[r] for r in self.GetSelectedRows()]
 
     def OnDelete(self,_):
-        self.table.ClearSelection()
         for r in self.GetSelectedRowKeys():
             del self._data[r]
+        self.table.ClearSelection()
         self.dt.OnDataUpdated()
         self.modified=True
 
@@ -1217,10 +1220,13 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         imported,existing,result=None,None,None
         if row[1] is not None:
             imported=getdata(self.columns[col], self.main.importdata[row[1]], None)
+            if imported is not None: imported=str(imported)
         if row[2] is not None:
             existing=getdata(self.columns[col], self.main.existingdata[row[2]], None)
+            if existing is not None: existing=str(existing)
         if row[3] is not None:
             result=getdata(self.columns[col], self.main.resultdata[row[3]], None)
+            if result is not None: result=str(result)
 
         # The following code looks at the combinations of imported,
         # existing and result with them being None and/or equalling
@@ -1304,7 +1310,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                                           'colour': colour}
 
     def OnDataUpdated(self):
-        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.BeginBusyCursor()
         wx.Yield() # so the cursor can be displayed
 
         # update row keys
@@ -1335,12 +1341,6 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             sortcolumn=self.columns[self.main.sortedColumn]
         except IndexError:
             sortcolumn=0
-
-        # update view
-        try:
-            currentviewcolumn=colsused.index(currentviewcolumn)
-        except ValueError:
-            currentviewcolumn=0
 
         # update columns
         self.columns=colsused
@@ -1387,6 +1387,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
         self.GetView().ClearSelection()
+        self.main.OnCellSelect()
         self.GetView().AutoSize()
         wx.CallAfter(self.GetView().Fit)
         wx.CallAfter(self.sizetwiddle)
@@ -1619,7 +1620,7 @@ class ImportDialog(wx.Dialog):
         # had the terrible side effect of meaning that your original
         # data got modified even if you pressed cancel!
 
-        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.BeginBusyCursor()
         count=0
         row={}
         results={}
@@ -1692,9 +1693,12 @@ class ImportDialog(wx.Dialog):
 
         return result
         
-    def OnCellSelect(self, event):
-        event.Skip()
-        row=self.table.GetRowData(event.GetRow())
+    def OnCellSelect(self, event=None):
+        if event is not None:
+            event.Skip()
+            row=self.table.GetRowData(event.GetRow())
+        else:
+            row=self.table.GetRowData(self.grid.GetGridCursorRow())
         confidence,importid,existingid,resultid=row
         if resultid is not None:
             self.resultpreview.ShowEntry(self.resultdata[resultid])
@@ -1707,19 +1711,23 @@ class ImportDialog(wx.Dialog):
     ID_REVERT_TO_IMPORTED=wx.NewId()
     ID_REVERT_TO_EXISTING=wx.NewId()
     ID_CLEAR_FIELD=wx.NewId()
+    ID_IMPORTED_MISMATCH=wx.NewId()
     
     def MakeMenus(self):
         menu=wx.Menu()
         menu.Append(self.ID_EDIT_ITEM, "Edit...")
         menu.Append(self.ID_REVERT_TO_EXISTING, "Revert field to existing value")
         menu.Append(self.ID_REVERT_TO_IMPORTED, "Revert field to imported value")
-        menu.Append(self.ID_CLEAR_FIELD, "Clear")
+        menu.Append(self.ID_CLEAR_FIELD, "Clear field")
+        menu.AppendSeparator()
+        menu.Append(self.ID_IMPORTED_MISMATCH, "Imported entry mismatch")
         self.menu=menu
 
         wx.EVT_MENU(menu, self.ID_EDIT_ITEM, self.OnEditItem)
         wx.EVT_MENU(menu, self.ID_REVERT_TO_EXISTING, self.OnRevertFieldToExisting)
         wx.EVT_MENU(menu, self.ID_REVERT_TO_IMPORTED, self.OnRevertFieldToImported)
         wx.EVT_MENU(menu, self.ID_CLEAR_FIELD, self.OnClearField)
+        wx.EVT_MENU(menu, self.ID_IMPORTED_MISMATCH, self.OnImportedMismatch)
 
     def OnRightGridClick(self, event):
         row,col=event.GetRow(), event.GetCol()
@@ -1737,6 +1745,8 @@ class ImportDialog(wx.Dialog):
                              and getdata(columnname, self.existingdata[existingkey], None)!= resultvalue)
         self.menu.Enable(self.ID_REVERT_TO_IMPORTED, importkey is not None
                              and getdata(columnname, self.importdata[importkey], None) != resultvalue)
+
+        self.menu.Enable(self.ID_IMPORTED_MISMATCH, importkey is not None)
         # pop it up
         pos=event.GetPosition()
         self.grid.PopupMenu(self.menu, pos)
@@ -1750,7 +1760,10 @@ class ImportDialog(wx.Dialog):
         row=self.table.GetRowData(row)
         reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
         exkey,exindex=getdatainfo(columnname, self.existingdata[row[2]])
-        assert exindex is not None
+        if exindex is None:
+            # actually need to clear the field
+            self.OnClearField(None)
+            return
         if resindex is None:
             self.resultdata[row[3]][reskey].append(copy.deepcopy(self.existingdata[row[2]][exkey][exindex]))
         elif resindex<0:
@@ -1786,6 +1799,70 @@ class ImportDialog(wx.Dialog):
             del self.resultdata[row[3]][reskey][resindex]
         self.table.OnDataUpdated()
 
+    def OnImportedMismatch(self,_):
+        # what are we currently matching
+        row=self.grid.GetGridCursorRow()
+        _,ourimportkey,existingmatchkey,resultkey=self.table.GetRowData(row)
+        match=None
+        # what are the choices
+        choices=[]
+        for row in range(self.table.GetNumberRows()):
+            _,_,existingkey,_=self.table.GetRowData(row)
+            if existingkey is not None:
+                if existingmatchkey==existingkey:
+                    match=len(choices)
+                choices.append( (getdata("Name", self.existingdata[existingkey], "<blank>"), existingkey) )
+        
+        dlg=ImportedEntryMatchDialog(self, choices, match)
+        try:
+            if dlg.ShowModal()==wx.ID_OK:
+                confidence,importkey,existingkey,resultkey=self.table.GetRowData(self.grid.GetGridCursorRow())
+                assert importkey is not None
+                match=dlg.GetMatch()
+                if match is None:
+                    # new entry
+                    if existingkey is None:
+                        wx.MessageBox("It is already a new entry!", wx.OK|wx.ICON_EXCLAMATION)
+                        return
+                    # make a new entry
+                    for rowdatakey in xrange(100000):
+                        if rowdatakey not in self.rowdata:
+                            for resultdatakey in xrange(100000):
+                                if resultdatakey not in self.resultdata:
+                                    self.rowdata[rowdatakey]=("", importkey, None, resultdatakey)
+                                    self.resultdata[resultdatakey]=copy.deepcopy(self.importdata[importkey])
+                                    # revert original one back
+                                    self.resultdata[resultkey]=copy.deepcopy(self.existingdata[existingkey])
+                                    self.rowdata[self.table.rowkeys[self.grid.GetGridCursorRow()]]=("", None, existingkey, resultkey)
+                                    self.table.OnDataUpdated()
+                                    return
+                    assert False, "You really can't get here!"
+                # match an existing entry
+                ekey=choices[match][1]
+                if ekey==existingkey:
+                    wx.MessageBox("That is already the entry matched!", wx.OK|wx.ICON_EXCLAMATION)
+                    return
+                # find new match
+                for r in range(self.table.GetNumberRows()):
+                    if r==self.grid.GetGridCursorRow(): continue
+                    confidence,importkey,existingkey,resultkey=self.table.GetRowData(r)
+                    if existingkey==ekey:
+                        if importkey is not None:
+                            wx.MessageBox("The new match already has an imported entry matching it!", wx.OK|wx.ICON_EXCLAMATION)
+                            return
+                        # clear out old match
+                        del self.rowdata[self.table.rowkeys[self.grid.GetGridCursorRow()]]
+                        # put in new one
+                        self.rowdata[self.table.rowkeys[r]]=(confidence, ourimportkey, ekey, resultkey)
+                        self.resultdata[resultkey]=self.MergeEntries(
+                            copy.deepcopy(self.existingdata[ekey]),
+                            copy.deepcopy(self.importdata[ourimportkey]))
+                        self.table.OnDataUpdated()
+                        return
+                assert False, "Can't get here"
+        finally:
+            dlg.Destroy()
+
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
 
@@ -1807,6 +1884,82 @@ class ImportDialog(wx.Dialog):
             self.table.OnDataUpdated()
         dlg.Destroy()
 
+
+class ImportedEntryMatchDialog(wx.Dialog):
+    "The dialog shown to select how an imported entry should match"
+    
+    def __init__(self, parent, choices, match):
+        wx.Dialog.__init__(self, parent, id=-1, title="Select Import Entry Match", style=wx.CAPTION|
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+
+        self.choices=choices
+        self.importdialog=parent
+
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.matchexisting=wx.RadioButton(self, wx.NewId(), "Matches an existing entry below", style=wx.RB_GROUP)
+        self.matchnew=wx.RadioButton(self, wx.NewId(), "Is a new entry")
+        hbs.Add(self.matchexisting, wx.NewId(), wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(self.matchnew, wx.NewId(), wx.ALIGN_CENTRE|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        wx.EVT_RADIOBUTTON(self, self.matchexisting.GetId(), self.OnRBClicked)
+        wx.EVT_RADIOBUTTON(self, self.matchnew.GetId(), self.OnRBClicked)
+
+        splitter=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+        self.nameslb=wx.ListBox(splitter, wx.NewId(), choices=[name for name,id in choices], style=wx.LB_SINGLE|wx.LB_NEEDED_SB)
+        self.preview=PhoneEntryDetailsView(splitter, -1)
+        splitter.SplitVertically(self.nameslb, self.preview)
+        vbs.Add(splitter, 1, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        wx.EVT_LISTBOX(self, self.nameslb.GetId(), self.OnLbClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.nameslb.GetId(), self.OnLbDClicked)
+
+        # set values
+        if match is None:
+            self.matchexisting.SetValue(False)
+            self.matchnew.SetValue(True)
+            self.nameslb.Enable(False)
+        else:
+            self.matchexisting.SetValue(True)
+            self.matchnew.SetValue(False)
+            self.nameslb.Enable(True)
+            self.nameslb.SetSelection(match)
+            self.preview.ShowEntry(self.importdialog.existingdata[choices[match][1]])
+
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        guiwidgets.set_size(wx.GetApp().config, "PhonebookImportEntryMatcher", self, screenpct=75, aspect=0.58)
+
+        wx.EVT_MENU(self, wx.ID_OK, self.SaveSize)
+        wx.EVT_MENU(self, wx.ID_CANCEL, self.SaveSize)
+
+
+    def SaveSize(self, evt=None):
+        if evt is not None:
+            evt.Skip()
+        guiwidgets.save_size(wx.GetApp().config, "PhonebookImportEntryMatcher", self.GetRect())
+
+    def OnRBClicked(self, _):
+        self.nameslb.Enable(self.matchexisting.GetValue())
+
+    def OnLbClicked(self,_=None):
+        existingid=self.choices[self.nameslb.GetSelection()][1]
+        self.preview.ShowEntry(self.importdialog.existingdata[existingid])
+
+    def OnLbDClicked(self,_):
+        self.OnLbClicked()
+        self.SaveSize()
+        self.EndModal(wx.ID_OK)
+
+    def GetMatch(self):
+        if self.matchnew.GetValue():
+            return None # new entry
+        return self.nameslb.GetSelection() 
 
 def dictintersection(one,two):
     return filter(two.has_key, one.keys())
