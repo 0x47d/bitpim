@@ -13,6 +13,7 @@
 import os
 import sys
 import cStringIO
+import random
 
 # wx modules
 import wx
@@ -198,6 +199,11 @@ class WallpaperView(guiwidgets.FileView):
         if self.isBCI(file):
             return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         return file, wx.Image
+
+    def GetImageStatInformation(self, file):
+        """Returns the statinfo for file"""
+        file=os.path.join(self.mainwindow.wallpaperpath, file)
+        return statinfo(file)
         
     def updateindex(self, index):
         if index!=self._data['wallpaper-index']:
@@ -392,11 +398,43 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
 ### Virtual filesystem where the images etc come from for the HTML stuff
 ###
 
+def statinfo(filename):
+    """Returns a simplified version of os.stat results that can be used to tell if a file
+    has changed.  The normal structure returned also has things like last access time
+    which should not be used to tell if a file has changed."""
+    try:
+        s=os.stat(filename)
+        return (s.st_mode, s.st_ino, s.st_dev, s.st_uid, s.st_gid, s.st_size, s.st_mtime,
+                s.st_ctime)
+    except:
+        return None
+
 class BPFSHandler(wx.FileSystemHandler):
+
+    CACHELOWWATER=20
+    CACHEHIGHWATER=40
 
     def __init__(self, wallpapermanager):
         wx.FileSystemHandler.__init__(self)
         self.wpm=wallpapermanager
+        self.cache={}
+
+    def _GetCache(self, location, statinfo):
+        """Return the cached item, or None
+
+        Note that the location value includes the filename and the parameters such as width/height
+        """
+        if statinfo is None: return None
+        return self.cache.get( (location, statinfo), None)
+
+    def _AddCache(self, location, statinfo, value):
+        "Add the item to the cache"
+        # we also prune it down in size if necessary
+        if len(self.cache)>=self.CACHEHIGHWATER:
+            # random replacement - almost as good as LRU ...
+            while len(self.cache)>self.CACHELOWWATER:
+                del self.cache[random.choice(self.cache.keys())]
+        self.cache[(location, statinfo)]=value
 
     def CanOpen(self, location):
 
@@ -414,9 +452,15 @@ class BPFSHandler(wx.FileSystemHandler):
         return False
 
     def OpenFile(self,filesystem,location):
-        res=self._OpenFile(filesystem,location)
-        if res is not None:
-            res.thisown=False # work around bug in wxPython 2.5.2.7
+        try:
+            res=self._OpenFile(filesystem,location)
+        except:
+            res=None
+            print "Exception in getting image file - you can't do that!"
+            print common.formatexception()
+        #if res is not None:
+        #    
+        #    res.thisown=False # work around bug in wxPython 2.5.2.7
         return res
 
     def _OpenFile(self, filesystem, location):
@@ -441,17 +485,28 @@ class BPFSHandler(wx.FileSystemHandler):
         return None
 
     def OpenBPUserImageFile(self, location, name, **kwargs):
+        si=self.wpm.GetImageStatInformation(name)
+        res=self._GetCache(location, si)
+        if res is not None: return res
         file,cons=self.wpm.GetImageConstructionInformation(name)
         if cons == wx.Image:
-            return BPFSImageFile(self, location, file, **kwargs)
-        return BPFSImageFile(self, location, img=cons(file), **kwargs)
+            res=BPFSImageFile(self, location, file, **kwargs)
+        else:
+            res=BPFSImageFile(self, location, img=cons(file), **kwargs)
+        self._AddCache(location, si, res)
+        return res
 
     def OpenBPImageFile(self, location, name, **kwargs):
         f=guihelper.getresourcefile(name)
         if not os.path.isfile(f):
             print f,"doesn't exist"
             return None
-        return BPFSImageFile(self, location, name=f, **kwargs)
+        si=statinfo(f)
+        res=self._GetCache(location, si)
+        if res is not None: return res
+        res=BPFSImageFile(self, location, name=f, **kwargs)
+        self._AddCache(location, si, res)
+        return res
 
 class BPFSImageFile(wx.FSFile):
     """Handles image files
@@ -494,7 +549,6 @@ class BPFSImageFile(wx.FSFile):
         s=wx.InputStream(cStringIO.StringIO(data))
         
         wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
-
 
 class StringInputStream(wx.InputStream):
 
