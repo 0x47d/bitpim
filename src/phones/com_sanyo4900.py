@@ -44,12 +44,15 @@ class Phone(com_sanyo.Phone):
 
     def savewallpapers(self, results, merge):
         print "savewallpapers ",results['wallpaper-index']
-        return self.savemedia('wallpapers', 'wallpaper-index', results, merge)
+        return self.savemedia('wallpapers', 'wallpaper-index', 'images', results, merge)
                               
+    # Note:  Was able to write 6 ringers to phone.  If there are ringers
+    # already on phone, this counts against the 6.  Don't know yet if the limit
+    # is a count limit or a byte limit.
     def saveringtones(self, results, merge):
-        return self.savemedia('ringtone', 'ringtone-index', results, merge)
+        return self.savemedia('ringtone', 'ringtone-index', 'ringers', results, merge)
     
-    def savemedia(self, mediakey, mediaindexkey, results, merge):
+    def savemedia(self, mediakey, mediaindexkey, mediatype, results, merge):
         """Actually saves out the media
 
         @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
@@ -68,9 +71,9 @@ class Phone(com_sanyo.Phone):
         # Don't care about origin since there is only one place to put images
 #        print wp
         init={}
-        init['images']={}
+        init[mediatype]={}
         for k in wpi.keys():
-            if wpi[k]['origin']=='images':
+            if wpi[k]['origin']==mediatype:
                 index=k
                 name=wpi[k]['name']
                 data=None
@@ -99,7 +102,7 @@ class Phone(com_sanyo.Phone):
         # we now have init[type] with the entries and index number as key (negative indices are
         # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
                              
-        index=init['images']
+        index=init[mediatype]
 
         dellist=[]
 
@@ -168,8 +171,8 @@ class Phone(com_sanyo.Phone):
         # Note that we don't write to the camera area
 
         # tidy up - reread indices
-        del results[mediakey] # done with it
-        reindexfunction(results)
+        # del results[mediakey] # done with it
+        # reindexfunction(results)
         return results
         
 
@@ -234,8 +237,8 @@ class Profile(com_sanyo.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-#        ('wallpaper', 'write', 'OVERWRITE'),
-#        ('ringtone', 'write', 'OVERWRITE'),
+        # ('wallpaper', 'write', 'OVERWRITE'),
+        # ('ringtone', 'write', 'OVERWRITE'),
         )
 
 
