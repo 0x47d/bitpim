@@ -36,6 +36,7 @@ import comdiagnose
 import phonebook
 import importexport
 import wallpaper
+import ringers
 import guihelper
 
 ###
@@ -490,7 +491,7 @@ class MainWindow(wxFrame):
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
-        self.ringerwidget=guiwidgets.RingerView(self, self.nb)
+        self.ringerwidget=ringers.RingerView(self, self.nb)
         self.nb.AddPage(self.ringerwidget, "Ringers")
         self.calendarwidget=guiwidgets.Calendar(self, self.nb)
         self.nb.AddPage(self.calendarwidget, "Calendar")
@@ -681,11 +682,16 @@ class MainWindow(wxFrame):
         if not updwp and results.has_key('wallpaper-index'):
             self.wallpaperwidget.updateindex(results['wallpaper-index'])
         # ringtone
+        updrng=False # did we update ringtones
         if results['sync'].has_key('ringtone'):
             v=results['sync']['ringtone']
             if v=='MERGE': raise Exception("Not implemented")
+            updrng=True
             self.ringerwidget.populatefs(results)
             self.ringerwidget.populate(results)
+        # wallpaper-index
+        if not updrng and results.has_key('ringtone-index'):
+            self.ringerwidget.updateindex(results['ringtone-index'])            
         # calendar
         if results['sync'].has_key('calendar'):
             v=results['sync']['calendar']
@@ -729,11 +735,12 @@ class MainWindow(wxFrame):
         if v!=dlg.NOTREQUESTED:
             merge=True
             if v==dlg.OVERWRITE: merge=False
-            self.ringerwidget.getdata(data)
+            if merge:
+                want=self.ringerwidget.SELECTED
+            else:
+                want=self.ringerwidget.ALL
+            self.ringerwidget.getdata(data, want)
             todo.append( (self.wt.writeringtone, "Ringtone", merge) )
-            # writing will modify data (especially index) so
-            # we repopulate on return
-            funcscb.append( self.ringerwidget.populatefs )
             funcscb.append( self.ringerwidget.populate )
 
         ### Phonebook
