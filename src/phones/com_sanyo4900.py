@@ -366,7 +366,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Stop update
         res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse, writemode=True)
-        self.close()
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
@@ -397,7 +396,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             res=self.sendpbcommand(req, p_sanyo.eventresponse)
             if(res.entry.flag):
                 self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
-                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`+" "+`res.entry.serial`)
+                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`)
                 entry={}
                 entry['pos']=i
                 entry['changeserial']=res.entry.serial
@@ -412,9 +411,29 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 entry['repeat']=self._calrepeatvalues[res.entry.period]
                 alarmtime=res.entry.alarm
                 entry['alarm']=(starttime-alarmtime)/60
-                calres[i]=entry
                 entry['ringtone']=res.entry.alarm_type
                 entry['snoozedelay']=0
+                calres[i]=entry
+
+        req=p_sanyo.callalarmrequest()
+        for i in range(0, p_sanyo._NUMCALLALARMSLOTS):
+            req.slot=i
+            res=self.sendpbcommand(req, p_sanyo.callalarmresponse)
+            if(res.entry.flag):
+                self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum)
+                self.log("Extra number: "+`res.entry.dunno1`)
+                entry={}
+                entry['pos']=i+p_sanyo._NUMEVENTSLOTS # Make unique
+                entry['changeserial']=res.entry.serial
+                entry['description']=res.entry.phonenum
+                starttime=res.entry.date
+                entry['start']=self.decodedate(starttime)
+                entry['end']=entry['start']
+                entry['repeat']=self._calrepeatvalues[res.entry.period]
+                entry['alarm']=0
+                entry['ringtone']=0
+                entry['snoozedelay']=0
+                calres[i]=entry
 
         result['calendar']=calres
         return result
@@ -424,20 +443,22 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # what will be written to the files
         #   Handle Change Serial better.
         #   Advance date on repeating entries to after now so that they
-        #   won't all go off when the phone gets turned on.
+        #     won't all go off when the phone gets turned on.
+        #   Sort by date so that that already happened entries don't get
+        #     loaded if we don't have room
         #
         cal=dict['calendar']
         newcal={}
         keys=cal.keys()
 
-        slot=0
-        progressmax=p_sanyo._NUMEVENTSLOTS
+        eventslot=0
+        callslot=0
+        progressmax=p_sanyo._NUMEVENTSLOTS+p_sanyo._NUMCALLALARMSLOTS
         for k in keys:
             entry=cal[k]
             
-            e=p_sanyo.evententry()
-
-            setattr(e,'slot',slot)
+            descloc=entry['description']
+            self.progress(eventslot+callslot, progressmax, "Writing "+descloc)
 
             repeat=None
             for k,v in self._calrepeatvalues.items():
@@ -447,66 +468,125 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             if repeat is None:
                 self.log(descloc+": Repeat type "+`entry['repeat']`+" not valid for this phone")
                 repeat=0
-            e.period=repeat
 
-            descloc=entry['description']
-            self.progress(slot, progressmax, "Writing "+descloc)
-            self.log("Write calendar slot "+`slot`+ " - "+descloc)
+            phonenum=re.sub("\-","",descloc)
+            if(phonenum.isdigit()):  # This is a phone number, use call alarm
+                self.log("Write calendar call alarm slot "+`callslot`+ " - "+descloc)
+                e=p_sanyo.callalarmentry()
+                e.slot=callslot
+                e.phonenum=phonenum
+                e.phonenum_len=len(e.phonenum)
+                
+                now=time.mktime(time.localtime(time.time()))
 
-            slashpos=descloc.find('/')
-            if(slashpos >= 0):
-                eventname=descloc[0:slashpos]
-                location=descloc[slashpos+1:]
-            else:
-                eventname=descloc
-                location=''
+                timearray=entry['start']+[0,0,0,0]
+                starttimelocal=time.mktime(timearray)
+                if(starttimelocal<now and repeat==0):
+                    e.flag=2 # In the past
+                else:
+                    e.flag=1 # In the future
+                e.date=starttimelocal-self._sanyoepochtounix
+                e.datedup=e.date
+                e.phonenumbertype=0
+                e.phonenumberslot=0
+                e.name="" # Could get this by reading phone book
+                          # But it would take a lot more time
+                e.name_len=len(e.name)
+
+                req=p_sanyo.callalarmupdaterequest()
+                callslot+=1
+                respc=p_sanyo.callalarmresponse
+            else: # Normal calender event
+                self.log("Write calendar event slot "+`eventslot`+ " - "+descloc)
+                e=p_sanyo.evententry()
+                e.slot=eventslot
+
+                slashpos=descloc.find('/')
+                if(slashpos >= 0):
+                    eventname=descloc[0:slashpos]
+                    location=descloc[slashpos+1:]
+                else:
+                    eventname=descloc
+                    location=''
             
-            e.eventname=eventname
-            e.eventname_len=len(e.eventname)
-            e.location=location
-            e.location_len=len(e.location)
-            now=time.mktime(time.localtime(time.time()))
+                e.eventname=eventname
+                e.eventname_len=len(e.eventname)
+                e.location=location
+                e.location_len=len(e.location)
+                now=time.mktime(time.localtime(time.time()))
 
-            e.dom=entry['start'][2]
+                timearray=entry['start']+[0,0,0,0]
+                starttimelocal=time.mktime(timearray)
+                if(starttimelocal<now and repeat==0):
+                    e.flag=2 # In the past
+                else:
+                    e.flag=1 # In the future
+                e.start=starttimelocal-self._sanyoepochtounix
 
-            timearray=entry['start']+[0,0,0,0]
-            starttimelocal=time.mktime(timearray)
-            if(starttimelocal<now and repeat==0):
-                e.flag=2 # In the past
-            else:
-                e.flag=1 # In the future
-            e.start=starttimelocal-self._sanyoepochtounix
+                timearray=entry.get('end', entry['start'])+[0,0,0,0]
+                e.end=time.mktime(timearray)-self._sanyoepochtounix
 
-            timearray=entry.get('end', entry['start'])+[0,0,0,0]
-            e.end=time.mktime(timearray)-self._sanyoepochtounix
+                alarmdiff=entry.get('alarm',0)
+                e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
+                e.location=location
+                e.location_len=len(e.location)
 
-            alarmdiff=entry.get('alarm',0)
-            e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
-            e.location=location
-            e.location_len=len(e.location)
-
-            e.alarm_type=entry.get('ringtone',0)
+                e.alarm_type=entry.get('ringtone',0)
 
 # What we should do is first find largest changeserial, and then increment
 # whenever we have one that is undefined or zero.
-            e.serial=entry.get('changeserial',0)
-                                    
             
-            req=p_sanyo.eventupdaterequest()
+                req=p_sanyo.eventupdaterequest()
+                eventslot+=1
+                respc=p_sanyo.eventresponse
+
+            e.period=repeat
+            e.dom=entry['start'][2]
+            e.serial=entry.get('changeserial',0)
             req.entry=e
+            res=self.sendpbcommand(req, respc, writemode=True)
+
+
+# Blank out unused slots
+        e=p_sanyo.evententry()
+        e.flag=0 # Unused slot
+        e.eventname=""
+        e.eventname_len=0
+        e.location=""
+        e.location_len=0
+        e.start=0
+        e.end=0
+        e.alarm_type=0
+        e.period=0
+        e.dom=0
+        e.alarm=0
+        req=p_sanyo.eventupdaterequest()
+        req.entry=e
+        for eventslot in range(eventslot,p_sanyo._NUMEVENTSLOTS):
+            self.progress(eventslot+callslot, progressmax, "Writing unused")
+            self.log("Write calendar event slot "+`eventslot`+ " - Unused")
+            req.entry.slot=eventslot
             res=self.sendpbcommand(req, p_sanyo.eventresponse, writemode=True)
 
-            slot+=1
-
-#        for slot in range(slot,20):
-        for slot in range(slot,p_sanyo._NUMEVENTSLOTS):
-            self.progress(slot, progressmax, "Writing unused")
-            self.log("Write calendar slot "+`slot`+ " - Unused")
-            e.slot=slot
-            e.flag=0 # Unused slot
-            req=p_sanyo.eventupdaterequest()
-            req.entry=e
-            res=self.sendpbcommand(req, p_sanyo.eventresponse, writemode=True)
+        e=p_sanyo.callalarmentry()
+        e.flag=0 # Unused slot
+        e.name=""
+        e.name_len=0
+        e.phonenum=""
+        e.phonenum_len=0
+        e.date=0
+        e.datedup=0
+        e.period=0
+        e.dom=0
+        e.phonenumbertype=0
+        e.phonenumberslot=0
+        req=p_sanyo.callalarmupdaterequest()
+        req.entry=e
+        for callslot in range(callslot,p_sanyo._NUMCALLALARMSLOTS):
+            self.progress(eventslot+callslot, progressmax, "Writing unused")
+            self.log("Write calendar call alarm slot "+`callslot`+ " - Unused")
+            req.entry.slot=callslot
+            res=self.sendpbcommand(req, p_sanyo.callalarmresponse, writemode=True)
 
         self.progress(progressmax, progressmax, "Calendar write done")
 
