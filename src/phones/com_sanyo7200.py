@@ -34,6 +34,14 @@ class Phone(com_sanyo.Phone):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
+    def savecalendar(self, dict, merge):
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=1 # Start update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+
+        self.writewait()
+        result = com_sanyo.Phone.savecalendar(self, dict, merge)
+
 class Profile(com_sanyo.Profile):
 
     protocolclass=p_sanyo7200
