@@ -6,8 +6,17 @@ combined YAPTU and XYAPTU into a single file.  The copyright,
 warranty and license remain with the original authors.  Please
 consult these two URLs
 
-U{http://aspn.activestate.com/ASPN/Python/Cookbook/Recipe/52305}
-U{http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/162292}
+  - U{http://aspn.activestate.com/ASPN/Python/Cookbook/Recipe/52305}
+  - U{http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/162292}
+
+The following changes were made:
+
+  - Removed very lengthy examples from the end (see the above URLs for
+    them)
+  - Added: setupxcopy() takes the template text and remembers it
+  - Added: xcopywithdns() does the copy with supplied DNS and remembered template
+    and returns the resulting string
+
 """
 
 import sys
@@ -135,31 +144,32 @@ class xcopier(copier):
                     preproc=_preproc, handle=self._handleBadExps, ouf=ouf)
 
 
-  def xcopy(self, input=None):
+  def xcopy(self, inputText):
     '''
     Converts the value of the input stream (or contents of input filename) 
     from xyaptu format to yaptu format, and invokes yaptu.copy
     '''
     
-    # Read the input
-    inf = input
-    try: 
-      inputText = inf.read()
-    except AttributeError: 
-      inf = open(input)
-      if inf is None: 
-        raise ValueError, "Can't open file (%s)" % input 
-      inputText = inf.read()
-    try:
-      inf.close()
-    except: 
-      pass
-
     # Translate (xyaptu) input to (yaptu) input, and call yaptu.copy()
     from cStringIO import StringIO
     yinf = StringIO(self._x2y_translate(inputText))
     self.copy(inf=yinf)
     yinf.close()
+
+  def setupxcopy(self, inputText):
+      from cStringIO import StringIO
+      yinf = StringIO(self._x2y_translate(inputText))
+      # we have to build the list since you can only run
+      # readline/s once on a file
+      self.remembered=[line for line in yinf.readline()]
+      
+  def xcopywithdns(self, dns):
+      from cStringIO import StringIO
+      self.globals=dns
+      out=StringIO()
+      self.ouf=out
+      self.copy(self.remembered)
+      return out.getvalue()
 
   def _x2y_translate(self, xStr):
     ' Converts xyaptu markup in input string to yaptu delimeters '
@@ -262,144 +272,3 @@ class xcopier(copier):
     for code in codes:
       s = string.replace(s, code[1], code[0])
     return s
-
-
-####################################################
-
-if __name__=='__main__':
-
-  ##################################################
-  # Document Name Space (a dictionary, normally prepared by runtime application,
-  # and that serves as the substitution namespace for instantiating a doc template).
-  #
-  DNS = {
-    'pageTitle' : 'Event Log (xyaptu test page)',
-    'baseUrl' : 'http://xproject.sourceforge.net/',
-    'sid' : 'a1b2c3xyz',
-    'session' : 1,
-    'userName' : 'mario',
-    'startTime' : '12:31:42',
-    'AllComputerCaptions' : 'No',
-    'ComputerCaption' : 'mymachine01',
-    'LogSeverity' : ['Info', 'Warning', 'Error' ],
-    'LogFileType' : 'Application',
-    'logTimeStamp' : 'Event Log Dump written on 25 May 2001 at 13:55',
-    'logHeadings' : ['Type', 'Date', 'Time', 'Source', 'Category', 'Computer', 'Message'] , 
-    'logEntries' : [
-      ['Info', '14/05/2001', '15:26', 'MsiInstaller', '0', 'PC01', 'winzip80 install ok...'],
-      ['Warning', '16/05/2001', '02:43', 'EventSystem', '4', 'PC02', 'COM+ failed...'],      
-      ['Error', '22/05/2001', '11:35', 'rasctrs', '0', 'PC03', '...', ' ** EXTRA ** ' ],
-    ]
-  }
-  
-  # and a function...
-  def my_current_time():
-    import time
-    return str(time.clock())
-  DNS['my_current_time'] = my_current_time
-
-  '''  
-  # To use functions defined in an external library
-  import externalFunctionsLib
-  dict['fcn'] = externalFunctionsLib 
-  # which will therefore permit to call functions with: 
-  ${fcn.somefun()}
-  '''
-  
-  ##################################################
-  # Sample page template that uses the xyaptu tags and pcdata expressions. 
-  # Note that:
-  #  - source code indentation here is irrelevant for xyaptu
-  #  - xyaptu tags may span more than one source line
-  #
-  templateString = '''<html>
- <head>
-  <title>$pageTitle</title>
- </head>
- <body bgcolor="#FFFFFF" text="#000000">
-  
-  <py-open code="if session:"/> 
-   Logged on as $userName, since <py-expr>startTime</py-expr>
-   (<a href="$baseUrl?sid=$sid&amp;linkto=Logout">Logout?</a>)
-  <py-close/>
-  <hr>
-  <h1>${pageTitle}</h1>
-  <hr>
-  <p>${a bad expression}</p>
-  <p>
-   <b>Filtering Event Log With:</b><br>
-   All Computers: $AllComputerCaptions <br>
-   Computer Name: $ComputerCaption <br>
-   Log Severity: 
-    <py-open code="for LG in LogSeverity:"/> 
-      $LG
-    <py-close/> 
-    <br>
-   Log File Type: <py-expr code="LogFileType" />
-  </p>
-  <hr>
-  <p>$logTimeStamp</p>
-  
-  <table width="100%" border="0" cellspacing="0" cellpadding="2">
-
-   <tr valign="top" align="left">
-    <py-open code = "for h in logHeadings:" > code attribute takes precedence 
-     over this text, which is duly ignored </py-open>
-     <th>$h</th>
-    <py-close/>
-   </tr>
-
-   <py-line
-               code = "numH=len(logHeadings)" 
-                                                />
-   
-   <py-open code="for logentry in logEntries:"/>
-    <tr valign="top" align="left">
-     <py-open>for i in range(0,len(logentry)):</py-open>
-      <py-open code="if i &lt; numH:" />
-       <td>${logentry[i]}</td>
-      <py-clause code="else:" />
-       <td bgcolor="#cc0000">Oops! <!-- There's more log entry fields than headings! --></td>
-      <py-close/>
-     <py-close>### close (this is ignored) </py-close>
-    </tr>
-   <py-close/>
-   
-  </table>
-  <hr>
-  Current time: ${my_current_time()}
-  <hr>
- </body>
-</html>
-  '''
-
-  ##################################################
-  # Set a filelike object to templateString 
-  from cStringIO import StringIO
-  templateStream = StringIO(templateString)
-  
-  ##################################################
-  # Initialise an xyaptu xcopier, and call xcopy
-  xcp = xcopier(DNS)
-  xcp.xcopy(templateStream)
-
-
-  ##################################################
-  # Test DBG 1
-  # Set dbg ON (writing dbg statements on output stream)
-  '''
-  xcp = xcopier(DNS, dbg=1)
-  xcp.xcopy(templateStream)
-  '''
-  
-  ##################################################
-  # Test DBG 2
-  # Write dbg statements to a separate dbg stream
-  '''
-  dbgStream = StringIO()
-  dbgStream.write('DBG info: \n')
-  xcp = xcopier(DNS, dbg=1, dbgOuf=dbgStream)
-  xcp.xcopy(templateStream)
-  print dbgStream.getvalue()
-  dbgStream.close()
-  '''
