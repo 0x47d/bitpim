@@ -120,13 +120,15 @@ class BCIPalette:
 class MemoryInputStream(wx.InputStream):    
     def __init__(self, data):
         import cStringIO
-        f=cStringIO.StringIO(data)
-        wx.InputStream.__init__(self,f)
+        wx.InputStream.__init__(self,cStringIO.StringIO(data))
 
 class FileInputStream(wx.InputStream):    
     def __init__(self, name):
         self.f=open(name, "rb")
-        wx.InputStream.__init__(self,self.f)
+        wx.InputStream.__init__(self, self.f)
+
+    def __del__(self):
+        self.f.close()
 
 def getimage(stream, intoImage=None):
     """Returns a wxImage of the stream specified"""
