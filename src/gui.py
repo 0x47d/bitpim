@@ -1403,8 +1403,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         if mw.HandleException(exception): return
         item=self.pathtoitem(path)
         l=[]
-        cookie=id(result)-10000
-        child,cookie=self.GetFirstChild(item,cookie)
+        child,cookie=self.GetFirstChild(item)
         for dummy in range(0,self.GetChildrenCount(item,False)):
             l.append(child)
             child,cookie=self.GetNextChild(item,cookie)
@@ -1718,9 +1717,8 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         dirs=path.split('/')
         node=self.root
         for n in range(0, len(dirs)):
-            cookie=id(node)-10000
             foundnode=None
-            child,cookie=self.GetFirstChild(node,cookie)
+            child,cookie=self.GetFirstChild(node)
             for dummy in range(0, self.GetChildrenCount(node, False)):
                 d=self.GetItemText(child)
                 if d==dirs[n]:
