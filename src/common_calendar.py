@@ -139,24 +139,28 @@ class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
         m={}
         m_count=0
         for k in data:
-            d=data[k]
-            col_idx=None
-            mm={}
-            for i, l in enumerate(self.__col_labels):
-                entry=d.get(l[0], None)
-                s=''
-                if l[3] is None:
-                    s=str(entry)
-                else:
-                    s=l[3](d, entry)
-                mm[i]=s
-                if i:
-                    self.__list.SetStringItem(col_idx, i, s)
-                else:
-                    col_idx=self.__list.InsertImageStringItem(sys.maxint, s, -1)
-            self.__list.SetItemData(col_idx, m_count)
-            m[m_count]=mm
-            m_count += 1
+            try:
+                d=data[k]
+                col_idx=None
+                mm={}
+                for i, l in enumerate(self.__col_labels):
+                    entry=d.get(l[0], None)
+                    s=''
+                    if l[3] is None:
+                        s=str(entry)
+                    else:
+                        s=l[3](d, entry)
+                    mm[i]=s
+                    if i:
+                        self.__list.SetStringItem(col_idx, i, s)
+                    else:
+                        col_idx=self.__list.InsertImageStringItem(sys.maxint, s, -1)
+                self.__list.SetItemData(col_idx, m_count)
+                m[m_count]=mm
+                m_count += 1
+            except:
+                # something wrong happened, drop this event
+                if __debug__: raise
         self.itemDataMap=m
 
     def GetListCtrl(self):
