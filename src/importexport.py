@@ -100,7 +100,7 @@ class ImportCSVDialog(wx.Dialog):
         }
 
 
-    def __init__(self, filename, parent, id, title, style=wx.CAPTION|\
+    def __init__(self, filename, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style, size=(640,480))
 
