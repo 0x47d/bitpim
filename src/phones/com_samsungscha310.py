@@ -120,50 +120,32 @@ class Phone(com_samsung.Phone):
         except commport.ATError:
             return {}
             
-        s2=split(s[0], ': ')[1]
         r={}
-        for k in range(1,len(s2)-2):
-            s3=split(s2[k],',')
+        for k in s[1:]:
+            s3=split(k, ',')
             r[atoi(s3[0])]={ 'name': s3[2], 'origin': 'builtin' }
-
         return r
-
-    def _get_phone_num_count(self):
-        try:
-            s=self.comm.sendatcommand("#PCBIT?")
-            if len(s)==0:
-                return 0
-            c=atoi(split(split(s[0], ": ")[1], ",")[7])-30
-            if c>len(self.__phone_entries_range):
-                # count out whack
-                c=0
-            return c
-            
-        except ATError:
-            return 0
 
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
-
         self.pmode_on()
-        c=self._get_phone_num_count()
-        k,j=0,1
-        i=[0]
+        c=len(self.__phone_entries_range)
+        k=0
         pb_book={}
-        while i[0]<c:
-            # print "Getting entry: ", j
+        for j in self.__phone_entries_range:
             pb_entry=self.get_phone_entry(j);
             if len(pb_entry):
-                pb_book[k]=self._extract_phone_entry(pb_entry, result, i)
-                # print pb_book[k], i
+                pb_book[k]=self._extract_phone_entry(pb_entry, result)
                 if show_progress:
-                    self.progress(i[0], c, 'Reading '+pb_entry[self.__pb_name])
+                    self.progress(j, c, 'Reading '+pb_entry[self.__pb_name])
                 k+=1
-            j+=1
+            else:
+                if show_progress:
+                    self.progress(j, c, 'Blank entry: %d' % j)
         self.pmode_off()
         return pb_book
-
+        
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
@@ -174,7 +156,7 @@ class Phone(com_samsung.Phone):
         result['phonebook']=pb_book
         return pb_book
 
-    def _extract_phone_entry(self, entry, fundamentals, pb_count):
+    def _extract_phone_entry(self, entry, fundamentals):
 
         res={}
 
@@ -196,7 +178,6 @@ class Phone(com_samsung.Phone):
         s=strip(entry[self.__pb_email], '"')
         if len(s):
                res['emails']=[ { 'email': s } ]
-               pb_count[0] += 1
 
         # urls
         # private
@@ -227,7 +208,6 @@ class Phone(com_samsung.Phone):
                     else:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key })
-                    pb_count[0] += 1
         return res
 
     def savephonebook(self, data):
@@ -418,6 +398,7 @@ class Phone(com_samsung.Phone):
         e[self.__pb_group]=`grp`
 
         # ringtones
+        e[self.__pb_ringtone]=None
         try:
             ringtone_name=pb_entry['ringtones'][0]['ringtone']
             for k in ringtone_index:
@@ -426,6 +407,10 @@ class Phone(com_samsung.Phone):
                     break
         except:
             pass
+        if e[self.__pb_ringtone] is None:
+            e[self.__pb_ringtone]='0'
+            pb_entry['ringtones']=[ { 'ringtone': ringtone_index[0]['name'],
+                                      'use': 'call' } ]
 
         # name
         e[self.__pb_name]='"'+pb_entry['names'][0]['full']+'"'
@@ -480,15 +465,17 @@ class Phone(com_samsung.Phone):
         # if it has not then do nothing an just return
 
         ee=self.get_phone_entry(atoi(e[self.__pb_entry]))
-        k=self.__pb_max_entries-2
+        if len(ee):
+            # valid phone entry, do comparison
+            # DSV took " out, need put them back in
+            ee[self.__pb_name]='"'+ee[self.__pb_name]+'"'
+            ee[self.__pb_email]='"'+ee[self.__pb_email]+'"'
+            k=self.__pb_max_entries-2
+            if e[0:k]==ee[0:k]:
+                return True
 
-        # self.log("Old: "+join(ee,','))
-        # self.log("New: "+join(e,','))
-        # return True
-        if e[0:k]==ee[0:k]:
-            return True
-        else:
-            return self.save_phone_entry('0,'+join(e,','))
+        return self.save_phone_entry('0,'+join(e,','))
+
 
     def getcalendar(self, result):
         if not self.is_online():
@@ -516,7 +503,7 @@ class Phone(com_samsung.Phone):
             entry['end']=self.extract_timedate(r[self.__cal_end_datetime])
 
             # description
-            entry['description']=strip(r[self.__cal_read_name], '"')
+            entry['description']=r[self.__cal_read_name]
 
             # alarm
             try:
@@ -588,9 +575,9 @@ class Phone(com_samsung.Phone):
                     break
 
             if e[self.__cal_alarm_type] is None:
-                self.log("Invalid alarm value (%d), reset to 0" % alarm)
+                self.log("Invalid alarm value (%s), reset to 0" % str(alarm))
                 e[self.__cal_alarm_type]='0'
-                c['alarm']=0
+                c['alarm']=self.__cal_alarm_values['0']
 
             # Name
             e[self.__cal_write_name]='"'+c['description']+'"'
