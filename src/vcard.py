@@ -83,7 +83,10 @@ class VFile:
         items=b4.upper().split(";")
 
         newitems=[]
-        charset="LATIN-1"
+        if isinstance(line, unicode):
+            charset=None
+        else:
+            charset="LATIN-1"
         for i in items:
             # ::TODO:: probably delete anything preceding a '.'
             # (see 5.8.2 in rfc 2425)
