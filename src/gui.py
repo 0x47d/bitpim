@@ -36,6 +36,8 @@ ID_FILESAVE=1
 ID_FILEPRINT=1
 ID_FILEPRINTPREVIEW=1
 ID_FILEEXIT=1
+ID_EDITADDENTRY=1
+ID_EDITDELETEENTRY=1
 ID_EDITSETTINGS=1
 ID_DATAGETPHONE=1
 ID_DATASENDPHONE=1
@@ -280,6 +282,12 @@ class MainWindow(wxFrame):
         menu.Append(ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wxMenu()
+        menu.Append(ID_EDITADDENTRY, "Add...", "Add an item")
+        menu.Append(ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
+        menu.AppendSeparator()
+        menu.Append(ID_FV_ICONS, "View as Images", "Show items as images")
+        menu.Append(ID_FV_LIST, "View As List", "Show items as a report")
+        menu.AppendSeparator()
         menu.Append(ID_EDITSETTINGS, "&Settings", "Edit settings")
         menuBar.Append(menu, "&Edit");
 
@@ -336,6 +344,8 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_VIEWFILESYSTEM, self.OnViewFilesystem)
         EVT_MENU(self, ID_FV_LIST, self.OnFileViewList)
         EVT_MENU(self, ID_FV_ICONS, self.OnFileViewIcons)
+        EVT_MENU(self, ID_EDITADDENTRY, self.OnEditAddEntry)
+        EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
 
@@ -357,6 +367,9 @@ class MainWindow(wxFrame):
 
         # Populate all widgets from disk
         self.OnPopulateEverythingFromDisk()
+
+        # Fake event to update menus/toolbars
+        self.OnNotebookPageChanged()
 
     def OnExit(self,_=None):
         self.Close()
@@ -516,21 +529,29 @@ class MainWindow(wxFrame):
         self.configdlg.ShowModal()
 
     # deal with graying out/in menu items on notebook page changing
-    def OnNotebookPageChanged(self, _):
+    def OnNotebookPageChanged(self, _=None):
         # is ringers or wallpaper viewable?
         widget=self.nb.GetPage(self.nb.GetSelection())
         if widget is self.ringerwidget or \
            widget is self.wallpaperwidget:
-            enable=True
-        else: enable=False
-        if IsGtk():
-            enable=False # crummy platform
+            enablefv=True
+        else: enablefv=False
+        if widget is self.ringerwidget or \
+           widget is self.wallpaperwidget or \
+           widget is self.phonewidget:
+            enableedit=True
+        else: enableedit=False
         
-        self.GetToolBar().EnableTool(ID_FV_ICONS, enable)
-        self.GetToolBar().EnableTool(ID_FV_LIST, enable)
-        # wx errors if there is no menu item with the ID
-        # self.GetMenuBar().Enable(ID_FV_ICONS, enable)
-        # self.GetMenuBar().Enable(ID_FV_LIST, enable)
+        if IsGtk():
+            enablefv=False # crummy platform
+            
+        
+        self.GetToolBar().EnableTool(ID_FV_ICONS, enablefv)
+        self.GetToolBar().EnableTool(ID_FV_LIST, enablefv)
+        self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
+        self.GetMenuBar().Enable(ID_FV_LIST, enablefv)
+        self.GetMenuBar().Enable(ID_EDITADDENTRY, enableedit)
+        self.GetMenuBar().Enable(ID_EDITDELETEENTRY, enableedit)
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):
@@ -538,6 +559,13 @@ class MainWindow(wxFrame):
 
     def OnFileViewIcons(self, _):
         self.nb.GetPage(self.nb.GetSelection()).seticonview()
+
+    # add/delete entry in the current tab
+    def OnEditAddEntry(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnAdd(evt)
+
+    def OnEditDeleteEntry(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnDelete(evt)
 
     # images and other resources
     def getbitmap(self,name):
@@ -864,7 +892,7 @@ class FileSystemView(wxTreeCtrl):
                 made=1
             if result[file]['type']=='file':
                 self.dirhash[result[file]['name']]=0
-                self.SetItemHasChildren(found, false)
+                self.SetItemHasChildren(found, False)
             else: # it is a directory
                 self.dirhash[result[file]['name']]=1
                 self.SetItemHasChildren(found, True)

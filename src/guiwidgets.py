@@ -29,7 +29,7 @@ class PhoneDataTable(wxPyGridTableBase):
 
     typestypename=wxGRID_VALUE_CHOICE+":"+",".join(numbertypetab)
 
-    intnames=( '#', 'group', 'msgringtone', 'ringtone', 'serial1', 'serial2' )
+    intnames=( 'group', 'msgringtone', 'ringtone', 'serial1', 'serial2' )
     
     boolnames=( 'secret', )
     
@@ -41,14 +41,14 @@ class PhoneDataTable(wxPyGridTableBase):
         self.labels=[] # columns
         self.roworder=[] # rows
         self._data={}
-        self.needswrite=0
+        self.needswrite=False
 
 
     def OnIdle(self, _):
         if self.needswrite:
             print "updating filesystem"
             self.populatefs(self.getdata({}))
-            self.needswrite=0
+            self.needswrite=False
 
 
     def getdata(self, dict):
@@ -59,7 +59,6 @@ class PhoneDataTable(wxPyGridTableBase):
     def setstandardlabels(self):
         # get some nice columns setup first
         self.addcolumn('name')
-        self.addcolumn('#')
         self.addcolumn('group')
         for i in range(1,6):
             self.addcolumn('type'+`i`)
@@ -77,6 +76,20 @@ class PhoneDataTable(wxPyGridTableBase):
         msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, oldr)
         if oldr:
             self.GetView().ProcessTableMessage(msg)
+
+    def OnDelete(self, rows):
+        # we do them in reverse order so that we don't have to worry about row numbers
+        # changing under us
+        print "deleting", rows
+        rows.sort()
+        rows.reverse()
+        for row in rows:
+            del self._data[self.roworder[row]]
+            del self.roworder[row]
+            msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, row, 1)
+            self.GetView().ProcessTableMessage(msg)
+        if len(rows):
+            self.needswrite=True
 
     def getcolumn(self,name):
         if len(self.labels)==0:
@@ -120,7 +133,6 @@ class PhoneDataTable(wxPyGridTableBase):
     def populate(self, dict):
         self.clear()
         pb=dict['phonebook']
-        self.mainwindow.OnLog(`pb`)
         k=pb.keys()
         k.sort()
         self._data.update(pb)
@@ -224,6 +236,10 @@ class PhoneGrid(wxGrid):
     def OnLeftDClick(self, _):
         if self.CanEnableCellControl():
             self.EnableCellEditControl()
+
+    def OnDelete(self, evt):
+        rows=self.GetSelectedRows()
+        self.table.OnDelete(rows)
 
     def clear(self):
         self.table.clear()
@@ -453,7 +469,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.SetDropTarget(self.droptarget)
         self.mainwindow=mainwindow
         self.thedir=None
-        self.wildcard="I forgot to set this in derived class|*"
+        self.wildcard="I forgot to set wildcard in derived class|*"
         self.maxlen=255
         if style!=wxLC_REPORT and not gui.IsGtk():
             # gtk can't do report and icon style
@@ -890,7 +906,7 @@ class MyStatusBar(wxStatusBar):
         EVT_IDLE(self, self.OnIdle)
         self.gauge=wxGauge(self, 1000, 1)
         self.SetFieldsCount(4)
-        self.SetStatusWidths( [60, -5, 260, -20] )
+        self.SetStatusWidths( [300, -5, 260, -20] )
         self.Reposition()
 
     def OnSize(self,_):
