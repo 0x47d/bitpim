@@ -895,20 +895,37 @@ class ImageCropSelect(wx.ScrolledWindow):
             self.previewwindow.SetUpdated(self.GetPreview)
 
     def GetPreview(self):
+        w,h=self.resultsize
+        l,t,r,b=self.anchors
+        scale=max(float(w+0.99999)/(r-l), float(h+0.99999)/(b-t))
+
+        # we are fine using this to scale down
+        if True and scale<1:
+            sub=wx.EmptyBitmap(w,h)
+            mdcsub=wx.MemoryDC()
+            mdcsub.SelectObject(sub)
+            mdcsub.SetUserScale(scale, scale)
+            mdc=wx.MemoryDC()
+            mdc.SelectObject(self.thebmp)
+            mdcsub.Blit(0,0,r-l,b-t,mdc,l,t)
+
+            mdc.SelectObject(wx.NullBitmap)
+            mdcsub.SelectObject(wx.NullBitmap)
+            return sub
+
+        # scaling up
         # Mac is eye wateringly slow doing wx.Bitmap to wx.Image conversions so
-        # we use up extra memory keeping a copy of self.thebmp as an image
+        # we use up extra memory keeping a copy of self.thebmp as an image        
         if guihelper.IsMac():
             if self.imageofthebmp is None:
                 self.imageofthebmp=self.thebmp.ConvertToImage()
-            l,t,r,b=self.anchors
             sub=self.imageofthebmp.GetSubImage( (l,t,(r-l),(b-t)) )
-            sub.Rescale(*self.resultsize)
+            sub.Rescale(w,h)
             return sub.ConvertToBitmap()
         # non-Mac
-        l,t,r,b=self.anchors
         sub=self.thebmp.GetSubBitmap( (l,t,(r-l),(b-t)) )
         sub=sub.ConvertToImage()
-        sub.Rescale(*self.resultsize)
+        sub.Rescale(w,h)
         return sub.ConvertToBitmap()
 
 class ImagePreview(wx.PyWindow):
