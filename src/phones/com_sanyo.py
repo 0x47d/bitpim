@@ -14,6 +14,7 @@ import re
 import time
 import cStringIO
 import sha
+import datetime
 
 # BitPim modules
 import com_brew
@@ -927,7 +928,9 @@ class SanyoPhonebook:
                 starttime=res.entry.start
                 entry.start=self.decodedate(starttime)
                 entry.end=self.decodedate(res.entry.end)
-                entry.repeat=self._calrepeatvalues[res.entry.period]
+                repeat=self._calrepeatvalues[res.entry.period]
+                entry.repeat = self.makerepeat(repeat,entry.start)
+
                 if res.entry.alarm==0xffffffff:
                     entry.alarm=res.entry.alarmdiff/60
                 else:
@@ -956,7 +959,8 @@ class SanyoPhonebook:
                 starttime=res.entry.date
                 entry.start=self.decodedate(starttime)
                 entry.end=entry.start
-                entry.repeat=self._calrepeatvalues[res.entry.period]
+                repeat=self._calrepeatvalues[res.entry.period]
+                entry.repeat = self.makerepeat(repeat,entry.start)
                 entry.alarm=0
                 if res.entry.ringtone!=self.calendar_defaultringtone:
                     entry.ringtone=result['ringtone-index'][res.entry.ringtone]['name']
@@ -967,6 +971,29 @@ class SanyoPhonebook:
         result['calendar']=calres
         return result
 
+    def makerepeat(self, repeatword, startdate):
+        if repeatword is None:
+            repeat_entry=None
+        else:
+            repeat_entry=bpcalendar.RepeatEntry()
+            if repeatword=='daily':
+                repeat_entry.repeat_type=repeat_entry.daily
+                repeat_entry.interval=1
+            elif repeatword=='monfri':
+                repeat_entry.repeat_type=repeat_entry.daily
+                repeat_entry.interval=0
+            elif repeatword=='weekly':
+                repeat_entry.repeat_type=repeat_entry.weekly
+                repeat_entry.interval=1
+                dow=datetime.date(*startdate[:3]).isoweekday()%7
+                repeat_entry.dow=1<<dow
+            elif repeatword=='monthly':
+                repeat_entry.repeat_type=repeat_entry.monthly
+            else:
+                repeat_entry.repeat_type=repeat_entry.yearly
+
+        return repeat_entry
+        
     def savecalendar(self, dict, merge):
         # ::TODO:: obey merge param
         # what will be written to the files
@@ -994,8 +1021,17 @@ class SanyoPhonebook:
             self.progress(eventslot+callslot, progressmax, "Writing "+descloc)
 
             repeat=None
+            rp=entry.repeat
+            if rp.repeat_type==rp.daily:
+                repeatname='daily'
+            elif rp.repeat_type==rp.weekly:
+                repeatname='weekly'
+            elif rp.repeat_type==rp.monthly:
+                repeatname='monthly'
+            elif rp.repeat_type==rp.yearly:
+                repeatname='yearly'
             for k,v in self._calrepeatvalues.items():
-                if entry.repeat==v:
+                if repeatname==v:
                     repeat=k
                     break
             if repeat is None:
