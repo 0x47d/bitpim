@@ -1978,7 +1978,6 @@ class ExportCSVDialog(BaseExportDialog):
     def OnOk(self, _):
         # do export
         filename=self.filenamectrl.GetValue()
-        print filename
         # find out the length of each key
         key_count={}
         for e in self.__pb_keys:
@@ -1987,7 +1986,6 @@ class ExportCSVDialog(BaseExportDialog):
             for k in record:
                 if key_count.has_key(k):
                     key_count[k]=max(key_count[k], len(record[k]))
-        print key_count
         f=open(filename, 'wt')
         l=[]
         for e in self.__pb_keys:
