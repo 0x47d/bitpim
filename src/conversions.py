@@ -211,7 +211,8 @@ def convertwavtoqcp(wavfile):
     pvconv=gethelperbinary('pvconv')
     run(pvconv, shortfilename(wavfile))
 
-def trimwav1(wavfilename, wavoutfilename, start, duration=None):
+def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
+    f=None
     try:
         f=open(wavfilename, 'rb')
         # read in the headers
@@ -237,17 +238,17 @@ def trimwav1(wavfilename, wavoutfilename, start, duration=None):
             new_size=subchunk2size-new_start
         # go get it
         f.seek(new_start, 1)
-        open(wavoutfilename, 'wb').write('RIFF'+\
-                                         common.LSBstr32(4+8+subchunk1size+8+new_size)+\
-                                         headers[8:]+'data'+\
-                                         common.LSBstr32(new_size)+\
-                                         f.read(new_size))
-        f.close()
-    except:
-        f.close()
-        raise
+        open(wavoutfilename, 'wb').write("".join(['RIFF',
+                                                  common.LSBstr32(4+8+subchunk1size+8+new_size),
+                                                  headers[8:],
+                                                  'data',
+                                                  common.LSBstr32(new_size),
+                                                  f.read(new_size)]))
+    finally:
+        if f is not None:
+            f.close()
 
-def trimwav2(wavedatain, start, duration=None):
+def trimwavdata(wavedatain, start, duration=None):
     # check for a PCM file format
     if wavedatain[:4]!='RIFF' or wavedatain[8:12]!='WAVE' or \
        wavedatain[12:16]!='fmt ' or common.LSBUint16(wavedatain[20:22])!=1:
