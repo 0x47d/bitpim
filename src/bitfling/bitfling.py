@@ -386,9 +386,7 @@ class MainWindow(wx.Frame):
         self.taskwin=None # set later
         wx.Frame.__init__(self, parent, id, title, style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION)
 
-        print sys.excepthook
         sys.excepthook=self.excepthook
-        print sys.excepthook
 
         self.authinfo={}  # updated by config panel
         self.icacache={}  # used by IsConnectionAllowed
