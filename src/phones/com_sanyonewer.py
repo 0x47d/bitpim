@@ -22,9 +22,6 @@ import com_sanyo
 import com_sanyomedia
 import prototypes
 
-numbertypetab=( 'home', 'office', 'cell', 'pager',
-                    'data', 'fax', 'none' )
-
 
 class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     "Talk to a Sanyo SCP-5500 style cell phone"
