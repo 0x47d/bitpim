@@ -184,8 +184,6 @@ class VCard:
                 ver=v.split(".")
                 try:
                     ver=[int(xx) for xx in ver]    
-        
-
                 except ValueError:
                     raise VFileException(v+" is not a valid vcard version")
                 self._version=ver
@@ -552,18 +550,17 @@ class VCard:
 
 # The formatters return a string
 
-def _quotechars(value):
-    return value \
-           .replace("\r", r"\\r") \
-           .replace("\n", r"\\n")
+def myqpencodestring(value):
+    """My own routine to do qouted printable since the builtin one doesn't encode CR or NL!"""
+    return quopri.encodestring(value).replace("\r", "=0D").replace("\n", "=0A")
 
 def format_stringv2(value):
     """Return a vCard v2 string.  Any embedded commas or semi-colons are removed."""
-    return _quotechars(value.replace("\\", "").replace(",", "").replace(";", ""))
+    return value.replace("\\", "").replace(",", "").replace(";", "")
 
 def format_stringv3(value):
     """Return a vCard v3 string.  Embedded commas and semi-colons are backslash quoted"""
-    return _quotechars(value.replace("\\", "").replace(",", r"\,").replace(";", r"\;"))
+    return value.replace("\\", "").replace(",", r"\,").replace(";", r"\;")
 
 _string_formatters=(format_stringv2, format_stringv3)
 
@@ -597,20 +594,20 @@ def out_line(name, attributes, value, formatter, join_char=";"):
             qp=False
             for f in value:
                 f=formatter(f)
-                if quopri.encodestring(f)!=f:
+                if myqpencodestring(f)!=f:
                     qp=True
                     break
             if qp:
                 attributes.append("ENCODING=QUOTED-PRINTABLE")
-                value=[quopri.encodestring(f) for f in value]
+                value=[myqpencodestring(f) for f in value]
                 
             value=join_char.join(value)
         else:
             value=formatter(value)
             # do the qp test
-            qp= quopri.encodestring(value)!=value
+            qp= myqpencodestring(value)!=value
             if qp:
-                value=quopri.encodestring(value)
+                value=myqpencodestring(value)
                 attributes.append("ENCODING=QUOTED-PRINTABLE")
     else:
         assert not _is_sequence(value)
@@ -702,6 +699,44 @@ def out_emails(vals, formatter):
 def out_urls(vals, formatter):
     return out_eu(vals, formatter, "URL", "url")
 
+# fun fun fun
+_out_tel_mapping={ 'home': 'HOME',
+                   'office': 'WORK',
+                   'cell': 'CELL',
+                   'fax': 'FAX',
+                   'pager': 'PAGER',
+                   'data': 'MODEM',
+                   'none': 'VOICE'
+                   }
+def out_tel(vals, formatter):
+    # ::TODO:: limit to one type of each number
+    res=""
+    first=True
+    for v in vals:
+        res+=out_line("TEL", ["TYPE=%s%s" % (_out_tel_mapping[v['type']], ("", ",PREF")[first])], v['number'], formatter)
+        first=False
+    return res
+
+# and addresses
+def out_adr(vals, formatter):
+    # ::TODO:: limit to one type of each address, and only one org
+    res=""
+    first=True
+    for v in vals:
+        o=v.get("company", "")
+        if len(o):
+            res+=out_line("ORG", None, o, formatter)
+        if v.get("type")=="home": type="HOME"
+        else: type="WORK"
+        type="TYPE="+type+("", ",PREF")[first]
+        res+=out_line("ADR", [type], [v.get(k, "") for k in (None, "street2", "street", "city", "state", "postalcode", "country")], formatter)
+        first=False
+    return res
+
+def out_note(vals, formatter, limit=1):
+    return "".join([out_line("NOTE", None, v["memo"], formatter) for v in vals[:limit]])
+
+
 # This is the order we write things out to the vcard.  Although
 # vCard doesn't require an ordering, it looks nicer if it
 # is (eg name first)
@@ -745,17 +780,14 @@ profile_vcard2={
     'categories': out_categories,
     'emails': out_emails,
     'urls': out_urls,
+    'numbers': out_tel,
+    'addresses': out_adr,
+    'memos': out_note,
     }
 
-profile_vcard3={
-    '_formatter': format_stringv3,
-    '_limit': 1,
-    '_version': "3.0",
-    'names': out_names,
-    'categories': out_categories,
-    'emails': out_emails,
-    'urls': out_urls,    
-    }
+profile_vcard3=profile_vcard2.copy()
+profile_vcard3['_formatter']=format_stringv3
+profile_vcard3['_version']="3.0"
 
 profile_apple=profile_vcard3.copy()
 profile_apple['categories']=out_categories_apple
