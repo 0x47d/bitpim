@@ -657,8 +657,14 @@ class FileViewNew(bpmedia.MediaDisplayer):
         #EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
         #EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
         #EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
-        #EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
         #EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
+
+
+
+    def OnDelete(self,_):
+        print "OnDelete called"
 
     def genericpopulatefs(self, dict, key, indexkey, version):
         try:
