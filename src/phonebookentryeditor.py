@@ -145,6 +145,7 @@ class CategoryManager(wx.Dialog):
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
+        print "categories updated to",cats
         if self.curlist is None:
             self.curlist=cats
 
