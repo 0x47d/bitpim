@@ -139,7 +139,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
-                return split(split(s, ": ")[1], ",")
+                return split(split(s[0], ": ")[1], ",")
         except commport.ATError:
             pass
         return []
