@@ -190,6 +190,8 @@ def genhtml(port):
         elif k=="libusb":
             res+=sfont+"""This indicates if the usb library is in use to access this device.  Operating system
             device drivers (if any) are bypassed when BitPim talks to the device"""+efont
+        elif k=="BitFling":
+            res+=sfont+"""This indicates that the port is being accessed from a remote machine via BitFling,"""+efont
         elif k=="protocol":
             res+=sfont+"""This is the protocol the USB device claims to speak"""+efont
         elif k=="class":
