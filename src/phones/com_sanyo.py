@@ -669,7 +669,10 @@ class SanyoPhonebook:
                 entry['repeat']=self._calrepeatvalues[res.entry.period]
                 alarmtime=res.entry.alarm
                 entry['alarm']=(starttime-alarmtime)/60
-                entry['ringtone']=res.entry.alarm_type
+                if res.entry.ringtone==self.calendar_defaultringtone:
+                    entry['ringtone']=0
+                else:
+                    entry['ringtone']=res.entry.ringtone
                 entry['snoozedelay']=0
                 calres[count]=entry
                 count+=1
@@ -690,7 +693,10 @@ class SanyoPhonebook:
                 entry['end']=entry['start']
                 entry['repeat']=self._calrepeatvalues[res.entry.period]
                 entry['alarm']=0
-                entry['ringtone']=0
+                if res.entry.ringtone==self.calendar_defaultringtone:
+                    entry['ringtone']=0
+                else:
+                    entry['ringtone']=res.entry.ringtone
                 entry['snoozedelay']=0
                 calres[count]=entry
                 count+=1
@@ -756,6 +762,10 @@ class SanyoPhonebook:
                 e.name="" # Could get this by reading phone book
                           # But it would take a lot more time
                 e.name_len=len(e.name)
+                if entry['ringtone']==0:
+                    e.ringtone=self.calendar_defaultringtone
+                else:
+                    e.ringtone=entry['ringtone']
 
                 req=self.protocolclass.callalarmupdaterequest()
                 callslot+=1
@@ -794,7 +804,10 @@ class SanyoPhonebook:
                 e.location=location
                 e.location_len=len(e.location)
 
-                e.alarm_type=entry.get('ringtone',0)
+                if entry['ringtone']==0:
+                    e.ringtone=self.calendar_defaultringtone
+                else:
+                    e.ringtone=entry['ringtone']
 
 # What we should do is first find largest changeserial, and then increment
 # whenever we have one that is undefined or zero.
@@ -819,9 +832,9 @@ class SanyoPhonebook:
         e.location_len=0
         e.start=0
         e.end=0
-        e.alarm_type=0
         e.period=0
         e.dom=0
+        e.ringtone=0
         e.alarm=0
         req=self.protocolclass.eventupdaterequest()
         req.entry=e
@@ -841,6 +854,7 @@ class SanyoPhonebook:
         e.datedup=0
         e.period=0
         e.dom=0
+        e.ringtone=0
         e.phonenumbertype=0
         e.phonenumberslot=0
         req=self.protocolclass.callalarmupdaterequest()
