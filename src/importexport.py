@@ -1407,7 +1407,7 @@ class ExportVCardDialog(wx.Dialog):
         if self.rows_all.GetValue():
             rowkeys=data.keys()
         else:
-            rowkeys=self.phonebook.GetSelectedRows()
+            rowkeys=self.phonebook.GetSelectedRowKeys()
 
         # ::TODO:: ask about overwriting existing file
         f=open(filename, "wt")

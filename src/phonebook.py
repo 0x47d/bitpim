@@ -756,13 +756,12 @@ class PhoneWidget(wx.Panel):
 
         return rows
 
+    def GetSelectedRowKeys(self):
+        return [self.dt.rowkeys[r] for r in self.GetSelectedRows()]
+
     def OnDelete(self,_):
-        rows=self.GetSelectedRows()
         self.table.ClearSelection()
-        rowkeys=[]
-        for r in rows:
-            rowkeys.append(self.dt.rowkeys[r])
-        for r in rowkeys:
+        for r in self.GetSelectedRowKeys():
             del self._data[r]
         self.dt.OnDataUpdated()
         self.modified=True
@@ -2429,7 +2428,7 @@ class PhonebookPrintDialog(wx.Dialog):
         if self.all.GetValue():
             rowkeys=self.phonewidget._data.keys()
         else:
-            rowkeys=self.phonewidget.GetSelectedRows()
+            rowkeys=self.phonewidget.GetSelectedRowKeys()
         # sort the data
         # we actually sort in reverse order of what the UI shows in order to get correct results
         for keycb in (-1, -2, -3):
