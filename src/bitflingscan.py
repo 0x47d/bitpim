@@ -66,6 +66,7 @@ class flinger:
         ports=self.client.scan()
         for p in range(len(ports)):
             ports[p]['BitFling']=True
+            ports[p]['name']='bitfling::'+ports[p]['name']
         return ports
 
 
