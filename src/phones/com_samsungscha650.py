@@ -156,7 +156,7 @@ class Phone(com_samsung.Phone):
         pb_book={}
         for j in self.__phone_entries_range:
             # print "Getting entry: ", j
-            pb_entry=self.get_phone_entry(j,__pb_alias,__pb_max_entries)
+            pb_entry=self.get_phone_entry(j, self.__pb_alias, self.__pb_max_entries)
             if len(pb_entry)==self.__pb_max_entries:
                 pb_book[k]=self._extract_phone_entry(pb_entry, result)
                 k+=1
@@ -588,7 +588,8 @@ class Phone(com_samsung.Phone):
 
         # final check to determine if this entry has changed.
         # if it has not then do nothing and just return
-        ee=self.get_phone_entry(int(e[self.__pb_entry]),__pb_alias,__pb_max_entries)
+        ee=self.get_phone_entry(int(e[self.__pb_entry]),
+                                self.__pb_alias, self.__pb_max_entries)
         if len(ee):
             # DSV took the " out, need to put them back in for comparison
             ee[self.__pb_name]='"'+ee[self.__pb_name]+'"'

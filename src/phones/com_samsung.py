@@ -124,7 +124,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             if len(s):
                 line=s[0]
                 if alias_column >= 0 and alias_column < num_columns:
-                    line=defrell(line, alias_column, num_columns)
+                    line=self.defrell(line, alias_column, num_columns)
                 return self.splitandunescape(line)
         except commport.ATError:
             pass
