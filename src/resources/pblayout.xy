@@ -1,5 +1,5 @@
 <html>
-<body>
+<body bgcolor="#cdefab">
 <!-- Picture Ringtone Name Category row -->
 <table ${styles['table']}>
 <tr>
