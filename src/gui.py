@@ -17,7 +17,6 @@ import os
 
 # wxPython modules
 from wxPython.wx import *
-from wxPython.lib.dialogs import wxScrolledMessageDialog
 from wxPython.lib import colourdb
 from wxPython.help import *
 
@@ -533,10 +532,15 @@ class MainWindow(wxFrame):
         self.configdlg.updatevariables()
 
         # Final widgets that depend on config
-        lv=self.config.ReadInt("logviewdata", 0)
+        lv=self.config.ReadInt("viewlogdata", 0)
         if lv:
             menuBar.Check(ID_VIEWLOGDATA, 1)
             self.OnViewLogData(None)
+
+        fv=self.config.ReadInt("viewfilesystem", 0)
+        if fv:
+            menuBar.Check(ID_VIEWFILESYSTEM, 1)
+            self.OnViewFilesystem(None)
 
         # Populate all widgets from disk
         self.OnPopulateEverythingFromDisk()
@@ -592,14 +596,14 @@ class MainWindow(wxFrame):
         if self.lwdata is None:
             self.lwdata=guiwidgets.LogWindow(self.nb)
             self.nb.AddPage(self.lwdata, logdatatitle)
-            self.config.WriteInt("logviewdata", 1)
+            self.config.WriteInt("viewlogdata", 1)
         else:
             self.lwdata=None
             for i in range(0,self.nb.GetPageCount()):
                 if self.nb.GetPageText(i)==logdatatitle:
                     self.nb.DeletePage(i)
                     break
-            self.config.WriteInt("logviewdata", 0)
+            self.config.WriteInt("viewlogdata", 0)
 
     def OnViewFilesystem(self,_):
         # toggle filesystem view
@@ -610,13 +614,17 @@ class MainWindow(wxFrame):
                 if self.nb.GetPageText(i)==logtitle:
                     self.filesystemwidget=FileSystemView(self, self.nb)
                     self.nb.InsertPage(i, self.filesystemwidget, fstitle, True)
+                    self.config.WriteInt("viewfilesystem", True)
                     return
+            assert False, "log page is missing!"
             return
         self.filesystemwidget=None
         for i in range(0, self.nb.GetPageCount()):
             if self.nb.GetPageText(i)==fstitle:
                 self.nb.DeletePage(i)
+                self.config.WriteInt("viewfilesystem", False)
                 return
+        assert False, "filesytem view page is missing!"
         
 
     ### 
@@ -841,7 +849,7 @@ class MainWindow(wxFrame):
             dlg.ShowModal()
             dlg.Destroy()
             return True
-        e=ExceptionDialog(self, exception)
+        e=guiwidgets.ExceptionDialog(self, exception)
         e.ShowModal()
         e.Destroy()
         return True
@@ -865,25 +873,7 @@ class MainWindow(wxFrame):
 #    pass
 
 
-###
-###  Dialog that deals with exceptions
-###
-import StringIO
-import traceback
 
-class ExceptionDialog(wxScrolledMessageDialog):
-    def __init__(self, frame, exception, title="Exception"):
-        s=StringIO.StringIO()
-        s.write("An unexpected exception has occurred.\nPlease report the following information to the developers\n\n")
-        if hasattr(exception, 'gui_exc_info'):
-            traceback.print_exception(exception.gui_exc_info[0],
-                                      exception.gui_exc_info[1],
-                                      exception.gui_exc_info[2],
-                                      file=s)
-        else:
-            s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
-
-        wxScrolledMessageDialog.__init__(self, frame, s.getvalue(), title)
 
 ###
 ###  Class that does all the comms and other stuff in a seperate
@@ -1181,7 +1171,8 @@ class FileSystemView(wxTreeCtrl):
     def OnHexViewResults(self, path, exception, result):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        dlg=guiwidgets.FixedScrolledMessageDialog(self, common.datatohexstring(result), path+" Contents")
+        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
+                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
         dlg.Show()
 
     def OnFileDelete(self, _):
@@ -1283,7 +1274,10 @@ class FileSystemView(wxTreeCtrl):
                 return res
             item=parent
             res=self.GetItemText(item)+"/"+res
-
+        # can't get here, but pychecker doesn't seem to realise
+        assert False
+        return ""
+        
     def pathtoitem(self, path):
         if path=="": return self.root
         dirs=path.split('/')
