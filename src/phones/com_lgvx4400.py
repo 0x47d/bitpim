@@ -695,19 +695,6 @@ class Profile(com_phone.Profile):
     def __init__(self):
         com_phone.Profile.__init__(self)
 
-    def makeone(self, list, default):
-        "Returns one item long list"
-        if len(list)==0:
-            return default
-        assert len(list)==1
-        return list[0]
-
-    def filllist(self, list, numitems, blank):
-        "makes list numitems long appending blank to get there"
-        l=list[:]
-        for dummy in range(len(l),numitems):
-            l.append(blank)
-        return l
 
     def _getgroup(self, name, groups):
         for key in groups:
@@ -791,7 +778,7 @@ class Profile(com_phone.Profile):
                 e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
 
                 # categories/groups
-                cat=self.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
+                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
                 if cat is None:
                     e['group']=0
                 else:
@@ -804,13 +791,13 @@ class Profile(com_phone.Profile):
 
                 # email addresses
                 emails=helper.getemails(entry.get('emails', []) ,0,3,48)
-                e['emails']=self.filllist(emails, 3, "")
+                e['emails']=helper.filllist(emails, 3, "")
 
                 # url
-                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
+                e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
 
                 # memo
-                e['memo']=self.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
+                e['memo']=helper.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
 
                 # phone numbers
                 # there must be at least one email address or phonenumber
@@ -848,8 +835,8 @@ class Profile(com_phone.Profile):
                     if sd>=self.protocolclass._FIRSTSPEEDDIAL and sd<=self.protocolclass._LASTSPEEDDIAL:
                         speeds[sd]=(e['bitpimserial'], numindex)
 
-                e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
-                e['numbers']=self.filllist(e['numbers'], 5, "")
+                e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
+                e['numbers']=helper.filllist(e['numbers'], 5, "")
 
                 # ringtones, wallpaper
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)

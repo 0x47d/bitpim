@@ -943,7 +943,11 @@ class PhoneWidget(wx.Panel):
 
     def getfullname(self, names, min, max, truncateat=None):
         "Return at least min and at most max fullnames from the names list"
-        n=[nameparser.formatsimplename(nn) for nn in names]
+        # secret lastnamefirst setting
+        if wx.GetApp().config.ReadInt("lastnamefirst", False):
+            n=[nameparser.formatsimplelastfirst(nn) for nn in names]
+        else:
+            n=[nameparser.formatsimplename(nn) for nn in names]
         if len(n)<min:
             raise self.ConversionFailed("Too few names.  Need at least %d but there were only %d" % (min, len(n)))
         if len(n)>max:
@@ -1050,6 +1054,21 @@ class PhoneWidget(wx.Panel):
                 newl.append(p)
                 
         return newl
+
+     def makeone(self, list, default):
+        "Returns one item long list"
+        if len(list)==0:
+            return default
+        assert len(list)==1
+        return list[0]   
+
+    def filllist(self, list, numitems, blank):
+        "makes list numitems long appending blank to get there"
+        l=list[:]
+        for dummy in range(len(l),numitems):
+            l.append(blank)
+        return l
+
 
 class ImportCellRenderer(wx.grid.PyGridCellRenderer):
     SCALE=0.8

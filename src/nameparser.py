@@ -46,7 +46,7 @@ def formatfullname(name):
     return res
 
 def formatsimplename(name):
-    # like formatname, except we use the first matching component
+    "like L{formatname}, except we use the first matching component"
     if len(name.get("full", "")):
         return name.get("full")
     f=name.get("first", "")
@@ -55,6 +55,15 @@ def formatsimplename(name):
     if len(f) or len(m) or len(l):
         return " ".join([p for p in (f,m,l) if len(p)])
     return name.get('nickname', "")
+
+def formatsimplelastfirst(name):
+    "Returns the name formatted as Last, First Middle"
+    f,m,l=getparts(name)
+    if len(l):
+        if len(f+m):
+            return l+", "+" ".join([f,m])
+        return l
+    return " ".join([f,m])
 
 def getfullname(name):
     """Gets the full name, joining the first/middle/last if necessary"""

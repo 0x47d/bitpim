@@ -1187,73 +1187,7 @@ class Profile(com_phone.Profile):
         ('wallpaper', 'write', 'MERGE'),
         ('ringtone', 'write', 'MERGE'),
         )
-
-### Some drop in replacement routines for phonebook.py that can be moved
-### if they look OK.
-    def _getentries(self, list, min, max, name):
-        candidates=[]
-        for i in list:
-            # ::TODO:: possibly ensure that a key appears in each i
-            candidates.append(i)
-        if len(candidates)<min:
-            # ::TODO:: log this
-            raise ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
-        if len(candidates)>max:
-            # ::TODO:: mention this to user
-            candidates=candidates[:max]
-        return candidates
-
-    def _getfield(self,list,name):
-        res=[]
-        for i in list:
-            res.append(i[name])
-        return res
-
-    def _makefullnames(self, list, lastnamefirst=False):
-        res=[]
-        for i in list:
-            first=i.get('first','')
-            last=i.get('last','')
-            full=i.get('full','')
-            if len(last)>0:
-                if(lastnamefirst):
-                    res.append(last+", "+first)
-                else:
-                    res.append(first+" "+last)
-            elif len(first)>0:
-                res.append(first)
-            else:
-                res.append(full)
-
-        return res
-        
-    def _truncatefields(self, list, truncateat, compresscomma=False):
-        if truncateat is None:
-            return list
-        res=[]
-        for i in list:
-            if len(i)>truncateat:
-                # ::TODO:: log truncation
-                res.append(i[:truncateat])
-            else:
-                res.append(i)
-        return res
-
-    def getfullname(self, names, min, max, truncateat=None, lastnamefirst=False):
-        "Return at least min and at most max fullnames from the names list"
-        if(lastnamefirst):
-            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names"),lastnamefirst),truncateat,compresscomma=True)
-        else:
-            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names")),truncateat)
-
 ###
-
-    def makeone(self, list, default):
-        "Returns one item long list"
-        if len(list)==0:
-            return default
-        assert len(list)==1
-        return list[0]
 
     # Processes phone book for writing to Sanyo.  But does not leave phone book
     # in a bitpim compatible format.  Need to understand exactly what bitpim
@@ -1262,8 +1196,6 @@ class Profile(com_phone.Profile):
     def convertphonebooktophone(self, helper, data):
         "Converts the data to what will be used by the phone"
         results={}
-
-        lastnamefirst=wx.GetApp().config.ReadInt("lastnamefirst")
 
         slotsused={}
         for pbentry in data['phonebook']:
@@ -1278,7 +1210,7 @@ class Profile(com_phone.Profile):
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=self.getfullname(entry.get('names', []),1,1,16,lastnamefirst)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,16)[0]
                 e['name_len']=len(e['name'])
 
                 serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
@@ -1295,10 +1227,10 @@ class Profile(com_phone.Profile):
                 
                 e['slotdup']=e['slot']
 
-                e['email']=self.makeone(helper.getemails(entry.get('emails', []),0,1,self.protocolclass._MAXEMAILLEN), "")
+                e['email']=helper.makeone(helper.getemails(entry.get('emails', []),0,1,self.protocolclass._MAXEMAILLEN), "")
                 e['email_len']=len(e['email'])
 
-                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,self.protocolclass._MAXEMAILLEN), "")
+                e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,self.protocolclass._MAXEMAILLEN), "")
                 e['url_len']=len(e['url'])
 # Could put memo in email or url
 
