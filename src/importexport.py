@@ -441,7 +441,9 @@ class ImportCSVDialog(wx.Dialog):
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
-                self.preview.SetCellValue(row+1, col, str(self.data[row][col]))
+                s=str(self.data[row][col])
+                if len(s):
+                    self.preview.SetCellValue(row+1, col, s)
                 self.preview.SetReadOnly(row+1, col, True)
             if row%2:
                 self.preview.SetRowAttr(row+1, oddattr)
