@@ -88,7 +88,7 @@ class ImportDialog(wx.Dialog):
     filternamecolumns=["First Name", "Last Name", "Middle Name", "Name", "Nickname"]
     
     filternumbercolumns=["Home Phone", "Home Fax", "Mobile Phone", "Business Phone",
-                         "Business Fax", "Pager", "Fax"]
+                         "Business Fax", "Pager", "Fax", "Phone"]
 
     filterhomeaddresscolumns=["Home Street", "Home City", "Home Postal Code", "Home State",
                           "Home Country/Region"]
@@ -96,7 +96,7 @@ class ImportDialog(wx.Dialog):
     filterbusinessaddresscolumns=["Business Street", "Business City",
                                   "Business Postal Code", "Business State", "Business Country/Region"]
 
-    filteraddresscolumns=filterhomeaddresscolumns+filterbusinessaddresscolumns
+    filteraddresscolumns=filterhomeaddresscolumns+filterbusinessaddresscolumns+["Address"]
 
     filteremailcolumns=["Email Address"]
                           
@@ -207,7 +207,7 @@ class ImportDialog(wx.Dialog):
                     continue
                 c=self.columns[n]
                 if c in self.filternumbercolumns or c in self.filteremailcolumns or c in \
-                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone"]:
+                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone", "Address"]:
                     # these are multivalued
                     if not rec.has_key(c):
                         rec[c]=[]
@@ -232,10 +232,6 @@ class ImportDialog(wx.Dialog):
                       ("Business", self.filterbusinessaddresscolumns)
                       ):
                 addr={}
-                if prefix=="Business" and rec.has_key("Company"):
-                    addr['type']=prefix.lower()
-                    addr['company']=rec["Company"]
-                    del rec["Company"]
                 for k in fields:
                     if k in rec:
                         # it has a field for this type
@@ -244,13 +240,32 @@ class ImportDialog(wx.Dialog):
                         addr[self.addressmap[shortk]]=rec[k]
                         del rec[k]
                 if len(addr):
+                    if prefix=="Business" and rec.has_key("Company"):
+                        # fill in company info
+                        addr['type']=prefix.lower()
+                        addr['company']=rec["Company"]
                     if not entry.has_key("addresses"):
                         entry["addresses"]=[]
                     entry["addresses"].append(addr)
+            # address (dict form of addresses)
+            if rec.has_key("Address"):
+                # ensure result key exists
+                if not entry.has_key("addresses"):
+                    entry["addresses"]=[]
+                # find the company name
+                company=rec.get("Company", None)
+                for a in rec["Address"]:
+                    if a["type"]=="business": a["company"]=company
+                    addr={}
+                    for k in ("type", "company", "street", "street2", "city", "state", "postalcode", "country"):
+                        v=a.get(k, None)
+                        if v is not None: addr[k]=v
+                    entry["addresses"].append(addr)
+                del rec["Address"]
             # numbers
             numbers=[]
             for field in self.filternumbercolumns:
-                if rec.has_key(field):
+                if field!="Phone" and rec.has_key(field):
                     for val in rec[field]:
                         numbers.append({'type': self.numbermap[field], 'number': val})
                     del rec[field]
@@ -337,6 +352,8 @@ class ImportDialog(wx.Dialog):
             # stash it away
             res[count]=entry
             # Did we forget anything?
+            # Company is part of other fields
+            if rec.has_key("Company"): del rec["Company"]
             if len(rec):
                 raise Exception("Internal conversion failed to complete on %s\nStill to do: %s" % (record, rec))
             count+=1
@@ -433,6 +450,7 @@ class ImportDialog(wx.Dialog):
         self.preview.EndBatch()
 
 def _getpreviewformatted(value, column):
+    if value is None: return ""
     if isinstance(value, dict):
         if column=="Email Address":
             value="%s (%s)" %(value["email"], value["type"])
@@ -440,6 +458,15 @@ def _getpreviewformatted(value, column):
             value="%s (%s)" %(value["url"], value["type"])
         elif column=="Phone":
             value="%s (%s)" %(value["number"], value["type"])
+        elif column=="Address":
+            v=[]
+            for f in ("pobox", "street", "street2", "city", "state", "postalcode", "country"):
+                vv=value.get(f, None)
+                if vv is not None:
+                    v.append(vv)
+            assert len(v)
+            v[0]=v[0]+"  (%s)" %(value['type'],)
+            value="\n".join(v)
         else:
             print "don't know how to convert dict",value,"for preview column",column
     try:
@@ -896,6 +923,8 @@ class ImportVCardDialog(ImportDialog):
         "email": "Email Address",
         "url": "Web Page",
         "phone": "Phone",
+        "address": "Address",
+        "organisation": "Company",
         }
     def __init__(self, filename, parent, id, title):
         self.headerrowiseditable=False
