@@ -2247,11 +2247,8 @@ def mergenumberlists(orig, imp):
 
     return res
 
-def default_cleaner(param):
-    """Clean fields for merging.  In particular * characters have to be
-    removed since winkler uses them internally"""
-    # ::TODO:: reimplment winkler and use a different special character such as an unprintable one
-    return param.replace("*", "")
+# new jaro winkler implementation doesn't use '*' chars or similar mangling
+default_cleaner=lambda x: x
 
 def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
     """Return the results of merging two lists of fields
@@ -2317,32 +2314,16 @@ def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
 
     return res
 
-try:
-    # Try to use febrl's winkler ...
-    import stringcmp
-    stringcmp.winkler
+import native.strings
+jarowinkler=native.strings.jarow
 
-    def comparestrings(origfield, impfield):
-        """ Compares two strings and returns the score using 
-        winkler routine from Febrl (stringcmp.py)
-        
-        Return value is between 0.0 and 1.0, where 0.0 means no similarity
-        whatsoever, and 1.0 means the strings match exactly."""
-        return stringcmp.winkler(origfield, impfield)
-
-except:
-    # fallback on difflib
-    import difflib
-    def comparestrings(origfield, impfield):
-        """ Compares two strings and returns the score using Python's
-        built-in difflib (if stringcmp.py isn't available).
-        
-        Return value is between 0.0 and 1.0, where 0.0 means no similarity
-        whatsoever, and 1.0 means the strings match exactly."""
-        sm=difflib.SequenceMatcher()
-        sm.set_seq1(origfield)
-        sm.set_seq2(impfield)
-        return sm.ratio()
+def comparestrings(origfield, impfield):
+    """ Compares two strings and returns the score using 
+    winkler routine from Febrl (stringcmp.py)
+    
+    Return value is between 0.0 and 1.0, where 0.0 means no similarity
+    whatsoever, and 1.0 means the strings match exactly."""
+    return jarowinkler(origfield, impfield, 16)
 
 def normalise_data(entries):
     for k in entries:
