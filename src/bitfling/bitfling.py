@@ -76,10 +76,10 @@ class MyTaskBarIcon(parentclass):
             self.windowsinit(iconfile)
             
         self.leftdownpos=0,0
-        wx.EVT_MENU(menu, ID_CONFIG, self.OnConfig)
-        wx.EVT_MENU(menu, ID_LOG, self.OnLog)
+        #wx.EVT_MENU(menu, ID_CONFIG, self.OnConfig)
+        #wx.EVT_MENU(menu, ID_LOG, self.OnLog)
         wx.EVT_MENU(menu, ID_EXIT, self.OnExit)
-        wx.EVT_MENU(menu, ID_RESCAN, self.OnRescan)
+        #wx.EVT_MENU(menu, ID_RESCAN, self.OnRescan)
 
     def GoAway(self):
         if parentclass is wx.Frame:
@@ -110,6 +110,7 @@ class MyTaskBarIcon(parentclass):
             self.PopupMenu(self.menu)
 
     def OnLButtonUp(self, evt=None):
+        print "OnLButtonUp"
         if self.leftdownpos is None:
             return # cleared out by motion stuff
         if self.mw.IsShown():
@@ -119,7 +120,11 @@ class MyTaskBarIcon(parentclass):
             self.mw.Raise()
 
     def OnLeftDown(self, evt):
-        self.leftdownpos=evt.GetPosition()
+        print "OnLeftDown"
+        if guihelper.IsMSWindows():
+            self.leftdownpos=0
+        else:
+            self.leftdownpos=evt.GetPosition()
         self.motionorigin=self.leftdownpos
 
     def OnMouseMotion(self, evt):
@@ -141,7 +146,11 @@ class MyTaskBarIcon(parentclass):
         icon=wx.EmptyIcon()
         icon.CopyFromBitmap(bitmap)
         self.SetIcon(icon, "BitFling")
-
+        wx.EVT_TASKBAR_RIGHT_UP(self, self.OnRButtonUp)
+        wx.EVT_TASKBAR_LEFT_UP(self, self.OnLButtonUp)
+        #wx.EVT_TASKBAR_MOVE(self, self.OnMouseMotion)
+        wx.EVT_TASKBAR_LEFT_DOWN(self, self.OnLeftDown)
+        
     def genericinit(self, iconfile):
         self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         bitmap=wx.Bitmap(guihelper.getresourcefile(iconfile), wx.BITMAP_TYPE_PNG)
@@ -755,9 +764,9 @@ def run(args):
     theApp=wx.PySimpleApp()
 
     menu=wx.Menu()
-    menu.Append(ID_CONFIG, "Configuration")
-    menu.Append(ID_LOG, "Log")
-    menu.Append(ID_RESCAN, "Rescan devices")
+    #menu.Append(ID_CONFIG, "Configuration")
+    #menu.Append(ID_LOG, "Log")
+    #menu.Append(ID_RESCAN, "Rescan devices")
     menu.Append(ID_EXIT, "Exit")
 
     mw=MainWindow(None, -1, "BitFling")
