@@ -1121,10 +1121,12 @@ class DayViewDialog(wxDialog):
     ID_START=7
     ID_END=8
     ID_REPEAT=9
-    # 10 is used by something else
+    ID_DESCRIPTION=10
     ID_SAVE=11
     ID_HELP=12
     ID_REVERT=13
+
+    
     
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
@@ -1176,8 +1178,9 @@ class DayViewDialog(wxDialog):
             elif field=='repeat':
                 c=DVRepeatControl(self, self.ID_REPEAT)
             elif field=='description':
-                c=wxTextCtrl(self, len(self.fields)+10, "dummy")
+                c=DVTextControl(self, self.ID_DESCRIPTION, "dummy")
             else:
+                print "field",field,"needs an id"
                 c=DVIntControl(self, -1)
             gs.Add(c,0,wxEXPAND)
             self.fields[field]=c
@@ -1223,19 +1226,35 @@ class DayViewDialog(wxDialog):
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
 
-        self.seteditmode(False)
+        # Dirty tracking.  We restrict what the user can do while editting an
+        # entry to only be able to edit that entry.  'dirty' gets fired when
+        # they make any updates.  Annoyingly, controls generate change events
+        # when they are updated programmatically as well as by user interaction.
+        # ignoredirty is set when we are programmatically updating controls
+        self.dirty=None
+        self.ignoredirty=False 
+        self.setdirty(False)
+        # delete is disabled until an item is selected
+        self.FindWindowById(self.ID_DELETE).Enable(False)
 
     def OnListBoxItem(self, _):
         self.updatefields(self.entrymap[self.listbox.GetSelection()])
-        self.seteditmode(True)
+        self.setdirty(False)
+        self.FindWindowById(self.ID_DELETE).Enable(True)
 
     def OnSaveButton(self, _=None):
-        for f in fields:
-            print f
-            print fields[f].GetValue()
+        for f in self.fields:
+            control=self.fields[f]
+            if isinstance(control, DVTimeControl):
+                # we have to add back in the date
+                v=self.date+control.GetValue()
+            else:
+                v=control.GetValue()
+            print f,v
 
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
+        self.date=year,month,day
         self.title.SetLabel(d)
         self.entries=self.cw.getentrydata(year,month,day)
         self.updatelistbox()
@@ -1270,37 +1289,67 @@ class DayViewDialog(wxDialog):
         self.entrymap=[x[3] for x in self.entrymap] 
 
     def updatefields(self, entry):
+        self.ignoredirty=True
         print entry
+        active=True
         if entry is None:
             for i in self.fields:
                 self.fields[i].SetValue("")
-            return
-        for i in self.fieldnames:
-            print i, entry[i]
-            self.fields[i].SetValue(entry[i])
+            active=False
+        else:
+            for i in self.fieldnames:
+                print i, entry[i]
+                self.fields[i].SetValue(entry[i])
 
-    def seteditmode(self, val):
-        # if val is true then we are editing an entry
-
-        # previous and next buttons
-        self.FindWindowById(self.ID_PREV).Enable(not val)
-        self.FindWindowById(self.ID_NEXT).Enable(not val)
-
-        # listbox
-        self.FindWindowById(self.ID_LISTBOX).Enable(not val)
-
-        # main buttons
-        self.FindWindowById(self.ID_ADD).Enable(not val)
-        self.FindWindowById(self.ID_DELETE).Enable(val)
-        self.FindWindowById(self.ID_REVERT).Enable(val)
-        self.FindWindowById(self.ID_SAVE).Enable(val)
-
-        # fields
+        # manipulate field widgets
         for i in self.fields:
-            self.fields[i].Enable(val)
+            self.fields[i].Enable(active)
 
-        # bottom buttons
-        self.FindWindowById(self.ID_CLOSE).Enable(not val)
+        self.ignoredirty=False
+
+    # called from various widget update callbacks
+    def OnMakeDirty(self, _=None):
+        print "OnMakeDirty"
+        self.setdirty(True)
+
+    def setdirty(self, val):
+        if self.ignoredirty:
+            print "ignoring setdirty(%d)" % (val,)
+            return
+        print "setdirty(%d)" % (val,)
+        self.dirty=val
+        if self.dirty:
+            # The data has been modified, so we only allow working
+            # with this data
+            
+            # enable save, revert, delete
+            self.FindWindowById(self.ID_SAVE).Enable(True)
+            self.FindWindowById(self.ID_REVERT).Enable(True)
+            self.FindWindowById(self.ID_DELETE).Enable(True)
+            # disable close, left, right, new
+            self.FindWindowById(self.ID_CLOSE).Enable(False)
+            self.FindWindowById(self.ID_PREV).Enable(False)
+            self.FindWindowById(self.ID_NEXT).Enable(False)
+            self.FindWindowById(self.ID_ADD).Enable(False)
+            # can't play with listbox now
+            self.FindWindowById(self.ID_LISTBOX).Enable(False)
+        else:
+            # The data is now clean and saved/reverted or deleted
+            
+            # disable save, revert,
+            self.FindWindowById(self.ID_SAVE).Enable(False)
+            self.FindWindowById(self.ID_REVERT).Enable(False)
+
+            # enable delete, close, left, right, new
+            self.FindWindowById(self.ID_DELETE).Enable(True)
+            self.FindWindowById(self.ID_PREV).Enable(True)
+            self.FindWindowById(self.ID_NEXT).Enable(True)
+            self.FindWindowById(self.ID_ADD).Enable(True)
+
+            # can choose another item in listbox
+            self.FindWindowById(self.ID_LISTBOX).Enable(True)
+
+
 
 class DVTimeControl(wxPanel):
     # A time control customised to work in the dayview editor
@@ -1322,6 +1371,11 @@ class DVTimeControl(wxPanel):
             self.tc.SetWxDateTime(wxDateTimeFromHMS(0, 0))
             return
         self.tc.SetWxDateTime(wxDateTimeFromHMS(v[3], v[4]))
+
+    def GetValue(self):
+        t=self.tc.GetValue(as_wxDateTime=True)
+        return t.GetHour(), t.GetMinute()
+        
     
 class DVRepeatControl(wxChoice):
     # shows the repeat values
@@ -1337,6 +1391,11 @@ class DVRepeatControl(wxChoice):
         assert v in self.vals
         self.SetSelection(self.vals.index(v))
 
+    def GetValue(self):
+        s=self.GetSelection()
+        if s<0: s=0
+        return self.vals[s]
+
 class DVIntControl(wxIntCtrl):
     # shows integer values
     def __init__(self, parent, id):
@@ -1351,7 +1410,10 @@ class DVIntControl(wxIntCtrl):
         assert isinstance(v, int)
         wxIntCtrl.SetValue(self,v)
         
-
+class DVTextControl(wxTextCtrl):
+    def __init__(self, parent, id, value=""):
+        wxTextCtrl.__init__(self, parent, id, value)
+        EVT_TEXT(self, id, parent.OnMakeDirty)
         
 
         
