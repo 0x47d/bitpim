@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <wab.h>
 #include <stdio.h>
-
+#include <stdarg.h>
 
 static HMODULE hModule;
 static LPWABOPEN openfn;
@@ -9,6 +9,44 @@ static LPADRBOOK lpaddrbook;
 static LPWABOBJECT lpwabobject;
 static LPABCONT lpcontainer;
 static LPMAPITABLE lptable;
+
+char *errorstring=NULL;
+
+static void errorme(HRESULT hr, IMAPIProp *glefrom, const char *format, ...)
+{
+  va_list arglist;
+  va_start(arglist, format);
+  char *tmp=(char*)malloc(4096);
+  vsnprintf(tmp, 4096, format, arglist);
+  va_end(arglist);
+
+  LPSTR sysmsg=NULL;
+
+  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		GetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPSTR)&sysmsg,
+		0,
+		NULL );
+
+  if (!errorstring)
+    errorstring=(char*)malloc(16384);
+
+  snprintf(errorstring, 16384, "%s: HResult: %lu  System message %s", tmp, hr, sysmsg?sysmsg:"<NULL>");
+  free(tmp);
+  LocalFree(sysmsg);
+  if (glefrom)
+    {
+      LPMAPIERROR me=NULL;
+      hr=glefrom->GetLastError(hr, 0, &me);
+      if (!HR_FAILED(hr) && me)
+	printf("AddrBook: %s.%s\n", me->lpszComponent, me->lpszError);
+    }
+}
+
 
 bool Initialize(void)
 {
@@ -23,12 +61,18 @@ bool Initialize(void)
   hModule=LoadLibrary((char*)keyValue);
 
   if (!hModule)
-    return false;
+    {
+      errorme(GetLastError(), NULL, "Failed to load library %s", keyValue);
+      return false;
+    }
 
   openfn=(LPWABOPEN) GetProcAddress(hModule, "WABOpen");
 
   if (!openfn)
-    return false;
+    {
+      errorme(0, NULL, "Couldn't find WABOpen function in %s", keyValue);
+      return false;
+    }
 
   return true;
 }
@@ -37,6 +81,18 @@ bool Initialize(void)
 
 static struct { ULONG id; const char* name; }  propnames[]={
 #define PR(t) { PROP_ID(t), #t }
+  // these are for debug purposes only
+  PR(PR_DISPLAY_TYPE),
+  PR(PR_ACCESS_LEVEL),
+  PR(PR_RECORD_KEY),
+  PR(PR_ROWID),
+  PR(PR_CONTAINER_FLAGS),
+  PR(PR_FOLDER_TYPE),
+  PR(PR_SUBFOLDERS),
+  PR(PR_CONTAINER_HIERARCHY),
+  PR(PR_CONTAINER_CONTENTS),
+  PR(PR_INSTANCE_KEY),
+  
 #define DO_PRSTUFF
 #include "_genprops.h"
 #undef DO_PRSTUFF
@@ -178,6 +234,28 @@ static void print_row(const SRow &row)
     }
 }
 
+static SPropValue *get_property(const SRow &row, ULONG propdetails)
+{
+  for (unsigned i=0; i<row.cValues;i++)
+    if (row.lpProps[i].ulPropTag==propdetails)
+      return &row.lpProps[i];
+  return NULL;
+}
+
+static bool has_property_value(const SRow &row, ULONG propdetails, long value)
+{
+  SPropValue *prop=get_property(row, propdetails);
+  if (!prop)
+    return false;
+  switch(PROP_TYPE(prop->ulPropTag))
+    {
+      // case PT_I2:
+    case PT_SHORT: return value==prop->Value.i;
+      // case PT_I4:
+    case PT_LONG: return value==prop->Value.l;
+    case PT_BOOLEAN: return value==prop->Value.b;
+    }
+}
 
 bool Load(const char *filename)
 {
@@ -185,9 +263,14 @@ bool Load(const char *filename)
   wp.cbSize=sizeof(WAB_PARAM);
   if (!filename) filename="";
   wp.szFileName=(CHAR*)filename;
+  wp.ulFlags=WAB_ENABLE_PROPERTIES;
+
   HRESULT hr=openfn(&lpaddrbook, &lpwabobject, &wp, 0);
   if (HR_FAILED(hr))
-    return false;
+    {
+      errorme(hr, NULL, "Failed to open address book %s", strlen(filename)?filename:"<default>");
+      return false;
+    }
 
   ULONG cbentryid;
   LPENTRYID entryid;
@@ -197,17 +280,88 @@ bool Load(const char *filename)
 
   ULONG objtype;
 
-  hr=lpaddrbook->OpenEntry(cbentryid, entryid, NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
+  // hr=lpaddrbook->OpenEntry(cbentryid, entryid, NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
+  hr=lpaddrbook->OpenEntry(0, NULL, NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
   if (HR_FAILED(hr))
     return false;
 
   lpwabobject->FreeBuffer(entryid);
+
+  return true;
 
   hr=lpcontainer->GetContentsTable(0, &lptable);
   if (HR_FAILED(hr))
     return false;
 
   return true;
+}
+
+bool TopLevel(void)
+{
+  LPMAPITABLE table=NULL;
+  HRESULT hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, lpcontainer, "TopLevel:GetHierarchyTable1 failed");
+      return false;
+    }
+
+  LPSRowSet lprowset;
+  do {
+    hr=table->QueryRows(1,0,&lprowset);
+    if (HR_FAILED(hr))
+      {
+	errorme(hr, NULL, "TopLevel:QueryRows failed");
+	return false;
+      }
+    if (lprowset->cRows==0)
+      {
+	lprowset=NULL;
+	break; //end of table
+      }
+
+    if (has_property_value(lprowset->aRow[0], PR_CONTAINER_FLAGS, 5))
+      break;
+
+  } while(true);
+
+  SPropValue *prop=get_property(lprowset->aRow[0], PR_ENTRYID);
+  ULONG objtype;
+  hr=lpaddrbook->OpenEntry(prop->Value.bin.cb, (ENTRYID*)(prop->Value.bin.lpb), NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, lpaddrbook, "TopLevel:Openentry failed with len %d", prop->Value.bin.cb);
+      return false;
+    }
+
+  hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, lpcontainer, "TopLevel:GetHierarchyTable2 failed");
+      return false;
+    }
+
+  do {
+    hr=table->QueryRows(1,0,&lprowset);
+    if (HR_FAILED(hr))
+      {
+	errorme(hr, NULL, "TopLevel:QueryRows2 failed");
+	return false;
+      }
+    if (lprowset->cRows==0)
+      {
+	lprowset=NULL;
+	break; //end of table
+      }
+
+    print_row(lprowset->aRow[0]);
+
+  } while(true);
+
+
+  
+  return true;
+
 }
 
 #define DO_PROPSIWANT
@@ -246,8 +400,22 @@ int main(int argc, char **argv)
   const char *fname=NULL;
   if (argc==2)
     fname=argv[1];
-  printf("Load(%s)=%d\n", fname?fname:"<NULL>", Load(fname));
- 
-  printf("List()=%d\n", List());
+
+  bool res=Load(fname);
+  printf("Load(%s)=%d\n", fname?fname:"<NULL>", res);
+  if (!res)
+    printf("Error: %s\n", errorstring);
+
+  res=TopLevel();
+  printf("TopLevel()=%d\n", res);
+  if (!res)
+    printf("Error: %s\n", errorstring);
+
+  return 0;
+  res=List();
+  printf("List()=%d\n", res);
+  if (!res)
+    printf("Error: %s\n", errorstring);
+
   return 0;
 }
