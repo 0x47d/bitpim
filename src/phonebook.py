@@ -1689,17 +1689,20 @@ class ImportDialog(wx.Dialog):
     ID_EDIT_ITEM=wx.NewId()
     ID_REVERT_TO_IMPORTED=wx.NewId()
     ID_REVERT_TO_EXISTING=wx.NewId()
+    ID_CLEAR_FIELD=wx.NewId()
     
     def MakeMenus(self):
         menu=wx.Menu()
         menu.Append(self.ID_EDIT_ITEM, "Edit...")
         menu.Append(self.ID_REVERT_TO_EXISTING, "Revert field to existing value")
         menu.Append(self.ID_REVERT_TO_IMPORTED, "Revert field to imported value")
+        menu.Append(self.ID_CLEAR_FIELD, "Clear")
         self.menu=menu
 
         wx.EVT_MENU(menu, self.ID_EDIT_ITEM, self.OnEditItem)
         wx.EVT_MENU(menu, self.ID_REVERT_TO_EXISTING, self.OnRevertFieldToExisting)
         wx.EVT_MENU(menu, self.ID_REVERT_TO_IMPORTED, self.OnRevertFieldToImported)
+        wx.EVT_MENU(menu, self.ID_CLEAR_FIELD, self.OnClearField)
 
     def OnRightGridClick(self, event):
         row,col=event.GetRow(), event.GetCol()
@@ -1707,13 +1710,16 @@ class ImportDialog(wx.Dialog):
         self.grid.ClearSelection()
         # enable/disable stuff in the menu
         columnname=self.table.GetColLabelValue(col)
-        row=self.table.GetRowData(row)
-        self.menu.Enable(self.ID_REVERT_TO_EXISTING, row[2] is not None 
-                             and getdata(columnname, self.existingdata[row[2]], None) is not None)
-                             # ::TODO:: also check that existing is different than result
-        self.menu.Enable(self.ID_REVERT_TO_IMPORTED, row[1] is not None
-                             and getdata(columnname, self.importdata[row[1]], None) is not None)
-                             # ::TODO:: also check that imported is different than result
+        _, importkey, existingkey, resultkey=self.table.GetRowData(row)
+
+        resultvalue=None
+        if resultkey is not None:
+            resultvalue=getdata(columnname, self.resultdata[resultkey], None)
+
+        self.menu.Enable(self.ID_REVERT_TO_EXISTING, existingkey is not None 
+                             and getdata(columnname, self.existingdata[existingkey], None)!= resultvalue)
+        self.menu.Enable(self.ID_REVERT_TO_IMPORTED, importkey is not None
+                             and getdata(columnname, self.importdata[importkey], None) != resultvalue)
         # pop it up
         pos=event.GetPosition()
         self.grid.PopupMenu(self.menu, pos)
@@ -1727,9 +1733,10 @@ class ImportDialog(wx.Dialog):
         row=self.table.GetRowData(row)
         reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
         exkey,exindex=getdatainfo(columnname, self.existingdata[row[2]])
-        assert resindex is not None
         assert exindex is not None
-        if resindex<0:
+        if resindex is None:
+            self.resultdata[row[3]][reskey].append(copy.deepcopy(self.existingdata[row[2]][exkey][exindex]))
+        elif resindex<0:
             self.resultdata[row[3]][reskey]=copy.deepcopy(self.existingdata[row[2]][exkey])
         else:
             self.resultdata[row[3]][reskey][resindex]=copy.deepcopy(self.existingdata[row[2]][exkey][exindex])
@@ -1741,14 +1748,26 @@ class ImportDialog(wx.Dialog):
         row=self.table.GetRowData(row)
         reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
         imkey,imindex=getdatainfo(columnname, self.importdata[row[1]])
-        assert resindex is not None
         assert imindex is not None
-        if resindex<0:
+        if resindex is None:
+             self.resultdata[row[3]][reskey].append(copy.deepcopy(self.importdata[row[1]][imkey][imindex]))
+        elif resindex<0:
             self.resultdata[row[3]][reskey]=copy.deepcopy(self.importdata[row[1]][imkey])
         else:
             self.resultdata[row[3]][reskey][resindex]=copy.deepcopy(self.importdata[row[1]][imkey][imindex])
         self.table.OnDataUpdated()
 
+    def OnClearField(self, _):
+        row,col=self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol()
+        columnname=self.table.GetColLabelValue(col)
+        row=self.table.GetRowData(row)
+        reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
+        assert resindex is not None
+        if resindex<0:
+            del self.resultdata[row[3]][reskey]
+        else:
+            del self.resultdata[row[3]][reskey][resindex]
+        self.table.OnDataUpdated()
 
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
