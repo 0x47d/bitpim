@@ -61,8 +61,8 @@ class Profile(com_sanyonewer.Profile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
-#        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-#        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
