@@ -25,7 +25,16 @@ class Phone(com_sanyo.Phone):
 
     protocolclass=p_sanyo4900
     serialsname='scp4900'
-    
+
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                       '', 'La Bamba', 'Foster Dreamer', 'Schubert March',
+                       'Mozart Eine Kleine', 'Debussey Arabesq', 'Nedelka',
+                       'Brahms Hungarian', 'Star Spangled Banner', 'Rodeo',
+                       'Birds', 'Toy Box' )
+                      
+
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
