@@ -40,7 +40,7 @@ wW   driverdescription  string   some generic description of the driver
   L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
-version="7 December 2003"
+version="13 December 2003"
 
 import sys
 import os
@@ -93,9 +93,13 @@ if _IsWindows():
                     subkey=_winreg.EnumKey(k, index)
                     res.append(subkey)
                     index+=1
-                except:
-                    # ran out of keys
-                    break
+                except WindowsError,e:
+                    if e[0]==259: # No more data is available
+                        break
+                    elif e[0]==234: # more data is available
+                        index+=1
+                        continue
+                    raise
             return res
 
 
