@@ -34,11 +34,7 @@ import com_phone
 import com_lg
 import prototypes
 
-numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
-                    'pager', 'fax', 'fax2', 'none' )
-
-        
-class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lgvx4400.Phone):
+class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX6000 cell phone"
 
     desc="LG-VX6000"
@@ -47,16 +43,54 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lgvx440
     ringerindexfilename="download/dloadindex/brewRingerIndex.map"
     protocolclass=p_lgvx6000
     serialsname='lgvx6000'
+
+    cameraoffset=0x82
+    # more VX6000 indices
+    imagelocations=(
+        # offset, index file, files location, type
+        ( 10, wallpaperindexfilename, "brew/shared", "images") ,
+        ( 0xc8, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms"),
+        ( 40, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm") # offset is a guess
+        )
     
     def __init__(self, logtarget, commport):
-        #com_phone.Phone.__init__(self, logtarget, commport)
-	#com_brew.BrewProtocol.__init__(self)
-        #com_lg.LGPhonebook.__init__(self)
-
-        # this calls all the above anyway
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
         self.log("Attempting to contact phone")
         self.mode=self.MODENONE
+
+    def getwallpaperindices(self, results):
+        wp={}
+
+        # builtins
+        c=1
+        for name in 'Beach Ball', 'Towerbridge', 'Sunflower', 'Beach', 'Fish', 'Sea', 'Snowman':
+            wp[c]={'name': name, 'origin': 'builtin' }
+            c+=1
+
+        # the 3 different maps
+        for offset,indexfile,location,type in self.imagelocations:
+            index=self.getindex(indexfile)
+            for i in index:
+                wp[i+offset]={'name': index[i], 'origin': type}
+                
+        # camera
+        index=self.getcameraindex()
+        for i in index:
+            wp[i+self.cameraoffset]=index[i]
+
+        results['wallpaper-index']=wp
+        return wp
+
+    def getcameraindex(self):
+        buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
+        index={}
+        g=self.protocolclass.campicsdat()
+        g.readfrombuffer(buf)
+        for i in g.items:
+            if len(i.name):
+                index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
+        return index
+        
 
 class Profile(com_lgvx4400.Profile):
 

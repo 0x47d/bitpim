@@ -76,13 +76,35 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             if len(g.groups[i].name): # sometimes have zero length names
                 groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
         results['groups']=groups
+        self.getwallpaperindices(results)
+        self.log(common.prettyprintdict(results['wallpaper-index']))
+        self.getringtoneindices(results)
+        self.log("Fundamentals retrieved")
+        return results
+
+
+    def getwallpaperindices(self, results):
         # wallpaper index
         self.log("Reading wallpaper indices")
-        results['wallpaper-index']=self.getindex(self.wallpaperindexfilename)
+        
+        newres={}
+        c=1
+        for name in 'Balloons', 'Soccer', 'Basketball', 'Bird', 'Sunflower', 'Puppy', 'Mountain House', 'Beach':
+            newres[c]={'name': name, 'type': 'builtin'}
+            c+=1
+
+        # add 10 to each result
+        res=self.getindex(self.wallpaperindexfilename)
+
+        for i in res.keys():
+            newres[i+10]={'name': res[i], 'type': 'image'}
+        results['wallpaper-index']=newres
+        return results
+
+    def getringtoneindices(self, results):
         # ringtone index
         self.log("Reading ringtone indices")
         results['ringtone-index']=self.getindex(self.ringerindexfilename)
-        self.log("Fundamentals retrieved")
         return results
         
     def getphonebook(self,result):
@@ -406,9 +428,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         g=self.protocolclass.indexfile()
         g.readfrombuffer(buf)
         self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
-        for i in range(g.maxitems):
-            if g.items[i].index!=0xffff:
-                index[g.items[i].index]=g.items[i].name
+        for i in g.items:
+            if i.index!=0xffff:
+                index[i.index]=i.name
         return index
         
     def getprettystuff(self, result, directory, datakey, indexfile, indexkey):
@@ -571,10 +593,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # wallpapers
         wp=entry.wallpaper
         paper=None
-        # 0-9 are builtin wallpapers (except phone doesn't let you select them anyway)
-        if wp>=10:
+        # 0 is default
+        if wp>0:
             try:
-                paper=fundamentals['wallpaper-index'][wp-10]
+                paper=fundamentals['wallpaper-index'][wp]['name']
             except:
                 pass
 
