@@ -694,7 +694,7 @@ class PhoneWidget(wx.Panel):
                     break
                 # remove if needbe
                 if remove is not None:
-                    for count,serial in zip(range(len(entry['serials'])), entry['serials']):
+                    for count,serial in enumerate(entry['serials']):
                         if remove==serial:
                             break
                     del entry['serials'][count]

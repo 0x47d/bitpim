@@ -711,7 +711,7 @@ class LIST(BaseProtogenClass):
 
     def containerelements(self):
         self._ensurelength()
-        for i,v in zip(range(len(self._thelist)), self._thelist):
+        for i,v in enumerate(self._thelist):
             yield "["+`i`+"]",v,None
         
 

@@ -1275,7 +1275,7 @@ class Profile(com_phone.Profile):
                         unusednumbers.append(num)
                         continue
                     typesused[typename]=1
-                    for typenum,tnsearch in zip(range(100),self.numbertypetab):
+                    for typenum,tnsearch in enumerate(self.numbertypetab):
                         if typename==tnsearch:
                             if defaultnum==0:
                                 defaultnum=typenum+1

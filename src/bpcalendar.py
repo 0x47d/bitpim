@@ -737,7 +737,7 @@ class DayViewDialog(wx.Dialog):
         selectitem=-1
         self.entrymap=[]
         # decorate
-        for index, entry in zip(range(len(self.entries)), self.entries):
+        for index, entry in enumerate(self.entries):
             e=( entry['start'][3:5], entry['end'][3:5], entry['description'], entry['pos'],  index)
             self.entrymap.append(e)
         # time ordered
@@ -745,7 +745,7 @@ class DayViewDialog(wx.Dialog):
         # now undecorate
         self.entrymap=[index for ign0, ign1, ign2, ign3, index in self.entrymap]
         # add listbox entries
-        for curpos, index in zip(range(len(self.entrymap)), self.entrymap):
+        for curpos, index in enumerate(self.entrymap):
             e=self.entries[index]
             if e['pos']==entrytoselect:
                 selectitem=curpos
