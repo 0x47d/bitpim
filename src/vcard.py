@@ -223,7 +223,7 @@ class VCard:
             elif f[0]=="WORK.LABEL": f[0:1]=["LABEL", "WORK"]
             self.lines.append( (f,v) )
         self._parse(self.lines, self._data)
-        print self._data
+        self._update_groups(self._data)
 
     def getdata(self):
         "Returns a dict of the data parsed out of the vcard"
@@ -251,6 +251,11 @@ class VCard:
             t=f.replace("-", "_")
             func=getattr(self, "_field_"+t, self._default_field)
             func(field, value, result)
+
+    def _update_groups(self, result):
+        """Update the groups info """
+        for k,e in self._groups.items():
+            self._setvalue(result, *e)
 
     # fields we ignore
 
@@ -479,18 +484,21 @@ class VCard:
         group_type=self._groups.get(group, None)
         if group_type is None:
             # 1st one of the group
-            self._groups[group]=self._setvalue(result, type, value, preferred)
+            self._groups[group]=[type, value, preferred]
         else:
-            result[group_type].update(value)
+            if type!=group_type[0]:
+                print 'Group',group,'has different types:',type,groups_type[0]
+            if preferred:
+                group_type[2]=True
+            group_type[1].update(value)
 
     def _setvalue(self, result, type, value, preferred=False):
         if type not in result:
             result[type]=value
-            return type
+            return
         if not preferred:
-            t=self._getfieldname(type, result)
-            result[t]=value
-            return t
+            result[self._getfieldname(type, result)]=value
+            return
         # we need to insert our value at the begining
         values=[value]
         for suffix in [""]+range(2,99):
@@ -501,7 +509,6 @@ class VCard:
         suffixes=[""]+range(2,len(values)+1)
         for l in range(len(suffixes)):
             result[type+str(suffixes[l])]=values[l]
-        return type
 
     def _field_CATEGORIES(self, field, value, result):
         # comma seperated just for fun
