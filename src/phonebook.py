@@ -989,16 +989,18 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
             dc.SetPen(wx.Pen(wx.BLACK,1,wx.SOLID))
 
         dc.SetBackgroundMode(wx.TRANSPARENT)
+        dc.SetFont(attr.GetFont())
 
+        # ::TODO:: pass in colour of text?
         text = grid.GetTable().GetHtmlCellValue(row, col)
         bphtml.drawhtml(dc,
                         wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
-                        text, scale=self.SCALE)
+                        text, font=attr.GetFont().GetFaceName(), size=attr.GetFont().GetPointSize())
         dc.DestroyClippingRegion()
 
     def GetBestSize(self, grid, attr, dc, row, col):
         text = grid.GetTable().GetHtmlCellValue(row, col)
-        return bphtml.getbestsize(dc, text, scale=self.SCALE)
+        return bphtml.getbestsize(dc, text, font=attr.GetFont().GetFaceName(), size=attr.GetFont().GetPointSize())
 
     def Clone(self):
         return ImportCellRenderer()

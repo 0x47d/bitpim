@@ -413,7 +413,9 @@ class HtmlEasyPrinting:
         guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
         event.Skip()
 
-def getbestsize(dc, html, basepath="", scale=1.0):
+_scales=[0.7, 0.9, 1, 1.1, 1.2, 1.4, 1.6]
+
+def getbestsize(dc, html, basepath="", font="", size=10):
     if html is None or html=="":
         return wx.Size(10,10)
 
@@ -421,20 +423,20 @@ def getbestsize(dc, html, basepath="", scale=1.0):
     mdc=wx.MemoryDC()
     mdc.SelectObject(bmp)
     hdc=wx.html.HtmlDCRenderer()
-    hdc.SetFonts("", "", getbasefontsizes(scale))
+    hdc.SetFonts(font, "", [int(x*size) for x in _scales])
     hdc.SetDC(mdc, 1)
     hdc.SetSize(99999, 99999)
     hdc.SetHtmlText(html, basepath)
     hdc.Render(0, 0, 0, False)
     return wx.Size(mdc.MaxX(), mdc.MaxY())
 
-def drawhtml(dc, rect, html, basepath="", scale=1.0):
+def drawhtml(dc, rect, html, basepath="", font="", size=10):
     """Draw html into supplied dc and rect"""
     if html is None or html=="":
         return
     origscale=dc.GetUserScale()
     hdc=wx.html.HtmlDCRenderer()
-    hdc.SetFonts("", "", getbasefontsizes(scale))
+    hdc.SetFonts(font, "", [int(x*size) for x in _scales])
     hdc.SetDC(dc, 1)
     hdc.SetSize(rect.width, rect.height)
     hdc.SetHtmlText(html, basepath)
