@@ -393,7 +393,8 @@ class ConfigDialog(wx.Dialog):
 
     def OnComBrowse(self, _):
         self.saveSize()
-        self.mw.wt.clearcomm()
+        if self.mw.wt is not None:
+            self.mw.wt.clearcomm()
         # remember its size
         # w=self.mw.config.ReadInt("combrowsewidth", 640)
         # h=self.mw.config.ReadInt("combrowseheight", 480)
