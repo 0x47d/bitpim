@@ -465,7 +465,8 @@ class ConfigDialog(wxDialog):
         self.mw.config.Write("path", path)
         self.mw.commportsetting=self.commbox.GetValue()
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
-        self.mw.commphone=None # cause it to be recreated
+        if self.mw.wt is not None:
+            self.mw.wt.commphone=None # cause it to be recreated
         
     def needconfig(self):
         self.setfromconfig()

@@ -509,7 +509,7 @@ class Phone:
 
         # failed
         self.mode=self.MODENONE
-        raise common.CommsException(self.desc, "Unable to transition mode from %s to %s" \
+        self.raisecommsexception("transitioning mode from %s to %s" \
                                  % (strmode, strdesiredmode))
         
 
