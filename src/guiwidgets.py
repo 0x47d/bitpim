@@ -2341,10 +2341,7 @@ class ExceptionDialog(MyFixedScrolledMessageDialog):
         s=StringIO.StringIO()
         s.write("An unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
         if hasattr(exception, 'gui_exc_info'):
-            traceback.print_exception(exception.gui_exc_info[0],
-                                      exception.gui_exc_info[1],
-                                      exception.gui_exc_info[2],
-                                      file=s)
+            s.write(common.formatexception(*(exception.gui_exc_info)))
         else:
             s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
 
