@@ -46,7 +46,7 @@ class HTMLWindow(wx.html.HtmlWindow):
         if guihelper.IsGtk():
             basefonts=[10,13,17,20,23,27,30] # Linux
         elif guihelper.IsMac():
-            basefonts=[10,12,16,22,30]       # MacOS
+            basefonts=[9,12,14,18,24,30,36]  # MacOSX - s/b NULL for defaults
         else:
             basefonts=[7,8,10,12,16,22,30]   # Windows/other
         self.SetFonts("", "", [int(sz*scale) for sz in basefonts])
