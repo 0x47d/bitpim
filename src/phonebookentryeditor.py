@@ -633,23 +633,27 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             self.widgets[0].SetFocus()
         
     def Delete(self):
+        # ignore if there is nothing to delete
         if len(self.widgets)==0:
             return
+        # get the current value of all widgets
         gets=[x.Get() for x in self.widgets]
         pos=self.GetCurrentWidgetIndex()
+        # remove the last widget (the UI, not the value)
         self.sizer.Remove(self.widgets[-1])
         self.widgets[-1].Destroy()
+        del self.widgets[-1]
         self.sizer.Layout()
         self.SetupScrolling()
-        del self.widgets[-1]
-        del gets[pos]
+
+        # update from one we deleted to end
         for i in range(pos, len(self.widgets)):
-            self.widgets[pos].Set(gets[pos])
+            self.widgets[i].Set(gets[i+1])
+            
         if len(self.widgets):
+            # change focus if we deleted the last widget
             if pos<len(self.widgets):
                 self.widgets[pos].SetFocus()
-            else:
-                self.widgets[pos-1].SetFocus()
 
 
     def Move(self, delta):
