@@ -334,18 +334,18 @@ def _comscanmac(maxnum=9):
             resultscount+=1
     return results
 
-def availableports():
-    """Gets list of available ports
+##def availableports():
+##    """Gets list of available ports
 
-    It is verified that the ports can be opened.
+##    It is verified that the ports can be opened.
 
-    @note:   You must close any ports you have open before calling this function, otherwise they
-             will not be considered available.
+##    @note:   You must close any ports you have open before calling this function, otherwise they
+##             will not be considered available.
 
-    @return: List of tuples.  Each tuple is (port name, port description) - the description is user
-             friendly.  The list is sorted.
-    """
-    pass
+##    @return: List of tuples.  Each tuple is (port name, port description) - the description is user
+##             friendly.  The list is sorted.
+##    """
+##    pass
 
 def _stringint(str):
     """Seperate a string and trailing number into a tuple
