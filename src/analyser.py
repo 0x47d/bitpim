@@ -312,8 +312,6 @@ if __name__=='__main__':
     data=None
     if len(sys.argv)==2:
         # From a file
-        f=common.opentextfile(sys.argv[1])
-        data=f.read()
-        f.close()
+        data=common.opentextfile(sys.argv[1]).read()
     frame=Analyser(data=data)
     app.MainLoop()

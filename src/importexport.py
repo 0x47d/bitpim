@@ -647,9 +647,7 @@ class ImportCSVDialog(ImportDialog):
                 (600,100)
 
     def getcontrols(self, vbs):
-        f=common.opentextfile(self.filename)
-        data=f.read()
-        f.close()
+        data=common.opentextfile(self.filename).read()
         # turn all EOL chars into \n and then ensure only one \n terminates each line
         data=data.replace("\r", "\n")
         oldlen=-1

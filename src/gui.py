@@ -1490,9 +1490,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
                              style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
         if dlg.ShowModal()==wx.ID_OK:
-            f=open(dlg.GetPath(), "wb")
-            f.write(contents)
-            f.close()
+            open(dlg.GetPath(), "wb").write(contents)
         dlg.Destroy()
 
     def OnHexView(self, _):
@@ -1527,9 +1525,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
             dlg.Destroy()
             return
         infile=dlg.GetPath()
-        f=open(infile, "rb")
-        contents=f.read()
-        f.close()
+        contents=open(infile, "rb").read()
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.writefile, path, contents),
                      Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
@@ -1567,9 +1563,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
             dlg.Destroy()
             return
         infile=dlg.GetPath()
-        f=open(infile, "rb")
-        contents=f.read()
-        f.close()
+        contents=open(infile, "rb").read()
         if len(parent):
             path=parent+"/"+os.path.basename(dlg.GetPath())
         else:
@@ -1650,9 +1644,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
                              style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
         if dlg.ShowModal()==wx.ID_OK:
-            f=open(dlg.GetPath(), "wb")
-            f.write(backup)
-            f.close()
+            open(dlg.GetPath(), "wb").write(backup)
         dlg.Destroy()
 
     def OnRestore(self, _):

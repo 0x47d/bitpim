@@ -46,9 +46,7 @@ def convertto8bitpng(pngdata, maxsize):
 
     # Write original image to a temp file
     png=common.gettempfilename("png")
-    f=open(png, "wb")
-    f.write(pngdata)
-    f.close()
+    open(png, "wb").write(pngdata)
 
     # Convert this image to pnm
     pnm=common.gettempfilename("pnm")
@@ -75,9 +73,7 @@ def convertto8bitpng(pngdata, maxsize):
         #self.log(s)
         os.system(s)
         os.remove(pnmq)
-        f=open(png,"rb")
-        pngquantdata=f.read()
-        f.close()
+        pngquantdata=open(png,"rb").read()
         os.remove(png)
         size=len(pngquantdata)
         print `ncolor`+' '+`size`

@@ -146,9 +146,7 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
 
     def ShowEntry(self, entry):
         if self.xcp is None:
-            f=open(self.pblayoutfile, "rt")
-            template=f.read()
-            f.close()
+            template=open(self.pblayoutfile, "rt").read()
             self.xcp=xyaptu.xcopier(None)
             self.xcp.setupxcopy(template)
         if self.xcpstyles is None:
@@ -160,9 +158,7 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
             text=bphtml.applyhtmlstyles(text, self.xcpstyles['styles'])
         except:
             if __debug__:
-                f=open("debug.html", "wt")
-                f.write(common.forceascii(text))
-                f.close()
+                open("debug.html", "wt").write(common.forceascii(text))
             raise
         self.SetPage(text)
 

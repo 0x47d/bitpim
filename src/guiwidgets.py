@@ -773,9 +773,7 @@ class CommPortDialog(wx.Dialog):
         dlg=wx.FileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
                          style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
         if dlg.ShowModal()==wx.ID_OK:
-            f=open(dlg.GetPath(), "w")
-            f.write(html.getvalue())
-            f.close()
+            open(dlg.GetPath(), "wt").write(html.getvalue())
         dlg.Destroy()
 
     def OnCancel(self, _):
