@@ -151,13 +151,7 @@ class WallpaperView(guiwidgets.FileView):
             height=min(image.GetHeight(), self.useheight)
             img=image.GetSubImage(wx.Rect(0,0,width,height))
             if width!=self.usewidth or height!=self.useheight:
-                b=wx.EmptyBitmap(self.usewidth, self.useheight)
-                mdc=wx.MemoryDC()
-                mdc.SelectObject(b)
-                mdc.Clear()
-                mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
-                mdc.SelectObject(wx.NullBitmap)
-                bitmap=b
+                bitmap=ScaleImageIntoBitmap(img, self.usewidth, self.useheight, bgcolor=None)
             else:
                 bitmap=img.ConvertToBitmap()
             pos=-1
@@ -227,6 +221,8 @@ class WallpaperView(guiwidgets.FileView):
             return
         self.OnAddImage(img,file)
 
+
+
     def OnAddImage(self, img, file):
         # Everything else is converted to BMP
         target=self.getshortenedbasename(file, 'bmp')
@@ -237,26 +233,7 @@ class WallpaperView(guiwidgets.FileView):
            img.GetHeight()>self.useheight*120/100 or \
            img.GetWidth()<self.usewidth*60/100 or \
            img.GetHeight()<self.useheight*60/100:
-            bitmap=wx.EmptyBitmap(self.usewidth, self.useheight)
-            mdc=wx.MemoryDC()
-            mdc.SelectObject(bitmap)
-            # scale the source. 
-            sfactorw=self.usewidth*1.0/img.GetWidth()
-            sfactorh=self.useheight*1.0/img.GetHeight()
-            sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=int(img.GetWidth()*sfactor/1.0)
-            newheight=int(img.GetHeight()*sfactor/1.0)
-            self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
-                                                            img.GetHeight(), newwidth,
-                                                            newheight))
-            img.Rescale(newwidth, newheight)
-            # figure where to place image to centre it
-            posx=self.usewidth-(self.usewidth+newwidth)/2
-            posy=self.useheight-(self.useheight+newheight)/2
-            # background fill in white
-            mdc.Clear()
-            mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
-            obj=bitmap
+            obj=ScaleImageIntoBitmap(obj, self.usewidth, self.useheight, "FFFFFF") # white background ::TODO:: something more intelligent
             
         if not obj.SaveFile(target, wx.BITMAP_TYPE_BMP):
             os.remove(target)
@@ -297,6 +274,51 @@ class WallpaperView(guiwidgets.FileView):
                 d[i]={'name': input[i]}
             dict['wallpaper-index']=d
         return dict
+
+
+def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
+    """Scales the image and returns a bitmap
+
+    @param usewidth: the width of the new image
+    @param useheight: the height of the new image
+    @param bgcolor: the background colour as a string ("ff0000" is red etc).  If this
+                    is none then the background is made transparent"""
+    bitmap=wx.EmptyBitmap(usewidth, useheight)
+    mdc=wx.MemoryDC()
+    mdc.SelectObject(bitmap)
+    # scale the source. 
+    sfactorw=usewidth*1.0/img.GetWidth()
+    sfactorh=useheight*1.0/img.GetHeight()
+    sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
+    newwidth=int(img.GetWidth()*sfactor/1.0)
+    newheight=int(img.GetHeight()*sfactor/1.0)
+
+    img.Rescale(newwidth, newheight)
+    # deal with bgcolor/transparency
+    if bgcolor is not None:
+        transparent=None
+        assert len(bgcolor)==6
+        red=int(bgcolor[0:2],16)
+        green=int(bgcolor[2:4],16)
+        blue=int(bgcolor[4:6],16)
+        mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(wx.Colour(red,green,blue), wx.SOLID))
+    else:
+        transparent=wx.Colour(*(img.FindFirstUnusedColour()[1:]))
+        mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(transparent, wx.SOLID))
+    mdc.Clear()
+    mdc.SelectObject(bitmap)
+    # figure where to place image to centre it
+    posx=usewidth-(usewidth+newwidth)/2
+    posy=useheight-(useheight+newheight)/2
+    # draw the image
+    mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
+    # clean up
+    mdc.SelectObject(wx.NullBitmap)
+    # deal with transparency
+    if transparent is not None:
+            mask=wx.MaskColour(bitmap, transparent)
+            bitmap.SetMask(mask)
+    return bitmap
 
 ###
 ### Virtual filesystem where the images etc come from for the HTML stuff
@@ -366,34 +388,7 @@ class BPFSImageFile(wx.FSFile):
         if img is None:
             img=wx.Image(name)
 
-        # resize image
-        sfactorw=width*1.0/img.GetWidth()
-        sfactorh=height*1.0/img.GetHeight()
-        sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-        newwidth=img.GetWidth()*sfactor/1.0
-        newheight=img.GetHeight()*sfactor/1.0
-        img.Rescale(int(newwidth), int(newheight))
-
-        b=wx.EmptyBitmap(width, height)
-        mdc=wx.MemoryDC()
-        mdc.SelectObject(b)
-        if bgcolor is not None and  len(bgcolor)==6:
-            transparent=None
-            red=int(bgcolor[0:2],16)
-            green=int(bgcolor[2:4],16)
-            blue=int(bgcolor[4:6],16)
-            mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(wx.Colour(red,green,blue), wx.SOLID))
-        else:
-            bgcolor=None
-            transparent=wx.Colour(*(img.FindFirstUnusedColour()[1:]))
-            mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(transparent, wx.SOLID))
-        mdc.Clear()
-        mdc.SelectObject(b)
-        mdc.DrawBitmap(img.ConvertToBitmap(), (width-img.GetWidth())/2, (height-img.GetHeight())/2, True)
-        mdc.SelectObject(wx.NullBitmap)
-        if transparent is not None:
-            mask=wx.MaskColour(b, transparent)
-            b.SetMask(mask)
+        b=ScaleImageIntoBitmap(img, width, height, bgcolor)
         
         f=common.gettempfilename("png")
         if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
