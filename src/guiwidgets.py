@@ -343,42 +343,41 @@ class ConfigDialog(wx.Dialog):
     ID_BITFLING=wx.NewId()
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
         wx.Dialog.__init__(self, frame, id, title,
-                          style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+                          style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
         self.mw=mainwindow
 
         self.bitflingresponsequeues={}
 
-        gs=wx.FlexGridSizer(0, 3,  5 ,10)
+        gs=wx.GridBagSizer(10, 10)
         gs.AddGrowableCol(1)
 
         # where we store our files
-        gs.Add( wx.StaticText(self, -1, "Disk storage"), 0, wx.ALIGN_CENTER_VERTICAL)
-        self.diskbox=wx.TextCtrl(self, -1, self.setme, size=wx.Size( 400, 10))
-        gs.Add( self.diskbox, 0, wx.EXPAND)
-        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), 0, wx.EXPAND)
+        gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(0,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.diskbox=wx.TextCtrl(self, -1, self.setme, size=(400,-1))
+        gs.Add( self.diskbox, pos=(0,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), pos=(0,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # phone type
-        gs.Add( wx.StaticText(self, -1, "Phone Type"), 0, wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(1,0), flag=wx.ALIGN_CENTER_VERTICAL)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, 0, wx.EXPAND)
-        gs.Add( (1,1), 0, wx.EXPAND) # blank
+        gs.Add( self.phonebox, pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # com port
-        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.ALIGN_CENTER_VERTICAL)
-        self.commbox=wx.TextCtrl(self, -1, self.setme)
-        gs.Add( self.commbox, 0, wx.EXPAND)
-        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), 0, wx.EXPAND)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.commbox=wx.TextCtrl(self, -1, self.setme, size=(200,-1))
+        gs.Add( self.commbox, pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(2,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), 0, wx.EXPAND)
+            gs.Add(self.bitflingenabled, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -392,11 +391,10 @@ class ConfigDialog(wx.Dialog):
         # crud at the bottom
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
-        bs.Add((1,1), 1, wx.EXPAND|wx.ALL, 5) # takes up slack
         bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
         but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
-        bs.Add(but, 0, wx.CENTER, 10)
+        bs.Add(but, 0, wx.CENTER|wx.ALL, 10)
 
         wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
         wx.EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
