@@ -352,7 +352,7 @@ class WallpaperView(guiwidgets.FileView):
         extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
         # munge name
-        targetfilename=self.getshortenedbasename(file, self.convertextension)
+        targetfilename=self.getshortenedbasename(file, extension)
 
         res=getattr(self, "saveimage_"+imgparams['format'])(img, targetfilename, imgparams)
         if not res:
@@ -372,7 +372,7 @@ class WallpaperView(guiwidgets.FileView):
             img.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
         return img.SaveFile(targetfilename, wx.BITMAP_TYPE_BMP)
 
-    def saveimage_JPG(self, img, targetfilename, imgparams):
+    def saveimage_JPEG(self, img, targetfilename, imgparams):
         img.SetOptionInt("quality", 100)        
         return img.SaveFile(targetfilename, wx.BITMAP_TYPE_JPEG)
 

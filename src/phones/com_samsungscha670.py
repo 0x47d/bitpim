@@ -786,6 +786,32 @@ class Profile(com_samsung.Profile):
         d['format']='QCP'
         return ('pmd', fileinfo.AudioFileInfo(afi, **d))
 
+    imageorigins={
+        "wallpapers": { 'meta-help': 'Wallpapers'}
+        }
+    imagetargets={
+        "Full Screen": {'meta-help': 'Full Screen Wallpapers'},
+        "Wallpapers": {'meta-help': 'Clipped Wallpapers'},
+        "Picture ID": {'meta-help': 'Picture ID' }
+        }
+
+    def GetImageOrigins(self):
+        # Note: only return origins that you can write back to the phone
+        return self.imageorigins
+
+    def GetTargetsForImageOrigin(self, origin):
+        targets={}
+        targets.update(common.getkv(self.imagetargets,
+                                    "Full Screen",
+                                  {'width': 128, 'height': 160, 'format': "PNG"}))
+        targets.update(common.getkv(self.imagetargets,
+                                    "Wallpapers",
+                                  {'width': 128, 'height': 128, 'format': "PNG"}))
+        targets.update(common.getkv(self.imagetargets,
+                                    "Picture ID",
+                                  {'width': 96, 'height': 96, 'format': "JPEG"}))
+        return targets
+
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
@@ -953,6 +979,8 @@ class FileEntries:
         if len(new_keys):
             try:
                 self.__phone.mkdirs(self.__path)
+                # yet another hack
+                self.__phone.mkdirs('brew/shared')
             except:
                 pass
         file_count=0
@@ -972,9 +1000,17 @@ class FileEntries:
                                     (self.__max_file_count, self.__file_type))
                 break
             if self.__origin=='wallpapers':
-                mms_file_name, file_hdr=self.__to_mms_jpg(n['name'], len(n['data']))
-                file_name=self.__path+'/'+mms_file_name
-                file_contents=file_hdr+n['data']
+                # ugly hack to make it work for this build
+                # realy NEED to work on this!!!
+                if n['name'][-4:]=='.jpg':
+                    # jpeg file/picture ID files
+                    mms_file_name, file_hdr=self.__to_mms_jpg(n['name'], len(n['data']))
+                    file_name=self.__path+'/'+mms_file_name
+                    file_contents=file_hdr+n['data']
+                else:
+                    # wallpaper files
+                    file_name='brew/shared/'+n['name']
+                    file_contents=n['data']
             else:
                 file_name=self.__path+'/'+n['name']
                 file_contents=n['data']
