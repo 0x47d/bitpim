@@ -1308,13 +1308,18 @@ def GetPhonebookExports():
 
 class ExportVCardDialog(wx.Dialog):
 
-    dialects= {"vCard v2.1": "_21", "vCard v3.0": "_30",  "Apple": "_apple"}
-    default_dialect="vCard v2.1"
+    dialects=vcard.profiles.keys()
+    dialects.sort()
+    default_dialect='vcard2'
 
     def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
              wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
+        import phonebook
+        self.phonebook=phonebook.thephonewidget
 
+        # make the ui
+        
         vbs=wx.BoxSizer(wx.VERTICAL)
 
         bs=wx.BoxSizer(wx.HORIZONTAL)
@@ -1330,19 +1335,28 @@ class ExportVCardDialog(wx.Dialog):
 
         vbs2=wx.BoxSizer(wx.VERTICAL)
 
+        # dialects
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Dialect"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
-        d=self.dialects.keys()
-        d.sort()
-        self.dialectctrl=wx.ComboBox(self, -1, style=wx.CB_DROPDOWN, choices=d)
+        self.dialectctrl=wx.ComboBox(self, -1, style=wx.CB_DROPDOWN, choices=[vcard.profiles[d]['description'] for d in self.dialects])
         default=wx.GetApp().config.Read("vcard/export-format", self.default_dialect)
-        if default not in d: default=self.default_dialect
-        self.dialectctrl.SetSelection(d.index(default))
+        if default not in self.dialects: default=self.default_dialect
+        self.dialectctrl.SetSelection(self.dialects.index(default))
         hbs.Add(self.dialectctrl, 1, wx.ALL|wx.EXPAND, 5)
         vbs2.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        
+        # selected or all?
+        lsel=len(self.phonebook.GetSelectedRows())
+        lall=len(self.phonebook._data)
+        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
+        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
+        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
+        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
+        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        self.whichctrl=wx.RadioBox(self, -1, "Entries", style=wx.RA_SPECIFY_ROWS, choices=["All", "Selected"])
-        vbs2.Add(self.whichctrl, 0, wx.EXPAND|wx.ALL, 5)
+        self.rows_selected.SetValue(lsel>1)
+        self.rows_all.SetValue(not lsel>1)
 
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(vbs2, 1, wx.EXPAND|wx.ALL, 5)
@@ -1352,6 +1366,10 @@ class ExportVCardDialog(wx.Dialog):
         for c in ("Everything", "Phone Numbers", "Addresses", "Email Addresses"):
             cb.append(wx.CheckBox(self, -1, c))
             vbs2.Add(cb[-1], 0, wx.EXPAND|wx.ALL, 5)
+
+        for c in cb:
+            c.Enable(False)
+        cb[0].SetValue(True)
 
         hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 10)
 
@@ -1373,10 +1391,30 @@ class ExportVCardDialog(wx.Dialog):
         dlg.Destroy()
 
     def OnOk(self, _):
+        import phonebook
         # do export
-
         filename=self.filenamectrl.GetValue()
-        dialect=self.dialectctrl.GetValue()
+
+        dialect=None
+        for k,v in vcard.profiles.items():
+            if v['description']==self.dialectctrl.GetValue():
+                dialect=k
+                break
+
+        assert dialect is not None
+
+        data=self.phonebook._data
+        if self.rows_all.GetValue():
+            rowkeys=data.keys()
+        else:
+            rowkeys=phonebook.GetSelectedRows()
+
+        # ::TODO:: ask about overwriting existing file
+        f=open(filename, "wt")
+        for k in rowkeys:
+            print >>f, vcard.output_entry(data[k], vcard.profiles[dialect]['profile'])
+
+        f.close()
         
         # save settings since we were succesful
         wx.GetApp().config.Write("vcard/export-file", filename)
