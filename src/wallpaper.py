@@ -121,10 +121,10 @@ class WallpaperView(guiwidgets.FileView):
         return image
 
     def GetItemSizedBitmap(self, item, width, height):
-        print item
+        if __debug__: print item
         img=self.GetItemImage(item)
-        print width, height
-        print img.GetWidth(), img.GetHeight()
+        if __debug__: print width, height
+        if __debug__: print img.GetWidth(), img.GetHeight()
         if width!=img.GetWidth() or height!=img.GetHeight():
             if guihelper.IsMSWindows():
                 bg=None # transparent
@@ -196,7 +196,7 @@ class WallpaperView(guiwidgets.FileView):
             entry=dict['wallpaper-index'][k]
             filename=os.path.join(self.mainwindow.wallpaperpath, entry['name'])
             if not os.path.exists(filename):
-                print "no file for wallpaper",entry['name']
+                if __debug__: print "no file for wallpaper",entry['name']
                 continue
             newentry={}
             # look through existing to see if we already have a match

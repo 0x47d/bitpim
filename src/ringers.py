@@ -173,7 +173,7 @@ class RingerView(guiwidgets.FileView):
             entry=dict['ringtone-index'][i]
             filename=os.path.join(self.mainwindow.ringerpath, entry['name'])
             if not os.path.isfile(filename):
-                print "no file for",entry['name']
+                if __debug__: print "no file for",entry['name']
                 continue
             filelen=int(os.stat(filename).st_size)
             newentry={}
