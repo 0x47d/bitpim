@@ -30,7 +30,7 @@
 # stuff, but the actual request handling still seems single threaded.
 
 
-TRACE=False
+TRACE=True
 
 
 # standard modules
