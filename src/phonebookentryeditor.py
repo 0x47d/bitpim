@@ -262,18 +262,28 @@ class CategoryManager(wx.Dialog):
         hs.Add(self.add, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
 
-        gs=wx.FlexGridSizer(2,3,5,5)
-        gs.Add(wx.StaticText(self, -1, "List"))
-        gs.Add(wx.StaticText(self, -1, "Added"))
-        gs.Add(wx.StaticText(self, -1, "Deleted"))
-        self.thelistb=wx.ListBox(self, -1, style=wx.LB_SORT)
+        self.thelistb=wx.ListBox(self, -1, size=(100, 250), style=wx.LB_SORT)
         self.addlistb=wx.ListBox(self, -1, style=wx.LB_SORT)
         self.dellistb=wx.ListBox(self, -1, style=wx.LB_SORT)
-        gs.Add(self.thelistb)
-        gs.Add(self.addlistb)
-        gs.Add(self.dellistb)
-        gs.AddGrowableRow(1)
-        vs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
+
+        hs=wx.BoxSizer(wx.HORIZONTAL)
+
+        vs2=wx.BoxSizer(wx.VERTICAL)
+        vs2.Add(wx.StaticText(self, -1, "  List"), 0, wx.ALL, 2)
+        vs2.Add(self.thelistb, 1, wx.ALL|wx.EXPAND, 5)
+        hs.Add(vs2, 1, wx.ALL|wx.EXPAND, 5)
+
+        vs2=wx.BoxSizer(wx.VERTICAL)
+        vs2.Add(wx.StaticText(self, -1, "  Added"), 0, wx.ALL, 2)
+        vs2.Add(self.addlistb, 1, wx.ALL|wx.EXPAND, 5)
+        hs.Add(vs2, 1, wx.ALL|wx.EXPAND, 5)
+
+        vs2=wx.BoxSizer(wx.VERTICAL)
+        vs2.Add(wx.StaticText(self, -1, "  Deleted"), 0, wx.ALL, 2)
+        vs2.Add(self.dellistb, 1, wx.ALL|wx.EXPAND, 5)
+        hs.Add(vs2, 1, wx.ALL|wx.EXPAND, 5)
+
+        vs.Add(hs, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
