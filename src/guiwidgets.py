@@ -1327,6 +1327,7 @@ class ExceptionDialog(wx.Dialog):
         vbs.Add(buttsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 5)
 
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.abort)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_EXCEPTION_DIALOG))
         
         self.SetSizer(vbs)
         self._text=""
