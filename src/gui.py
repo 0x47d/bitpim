@@ -797,6 +797,15 @@ class MainWindow(wx.Frame):
         convertors=[]
         todo=[]
         funcscb=[]
+        ### Phonebook
+        v=dlg.GetPhoneBookSetting()
+        if v!=dlg.NOTREQUESTED:
+            if v==dlg.OVERWRITE: 
+                self.phonewidget.getdata(data)
+                todo.append( (self.wt.writephonebook, "Phonebook") )
+            convertors.append(self.phonewidget.converttophone)
+            # writing will modify serials so we need to update
+            funcscb.append(self.phonewidget.updateserials)
         ### Calendar
         v=dlg.GetCalendarSetting()
         if v!=dlg.NOTREQUESTED:
@@ -828,16 +837,6 @@ class MainWindow(wx.Frame):
             self.ringerwidget.getdata(data, want)
             todo.append( (self.wt.writeringtone, "Ringtone", merge) )
             # funcscb.append( self.ringerwidget.populate )
-
-        ### Phonebook
-        v=dlg.GetPhoneBookSetting()
-        if v!=dlg.NOTREQUESTED:
-            if v==dlg.OVERWRITE: 
-                self.phonewidget.getdata(data)
-                todo.append( (self.wt.writephonebook, "Phonebook") )
-            convertors.append(self.phonewidget.converttophone)
-            # writing will modify serials so we need to update
-            funcscb.append(self.phonewidget.updateserials)
 
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
