@@ -138,6 +138,9 @@ class usb_ids:
 		if (ufile):
 			ufile.close()
 
+	def lookupdevice(self, vendor, product=None, interface=None):
+		return self.vendorlist.getVendorInfo(vendor, product, interface)		
+
 	def getVendorList(self):
 		""" Return the object representing the list of vendors """
 		return self.vendorlist
