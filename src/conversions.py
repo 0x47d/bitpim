@@ -214,9 +214,13 @@ def converttowav(mp3filename, wavfilename, samplerate=None,
 
     run(*cmd)
 
-def convertwavtoqcp(wavfile):
+def convertwavtoqcp(wavfile, qcpfile):
     pvconv=gethelperbinary('pvconv')
-    run(pvconv, shortfilename(wavfile))
+    run(pvconv, shortfilename(wavfile), shortfilename(qcpfile))
+
+def convertqcptowav(qcpfile, wavfile):
+    pvconv=gethelperbinary('pvconv')
+    run(pvconv, shortfilename(qcpfile), shortfilename(wavfile))
 
 def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
     f=None
