@@ -99,8 +99,7 @@ class Request:
 class HelperReturnEvent(wx.PyEvent):
     def __init__(self, callback, *args, **kwargs):
         if __debug__:
-            # verify not being called in main thread.  We could be called in
-            # the comms worker thread, or in the XML-RPC worker threads
+            # verify being called in comm worker thread
             global helperthreadid
             assert helperthreadid==thread.get_ident()
         global EVT_CALLBACK
@@ -155,6 +154,7 @@ class WorkerThreadFramework(threading.Thread):
                 ex=e
                 if not hasattr(e,"gui_exc_info"):
                     ex.gui_exc_info=sys.exc_info()
+                
             wx.PostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
             if isinstance(ex, SystemExit):
                 raise ex
@@ -833,23 +833,27 @@ class MainWindow(wx.Frame):
                 
     # Get data from disk
     def OnPopulateEverythingFromDisk(self,_=None):
-        results={}
-        # get info
-        self.phonewidget.getfromfs(results)
-        self.wallpaperwidget.getfromfs(results)
-        self.ringerwidget.getfromfs(results)
-        self.calendarwidget.getfromfs(results)
-        # update controls
-        wx.SafeYield(onlyIfNeeded=True)
-        self.phonewidget.populate(results)
-        wx.SafeYield(onlyIfNeeded=True)
-        self.wallpaperwidget.populate(results)
-        wx.SafeYield(onlyIfNeeded=True)
-        self.ringerwidget.populate(results)
-        wx.SafeYield(onlyIfNeeded=True)
-        self.calendarwidget.populate(results)
-        # close the splash screen if it is still up
-        self.CloseSplashScreen()
+        self.OnBusyStart()
+        try:
+            results={}
+            # get info
+            self.phonewidget.getfromfs(results)
+            self.wallpaperwidget.getfromfs(results)
+            self.ringerwidget.getfromfs(results)
+            self.calendarwidget.getfromfs(results)
+            # update controls
+            wx.SafeYield(onlyIfNeeded=True)
+            self.phonewidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.wallpaperwidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.ringerwidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.calendarwidget.populate(results)
+            # close the splash screen if it is still up
+            self.CloseSplashScreen()
+        finally:
+            self.OnBusyEnd()
         
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
@@ -951,6 +955,8 @@ class MainWindow(wx.Frame):
         if exception is None: return False
         assert isinstance(exception, Exception)
         self.CloseSplashScreen()
+        # always close comm connection when we have any form of exception
+        self.wt.clearcomm()
         text=None
         title=None
         style=None
