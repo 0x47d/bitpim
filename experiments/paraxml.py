@@ -3,9 +3,9 @@
 import  paramiko_bp as paramiko # our version is slightly modified
 import socket
 import sys
-import threading
+import threading, thread
 
-
+print "Main thread is",thread.get_ident()
 
 
 bind_address=("", 12098)
@@ -18,11 +18,13 @@ class ServerChannel(paramiko.Channel):
 class ServerTransport(paramiko.Transport):
     okauth=( ('rogerb', 'password'), ('example', 'nonsense') )
     def check_channel_request(self, kind, chanid):
+        print "check channel request in thread",thread.get_ident()
         if kind == 'bitfling':
             return ServerChannel(chanid)
         return self.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
     def check_auth_password(self, username, password):
+        print "check auth request in thread",thread.get_ident()
         print "checking creds",`username`, `password`
         if (username,password) in self.okauth:
             return self.AUTH_SUCCESSFUL
@@ -92,7 +94,7 @@ def client():
     event.wait(15)
     print "active =",transport.is_active()
     keytype, hostkey = transport.get_remote_server_key()
-    print "host key is",keytype,paramiko.util.hexify(hostkey.get_fingerprint)
+    print "host key is",keytype,paramiko.util.hexify(hostkey)
     event=threading.Event()
     transport.auth_password('rogerb', 'password', event)
     event.wait(10)
