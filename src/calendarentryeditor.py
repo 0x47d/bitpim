@@ -607,11 +607,13 @@ class Editor(wx.Dialog):
             newentry.repeat=self.__widgets[self.__repeat_page].Get()
         # and other tabs as well
         newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', None)
-        newentry.category=self.__widgets[self.__categories_page].Get()
+        newentry.categories=self.__widgets[self.__categories_page].Get()
         newentry.wallpaper=self.__widgets[self.__wallpapers_page].Get().get('wallpaper', None)
         newentry.ringtone=self.__widgets[self.__ringtones_page].Get().get('ringtone', None)
         # got the data
         print newentry.get()
+        print 'New DB Calendar object:'
+        print bpcalendar.CalendarDataObject(newentry)
         # update calendar widget
         if res==self.ANSWER_ORIGINAL:
             self.cw.ChangeEntry(entry, newentry)
@@ -774,7 +776,7 @@ class Editor(wx.Dialog):
             self.__widgets[i].Enable(True)
         self.__widgets[self.__repeat_page].Set(entry.repeat)
         self.__widgets[self.__notes_page].Set({ 'memo': entry.notes })
-        self.__widgets[self.__categories_page].Set(entry.category)
+        self.__widgets[self.__categories_page].Set(entry.categories)
         self.__widgets[self.__wallpapers_page].Set( \
             { 'wallpaper': entry.wallpaper, 'type': 'calendar' })
         self.__widgets[self.__ringtones_page].Set( \

@@ -37,7 +37,9 @@ wallpaper - string wallpaper assignment.
 
 CalendarEntry methods:
 get() - return a copy of the internal dict
+get_db_dict()- return a copy of a database.basedataobject dict.
 set(dict) - set the internal dict with the supplied dict
+set_db_dict(dict) - set internal data with the database.basedataobject dict
 is_active(y, m, d) - True if this event is active on (y,m,d)
 suppress_repeat_entry(y,m,d) - exclude (y,m,d) from this repeat event.
 
@@ -118,11 +120,35 @@ import wx.lib.intctrl
 import calendarcontrol
 import calendarentryeditor  # DJP
 import common
+import database
 import helpids
 
 #-------------------------------------------------------------------------------
+class CalendarDataObject(database.basedataobject):
+    """
+    This class is a wrapper class to enable CalendarEntry object data to be
+    stored in the database stuff.  Once the database module is updated, this
+    class will also be updated and eventually replace CalendarEntry.
+    """
+    _knownproperties=['description', 'location', 'priority', 'alarm',
+                      'notes', 'ringtone', 'wallpaper',
+                      'start', 'end']
+    _knownlistproperties=database.basedataobject._knownlistproperties.copy()
+    _knownlistproperties.update( {
+                                  'repeat': ['type', 'interval', 'dow'],
+                                  'suppressed': ['date'],
+                                  'categories': ['category'] })
+    def __init__(self, data=None):
+        if data is None:
+            # empty data, do nothing
+            return
+        assert isinstance(data, CalendarEntry), 'data must be a CaledarEntry object'
+        self.update(data.get_db_dict())
+
+calendarobjectfactory=database.dataobjectfactory(CalendarDataObject)
+#-------------------------------------------------------------------------------
 class RepeatEntry(object):
-    # class constansts
+    # class constants
     daily='daily'
     weekly='weekly'
     monthly='monthly'
@@ -153,6 +179,25 @@ class RepeatEntry(object):
         r['suppressed']=self.__suppressed
         return r
 
+    def get_db_dict(self):
+        # return a copy of the dict compatible with the database stuff
+        db_r={}
+        r={}
+        r['type']=self.__type
+        if self.__type==self.daily:
+            r['interval']=self.__data[self.__interval]
+        elif self.__type==self.weekly:
+            r['interval']=self.__data[self.__interval]
+            r['dow']=self.__data[self.__dow]
+        # and the suppressed stuff
+        s=[]
+        for n in self.__suppressed:
+            s.append({ 'date': '%04d%02d%02d'%tuple(n) })
+        db_r['repeat']=[r]
+        if len(s):
+            db_r['suppressed']=s
+        return db_r
+
     def set(self, data):
         # setting data from a dict, mainly used for getfromfs
         if data.has_key(self.daily):
@@ -169,6 +214,22 @@ class RepeatEntry(object):
         else:
             self.repeat_type=self.yearly
         self.suppressed=data.get('suppressed', [])
+
+    def set_db_dict(self, data):
+        r=data.get('repeat', [{}])[0]
+        self.repeat_type=r['type']
+        if self.repeat_type==self.daily:
+            self.interval=r['interval']
+        elif self.repeat_type==self.weekly:
+            self.interval=r['interval']
+            self.dow=r['dow']
+        # now the suppressed stuff
+        s=data.get('suppressed', [])
+        t=[]
+        for k in s:
+            n=k['date']
+            t.append((int(n[:4]), int(n[4:6]), int(n[6:8])))
+        self.suppressed=t
 
     def __check_daily(self, s, d):
         if self.interval:
@@ -258,11 +319,12 @@ class RepeatEntry(object):
 
 #-------------------------------------------------------------------------------
 class CalendarEntry(object):
-    def __init__(self, year, month, day):
+    def __init__(self, year=None, month=None, day=None):
         self.__data={}
         # setting default values
-        self.__data['start']={ 'date': (year, month, day) }
-        self.__data['end']={ 'date': (year, month, day) }
+        if day is not None:
+            self.__data['start']={ 'date': (year, month, day) }
+            self.__data['end']={ 'date': (year, month, day) }
         self.__data['serials']=[]
         self.__create_id()
 
@@ -272,12 +334,65 @@ class CalendarEntry(object):
             r['repeat']=self.repeat.get()
         return r
 
+    def __encode_date_time(self, v):
+        if len(v)==3:
+            # date only
+            return '%04d%02d%02d'%tuple(v)
+        elif len(v)==5:
+            # date & time
+            return '%04d%02d%02dT%02d%02d'%tuple(v)
+        else:
+            return ''
+
+    def __extract_date_time(self, v):
+        if len(v)==8:
+            return (int(v[:4]), int(v[4:6]), int(v[6:8]), 0, 0)
+        else:
+            return (int(v[:4]), int(v[4:6]), int(v[6:8]),
+                    int(v[9:11]), int(v[11:13]))
+
+    def get_db_dict(self):
+        # return a dict compatible with the database stuff
+        r=copy.deepcopy(self.__data, _nil={})
+        # adjust for start & end
+        if self.allday:
+            r['start']=self.__encode_date_time(self.start[:3])
+            r['end']=self.__encode_date_time(self.end[:3])
+        else:
+            r['start']=self.__encode_date_time(self.start)
+            r['end']=self.__encode_date_time(self.end)
+        # adjust for repeat & suppressed
+        if self.repeat is not None:
+            r.update(self.repeat.get_db_dict())
+        # take out uneeded keys
+        if r.has_key('allday'):
+            del r['allday']
+        return r
+
     def set(self, data):
-        self.__data=copy.deepcopy(data)
+        self.__data={}
+        self.__data.update(data)
         if self.repeat is not None:
             r=RepeatEntry()
             r.set(self.repeat)
             self.repeat=r
+
+    def set_db_dict(self, data):
+        # update our data with dict return from database
+        self.__data={}
+        self.__data.update(data)
+        # adjust for allday
+        self.allday=len(data['start'])==8
+        # adjust for start and end
+        self.__data['start']={}
+        self.start=self.__extract_date_time(data['start'])
+        self.__data['end']={}
+        self.end=self.__extract_date_time(data['end'])
+        # adjust for repeat
+        if data.has_key('repeat'):
+            rp=RepeatEntry()
+            rp.set_db_dict(data)
+            self.repeat=rp
 
     def is_active(self, y, m ,d):
         # return true if if this event is active on this date,
@@ -300,8 +415,8 @@ class CalendarEntry(object):
             return
         self.repeat.add_suppressed(y, m, d)
 
-    def __set_or_del(self, key, v):
-        if v is None:
+    def __set_or_del(self, key, v, v_list=()):
+        if v is None or v in v_list:
             if self.__data.has_key(key):
                 del self.__data[key]
         else:
@@ -316,9 +431,7 @@ class CalendarEntry(object):
     def __get_location(self):
         return self.__data.get('location', '')
     def __set_location(self, location):
-        self.__set_or_del('location', location)
-        if self.location=='':
-            del self.__data['location']
+        self.__set_or_del('location', location, (''))
     location=property(fget=__get_location, fset=__set_location)
 
     def __get_priority(self):
@@ -402,13 +515,13 @@ class CalendarEntry(object):
         self.__set_or_del('notes', s)
     notes=property(fget=__get_notes, fset=__set_notes)
 
-    def __get_category(self):
+    def __get_categories(self):
         return self.__data.get('categories', [])
-    def __set_category(self, s):
-        self.__set_or_del('categories', s)
-        if self.category==[]:
+    def __set_categories(self, s):
+        self.__set_or_del('categories', s,([]))
+        if s==[] and self.__data.has_key('categories'):
             del self.__data['categories']
-    category=property(fget=__get_category, fset=__set_category)
+    categories=property(fget=__get_categories, fset=__set_categories)
 
     def __get_ringtone(self):
         return self.__data.get('ringtone', '')
@@ -611,16 +724,6 @@ class Calendar(calendarcontrol.Calendar):
 
     def populatefs(self, dict):
         """Saves the dict to disk"""
-        self.thedir=self.mainwindow.calendarpath
-        try:
-            os.makedirs(self.thedir)
-        except:
-            pass
-        if not os.path.isdir(self.thedir):
-            raise Exception("Bad directory for calendar '"+self.thedir+"'")
-        for f in os.listdir(self.thedir):
-            # delete them all!
-            os.remove(os.path.join(self.thedir, f))
 
         if dict.get('calendar_version', None)==2:
             # Cal dict version 2, need to convert to current ver(3)
@@ -629,11 +732,12 @@ class Calendar(calendarcontrol.Calendar):
         else:
             cal_dict=dict.get('calendar', {})
 
-        rr={}
+        db_rr={}
         for k, e in cal_dict.items():
-            rr[k]=e.get()
-        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"),
-                                     {'calendar': rr}, self.CURRENTFILEVERSION)
+            db_rr[k]=CalendarDataObject(e)
+        database.ensurerecordtype(db_rr, calendarobjectfactory)
+        db_rr=database.extractbitpimserials(db_rr)
+        self.mainwindow.database.savemajordict('calendar', db_rr)
         return dict
 
     def getfromfs(self, dict):
@@ -645,30 +749,37 @@ class Calendar(calendarcontrol.Calendar):
         @param dict: the dictionary to update
         @return: the updated dictionary"""
         self.thedir=self.mainwindow.calendarpath
-        try:
-            os.makedirs(self.thedir)
-        except:
-            pass
-        if not os.path.isdir(self.thedir):
-            raise Exception("Bad directory for calendar '"+self.thedir+"'")
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
+            # old index file exists: read, convert, and discard file
             dct={'result': {}}
             common.readversionedindexfile(os.path.join(self.thedir, "index.idx"),
                                           dct, self.versionupgrade,
                                           self.CURRENTFILEVERSION)
-            if dct['result'].has_key('converted'):
-                dict.update({ 'calendar': dct['result']['calendar'] })
-                return dict
-            tdy=datetime.date.today()
-            y,m,d=(tdy.year, tdy.month, tdy.day)
-            r={}
+            converted=dct['result'].has_key('converted')
+            db_r={}
             for k,e in dct['result'].get('calendar', {}).items():
-                ce=CalendarEntry(y, m, d)
-                ce.set(e)
-                r[k]=ce
-            dict.update({ 'calendar': r })
-        else:
-            dict['calendar']={}
+                if converted:
+                    db_r[k]=CalendarDataObject(e)
+                else:
+                    ce=CalendarEntry()
+                    ce.set(e)
+                    db_r[k]=CalendarDataObject(ce)
+            # save it in the new database
+            database.ensurerecordtype(db_r, calendarobjectfactory)
+            db_r=database.extractbitpimserials(db_r)
+            self.mainwindow.database.savemajordict('calendar', db_r)
+            # now that save is succesful, move file out of the way
+            os.rename(os.path.join(self.thedir, "index.idx"), os.path.join(self.thedir, "index-is-now-in-database.bak"))
+        # read data from the database
+        cal_dict=self.mainwindow.database.getmajordictvalues('calendar',
+                                                      calendarobjectfactory)
+        r={}
+        for k,e in cal_dict.items():
+            ce=CalendarEntry()
+            ce.set_db_dict(e)
+            r[ce.id]=ce
+        dict.update({ 'calendar': r })
+
         return dict
 
     def versionupgrade(self, dict, version):
