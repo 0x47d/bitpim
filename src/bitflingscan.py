@@ -92,6 +92,15 @@ class flinger:
         self._configure()
         return self.client.devicewrite(handle, data)
     
+    def devicesendatcommand(self, handle, sendatcommand, ignoreerror):
+        self._configure()
+        res=self.client.devicesendatcommand(handle, sendatcommand, ignoreerror)
+        if res==0:
+            raise
+        elif res==1:
+            res=[]
+        return res
+                          
     def devicereaduntil(self, handle, char, numfailures):
         self._configure()
         return self.client.devicereaduntil(handle, char, numfailures)
@@ -100,9 +109,10 @@ class flinger:
         self._configure()
         return self.client.deviceread(handle, numchars)
 
-    def devicereadsome(self, handle):
+    def devicereadsome(self, handle, numchars):
         self._configure()
-        return self.client.devicereadsome(handle)
+        print "bitflingscan devicereadsome"
+        return self.client.devicereadsome(handle, numchars)
 
     def devicewritethenreaduntil(self, handle, data, char, numfailures):
         self._configure()
@@ -249,6 +259,9 @@ class CommConnection:
         self.handle=flinger.deviceopen(self.port[len("bitfling::"):], self.baud, self.timeout, self.hardwareflow,
                                        self.softwareflow)
 
+    def IsAuto(self):
+        return False
+    
     def close(self):
         if self.handle is not None:
             flinger.deviceclose(self.handle)
@@ -276,14 +289,19 @@ class CommConnection:
             self.logdata("Writing", data)
         flinger.devicewrite(self.handle, data)
 
+    def sendatcommand(self, atcommand, ignoreerror=False):
+        res=flinger.devicesendatcommand(self.handle, atcommand, ignoreerror)
+        return res
+        
     def read(self, numchars=1, log=True):
         res=flinger.deviceread(self.handle, numchars)
         if log:
             self.logdata("Reading exact data - requested "+`numchars`, res)
         return res
 
-    def readsome(self, log=True):
-        res=flinger.devicereadsome(self.handle)
+    def readsome(self, log=True, numchars=-1):
+        print "bitflingscan readsome"
+        res=flinger.devicereadsome(self.handle, numchars)
         if log:
             self.logdata("Reading remaining data", res)
         return res
