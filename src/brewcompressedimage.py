@@ -118,6 +118,7 @@ class BCIPalette:
         return self.pal[e]
 
 class ReadMethodFixup:
+    """This is a mixin that corrects the behaviour of the Read method in an InputStream"""
     def Read(self, len):
         res=cStringIO.StringIO()
         while len>0 and not self.Eof():
