@@ -66,16 +66,19 @@ class Phone(com_samsung.Phone):
     __pb_max_emails=1
     __pb_max_email_chars=48	# Not currently used, but shouldn't it be?
     __pb_max_alias_chars=48	# Not currently used, but shouldn't it be?
+    __wp_photo_dir="digital_cam"
+    __wp_header_bytes=96	# Extra bytes in front of jpg
+    __wp_ts_offset=47 		# Timestamp in yyyymmddHHMMSS format starts here
     
     builtinringtones=( 'Inactive',
                        'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
                        'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
                        'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10')
-    # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'user/sound/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'nvm/brew/shared', 19, 20)
-    # Added this for future use. Not sure about numeric values
-    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 20, 50)
+    # 'type name', 'type index name', 'dir path', 'max file name length', 'max file name count'    
+    __ringtone_info=('ringtone', 'ringtone-index', 'brew/ringer', 19, 20)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'brew/shared', 19, 20)
+# Added this for future use. Not sure about numeric values
+    __camerapix_info=('camera', 'camerapix-index', 'digital_cam', 20, 50)
         
     def __init__(self, logtarget, commport):
 
@@ -227,16 +230,20 @@ class Phone(com_samsung.Phone):
         pb_book=data['phonebook']
         pb_groups=data['groups']
         self.log('Validating phonebook entries.')
+	print "OK 1"
         if len(pb_book)>len(self.__phone_entries_range):
             self.report('Too many phone entries')
             return data
+	print "OK 2"
         for k in pb_book:
             if not self.__validate_entry(pb_book[k], pb_groups):
                 self.report('Invalid entry, Save Phonebook aborted.')
                 return data
+	print "OK 3"
         if self._has_duplicate_speeddial(pb_book):
             self.report('Duplicate speed dial entries exist, Save Phonebook aborted')
             return data
+	print "OK 4"
         self.log('All entries validated')
 
         pb_locs=[False]*(len(self.__phone_entries_range)+1)
@@ -245,11 +252,13 @@ class Phone(com_samsung.Phone):
         # get existing phonebook from the phone
         self.log("Getting current phonebook from the phone")
         current_pb=self._get_phonebook(data, True)
+	print "OK 5"
 
         # check and adjust for speeddial changes
         self.log("Processing speeddial data")
         for k in pb_book:
             self._update_speeddial(pb_book[k])
+	print "OK 6"
 
         # check for deleted entries and delete them
         self.pmode_on()
@@ -308,9 +317,11 @@ class Phone(com_samsung.Phone):
             progresscur += 1
 
         # update existing and new entries
+ 	print "OK 9"
         data["serialupdates"]=serials_update
         self.log("Done")
         self.pmode_off()
+	print "OK 10"
         return data
 
     # validate a phonebook entry, return True if good, False otherwise
@@ -567,7 +578,7 @@ class Phone(com_samsung.Phone):
         e[self.__pb_email]='"'+email+'"'
 # A650 apparently doesn't assign picture IDs so this is different 
         e[self.__pb_image_assign]='5'
-	e[self.__pb_contact_image]=''
+	e[self.__pb_contact_image]='""'
         for k in self.__pb_blanks:
             e[k]=''
 
@@ -608,21 +619,19 @@ class Phone(com_samsung.Phone):
     def getwallpapers(self, result):
         self.reportinit('Get Wallpapers', result)
         m=FileEntries(self, self.__wallpaper_info)
-        result['rebootphone']=1
-        m.get_media(result)
-        m=FileEntries(self, self.__camerapix_info)
+        result['rebootphone']=0
+#        result['rebootphone']=1
         r=m.get_media(result)
-        self.report('\r\nBITPIM is now resetting your phone.')
+#        self.report('\r\nBITPIM is now resetting your phone.')
         return r
 
     def savewallpapers(self, result, merge):
         self.reportinit('Save Wallpapers', result)
         m=FileEntries(self, self.__wallpaper_info)
-        m.save_media(result)
-        result['rebootphone']=1
-        m=FileEntries(self, self.__camerapix_info)
+        result['rebootphone']=0
+#        result['rebootphone']=1
         r=m.save_media(result)
-        self.report('\r\nBITPIM is now restting your phone.')
+#        self.report('\r\nBITPIM is now resetting your phone.')
         return r
 
     getmedia=None
@@ -649,10 +658,10 @@ class Profile(com_samsung.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        #('ringtone', 'read', None),   # all ringtone reading
-        #('ringtone', 'write', 'OVERWRITE'),
-        #('wallpaper', 'read', None),  # all wallpaper reading
-        #('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'write', 'OVERWRITE'),
         )
 
     def convertphonebooktophone(self, helper, data):
@@ -661,15 +670,13 @@ class Profile(com_samsung.Profile):
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
-        self.__file_type, self.__index_type, self.__origin, self.__path, self.__max_file_len, self.__max_file_count=info
+        self.__file_type, self.__index_type, self.__path, self.__max_file_len, self.__max_file_count=info
     def get_media(self, result):
         self.__phone.log('Getting media for type '+self.__file_type)
         media={}
         idx={}
         if result.has_key(self.__index_type):
             idx=result[self.__index_type]
-        if result.has_key(self.__file_type):
-            media=result[self.__file_type]
         file_cnt, idx_k=0, len(idx)
         path_len=len(self.__path)+1
         try:
@@ -679,35 +686,34 @@ class FileEntries:
                     index=k[path_len:]
                     # print k, index
                     media[index]=self.__phone.getfilecontents(k)
-                    idx[idx_k]={ 'name': index, 'origin': self.__origin }
+                    idx[idx_k]={ 'name': index, 'origin': self.__file_type }
                     idx_k+=1
                     file_cnt += 1
                 except:
                     self.__phone.log('Failed to read file '+k)
-                    self.__phone.report('Failed to read '+self.__file_type+k)
+#                    self.__phone.report('Failed to read '+self.__file_type+k)
         except:
             self.__phone.log('Failed to read dir '+self.__path)
         result[self.__file_type]=media
         result[self.__index_type]=idx
-        if file_cnt > self.__max_file_count:
-            self.__phone.report('This phone only supports %d %s.  %d %s read, weird things may happen.' % \
-                                (self.__max_file_count, self.__file_type,
-                                 file_cnt, self.__file_type))
+#        if file_cnt > self.__max_file_count:
+#            self.__phone.report('This phone only supports %d %s.  %d %s read, weird things may happen.' % \
+#                                (self.__max_file_count, self.__file_type,
+#                                 file_cnt, self.__file_type))
         return result
-    
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
         # check for max num of allowable files
         if len(media) > self.__max_file_count:
-            self.__phone.report('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
-                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
+#            self.__phone.report('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
+#                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
             return result
         # check for file name length
         for k in media:
             if len(media[k]['name']) > self.__max_file_len:
-                self.__phone.report('%s %s name is too long.  Save %s aborted'% \
-                                    (self.__file_type, media[k]['name'], self.__file_type))
+#                self.__phone.report('%s %s name is too long.  Save %s aborted'% \
+#                                    (self.__file_type, media[k]['name'], self.__file_type))
                 return result
         # get existing dir listing
         try:
@@ -722,34 +728,29 @@ class FileEntries:
             # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
             for k1 in media:
-                if media[k1].has_key('origin') and media[k1]['origin']!=self.__origin:
-                    continue
                 # self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
-                if media[k1]['name']==name and media[k1]['origin']==self.__origin:
+                if media[k1]['name']==name:
                     found=True
                     break
             if not found:
                 self.__phone.log('Deleting file '+k)
-                self.__phone.report('Deleting file '+name)
+#                self.__phone.report('Deleting file '+name)
                 try:
                     self.__phone.rmfile(k)
                 except:
                     self.__phone.log('Failed to rm file '+str(k))
-                    self.__phone.report('Failed to delete file '+k)
+#                    self.__phone.report('Failed to delete file '+k)
         # writing new/existing files
         for k in media:
             try:
-                if media[k].has_key('origin') and media[k]['origin'] != self.__origin:
-                    continue
                 name=self.__path+'/'+media[k]['name']
                 if name in dir_l:
                     self.__phone.log('File '+name+' exists')
                 else:
                     self.__phone.log('Writing file '+name)
-                    self.__phone.report('Adding file '+media[k]['name'])
+#                    self.__phone.report('Adding file '+media[k]['name'])
                     self.__phone.writefile(name, media[k]['data'])
-                    media[k]['origin']=self.__origin
             except:
                 self.__phone.log('Failed to write file: '+name)
-                self.__phone.report('Failed to write file: '+media[k]['name'])
+#                self.__phone.report('Failed to write file: '+media[k]['name'])
         return result
