@@ -573,6 +573,8 @@ class Editor(wx.Dialog):
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         self.ignoredirty=False
         self.setdirty(False)
+        self.lastcurrententry=-1
+        
 
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
@@ -586,7 +588,11 @@ class Editor(wx.Dialog):
         @Note: this returns the unedited form of the entry"""
         i=self.listbox.GetSelection()
         if i==-1:
-            return None
+            if self.lastcurrententry>=0:
+                i=self.lastcurrententry
+            else:
+                return None
+        self.lastcurrententry=i
         return self.getentry(i)
 
     def getentry(self, num):
