@@ -11,7 +11,7 @@
 """Communicate with a Samsung SCH-A650"""
 
 # lib modules
-
+import copy
 import re
 import sha
 
@@ -24,10 +24,12 @@ import com_samsung
 import com_phone
 import conversions
 import fileinfo
+import memo
 import nameparser
 import p_samsungscha650
 import prototypes
 
+#-------------------------------------------------------------------------------
 class Phone(com_samsung.Phone):
 
     "Talk to the Samsung SCH-A650 Cell Phone"
@@ -541,17 +543,30 @@ class Phone(com_samsung.Phone):
         result['rebootphone']=1
         self.setmode(self.MODEMODEM)
         return r
-    # DJP
-    def gettodo(self, result):
-        print 'gettodo'
-        return result
 
-    def savetodo(self, result, merge):
-        print 'savetodo'
-        return result
-    # DJP
+    def getmemo(self, result):
+        print 'getmemo'
+        self.setmode(self.MODEPHONEBOOK)
+        m=com_samsung.MemoList(self)
+        m.read()
+        m_dict=m.get()
+        result['memo']=m_dict
+        self.setmode(self.MODEMODEM)
+        return m_dict
+
+    def savememo(self, result, merge):
+        print 'savememo'
+        self.setmode(self.MODEPHONEBOOK)
+        m=com_samsung.MemoList(self)
+        r=result.get('memo', {})
+        m.set(r)
+        m.write()
+        self.setmode(self.MODEMODEM)
+        return r
+
     getmedia=None
 
+#-------------------------------------------------------------------------------
 class Profile(com_samsung.Profile):
 
     serialsname='scha650'
@@ -580,8 +595,8 @@ class Profile(com_samsung.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
-        ('todo', 'read', None),     # all todo list reading DJP
-        ('todo', 'write', 'OVERWRITE')  # all todo list writing DJP
+        ('memo', 'read', None),     # all todo list reading DJP
+        ('memo', 'write', 'OVERWRITE')  # all todo list writing DJP
         )
 
     def convertphonebooktophone(self, helper, data):
@@ -598,6 +613,7 @@ class Profile(com_samsung.Profile):
         d['format']='QCP'
         return ('qcp', fileinfo.AudioFileInfo(afi, **d))
 
+#-------------------------------------------------------------------------------
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
@@ -705,17 +721,7 @@ class FileEntries:
 
         return result
 
-class TodoList:
-    def __init__(self, phone, data={}):
-        self.__phone=phone
-        self.__data=data
-
-    def read(self, result):
-        pass
-
-    def write(self, result):
-        pass
-
+#-------------------------------------------------------------------------------
 class RingtoneIndex:
     __builtin_ringtones=( 'Inactive',
                        'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
@@ -770,6 +776,7 @@ class RingtoneIndex:
             pass
         return r
 
+#-------------------------------------------------------------------------------
 class ImageIndex:
     __builtin_images=( 'Clock1', 'Dual Clock', 'Calendar', 'Aquarium',
                       'Landscape', 'Water Drop' )
@@ -822,7 +829,7 @@ class ImageIndex:
             pass
         return r
 
-
+#-------------------------------------------------------------------------------
 class PhoneNumbers:
     def __init__(self, phone):
         self.__phone=phone
@@ -846,6 +853,7 @@ class PhoneNumbers:
             return e.name[:e.length]
         return default
     
+#-------------------------------------------------------------------------------
 class PhoneBook:
 
     __pb_numbers= ({'home': 'home_num_index' },
@@ -961,6 +969,7 @@ class PhoneBook:
                 r[pb_cnt]=self.__extract_entry(e, pb_cnt, i)
         return r
 
+#-------------------------------------------------------------------------------
 class PBSlot:
     """ Class to handle Phonebook entry slot -> memory slot """
     def __init__(self, phone):

@@ -718,6 +718,26 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEMODEM)
         return r
 
+    def getmemo(self, result):
+        print 'getmemo'
+        self.setmode(self.MODEPHONEBOOK)
+        m=com_samsung.MemoList(self)
+        m.read()
+        m_dict=m.get()
+        result['memo']=m_dict
+        self.setmode(self.MODEMODEM)
+        return m_dict
+
+    def savememo(self, result, merge):
+        print 'savememo'
+        self.setmode(self.MODEPHONEBOOK)
+        m=com_samsung.MemoList(self)
+        r=result.get('memo', {})
+        m.set(r)
+        m.write()
+        self.setmode(self.MODEMODEM)
+        return r
+
     getmedia=None
 
 class Profile(com_samsung.Profile):
@@ -748,6 +768,8 @@ class Profile(com_samsung.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
+        ('memo', 'read', None),     # all todo list reading DJP
+        ('memo', 'write', 'OVERWRITE')  # all todo list writing DJP
         )
 
     def convertphonebooktophone(self, helper, data):

@@ -17,6 +17,8 @@ import com_brew
 import com_phone
 import common
 import commport
+import copy
+import memo
 import time
 import re
 from DSV import DSV
@@ -224,6 +226,23 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     def save_calendar_entry(self, entry_str):
         try:
             self.comm.sendatcommand('#PISHW='+entry_str)
+            return True
+        except:
+            return False
+
+    def get_memo_entry(self, entry_index):
+        try:
+            s=self.comm.sendatcommand('#PIMMR=%d'%entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
+
+    def save_memo_entry(self, entry_str):
+        try:
+            print entry_str
+            self.comm.sendatcommand('#PIMMW='+entry_str)
             return True
         except:
             return False
@@ -585,3 +604,89 @@ class Samsung_Calendar:
     def __get_alarm(self):
         return self.__alarm
     alarm=property(fget=__get_alarm)
+
+#-------------------------------------------------------------------------------
+class MemoList(object):
+    # class constants
+    __max_num_entries=10
+    __range_entries=xrange(__max_num_entries)
+    __max_text_len=60
+    __max_subject_len=12
+    __max_num_of_fields=4
+    __text_index=3
+    __date_index=1
+    __max_write_fields=3
+    __write_entry_index=0
+    __write_date_index=1
+    __write_text_index=2
+    __continuation_char='-'
+
+    def __init__(self, phone):
+        self.__phone=phone
+        self.__data={}
+
+    def get(self):
+        return copy.deepcopy(self.__data, {})
+
+    def read(self):
+        self.__data={}
+        text=''
+        for i in self.__range_entries:
+            try:
+                s=self.__phone.get_memo_entry(i)
+                if len(s)!=self.__max_num_of_fields:
+                    continue
+                t=s[self.__text_index]
+                if len(t)==self.__max_text_len and \
+                   t[-1]==self.__continuation_char:
+                    # contination to the next record
+                    text+=t[:len(t)-1]
+                    continue
+                # new record
+                text+=t
+                m=memo.MemoEntry()
+                m.text=text
+                m.set_date_isostr(s[self.__date_index])
+                self.__data[m.id]=m
+                text=''
+            except:
+                if __debug__: raise
+
+    def write(self):
+        keys=self.__data.keys()
+        keys.sort()
+        count=0
+        for k in keys:
+            if count>=self.__max_num_entries:
+                self.__phone.log('Max number of memos sent')
+                break
+            n=self.__data[k]
+            text=n.text
+            subj=n.subject
+            l=min(self.__max_subject_len, len(text))
+            if subj[:l]!=text[:l]:
+                text=subj+':'+text
+            text.replace('"', '')
+            while len(text) and count<self.__max_num_entries:
+                if len(text)>self.__max_text_len:
+                    sub_text=text[:self.__max_text_len-1]+self.__continuation_char
+                    text=text[self.__max_text_len-1:]
+                else:
+                    sub_text=text
+                    text=''
+                entry_str=['']*self.__max_write_fields
+                entry_str[self.__write_entry_index]=`count`
+                entry_str[self.__write_date_index]=self.__phone.get_time_stamp()
+                entry_str[self.__write_text_index]='"'+sub_text+'"'
+                if self.__phone.save_memo_entry(','.join(entry_str)):
+                    self.__phone.log('Sent memo %s to the phone'%subj)
+                    count+=1
+                else:
+                    self.__phone.log("Failed to send memo"+subj)
+        # clear out the rest of the slots
+        for k in xrange(count, self.__max_num_entries):
+            self.__phone.save_memo_entry(`k`)
+
+    def set(self, data):
+        self.__data={}
+        self.__data.update(data)

@@ -75,7 +75,7 @@ memoobjectfactory=database.dataobjectfactory(MemoDataObject)
 
 #-------------------------------------------------------------------------------
 class MemoEntry(object):
-    __body_subject_len=15   # the x # of chars from body to fill in for subj.
+    __body_subject_len=12   # the # of chars from body to fill in for subj + ...
     def __init__(self):
         self.__data={ 'body': [], 'serials': [] }
         self.set_date_now()
@@ -112,6 +112,8 @@ class MemoEntry(object):
                 return n.get('data', '')
         return ''
     def __set_text(self, v):
+        if not len(self.subject):
+            self.subject=v[:self.__body_subject_len]+'...'
         b=self.__data.get('body', [])
         for n in b:
             if n.get('type', None)=='text':
