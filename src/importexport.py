@@ -71,6 +71,8 @@ class ImportDialog(wx.Dialog):
         ',': "Comma"
         }
 
+    # these are presented in the UI and are what the user can select.  additional
+    # column names are available but not specified 
     possiblecolumns=["<ignore>", "First Name", "Last Name", "Middle Name",
                      "Name", "Nickname", "Email Address", "Web Page", "Fax", "Home Street",
                      "Home City", "Home Postal Code", "Home State",
