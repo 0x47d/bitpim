@@ -142,7 +142,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
-                return DSV.importDSV([split(s[0], ': ')[1]])[0]
+                return self.splitandunescape(s[0])
         except commport.ATError:
             pass
         return []
@@ -176,7 +176,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand('#PISHR=%d' % entry_index)
             if len(s):
-                return DSV.importDSV([split(s[0], ': ')[1]])[0]
+                return self.splitandunescape(s[0])
         except commport.ATError:
             pass
         return []
@@ -196,6 +196,26 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         # reverse if extract_timedate
         return "%04d%02d%02dT%02d%02d00" % tuple(td)
 
+    def splitandunescape(self, line):
+        """Split fields and unescape double quote and right brace"""
+        # Should unescaping be done on fields that are not surrounded by
+        # double quotes?  DSV sprips these quotes, so we have to do it to
+        # all fields.
+        col=line.find(": ")
+        print line[col+2:]
+        e=DSV.importDSV([line[col+2:]])[0]
+        i=0
+        while i<len(e):
+            item=e[i]
+            mo=re.match('^"?(.*?)"?$',item)
+            item=mo.group(1)
+            item=item.replace("}\002",'"')
+            item=item.replace("}]","}")
+            e[i]=item
+            i+=1
+            
+        return e
+        
     def csvsplit(self, line):
         """Parse a Samsung comma separated list."""
         e=line.split(",")
