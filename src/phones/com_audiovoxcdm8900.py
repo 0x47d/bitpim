@@ -95,7 +95,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             res=self.sendpbcommand(req, self.protocolclass.readpbentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             self.progress(i, numentries, res.entry.name)
-            entry=self.extractphonebookentry(res.entry, result)
+            entry=self.extractphonebookentry(slots[i], res.entry, result)
             pbook[i]=entry
             self.progress(i, numentries, res.entry.name)
         self.progress(numentries, numentries, "Phone book read completed")
@@ -108,11 +108,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         
         return pbook
 
-    def extractphonebookentry(self, entry, result):
+    def extractphonebookentry(self, slotnumber, entry, result):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
-        # res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.serial1, 'serial2': entry.serial2,
-        #                  'sourceuniqueid': fundamentals['uniqueserial']} ]
+        # serials
+        res['serials']=[ {'sourcetype': self.serialsname, 'slot': slotnumber,
+                          'sourceuniqueid': result['uniqueserial']} ]
         # numbers
         numbers=[]
         for t, v in ( ('cell', entry.mobile), ('home', entry.home), ('office', entry.office),
@@ -141,7 +142,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             res['flags']=[{'secret': True}]
         # group
         if entry.group in result['groups']:
-            res['categories']=[{'category': result['groups'][entry.group]['name']}]
+            group=result['groups'][entry.group]['name']
+            if group!="Etc.": # this is the "bucket" group on the phone, which we treat as no group at all
+                res['categories']=[{'category': group}]
         # media
         rt=[]
         if entry.ringtone!=0xffff:
@@ -172,7 +175,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def savephonebook(self, data):
         self.log("Saving group information")
 
-        for gid in range(0, self.protocolclass._NUMGROUPS):
+        for gid in range(1, self.protocolclass._NUMGROUPS): # do not save group 0 - All
             name=data['groups'].get(gid, {'name': ''})['name']
             req=self.protocolclass.writegroupentryrequest()
             req.number=gid
@@ -184,14 +187,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
         
         self.log("New phonebook\n"+common.prettyprintdict(data['phonebook']))
-
+    
         # in theory we should offline the phone and wait two seconds first ...
 
         pb=data['phonebook']
         keys=pb.keys()
         keys.sort()
         keys=keys[:self.protocolclass._NUMSLOTS]
-        # work out the bitmap.  note mild abuse of python booleans
+        # work out the bitmap.
         slots=[]
         for i in range(self.protocolclass._NUMSLOTS):
             if i not in keys:
@@ -282,7 +285,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         
 class Profile(com_phone.Profile):
 
-    protocolclass=p_audiovoxcdm8900
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=145
@@ -315,13 +319,9 @@ class Profile(com_phone.Profile):
     def normalisegroups(self, helper, data):
         "Assigns groups based on category data"
 
-        pad=[]
         keys=data['groups'].keys()
         keys.sort()
-        for k in keys:
-                if k: # ignore key 0 which is 'All'
-                    name=data['groups'][k]['name']
-                    pad.append(name)
+        pad=[data['groups'][k]['name'] for k in keys if k] # ignore key 0 - All
 
         groups=helper.getmostpopularcategories(self.protocolclass._NUMGROUPS, data['phonebook'], ["All", "Business", "Personal", "Etc."],
                                                self.protocolclass._MAXGROUPLEN, pad)
@@ -362,10 +362,19 @@ class Profile(com_phone.Profile):
                  as well as where the results go"""
         self.normalisegroups(helper, data)
         results={}
-        for pbentry in data['phonebook']:
+
+        # find which entries are already known to this phone
+        pb=data['phonebook']
+        # decorate list with (slot, pbkey) tuples
+        slots=[ (helper.getserial(pb[pbentry].get("serials", []), self.serialsname, data['uniqueserial'], "slot", None), pbentry)
+                for pbentry in pb]
+        slots.sort() # numeric order
+        # make two lists - one contains known slots, one doesn't
+        newones=[(pbentry,slot) for slot,pbentry in slots if slot is None]
+        existing=[(pbentry,slot) for slot,pbentry in slots if slot is not None]
+        
+        for pbentry,slot in newones+existing:
             if len(results)==self.protocolclass._NUMSLOTS:
-                # ::TODO:: should really sort by ones known to this phone
-                # (ie have serials for it) first
                 break
             try:
                 e={} # entry out
@@ -408,17 +417,18 @@ class Profile(com_phone.Profile):
                 # deal with group
                 group=helper.getcategory(entry.get('categories', [{'category': 'Etc.'}]),1,1,self.protocolclass._MAXGROUPLEN)[0]
                 gid,_=self._getgroup(group, data['groups'])
-                if gid is None:
+                if gid is None or gid==0:
                     gid,_=self._getgroup("Etc.", data['groups'])
                 assert gid!=0
                 e['group']=gid
                 data['groups'][gid]['members']+=1
-                data['groups'][0]['members']+=1
-                
-                for i in range(1000):
-                    if i not in results:
-                        results[i]=e
-                        break
+                # find the right slot
+                if slot is None or slot<0 or slot>=self.protocolclass._NUMSLOTS or slot in results:
+                    for i in range(100000):
+                        if i not in results:
+                            slot=i
+                            break
+                results[slot]=e
             except helper.ConversionFailed:
                 continue
         data['phonebook']=results
