@@ -878,7 +878,7 @@ class PhoneWidget(wx.Panel):
             candidates.append(i)
         if len(candidates)<min:
             # ::TODO:: log this
-            raise ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
+            raise self.ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
         if len(candidates)>max:
             # ::TODO:: mention this to user
             candidates=candidates[:max]
