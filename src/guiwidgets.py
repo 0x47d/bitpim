@@ -15,6 +15,7 @@ from wxPython.grid import *
 from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
 from wxPython.lib.intctrl import *
 from wxPython.lib.maskededit import wxMaskedTextCtrl
+from wxPython.html import *
 
 # my modules
 import common
@@ -585,10 +586,41 @@ class ConfigDialog(wxDialog):
 ###
 
 class CommPortDialog(wxDialog):
+    ID_LISTBOX=1
+    ID_TEXTBOX=2
+    ID_REFRESH=3
+    
     def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto"):
         wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
         self.parent=parent
         self.port=defaultport
+        
+        p=parent # set here in case we want a different parent
+
+        # the listbox and textbox
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        self.lb=wxListBox(p, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
+        self.tb=wxHtmlWindow(p, self.ID_TEXTBOX) # default style is auto scrollbar
+        hbs.Add(self.lb, 0, wxEXPAND|wxALL, 10)
+        hbs.Add(self.tb, 1, wxEXPAND|wxALL, 10)
+
+        # the buttons
+        buttsizer=wxGridSizer(1, 4)
+        buttsizer.Add(wxButton(p, wxID_CANCEL, "Cancel"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, self.ID_REFRESH, "Refresh"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxALL, 10)
+
+        # vertical join of the two
+        vbs=wxBoxSizer(wxVERTICAL)
+        vbs.Add(hbs, 1, wxEXPAND)
+        vbs.Add(vbs, 0, wxCENTER)
+
+        # hook into self
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+        
 
     def GetPort(self):
         return self.port
