@@ -260,6 +260,7 @@ class WallpaperView(guiwidgets.FileView):
         sizes={0: ('Less than 8kb', []),
                8192: ('8 kilobytes', []),
                16384: ('16 kilobytes', []),
+               32768: ('32 kilobytes', []),
                65536: ('64 kilobytes', []),
                131052: ('128 kilobytes', []),
                524208: ('512 kilobytes', []),
