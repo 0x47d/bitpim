@@ -79,7 +79,7 @@ class DisplayItem(object):
                 dc.DrawRectangle(*self.selbbox)
                 dc.SetBrush(oldb)
                 dc.SetPen(oldp)
-        dc.DrawBitmap(self.thumb, self.PADDING, self.PADDING, True)
+        dc.DrawBitmap(self.thumb, self.PADDING+self.thumbnailsize[0]/2-self.thumb.GetWidth()/2, self.PADDING, True)
         xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
         yoff=self.PADDING*2
         widthavailable=width-xoff-self.PADDING
@@ -297,11 +297,17 @@ class WallpaperView(guiwidgets.FileView):
                     self.modified=True
 
     def GetItemThumbnail(self, name, width, height):
+        print name
         img,_=self.GetImage(name)
         if width!=img.GetWidth() or height!=img.GetHeight():
-            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=None, valign="clip")
-        else:
-            bitmap=img.ConvertToBitmap()
+            # scale the image. 
+            sfactorw=float(width)/img.GetWidth()
+            sfactorh=float(height)/img.GetHeight()
+            sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
+            newwidth=int(img.GetWidth()*sfactor)
+            newheight=int(img.GetHeight()*sfactor)
+            img.Rescale(newwidth, newheight)
+        bitmap=img.ConvertToBitmap()
         return bitmap
 
     def GetImage(self, file):
