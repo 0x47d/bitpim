@@ -33,6 +33,7 @@ import helpids
 import comscan
 import comdiagnose
 import brewcompressedimage
+import bpaudio
 
 ####
 #### A widget for displaying the phone information
@@ -787,6 +788,12 @@ class MyFileDropTarget(wxFileDropTarget):
 
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
+
+    # ::TODO:: stop storing file data in 'data' and get from
+    # disk instead.
+    # be resilient to conversion failures in ringer
+    # ringer onluanch should convert qcp to wav
+    
     # File we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
     
@@ -1012,7 +1019,7 @@ class RingerView(FileView):
         self._data['ringtone']={}
         self._data['ringtone-index']={}
 
-        self.wildcard="MIDI files (*.mid)|*.mid"
+        self.wildcard="MIDI files (*.mid)|*.mid|PureVoice Files (*.qcp)|*.qcp"
         self.maxlen=19
 
     def getdata(self, dict):
@@ -1021,16 +1028,24 @@ class RingerView(FileView):
 
     def OnAddFile(self, file):
         self.thedir=self.mainwindow.ringerpath
-        target=self.getshortenedbasename(file, 'mid')
-        if target==None: return # user didn't want to
-        f=open(file, "rb")
-        contents=f.read()
-        f.close()
-        if len(contents)>=65534:
-            raise Exception(file+" is too big at "+`len(contents)`+ " bytes.  Max size is 64k")
-        f=open(target, "wb")
-        f.write(contents)
-        f.close()
+        if os.path.splitext(file)[1]=='.mid':
+            target=self.getshortenedbasename(file, 'mid')
+            if target==None: return # user didn't want to
+            f=open(file, "rb")
+            contents=f.read()
+            f.close()
+            f=open(target, "wb")
+            f.write(contents)
+            f.close()
+        else:
+            # ::TODO:: warn if not on Windows
+            target=self.getshortenedbasename(file, 'qcp')
+            if target==None: return # user didn't want to
+            qcpdata=bpaudio.converttoqcp(file)
+            f=open(target, "wb")
+            f.write(qcpdata)
+            f.close()
+            
         self.OnRefresh()
 
     def populatefs(self, dict):
@@ -1057,9 +1072,14 @@ class RingerView(FileView):
             self.InsertImageStringItem(count, item['name'], 0)
             self.SetStringItem(count, 0, item['name'])
             self.SetStringItem(count, 1, `len(item['data'])`)
-            self.SetStringItem(count, 2, "1 second :-)")
-            self.SetStringItem(count, 3, `item['index']`)
-            self.SetStringItem(count, 4, "Midi file")
+            if os.path.splitext(item['name'])[1]=='.qcp':
+                self.SetStringItem(count, 2, "2 seconds :-)")
+                self.SetStringItem(count, 3, `item['index']`)
+                self.SetStringItem(count, 4, "PureVoice file")
+            else:
+                self.SetStringItem(count, 2, "1 second :-)")
+                self.SetStringItem(count, 3, `item['index']`)
+                self.SetStringItem(count, 4, "Midi file")
             count+=1
 
     def getfromfs(self, result):
