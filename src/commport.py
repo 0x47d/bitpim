@@ -255,8 +255,13 @@ class CommConnection:
                 res=res+r
                 continue
             break
+
+        while len(res)>0 and (res[0]=='\n' or res[0]=='\r'):
+            res=res[1:]
+
         if len(res)==0:
             raise CommTimeout()
+
         self.readbytes+=len(res)
         if log:
             self.logdata("Reading remaining data", res)
