@@ -26,11 +26,33 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo8100
     serialsname='scp8100'
     
-    builtinringtones=( 'Normal', 'None', 'Vibrate')
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
+                       '', '', '', '', '', '', '',
+                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
+                       'Bach Air on the G', 'Beethoven Sym.5', 'Greensleeves',
+                       'Johnny Comes..', 'Foster Ky. Home', 'Asian Jingle',
+                       'Disco' )
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
+
+    def savewallpapers(self, results, merge):
+        req=self.protocolclass.sanyomediaheader()
+        req.command=0x10
+        req.subcommand=0
+        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
+        req.command=0x13
+        req.subcommand=0
+        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
+
+        req=self.protocolclass.sanyomediafilename()
+        req.filename="testimage.jpg"
+        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
+    
+        return 
 
     def getcalendar(self,result):
 
@@ -78,6 +100,16 @@ class Profile(com_sanyo.Profile):
 
     protocolclass=p_sanyo8100
     serialsname='scp8100'
+
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+#        ('wallpaper', 'read', None),  # all wallpaper reading
+#        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+#        ('wallpaper', 'write', 'OVERWRITE'),
+    )
 
     def __init__(self):
         com_sanyo.Profile.__init__(self)
