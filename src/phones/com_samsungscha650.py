@@ -680,16 +680,14 @@ class FileEntries:
                     if self.__origin=='wallpapers':
                         if __debug__:
                             print 'FileEntries.save_media: optimizing png'
-                        # copy from Sanyo code, not sure what's the
-                        # significant of size 16383 ??
+                        # copy from Sanyo code
                         self.__phone.writefile(name,
-                        conversions.convertto8bitpng(\
-                        media[k]['data'], 16383))
+                        conversions.convertto8bitpng(media[k]['data']))
                     else:
                         self.__phone.writefile(name, media[k]['data'])
                     media[k]['origin']=self.__origin
             except:
-                self.__phone.report('Failed to write file: '+media[k]['name'])
+                self.__phone.log('Failed to write file: '+media[k]['name'])
         return result
 
 class TodoList:

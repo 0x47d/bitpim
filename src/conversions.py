@@ -13,6 +13,7 @@
 import os
 import tempfile
 import sys
+import wx
 
 import common
 
@@ -89,4 +90,55 @@ def convertto8bitpng(pngdata, maxsize):
 
     os.remove(pnm)
     return pngquantdata
+
+def convertto8bitpng(pngdata):
+    "Convert a PNG file to 8bit color map"
+    "Separate routine for now so not to screw up existing one, may merge later"
+    if pngdata[1:4]!='PNG':
+        return pngdata
+    # get the path to helper
+    p=sys.path[0]
+    if os.path.isfile(p):
+        p=os.path.dirname(p)
+    helpersdirectory=os.path.abspath(os.path.join(p, 'helpers'))
+    print "Helper Directory: "+helpersdirectory
+    if sys.platform=='win32':
+        osext=".exe"
+    if sys.platform=='darwin':
+        osext=".mbin"
+    if sys.platform=='linux2':
+        osext=".lbin"
         
+    pngtopnmbin=os.path.join(helpersdirectory,'pngtopnm')+osext
+    ppmquantbin=os.path.join(helpersdirectory,'ppmquant')+osext
+    pnmtopngbin=os.path.join(helpersdirectory,'pnmtopng')+osext
+    print "pngtopnm: "+pngtopnmbin
+    print "ppmquant: "+ppmquantbin
+    print "pnmtopng: "+pnmtopngbin
+    # Write original image to a temp file
+    png=common.gettempfilename("png")
+    open(png, "wb").write(pngdata)
+    num_of_colors=wx.Image(png).ComputeHistogram(wx.ImageHistogram())
+    print 'number of colors:', num_of_colors
+    if num_of_colors>256:
+        # no optimization possible, just return
+        os.remove(png)
+        return pngdata
+    # else optimize it
+    # Convert this image to pnm
+    pnm=common.gettempfilename("pnm")
+    s='"'+pngtopnmbin+'"' + ' < '+png+' > '+pnm
+    os.system(s)
+    os.remove(png)
+    # quantize & convert
+    pnmq=common.gettempfilename("pnm")
+    s='"'+ppmquantbin+'"'+' '+`num_of_colors`+' '+pnm+ ' > '+pnmq
+    os.system(s)
+    s ='"'+pnmtopngbin+'"' + ' < ' + pnmq + ' > '+png
+    os.system(s)
+    os.remove(pnmq)
+    pngquantdata=open(png, 'rb').read()
+    os.remove(png)
+    os.remove(pnm)
+    print 'old size: ',len(pngdata),', new size: ',len(pngquantdata)
+    return pngquantdata
