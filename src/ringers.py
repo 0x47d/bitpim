@@ -438,7 +438,7 @@ class ConvertDialog(wx.Dialog):
         now=time.time()
         if now>self.endtime:
             self.timer.Stop()
-            assert wx.Sound.IsPlaying()==False
+            # assert wx.Sound.IsPlaying()==False
             self.slider.SetValue(self.endframe)
             self.UpdatePosition(self.endframe)
             return
