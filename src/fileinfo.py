@@ -326,6 +326,7 @@ def idaudio_MIDI(f):
     d['numtracks']=m.num_tracks
     d['duration']=m.duration
     d['_shortdescription']=fmts_MIDI
+    d['mimetypes']=['audio/x-midi', 'audio/midi']
     for i in d.itervalues():
         if i is None:  return None
     afi=AudioFileInfo(f,**d)
