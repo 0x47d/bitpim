@@ -98,7 +98,7 @@ class CalendarCell(wxWindow):
     fontscalecache=FontscaleCache()
 
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wxSIMPLE_BORDER):
-        wxWindow.__init__(self, parent, id, style=style)
+        wxWindow.__init__(self, parent, id, style=style|wxWANTS_CHARS)
         self.attr=attr
         self.day=33
         self.year=2033
@@ -170,7 +170,7 @@ class CalendarCell(wxWindow):
         # do the label
         self.attr.setforlabel(dc)
         w,h=dc.GetTextExtent(`self.day`)
-        x=5
+        x=1
         if self.attr.isrightaligned():
             x=self.width-(w+5)
         dc.DrawText(`self.day`, x, 0)
@@ -186,13 +186,13 @@ class CalendarCell(wxWindow):
             iteration+=1
             # now calculate how much space is needed for the time fields
             self.attr.setfortime(dc, fontscale)
-            boundingspace=10
+            boundingspace=2
             space,_=dc.GetTextExtent("i")
             timespace,timeheight=dc.GetTextExtent("88:88")
             if self.attr.ismiltime():
                 ampm=0
             else:
-                ampm,_=dc.GetTextExtent(" mm")
+                ampm,_=dc.GetTextExtent("a")
 
             leading=0
 
@@ -212,21 +212,25 @@ class CalendarCell(wxWindow):
                 if timeheight<firstrowheight:
                     timey+=firstrowheight-timeheight
                 text=""
-                if not self.attr.ismiltime():
-                    ap="am"
-                    if h>=12: ap="pm"
+                
+                if self.attr.ismiltime():
+                    ap=""
+                else:
+                    ap="a"
+                    if h>=12: ap="p"
                     h%=12
                     if h==0: h=12
-                if h<10: text+=" "
-                text+="%d:%02d" % (h,m)
-                dc.DrawText(text, x, timey)
-                x+=timespace
-                x+=space
-                if not self.attr.ismiltime():
-                    if lastap!=ap:
-                        dc.DrawText(ap, x, timey)
+                    if ap==lastap:
+                        ap=""
+                    else:
                         lastap=ap
-                    x+=ampm+space
+                if h<10: text+=" "
+                
+                text+="%d:%02d%s" % (h,m,ap)
+                dc.DrawText(text, x, timey)
+                x+=timespace+space
+                if not self.attr.ismiltime: x+=ampm
+                
                 self.attr.setforentry(dc, fontscale)
                 ey=y
                 if entryheight<firstrowheight:
@@ -364,10 +368,10 @@ class Calendar(wxPanel):
 
     attrevenmonth=CalendarCellAttributes()
     attroddmonth=CalendarCellAttributes()
-    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 230, 255), wxSOLID)
+    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
     
-    def __init__(self, parent, rows=5, id=-1):
-        wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
+    def __init__(self, parent, rows=9, id=-1):
+        wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS)
         sizer=RowColSizer()
         self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
         sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
@@ -391,10 +395,19 @@ class Calendar(wxPanel):
         sizer.Add(self.label, flag=wxEXPAND, row=2, col=0, rowspan=self.numrows)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
-#        EVT_BUTTON(self, self.ID_UP, self.OnUp)
+        EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
         EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
         EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        # EVT_KEY_DOWN(self, self.OnKeyDown)
+        map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
 
+    def OnKeyDown(self, event):
+        print "keydown"
+        key=event.GetKeyCode()
+        if key==WXK_NEXT:
+            self.scrollby( (self.numrows-1)*7)
+        elif key==WXK_PRIOR:
+            self.scrollby( (self.numrows-1)*-7)
 
     def OnEraseBackground(self, _):
         pass
@@ -407,14 +420,21 @@ class Calendar(wxPanel):
             sizer.Add( res[-1], flag=wxEXPAND, row=row, col=i+1)
         return res
 
-    def OnScrollDown(self, _=None):
-        # user has pressed scroll down button
+    def scrollby(self, amount):
+        assert abs(amount)%7==0
         for row in range(0, self.numrows):
                 y,m,d=self.rows[row][0].getdate()
-                y,m,d=normalizedate(y,m,d+7)
+                y,m,d=normalizedate(y,m,d+amount)
                 self.updaterow(row, y,m,d)
         self.label.changenotify()
-        
+
+    def OnScrollDown(self, _=None):
+        # user has pressed scroll down button
+        self.scrollby(7)
+
+    def OnScrollUp(self, _=None):
+        # user has pressed scroll up button
+        self.scrollby(-7)
 
     def setday(self, year, month, day):
         # makes specified day be shown and selected
@@ -422,52 +442,25 @@ class Calendar(wxPanel):
         d=(d+1)%7
 
         r=self.showrow
-        c=d
-        y=year
-        m=month
-        d=day
-        # Fill in calendar going forward
-        daysinmonth=calendar.monthrange(y, m)[1]
-        while r<self.numrows:
-            self.updatecell(r, c, y, m, d)
-            if d==daysinmonth:
-                d=1
-                m+=1
-                if m==13:
-                    m=1
-                    y+=1
-                daysinmonth=calendar.monthrange(y, m)
-            else:
-                d+=1
-            c+=1
-            if c==7:
-                r+=1
-                c=0
-        # Fill in going backwards
-        d=calendar.weekday(year, month, day)
-        d=(d+1)%7
 
-        r=self.showrow
-        c=d
-        y=year
-        m=month
-        d=day
-        while r>=0:
-            self.updatecell(r, c, y, m, d)
-            if d==1:
-                m-=1
-                if m==0:
-                    m=12
-                    y-=1
-                d=calendar.monthrange(y,m)[1]
-            else: d-=1
-            c-=1
-            if c<0:
-                c=6
-                r-=1
+        day-=d # go back to begining of week
+        day-=7*self.showrow # then begining of screen
+        y,m,d=normalizedate(year, month, day)
+        for row in range(0,self.numrows):
+            self.updaterow(row, *normalizedate(year, month, day+7*row))
+
+    def updatecell(self, row, column, y, m, d):
+        self.rows[row][column].setdate(y,m,d)
+        if m%2:
+            self.rows[row][column].setattr(self.attroddmonth)
+        else:
+            self.rows[row][column].setattr(self.attrevenmonth)
+        if row==0 and column==0:
+            self.year.SetLabel(`y`)
+        # ::TODO:: get events for this day
 
     def updaterow(self, row, y, m, d):
-        daysinmonth=calendar.monthrange(y, m)[1]
+        daysinmonth=monthrange(y, m)
         for c in range(0,7):
             self.updatecell(row, c, y, m, d)
             if d==daysinmonth:
@@ -476,43 +469,47 @@ class Calendar(wxPanel):
                 if m==13:
                     m=1
                     y+=1
-                daysinmonth=calendar.monthrange(y, m)[1]
+                daysinmonth=monthrange(y, m)
             else:
                 d+=1
 
-    def updatecell(self, row, column, y, m, d):
-        self.rows[row][column].setdate(y,m,d)
-        if m%2:
-            self.rows[row][column].setattr(self.attroddmonth)
-        else:
-            self.rows[row][column].setattr(self.attrevenmonth)
-        # ::TODO:: get events for this day
-        
 
+_monthranges=[0, 31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+def monthrange(year, month):
+    if month==2:
+        return calendar.monthrange(year, month)[1]
+    return _monthranges[month]
 
 def normalizedate(year, month, day):
     # metric system please .....
-    if month<1:
-        year-=1
-        month=month+12
-    if month>12:
-        year+=1
-        month-=13
-    if day<1:
-        month-=1
-        if month<1:
-            month=12
-            year-=1
-        num=calendar.monthrange(year, month)[1]
-        day=num-day
-    else:
-        num=calendar.monthrange(year, month)[1]
-        if day>num:
+    while day<1 or month<1 or month>12 or (day>28 and day>monthrange(year, month)):
+        if day<1:
+            month-=1
+            if month<1:
+                month=12
+                year-=1
+            num=monthrange(year, month)
+            day=num+day
+            continue
+        if day>28 and day>monthrange(year, month):
+            num=calendar.monthrange(year, month)[1]
             month+=1
             if month>12:
                 month=1
                 year+=1
             day=day-num
+            continue    
+        if month<1:
+            year-=1
+            month=month+12
+            continue
+        if month>12:
+            year+=1
+            month-=12
+            continue
+        assert False, "can't get here"
+
     return year, month, day
             
 # Up and down bitmap icons
