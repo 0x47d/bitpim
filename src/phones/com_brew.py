@@ -158,14 +158,21 @@ class BrewProtocol:
                 results.update(self.getfilesystem(subdir, recurse-1))
         return results
 
-    def writefile(self, name, contents):
+    def writefile(self, name, contents, first=True):
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         desc="Writing "+name
 	req=p_brew.writefilerequest()
 	req.filesize=len(contents)
 	req.data=contents[:0x100]
 	req.filename=name
-	self.sendbrewcommand(req, p_brew.writefileresponse)
+        try:
+            self.sendbrewcommand(req, p_brew.writefileresponse)
+        except BrewFileLockedException:
+            if True or not first: # True is to disable this auto-offline code
+                raise
+            self.log("File is locked.  Making phone go offline and trying again")
+            self.offlinerequest()
+            return self.writefile(name, contents, False)
         # do remaining blocks
         numblocks=len(contents)/0x100
         count=0
