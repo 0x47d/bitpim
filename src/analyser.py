@@ -211,19 +211,26 @@ class Analyser(wx.Frame):
             return
         begin=self.hex.XYToPosition(0, self.dataline+start/16)
         self.hex.ShowPosition(begin)
-        self.hex.Freeze()
-        for offset in range(start,end):
-            fudge=0
-            
-            # figure out hex bytes and char for this offset
+        offset=start
+        while offset<end:
             line=self.hex.XYToPosition(0,self.dataline+offset/16)
-            if offset+1==end or (offset%16)==15:
-                fudge=-1
-            offset%=16
-            self.hex.SetStyle(line+9+offset*3, line+9+offset*3+3+fudge, self.highlightstyle)
-            # and now the char
-            self.hex.SetStyle(line+61+offset,  line+61+offset+1, self.highlightstyle)
-        self.hex.Thaw()
+            if offset+16<end:
+                # highlight till end of line
+                offsetmod=offset%16
+                self.hex.SetStyle(line+9+offsetmod*3, line+9+15*3+3-1, self.highlightstyle)
+                self.hex.SetStyle(line+61+offsetmod,  line+61+15+1, self.highlightstyle)
+                offset+=16-offsetmod
+                continue
+
+            # highlight till end byte which is on this row
+            howmany=end-offset
+            offsetmod=offset%16
+            called+=1
+            # hexes
+            self.hex.SetStyle(line+9+offsetmod*3, line+9+(offsetmod+howmany)*3-1, self.highlightstyle)
+            # and now the chars
+            self.hex.SetStyle(line+61+offsetmod,  line+61+(offsetmod+howmany), self.highlightstyle)
+            return # alls done
 
     def errorme(self, desc, exception=None):
         "Put exception information into the hex pane and output traceback to console"
