@@ -1288,9 +1288,9 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     def OnDataUpdated(self):
         # update row keys
         newkeys=self.main.rowdata.keys()
-        newkeys.sort()
         oldrows=self.rowkeys
-        self.rowkeys=newkeys
+        # rowkeys is kept in the same order as oldrows
+        self.rowkeys=[k for k in oldrows if k in newkeys]+[k for k in newkeys if k not in oldrows]
         # work out which columns we actually need
         colsavail=ImportColumns
         colsused=[]
@@ -1308,6 +1308,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         lo=len(self.columns)
         ln=len(colsused)
 
+        sortcolumn=self.columns[self.main.sortedColumn]
+
         # update columns
         self.columns=colsused
         if ln>lo:
@@ -1318,6 +1320,18 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             msg=None
         if msg is not None:
             self.GetView().ProcessTableMessage(msg)
+
+        # do sorting
+        if sortcolumn not in self.columns:
+            sortcolumn=1
+        else:
+            sortcolumn=self.columns.index(sortcolumn)
+
+        items=[(self.GetValue(row,sortcolumn), row) for row in range(len(self.rowkeys))]
+        items.sort()
+        if self.main.sortedColumnDescending:
+            items.reverse()
+        self.rowkeys=[self.rowkeys[n] for _,n in items]
         
         # update rows
         lo=len(oldrows)
@@ -1455,6 +1469,9 @@ class ImportDialog(wx.Dialog):
         wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self.grid, self.OnRightGridClick)
         wx.grid.EVT_GRID_SELECT_CELL(self.grid, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self.grid, self.OnCellDClick)
+        wx.EVT_PAINT(self.grid.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
+        wx.grid.EVT_GRID_LABEL_LEFT_CLICK(self.grid, self.OnGridLabelLeftClick)
+        wx.grid.EVT_GRID_LABEL_LEFT_DCLICK(self.grid, self.OnGridLabelLeftClick)
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
@@ -1477,6 +1494,55 @@ class ImportDialog(wx.Dialog):
         w,_=splitter.GetSize()
         splitter.SetSashPosition(max(w/2, w-200))
         self.MakeMenus()
+
+        self.sortedColumn=1
+        self.sortedColumnDescending=False
+
+    # ::TODO:: this method and the copy earlier should be merged into a single mixin
+    def OnColumnHeaderPaint(self, evt):
+        w = self.grid.GetGridColLabelWindow()
+        dc = wx.PaintDC(w)
+        font = dc.GetFont()
+        dc.SetTextForeground(wx.BLACK)
+        
+        # For each column, draw it's rectangle, it's column name,
+        # and it's sort indicator, if appropriate:
+        totColSize = -self.grid.GetViewStart()[0]*self.grid.GetScrollPixelsPerUnit()[0]
+        for col in range(self.grid.GetNumberCols()):
+            dc.SetBrush(wx.Brush("WHEAT", wx.TRANSPARENT))
+            colSize = self.grid.GetColSize(col)
+            rect = (totColSize,0,colSize,32)
+            # note abuse of bool to be integer 0/1
+            dc.DrawRectangle(rect[0] - (col!=0), rect[1], rect[2] + (col!=0), rect[3])
+            totColSize += colSize
+            
+            if col == self.sortedColumn:
+                font.SetWeight(wx.BOLD)
+                # draw a triangle, pointed up or down, at the
+                # top left of the column.
+                left = rect[0] + 3
+                top = rect[1] + 3
+                
+                dc.SetBrush(wx.Brush("WHEAT", wx.SOLID))
+                if self.sortedColumnDescending:
+                    dc.DrawPolygon([(left,top), (left+6,top), (left+3,top+4)])
+                else:
+                    dc.DrawPolygon([(left+3,top), (left+6, top+4), (left, top+4)])
+            else:
+                font.SetWeight(wx.NORMAL)
+
+            dc.SetFont(font)
+            dc.DrawLabel("%s" % self.grid.GetTable().GetColLabelValue(col),
+                     rect, wx.ALIGN_CENTER | wx.ALIGN_TOP)
+
+    def OnGridLabelLeftClick(self, evt):
+        col=evt.GetCol()
+        if col==self.sortedColumn:
+            self.sortedColumnDescending=not self.sortedColumnDescending
+        else:
+            self.sortedColumn=col
+            self.sortedColumnDescending=False
+        self.table.OnDataUpdated()
 
     def DoMerge(self):
         """Merges all the importdata with existing data
