@@ -10,10 +10,9 @@
 """Interface to the database"""
 
 import os
-import threading
 import copy
 import time
-import apsw as sqlite
+import apsw
 
 if __debug__:
     TRACE=True
@@ -24,26 +23,35 @@ def ExclusiveWrapper(method):
     """Wrap a method so that it has an exclusive lock on the database
     (noone else can read or write) until it has finished"""
 
-    # pysqlite currently tries to issue its own BEGINs and ENDs which breaks things
+    # note that the existing threading safety checks in apsw will
+    # catch any thread abuse issues.
+
     
     def _transactionwrapper(*args, **kwargs):
-        exlock=getattr(args[0], "exlock")
-        exlock.acquire()
+
         cursor=getattr(args[0], "cursor")
-        # RLock doesn't expose the count nicely so we have to dig inside it
-        if exlock._RLock__count==1:
-            # cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
-            pass
+        excounter=getattr(args[0], "excounter")
+        excounter+=1
+        setattr(args[0], "excounter", excounter)
+        if excounter==1:
+            cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
         try:
-            # ::TODO:: deal with successful return v exception thrown
-            # and commit/rollback as appropriate
-            return method(*args, **kwargs)
+            try:
+                success=True
+                return method(*args, **kwargs)
+            except:
+                success=False
+                raise
         finally:
-            if exlock._RLock__count==1:
-                # cursor.execute("COMMIT TRANSACTION")
-                # getattr(args[0], "connection").commit()
-                pass
-            exlock.release()
+            excounter=getattr(args[0], "excounter")
+            excounter-=1
+            setattr(args[0], "excounter", excounter)
+            if excounter==0:
+                if success:
+                    cursor.execute("END TRANSACTION")
+                else:
+                    # somehow we need to detect if we were doing data changes
+                    cursor.execute("ROLLBACK")
 
     return _transactionwrapper
 
@@ -61,27 +69,35 @@ def idquote(s):
 class Database:
 
     def __init__(self, directory, filename):
-        self.connection=sqlite.Connection(os.path.join(directory, filename))
+        self.connection=apsw.Connection(os.path.join(directory, filename))
         self.cursor=self.connection.cursor()
-        self.exlock=threading.RLock()
+        self.excounter=0  # exclusive lock counter
         self._schemacache={}
+        self.sql=self.cursor.execute
+        self.sqlmany=self.cursor.executemany
+        if TRACE:
+            self.cursor.setexectrace(self._sqltrace)
+            self.cursor.setrowtrace(self._rowtrace)
+
+    def _sqltrace(self, cmd, bindings):
+        print "SQL:",cmd
+        if bindings:
+            print " bindings:",bindings
+        return True
+
+    def _rowtrace(self, *row):
+        print "ROW:",row
+        return row
 
     def sql(self, statement, params=()):
-        "Execute statement and return a generator of the results"
-        if TRACE:
-            print "SQL:",statement
-            if len(params):
-                print "Params:", params
-        self.cursor.execute(statement,params)
-        return self.cursor
+        "Executes statement and return a generator of the results"
+        # this is replaced in init
+        assert False
 
     def sqlmany(self, statement, params):
-        "Like cursor.executemany but it actually works"
-        # non-new cursor implementation
-        res=[]
-        for p in params:
-            res.extend([row for row in self.sql(statement, p)])
-        return res
+        "execute statements repeatedly with params"
+        # this is replaced in init
+        assert False
             
     def doestableexist(self, tablename):
         if tablename in self._schemacache:
@@ -293,9 +309,8 @@ class Database:
                         params.append(record[k])
                     cmd.extend([")", "values", "("])
                     cmd.append(",".join(["?" for p in params]))
-                    cmd.append(")")
-                    self.sql(" ".join(cmd), params)
-                    found=self.sql("select last_insert_rowid()").next()[0]
+                    cmd.append("); select last_insert_rowid()")
+                    found=self.sql(" ".join(cmd), params).next()[0]
                 res+=`found`+","
             indirects[r]=res
                         
@@ -362,8 +377,6 @@ class Database:
         assert len(res)
         return res
         
-    # savemajordict=ExclusiveWrapper(savemajordict)
-
     def _altertable(self, tablename, columnstoadd, createindex=0):
         """Alters the named table by adding the listed columns
 
@@ -474,6 +487,12 @@ class Database:
         self.sqlmany("delete from %s where __rowid__=?" % (idquote(tablename),), [(r,) for r in deleterows])
 
         return len(deleterows), self.sql("select count(*) from "+idquote(tablename)).next()[0]
+
+    # various operations need exclusive access to the database
+    savemajordict=ExclusiveWrapper(savemajordict)
+    getmajordictvalues=ExclusiveWrapper(getmajordictvalues)
+    deleteold=ExclusiveWrapper(deleteold)
+
                     
             
 def extractbpserials(dict):
@@ -506,10 +525,6 @@ if __name__=='__main__':
     def testfunc():
         global phonebook, TRACE, db
 
-        db=Database(".", "testdb")
-
-        db.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
-
         # note that iterations increases the size of the
         # database/journal and will make each one take longer and
         # longer as the db/journal gets bigger
@@ -519,6 +534,10 @@ if __name__=='__main__':
             iterations=1
         if iterations >1:
             TRACE=False
+
+        db=Database(".", "testdb")
+
+
         b4=time.time()
         
 
@@ -574,7 +593,6 @@ if __name__=='__main__':
             print "\ttime per iteration is",(after-b4)/(iterations*10),"seconds"
             print "\ttotal time was",after-b4,"seconds for",iterations*10,"iterations"
 
-        db.cursor.execute("COMMIT")
 
     sys.excepthook=common.formatexceptioneh
 
