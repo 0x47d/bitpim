@@ -12,8 +12,6 @@ import os
 import time
 import wx
 
-
-import bpaudio
 import guiwidgets
 import guihelper
 import pubsub
