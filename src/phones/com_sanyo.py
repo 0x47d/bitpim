@@ -78,12 +78,12 @@ class SanyoPhonebook:
             return 1
         except com_phone.modeignoreerrortypes:
             pass
-        self._setmodelgdmgo()
-        try:
-            self.sendpbcommand(req, respc, callsetmode=False)
-            return 1
-        except com_phone.modeignoreerrortypes:
-            pass
+    #    self._setmodelgdmgo()
+    #    try:
+    #        self.sendpbcommand(req, respc, callsetmode=False)
+    #        return 1
+    #    except com_phone.modeignoreerrortypes:
+    #        pass
         return 0
         
     def getmediaindex(self, builtins, maps, results, key):
