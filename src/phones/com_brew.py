@@ -34,6 +34,7 @@ class BrewNoSuchFileException(BrewCommandException):
     def __init__(self, errnum=0x06):
         BrewCommandException.__init__(self, errnum, "No such file")
 
+modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,)
 
 class BrewProtocol:
     "Talk to a phone using the 'brew' protocol"
@@ -185,14 +186,14 @@ class BrewProtocol:
             # might already be?
             self.sendbrewcommand(req, respc, callsetmode=False)
             return 1
-        except com_phone.modeignoreerrortypes:
+        except modeignoreerrortypes:
             pass
         try:
             # try again at 38400
             self.comm.setbaudrate(38400)
             self.sendbrewcommand(req, respc, callsetmode=False)
             return 1
-        except com_phone.modeignoreerrortypes:
+        except modeignoreerrortypes:
             pass
         
         # send AT$CDMG at various speeds
@@ -212,14 +213,14 @@ class BrewProtocol:
                 self.comm.readsome()
                 self.comm.setbaudrate(38400) # dm mode is always 38400
                 return 1
-            except com_phone.modeignoreerrortypes:
+            except modeignoreerrortypes:
                 self.log("No response to setting QCDMG mode")
                 
         self.comm.setbaudrate(38400) # just in case it worked
         try:
             self.sendbrewcommand(req, respc, callsetmode=False)
             return 1
-        except com_phone.modeignoreerrortypes:
+        except modeignoreerrortypes:
             return 0
 
     def sendbrewcommand(self, request, responseclass, callsetmode=True):
@@ -234,7 +235,7 @@ class BrewProtocol:
         try:
             self.comm.write(data, log=False) # we logged above
 	    data=self.comm.readuntil(self.brewterminator, logsuccess=False)
-        except com_phone.modeignoreerrortypes:
+        except modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsexception("manipulating the filesystem")
         self.comm.success=True
