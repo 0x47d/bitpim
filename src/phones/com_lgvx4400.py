@@ -17,7 +17,6 @@ import sha
 
 # my modules
 import common
-import commport
 import copy
 import p_lgvx4400
 import com_brew
