@@ -544,7 +544,7 @@ class CommPortDialog(wx.Dialog):
         vbs.Fit(p)
 
         # update dialog
-        self.OnRefresh()
+        wx.CallAfter(self.OnRefresh)
 
         # hook in all the widgets
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
