@@ -759,7 +759,7 @@ class Profile(com_samsung.Profile):
         if afi.format in ("MIDI", "PMD", "QCP"):
             for k,n in self.RINGTONE_LIMITS.items():
                 setattr(afi, k, n)
-            return self.__audio_ext[afi.format], afi
+            return currentextension, afi
         d=self.RINGTONE_LIMITS.copy()
         d['format']='QCP'
         return ('pmd', fileinfo.AudioFileInfo(afi, **d))
