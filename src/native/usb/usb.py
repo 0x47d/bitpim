@@ -15,6 +15,8 @@ for sym in dir(usb):
     if sym.startswith("USB_CLASS_") or sym.startswith("USB_DT"):
         exec "%s=usb.%s" %(sym, sym)
 
+TRACE=True
+
 class USBException(Exception):
     def __init__(self):
         Exception.__init__(self, usb.usb_strerror())
@@ -49,6 +51,7 @@ class USBDevice:
         self.usb=usb # save it so that it can't be GC before us
         self.dev=usb_device
         self.handle=usb.usb_open(self.dev)
+        if TRACE: print "usb_open(%s)=%s" % (self.dev,self.handle)
         if self.handle is None:
             raise USBException()
 
@@ -57,6 +60,7 @@ class USBDevice:
 
     def close(self):
         if self.handle is not None:
+            if TRACE: print "usb_close(%s)" % (self.handle,)
             self.usb.usb_close(self.handle)
             self.handle=None
         self.usb=None
@@ -83,6 +87,7 @@ class USBDevice:
         n=getattr(self.dev.descriptor, fieldname)
         if n:
             res,string=usb.usb_get_string_simple(self.handle, n, 1024)
+            if TRACE: print "usb_get_string_simple(%s, %d, %d)=%d,%s" % (self.handle, n, 1024, res, string)
             if res<0:
                 raise USBException()
             return string
@@ -137,17 +142,15 @@ class USBInterface:
         v=self.device.dev.config.bConfigurationValue
         print "value is",v,"now about to set config"
         res=usb.usb_set_configuration(self.device.handle, v)
+        if TRACE: print "usb_set_configurationds(%s, %d)=%d" % (self.device.handle,v,res)
         print "config set"
-        if res<0:
-            usb.usb_release_interface(self.device.handle, self.number())
-            raise USBException()
 
         # grab the interface
-        for i in range(3):
-            print "claiming",i
-            res=usb.usb_claim_interface(self.device.handle, i)
-            if res<0:
-                raise USBException()
+        print "claiming",self.number()
+        res=usb.usb_claim_interface(self.device.handle, self.number())
+        if TRACE: print "usb_claim_interface(%s, %d)=%d" % (self.device.handle, self.number(), res)
+        if res<0:
+            raise USBException()
 
         # we now have the file
         return USBFile(self, epin, epout)
@@ -205,7 +208,8 @@ class USBFile:
         print "reading from addr",self.addrin
         data=""
         while howmuch>0:
-            res,str=usb.usb_bulk_read_wrapped(iface.device.handle, self.addrin, min(howmuch,self.insize), timeout)
+            res,str=usb.usb_bulk_read_wrapped(self.iface.device.handle, self.addrin, min(howmuch,self.insize), timeout)
+            if TRACE: print "usb_bulk_read(%s,%d,%d,%d)=%d,%s" % (self.iface.device.handle, self.addrin, min(howmuch, self.insize), timeout, res, `str`)
             if res<0:
                 if len(data)>0:
                     return data
@@ -214,13 +218,17 @@ class USBFile:
                 return data
             data+=str
             howmuch-=len(str)
+            if howmuch and len(str)!=self.insize:
+                # short read, no more data
+                break
 
         return data
 
     def write(self, data, timeout=1000):
         print "writing to addr",self.addrout
         while len(data):
-            res=usb.usb_bulk_write(iface.device.handle, self.addrout, data[:min(len(data), self.outsize)], timeout)
+            res=usb.usb_bulk_write(self.iface.device.handle, self.addrout, data[:min(len(data), self.outsize)], timeout)
+            if TRACE: print "usb_bulk_write(%s, %d, %d bytes, %d)=%d" % (self.iface.device.handle, self.addrout, min(len(data), self.outsize), timeout, res)
             if res<0:
                 raise USBException()
             data=data[res:]
@@ -305,6 +313,7 @@ if __name__=='__main__':
     print "device opened, about to write"
     cell.write("\x59\x0c\xc4\xc1\x7e")
     print "wrote, about to read"
-    res=cell.read(10)
+    res=cell.read(12)
     print "read %d bytes" % (len(res),)
+    print `res`
     cell.close()
