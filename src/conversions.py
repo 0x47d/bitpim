@@ -87,7 +87,7 @@ def convertto8bitpng(pngdata, maxsize):
     os.remove(pnm)
     return pngquantdata
 
-def convertto8bitpng(pngdata):
+def convertto8bitpng_joe(pngdata):
     "Convert a PNG file to 8bit color map"
     "Separate routine for now so not to screw up existing one, may merge later"
     if pngdata[1:4]!='PNG':
