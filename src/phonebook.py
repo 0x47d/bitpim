@@ -732,6 +732,7 @@ class PhoneWidget(wx.Panel):
         dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]})
         if dlg.ShowModal()==wx.ID_OK:
             data=phonebookobjectfactory.newdataobject(dlg.GetData())
+            data.EnsureBitPimSerial()
             while True:
                 key=int(time.time())
                 if key in self._data:
