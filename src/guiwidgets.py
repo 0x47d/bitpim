@@ -13,7 +13,6 @@
 
 # standard modules
 import os
-import re
 import calendar
 import time
 import copy
@@ -526,6 +525,7 @@ class ConfigDialog(wxDialog):
         p=self.mw.config.ReadInt("combrowsesash", 0)
         dlg=CommPortDialog(self, defaultport=self.commbox.GetValue(), sashposition=p)
         dlg.SetSize(wxSize(w,h))
+        dlg.Centre()
         res=dlg.ShowModal()
         v=dlg.GetPort()
         sz=dlg.GetSize()
@@ -558,10 +558,7 @@ class ConfigDialog(wxDialog):
                 path=os.path.expanduser("~/.bitpim-files")
             self.diskbox.SetValue(path)
         if self.commbox.GetValue()==self.setme:
-            if gui.IsMSWindows(): 
-                comm="com4"
-            else:
-                comm="/dev/usb/ttyUSB0"
+            comm="auto"
             self.commbox.SetValue(comm)
 
     def updatevariables(self):
@@ -574,7 +571,8 @@ class ConfigDialog(wxDialog):
         self.mw.config.Write("path", path)
         self.mw.commportsetting=self.commbox.GetValue()
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
-        self.mw.wt.clearcomm()
+        if self.mw.wt is not None:
+            self.mw.wt.clearcomm()
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to
@@ -586,10 +584,18 @@ class ConfigDialog(wxDialog):
         return path
         
     def needconfig(self):
+        # Set base config
         self.setfromconfig()
+        # are any at unknown settings
         if self.diskbox.GetValue()==self.setme or \
            self.commbox.GetValue()==self.setme:
-            return True
+            # fill in and set defaults
+            self.setdefaults()
+            self.updatevariables()
+            # any still unset?
+            if self.diskbox.GetValue()==self.setme or \
+                   self.commbox.GetValue()==self.setme:
+                return True
         return False
 
     def ShowModal(self):
@@ -662,6 +668,11 @@ class CommPortDialog(wxDialog):
         self.Update()
         ports=comscan.comscan()
         self.portinfo=comdiagnose.diagnose(ports)
+        if len(self.portinfo):
+            self.portinfo=[ ("Automatic", "auto",
+                             "<p>BitPim will try to detect the correct port automatically when accessing your phone"
+                             ) ]+\
+                           self.portinfo
         self.lb.Clear()
         sel=-1
         for name, actual, description in self.portinfo:
