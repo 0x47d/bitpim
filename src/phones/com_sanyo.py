@@ -175,6 +175,7 @@ class SanyoPhonebook:
         if callsetmode:
             self.setmode(self.MODEPHONEBOOK)
         buffer=prototypes.buffer()
+
         request.writetobuffer(buffer)
         data=buffer.getvalue()
         self.logdata("Sanyo phonebook request", data, request)
@@ -189,14 +190,36 @@ class SanyoPhonebook:
             self.mode=self.MODENONE
             self.raisecommsdnaexception("manipulating the phonebook")
         self.comm.success=True
+
+        origdata=data
+        # sometimes there is junk at the begining, eg if the user
+        # turned off the phone and back on again.  So if there is more
+        # than one 7e in the escaped data we should start after the
+        # second to last one
+        d=data.rfind(self.pbterminator,0,-1)
+        if d>=0:
+            self.log("Multiple LG packets in data - taking last one starting at "+`d+1`)
+            self.logdata("Original LG data", origdata, None)
+            data=data[d+1:]
+
+        # turn it back to normal
         data=com_brew.unescape(data)
-        # get rid of leading junk
+
+        # sometimes there is other crap at the begining
         d=data.find(firsttwo)
         if d>0:
+            self.log("Junk at begining of Sanyo packet, data at "+`d`)
+            self.logdata("Original Sanyo data", origdata, None)
+            self.logdata("Working on Sanyo data", data, None)
             data=data[d:]
-        # take off crc and terminator ::TODO:: check the crc
+        # take off crc and terminator
+        crc=data[-3:-1]
         data=data[:-3]
-        
+        if com_brew.crcs(data)!=crc:
+            self.logdata("Original Sanyo data", origdata, None)
+            self.logdata("Working on Sanyo data", data, None)
+            raise common.CommsDataCorruption(self.desc, "Sanyo packet failed CRC check")
+
         # log it
         self.logdata("sanyo phonebook response", data, responseclass)
 
