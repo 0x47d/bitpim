@@ -440,7 +440,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # the index may be corrupt so we cope with it having entries for
         # files that don't exist
         index=self.getindex(indexfile)
-        result[indexkey]=index
 
         stuff={}
         for i in index:
