@@ -1,7 +1,7 @@
 # $Id$
 # Version information
 version="0.5"
-testver=2  # value of zero is non-test build
+testver=0  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
 contact="The BitPim home page is at http://bitpim.sf.net.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
