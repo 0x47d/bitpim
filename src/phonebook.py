@@ -1526,7 +1526,7 @@ class ImportDialog(wx.Dialog):
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
-        splitter.SplitVertically(self.grid, self.resultpreview, -200)
+        splitter.SplitVertically(self.grid, self.resultpreview)
 
         vbs.Add(splitter, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
@@ -1535,21 +1535,29 @@ class ImportDialog(wx.Dialog):
 
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
-        vbs.Fit(self)
-
-        wx.CallAfter(self.DoMerge)
 
         self.config = parent.mainwindow.config
         guiwidgets.set_size(self.config, "PhoneImportMergeDialog", self, screenpct=95,  aspect=1.10)
-        # the above doesn't change the splitter position
-        w,_=splitter.GetSize()
-        splitter.SetSashPosition(max(w/2, w-200))
+
         self.MakeMenus()
 
         self.sortedColumn=1
         self.sortedColumnDescending=False
 
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_DLG_PBMERGEENTRIES))
+
+        # the splitter which adamantly insists it is 20 pixels wide no
+        # matter how hard you try to convince it otherwise. so we force it
+        self.splitter=splitter
+        wx.CallAfter(self._setthedamnsplittersizeinsteadofbeingsostupid_thewindowisnot20pixelswide_isetthesizenolessthan3times_argggh)
+
+        wx.CallAfter(self.DoMerge)
+
+
+    def _setthedamnsplittersizeinsteadofbeingsostupid_thewindowisnot20pixelswide_isetthesizenolessthan3times_argggh(self):
+        splitter=self.splitter
+        w,_=splitter.GetSize()
+        splitter.SetSashPosition(max(w/2, w-200))
 
     # ::TODO:: this method and the copy earlier should be merged into a single mixin
     def OnColumnHeaderPaint(self, evt):
