@@ -671,6 +671,7 @@ class PhoneWidget(wx.Panel):
             for k in self._data:
                 entry=self._data[k]
                 if not entry.has_key('serials'):
+                    assert False, "serials have gone horribly wrong"
                     continue
                 found=False
                 for serial in entry['serials']:
@@ -785,6 +786,40 @@ class PhoneWidget(wx.Panel):
         dict['categories']=self.categories[:]
         return dict
 
+    def DeleteBySerial(self, bpserial):
+        for k in self._data:
+            entry=self._data[k]
+            for serial in entry['serials']:
+                if serial==bpserial:
+                    del self._data[k]
+                    self.dt.OnDataUpdated()
+                    self.modified=True
+                    return
+        raise ValueError("No such entry with serial "+`bpserial`)
+
+    def UpdateSerial(self, bpserial, otherserial):
+        try:
+            for k in self._data:
+                entry=self._data[k]
+                for serial in entry['serials']:
+                    if serial==bpserial:
+                        # this is the entry we have been looking for
+                        for i,serial in enumerate(entry['serials']):
+                            if serial["sourcetype"]==otherserial["sourcetype"]:
+                                if otherserial.has_key("sourceuniqueid") and \
+                                   serial["sourceuniqueid"]==otherserial["sourceuniqueid"]:
+                                    # replace
+                                    entry['serials'][i]=otherserial
+                                    return
+                                elif not otherserial.has_key("sourceuniqueid"):
+                                    entry['serials'][i]=otherserial
+                                    return
+                        entry['serials'].append(otherserial)
+                        return
+            raise ValueError("No such entry with serial "+`bpserial`)
+        finally:
+            self.modified=True
+            
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
