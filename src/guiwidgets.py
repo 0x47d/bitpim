@@ -419,6 +419,7 @@ class GetPhoneDialog(wxDialog):
     MERGE=1
     OVERWRITE=2
 
+    HELPID=helpids.ID_GET_PHONE_DATA
 
     # ::TODO:: ok button should be grayed out unless at least one category is
     # picked
@@ -459,6 +460,8 @@ class GetPhoneDialog(wxDialog):
         self.SetAutoLayout(True)
         bs.Fit(self)
 
+        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
+
     def _setting(self, index):
         if not self.cb[index].GetValue(): return self.NOTREQUESTED
         if self.rb[index][0].GetValue(): return self. MERGE
@@ -476,7 +479,12 @@ class GetPhoneDialog(wxDialog):
     def GetRingtoneSetting(self):
         return self._setting(3)
 
+    def OnHelp(self,_):
+        wxGetApp().displayhelpid(self.HELPID)
+
 class SendPhoneDialog(GetPhoneDialog):
+    HELPID=helpids.ID_SEND_PHONE_DATA
+    
     def __init__(self, frame, title, id=-1):
         GetPhoneDialog.__init__(self, frame, title, id)
         # turn all checkboxes off by default for writing
@@ -1676,6 +1684,7 @@ class DayViewDialog(wxDialog):
         EVT_BUTTON(self, self.ID_CLOSE, self.OnCloseButton)
         EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
         EVT_BUTTON(self, self.ID_DELETE, self.OnDeleteButton)
+        EVT_BUTTON(self, self.ID_HELP, lambda _: wxGetApp().displayhelpid(helpids.ID_EDITING_CALENDAR_EVENTS))
 
         # this is allegedly called automatically but didn't work for me
         EVT_CLOSE(self, self.OnCloseWindow)
