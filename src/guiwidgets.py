@@ -287,7 +287,9 @@ class ConfigDialog(wx.Dialog):
                   # 'LG-VX10': 'com_lgtm520',
                   'SCP-4900': 'com_sanyo4900',
                   'SCP-5300': 'com_sanyo5300',
-                  'SCP-8100': 'com_sanyo8100'}
+                  'SCP-8100': 'com_sanyo8100',
+                  # 'SCP-5500': 'com_sanyo5500',
+                  }
 
     setme="<setme>"
     ID_DIRBROWSE=1
