@@ -23,6 +23,7 @@ import brewcompressedimage
 import guihelper
 import common
 import helpids
+import pubsub
 
 ###
 ###  Wallpaper pane
@@ -32,6 +33,10 @@ class WallpaperView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
+
+    # this is only used to prevent the pubsub module
+    # from being GC while any instance of this class exists
+    __publisher=pubsub.Publisher
     
     def __init__(self, mainwindow, parent, id=-1):
         guiwidgets.FileView.__init__(self, mainwindow, parent, id, style=wx.LC_ICON)
@@ -48,6 +53,12 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_PASTE, self.OnPaste)
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
+        pubsub.subscribe(pubsub.REQUEST_WALLPAPERS, self, "OnListRequest")
+
+    def OnListRequest(self, msg=None):
+        l=[self._data['wallpaper-index'][x]['name'] for x in self._data['wallpaper-index']]
+        l.sort()
+        pubsub.publish(pubsub.ALL_WALLPAPERS, l)
 
     def OnIdle(self, _):
         "Save out changed data"
@@ -55,6 +66,7 @@ class WallpaperView(guiwidgets.FileView):
             print "Saving wallpaper information"
             self.modified=False
             self.populatefs(self._data)
+            self.OnListRequest()
 
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
