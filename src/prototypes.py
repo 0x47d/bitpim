@@ -625,7 +625,15 @@ class LIST(BaseProtogenClass):
         return self._thelist[index]
 
     def __iter__(self):
-        return self._thelist.__iter__()
+        try:
+            return self._thelist.__iter__()
+        except:
+            return self.__fallbackiter()
+
+    def __fallbackiter(self):
+        # used for Python 2.2 which doesn't have list.__iter__
+        for item in self._thelist:
+            yield item
 
     def __len__(self):
         return self._thelist.__len__()
