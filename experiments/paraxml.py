@@ -92,7 +92,7 @@ def client():
     event.wait(15)
     print "active =",transport.is_active()
     keytype, hostkey = transport.get_remote_server_key()
-    print "host key is of type",keytype
+    print "host key is",keytype,paramiko.util.hexify(hostkey.get_fingerprint)
     event=threading.Event()
     transport.auth_password('rogerb', 'password', event)
     event.wait(10)
