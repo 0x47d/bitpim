@@ -215,8 +215,8 @@ class Analyser(wx.Frame):
             if offset+16<end:
                 # highlight till end of line
                 offsetmod=offset%16
-                self.hex.SetStyle(line+9+offsetmod*3, line+9+15*3+3-1, self.highlightstyle)
-                self.hex.SetStyle(line+61+offsetmod,  line+61+15+1, self.highlightstyle)
+                self.hex.SetStyle(line+9+offsetmod*3, line+9+16*3-1, self.highlightstyle)
+                self.hex.SetStyle(line+61+offsetmod,  line+61+16, self.highlightstyle)
                 offset+=16-offsetmod
                 continue
 
