@@ -384,6 +384,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
     def Sort(self):
         bycol=self.main.sortedColumn
         descending=self.main.sortedColumnDescending
+        ### ::TODO:: this sorting is not stable - it should include the current pos rather than key
         l=[ (getdata(self.columns[bycol], self.main._data[key]), key) for key in self.rowkeys]
         l.sort()
         if descending:
