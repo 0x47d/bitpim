@@ -27,6 +27,7 @@ import com_samsung
 import com_phone
 import conversions
 import fileinfo
+import nameparser
 import p_samsungscha670
 import prototypes
 
@@ -306,7 +307,8 @@ class Phone(com_samsung.Phone):
                 self.log('Invalid entry, entry will be not be sent.')
                 del_entries.append(k)
         for k in del_entries:
-            self.log('Deleting entry '+pb_book[k]['names'][0]['full'])
+            self.log('Deleting entry '+\
+                     nameparser.getfullname(pb_book[k]['names'][0]))
             del pb_book[k]
         self._has_duplicate_speeddial(pb_book)
         self.log('All entries validated')
@@ -338,9 +340,12 @@ class Phone(com_samsung.Phone):
                 pb_locs[int(current_pb[k1]['serials'][0]['serial1'])]=True
                 pb_mem[int(current_pb[k1]['serials'][0]['serial2'])]=True
             else:
-                self.log("Deleted item: "+current_pb[k1]['names'][0]['full'])
+                self.log("Deleted item: "+\
+                         nameparser.getfullname(current_pb[k1]['names'][0]))
                 # delete the entries from data and the phone
-                self.progress(0, 10, "Deleting "+current_pb[k1]['names'][0]['full'])
+                self.progress(0, 10, "Deleting "+\
+                              nameparser.getfullname(\
+                                  current_pb[k1]['names'][0]))
                 self._del_phone_entry(current_pb[k1])
         mem_idx, loc_idx = self.__pb_max_speeddials, 1
         
@@ -372,11 +377,14 @@ class Phone(com_samsung.Phone):
                           'serial1': `loc_idx`,
                           'serial2': `mem_index` }
                 e['serials'].append(s1)
-                self.log("New entries: Name: "+e['names'][0]['full']+", s1: "+`loc_idx`+", s2: "+`mem_index`)
+                self.log("New entries: Name: "+\
+                         nameparser.getfullname(e['names'][0])+", s1: "+`loc_idx`+", s2: "+`mem_index`)
                 serials_update.append((self._bitpim_serials(e), s1))
-            self.progress(progresscur, progressmax, "Updating "+e['names'][0]['full'])
+            self.progress(progresscur, progressmax, "Updating "+\
+                          nameparser.getfullname(e['names'][0]))
             if not self._write_phone_entry(e, data):
-                self.log("Failed to save entry: "+e['names'][0]['full'])
+                self.log("Failed to save entry: "+\
+                         nameparser.getfullname(e['names'][0]))
             progresscur += 1
 
         data["serialupdates"]=serials_update
@@ -388,11 +396,10 @@ class Phone(com_samsung.Phone):
     def __validate_entry(self, pb_entry, pb_groups, ringtone_index):
         try:
             # validate name
-            name=pb_entry['names'][0]['full'].replace('"', '')
+            name=nameparser.getfullname(pb_entry['names'][0]).replace('"', '')
             if len(name)>self.__pb_max_name_len:
                 name=name[:self.__pb_max_name_len]
-            if pb_entry['names'][0]['full']!=name:
-                pb_entry['names'][0]['full']=name
+            pb_entry['names'][0].setdefault('full', name)
             # validate url/alias
             url=pb_entry.get('urls', [{}])[0].get('url', None)
             if url is not None:
@@ -589,7 +596,8 @@ class Phone(com_samsung.Phone):
             pass
 
         # name & alias/url
-        e[self.__pb_name]='"'+pb_entry['names'][0]['full']+'"'
+        e[self.__pb_name]='"'+nameparser.getfullname(\
+            pb_entry['names'][0])+'"'
 	url=''
         try:
             url=pb_entry['urls'][0]['url']
@@ -900,12 +908,6 @@ class FileEntries:
         dl_info_keys=dl_info.keys()
         deleted_keys=[k for k in dl_info_keys if k not in media_names]
         new_keys=[k for k in media if media[k]['name'] not in dl_info_keys]
-##        print 'deleted keys: ', deleted_keys
-##        print 'new keys: ', new_keys
-##        for k in new_keys:
-##            print media[k]['name']
-##        return result
-
         # deleting files
         campix_file_path=self.__phone.protocolclass.cam_pix_file_path
         campix_file_len=len(campix_file_path)
@@ -920,6 +922,12 @@ class FileEntries:
             except:
                 self.__phone.log('Failed to delete file: '+file_name)
         # writing new files
+        # make sure dir exists to write new files
+        if len(new_keys):
+            try:
+                self.__phone.mkdirs(self.__path)
+            except:
+                pass
         file_count=0
         for k in new_keys:
             n=media[k]
