@@ -2336,7 +2336,6 @@ class MyFixedScrolledMessageDialog(wxDialog):
 ###  Dialog that deals with exceptions
 ###
 import StringIO
-import traceback
 
 class ExceptionDialog(MyFixedScrolledMessageDialog):
     def __init__(self, frame, exception, title="Exception"):
