@@ -16,6 +16,8 @@ or a small icon (Linux, Mac) that you can click on to get the dialog."""
 import sys
 import cStringIO
 import os
+import random
+import sha
 
 # m2 stuff
 import M2Crypto
@@ -25,6 +27,7 @@ import wx
 import wx.html
 import wx.lib.newevent
 import wx.lib.maskededit
+import wx.lib.mixins.listctrl
 
 # My stuff
 import native.usb
@@ -134,7 +137,7 @@ class MyTaskBarIcon(parentclass):
         wx.EVT_LEFT_DOWN(bit, self.OnLeftDown)
         self.bit=bit
 
-class ConfigPanel(wx.Panel):
+class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
 
     def __init__(self, mw, parent, id=-1):
         wx.Panel.__init__(self, parent, id)
@@ -197,6 +200,8 @@ class ConfigPanel(wx.Panel):
         bs.Add(self.authlist, 1, wx.EXPAND|wx.ALL, 5)
         
         vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
+        self.itemDataMap={}
+        wx.lib.mixins.listctrl.ColumnSorterMixin.__init__(self,3)
 
         # devices
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Devices"), wx.VERTICAL)
@@ -216,27 +221,70 @@ class ConfigPanel(wx.Panel):
         vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
         
         self.setupauthorization()
+        self.SortListItems()
         
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
 
+    def _updateauthitemmap(self, itemnum):
+        pos=-1
+        if itemnum in self.itemDataMap:
+            # find item by looking for ItemData, and set pos
+            # to corresponding pos in list
+            raise Exception("need to implement this")
+        v=self.mw.authinfo[itemnum]
+        username=v[0]
+        expires=v[2]
+        addresses=" ".join(v[3])
+        if pos<0:
+            pos=self.authlist.GetItemCount()
+            self.authlist.InsertStringItem(pos, username)
+        else:
+            self.authlist.SetStringItem(pos, 0, username)
+        self.authlist.SetStringItem(pos, 2, `expires`)
+        self.authlist.SetStringItem(pos, 1, addresses)
+        self.authlist.SetItemData(pos, itemnum)
+        self.itemDataMap[itemnum]=(username, addresses, expires)
+
+    def GetListCtrl(self):
+        "Used by the ColumnSorter mixin"
+        return self.authlist
+
     def setupauthorization(self):
         dict={}
+        items=[]
         for i in range(1000):
             if self.mw.config.HasEntry("user-"+`i`):
-                dict[i]=self.mw.config.Read("user-"+`i`).split(":")
+                username,password,expires,addresses=self.mw.config.Read("user-"+`i`).split(":")
+                expires=int(expires)
+                addresses=addresses.split()
+                dict[i]=username,password,expires,addresses
+                items.append(i)
         self.mw.authinfo=dict
+        for i in items:
+            self._updateauthitemmap(i)
+
 
     def OnAddAuth(self,_):
         dlg=AuthItemDialog(self, "Add Entry")
         if dlg.ShowModal()==wx.ID_OK:
-            pass
+            username,password,expires,addresses=dlg.GetValue()
+            for i in range(1000):
+                if i not in self.mw.authinfo:
+                    self.mw.config.Write("user-"+`i`, "%s:%s:%d:%s" % (username, password, expires, " ".join(addresses)))
+                    self.mw.config.Flush()
+                    self.mw.authinfo[i]=username,password,expires,addresses
+                    self._updateauthitemmap(i)
+                    self.SortListItems()
+                    break
         dlg.Destroy()
 
 
 class AuthItemDialog(wx.Dialog):
 
-    def __init__(self, parent, title, username="New User", password=None, expires=0, addresses=[]):
+    _password_sentinel="\x01\x02\x03\x04\x05\x06\x07\x08" # magic value used to detect if user has changed the field
+
+    def __init__(self, parent, title, username="New User", password="", expires=0, addresses=[]):
         wx.Dialog.__init__(self, parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         p=self
@@ -249,6 +297,8 @@ class AuthItemDialog(wx.Dialog):
         gs.Add(self.username,0, wx.EXPAND)
         gs.Add(wx.StaticText(p, -1, "Password"))
         self.password=wx.TextCtrl(self, -1, "", style=wx.TE_PASSWORD)
+        self.origpassword=password
+        if len(password): self.password.SetValue(self._password_sentinel)
         gs.Add(self.password, 0, wx.EXPAND)
         gs.Add(wx.StaticText(p, -1, "Expires"))
         self.expires=wx.lib.maskededit.MaskedTextCtrl(p, -1, "", autoformat="EUDATETIMEYYYYMMDD.HHMM")
@@ -267,8 +317,24 @@ class AuthItemDialog(wx.Dialog):
         vbs.Fit(self)
 
 
+    def GenPassword(self, string):
+        # random salt
+        salt="".join([chr(random.randint(0,255)) for x in range(8)])
+        saltstr="".join(["%02x" % (ord(x),) for x in salt])
+        # we use a sha of the salt followed by the string
+        val=sha.new(salt+string)
+        # return generated password as $ seperated hex strings
+        return "$".join([saltstr, val.hexdigest()])
+        
+
     def GetValue(self):
-        return [self.username.GetValue(), password, time, addresses]
+        # ::TODO:: ensure no colons in username or addresses
+        # figure out password
+        if self.password.GetValue()!=self._password_sentinel:
+            password=self.GenPassword(self.password.GetValue())
+        else:
+            password=self.origpassword
+        return [self.username.GetValue(), password, 0, self.addresses.GetValue().split()]
 
 class MainWindow(wx.Frame):
 
@@ -356,13 +422,9 @@ class MainWindow(wx.Frame):
         
         if guihelper.IsMSWindows(): # we want subdir of my documents on windows
             # nice and painful
-            import _winreg
-            x=_winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
-            y=_winreg.OpenKey(x, r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
-            str=_winreg.QueryValueEx(y, "Personal")[0]
-            _winreg.CloseKey(y)
-            _winreg.CloseKey(x)
-            path=os.path.join(str, ".bitfling.key")
+            from win32com.shell import shell, shellcon
+            path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+            path=os.path.join(str(path), ".bitfling.key")
         else:
             path=os.path.expanduser("~/.bitfling.key")
         return self.config.Read("certificatefile", path)
