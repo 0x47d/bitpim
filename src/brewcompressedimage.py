@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+
+### BITPIM
+###
+### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+###
+### This software is under the Artistic license.
+### http://www.opensource.org/licenses/artistic-license.php
+###
+### $Id$
+
+"""Support for the BCI (Brew Compressed Image) format
+
+Currently this code can read a BCI file.  You should call the
+L{getimage} function.
+
+"""
+
+"""
+integers are lsb
+
+0000 - 0003 BCI\0
+0004 - 0007 ?  (x0844 = 2116) [length of file]
+0008 - 000b ?  (x0434 = 1076) [offset to first image
+000c - 000d ?  (1)
+000e - 000f width
+0010 - 0011 height
+0012 - 0013 ?  (1) 2
+0014 - 0015 ?  (1) 2
+0016 - 0017 ?  (1) 2
+0018 - 0019 ?  (0)
+001a - 001b ?  (8) [bits per pixel?]
+001c - 001d ?  (1)
+001e - 001f ?  [0x100 = 256 ] # number of entries in palette
+
+palette
+b,g,r,0  (32 bit entry)
+
+next palette
+0000 - 0001 ? (2) palette number/id
+0002 - 0003 number of entries in palette
+
+image
+0000 - 0001 data length
+0002 - 0003 ? (0)
+0004 - 0005 width
+0006 - 0007 height
+0008 - 0009 ? (1)
+000a - 000b ? (1)
+
+"""
+
+import common
+import zlib
+
+from wxPython.wx import *
+
+class Display(wxFrame):
+    """Used for the builtin tester"""
+
+    def __init__(self, file, parent=None):
+        bmp=getbitmap(file)
+        
+        wxFrame.__init__(self, parent, -1, "Image Display")
+
+        b=wxStaticBitmap(self, -1, bmp)
+
+        b.SetSize((bmp.GetWidth(), bmp.GetHeight()))
+        self.Fit()
+        self.Show(True)
+
+
+class MyImage:
+    """An encapsulation of the image"""
+    
+    def __init__(self, width, height, bytes, palette):
+        self.width=width
+        self.height=height
+        offset=0
+        import cStringIO
+        data=cStringIO.StringIO()
+        for row in range(height):
+            # print "\r"+`row`,
+            # 32 bit alignment
+            while (offset%4)!=0:
+                offset+=1
+            for col in range(width):
+                v=ord(bytes[offset])
+                offset+=1
+                data.write(palette[v])
+
+        self.data=data.getvalue()
+        # print
+
+    def toImage(self):
+        """Converts image to wxImage
+
+        @rtype: wxImage
+        """
+        img=wxEmptyImage(self.width, self.height)
+        img.SetData(self.data)
+        return img
+        
+class BCIPalette:
+    """An encapsulation of the palette"""
+    def __init__(self, data=""):
+        pal=[]
+        for offset in range(0, len(data), 4):
+            assert data[3]=="\x00"
+            pal.append(data[offset+2]+data[offset+1]+data[offset])
+        self.pal=pal
+
+    def __getitem__(self,e):
+        return self.pal[e]
+
+def getimage(file):
+    """Returns a wxImage of the file specified"""
+    
+    f=open(file, "rb")
+    data=f.read()
+    f.close()
+
+    # save hex version for debugging
+    # f=open(file+".hex", "w")
+    # f.write(common.datatohexstring(data))
+    # f.close()
+
+    palettes={}
+
+    ### verify format
+
+    # header
+    assert data[0x00:0x04]=='BCI\x00'
+    # file length
+    assert readlsb(data[0x04:0x08])<=len(data)  # this would be == but the bci tool doesn't truncate the file!
+    # image offset
+    imageoffset=readlsb(data[0x08:0x0b])
+    assert imageoffset<len(data)
+    # ? (1)
+    assert readlsb(data[0x0c:0x0e])==1
+    # width, height
+    width=readlsb(data[0x0e:0x10])
+    height=readlsb(data[0x10:0x12])
+    assert width>0 and height>0
+    # number of objects/frames/palettes?  no idea on order
+    numitem1=readlsb(data[0x12:0x14])
+    numitem2=readlsb(data[0x14:0x16])
+    numitem3=readlsb(data[0x16:0x18])
+    # print "number of objects/frames/palettes?  no idea on order: %d, %d, %d" % (numitem1, numitem2, numitem3)
+    numpalettes=numitem1  # just a guess
+    numotherthing=numitem2 # no idea what they are, possibly 'frames' as in the doc
+    numimages=numitem3 # images, probbaly 'object' as in the doc
+    # ? (0)
+    assert readlsb(data[0x18:0x1a])==0
+    # palette depth?
+    bpp=readlsb(data[0x1a:0x1c])
+    
+    # read the palettes
+    offset=0x1c
+    for _ in range(numpalettes):
+        id=readlsb(data[offset:offset+2])
+        # print "palette id",id
+        offset+=2
+        numentries=readlsb(data[offset:offset+2])
+        # print "contains",numentries,"entries"
+        offset+=2
+        # f=open(file+".palette."+`id`+".hex", "w")
+        # f.write(common.datatohexstring(data[offset:offset+numentries*4]))
+        # f.close()
+        pal=BCIPalette(data[offset:offset+numentries*4])
+        offset+=numentries*4
+        palettes[id]=pal
+
+        
+    # some other type of object, possibly frames as in the doc
+    for _ in range(numotherthing):
+        # we just ignore the contents for the moment
+        # print common.datatohexstring(data[offset:offset+0x14])
+        offset+=0x14
+
+    # images
+    for _ in range(numimages):
+        szdata=readlsb(data[offset:offset+4])
+        width=readlsb(data[offset+4:offset+6])
+        height=readlsb(data[offset+6:offset+8])
+        id1=readlsb(data[offset+8:offset+0xa]) # image id?
+        id2=readlsb(data[offset+0xa:offset+0xc])  # palette id?
+        offset+=0xc
+        buf=data[offset:offset+szdata]
+        res=zlib.decompress(buf)
+        # f=open(file+".image."+`id1`+".hex", "w")
+        # f.write(common.datatohexstring(res))
+        # f.close()
+
+        img=MyImage(width, height, res, palettes[id2])
+    
+        return img.toImage()
+
+def readlsb(data):
+    """Read binary data in lsb"""
+    res=0
+    shift=0
+    for i in data:
+        res|=ord(i)<<shift
+        shift+=8
+    return res
+
+if __name__=='__main__':
+    wxInitAllImageHandlers()
+    app=wxPySimpleApp()
+    if len(sys.argv)==2:
+        f=Display(sys.argv[1])
+    elif len(sys.argv)==3:
+        bciconvert(sys.argv[1], sys.argv[2])
+        f=Display(sys.argv[2])
+    else:
+        assert Exception, "not enough params"
+    
+    app.MainLoop()
