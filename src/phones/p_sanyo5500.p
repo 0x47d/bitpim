@@ -173,17 +173,20 @@ PACKET callalarmupdaterequest:
     417 UNKNOWN +pad
 
 PACKET bufferpartrequest:
+    P UINT {'constant': 1024} bufpartsize
     * sanyoheader {'packettype': 0x0f} +header
     1026 UNKNOWN +pad
 
 PACKET bufferpartresponse:
+    P UINT {'constant': 1024} bufpartsize
     * sanyoheader header
-    1024 DATA data
+    * DATA {'sizeinbytes': self.bufpartsize} data
     2 UNKNOWN pad
 
 PACKET bufferpartupdaterequest:
+    P UINT {'constant': 1024} bufpartsize
     * sanyowriteheader {'packettype': 0x0f} +header
-    1024 DATA data
+    * DATA {'sizeinbytes': self.bufpartsize} data
     2 UNKNOWN +pad
 
 PACKET calleridbuffer:
@@ -193,6 +196,7 @@ PACKET calleridbuffer:
     P UINT {'constant': 500} maxentries
     P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 7168} bufsize
+    P STRING {'default': "callerid"} +comment
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     666 UNKNOWN +pad
@@ -205,20 +209,21 @@ PACKET ringerpicbuffer:
     P UINT {'constant': 0xd7} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 0x0f} packettype "Non standard packet type"
     P UINT {'constant': 1024} bufsize
+    P STRING {'default': "ringer/picture assignments"} +comment
     * LIST {'length': _NUMPBSLOTS} +ringtones:
         1 UINT ringtone "ringtone index"
     * LIST {'length': _NUMPBSLOTS} +wallpapers:
         1 UINT wallpaper "wallpaper index"
     424 UNKNOWN +pad
 
-PACKET ringerpicbufferrequest:
-    "Packet to get ringer picture buffer"
-    * sanyoheader {'packettype': 0x0c, 'command': 0xd7} +header
-    1026 UNKNOWN +pad
+#PACKET ringerpicbufferrequest:
+#    "Packet to get ringer picture buffer"
+#    * sanyoheader {'packettype': 0x0c, 'command': 0xd7} +header
+#    1026 UNKNOWN +pad
     
-PACKET ringerpicbufferresponse:
-    * sanyoheader +header
-    * ringerpicbuffer +buffer
+#PACKET ringerpicbufferresponse:
+#    * sanyoheader +header
+#    * ringerpicbuffer +buffer
     
 PACKET pbsortbuffer:
     "Various arrays for sorting the phone book, speed dial, determining which"
@@ -227,6 +232,7 @@ PACKET pbsortbuffer:
     # payload from commands 0X 3c 0F through 0X 43 0F
     P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 4096} bufsize
+    P STRING {'default': "sort buffer"} +comment
     * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused

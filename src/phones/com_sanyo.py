@@ -115,17 +115,21 @@ class SanyoPhonebook:
     def getringtoneindices(self, results):
         return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
 
-    def getsanyobuffer(self, startcommand, buffersize, comment):
+    def getsanyobuffer(self, responseclass):
         # Read buffer parts and concatenate them together
-        desc="Reading "+comment
+        bufres=responseclass()
+        desc="Reading "+bufres.comment
         data=cStringIO.StringIO()
         bufp=0
-        command=startcommand
-        for offset in range(0, buffersize, 500):
+        command=bufres.startcommand
+        buffersize=bufres.bufsize
+        req=self.protocolclass.bufferpartrequest()
+        if command==0xd7:
+            req.header.packettype=0x0c # Special Case for 5500 Class phones
+        for offset in range(0, buffersize, req.bufpartsize):
             self.progress(data.tell(), buffersize, desc)
-            req=p_sanyo.bufferpartrequest()
             req.header.command=command
-            res=self.sendpbcommand(req, p_sanyo.bufferpartresponse);
+            res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse);
             data.write(res.data)
             command+=1
 
@@ -134,24 +138,35 @@ class SanyoPhonebook:
         data=data.getvalue()
         self.log("expected size "+`buffersize`+"  actual "+`len(data)`)
         assert buffersize==len(data)
-        return data
+        #self.logdata("Sanyo buffer response", data, responseclass)
+        buffer=prototypes.buffer(data)
+        bufres.readfrombuffer(buffer)
+        return bufres
 
-    def sendsanyobuffer(self, buffer, startcommand, comment):
+    def sendsanyobuffer(self, bufreq):
+        comment=bufreq.comment
+        buffer=prototypes.buffer()
+        bufreq.writetobuffer(buffer)
+        buffer=buffer.getvalue()
         self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
+        #self.logdata("Write "+comment, buffer, bufreq)
         desc="Writing "+comment
-        numblocks=len(buffer)/500
+        req=self.protocolclass.bufferpartupdaterequest()
+        bufpartsize=req.bufpartsize
+        numblocks=len(buffer)/bufpartsize
         offset=0
-        command=startcommand
-        for offset in range(0, len(buffer), 500):
-            self.progress(offset/500, numblocks, desc)
-            req=p_sanyo.bufferpartupdaterequest()
+        command=bufreq.startcommand
+        if command==0xd7:
+            req.header.packettype=0x0c
+        for offset in range(0, len(buffer), bufpartsize):
+            self.progress(offset/bufpartsize, numblocks, desc)
             req.header.command=command
             block=buffer[offset:]
-            l=min(len(block), 500)
+            l=min(len(block), bufpartsize)
             block=block[:l]
             req.data=block
             command+=1
-            self.sendpbcommand(req, p_sanyo.bufferpartresponse, writemode=True)
+            self.sendpbcommand(req, self.protocolclass.bufferpartresponse, writemode=True)
         
     def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=0):
         if writemode:
@@ -281,13 +296,10 @@ class SanyoPhonebook:
         pbook={}
         # Get Sort buffer so we know which of the 300 phone book slots
         # are in use.
-        sortstuff=self.protocolclass.pbsortbuffer()
-        buf=prototypes.buffer(self.getsanyobuffer(sortstuff.startcommand, sortstuff.bufsize, "sort buffer"))
-        sortstuff.readfrombuffer(buf)
+        sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
 
-        ringpic=self.protocolclass.ringerpicbuffer()
-        buf=prototypes.buffer(self.getsanyobuffer(ringpic.startcommand, ringpic.bufsize, "ringer/picture assignments"))
-        ringpic.readfrombuffer(buf)
+        # Get the ringer and wall paper assignments
+        ringpic = self.getsanyobuffer(self.protocolclass.ringerpicbuffer)
 
         speedslot=[]
         speedtype=[]
@@ -584,20 +596,12 @@ class SanyoPhonebook:
             i+=1
 
         # Now write out the 3 buffers
-        buffer=prototypes.buffer()
-        sortstuff.writetobuffer(buffer)
-        self.logdata("Write sort buffer", buffer.getvalue(), sortstuff)
-        self.sendsanyobuffer(buffer.getvalue(),sortstuff.startcommand,"sort buffer")
+        self.sendsanyobuffer(sortstuff)
 
-        buffer=prototypes.buffer()
-        ringpic.writetobuffer(buffer)
-        self.logdata("Write ringer picture buffer", buffer.getvalue(), ringpic)
-        self.sendsanyobuffer(buffer.getvalue(),ringpic.startcommand,"ringer/pictures assignments")
+        self.sendsanyobuffer(ringpic)
         
-        buffer=prototypes.buffer()
-        callerid.writetobuffer(buffer)
-        self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
-        self.sendsanyobuffer(buffer.getvalue(),callerid.startcommand,"callerid")
+        self.sendsanyobuffer(callerid)
+        
         time.sleep(1.0)
 
         data['phonebook']=newphonebook

@@ -64,56 +64,6 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=False, numsendretry=numsendretry)
         return res
  
-#
-# Almost identical to com_sanyo.py version.  Will be merged eventually
-#
-    def getsanyobuffer(self, startcommand, buffersize, comment):
-        # Read buffer parts and concatenate them together
-        desc="Reading "+comment
-        data=cStringIO.StringIO()
-        bufp=0
-        command=startcommand
-        req=self.protocolclass.bufferpartrequest()
-        if command==0xd7:
-            req.header.packettype=0x0c
-        for offset in range(0, buffersize, 1024):
-            self.progress(data.tell(), buffersize, desc)
-            req.header.command=command
-            res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse);
-            data.write(res.data)
-            command+=1
-
-        self.progress(1,1,desc)
-
-        data=data.getvalue()
-        self.logdata("Sanyo Buffer", data, None)
-        self.log("expected size "+`buffersize`+"  actual "+`len(data)`)
-        assert buffersize==len(data)
-        return data
-
-        return res
-
-#
-# Almost identical to com_sanyo.py version.  Will be merged eventually
-#
-    def sendsanyobuffer(self, buffer, startcommand, comment):
-        self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
-        desc="Writing "+comment
-        numblocks=len(buffer)/1024
-        offset=0
-        command=startcommand
-        req=self.protocolclass.bufferpartupdaterequest()
-        if command==0xd7:
-            req.header.packettype=0x0c
-        for offset in range(0, len(buffer), 1024):
-            self.progress(offset/1024, numblocks, desc)
-            req.header.command=command
-            block=buffer[offset:]
-            l=min(len(block), 1024)
-            block=block[:l]
-            req.data=block
-            command+=1
-            self.sendpbcommand(req, self.protocolclass.bufferpartresponse, writemode=True)
 
     def savecalendar(self, dict, merge):
         req=self.protocolclass.beginendupdaterequest()
