@@ -367,7 +367,7 @@ class AuthItemDialog(wx.Dialog):
 
     def GenPassword(self, string):
         # random salt
-        salt="".join([chr(random.randint(0,255)) for x in range(8)])
+        salt="".join([chr(random.randint(0,127)) for x in range(8)])
         saltstr="".join(["%02x" % (ord(x),) for x in salt])
         # we use a sha of the salt followed by the string
         val=sha.new(salt+string)
@@ -650,8 +650,7 @@ class MainWindow(wx.Frame):
         if certfile is None or port is None:
             return
         self.Log("Starting on port "+`port`)
-        key=paramiko.DSSKey()
-        key.read_private_key_file(certfile)
+        key=paramiko.DSSKey.from_private_key_file(certfile)
         fp=paramiko.util.hexify(key.get_fingerprint())
         self.configpanel.fingerprint.SetValue(fp)
         self.configpanel.porttext.SetLabel(`port`)
