@@ -91,8 +91,12 @@ def getqdpath(filename):
     if filename.startswith("~"):
         # windows 98, no home directory present
         filename="c:\\"+filename[1:]
-    return filename
+    return os.path.abspath(filename)
 
+
+def getfilename():
+    "Returns the filename we need"
+    return getqdpath("addressbook/addressbook.xml")
 
 # XML returns all the values as strings, so these two routines
 # help strip out the unicode bit
