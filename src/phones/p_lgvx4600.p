@@ -26,6 +26,7 @@ BOOL=BOOLlsb
 
 _NUMSPEEDDIALS=0
 _NUMPHONEBOOKENTRIES=500
+_MAXCALENDARDESCRIPTION=38
 %}
 
 # desc file used for wallpaper and ringtone indices

@@ -451,7 +451,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             entry['pos']=data.pos
             # simple copy of these fields
             for field in 'start', 'end', 'daybitmap', 'changeserial', 'snoozedelay','ringtone','description':
-                setattr(data,field,entry[field])
+                v=entry[field]
+                if field == "description":
+                    v=v[:self.protocolclass._MAXCALENDARDESCRIPTION]
+                setattr(data,field,v)
             # And now the special ones
             repeat=None
             for k,v in self._calrepeatvalues.items():
