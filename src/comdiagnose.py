@@ -98,7 +98,10 @@ def genhtml(port):
         elif k=='driverstatus':
             res+=sfont+`port[k]`+efont # should print it nicer at some point
         else:
-            res+=sfont+`port[k]`+efont
+            if isinstance(port[k], type("")):
+                res+=sfont+port[k]+efont
+            else:
+                res+=sfont+`port[k]`+efont
         res+="</td><td>"
         # description
         if k=='name':

@@ -546,7 +546,10 @@ class Calendar(wxPanel):
            event.Skip()  # control can have it
 
     def OnMouseWheel(self, event):
-        lines=event.GetWheelRotation()/event.GetWheelDelta()
+        delta=event.GetWheelDelta()
+        if delta==0: # as it does on linux
+            delta=120
+        lines=event.GetWheelRotation()/delta
         self.scrollby(-7*lines)
 
     def OnLeftDown(self, event):

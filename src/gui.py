@@ -430,9 +430,10 @@ class MainWindow(wxFrame):
         menu=wxMenu()
         menu.Append(ID_EDITADDENTRY, "Add...", "Add an item")
         menu.Append(ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
-        menu.AppendSeparator()
-        menu.Append(ID_FV_ICONS, "View as Images", "Show items as images")
-        menu.Append(ID_FV_LIST, "View As List", "Show items as a report")
+        if HasFullyFunctionalListView():
+            menu.AppendSeparator()
+            menu.Append(ID_FV_ICONS, "View as Images", "Show items as images")
+            menu.Append(ID_FV_LIST, "View As List", "Show items as a report")
         menu.AppendSeparator()
         menu.Append(ID_EDITSETTINGS, "&Settings", "Edit settings")
         menuBar.Append(menu, "&Edit");
@@ -532,7 +533,11 @@ class MainWindow(wxFrame):
         global thesplashscreen
         if thesplashscreen is not None:
             wxSafeYield()
-            thesplashscreen.Show(False)
+            try:
+		# on Linux this is often already deleted and generates an exception
+                thesplashscreen.Show(False)
+            except:
+                pass
 
         # Show tour on first use
         if self.config.ReadInt("firstrun", True):
@@ -812,8 +817,9 @@ class MainWindow(wxFrame):
         self.GetToolBar().EnableTool(ID_EDITADDENTRY, enableedit)
         self.GetToolBar().EnableTool(ID_EDITDELETEENTRY, enableedit)
         # menu items
-        self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
-        self.GetMenuBar().Enable(ID_FV_LIST, enablefv)
+        if HasFullyFunctionalListView():
+            self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
+            self.GetMenuBar().Enable(ID_FV_LIST, enablefv)
         self.GetMenuBar().Enable(ID_EDITADDENTRY, enableedit)
         self.GetMenuBar().Enable(ID_EDITDELETEENTRY, enableedit)
          
