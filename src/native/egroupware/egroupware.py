@@ -64,11 +64,14 @@ class Session:
         start="%04d-%02d-%02dT%02d:%02d:%02d" % start
         end="%04d-%02d-%02dT%02d:%02d:%02d" % end
         for item in self.sp.calendar.bocalendar.search({"start": start, "end": end}):
-            for k in item:
+            for k in item.keys():
                 if isinstance(item[k], xmlrpclib.DateTime):
                     v=str(item[k])
                     v=[int(x) for x in v[0:4], v[5:7], v[8:10], v[11:13], v[14:16], v[17:19]]
-                    item[k]=datetime.datetime(*v)
+                    if v==[0,0,0,0,0,0]:
+                        del item[k]
+                    else:
+                        item[k]=datetime.datetime(*v)
             yield item
 
     def doescontactexist(self, id):
