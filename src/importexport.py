@@ -517,5 +517,5 @@ def OnImportCSVPhoneBook(parent, phonebook, path):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        phonebook.importdata(data)
+        phonebook.importdata(data, merge=True)
         
