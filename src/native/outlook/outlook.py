@@ -181,6 +181,12 @@ def getcontacts(folder, keys=None):
                         except ValueError:
                             # illegal time value
                             continue
+                    if key=="Categories":
+                       # for some idiotic reason Outlook uses comma
+                       # space seperators for this field despite using
+                       # semi-colon elsewhere for the same field so we
+                       # munge the data
+                       v=";".join([x.strip() for x in v.split(",")])
                     record[key]=v
             res.append(record)
     return res
