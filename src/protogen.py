@@ -49,7 +49,7 @@ class protogentokenizer:
     # End of an 'if' section.  Nothing follows
     CONDITIONALEND="CONDITIONALEND"
 
-    # An actual field. Followed by name, size [-1 means unknown size], type, generatordict, userspecced dict, comment
+    # An actual field. Followed by name, size [-1 means unknown size], type, generatordict, userspecced dict, comment, modifiers
     FIELD="FIELD"
 
     # An assertion (validity check).  Followed by string of assertion expression
@@ -350,11 +350,24 @@ class protogentokenizer:
             raise protoerror("Expecting field type", t)
         thetype=t[1]
 
+        # a dot and another type (first was module)?
+        t=self._lookahead()
+        if t[0]=='OP' and t[1]=='.':
+            self._next()
+            t=self._next()
+            if t[0]!='NAME':
+                raise protoerror("Expecting a name after . in field type", t)
+            thetype+="."+t[1]
+
         # Optional dict
         thedict=self._getdict()
 
         # Name
+        themodifiers=""
         t=self._next()
+        while t[0]=='OP':
+            themodifiers+=t[1]
+            t=self._next()
         if t[0]!='NAME':
             raise protoerror("Expecting field name", t)
         thename=t[1]
@@ -392,7 +405,7 @@ class protogentokenizer:
             self.state.append(self.STATE_PACKET)
 
             return self.FIELD, thename, thesize, thetype, "{'elementclass': "+autoclass+"}", \
-                   thedict, thedesc
+                   thedict, thedesc, themodifiers
         
         # optional string
         if t[0]=='STRING':
@@ -408,7 +421,7 @@ class protogentokenizer:
                 self._next()
                 self._consumenl()
         # return what have digested ..
-        return self.FIELD, thename, thesize, thetype, None, thedict, thedesc
+        return self.FIELD, thename, thesize, thetype, None, thedict, thedesc, themodifiers
 
 def indent(level=1):
     return "    "*level
@@ -474,6 +487,7 @@ class codegen:
         # if only field, pass stuff on to it
         if len(fields)==1:
             print >>out, indent(2)+"if len(args):"
+            # we can't use makefield as we have to make a new dict
             if f[2]>=0:
                 print >>out, indent(3)+"dict2={'sizeinbytes': "+`f[2]`+"}"
             else:
@@ -493,13 +507,7 @@ class codegen:
         for f in fields:
             if f[0]==tokens.FIELD and f[2]=='P':
                 print >>out, indent(2)+"if getattr(self, '__field_"+f[1]+"', None) is None:"
-                i=3
-                print >>out, indent(i)+"dict={}"
-                for xx in 4,5:
-                    if f[xx] is not None:
-                        print >>out, indent(i)+"dict.update("+f[xx]+")"
-                print >>out, indent(i)+"self.__field_%s=%s(**dict)" % (f[1],f[3])
-                
+                self.makefield(out, 3, f)
 
         print >>out, "\n"
 
@@ -510,6 +518,9 @@ class codegen:
         i=2
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
+                if '+' in f[7]:
+                    print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
+                    self.makefield(out, i+1, f)
                 print >>out, indent(i)+"sz+=self.__field_"+f[1]+".packetsize()"
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
@@ -527,6 +538,9 @@ class codegen:
         i=2
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
+                if '+' in f[7]:
+                    print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
+                    self.makefield(out, i+1, f)
                 print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buffer)"
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
@@ -546,14 +560,7 @@ class codegen:
             if f[0]==tokens.FIELD:
                 if f[2]=='P':
                     continue
-                if f[2]>=0:
-                    print >>out, indent(i)+"dict={'sizeinbytes': "+`f[2]`+"}"
-                else:
-                    print >>out, indent(i)+"dict={}"
-                for xx in 4,5:
-                    if f[xx] is not None:
-                        print >>out, indent(i)+"dict.update("+f[xx]+")"
-                print >>out, indent(i)+"self.__field_%s=%s(**dict)" % (f[1],f[3])
+                self.makefield(out, i, f)
                 print >>out, indent(i)+"self.__field_%s.readfrombuffer(buffer)" % (f[1],)
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
@@ -572,14 +579,7 @@ class codegen:
                 print >>out, indent(2)+"return self.__field_%s.getvalue()\n" % (f[1],)
                 # set
                 print >>out, indent()+"def __setfield_%s(self, value):" % (f[1],)
-                if f[2]!='P' and f[2]>=0:
-                    print >>out, indent(2)+"dict={'sizeinbytes': "+`f[2]`+"}"
-                else:
-                    print >>out, indent(2)+"dict={}"
-                for xx in 4,5:
-                    if f[xx] is not None:
-                        print >>out, indent(2)+"dict.update("+f[xx]+")"
-                print >>out, indent(2)+"self.__field_%s=%s(value, **dict)\n" % (f[1], f[3])
+                self.makefield(out, 2, f, "value,")
                 # del
                 print >>out, indent()+"def __delfield_%s(self): del self.__field_%s\n" % (f[1], f[1])
                 # Make it a property
@@ -604,6 +604,16 @@ class codegen:
         
 
         print >>out, "\n\n"
+
+    def makefield(self, out, indentamount, field, args="", dictname='dict'):
+        if field[2]!='P' and field[2]>=0:
+            print >>out, indent(indentamount)+dictname+"={'sizeinbytes': "+`field[2]`+"}" 
+        else:
+            print >>out, indent(indentamount)+"%s={}" % (dictname,)
+        for xx in 4,5:
+            if field[xx] is not None:
+                print >>out, indent(indentamount)+dictname+".update("+field[xx]+")"
+        print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dictname)
 
 
 if __name__=='__main__':
