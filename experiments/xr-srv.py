@@ -39,10 +39,8 @@ class AuthenticationChecker:
     def auth_failed(self):
         self.send_response(401, "Authentication required")
         self.send_header("WWW-Authenticate", "Basic realm="+self.realm)
-        self.send_header("Content-Length", "0")
         self.end_headers()
 
-        print xmlrpclib.dumps(xmlrpclib.Fault(1, "Authentication required"))
         return False
         
 
@@ -56,19 +54,17 @@ if sys.version>="2.3": # Python 2.3 - we also supply doc
         def do_POST(self):
             if not self.check_auth_headers():
                 return
+            #import pdb
+            #pdb.set_trace()
             DocXMLRPCServer.DocXMLRPCRequestHandler.do_POST(self)
 
         def do_GET(self):
-            print "doget"
-            if not self.check_auth_headers():
-                return
             DocXMLRPCServer.DocXMLRPCRequestHandler.do_GET(self)
 
         def finish(self):
-            print "my finish called"
             # do proper SSL shutdown sequence
-            #self.request.set_shutdown(SSL.SSL_RECEIVED_SHUTDOWN | SSL.SSL_SENT_SHUTDOWN)
-            #self.request.close()
+            self.request.set_shutdown(SSL.SSL_RECEIVED_SHUTDOWN | SSL.SSL_SENT_SHUTDOWN)
+            self.request.close()
 
 
     
@@ -82,10 +78,11 @@ if sys.version>="2.3": # Python 2.3 - we also supply doc
 
 else: # Python 2.2 - no doc
 
-    class SSLSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
+    class SSLSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler, AuthenticationChecker):
 
         def do_POST(self):
-            print self.headers
+            if not self.check_auth_headers():
+                return
             SimpleXMLRPCServer.SimpleXMLRPCRequestHandler.do_POST(self)
 
 
@@ -102,6 +99,7 @@ else: # Python 2.2 - no doc
             self.instance=None
             self.funcs={}
             SSL.SSLServer.__init__(self, addr, SSLSimpleXMLRPCRequestHandler, ssl_context)
+            
         def register_instance(self, instance):
             self.instance = instance
 

@@ -10,21 +10,16 @@ class MyTransport(SSL_Transport):
 
     def check_cert(self, handle):
         if  handle._conn.sock is None:
-            print "calling connect"
             handle._conn.connect()
             # only need to check here
-            handle._conn.sock.get_peer_cert()
+            print "would check cert here",handle._conn.sock.get_peer_cert()
 
     def request(self, host, handler, request_body, verbose=0):
         # Handle username and password.
         user_passwd, host_port = m2urllib.splituser(host)
         _host, _port = m2urllib.splitport(host_port)
-        if sys.version[0] == '2':
-            h = httpslib.HTTPS(_host, int(_port), ssl_context=self.ssl_ctx)
-        elif sys.version[:3] ==  '1.5':
-            h = httpslib.HTTPS(self.ssl_ctx, _host, int(_port))
-        else:
-            raise RuntimeError, 'unsupported Python version'
+        h = httpslib.HTTPS(_host, int(_port), ssl_context=self.ssl_ctx)
+
         if verbose:
             h.set_debuglevel(1)
 
@@ -39,6 +34,7 @@ class MyTransport(SSL_Transport):
 
         # required by XML-RPC
         h.putheader("User-Agent", self.user_agent)
+        h.putheader('Keep-Alive', '1')
         h.putheader("Content-Type", "text/xml")
         h.putheader("Content-Length", str(len(request_body)))
 
@@ -71,6 +67,6 @@ server=ServerProxy("https://username:password@localhost:1234", MyTransport())
 
 print server.add(1,2)
 
-print type(server.add(1,2))
-print dir(server)
+print server.add([1,2,3],[4,5,6])
+
 print server.add("one", "two")
