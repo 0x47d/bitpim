@@ -514,7 +514,7 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__ringtone_info)
         result['rebootphone']=1 # So we end up back in AT mode
-        r=m.save_media(result)
+        r=m.save_media(result, RingtoneIndex(self).get_download_info())
         self.setmode(self.MODEMODEM)
         return r
 
@@ -529,7 +529,7 @@ class Phone(com_samsung.Phone):
     def savewallpapers(self, result, merge):
         self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__wallpaper_info)
-        r=m.save_media(result)
+        r=m.save_media(result, ImageIndex(self).get_download_info())
         result['rebootphone']=1
         self.setmode(self.MODEMODEM)
         return r
@@ -640,67 +640,62 @@ class FileEntries:
                     media[file_key]=self.__phone.getfilecontents(file_name)
                 except:
                     self.__phone.log('Failed to read file '+file_name)
+        idx_k=max(media_index.keys())+1
+        media_index[idx_k]={ 'name': 'video0.avi', 'origin': 'video' }
+        media['video0.avi']=open('video0.avi', 'rb').read()
+        idx_k+=1
+        media_index[idx_k]={ 'name': 'video1.avi', 'origin': 'video' }
+        media['video1.avi']=open('video1.avi', 'rb').read()
         result[self.__file_type]=media
+        result[self.__index_type]=media_index
         return result
 
-    def save_media(self, result):
+    def save_media(self, result, dl_info):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
-        # get existing dir listing
-        try:
-            dir_l=self.__phone.getfilesystem(self.__path)
-        except com_brew.BrewNoSuchDirectoryException:
-            self.__phone.mkdirs(self.__path)
-            dir_l={}
         # check for files selected for deletion
-        path_len=len(self.__path)+1
-        for k in dir_l:
-            name=k[path_len:]
-            # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
-            found=False
-            for k1 in media:
-                if media[k1]['name']==name:
-                    found=True
-                    break
-            if not found:
-                self.__phone.log('Deleting file '+k)
-                try:
-                    self.__phone.rmfile(k)
-                except:
-                    self.__phone.log('Failed to rm file '+str(k))
-        # writing new/existing files
-        file_count=0
-        for k in media:
+        media_names=[media[k]['name'] for k in media]
+        dl_info_keys=dl_info.keys()
+        deleted_keys=[k for k in dl_info_keys if k not in media_names]
+        new_keys=[k for k in media if media[k]['name'] not in dl_info_keys]
+        # deleting files
+        for k in deleted_keys:
+            file_name=dl_info[k]
+            self.__phone.log('Deleting file: '+file_name)
             try:
-                origin=media[k].get('origin', None)
-                if origin is not None and origin != self.__origin:
-                    continue
-                if len(media[k]['name']) > self.__max_file_len:
-                    self.__phone.log('%s %s name is too long and will not be sent.'% \
-                                     (self.__file_type, media[k]['name']))
-                    continue
-                file_count+=1
-                if file_count>self.__max_file_count:
-                    # max # of files reached, bailing out
-                    self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
-                                        (self.__max_file_count, self.__file_type))
-                    break
-                name=self.__path+'/'+media[k]['name']
-                if name in dir_l:
-                    self.__phone.log('File '+name+' exists')
-                else:
-                    self.__phone.log('Writing file '+name)
-                    if self.__origin=='wallpapers':
-                        if __debug__:
-                            print 'FileEntries.save_media: optimizing png'
-                        # copy from Sanyo code
-                        self.__phone.writefile(name,
-                        conversions.convertto8bitpng_joe(media[k]['data']))
-                    else:
-                        self.__phone.writefile(name, media[k]['data'])
-                    media[k]['origin']=self.__origin
+                self.__phone.rmfile(file_name)
             except:
-                self.__phone.log('Failed to write file: '+media[k]['name'])
+                self.__phone.log('Failed to delete file: '+file_name)
+        # writing new files
+        file_count=0
+        for k in new_keys:
+            n=media[k]
+            origin=n.get('origin', None)
+            if origin is not None and origin != self.__origin:
+                continue
+            if len(n['name']) > self.__max_file_len:
+                self.__phone.log('%s %s name is too long and not sent to phone'% \
+                                 (self.__file_type, n['name']))
+                continue
+            file_count+=1
+            if file_count>self.__max_file_count:
+                # max # of files reached, bailing out
+                self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
+                                    (self.__max_file_count, self.__file_type))
+                break
+            file_name=self.__path+'/'+n['name']
+            if self.__origin=='wallpapers':
+                # try to optimize it if it's a png image file
+                file_contents=conversions.convertto8bitpng_joe(n['data'])
+            else:
+                file_contents=n['data']
+            self.__phone.log('Writing file: '+file_name)
+            try:
+                self.__phone.writefile(file_name, file_contents)
+            except:
+                self.__phone.log('Failed to write file: '+file_name)
+            media[k]['origin']=self.__origin
+
         return result
 
 class TodoList:

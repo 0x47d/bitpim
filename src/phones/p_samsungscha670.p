@@ -20,6 +20,7 @@ ringtone_file_path='brew/ringer'
 image_index_file_name='nvm/nvm/brew_image'
 image_file_path='brew/shared'
 cam_pix_file_path='digital_cam'
+mms_image_path='mms_image'
 
 # map all UINT fields to lsb version
 UINT=UINTlsb

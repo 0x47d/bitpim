@@ -20,6 +20,7 @@ import wx
 import wx.lib.colourselect
 
 # my modules
+import conversions
 import guiwidgets
 import brewcompressedimage
 import guihelper
@@ -111,7 +112,10 @@ class WallpaperView(guiwidgets.FileView):
             self.hoversize_percentage=120
         
     def OnListRequest(self, msg=None):
-        l=[self._data['wallpaper-index'][x]['name'] for x in self._data['wallpaper-index']]
+        # temporaty quick-fix to not include video items in the list!
+        l=[self._data['wallpaper-index'][x]['name'] \
+           for x in self._data['wallpaper-index']\
+               if self._data['wallpaper-index'][x].get('origin', None)!='video' ]
         l.sort()
         pubsub.publish(pubsub.ALL_WALLPAPERS, l)
 
@@ -266,11 +270,14 @@ class WallpaperView(guiwidgets.FileView):
         @return: (filename to use, function to call that returns wxImage)
         """
         file=os.path.join(self.mainwindow.wallpaperpath, file)
-
+        fi=self.GetFileInfo(file)
         if file.endswith(".mp4") or not os.path.isfile(file):
             return guihelper.getresourcefile('wallpaper.png'), wx.Image
         if self.isBCI(file):
             return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+        if fi is not None and fi.format=='AVI':
+            # return the 1st frame of the AVI file
+            return file, conversions.convertavitobmp
         return file, wx.Image
 
     def GetFileInfo(self, filename):

@@ -358,3 +358,37 @@ def trimwavdata(wavedatain, start, duration=None):
            wavedatain[8:subchunk2start]+\
            'data'+common.LSBstr32(new_size)+\
            wavedatain[newsubchunk2datastart:newsubchunk2datastart+new_size]
+
+def convertjpgtoavi(jpg_data, avi_file_name, fps=4, new_file=False):
+    bmp2avi=shortfilename(gethelperbinary('bmp2avi'))
+    if new_file:
+        # delete any existing file and start fresh
+        try:
+            os.remove(avi_file_name)
+        except:
+            pass
+    # convert the jpg data to bmp data
+    jpg_name=shortfilename(common.gettempfilename("jpg"))
+    bmp_name=shortfilename(common.gettempfilename("bmp"))
+    open(jpg_name, "wb").write(jpg_data)
+    wx.Image(jpg_name).SaveFile(bmp_name, wx.BITMAP_TYPE_BMP)
+    # add the bmp frame to the avi file
+    run(bmp2avi, '-f', `fps`, '-i', bmp_name, '-o', avi_file_name)
+    # del temp files
+    try:
+        os.remove(jpg_name)
+        os.remove(bmp_name)
+    except:
+        pass
+
+def convertavitobmp(avi_file_name, frame_num=0):
+    bmp2avi=shortfilename(gethelperbinary('bmp2avi'))
+    bmp_file_name=shortfilename(common.gettempfilename("bmp"))
+    run(bmp2avi, '-t', `frame_num`, '-i', shortfilename(avi_file_name),
+        '-o', bmp_file_name)
+    img=wx.Image(bmp_file_name)
+    try:
+        os.remove(bmp_file_name)
+    except:
+        pass
+    return img

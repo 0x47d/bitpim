@@ -17,6 +17,7 @@
 # lib modules
 import re
 import sha
+import time
 
 # my modules
 import common
@@ -24,6 +25,7 @@ import commport
 import com_brew
 import com_samsung
 import com_phone
+import conversions
 import fileinfo
 import p_samsungscha670
 import prototypes
@@ -90,11 +92,14 @@ class Phone(com_samsung.Phone):
 		       'User 18', 'User 19')
     allringtones={}
 
-    # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
+    # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'
     __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'mms_image', 19, 10)
+##    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
     __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 19, 40)
-        
+    __video0_info=('wallpapers', 'wallpaper-index', 'video', 'camcoder0', None, None)
+    __video1_info=('wallpapers', 'wallpaper-index', 'video', 'camcoder1', None, None)
+       
     def __init__(self, logtarget, commport):
 
         "Calls all the constructors and sets initial modes"
@@ -683,7 +688,7 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__ringtone_info)
         result['rebootphone']=1 # So we end up back in AT mode
-        r=m.save_media(result)
+        r=m.save_media(result, RingtoneIndex(self).get_download_info())
         self.setmode(self.MODEMODEM)
         return r
 
@@ -691,14 +696,16 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__wallpaper_info)
         img_info=ImageIndex(self).get_download_info()
-        r=m.get_media(result, img_info)
+        m.get_media(result, img_info)
+        FileEntries(self, self.__video0_info).get_video(result, 'Video001.avi')
+        r=FileEntries(self, self.__video1_info).get_video(result, 'Video002.avi')
         self.setmode(self.MODEMODEM)
         return r
 
     def savewallpapers(self, result, merge):
         self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__wallpaper_info)
-        r=m.save_media(result)
+        r=m.save_media(result, ImageIndex(self).get_download_info())
         result['rebootphone']=1
         self.setmode(self.MODEMODEM)
         return r
@@ -713,7 +720,8 @@ class Profile(com_samsung.Profile):
     WALLPAPER_HEIGHT=128
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
-    WALLPAPER_CONVERT_FORMAT="bmp"
+##    WALLPAPER_CONVERT_FORMAT="bmp"
+    WALLPAPER_CONVERT_FORMAT="jpg"
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
     RINGTONE_LIMITS= {
@@ -790,13 +798,20 @@ class FileEntries:
     def __get_media_by_index(self, result, rt_info):
         media=result.get(self.__file_type, {})
         media_index=result.get(self.__index_type, {})
+        mms_img_path=self.__phone.protocolclass.mms_image_path
+        mms_img_len=len(mms_img_path)
         for k, m in media_index.items():
             file_key=m.get('name', None)
             file_name=rt_info.get(file_key, None)
             if file_key is not None and file_name is not None:
                 try :
                     contents=self.__phone.getfilecontents(file_name)
-                    if m.get('origin', None)=='camera':
+                    img_origin=m.get('origin', None)
+                    if img_origin=='wallpapers':
+                        if file_name[:mms_img_len]==mms_img_path:
+                            # mms image file, skip the header
+                            contents=contents[52:]
+                    elif img_origin=='camera':
                         # Camera pix file, need to be touched up
                         # patch code to make it work right now, need to recode
                         m['date']=\
@@ -807,60 +822,134 @@ class FileEntries:
                     media[file_key]=contents
                 except:
                     self.__phone.log('Failed to read file '+file_name)
+                    if __debug__: raise
         result[self.__file_type]=media
         return result
 
-    def save_media(self, result):
+    def get_video(self, result, video_file_name):
+        self.__phone.log('Getting video file '+video_file_name)
+        media=result.get(self.__file_type, {})
+        idx=result.get(self.__index_type, {})
+        tmp_avi_name=common.gettempfilename("avi")
+        try:
+            file_list=self.__phone.getfilesystem(self.__path, 0)
+        except com_brew.BrewNoSuchDirectoryException:
+            file_list={}
+        except:
+            file_list={}
+            if __debug__: raise
+
+        if not len(file_list):
+            # empty directory
+            return result
+        file_keys=file_list.keys()
+        file_keys.sort();
+        for k in file_keys:
+            try:
+                conversions.convertjpgtoavi(self.__phone.getfilecontents(k)[96:],
+                                            tmp_avi_name)
+            except:
+                self.__phone.log('Failed to read video files')
+                if __debug__: raise
+        # got the avi file, now prep to send it back
+        if len(idx):
+            idx_k=max(idx.keys())+1
+        else:
+            idx_k=0
+        media[video_file_name]=open(tmp_avi_name, 'rb').read()
+        idx[idx_k]={ 'name': video_file_name, 'origin': 'video' }
+        result[self.__file_type]=media
+        result[self.__index_type]=idx
+        try:
+            os.remove(tmp_avi_name)
+        except:
+            pass
+        return result
+                
+    __mms_max_file_name_len=35
+    def __mms_header(self, img_name, img_type, img_data_len):
+        if len(img_name)>=self.__mms_max_file_name_len:
+            name=img_name[:self.__mms_max_file_name_len-1]
+        else:
+            name=img_name
+        return str('\x06'+str(name)+\
+                   '\x00'*(self.__mms_max_file_name_len-len(name))+\
+                   common.LSBstr32(img_data_len)+chr(img_type)+\
+                   '\x00'*11)
+    def __mms_file_name(self):
+        now = time.localtime(time.time())
+        return '%02d%02d%02d%02d%02d%02d'%((now[0]%2000,)+now[1:6])
+    def __to_mms_jpg(self, img_name, img_data_len):
+        return (self.__mms_file_name(),
+                self.__mms_header(img_name, 0, img_data_len))
+    def __to_mms_bmp(self, img_name, img_data_len):
+        return (self.__mms_file_name(),
+                self.__mms_header(img_name, 1, img_data_len))
+    def __to_mms_png(self, img_name, img_data_len):
+        return (self.__mms_file_name(),
+                self.__mms_header(img_name, 2, img_data_len))
+    def __to_mms_gif(self, img_name, img_data_len):
+        return (self.__mms_file_name(),
+                self.__mms_header(img_name, 3, img_data_len))
+       
+    def save_media(self, result, dl_info):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
-        # get existing dir listing
-        try:
-            dir_l=self.__phone.getfilesystem(self.__path)
-        except com_brew.BrewNoSuchDirectoryException:
-            self.__phone.mkdirs(self.__path)
-            dir_l={}
         # check for files selected for deletion
-        path_len=len(self.__path)+1
-        for k in dir_l:
-            name=k[path_len:]
-            # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
-            found=False
-            for k1 in media:
-                if media[k1]['name']==name:
-                    found=True
-                    break
-            if not found:
-                self.__phone.log('Deleting file '+k)
-                try:
-                    self.__phone.rmfile(k)
-                except:
-                    self.__phone.log('Failed to rm file '+str(k))
-        # writing new/existing files
-        file_count=0
-        for k in media:
+        media_names=[media[k]['name'] for k in media]
+        dl_info_keys=dl_info.keys()
+        deleted_keys=[k for k in dl_info_keys if k not in media_names]
+        new_keys=[k for k in media if media[k]['name'] not in dl_info_keys]
+##        print 'deleted keys: ', deleted_keys
+##        print 'new keys: ', new_keys
+##        for k in new_keys:
+##            print media[k]['name']
+##        return result
+
+        # deleting files
+        campix_file_path=self.__phone.protocolclass.cam_pix_file_path
+        campix_file_len=len(campix_file_path)
+        for k in deleted_keys:
+            file_name=dl_info[k]
+            if file_name[:campix_file_len]==campix_file_path:
+                # campera pix, do nothing
+                continue
+            self.__phone.log('Deleting file: '+file_name)
             try:
-                origin=media[k].get('origin', None)
-                if origin is not None and origin != self.__origin:
-                    continue
-                if len(media[k]['name']) > self.__max_file_len:
-                    self.__phone.log('%s %s name is too long and will not be sent.'% \
-                                     (self.__file_type, media[k]['name']))
-                    continue
-                file_count+=1
-                if file_count>self.__max_file_count:
-                    # max # of files reached, bailing out
-                    self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
-                                        (self.__max_file_count, self.__file_type))
-                    break
-                name=self.__path+'/'+media[k]['name']
-                if name in dir_l:
-                    self.__phone.log('File '+name+' exists')
-                else:
-                    self.__phone.log('Writing file '+name)
-                    self.__phone.writefile(name, media[k]['data'])
-                    media[k]['origin']=self.__origin
+                self.__phone.rmfile(file_name)
             except:
-                self.__phone.log('Failed to write file: '+media[k]['name'])
+                self.__phone.log('Failed to delete file: '+file_name)
+        # writing new files
+        file_count=0
+        for k in new_keys:
+            n=media[k]
+            origin=n.get('origin', None)
+            if origin is not None and origin != self.__origin:
+                continue
+            if len(n['name']) > self.__max_file_len:
+                self.__phone.log('%s %s name is too long and not sent to phone'% \
+                                 (self.__file_type, n['name']))
+                continue
+            file_count+=1
+            if file_count>self.__max_file_count:
+                # max # of files reached, bailing out
+                self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
+                                    (self.__max_file_count, self.__file_type))
+                break
+            if self.__origin=='wallpapers':
+                mms_file_name, file_hdr=self.__to_mms_jpg(n['name'], len(n['data']))
+                file_name=self.__path+'/'+mms_file_name
+                file_contents=file_hdr+n['data']
+            else:
+                file_name=self.__path+'/'+n['name']
+                file_contents=n['data']
+            self.__phone.log('Writing file: '+file_name)
+            try:
+                self.__phone.writefile(file_name, file_contents)
+            except:
+                self.__phone.log('Failed to write file: '+file_name)
+            media[k]['origin']=self.__origin
+
         return result
 
 class RingtoneIndex:
@@ -931,11 +1020,19 @@ class ImageIndex:
                 self.__phone.protocolclass.image_index_file_name))
             img_idx.readfrombuffer(buf)
             l=len(self.__phone.protocolclass.image_file_path)+1
+            mms_img_path=self.__phone.protocolclass.mms_image_path
+            mms_img_len=len(mms_img_path)
             for i in range(self.__phone.protocolclass.max_image_entries):
                 e=img_idx.entry[i]
                 if e.name_len and e.file_name_len:
-                    r[i]={ 'name': e.file_name[l:e.file_name_len],
-                               'origin': 'wallpapers' }
+                    if e.file_name[:mms_img_len]==mms_img_path:
+                        # this is an mms_image file
+                        idx_name=e.name[:e.name_len]
+                    else:
+                        # other image files
+                        idx_name=e.file_name[l:e.file_name_len]
+                    r[i]={ 'name': idx_name,
+                           'origin': 'wallpapers' }
             # then read the camera pix image index ('Gallery')
             # starting index should be max_image_entries+1
             idx=self.__phone.protocolclass.max_image_entries+1
@@ -964,10 +1061,16 @@ class ImageIndex:
                 self.__phone.protocolclass.image_index_file_name))
             img_idx.readfrombuffer(buf)
             l=len(self.__phone.protocolclass.image_file_path)+1
+            mms_img_path=self.__phone.protocolclass.mms_image_path
+            mms_img_len=len(mms_img_path)
             for i in range(self.__phone.protocolclass.max_image_entries):
                 e=img_idx.entry[i]
                 if e.name_len and e.file_name_len:
-                    r[e.file_name[l:e.file_name_len]]=e.file_name[:e.file_name_len]
+                    if e.file_name[:mms_img_len]==mms_img_path:
+                        idx_name=e.name[:e.name_len]
+                    else:
+                        idx_name=e.file_name[l:e.file_name_len]
+                    r[idx_name]=e.file_name[:e.file_name_len]
             # then 'Gallery' entries
             try:
                 dir_l=self.__phone.getfilesystem(\

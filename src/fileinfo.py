@@ -282,6 +282,7 @@ def idimg_GIF(f):
     d['width']=f.GetLSBUint16(6)
     d['height']=f.GetLSBUint16(8)
     d['_shortdescription']=fmts_GIF
+    d['mimetypes']=['image/gif', 'image/x-gif']
     ofs=13
     i=f.GetByte(10)
     if (i&0x80):
@@ -314,7 +315,27 @@ def fmts_GIF(ifi):
     if ifi.bpp is not None:
         res.append( '%d BPP'%ifi.bpp)
     return ' '.join(res)
-    
+
+def idimg_AVI(f):
+    "identify an AVI file format"
+    if f.GetBytes(0, 4)!='RIFF' or f.GetBytes(8, 8)!='AVI LIST' or\
+       f.GetBytes(20, 8)!='hdrlavih':
+        # not an AVI file
+        return None
+    d={ 'format': 'AVI' }
+    d['duration']=float(f.GetLSBUint32(0x20))*f.GetLSBUint32(0x30)/1000000.0
+    d['width']=f.GetLSBUint32(0x40)
+    d['height']=f.GetLSBUint32(0x44)
+    d['_shortdescription']=fmts_AVI
+    d['mimetypes']=['video/avi', 'video/msvideo', 'video/x-msvideo',
+                    'video/quicktime' ]
+    return ImgFileInfo(f, **d)
+
+def fmts_AVI(ifi):
+    res=['%d x %d' % (ifi.width, ifi.height)]
+    res.append('%.1fs video'%ifi.duration)
+    return ' '.join(res)
+
 imageids=[globals()[f] for f in dir() if f.startswith("idimg_")]
 def identify_imagefile(filename):
     v=thefileinfocache.get(filename)
