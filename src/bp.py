@@ -10,7 +10,12 @@
 ###
 ### $Id$
 
+"""Main entry point to Bitpim
 
+It invokes BitPim in gui or commandline mode as appropriate
+
+@Note: Only gui mode is supported at the moment
+"""
 
 # only gui mode support at the moment
 
