@@ -60,8 +60,7 @@ PACKET pbentry:
     *  LIST {'length': self.numberofemails} +emails:
         73 STRING {'raiseonunterminatedread': False} email
     72 STRING {'raiseonunterminatedread': False} url
-    1  UINT ringtone                                     "ringtone index for a call"
-    1  UINT msgringtone                                  "ringtone index for a text message"
+    2  UINT ringtone                                     "ringtone index for a call"
     1  BOOL secret
     49 STRING {'raiseonunterminatedread': False} memo
     2  UINT wallpaper
