@@ -119,7 +119,7 @@ PACKET scheduleevent:
     1 UINT changeserial
     1 UINT snoozedelay   "in minutes"
     1 UINT ringtone
-    39 STRING description
+    39 STRING {'raiseonunterminatedread': False} description
 
 
 PACKET schedulefile:
