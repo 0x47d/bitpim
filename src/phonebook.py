@@ -85,6 +85,7 @@ import os
 import cStringIO
 import webbrowser
 import difflib
+import re
 
 # GUI
 import wx
@@ -228,6 +229,28 @@ def formatname(name):
         res+=" ("+name["nickname"]+")"
     return res
 
+def formatsimplename(name):
+    # like formatname, except we use the first matching component
+    if len(name.get("full", "")):
+        return name.get("full")
+    f=name.get("first", "")
+    m=name.get("middle", "")
+    l=name.get("last", "")
+    if len(f) or len(m) or len(l):
+        res=""
+        if len(f):
+            res+=f
+        if len(m):
+            if len(res) and res[-1]!=" ":
+                res+=" "
+            res+=m
+        if len(l):
+            if len(res) and res[-1]!=" ":
+                res+=" "
+            res+=l
+        return res
+    return name['nickname']
+        
 
 ###
 ### We use a table for speed
@@ -366,23 +389,6 @@ class PhoneWidget(wx.Panel):
     def clear(self):
         self._data={}
         self.dt.OnDataUpdated()
-
-
-    def populatefs(self, dict):
-        self.thedir=self.mainwindow.phonebookpath
-        try:
-            os.makedirs(self.thedir)
-        except:
-            pass
-        if not os.path.isdir(self.thedir):
-            raise Exception("Bad directory for phonebook '"+self.thedir+"'")
-        for f in os.listdir(self.thedir):
-            # delete them all!
-            os.remove(os.path.join(self.thedir, f))
-        d={}
-        d['phonebook']=dict['phonebook']
-        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
-        return dict
 
     def getfromfs(self, dict):
         self.thedir=self.mainwindow.phonebookpath
@@ -786,6 +792,9 @@ class ImportDialog(wx.Dialog):
             self.importpreview=None
                         
 
+def dictintersection(one,two):
+    return filter(two.has_key, one.keys())
+
 class EntryMatcher:
     "Implements matching phonebook entries"
 
@@ -793,33 +802,130 @@ class EntryMatcher:
         self.sources=sources
         self.against=against
 
-        self.procsources={}
-        self.procagainst={}
-
-
     def bestmatches(self, sourceid, limit=5):
         """Gives best matches out of against list
 
         @return: list of tuples of (percent match, againstid)
         """
-        if self.procsources.get(sourceid, None) is None:
-            self.procsources[sourceid]=common.prettyprintdict(self.sources[sourceid])
 
         res=[]
-        sm=difflib.SequenceMatcher()
-        sm.set_seq2(self.procsources[sourceid])
 
+        source=self.sources[sourceid]
         for i in self.against:
-            a=self.procagainst.get(i, None)
-            if a is None:
-                a=common.prettyprintdict(self.against[i])
-                self.procagainst[i]=a
-            sm.set_seq1(a)
-            res.append( (int(sm.ratio()*100), i) )
+            against=self.against[i]
+
+            # now get keys source and against have in common
+            intersect=dictintersection(source,against)
+
+            # overall score for this match
+            score=0
+            count=0
+            for key in intersect:
+                s=source[key]
+                a=against[key]
+                count+=1
+                if key=="names":
+                    score+=comparenames(s,a)
+                elif key=="numbers":
+                    score+=comparenumbers(s,a)
+                elif key=="urls":
+                    score+=comparefields(s,a,"url")
+                elif key=="emails":
+                    score+=comparefields(s,a,"email")
+                elif key=="urls":
+                    score+=comparefields(s,a,"url")
+                elif key=="addresses":
+                    score+=compareallfields(s,a, ("company", "street", "street2", "city", "state", "postalcode", "country"))
+                else:
+                    # ignore it
+                    count-=1
+                
+            res.append( ( int(score*100/count), i ) )
 
         res.sort()
         res.reverse()
         if len(res)>limit:
             return res[:limit]
         return res
-        
+
+def comparenames(s,a):
+    "Give a score on two names"
+    sm=difflib.SequenceMatcher()
+    sm.set_seq1(formatsimplename(s[0]))
+    sm.set_seq2(formatsimplename(a[0]))
+                    
+    r=(sm.ratio()-0.6)*10
+    return r
+
+
+nondigits=re.compile("[^0-9]")
+def cleannumber(num):
+    "Returns num (a phone number) with all non-digits removed"
+    return re.sub(nondigits, "", num)
+
+def comparenumbers(s,a):
+    """Give a score on two numbers
+
+    """
+
+    sm=difflib.SequenceMatcher()
+    ss=[cleannumber(x['number']) for x in s]
+    aa=[cleannumber(x['number']) for x in a]
+
+    candidates=[]
+    for snum in ss:
+        sm.set_seq2(snum)
+        for anum in aa:
+            sm.set_seq1(anum)
+            candidates.append( (sm.ratio(), snum, anum) )
+
+    candidates.sort()
+    candidates.reverse()
+
+    if len(candidates)>3:
+        candidates=candidates[:3]
+
+    score=0
+    # we now have 3 best matches
+    for ratio,snum,anum in candidates:
+        if ratio>0.9:
+            score+=(ratio-0.9)*10
+
+    return score
+
+def comparefields(s,a,valuekey,threshold=0.8,lookat=3):
+    sm=difflib.SequenceMatcher()
+    ss=[x[valuekey] for x in s if x.has_key(valuekey)]
+    aa=[x[valuekey] for x in a if x.has_key(valuekey)]
+
+    candidates=[]
+    for sval in ss:
+        sm.set_seq2(sval)
+        for aval in aa:
+            sm.set_seq1(aval)
+            candidates.append( (sm.ratio(), sval, aval) )
+
+    candidates.sort()
+    candidates.reverse()
+
+    if len(candidates)>lookat:
+        candidates=candidates[:lookat]
+
+    score=0
+    # we now have 3 best matches
+    for ratio,sval,aval in candidates:
+        if ratio>threshold:
+            score+=(ratio-threshold)*10/(1-threshold)
+
+    return score
+    
+def compareallfields(s,a,fields,threshold=0.8,lookat=3):
+    args=[]
+    for d in s,a:
+        str=""
+        for f in fields:
+            if d.has_key(f):
+                str+=d[f]+"  "
+        args.append({'value': str})
+    args.extend( ['value', threshold, lookat] )
+    return comparefields(*args)
