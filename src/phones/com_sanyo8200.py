@@ -46,8 +46,6 @@ class Phone(com_sanyonewer.Phone):
                        'Foster Ky. Home', 'The Moment', 'Asian Jingle',
                        'Disco')
 
-    calendar_defaultringtone=4
-
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
