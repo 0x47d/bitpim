@@ -411,8 +411,8 @@ def statinfo(filename):
 
 class BPFSHandler(wx.FileSystemHandler):
 
-    CACHELOWWATER=20
-    CACHEHIGHWATER=40
+    CACHELOWWATER=80
+    CACHEHIGHWATER=100
 
     def __init__(self, wallpapermanager):
         wx.FileSystemHandler.__init__(self)
@@ -433,6 +433,7 @@ class BPFSHandler(wx.FileSystemHandler):
         "Add the item to the cache"
         # we also prune it down in size if necessary
         if len(self.cache)>=self.CACHEHIGHWATER:
+            print "BPFSHandler cache flush"
             # random replacement - almost as good as LRU ...
             while len(self.cache)>self.CACHELOWWATER:
                 del self.cache[random.choice(self.cache.keys())]
