@@ -1,4 +1,4 @@
-set USBDIR=c:\progra~1\libusb-win32-0.1.7.10
+set USBDIR=c:\progra~1\libusb-win32-0.1.8.0
 set SWIG="c:\program files\swig-1.3.20\swig.exe"
 set PYTHONDIR=c:\python23
 set PYTHONLIB=python23
