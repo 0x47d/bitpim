@@ -55,7 +55,6 @@ addresses:
 wallpapers:
 
   - wallpaper   Name of wallpaper
-  - index       Index number of the wallpaper (fill out one of these two, not both)
   - use         see ringtones.use
 
 flags:
@@ -489,6 +488,15 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSizeColumns()
 
+    def Sort(self, bycol, descending):
+        l=[ (getdata(self.columns[bycol], self.main._data[key]), key) for key in self.rowkeys]
+        l.sort()
+        if descending:
+            l.reverse()
+        self.rowkeys=[key for val,key in l]
+        msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        self.GetView().ProcessTableMessage(msg)
+
     def IsEmptyCell(self, row, col):
         return False
 
@@ -559,6 +567,60 @@ class PhoneWidget(wx.Panel):
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
         pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnCategoriesUpdate")
+        # we draw the column headers
+        # code based on original implementation by Paul Mcnett
+        wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
+        wx.grid.EVT_GRID_LABEL_LEFT_CLICK(self.table, self.OnGridLabelLeftClick)
+        wx.grid.EVT_GRID_LABEL_LEFT_DCLICK(self.table, self.OnGridLabelLeftClick)
+        self.sortedColumn=0
+        self.sortedColumnDescending=False
+        self.dt.Sort(self.sortedColumn, self.sortedColumnDescending)
+
+    def OnColumnHeaderPaint(self, evt):
+        w = self.table.GetGridColLabelWindow()
+        dc = wx.PaintDC(w)
+        font = dc.GetFont()
+        dc.SetTextForeground(wx.BLACK)
+        
+        # For each column, draw it's rectangle, it's column name,
+        # and it's sort indicator, if appropriate:
+        totColSize = -self.table.GetViewStart()[0]*self.table.GetScrollPixelsPerUnit()[0]
+        for col in range(self.table.GetNumberCols()):
+            dc.SetBrush(wx.Brush("WHEAT", wx.TRANSPARENT))
+            colSize = self.table.GetColSize(col)
+            rect = (totColSize,0,colSize,32)
+            dc.DrawRectangle(rect[0] - (col!=0 and 1 or 0), rect[1], rect[2] + (col!=0 and 1 or 0), rect[3])
+            totColSize += colSize
+            
+            if col == self.sortedColumn:
+                font.SetWeight(wx.BOLD)
+                # draw a triangle, pointed up or down, at the
+                # top left of the column.
+                left = rect[0] + 3
+                top = rect[1] + 3
+                
+                dc.SetBrush(wx.Brush("WHEAT", wx.SOLID))
+                if self.sortedColumnDescending:
+                    dc.DrawPolygon([(left,top), (left+6,top), (left+3,top+4)])
+                else:
+                    dc.DrawPolygon([(left+3,top), (left+6, top+4), (left, top+4)])
+            else:
+                font.SetWeight(wx.NORMAL)
+
+            dc.SetFont(font)
+            dc.DrawLabel("%s" % self.table.GetTable().columns[col],
+                     rect, wx.ALIGN_CENTER | wx.ALIGN_TOP)
+
+
+    def OnGridLabelLeftClick(self, evt):
+        col=evt.GetCol()
+        if col==self.sortedColumn:
+            self.sortedColumnDescending=not self.sortedColumnDescending
+        else:
+            self.sortedColumn=col
+            self.sortedColumnDescending=False
+        self.dt.Sort(self.sortedColumn, self.sortedColumnDescending)
+        self.table.Refresh()
 
 
     def SetColumns(self, columns):
