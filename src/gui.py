@@ -440,7 +440,7 @@ class MainWindow(wxFrame):
             for i in range(0, self.nb.GetPageCount()):
                 if self.nb.GetPageText(i)==logtitle:
                     self.filesystemwidget=FileSystemView(self, self.nb)
-                    self.nb.InsertPage(i, self.filesystemwidget, fstitle)
+                    self.nb.InsertPage(i, self.filesystemwidget, fstitle, True)
                     return
             print "ooops"
             return
@@ -1130,7 +1130,7 @@ def dirname(str):
 
 def HasFullyFunctionalListView():
     # can the list view be switched between icon view and report views
-    if IsWindows():
+    if IsMSWindows():
         return True
     return False
 

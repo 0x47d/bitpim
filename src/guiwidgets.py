@@ -851,7 +851,7 @@ class RingerView(FileView):
 class WallpaperView(FileView):
     def __init__(self, mainwindow, parent, id=-1):
         FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL)
-        if not gui.HasFullFunctionalListView():
+        if not gui.HasFullyFunctionalListView():
             self.InsertColumn(2, "Size")
             self.InsertColumn(3, "Index")
         self._data={}
@@ -912,7 +912,7 @@ class WallpaperView(FileView):
                 dlg.ShowModal()
                 il.Add(wxNullBitmap)
             self.InsertImageStringItem(count, item['name'], count)
-            if not gui.HasFullFunctionalListView():
+            if not gui.HasFullyFunctionalListView():
                 self.SetStringItem(count, 0, item['name'])
                 self.SetStringItem(count, 1, `len(item['data'])`)
                 self.SetStringItem(count, 2, "%d x %d" % (image.GetWidth(), image.GetHeight()))
