@@ -120,10 +120,13 @@ class FolderPage(wx.Panel):
         # an item was clicked on/selected
         self.__populate_each(self.__item_list.GetClientData(evt.GetInt()))
 
-    def __clear(self):
-        self.__item_list.Clear()
+    def __clear_info(self):
         self.__item_info.Clear()
         self.__item_text.Set(None)
+
+    def __clear(self):
+        self.__item_list.Clear()
+        self.__clear_info()
 
     def __populate(self):
         # populate new data
@@ -179,7 +182,7 @@ class FolderPage(wx.Panel):
             return
         k=self.__item_list.GetClientData(sel_idx)
         self.__item_list.Delete(sel_idx)
-        self.__clear()
+        self.__clear_info()
         del data[k]
 
 #-------------------------------------------------------------------------------
