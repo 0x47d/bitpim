@@ -129,6 +129,37 @@ class ViewSourceFrame(wx.Frame):
         stc.SetLexer(wx.stc.STC_LEX_HTML)
         stc.SetText(text)
         stc.Colourise(0,-1)
+
+
+###
+### Phonebook entry display (Derived from HTML)
+###
+
+class PhoneEntryDetailsView(HTMLWindow):
+
+    def __init__(self, parent, id, stylesfile, layoutfile):
+        HTMLWindow.__init__(self, parent, id)
+        self.stylesfile=guihelper.getresourcefile("styles.xy")
+        self.stylesfilestat=None
+        self.pblayoutfile=guihelper.getresourcefile("pblayout.xy")
+        self.pblayoutfilestat=None
+        self.xcp=None
+        self.xcpstyles=None
+
+    def ShowEntry(self, entry):
+        if self.xcp is None or self.pblayoutfilestat!=os.stat(self.pblayoutfile):
+            f=open(self.pblayoutfile, "rt")
+            template=f.read()
+            f.close()
+            self.pblayoutfilestat=os.stat(self.pblayoutfile)
+            self.xcp=xyaptu.xcopier(None)
+            self.xcp.setupxcopy(template)
+        if self.xcpstyles is None or self.stylesfilestat!=os.stat(self.stylesfile):
+            self.xcpstyles={}
+            execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
+            self.stylesfilestat=os.stat(self.stylesfile)
+        self.xcpstyles['entry']=entry
+        self.SetPage(self.xcp.xcopywithdns(self.xcpstyles))
         
 ###
 ### We use a table for speed
@@ -225,14 +256,9 @@ class PhoneWidget(wx.SplitterWindow):
         self.table.SetRowLabelSize(0)
         self.table.EnableEditing(False)
         self.table.SetMargins(1,0)
-        self.preview=HTMLWindow(self, -1) 
+        self.preview=PhoneEntryDetailsView(self, -1, "styles.xy", "pblayout.xy")
+        self.preview.ShowEntry({})
         self.SplitVertically(self.table, self.preview, -300)
-        self.stylesfile=guihelper.getresourcefile("styles.xy")
-        self.stylesfilestat=None
-        self.pblayoutfile=guihelper.getresourcefile("pblayout.xy")
-        self.pblayoutfilestat=None
-        self.xcp=None
-        self.xcpstyles=None
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
 
@@ -249,19 +275,7 @@ class PhoneWidget(wx.SplitterWindow):
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
     def SetPreview(self, entry):
-        if self.xcp is None or self.pblayoutfilestat!=os.stat(self.pblayoutfile):
-            f=open(self.pblayoutfile, "rt")
-            template=f.read()
-            f.close()
-            self.pblayoutfilestat=os.stat(self.pblayoutfile)
-            self.xcp=xyaptu.xcopier(None)
-            self.xcp.setupxcopy(template)
-        if self.xcpstyles is None or self.stylesfilestat!=os.stat(self.stylesfile):
-            self.xcpstyles={}
-            execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
-            self.stylesfilestat=os.stat(self.stylesfile)
-        self.xcpstyles['entry']=entry
-        self.preview.SetPage(self.xcp.xcopywithdns(self.xcpstyles))
+        self.preview.ShowEntry(entry)
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
