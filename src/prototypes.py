@@ -27,7 +27,7 @@ examine the code for UINTlsb in this file.  Of note:
     you are read or written from a buffer
   - (optionally) define a getvalue() method that returns
     a better type.  For example if your class is integer
-    like then this would return a real int.  If string link,
+    like then this would return a real int.  If string like,
     then this will return a real string.
   - If you are a container, override iscontainer.  You will
     also need to provide a containerelements() method which
