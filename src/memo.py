@@ -113,6 +113,8 @@ class MemoEntry(object):
                 return n.get('data', '')
         return ''
     def __set_text(self, v):
+        if v is None:
+            v=''
         if not len(self.subject):
             self.subject=v[:self.__body_subject_len]+'...'
         b=self.__data.get('body', [])
@@ -252,14 +254,14 @@ class MemoWidget(wx.Panel):
         # horizontal sizer for the listbox and tabs
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the list box
-        self.__item_list=wx.ListBox(self, wx.NewId(), size=(300,-1),
+        self.__item_list=wx.ListBox(self, wx.NewId(),
                                     style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
         hbs.Add(self.__item_list, 1, wx.EXPAND|wx.BOTTOM, border=5)
         # the detailed info pane
         vbs1=wx.BoxSizer(wx.VERTICAL)
         self.__items=(
             (GeneralEditor, 0),
-            (cal_editor.CategoryEditor, 0),
+            (cal_editor.CategoryEditor, 1),
             (pb_editor.MemoEditor, 1)
             )
         self.__w=[]
@@ -267,7 +269,7 @@ class MemoWidget(wx.Panel):
             w=n[0](self, -1)
             vbs1.Add(w, n[1], wx.EXPAND|wx.ALL, 5)
             self.__w.append(w)
-        hbs.Add(vbs1, 2, wx.EXPAND|wx.ALL, border=5)
+        hbs.Add(vbs1, 3, wx.EXPAND|wx.ALL, border=5)
         self.__general_editor_w=self.__w[0]
         self.__cat_editor_w=self.__w[1]
         self.__memo_editor_w=self.__w[2]
@@ -367,6 +369,7 @@ class MemoWidget(wx.Panel):
         m.subject='New Memo'
         self.__data[m.id]=m
         self.__populate()
+        self.__save_to_db(self.__data)
         self.__item_list.Select(self.__data_map[m.id])
         self.__populate_each(m.id)
 
