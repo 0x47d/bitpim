@@ -639,6 +639,9 @@ class LIST(BaseProtogenClass):
 
     def _makeitem(self, *args, **kwargs):
         "Creates a child element"
+        # if already of the type, then return it
+        if len(args)==1 and isinstance(args[0], self._elementclass):
+            return args[0]
         d={}
         d.update(self._elementinitkwargs)
         d.update(kwargs)
@@ -653,6 +656,70 @@ class LIST(BaseProtogenClass):
             return
         if self._length is not None and self._raiseonbadlength and len(self._thelist)!=self._length:
             raise ValueLengthException(len(self), self._length)
+
+# Strictly speaking, this should be in one of the LG files
+class LGCALDATE(UINTlsb):
+    def __init__(self, *args, **kwargs):
+        """A date/time as used in the LG calendar"""
+        super(LGCALDATE,self).__init__(*args, **kwargs)
+        self._valuedate=(0,0,0,0,0)  # year month day hour minute
+
+        dict={'sizeinbytes': 4}
+        dict.update(kwargs)
+
+        if self._ismostderived(LGCALDATE):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._converttoint(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(self._converttoint(args[0]),)
+        else:
+            raise TypeError("expected (year,month,day,hour,minute) as arg")
+
+        super(LGCALDATE,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(LGCALDATE,kwargs)
+        assert self._sizeinbytes==4
+
+    def getvalue(self):
+        """Unpack 32 bit value into date/time
+
+        @rtype: tuple
+        @return: (year, month, day, hour, minute)
+        """
+        val=super(LGCALDATE,self).getvalue()
+        min=val&0x3f # 6 bits
+        val>>=6
+        hour=val&0x1f # 5 bits (uses 24 hour clock)
+        val>>=5
+        day=val&0x1f # 5 bits
+        val>>=5
+        month=val&0xf # 4 bits
+        val>>=4
+        year=val&0xfff # 12 bits
+        return (year, month, day, hour, min)
+
+    def _converttoint(self, date):
+        assert len(date)==5
+        year,month,day,hour,min=date
+        if year>4095:
+            year=4095
+        val=year
+        val<<=4
+        val|=month
+        val<<=5
+        val|=day
+        val<<=5
+        val|=hour
+        val<<=6
+        val|=min
+        return val
+
+            
 
 
 class buffer:
