@@ -202,7 +202,7 @@ class CommConnection:
             self.read(b,0)
 
         fullline="AT"+atcommand
-        self.write(fullline+"\r\n")
+        self.write(str(fullline+"\r\n"))
         # Cache response
         self.readatresponse()
 
