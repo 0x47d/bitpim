@@ -104,6 +104,19 @@ class Table:
         elif t=='binary':
             v=v.split(',')
             return self.obj.makebinarystring(int(v[0]), int(v[1]))
+        elif t=='strings':
+            res=[]
+            pos=0
+            while pos<len(v):
+                ll=0
+                while v[pos]>='0' and v[pos]<='9':
+                    ll=ll*10+int(v[pos])
+                    pos+=1
+                assert v[pos]==':'
+                pos+=1
+                res.append(v[pos:pos+ll])
+                pos+=ll
+            return res
         print "Dunno how to handle key %s type %s value %s" % (key,t,v)
         return "%s:%s" % (t,v)
 
