@@ -15,9 +15,114 @@ import time
 import apsw
 
 if __debug__:
-    TRACE=True
+    # Change this to True to see what is going on under the hood.  It
+    # will produce a lot of output!
+    TRACE=False
 else:
     TRACE=False
+
+
+
+class basedataobject(dict):
+    """A base object derived from dict that is used for various
+    records.  Existing code can just continue to treat it as a dict.
+    New code can treat it as dict, as well as access via attribute
+    names (ie object["foo"] or object.foo).  attribute name access
+    will always give a result includes None if the name is not in
+    the dict.
+
+    As a bonus this class includes checking of attribute names and
+    types in non-production runs.  That will help catch typos etc.
+    For production runs we may be receiving data that was written out
+    by a newer version of BitPim so we don't check or error."""
+    # which properties we know about
+    _knownproperties=['foo']
+    # which ones we know about that should be a list of dicts
+    _knownlistproperties={'serials': ['sourcetype', 'id', '*'], 'bar': ['bam']}
+
+    if __debug__:
+        # in debug code we check key name and value types
+
+        def __check_property(self,name,value=None):
+            assert isinstance(name, (str, unicode)), "keys must be a string type"
+            assert name in self._knownproperties or name in self._knownlistproperties, "unknown property name"
+            if value is None: return
+            if name in getattr(self, "_knownlistproperties"):
+                assert isinstance(value, list), "list properties must be given a list as value"
+                # each list member must be a dict
+                for v in value:
+                    assert isinstance(v, dict), "each item in a list property must be a dict"
+                return
+            # the value must be a basetype supported by apsw/SQLite
+            assert isinstance(value, (str, unicode, buffer, int, long)), "only serializable types supported for values"
+                
+        def update(self, items):
+            assert isinstance(items, dict), "update only supports dicts" # Feel free to fix this code ...
+            for k in items:
+                self.__check_property(self, k, items[k])
+            super(basedataobject,self).update(items)
+
+        def __setitem__(self, name, value):
+            self.__check_property(name, value)
+            super(basedataobject,self).__setitem__(name, value)
+
+        def __setattr__(self, name, value):
+            # note that we map setattr to update the dict
+            self.__check_property(name, value)
+            self.__setitem__(name, value)
+
+        def __getattr__(self, name):
+            self.__check_property(name)
+            if name in self.keys():
+                return self[name]
+            return None
+
+        def __delattr__(self, name):
+            self.__check_property(name)
+            if name in self.keys():
+                del self[name]
+
+    else:
+        # non-debug mode - we don't do any attribute name/value type
+        # checking as the data may (legitimately) be from a newer
+        # version of the program.
+        def __setattr__(self, name, value):
+            # note that we map setattr to update the dict
+            super(basedataobject,self).__setitem__(name, value)
+
+        def __getattr__(self, name):
+            # and getattr checks the dict
+            if name in self.keys():
+                return self[name]
+            return None
+
+        def __delattr__(self, name):
+            if name in self.keys():
+                del self[name]
+
+# an example of how to use (needs to be corrected for the list types to include fields in contained dicts)
+#class calendarobject(basedataobject):
+#    _knownproperties=['repeat', 'orange']
+#    _knownlistproperties=['serials']
+#
+#class phonebookobject(basedataobject):
+#    _knownproperties=basedataobject._knownproperties+["last modified"]
+#    _knownlistproperties=basedataobject._knownlistproperties+["categories", "memos"]
+
+
+class dataobjectfactory:
+    "Called by the code to read in objects when it needs a new object container"
+    def __init__(self, dataobjectclass=basedataobject):
+        self.dataobjectclass=dataobjectclass
+
+    def newdataobject(self, values={}):
+        v=self.dataobjectclass()
+        if len(values):
+            v.update(values)
+        return v
+
+
+
 
 def ExclusiveWrapper(method):
     """Wrap a method so that it has an exclusive lock on the database
@@ -33,6 +138,7 @@ def ExclusiveWrapper(method):
         excounter=getattr(args[0], "excounter")
         excounter+=1
         setattr(args[0], "excounter", excounter)
+        setattr(args[0], "transactionwrite", False)
         if excounter==1:
             cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
         try:
@@ -47,11 +153,17 @@ def ExclusiveWrapper(method):
             excounter-=1
             setattr(args[0], "excounter", excounter)
             if excounter==0:
+                w=getattr(args[0], "transactionwrite")
                 if success:
-                    cursor.execute("END TRANSACTION")
+                    if w:
+                        cursor.execute("COMMIT TRANSACTION")
+                    else:
+                        cursor.execute("END TRANSACTION")
                 else:
-                    # somehow we need to detect if we were doing data changes
-                    cursor.execute("ROLLBACK")
+                    if w:
+                        cursor.execute("ROLLBACK TRANSACTION")
+                    else:
+                        cursor.execute("END TRANSACTION")
 
     return _transactionwrapper
 
@@ -71,7 +183,13 @@ class Database:
     def __init__(self, directory, filename):
         self.connection=apsw.Connection(os.path.join(directory, filename))
         self.cursor=self.connection.cursor()
-        self.excounter=0  # exclusive lock counter
+        # exclusive lock counter
+        self.excounter=0
+        # this should be set to true by any code that writes - it is
+        # used by the exclusivewrapper to tell if it should do a
+        # commit/rollback or just a plain end
+        self.transactionwrite=False
+        # a cache of the table schemas
         self._schemacache={}
         self.sql=self.cursor.execute
         self.sqlmany=self.cursor.executemany
@@ -117,7 +235,6 @@ class Database:
             return [name for colnum,name,type in res]
         return res
 
-
     def savemajordict(self, tablename, dict, timestamp=None):
         """This is the entrypoint for saving a first level dictionary
         such as the phonebook or calendar.
@@ -138,6 +255,7 @@ class Database:
         # make sure the table exists first
         if not self.doestableexist(tablename):
             # create table and include meta-fields
+            self.transactionwrite=True
             self.sql("create table %s (__rowid__ integer primary key, __timestamp__, __deleted__ integer, __uid__ varchar)" % (idquote(tablename),))
 
         # get the latest values for each guid ...
@@ -245,6 +363,7 @@ class Database:
             cmd.append(",".join(["?" for r in rk]))
             cmd.append(")")
             self.sql(" ".join(cmd), [timestamp]+[record[r] for r in rk])
+            self.transactionwrite=True
         
     def updateindirecttable(self, tablename, indirects):
         # this is mostly similar to savemajordict, except we only deal
@@ -255,6 +374,7 @@ class Database:
         if not self.doestableexist(tablename):
             # create table and include meta-fields
             self.sql("create table %s (__rowid__ integer primary key)" % (idquote(tablename),))
+            self.transactionwrite=True
         # get the list of keys from indirects
         datakeys=[]
         for i in indirects.keys():
@@ -311,6 +431,7 @@ class Database:
                     cmd.append(",".join(["?" for p in params]))
                     cmd.append("); select last_insert_rowid()")
                     found=self.sql(" ".join(cmd), params).next()[0]
+                    self.transactionwrite=True
                 res+=`found`+","
             indirects[r]=res
                         
@@ -388,7 +509,7 @@ class Database:
         dbtkeys=self.getcolumns(tablename)
         # clean out cache entry since we are about to invalidate it
         del self._schemacache[tablename]
-
+        self.transactionwrite=True
         cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
         for _,n,t in dbtkeys:
             if cmd[-1]!="(":
