@@ -272,6 +272,49 @@ def fmts_JPG(ifi):
         res.append("Unknown components "+`ifi.components`)
     return " ".join(res)
 
+def idimg_GIF(f):
+    "Identify a GIF image"
+    if f.GetBytes(0, 3)!='GIF':
+        # not a GIF image
+        return None
+    d={ 'format': 'GIF' }
+    d['version']=f.GetBytes(3, 3)
+    d['width']=f.GetLSBUint16(6)
+    d['height']=f.GetLSBUint16(8)
+    d['_shortdescription']=fmts_GIF
+    ofs=13
+    i=f.GetByte(10)
+    if (i&0x80):
+        # there's a global color table, skip it
+        bpp=(i&0x7)+1
+        d['bpp']=bpp
+        ofs+=3*(2**bpp)
+    # check for data block
+    i=f.GetByte(ofs)
+    if i!=0x2c:
+        # not an image data block
+        if d['version']=='89a' and i==0x21:
+            # extension block, just return what we have so far
+            return ImgFileInfo(f, **d)
+        else:
+            # unknown block, bail
+            return None
+    # get local data
+    d['width']=f.GetLSBUint16(ofs+5)
+    d['height']=f.GetLSBUint16(ofs+7)
+    i=f.GetByte(ofs+9)
+    if (i&0x80):
+        d['bpp']=(i&0xf)+1
+    return ImgFileInfo(f, **d)
+
+def fmts_GIF(ifi):
+    res=[]
+    res.append( "%d x %d" % (ifi.width, ifi.height) )
+    res.append( '%s%s'%(ifi.format, ifi.version))
+    if ifi.bpp is not None:
+        res.append( '%d BPP'%ifi.bpp)
+    return ' '.join(res)
+    
 imageids=[globals()[f] for f in dir() if f.startswith("idimg_")]
 def identify_imagefile(filename):
     v=thefileinfocache.get(filename)
