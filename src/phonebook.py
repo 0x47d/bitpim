@@ -82,38 +82,141 @@ serials:
 import os
 
 # GUI
-from wxPython.wx import *
-from wxPython.grid import *
+import wx
+import wx.grid
+import wx.html
 
 # My imports
 import gui
 import common
+import xyaptu
 
 ###
 ### New code
 ###
 
-class PhoneWidget(wxTextCtrl):
+class PhoneDataTable(wx.grid.PyGridTableBase):
+
+    def __init__(self, widget):
+        self.main=widget
+        self.rowkeys=self.main._data.keys()
+        self.rowkeys.sort()
+        wx.grid.PyGridTableBase.__init__(self)
+
+    def OnDataUpdated(self):
+        newkeys=self.main._data.keys()
+        newkeys.sort()
+        oldrows=self.rowkeys
+        self.rowkeys=newkeys
+        lo=len(oldrows)
+        ln=len(self.rowkeys)
+        if ln>lo:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, ln-lo)
+        elif lo>ln:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, lo-ln)
+        else:
+            msg=None
+        if msg is not None:
+            self.GetView().ProcessTableMessage(msg)
+        msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        self.GetView().AutoSizeColumns()
+
+
+    def IsEmptyCell(self, row, col):
+        return False
+
+    def GetNumberRows(self):
+        return len(self.rowkeys)
+
+    def GetNumberCols(self):
+        return 2
+
+    def formatname(self,name):
+        # Returns a string of the name in name.
+        # Since there can be many fields, we try to make sense of them
+        res=""
+        res+=name.get("full", "")
+        f=name.get("first", "")
+        m=name.get("middle", "")
+        l=name.get("last", "")
+        if len(f) or len(m) or len(l):
+            if len(res):
+                res+=" | "
+            # severe abuse of booleans
+            res+=f+(" "*bool(len(f)))
+            res+=m+(" "*bool(len(m)))
+            res+=l+(" "*bool(len(l)))
+        if name.has_key("nickname"):
+            res+=" ("+name["nickname"]+")"
+        return res
+
+    def GetValue(self, row, col):
+        entry=self.main._data[self.rowkeys[row]]
+        if col==0:
+            names=entry.get("names", [{'full': '<not set>'}])
+            name=names[0]
+            return self.formatname(name)
+        if col==1:
+            numbers=entry.get("numbers", [])
+            if len(numbers)==0:
+                return ""
+            number=numbers[0]
+            return number['type']+" : "+number['number']
+        assert False, "Bad column "+`col`
+    
+
+class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
     def __init__(self, mainwindow, parent, id=-1):
-        wxTextCtrl.__init__(self, parent, id, style=wxTE_RICH2|wxTE_MULTILINE|wxTE_PROCESS_TAB)
+        wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
         self.groupdict={}
-        EVT_IDLE(self, self.OnIdle)
+        self.modified=False
+        self.table=wx.grid.Grid(self, -1)
+        self.dt=PhoneDataTable(self)
+        # 1 is GridSelectRows.  The symbol pathologically refused to be defined
+        self.table.SetTable(self.dt, False, 1)
+        self.table.SetRowLabelSize(0)
+        self.table.EnableEditing(False)
+        self.table.SetMargins(1,0)
+        self.preview=wx.html.HtmlWindow(self, 1)
+        self.SplitVertically(self.table, self.preview, -300)
+        self.stylesfile=gui.getresourcefile("styles.xy")
+        self.stylesfilestat=None
+        self.pblayoutfile=gui.getresourcefile("pblayout.xy")
+        self.pblayoutfilestat=None
+        self.xcp=None
+        self.xcpstyles=None
+        wx.EVT_IDLE(self, self.OnIdle)
+        wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
 
     def OnIdle(self, _):
         "We save out changed data"
-        if self.IsModified():
-            try:
-                self._data=eval(self.GetValue())
-                self.DiscardEdits()
-            except:
-                return
+        if self.modified:
             print "Saving phonebook"
+            self.modified=False
             self.populatefs(self.getdata({}))
-            self.needswrite=False
+
+    def OnCellSelect(self, event):
+        row=event.GetRow()
+        self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
+
+    def SetPreview(self, entry):
+        if self.xcp is None or self.pblayoutfilestat!=os.stat(self.pblayoutfile):
+            f=open(self.pblayoutfile, "rt")
+            template=f.read()
+            f.close()
+            self.pblayoutfilestat=os.stat(self.pblayoutfile)
+            self.xcp=xyaptu.xcopier(None)
+            self.xcp.setupxcopy(template)
+        if self.xcpstyles is None or self.stylesfilestat!=os.stat(self.stylesfile):
+            self.xcpstyles={}
+            execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
+            self.stylesfilestat=os.stat(self.stylesfile)
+        self.xcpstyles['entry']=entry
+        self.preview.SetPage(self.xcp.xcopywithdns(self.xcpstyles))
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
@@ -134,13 +237,13 @@ class PhoneWidget(wxTextCtrl):
 
         # 1 to 2 etc
         if version==1:
-            wxMessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wxOK|wxICON_EXCLAMATION)
+            wx.MessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wx.OK|wx.ICON_EXCLAMATION)
             version=2
             dict['phonebook']={}
             
     def clear(self):
         self._data={}
-        self.Clear() # clear text widget
+        self.dt.OnDataUpdated()
 
 
     def populatefs(self, dict):
@@ -182,8 +285,7 @@ class PhoneWidget(wxTextCtrl):
         k.sort()
         self.clear()
         self._data=pb.copy()
-        txt=common.prettyprintdict(self._data)
-        self.AppendText(txt)
+        self.dt.OnDataUpdated()
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.phonebookpath
