@@ -518,17 +518,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         0x15: 'yearly'
         }
     
-    def getwallpapers(self, result):
-        return self.getmedia(self.imagelocations, result, 'wallpapers')
-
-    def getringtones(self, result):
-        return self.getmedia(self.ringtonelocations, result, 'ringtone')
-
-    def savewallpapers(self, results, merge):
-        return self.savemedia('wallpapers', 'wallpaper-index', self.imagelocations, results, merge, self.getwallpaperindices)
-
-    def saveringtones(self, results, merge):
-        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
 
     def _normaliseindices(self, d):
         "turn all negative keys into positive ones for index"
