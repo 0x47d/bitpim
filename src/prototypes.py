@@ -45,6 +45,18 @@ import cStringIO
 
 import common
 
+def unescape(d):
+    if d.find("\x7d")<0: return d
+    res=list(d)
+    try:
+        start=0
+        while True:
+            p=res.index("\x7d", start)
+            res[p:p+2]=chr(ord(res[p+1])^0x20)
+            start=p+1
+    except ValueError:
+        return "".join(res)
+
 class ProtogenException(Exception):
     """Base class for exceptions encountered with data marshalling"""
     def __init__(self, *args, **kwargs):
@@ -74,6 +86,11 @@ class ValueLengthException(ProtogenException):
     "The value is the wrong size (too big or too small)"
     def __init__(self, sz, space):
         ProtogenException.__init__(self, "The value (length %d) is the wrong size for space %d" % (sz,space))
+    
+class MissingQuotesException(ProtogenException):
+    "The value does not have quotes around it"
+    def __init__(self):
+        ProtogenException.__init__(self, "The value does not have the required quote characters around it")
     
 
 class BaseProtogenClass(object):
@@ -365,6 +382,170 @@ class STRING(BaseProtogenClass):
         self._bufferendoffset=buf.getcurrentoffset()
 
     def writetobuffer(self, buf):
+        if self._value is None:
+            raise ValueNotSetException()
+                
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if self._pascal:
+            l=len(self._value)
+            if self._terminator is not None:
+                l+=1
+            buf.appendbyte(l)
+        buf.appendbytes(self._value)
+        l=len(self._value)
+        if self._terminator is not None:
+            buf.appendbyte(self._terminator)
+            l+=1
+        if self._sizeinbytes is not None:
+            if l<self._sizeinbytes:
+                buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def packetsize(self):
+        if self._sizeinbytes is not None:
+            return self._sizeinbytes
+
+        if self._value is None:
+            raise ValueNotSetException()
+
+        l=len(self._value)
+        if self._terminator is not None:
+            l+=1
+
+        return l
+
+    def getvalue(self):
+        """Returns the string we are"""
+        if self._value is None:
+            raise ValueNotSetException()
+        return self._value
+
+class SAMSTRING(BaseProtogenClass):
+    """A text string enclosed in quotes, with a way to escape quotes that a supposed
+    to be part of the string.  Typical of Samsung phones."""
+    # Is there a better name for this than SAMSTRING?  Perhaps QUOTEDSTRING,
+    # ASCIISTRING, CSVSTRING...?
+    def __init__(self, *args, **kwargs):
+        """
+        A string value can be specified to this constructor, or in the value keyword arg.
+
+        @keyword constant: (Optional) A constant value.  All reads must have this value
+        @keyword terminator: (Default=,) The string terminator (or None).  If set there will
+             always be a terminator when writing.  The terminator is not returned when getting
+             the value.
+        @keyword quotechar: (Default=Double Quote) Quote character that surrounds string
+        @keyword readescape: (Default=True) Interpret PPP escape char (0x7d)
+        @keywors writeescape: (Default=False) Escape quotechar.  If false, drop quotechar in string.
+        @keyword maxsizeinbytes: (Optional) On writing, truncate strings longer than this (length is before
+                       any escaping and quoting
+        @keyword default: (Optional) Our default value
+        @keyword raiseonunterminatedread: (Default True) raise L{NotTerminatedException} if there is
+             no terminator on the value being read in.  terminator must also be set.
+        @keyword raiseontruncate: (Default True) raise L{ValueLengthException} if the supplied
+             value is too large to fit within sizeinbytes.
+        @keyword raiseonmissingquotes: (Default True) raise L{MissingQuotesException} if the string does
+             not have quote characters around it
+        @keyword value: (Optional) Value
+        """
+        super(SAMSTRING, self).__init__(*args, **kwargs)
+        
+        self._constant=None
+        self._terminator=ord(',')
+        self._quotechar=ord('"')
+        self._readescape=True
+        self._writeescape=False
+        self._maxsizeinbytes=None
+        self._default=None
+        self._raiseonunterminatedread=True
+        self._raiseontruncate=True
+        self._raiseonmissingquotes=True
+        self._value=None
+
+        if self._ismostderived(SAMSTRING):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(SAMSTRING,self)._update(args, kwargs)
+
+        self._consumekw(kwargs, ("constant", "terminator", "quotechar", "readescape",
+        "writeescape", "maxsizeinbytes", "default",
+        "raiseonunterminatedread", "value", "raiseontruncate","raiseonmissingquotes"))
+        self._complainaboutunusedargs(SAMSTRING,kwargs)
+
+        # Set our value if one was specified
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            self._value=common.forceascii(args[0])
+            if self._constant is not None and self._constant!=self._value:
+                raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+        if self._value is None and self._default is not None:
+            self._value=self._default
+
+        if self._value is not None:
+            self._value=str(self._value) # no unicode here!
+            if self._maxsizeinbytes is not None:
+                l=len(self._value)
+                if l>self._maxsizeinbytes:
+                    if self._raiseontruncate:
+                        raise ValueLengthException(l, self._sizeinbytes)
+                    
+                    self._value=self._value[:self._sizeinbytes]
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+
+        # First character better be a terminator
+        # Raise on, first char not quote, trailing quote never found, character after last quote
+        # not , or EOL.  Will need an option to not raise if initial quote not found
+
+        if self._terminator is None:
+            # read in entire rest of packet
+            # Ignore maxsizeinbytes
+            # Check for leading and trailing quotes later
+            self._value=getremainingbytes()
+        else:
+            # Possibly quoted string.  If first character is not a quote, read until
+            # terminator or end of line.  Exception will be thrown after reading if
+            # the string was not quoted and it was supposed to be.
+            self._value=chr(buf.getnextbyte())
+            inquotes=False
+            if self._quotechar is not None:
+                if self._value[0]==chr(self._quotechar):
+                    inquotes=True
+            while buf.hasmore():
+                self._value+=chr(buf.getnextbyte())
+                if inquotes:
+                    if self._value[-1]==chr(self._quotechar):
+                        inquotes=False
+                else:
+                    if self._value[-1]==chr(self._terminator):
+                        break
+            if self._value[-1]==self._terminator:
+                if self._raiseonunterminatedread:
+                    raise NotTerminatedException()
+            else:
+                self._value=self._value[:-1]
+
+        if self._quotechar is not None:
+            if self._value[0]==chr(self._quotechar) and self._value[-1]==chr(self._quotechar):
+                self._value=self._value[1:-1]
+            else:
+                raise MissingQuotesException()
+
+        if self._readescape:
+            self._value=unescape(self._value)
+            
+        if self._constant is not None and self._value!=self._constant:
+            raise ValueError("The value read was not the constant")
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        # Just copied from STRING, not working in SAMSTRING
         if self._value is None:
             raise ValueNotSetException()
                 
