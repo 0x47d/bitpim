@@ -628,6 +628,8 @@ class ConfigDialog(wx.Dialog):
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
+        # update the status bar
+        self.mw.SetPhoneModelStatus()
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to
@@ -1472,14 +1474,23 @@ class ExceptionDialog(wx.Dialog):
 ###
 
 class MyStatusBar(wx.StatusBar):
+    __total_panes=6
+    __version_index=0
+    __phone_model_index=1
+    __app_status_index=2
+    __gauge_index=3
+    __major_progress_index=4
+    __minor_progress_index=5
+    __help_str_index=5
+    __pane_width=[200, 150, 50, 180, -1, -4]
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
         self.sizechanged=False
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
-        self.SetFieldsCount(4)
-        self.SetStatusWidths( [200, 180, -1, -4] )
+        self.SetFieldsCount(self.__total_panes)
+        self.SetStatusWidths(self.__pane_width)
         self.Reposition()
 
     def OnSize(self,_):
@@ -1497,14 +1508,14 @@ class MyStatusBar(wx.StatusBar):
 
     def Reposition(self):
         self.sizeChanged = False
-        rect=self.GetFieldRect(1)
+        rect=self.GetFieldRect(self.__gauge_index)
         self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+4))
         self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
         self.gauge.SetValue(pos)
-        self.SetStatusText(desc,3)
+        self.SetStatusText(desc, self.__minor_progress_index)
 
     def progressmajor(self, pos, max, desc=""):
         self.progressminor(0,1)
@@ -1512,7 +1523,21 @@ class MyStatusBar(wx.StatusBar):
             str="%d/%d %s" % (pos+1, max, desc)
         else:
             str=desc
-        self.SetStatusText(str,2)
+        self.SetStatusText(str, self.__major_progress_index)
+
+    def GetHelpPane(self):
+        return self.__help_str_index
+    def set_app_status(self, str=''):
+        self.SetStatusText(str, self.__app_status_index)
+    def set_phone_model(self, str=''):
+        self.SetStatusText(str, self.__phone_model_index)
+    def set_versions(self, current, latest=''):
+        s='BitPim '+current
+        if len(latest):
+            s+='/Latest '+latest
+        else:
+            s+='/Latest <Unknown>'
+        self.SetStatusText(s, self.__version_index)
 
 ###
 ###  A MessageBox with a help button

@@ -202,8 +202,7 @@ class UpdateDialog(wx.Dialog):
 
 #-------------------------------------------------------------------------------
 def check_update(update_url=None, current_version=None,
-                 platform=None, flavor='',
-                 config=None):
+                 platform=None, flavor=''):
     # get info from current version
     if current_version is None:
         current_version=version.version
@@ -217,6 +216,7 @@ def check_update(update_url=None, current_version=None,
             platform='mac'
         else:
             raise ValueError, 'Invalid platform'
+    # todo: need to figure out how to do flavor, comment out for now
 ##    flavor=version.vendor
     # retrieve and parse update info
     print 'Checking update for BitPim ', current_version, ' running on ', \
@@ -231,16 +231,19 @@ def check_update(update_url=None, current_version=None,
             bp_update.get_update_info()
         else:
             bp_update.get_update_info(update_url)
+        dlg.Update(100)
     except:
         s='Failed to get BitPim update info.'
     dlg.Destroy()
     if s is None:
         s=bp_update.display_update_info(current_version, platform, flavor)
+        return bp_update.latest_version
     if s is not None:
         # error messages being return, display them
         dlg=wx.MessageDialog(None, s, 'BitPim Update', wx.OK|wx.ICON_ERROR)
         dlg.ShowModal()
         dlg.Destroy()
+        return ''
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -251,6 +254,7 @@ if __name__ == '__main__':
         sys.exit(0)
     app=wx.PySimpleApp()
     if len(sys.argv)==1:
-        check_update()
+        s=check_update()
     else:
-        check_update(*sys.argv[1:])
+        s=check_update(*sys.argv[1:])
+    print 'The latest version is: ', s

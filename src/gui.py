@@ -479,6 +479,7 @@ class MainWindow(wx.Frame):
 
         sb=guiwidgets.MyStatusBar(self)
         self.SetStatusBar(sb)
+        self.SetStatusBarPane(sb.GetHelpPane())
 
         ### Art
         # establish the custom art provider for custom icons
@@ -660,7 +661,9 @@ class MainWindow(wx.Frame):
             menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
             wx.Yield()
-
+        # update the the status bar info
+        self.SetPhoneModelStatus()
+        self.SetVersionsStatus()
         # now register for notebook changes
         wx.EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
 
@@ -759,8 +762,27 @@ class MainWindow(wx.Frame):
     def OnHelpTour(self, _=None):
         wx.GetApp().displayhelpid(helpids.ID_TOUR)
 
+    def DoCheckUpdate(self):
+        s=update.check_update()
+        # update our config with the latest version and date
+        self.config.Write('latest_version', s)
+        self.config.Write('last_update',
+                          time.strftime('%Y%d%m', time.localtime()))
+        # update the status bar
+        self.SetVersionsStatus()
+
     def OnCheckUpdate(self, _):
-        update.check_update(config=self.config)
+        self.DoCheckUpdate()
+
+    def SetPhoneModelStatus(self):
+        phone=self.config.Read('phonetype', 'None')
+        port=self.config.Read('lgvx4400port', 'None')
+        self.GetStatusBar().set_phone_model(phone+'/'+port)
+
+    def SetVersionsStatus(self):
+        current_v=version.version
+        latest_v=self.config.Read('latest_version')
+        self.GetStatusBar().set_versions(current_v, latest_v)
 
     def OnViewColumns(self, _):
         dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
@@ -1053,14 +1075,13 @@ class MainWindow(wx.Frame):
 
     # Busy handling
     def OnBusyStart(self):
-        self.SetStatusText("BUSY")
+        self.GetStatusBar().set_app_status("BUSY")
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
 
     def OnBusyEnd(self):
         wx.EndBusyCursor()
-        self.SetStatusText("Ready")
+        self.GetStatusBar().set_app_status("Ready")
         self.OnProgressMajor(0,1)
-
 
     # progress and logging
     def OnViewClearLogs(self, _):
