@@ -581,7 +581,7 @@ class ConfigDialog(wx.Dialog):
         self.mw.phonebookpath=self._fixup(os.path.join(path, "phonebook"))
         self.mw.calendarpath=self._fixup(os.path.join(path, "calendar"))
         self.mw.config.Write("path", path)
-        self.mw.commportsetting=self.commbox.GetValue()
+        self.mw.commportsetting=str(self.commbox.GetValue())
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
         if self.mw.wt is not None:
             self.mw.wt.clearcomm()
