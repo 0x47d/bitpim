@@ -1132,7 +1132,7 @@ class FileView(bpmedia.MediaDisplayer):
         # viewed tab in the notebook and send the files there
         target=self # fallback
         t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
-        if isinstance(t, FileView) or isinstance(t, FileViewNew):
+        if isinstance(t, FileView):
             # changing target in dragndrop
             target=t
         target.OnAddFiles(filenames)
