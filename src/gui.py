@@ -183,7 +183,7 @@ class MySplashScreen(wxSplashScreen):
         # how long are we going to be up for?
         time=config.ReadInt("splashscreentime", 3000)
         if time>0:
-            bmp=getbitmap("splashscreen")
+            bmp=guihelper.getbitmap("splashscreen")
             self.drawnameandnumber(bmp)
             wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
                                     time,
