@@ -95,10 +95,8 @@ class Phone:
 
         for func in ( '_setmode%sto%s' % (strmode, strdesiredmode),
                         '_setmode%s' % (strdesiredmode,)):
-            print "looking for",func
             if hasattr(self,func):
                 try:
-                    print "executing", func
                     res=getattr(self, func)()
                 except modeignoreerrortypes:
                     res=False
