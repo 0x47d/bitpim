@@ -538,8 +538,7 @@ class MainWindow(wxFrame):
                 self.OnExit()
         self.configdlg.updatevariables()
         
-        import com_lgvx4400
-        self.phoneprofile=com_lgvx4400.Profile()  # make this a property possibly
+        self.phoneprofile=self.phonemodule.Profile()  # make this a property possibly
 
         # draw everything now that we have a profile
         
@@ -1012,8 +1011,7 @@ class WorkerThread(WorkerThreadFramework):
                                             configparameters=comcfg)
                 
             try:
-                import com_lgvx4400
-                self.commphone=com_lgvx4400.Phone(self, comport)
+                self.commphone=self.dispatchto.phonemodule.Phone(self, comport)
             except:
                 comport.close()
                 raise

@@ -199,6 +199,8 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wxDialog):
+    phonemodels={ 'LG-VX4400': 'com_lgvx4400', 'LG-TM520': 'com_lgtm520',  'LG-VX10': 'com_lgtm520' }
+
     setme="<setme>"
     ID_DIRBROWSE=1
     ID_COMBROWSE=2
@@ -220,6 +222,10 @@ class ConfigDialog(wxDialog):
         gs.Add( self.commbox, 0, wxEXPAND)
         gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
 
+        gs.Add( wxStaticText(self, -1, "Phone Type"), 0, wxCENTER)
+        self.phonebox=wxComboBox(self, -1, style=wxCB_DROPDOWN|wxCB_READONLY|wxCB_SORT,choices=self.phonemodels.keys())
+        gs.Add( self.phonebox, 0, wxEXPAND)
+
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
         bs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 7)
@@ -231,7 +237,9 @@ class ConfigDialog(wxDialog):
         EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
         EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
         EVT_BUTTON(self, wxID_OK, self.OnOK)
-        
+
+        self.setdefaults()
+
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
@@ -285,6 +293,9 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(self.mw.config.Read("path", ""))
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
+        if len(self.mw.config.Read("phonetype")):
+            self.phonebox.SetValue(self.mw.config.Read("phonetype"))
+
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -303,6 +314,9 @@ class ConfigDialog(wxDialog):
         if self.commbox.GetValue()==self.setme:
             comm="auto"
             self.commbox.SetValue(comm)
+        print "pb=",self.phonebox.GetValue()
+        if self.phonebox.GetValue()=="":
+            self.phonebox.SetValue("LG-VX4400")
 
     def updatevariables(self):
         path=self.diskbox.GetValue()
@@ -324,6 +338,11 @@ class ConfigDialog(wxDialog):
         commparm['softwareflow']=self.mw.config.ReadInt('commsoftwareflow', False)
         commparm['baud']=self.mw.config.ReadInt('commbaud', 115200)
         self.mw.commparams=commparm
+        # phone model
+        self.mw.config.Write("phonetype", self.phonebox.GetValue())
+        self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
+        # ::TODO:: add/remove tabs depending on what phone supports
+                                       
         
 
     def _fixup(self, path):
@@ -360,7 +379,6 @@ class ConfigDialog(wxDialog):
 
     def ShowModal(self):
         self.setfromconfig()
-        self.setdefaults()
         ec=wxDialog.ShowModal(self)
         if ec==wxID_OK:
             self.updatevariables()

@@ -25,8 +25,11 @@ import prototypes
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
-
     desc="LG-TM520/VX10"
+
+    getcalendar=None
+    getwallpapers=None
+    getringtones=None
     
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
@@ -49,7 +52,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         pbook={}
         self.log("Reading number of phonebook entries")
         req=p_lgtm520.pbinitrequest()
-        res=self.sendpbcommand(req, p_lgvx4400.pbinitresponse)
+        res=self.sendpbcommand(req, p_lgtm520.pbinitresponse)
         numentries=res.numentries
         self.log("There are %d entries" % (numentries,))
         for i in range(0, numentries):
@@ -82,3 +85,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res['numbers']=[]
         for number in entry.numbers:
             res['numbers'].append({'number': number.number, 'type': 'home' })
+
+
+class Profile:
+    pass
