@@ -21,6 +21,7 @@ import time
 class CalendarCellAttributes:
     def __init__(self):
         # Set some defaults
+        self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(197,255,255), wxSOLID)
         self.labelfont=wxFont(20, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
@@ -28,13 +29,16 @@ class CalendarCellAttributes:
         self.timeforeground=wxNamedColour("ORCHID")
         self.entryfont=wxFont(15, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
-        self.miltime=True
+        self.miltime=False
 
     def isrightaligned(self):
         return self.labelalign==wxALIGN_RIGHT
 
     def ismiltime(self):
         return self.miltime
+
+    def setforcellbackground(self, dc):
+        dc.SetBackground(self.cellbackground)
 
     def setforlabel(self, dc, fontscale=1):
         self.setscaledfont(dc, self.labelfont, fontscale)
@@ -94,6 +98,11 @@ class CalendarCell(wxWindow):
         self.needsupdate=True
         self.Refresh(False)
 
+    def setattr(self, attr):
+        self.attr=attr
+        self.needsupdate=True
+        self.Refresh(False)
+
     def getdate(self):
         return (self.year, self.month, self.day)
 
@@ -111,6 +120,7 @@ class CalendarCell(wxWindow):
 
         mdc=wxMemoryDC()
         mdc.SelectObject(self.buffer)
+        self.attr.setforcellbackground(mdc)
         mdc.Clear()
         self.draw(mdc)
         mdc.SelectObject(wxNullBitmap)
@@ -209,7 +219,7 @@ class CalendarLabel(wxWindow):
         EVT_SIZE(self, self.OnSize)
         EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.setfont(wxFont(20, wxSWISS, wxNORMAL, wxBOLD ))
-        self.settextcolour(wxNamedColour("ORCHID"))
+        self.settextcolour(wxNamedColour("BLACK"))
         self.OnSize(None)
 
     def OnEraseBackground(self, _):
@@ -291,8 +301,14 @@ class CalendarLabel(wxWindow):
             if tw<h:
                 # it fits, so centre
                 dc.DrawRotatedText(month, w/2-th/2, y + h/2 + tw/2, 90)
-                
-
+            else:
+                 # it doesn't fit
+                 if row==0:
+                     # top one shows start of text
+                     dc.DrawRotatedText(month, w/2-th/2, y + h -5, 90)
+                 else:
+                     # show end of text at bottom
+                     dc.DrawRotatedText(month, w/2-th/2, y + 5 + tw, 90)
 
             # Loop around
             row=endrow+1
@@ -302,6 +318,11 @@ class Calendar(wxPanel):
     # All the horrible date code is an excellent case for metric time!
     ID_UP=1
     ID_DOWN=2
+
+    attrevenmonth=CalendarCellAttributes()
+    attroddmonth=CalendarCellAttributes()
+    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 219, 255), wxSOLID)
+    
     def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
         sizer=RowColSizer()
@@ -418,6 +439,10 @@ class Calendar(wxPanel):
 
     def updatecell(self, row, column, y, m, d):
         self.rows[row][column].setdate(y,m,d)
+        if m%2:
+            self.rows[row][column].setattr(self.attroddmonth)
+        else:
+            self.rows[row][column].setattr(self.attrevenmonth)
         # ::TODO:: get events for this day
         
 
