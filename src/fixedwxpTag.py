@@ -148,7 +148,7 @@ class wxpTagHandler(wx.html.HtmlWinTagHandler):
 
         className = tag.GetParam('CLASS')
         self.ctx.classObj = getattr(self.ctx.classMod, className)
-        if type(self.ctx.classObj) != types.ClassType:
+        if type(self.ctx.classObj) not in ( types.ClassType, types.TypeType):
             raise TypeError, "WXP tag attribute CLASS must name a class"
 
         # now look for width and height
