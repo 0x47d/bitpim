@@ -21,7 +21,7 @@ import cStringIO
 import wx
 import wx.html
 import wx.lib.mixins.listctrl
-
+import wx.lib.intctrl
 # my modules
 import common
 import helpids
@@ -295,10 +295,10 @@ class ConfigDialog(wx.Dialog):
                   }
 
     setme="<setme>"
-    ID_DIRBROWSE=1
-    ID_COMBROWSE=2
-    ID_RETRY=3
-    ID_BITFLING=4
+    ID_DIRBROWSE=wx.NewId()
+    ID_COMBROWSE=wx.NewId()
+    ID_RETRY=wx.NewId()
+    ID_BITFLING=wx.NewId()
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
         wx.Dialog.__init__(self, frame, id, title,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -308,34 +308,35 @@ class ConfigDialog(wx.Dialog):
         gs.AddGrowableCol(1)
 
         # where we store our files
-        gs.Add( wx.StaticText(self, -1, "Disk storage"), 0, wx.CENTER)
+        gs.Add( wx.StaticText(self, -1, "Disk storage"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.diskbox=wx.TextCtrl(self, -1, self.setme, size=wx.Size( 400, 10))
         gs.Add( self.diskbox, 0, wx.EXPAND)
         gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), 0, wx.EXPAND)
 
         # phone type
-        gs.Add( wx.StaticText(self, -1, "Phone Type"), 0, wx.CENTER)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), 0, wx.ALIGN_CENTER_VERTICAL)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, 0, wx.EXPAND|wx.CENTER)
+        gs.Add( self.phonebox, 0, wx.EXPAND)
         gs.Add( 1,1, 0, wx.EXPAND) # blank
 
         # com port
-        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.CENTER)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.commbox=wx.TextCtrl(self, -1, self.setme)
         gs.Add( self.commbox, 0, wx.EXPAND)
         gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), 0, wx.EXPAND)
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
-            gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.CENTER)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, -1, "Enabled")
-            gs.Add(self.bitflingenabled, 0, wx.CENTER)
-            gs.Add(1,1, 0, wx.EXPAND)
+            gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), 0, wx.EXPAND)
+            wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
         else:
-            self.bitflingenabled=False
+            self.bitflingenabled=None
 
         # crud at the bottom
         bs=wx.BoxSizer(wx.VERTICAL)
@@ -357,9 +358,6 @@ class ConfigDialog(wx.Dialog):
         self.SetAutoLayout(True)
         bs.Fit(self)
 
-        # Retrieve saved settings... Use 40% of screen if not specified
-        confDlgRect=retrieve_size(self.mw.config, "ConfigDialog", screenpct=75, aspect=3.5)
-        self.SetDimensions(confDlgRect.x, confDlgRect.y, confDlgRect.width, confDlgRect.height)
         wx.EVT_CLOSE(self, self.OnClose)
 
     def OnCancel(self, _):
@@ -412,8 +410,13 @@ class ConfigDialog(wx.Dialog):
         if res==wx.ID_OK:
             self.commbox.SetValue(v)
 
+    def OnBitFlingSettings(self, _):
+        dlg=BitFlingSettingsDialog(self, self.mw.config)
+        if dlg.ShowModal()==wx.ID_OK:
+            dlg.SaveSettings(self.mw.config)
+        dlg.Destroy()
+
     def OnClose(self, evt):
-        self.saveSize()
         # Don't destroy the dialong, just put it away...
         self.EndModal(wx.ID_CANCEL)
 
@@ -656,6 +659,52 @@ class CommPortDialog(wx.Dialog):
 
     def saveSize(self):
         save_size(self.parent.mw.config, "CommDialog", self.GetRect())
+
+###
+###  BitFling settings dialog
+###
+
+class BitFlingSettingsDialog(wx.Dialog):
+
+    ID_USERNAME=wx.NewId()
+    ID_PASSWORD=wx.NewId()
+    ID_HOST=wx.NewId()
+    ID_PORT=wx.NewId()
+    ID_TEST=wx.NewId()
+    passwordsentinel="\x01\x02\x03\x04\x05\x06\x07\x08"
+
+    def __init__(self, parent, config):
+        wx.Dialog.__init__(self, parent, -1, "Edit BitFling settings", style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.config=config
+        gs=wx.FlexGridSizer(1, 2, 5, 5)
+        gs.AddGrowableCol(1)
+        gs.AddMany([
+            (wx.StaticText(self, -1, "Username"), 0, wx.ALIGN_CENTER_VERTICAL),
+            (wx.TextCtrl(self, self.ID_USERNAME), 1, wx.EXPAND),
+            (wx.StaticText(self, -1, "Password"), 0, wx.ALIGN_CENTER_VERTICAL),
+            (wx.TextCtrl(self, self.ID_PASSWORD), 1, wx.EXPAND),
+            (wx.StaticText(self, -1, "Host"), 0, wx.ALIGN_CENTER_VERTICAL),
+            (wx.TextCtrl(self, self.ID_HOST), 1, wx.EXPAND),
+            (wx.StaticText(self, -1, "Port"), 0, wx.ALIGN_CENTER_VERTICAL),
+            (wx.lib.intctrl.IntCtrl(self, self.ID_PORT, value=12652, min=1, max=65535), 0)
+            ])
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(gs, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(1,1, 1, wx.EXPAND)
+        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+
+        gs=wx.GridSizer(1,4, 5,5)
+        gs.Add(wx.Button(self, wx.ID_OK, "OK"))
+        gs.Add(wx.Button(self, self.ID_TEST, "Test"))
+        gs.Add(wx.Button(self, wx.ID_HELP, "Help"))
+        gs.Add(wx.Button(self, wx.ID_CANCEL, "Cancel"))
+        vbs.Add(gs, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+    def SaveSettings(self, config):
+        "Copy settings from dialog fields into config object"
+        pass
 
 ###
 ### File viewer
