@@ -21,6 +21,7 @@ REQUEST_CATEGORIES=( 'request', 'categories' )
 ALL_CATEGORIES=( 'response', 'categories') # data is list of strings
 SET_CATEGORIES=( 'request', 'setcategories') # data is list of strings
 ADD_CATEGORY=( 'request', 'addcategory') # data is list of strings
+MERGE_CATEGORIES=( 'request', 'mergecategories') # data is list of strings
 
 ###
 ### Actual code using pubsub library
@@ -70,41 +71,4 @@ def unsubscribe(listener):
 def publish(topic, data=None):
     Publisher.sendMessage(topic, data)
 
-###
-### Builtin managers
-###
 
-class CategoryManager:
-
-    # this is only used to prevent the pubsub module
-    # from being GC while any instance of this class exists
-    __publisher=Publisher
-
-    def __init__(self):
-        self.categories=[]
-        subscribe(REQUEST_CATEGORIES, self, "OnListRequest")
-        subscribe(SET_CATEGORIES, self, "OnSetCategories")
-        subscribe(ADD_CATEGORY, self, "OnAddCategory")
-
-    def OnListRequest(self, msg=None):
-        print "publish all categories", self.categories
-        # nb we publish a copy of the list, not the real
-        # thing.  otherwise other code inadvertently modifies it!
-        publish(ALL_CATEGORIES, self.categories[:])
-
-    def OnAddCategory(self, msg):
-        name=msg.data
-        if msg in self.categories:
-            return
-        self.categories.append(name)
-        self.categories.sort()
-        self.OnListRequest()
-
-    def OnSetCategories(self, msg):
-        cats=msg.data[:]
-        self.categories=cats
-        self.categories.sort()
-        self.OnListRequest()
-
-# same trick as pubsub module
-CategoryManager=CategoryManager()
