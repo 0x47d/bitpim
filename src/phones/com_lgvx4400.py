@@ -50,6 +50,7 @@ class Phone:
         self.log("Phone initialised")
         self.mode=self.MODENONE
         self.seq=0
+        self.retries=2  # how many retries when we get no response
 
     def log(self, str):
         if self.logtarget:
@@ -673,6 +674,10 @@ class Phone:
                 return 1
             except: pass
         return 0        
+
+    def checkresult(self, firstbyte, res):
+        if res[0]!=firstbyte:
+            return
         
     def sendpbcommand(self, cmd, data):
         d="\xff"+chr(cmd)+chr(self.seq&0xff)+data
