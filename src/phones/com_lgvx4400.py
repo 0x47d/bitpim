@@ -322,7 +322,7 @@ class Phone:
         
         d=chr(len(dir)+1)+dir+"\x00"
 
-        self.log("file listing 0x0b command")
+        # self.log("file listing 0x0b command")
         if len(dir): # phone doesn't respond to listing files of root
             for i in range(0,1000):
                 data=makelsb(i,4)+d
@@ -335,7 +335,7 @@ class Phone:
 
         # i tried using 0x0a command to list subdirs but that fails when
         # mingled with 0x0b commands
-        self.log("dir listing 0x02 command")
+        # self.log("dir listing 0x02 command")
         res=self.sendbrewcommand(0x02, d)
         pos=7
         while pos<len(res):
@@ -634,14 +634,14 @@ class Phone:
         # bytes 4-7 serial
         res['serial1']=readlsb(packet[4:8])
 
-        # bytes 8-9  unknown
-        res['?offset008']=readlsb(packet[8:0xa])
+        # bytes 8-9  entry size => 0x0202
+        # res['?offset008']=readlsb(packet[8:0xa])
 
         # bytes a-d another serial
         res['serial2']=readlsb(packet[0xa:0xe])
 
-        # byte e is entry number
-        res['#']=readlsb(packet[0xe:0xf])
+        # byte e is entry number - we don't expose
+        # res['#']=readlsb(packet[0xe:0xf])
 
         # byte f is unknown
         res['?offset00f']=readlsb(packet[0xf:0x10])
@@ -722,7 +722,7 @@ class Phone:
         assert len(res)==4
         res+=makelsb(entry.get('serial1', 0), 4)
 
-        # bytes 8-9  unknown - always 0202
+        # bytes 8-9  length - always 0202
         assert len(res)==8
         res+=makelsb(0x0202, 2)
 
