@@ -1307,8 +1307,31 @@ class MyFixedScrolledMessageDialog(wx.Dialog):
 ###
 import StringIO
 
-class ExceptionDialog(MyFixedScrolledMessageDialog):
-    def __init__(self, frame, exception, title="Exception"):
+class ExceptionDialog(wx.Dialog):
+    def __init__(self, parent, exception, title="Exception"):
+        wx.Dialog.__init__(self, parent, title=title, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME|wx.MAXIMIZE_BOX, size=(740, 580))
+        self.maintext=wx.TextCtrl(self, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.HSCROLL)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(self.maintext, 1, wx.EXPAND|wx.ALL, 5)
+
+        buttsizer=wx.GridSizer(1, 3)
+        buttsizer.Add(wx.Button(self, wx.ID_CANCEL, "Abort BitPim"), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(self, wx.ID_HELP, "Help"), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(self, wx.ID_OK, "Continue"), 0, wx.ALL, 10)
+
+        vbs.Add(buttsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 5)
+
+        wx.EVT_BUTTON(self, wx.ID_CANCEL, self.abort)
+        
+        self.SetSizer(vbs)
+        self._text=""
+        self.addexception(exception)
+
+    def abort(self,_):
+        import os
+        os._exit(1)
+        
+    def addexception(self, exception):
         s=StringIO.StringIO()
         s.write("An unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
         if hasattr(exception, 'gui_exc_info'):
@@ -1316,8 +1339,8 @@ class ExceptionDialog(MyFixedScrolledMessageDialog):
         else:
             s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
         self._text=s.getvalue()
-        MyFixedScrolledMessageDialog.__init__(self, frame, s.getvalue(), title, helpids.ID_EXCEPTION_DIALOG)
-
+        self.maintext.SetValue(self._text)
+        
     def getexceptiontext(self):
         return self._text
 

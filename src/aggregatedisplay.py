@@ -60,6 +60,7 @@ class Display(wx.ScrolledWindow):
     
     def __init__(self, parent, datasource, watermark=None):
         wx.ScrolledWindow.__init__(self, parent, id=wx.NewId(), style=wx.FULL_REPAINT_ON_RESIZE)
+        self.exceptioncount=0
         self.EnableScrolling(False, False)
         self.datasource=datasource
         self._bufbmp=None
@@ -92,7 +93,7 @@ class Display(wx.ScrolledWindow):
     def OnEraseBackground(self, _):
         pass
 
-    def OnPaint(self, _):
+    def OnPaint(self, event):
         # Getting this drawing right involved hours of fighting wxPython/wxWidgets.
         # Those hours of sweating and cursing reveal the following:
         #
@@ -122,11 +123,21 @@ class Display(wx.ScrolledWindow):
             self.ReLayout()
             # relayout may change size (scrollbar appearing/going away) so repeat in that case
             if self.GetClientSize()!=sz:
-                return self.OnPaint(_)
+                return self.OnPaint(event)
 
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
         dc=wx.BufferedPaintDC(self, self._bufbmp)
+        try:
+            self.DoPaint(dc)
+        except:
+            # only raise one exception - swallow any more
+            self.exceptioncount+=1
+            if self.exceptioncount<=1:
+                print "raise"
+                raise
+
+    def DoPaint(self, dc):
         # we redraw everything that is in the visible area of the screen
         origin=self.GetViewStart()[1]*self.VSCROLLPIXELS
         firstvisible=origin

@@ -396,6 +396,7 @@ class MainWindow(wx.Frame):
         self.endbusycb=Callback(self.OnBusyEnd)
 
         ### random variables
+        self.exceptiondialog=None
         self.wantlog=1  # do we want to receive log information
         self.config=config
         self.progmajortext=""
@@ -1012,14 +1013,26 @@ class MainWindow(wx.Frame):
             dlg.ShowModal()
             dlg.Destroy()
             return True
-        e=guiwidgets.ExceptionDialog(self, exception)
-        try:
-            self.OnLog("Exception: "+e.getexceptiontext())
-        except AttributeError:
-            # this can happen if main gui hasn't been built yet
-            pass
-        e.ShowModal()
-        e.Destroy()
+
+        if self.exceptiondialog is None:
+            self.excepttime=time.time()
+            self.exceptcount=0
+            self.exceptiondialog=guiwidgets.ExceptionDialog(self, exception)
+            try:
+                self.OnLog("Exception: "+self.exceptiondialog.getexceptiontext())
+            except AttributeError:
+                # this can happen if main gui hasn't been built yet
+                pass
+        else:
+            self.exceptcount+=1
+            if self.exceptcount<10:
+                print "Ignoring an exception as the exception dialog is already up"
+                self.OnLog("Exception during exception swallowed")
+            return True
+            
+        self.exceptiondialog.ShowModal()
+        self.exceptiondialog.Destroy()
+        self.exceptiondialog=None
         return True
         
     # plumbing for the multi-threading
