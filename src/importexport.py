@@ -1391,7 +1391,6 @@ class ExportVCardDialog(wx.Dialog):
         dlg.Destroy()
 
     def OnOk(self, _):
-        import phonebook
         # do export
         filename=self.filenamectrl.GetValue()
 
@@ -1407,7 +1406,7 @@ class ExportVCardDialog(wx.Dialog):
         if self.rows_all.GetValue():
             rowkeys=data.keys()
         else:
-            rowkeys=phonebook.GetSelectedRows()
+            rowkeys=self.phonebook.GetSelectedRows()
 
         # ::TODO:: ask about overwriting existing file
         f=open(filename, "wt")
