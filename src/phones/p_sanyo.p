@@ -15,6 +15,7 @@
 from prototypes import *
 
 # We use LSB for all integer like fields
+
 UINT=UINTlsb
 BOOL=BOOLlsb
 _NUMPBSLOTS=300
@@ -23,7 +24,8 @@ _NUMLONGNUMBERS=5
 _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
-%}
+_NUMCALLHISTORY=20
+ %}
 
 PACKET firmwarerequest:
     1 UINT {'constant': 0x00} +command
@@ -267,41 +269,54 @@ PACKET messageresponse:
     151 UNKNOWN pad
 
 # Call History
-PACKET outgoingrequest:
+# 0x3d Outgoing
+# 0x3e Incoming
+# 0x3f Missed
+
+PACKET historyrequest:
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x3d} +header
-    2 UINT slot
-    500 UNKNOWN +pad
+    1 UINT slot
+    501 UNKNOWN +pad
 
-PACKET incomingrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x3e} +header
-    2 UINT slot
-    500 UNKNOWN +pad
+# Call History
+# 0x60 Outgoing
+# 0x61 Incoming
+# 0x62 Missed
 
-PACKET missedrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x3f} +header
-    2 UINT slot
-    500 UNKNOWN +pad
-
-PACKET outgoingmiscrequest:
+PACKET historymiscrequest:
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x60} +header
-    2 UINT slot
-    500 UNKNOWN +pad
+    1 UINT slot
+    501 UNKNOWN +pad
 
-PACKET incomingmiscrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x61} +header
+PACKET historyentry:
     2 UINT slot
-    500 UNKNOWN +pad
+    1 UNKNOWN dunno1
+    4 UINT date
+    1 UINT phonenumlen
+    48 STRING {'raiseonunterminatedread': False} phonenum
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    1 UNKNOWN dunno2
+    1 UNKNOWN dunno3
 
-PACKET missedmiscrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x62} +header
+PACKET historyresponse:
+    * sanyoheader header
+    * historyentry entry
+    428 UNKNOWN pad
+
+PACKET historymiscentry:
     2 UINT slot
-    500 UNKNOWN +pad
+    2 UINT pbslotandtype
+    2 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UINT dunno4
+
+PACKET historymiscresponse:
+    * sanyoheader header
+    * historymiscentry entry
+    493 UNKNOWN pad
 
 PACKET bufferpartrequest:
     * sanyoheader {'packettype': 0x0f} +header
