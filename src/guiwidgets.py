@@ -631,6 +631,8 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
     # maximum length of a filename
     maxlen=31
+    # acceptable characters in a filename
+    filenamechars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
     
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT):
         wxListCtrl.__init__(self, parent, id, style=style)
@@ -857,7 +859,10 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     def getshortenedbasename(self, filename, newext=''):
         filename=basename(filename).lower()
         if len(newext):
-            filename=stripext(filename)+'.'+newext
+            filename=stripext(filename)
+        filename="".join([x for x in filename if x in self.filenamechars])
+        if len(newext):
+            filename+='.'+newext
         if len(filename)>self.maxlen:
             chop=len(filename)-self.maxlen
             filename=stripext(filename)[:-chop]+'.'+getext(filename)
