@@ -710,20 +710,17 @@ class MainWindow(wxFrame):
             if v==dlg.OVERWRITE: merge=False
             self.calendarwidget.getdata(data)
             todo.append( (self.wt.writecalendar, "Calendar", merge) )
-            # writing will modify data (especially index) so
-            # we repopulate on return
-            funcscb.append( self.calendarwidget.populatefs )
-            funcscb.append( self.calendarwidget.populate )        
         ### Wallpaper
         v=dlg.GetWallpaperSetting()
         if v!=dlg.NOTREQUESTED:
             merge=True
             if v==dlg.OVERWRITE: merge=False
-            self.wallpaperwidget.getdata(data)
+            if merge:
+                want=self.wallpaperwidget.SELECTED
+            else:
+                want=self.wallpaperwidget.ALL
+            self.wallpaperwidget.getdata(data, want)
             todo.append( (self.wt.writewallpaper, "Wallpaper", merge) )
-            # writing will modify data (especially index) so
-            # we repopulate on return
-            funcscb.append( self.wallpaperwidget.populatefs )
             funcscb.append( self.wallpaperwidget.populate )
         ### Ringtone
         v=dlg.GetRingtoneSetting()
