@@ -53,7 +53,7 @@ def diagnose(portlist):
     if len(notavailablebutactive):
         whattodisplay="===== Ports in use ====="
         portselected=None
-        htmldiagnosis="<p>These ports are active, but are in use by another program, or you do not have permissions to access them."
+        htmldiagnosis="<p>These ports are active, but are in use by another program or device driver, or you do not have permissions to access them."
         res.append( (whattodisplay, portselected, htmldiagnosis) )
         for port in notavailablebutactive:
             whattodisplay=port['description']
@@ -133,6 +133,11 @@ def genhtml(port):
         elif k=='hardwareinstance':
             res+=sfont+"""This is how the device is named internally.  For example USB devices include
             the vendor (VID) and product (PID) identities"""+efont
+        elif k=="libusb":
+            res+=sfont+"""This indicates if the usb library is in use to access this device.  Operating system
+            device drivers (if any) are bypassed when BitPim talks to the device"""+efont
+        elif k=="protocol":
+            res+=sfont+"""This is the protocol the USB device claims to speak"""+efont
         else:
             res+="&nbsp;"
 
