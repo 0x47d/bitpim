@@ -18,7 +18,6 @@ except ImportError:
     bitfling=None
 
 def IsBitFlingEnabled():
-    return False
     if bitfling is None:
         return False
     return True
