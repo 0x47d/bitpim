@@ -26,7 +26,7 @@ class CommConnection:
         for dummy in range(2):
             try:
                 self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
-                self.log("Connection suceeded")
+                self.log("Connection to comm port suceeded")
                 return
             except serial.serialutil.SerialException,e:
                 ex=common.CommsOpenFailure(port, e.__str__())
@@ -98,7 +98,8 @@ class CommConnection:
                     raise CommTimeout(partial=res)
                 else:
                     numfailures-=1
-                    self.log("Timed out - trying again")
+                    self.ser.flushInput()
+                    self.log("Timed out - flushing and trying again")
             res=res+res2
 
         if log:
