@@ -126,7 +126,7 @@ class Phone:
             self.log("Reading entry "+`i`)
             res=self.sendpbcommand(0x13, "\x01\x00\x00\x00\x00\x00\x00")
             entry={ 'number':  readlsb(res[0xe:0xf]), 'serial1':  readlsb(res[0x04:0x08]),
-                    'serial2': readlsb(res[0xa:0xe])}
+                    'serial2': readlsb(res[0xa:0xe]), 'name': readstring(res[0x10:0x27])}
             existingpbook[i]=entry 
             self.progress(progresscur, progressmax, "existing "+`progresscur`)
             #### Advance to next entry
@@ -143,10 +143,10 @@ class Phone:
                 ii=existingpbook[i]
                 # no idea what the \x06 is about
                 data="\x01"+makelsb(ii['serial1'],4)+ \
-                      "\0x06\x00" + \
+                      "\0x00\x00" + \
                       makelsb(ii['serial2'],4) + \
                       makelsb(ii['number'],2)
-                self.log("Deleting entry "+`i`)
+                self.log("Deleting entry "+`i`+" - "+ii['name'])
                 self.sendpbcommand(0x05, data)
                 self.progress(progresscur, progressmax, "removing "+`i`)
                 continue
@@ -156,7 +156,7 @@ class Phone:
                 self.log("Appending entry "+`i`+" - "+pbook[entries[i]]['name'])
             else:
                 cmd=0x04 # overwrite
-                self.log("Overwriting entry "+`i`+" with "+pbook[entries[i]]['name'])
+                self.log("Overwriting entry "+`i`+" - "+existingpbook[i]['name']+" - with "+pbook[entries[i]]['name'])
             self.progress(progresscur, progressmax, "Writing "+pbook[entries[i]]['name'])
             self.sendpbcommand(cmd, "\x01"+entry)
 
