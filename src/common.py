@@ -51,6 +51,17 @@ class CommsOpenFailure(CommsException):
         self.device=device
         self.message=message
 
+class AutoPortsFailure(CommsException):
+     """Failed to auto detect a useful port"""
+     def __init__(self, portstried):
+          self.device="auto"
+          self.message="Failed to auto-detect the port to use.  "
+          if portstried is not None and len(portstried):
+               self.message+="I tried "+", ".join(portstried)
+          else:
+               self.message+="I couldn't detect any candidate ports"
+          CommsException.__init__(self, self.device, self.message)
+
 def datatohexstring(data):
     """Returns a pretty printed hexdump of the data
 
