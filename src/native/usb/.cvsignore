@@ -1,5 +1,6 @@
+*.doc
+*.pyc
+*.pyo
 _libusb.dll
 libusb.py
-libusb.pyc
 libusb_wrap.c
-*.doc
