@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from wxPython.wx import *
+from wxPython.lib.rcsizer import RowColSizer
+
 
 class CalendarCellAttributes:
     def __init__(self):
@@ -62,7 +64,6 @@ class CalendarCell(wxWindow):
         self.draw(dc)
 
     def draw(self, dc):
-        print "draw", self.width, self.height
         # do the label
         self.attr.setforlabel(dc)
         w,h=dc.GetTextExtent(`self.day`)
@@ -112,7 +113,6 @@ class CalendarCell(wxWindow):
                     if h==0: h=12
                 if h<10: text+=" "
                 text+="%d:%02d" % (h,m)
-                print "x=",x,"timey=",timey
                 dc.DrawText(text, x, timey)
                 x+=timespace
                 x+=space
@@ -138,15 +138,45 @@ class CalendarCell(wxWindow):
                 break
 
         
+class Calendar(wxPanel):
+    def __init__(self, parent, rows=5, id=-1):
+        wxPanel.__init__(self, parent, id)
+        sizer=RowColSizer()
+        self.upbutt=wxButton(self, -1, "^")
+        sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
+        self.year=wxButton(self, -1, "2003")
+        sizer.Add(self.year, flag=wxEXPAND, row=1, col=0)
+        p=1
+        for i in ( "Sun", "Mon", "Tue", "Wed" , "Thu", "Fri", "Sat" ):
+           sizer.Add(  wxStaticText( self, -1, i), flag=wxALIGN_CENTER_VERTICAL|wxALIGN_CENTER_HORIZONTAL  , row=1, col=p)
+           sizer.AddGrowableCol(p)
+           p+=1
+        self.numrows=0
+        self.rows=[]
+        for i in range(0, rows):
+            self.rows.append( self.makerow(sizer, i+2) )
+        self.downbutt=wxButton(self, -1, "V")
+        sizer.Add(self.downbutt, flag=wxEXPAND, row=2+rows, col=0, colspan=8)
 
+        self.SetSizer(sizer)
+        self.SetAutoLayout(True)
+
+    def makerow(self, sizer, row):
+        res=[]
+        sizer.AddGrowableRow(row)
+        for i in range(0,7):
+            res.append( CalendarCell(self, -1) )
+            sizer.Add( res[-1], flag=wxEXPAND, row=row, col=i+1)
+        return res
 
 
 if __name__=="__main__":
     class MainWindow(wxFrame):
         def __init__(self, parent, id, title):
-            wxFrame.__init__(self, parent, id, title, size=(200,100),
+            wxFrame.__init__(self, parent, id, title, size=(800,600),
                              style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
-            self.control=CalendarCell(self, 1)
+            # self.control=CalendarCell(self, 1) # test just the cell
+            self.control=Calendar(self)
             self.Show(True)
     
     app=wxPySimpleApp()
