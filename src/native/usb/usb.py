@@ -132,12 +132,6 @@ class USBInterface:
         assert epin is not None
         assert epout is not None
 
-        # grab the interface
-        print "claiming"
-        res=usb.usb_claim_interface(self.device.handle, self.number())
-        if res<0:
-            raise USBException()
-
         # set the configuration
         print "getting configvalue"
         v=self.device.dev.config.bConfigurationValue
@@ -146,6 +140,12 @@ class USBInterface:
         print "config set"
         if res<0:
             usb.usb_release_interface(self.device.handle, self.number())
+            raise USBException()
+
+        # grab the interface
+        print "claiming"
+        res=usb.usb_claim_interface(self.device.handle, self.number())
+        if res<0:
             raise USBException()
 
         # we now have the file
