@@ -1,6 +1,5 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
 ### Copyright (C) 2003-2004 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This program is free software; you can redistribute it and/or modify

@@ -1,10 +1,9 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
-### Copyright (C) 2003 Stephen Wood <sawecw@users.sf.net>
+### Copyright (C) 2003-2004 Stephen Wood <sawecw@users.sf.net>
 ###
-### This software is under the Artistic license.
-### Please see the accompanying LICENSE file
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
 
