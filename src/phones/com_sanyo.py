@@ -913,9 +913,11 @@ class SanyoPhonebook:
         #   
         calres={}
 
+        progressmax=self.protocolclass._NUMEVENTSLOTS+self.protocolclass._NUMCALLALARMSLOTS
         req=self.protocolclass.eventrequest()
         count=0
         for i in range(0, self.protocolclass._NUMEVENTSLOTS):
+            self.progress(i,progressmax,"Events")
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
             if res.entry.flag and res.entry.start:
@@ -948,9 +950,10 @@ class SanyoPhonebook:
 
         req=self.protocolclass.callalarmrequest()
         for i in range(0, self.protocolclass._NUMCALLALARMSLOTS):
+            self.progress(self.protocolclass._NUMEVENTSLOTS,progressmax,"Call Alarms")
             req.slot=i
             res=self.sendpbcommand(req, self.protocolclass.callalarmresponse)
-            if res.entry.flag and entry.start:
+            if res.entry.flag and res.entry.date:
                 self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum+", alarm ID "+`res.entry.ringtone`)
                 entry=bpcalendar.CalendarEntry()
                 #entry.pos=i+self.protocolclass._NUMEVENTSLOTS # Make unique
