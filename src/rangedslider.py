@@ -82,7 +82,7 @@ class RangedSlider(wx.PyWindow):
     def OnPaint(self, _):
         sz=self.GetClientSize()
         if self._bufbmp is None or sz.width>self._bufbmp.GetWidth() or sz.height>self._bufbmp.GetHeight():
-            self._bufbmp=wx.EmptyBitmap((sz.width+64)&~8, (sz.height+64)&~8, 24)
+            self._bufbmp=wx.EmptyBitmap((sz.width+64)&~8, (sz.height+64)&~8)
         dc=wx.BufferedPaintDC(self, self._bufbmp)
         dc.SetBackground(self.bg)
         dc.Clear()
