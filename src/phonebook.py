@@ -102,6 +102,7 @@ import phonebookentryeditor
 import pubsub
 import nameparser
 import bphtml
+import guiwidgets
 
 ###
 ### Phonebook entry display (Derived from HTML)
@@ -780,6 +781,7 @@ class PhoneWidget(wx.Panel):
         result=None
         if dlg.ShowModal()==wx.ID_OK:
             result=dlg.resultdata
+        guiwidgets.save_size(dlg.config, "ImportDialog", dlg.GetRect())
         dlg.Destroy()
         if result is not None:
             d={}
@@ -1051,9 +1053,9 @@ class ImportDialog(wx.Dialog):
 
     def __init__(self, parent, existingdata, importdata):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
-                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE,
-                           size=(740,680))
-
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+        self.config = parent.mainwindow.config
+        guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
         # the data already in the phonebook
         self.existingdata=existingdata
         # the data we are importing
