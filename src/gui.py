@@ -836,10 +836,9 @@ class MainWindow(wx.Frame):
         text=self.nb.GetPageText(self.nb.GetSelection())
         if text is not None:
             self.config.Write("viewnotebookpage", text)
-        # is ringers or wallpaper viewable?
+        # is ringers viewable?
         widget=self.nb.GetPage(self.nb.GetSelection())
-        if widget is self.ringerwidget or \
-           widget is self.wallpaperwidget:
+        if widget is self.ringerwidget:
             enablefv=True
         else: enablefv=False
         if widget is self.ringerwidget or \
@@ -949,7 +948,11 @@ class MainWindow(wx.Frame):
             dlg.Destroy()
             return True
         e=guiwidgets.ExceptionDialog(self, exception)
-        self.OnLog("Exception: "+e.getexceptiontext())
+        try:
+            self.OnLog("Exception: "+e.getexceptiontext())
+        except AttributeError:
+            # this can happen if main gui hasn't been built yet
+            pass
         e.ShowModal()
         e.Destroy()
         return True
