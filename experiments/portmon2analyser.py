@@ -93,8 +93,8 @@ for k,v in args:
 
 # we need to do filters in a particular order
 f=[]
-if filtermergerw in filters: f.append(filtermergerw)
 if filterremovenoise in filters: f.append(filterremovenoise)
+if filtermergerw in filters: f.append(filtermergerw)
 filters=f
 
 lines=[]
