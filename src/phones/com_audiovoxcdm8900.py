@@ -234,10 +234,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         request.writetobuffer(buffer)
         data=buffer.getvalue()
         self.logdata("audiovox cdm8900 phonebook request", data, request)
-        data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
+        data=common.pppescape(data+common.crcs(data))+common.pppterminator
         first=data[0]
         try:
-            data=self.comm.writethenreaduntil(data, False, self.pbterminator, logreaduntilsuccess=False)
+            data=self.comm.writethenreaduntil(data, False, common.pppterminator, logreaduntilsuccess=False)
         except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsdnaexception("manipulating the phonebook")
@@ -248,14 +248,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # turned off the phone and back on again.  So if there is more
         # than one 7e in the escaped data we should start after the
         # second to last one
-        d=data.rfind(self.pbterminator,0,-1)
+        d=data.rfind(common.pppterminator,0,-1)
         if d>=0:
             self.log("Multiple PB packets in data - taking last one starting at "+`d+1`)
             self.logdata("Original pb data", origdata, None)
             data=data[d+1:]
 
         # turn it back to normal
-        data=com_brew.unescape(data)
+        data=common.pppunescape(data)
 
         # sometimes there is other crap at the begining
         d=data.find(first)
@@ -267,7 +267,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
-        if com_brew.crcs(data)!=crc:
+        if common.crcs(data)!=crc:
             self.logdata("Original pb data", origdata, None)
             self.logdata("Working on pb data", data, None)
             raise common.CommsDataCorruption("Audiovox phonebook packet failed CRC check", self.desc)
