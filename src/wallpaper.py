@@ -167,18 +167,32 @@ class WallpaperView(guiwidgets.FileView):
 
         @return: (wxImage, filesize)
         """
-        file=os.path.join(self.mainwindow.wallpaperpath, file)
-        if self.isBCI(file):
-            image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-        else:
-            if file.endswith(".mp4"):
-                image=wx.Image(guihelper.getresourcefile('wallpaper.png'))
-                # Need to find a more appropriate graphic
-            else:
-                image=wx.Image(file)
-        # we use int to force the long to an int (longs print out with a trailing L which looks ugly)
-        return image, int(os.stat(file).st_size)
+        file,cons = self.GetImageConstructionInformation(file)
+        
+        return cons(file), int(os.stat(file).st_size)
 
+    # This function exists because of the constraints of the HTML
+    # filesystem stuff.  The previous code was reading in the file to
+    # a wx.Image, saving it as a PNG to disk (wx.Bitmap.SaveFile
+    # doesn't have save to memory implemented), reading it back from
+    # disk and supplying it to the HTML code.  Needless to say that
+    # involves unnecessary conversions and gets slower with larger
+    # images. We supply the info so that callers can make the minimum
+    # number of conversions possible
+    
+    def GetImageConstructionInformation(self, file):
+        """Gets information for constructing an Image from the file
+
+        @return: (filename to use, function to call that returns wxImage)
+        """
+        file=os.path.join(self.mainwindow.wallpaperpath, file)
+
+        if file.endswith(".mp4") or not os.path.isfile(file):
+            return guihelper.getresourcefile('wallpaper.png'), wx.Image
+        if self.isBCI(file):
+            return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+        return file, wx.Image
+        
     def updateindex(self, index):
         if index!=self._data['wallpaper-index']:
             self._data['wallpaper-index']=index.copy()
@@ -407,11 +421,10 @@ class BPFSHandler(wx.FileSystemHandler):
         return None
 
     def OpenBPUserImageFile(self, location, name, **kwargs):
-        try:
-            image,_=self.wpm.GetImage(name)
-        except IOError:
-            return self.OpenBPImageFile(location, "wallpaper.png", **kwargs)
-        return BPFSImageFile(self, location, img=image, **kwargs)
+        file,cons=self.wpm.GetImageConstructionInformation(name)
+        if cons == wx.Image:
+            return BPFSImageFile(self, location, file, **kwargs)
+        return BPFSImageFile(self, location, img=cons(file), **kwargs)
 
     def OpenBPImageFile(self, location, name, **kwargs):
         f=guihelper.getresourcefile(name)
@@ -430,6 +443,12 @@ class BPFSImageFile(wx.FSFile):
         self.fshandler=fshandler
         self.location=location
 
+        # special fast path if we aren't resizing or converting image
+        if img is None and width<0 and height<0 and \
+               (name.endswith(".bmp") or name.endswith(".jpg") or name.endswith(".png")):
+            wx.FSFile.__init__(self, wx.InputStream(open(name, "rb")), location, "image/"+name[-3:], "", wx.DateTime_Now())
+            return
+            
         if img is None:
             img=wx.Image(name)
 
