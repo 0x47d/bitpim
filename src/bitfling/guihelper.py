@@ -74,3 +74,29 @@ def getresourcefile(filename):
     @rtype: string
     """
     return os.path.join(resourcedirectory, filename)
+
+def run(*args):
+    """Execute the command.
+
+    The path is searched"""
+    sl=os.spawnl
+    if sys.platform!='win32':
+        sl=os.spawnlp
+        ret=apply(sl, (os.P_WAIT,args[0])+args)
+    else:
+        # win98 was fine with above code, winxp just chokes
+        # so we call system() instead
+        str=""
+        for a in args:
+            if a.find(' ')>=0:
+                str+=' "'+a+'"'
+            else:
+                str+=" "+a
+        str=str[1:] # remove first space
+        # If you ever wanted proof how idiotic windows is, here it is
+        # if there is a value enclosed in double quotes, it is
+        # taken as the window title, even if it comes after all
+        # the switches, so i have to supply one, otherwise it mistakes
+        # the command to run as the window title
+        ret=os.system('start /b /wait "%s" %s' % (args[0], str))
+    return ret

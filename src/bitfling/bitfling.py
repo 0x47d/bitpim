@@ -276,6 +276,36 @@ class MainWindow(wx.Frame):
         self.lw.log(text)
 
 
+class CertificateDialog(wx.Dialog):
+    """A dialog for generating a self-signed certificate"""
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent)
+
+
+def _sanitize(x):
+    return x
+
+def GenerateSelfSignedCert(fileout, subject, email="", org="", orgunit="", l="", country=""):
+
+    # ::TODO:: verify all strings only contain appropriate characters
+
+    assert len(country)==2 or len(country)==0
+    
+    if guihelper.IsMSWindows():
+        cmd=guihelper.getresourcefile("openssl.exe")
+    else:
+        cmd="openssl"
+
+    ret=guihelper.run (cmd, "req", "-config", guihelper.getresourcefile("bitfling.cnf"), "-new", "-x509",
+                       "-newkey", "rsa:1024", "-nodes", "-days", "365", "-keyout",
+                       fileout, "-out", fileout, "-subj", "/countryName=%s/emailAddress=%s/L=%s/O=%s/OU=%s/CN=%s"
+                       % (country, email, l, org, orgunit, subject))
+    return ret
+        # -nodes means keyfile is not password protected
+        # openssl req -config bitfling.cfg -new -x509 -newkey rsa:1024 -nodes -days 365 -keyout file.pem -out file.pem \
+        #    -subj "/countryName=US/L=Texas/O=org/OU=orgunit/CN=Who Me?"  # can have zero length strings
+
+
 if __name__ == '__main__':
     theApp=wx.PySimpleApp()
 
