@@ -52,12 +52,12 @@ PACKET phonebookentry:
 PACKET phonebookslotresponse:
     * sanyoheader header
     * phonebookentry entry
-    554 UNKNOWN pad
+    * UNKNOWN pad
 
 PACKET phonebookslotupdaterequest:
     * sanyowriteheader {'packettype': 0x0c, 'command': 0x28} +header
     * phonebookentry entry
-    554 UNKNOWN pad
+    500 UNKNOWN +pad
 
 PACKET evententry:
     1 UINT slot
@@ -82,12 +82,12 @@ PACKET evententry:
 PACKET eventresponse:
     * sanyoheader header
     * evententry entry
-    990 UNKNOWN pad
+    * UNKNOWN pad
 
 PACKET eventupdaterequest:
     * sanyoheader {'packettype': 0x0c, 'command':0x23} +header
     * evententry entry
-    990 UNKNOWN +pad
+    400 UNKNOWN +pad
 
 PACKET callalarmentry:
     P UINT {'constant': 0} ringtone
@@ -110,9 +110,9 @@ PACKET callalarmentry:
 PACKET callalarmresponse:
     * sanyoheader header
     * callalarmentry entry
-    971 UNKNOWN pad
+    * UNKNOWN pad
 
 PACKET callalarmupdaterequest:
     * sanyoheader {'packettype': 0x0c, 'command':0x24} +header
     * callalarmentry entry
-    971 UNKNOWN +pad
+    400 UNKNOWN +pad
