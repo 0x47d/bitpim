@@ -1,3 +1,4 @@
 _libusb.dll
 libusb.py
+libusb.pyc
 libusb_wrap.c
