@@ -279,7 +279,7 @@ class STRING(BaseProtogenClass):
         super(STRING,self)._update(args, kwargs)
 
         self._consumekw(kwargs, ("constant", "terminator", "pad", "pascal",
-        "sizeinbytes", "default", "raiseonunterminatedread", "value"))
+        "sizeinbytes", "default", "raiseonunterminatedread", "value", "raiseontruncate"))
         self._complainaboutunusedargs(STRING,kwargs)
 
         # Set our value if one was specified
