@@ -12,6 +12,7 @@
 import common
 import commport
 import copy
+import re
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -593,8 +594,11 @@ class Phone:
             data=makelsb(i,4)+d2
             try:
                 res=self.sendbrewcommand(0x0b, data)
-                name=res[0x19:-3]
-                results[name]={ 'name': name, 'type': 'file', 'data': readhex(res) }
+                name=res[0x19:]
+                results[name]={ 'name': name, 'type': 'file',
+                                'size': readlsb(res[0x0f:0x13]),
+                                'date': brewdecodedate(readlsb(res[0x0b:0x0f])),
+                                'data': readhex(res[:0x19]) }
             except BrewNoMoreEntriesException:
                 break
 
@@ -664,7 +668,7 @@ class Phone:
         numblocks=size/0x100
         if size%0x100:
             numblocks+=1
-        data=res[0xb:-3]
+        data=res[0xb:]
         count=1
         for i in range(1,numblocks):
             if i%5==0:
@@ -672,7 +676,7 @@ class Phone:
             res=self.sendbrewcommand(0x04, chr(count))
             count+=1
             if count==0x100: count=1
-            res=res[0x7:-3]
+            res=res[0x7:]
             data=data+res
         self.progress(numblocks,numblocks,desc)
         self.log("expected size "+`size`+"  actual "+`len(data)`)
@@ -837,7 +841,8 @@ class Phone:
             raise
         self.seq+=1
         try:
-            d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
+            d=self.unescape(self.comm.readuntil(self.terminator))
+            d=d[:-3] # strip crc
             self.comm.success=True
             if 0: # cmd!=0x15 and d[3]!="\x00":
                 raise PhoneBookCommandException(ord(d[3]))
@@ -883,6 +888,7 @@ class Phone:
             raise
         try:
             d=self.unescape(self.comm.readuntil(self.terminator))
+            d=d[:-3]
             self.comm.success=True
             # ::TODO:: we should check crc
             if d[2]!="\x00":
@@ -1150,23 +1156,33 @@ class Phone:
 
         # bytes 117-147 number 1
         assert len(res)==0x117
-        res+=makestring(entry.get('number1', ""), 49)
+        number=self.phonize(entry.get('number1', ""))
+        entry['number1']=number
+        res+=makestring(number, 49)
 
         # bytes 148-178 number 2
         assert len(res)==0x148
-        res+=makestring(entry.get('number2', ""), 49)
+        number=self.phonize(entry.get('number2', ""))
+        entry['number2']=number
+        res+=makestring(number, 49)
 
         # bytes 179-1a9 number 3
         assert len(res)==0x179
-        res+=makestring(entry.get('number3', ""), 49)
+        number=self.phonize(entry.get('number3', ""))
+        entry['number3']=number
+        res+=makestring(number, 49)
         
         # bytes 1aa-1da number 4
         assert len(res)==0x1aa
-        res+=makestring(entry.get('number4', ""), 49)
+        number=self.phonize(entry.get('number4', ""))
+        entry['number4']=number
+        res+=makestring(number, 49)
 
         # bytes 1db-20b number 5
         assert len(res)==0x1db
-        res+=makestring(entry.get('number5', ""), 49)
+        number=self.phonize(entry.get('number5', ""))
+        entry['number5']=number
+        res+=makestring(number, 49)
 
         # bytes 20c-210 five zeros
         assert len(res)==0x20c
@@ -1176,6 +1192,13 @@ class Phone:
         assert len(res)==0x211
 
         return res[4:]  # chop off cosmetic first bit
+
+    def phonize(self, str):
+        """Convert the phone number into something the phone understands
+
+        All non-digits are removed"""
+        return re.sub("[^0-9]", "", str)
+
     
     tonetab=( 'Default', 'Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5',
               'Ring 6', 'Voices of Spring', 'Twinkle Twinkle',
