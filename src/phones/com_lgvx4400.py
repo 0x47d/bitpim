@@ -27,12 +27,6 @@ import prototypes
 
 
 
-### default groups
-##        self.groupdict={0: {'name': 'No Group', 'icon': 0}, 1: {'name': 'Family', 'icon': 1},
-##                        2: {'name': 'Friends', 'icon': 2}, 3: {'name': 'Colleagues', 'icon': 3},
-##                        4: {'name': 'Business', 'icon': 4}, 5: {'name': 'School', 'icon': 5}, }
-
-
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
 
@@ -79,7 +73,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         g.readfrombuffer(buf)
         self.logdata("Groups read", buf.getdata(), g)
         groups={}
-        for i in range(g.numgroups):
+        for i in range(len(g.groups)):
             groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
         results['groups']=groups
         # wallpaper index
@@ -123,7 +117,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for i in result['groups']:
             if result['groups'][i]['name']!='No Group':
                 cats.append(result['groups'][i]['name'])
-        result['groups']=cats
+        result['categories']=cats
         print "returning keys",result.keys()
         return pbook
 
