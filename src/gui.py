@@ -17,15 +17,14 @@ import os
 import cStringIO
 import zipfile
 import re
+import sys
 
-# wxPython modules
-from wxPython.wx import *
-from wxPython.lib import colourdb
-from wxPython.help import *
-from wxPython.html import *
-from wxPython.gizmos import wxTreeListCtrl
+# wx modules
+import wx
+import wx.lib.colourdb
+import wx.gizmos
 
-# temp
+# temporarily needed due to bugs
 import wxPython.gizmosc as gizmosc
 
 # my modules
@@ -96,14 +95,14 @@ class Request:
 ### Event used for passing results back from helper thread
 ###
 
-class HelperReturnEvent(wxPyEvent):
+class HelperReturnEvent(wx.PyEvent):
     def __init__(self, callback, *args, **kwargs):
         if __debug__:
             global helperthreadid
             assert helperthreadid==thread.get_ident()
-        global wxEVT_CALLBACK
-        wxPyEvent.__init__(self)
-        self.SetEventType(wxEVT_CALLBACK)
+        global EVT_CALLBACK
+        wx.PyEvent.__init__(self)
+        self.SetEventType(EVT_CALLBACK)
         self.cb=callback
         self.args=args
         self.kwargs=kwargs
@@ -138,11 +137,11 @@ class WorkerThreadFramework(threading.Thread):
         first=1
         while True:
             if not first:
-                wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.endbusycb))
+                wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.endbusycb))
             else:
                 first=0
             item=self.q.get()
-            wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.startbusycb))
+            wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.startbusycb))
             call=item[0]
             resultcb=item[1]
             ex=None
@@ -152,26 +151,26 @@ class WorkerThreadFramework(threading.Thread):
             except Exception,e:
                 ex=e
                 ex.gui_exc_info=sys.exc_info()
-            wxPostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
+            wx.PostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
             if isinstance(ex, SystemExit):
                 raise ex
 
     def progressminor(self, pos, max, desc=""):
-        wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.progressminorcb, pos, max, desc))
+        wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.progressminorcb, pos, max, desc))
 
     def progressmajor(self, pos, max, desc=""):
-        wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.progressmajorcb, pos, max, desc))
+        wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.progressmajorcb, pos, max, desc))
 
     def progress(self, pos, max, desc=""):
         self.progressminor(pos, max, desc)
 
     def log(self, str):
         if self.dispatchto.wantlog:
-            wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logcb, str))
+            wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logcb, str))
 
     def logdata(self, str, data, klass=None):
         if self.dispatchto.wantlog:
-            wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data, klass))
+            wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data, klass))
 
 
 ###
@@ -180,7 +179,7 @@ class WorkerThreadFramework(threading.Thread):
 
 thesplashscreen=None  # set to non-none if there is one
 
-class MySplashScreen(wxSplashScreen):
+class MySplashScreen(wx.SplashScreen):
     def __init__(self, app, config):
         self.app=app
         # how long are we going to be up for?
@@ -188,10 +187,10 @@ class MySplashScreen(wxSplashScreen):
         if time>0:
             bmp=guihelper.getbitmap("splashscreen")
             self.drawnameandnumber(bmp)
-            wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
+            wx.SplashScreen.__init__(self, bmp, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
                                     time,
                                     None, -1)
-            EVT_CLOSE(self, self.OnClose)
+            wx.EVT_CLOSE(self, self.OnClose)
             self.Show()
             app.Yield(True)
             global thesplashscreen
@@ -201,7 +200,7 @@ class MySplashScreen(wxSplashScreen):
         self.goforit()
 
     def drawnameandnumber(self, bmp):
-        dc=wxMemoryDC()
+        dc=wx.MemoryDC()
         dc.SelectObject(bmp)
         # where we start writing
         x=23 
@@ -209,8 +208,8 @@ class MySplashScreen(wxSplashScreen):
         # Product name
         if False:
             str=version.name
-            dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
-            dc.SetFont( self._gimmethedamnsizeirequested(25, wxROMAN, wxNORMAL, wxNORMAL) )
+            dc.SetTextForeground( wx.NamedColour("MEDIUMORCHID4") ) 
+            dc.SetFont( self._gimmethedamnsizeirequested(25, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
             w,h=dc.GetTextExtent(str)
             dc.DrawText(str, x, y)
             y+=h+0
@@ -218,19 +217,19 @@ class MySplashScreen(wxSplashScreen):
         x=58
         y=127
         str=version.versionstring
-        dc.SetTextForeground( wxNamedColour("MEDIUMBLUE") )
-        dc.SetFont( self._gimmethedamnsizeirequested(15, wxROMAN, wxNORMAL, wxNORMAL) )
+        dc.SetTextForeground( wx.NamedColour("MEDIUMBLUE") )
+        dc.SetFont( self._gimmethedamnsizeirequested(15, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x+10, y)
         y+=h+0
         # all done
-        dc.SelectObject(wxNullBitmap)
+        dc.SelectObject(wx.NullBitmap)
 
     def _gimmethedamnsizeirequested(self, ps, family, style, weight):
         # on Linux we have to ask for bigger than we want
         if guihelper.IsGtk():
             ps=ps*1.6
-        font=wxTheFontList.FindOrCreateFont(ps, family, style, weight)
+        font=wx.TheFontList.FindOrCreateFont(ps, family, style, weight)
         return font
 
     def goforit(self):
@@ -243,17 +242,17 @@ class MySplashScreen(wxSplashScreen):
 ####
 #### Main application class.  Runs the event loop etc
 ####            
-wxEVT_CALLBACK=None
-class MainApp(wxApp):
+EVT_CALLBACK=None
+class MainApp(wx.App):
     def __init__(self, *_):
-        wxApp.__init__(self, redirect=False, useBestVisual=True)
+        wx.App.__init__(self, redirect=False, useBestVisual=True)
         sys.setcheckinterval(100)
         
     def OnInit(self):
         self.made=False
         # Routine maintenance
-        wxInitAllImageHandlers()
-        colourdb.updateColourDB()
+        wx.InitAllImageHandlers()
+        wx.lib.colourdb.updateColourDB()
         
         # Thread stuff
         global mainthreadid
@@ -263,7 +262,7 @@ class MainApp(wxApp):
         cfgstr='bitpim'
         if guihelper.IsMSWindows():
             cfgstr="BitPim"  # nicely capitalized on Windows
-        self.config=wxConfig(cfgstr, style=wxCONFIG_USE_LOCAL_FILE)
+        self.config=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
 
         # for help to save prefs
         self.SetAppName(cfgstr)
@@ -275,8 +274,8 @@ class MainApp(wxApp):
         # html easy printing
         self.htmlprinter=bphtml.HtmlEasyPrinting(None, self.config, "printing")
 
-        global wxEVT_CALLBACK
-        wxEVT_CALLBACK=wxNewEventType()
+        global EVT_CALLBACK
+        EVT_CALLBACK=wx.NewEventType()
 
         # get the splash screen up
         MySplashScreen(self, self.config)
@@ -284,17 +283,17 @@ class MainApp(wxApp):
         return True
 
 ##    def setuphelpiwant(self):
-##        """This is how the setuphelp code is supposed to be, but stuff is missing from wxPython"""
-##        self.helpcontroller=wxBestHelpController()
+##        """This is how the setuphelp code is supposed to be, but stuff is missing from wx"""
+##        self.helpcontroller=wx.BestHelpController()
 ##        self.helpcontroller.Initialize(gethelpfilename)
 
     def setuphelp(self):
         """Does all the nonsense to get help working"""
-        from wxPython.wx import wxFileSystem_AddHandler, wxZipFSHandler
-        import wxPython.html
+        import wx.html
+        # htmlhelp isn't correctly wrapper in wx package
         from wxPython.htmlhelp import wxHtmlHelpController
         # Add the Zip filesystem
-        wxFileSystem_AddHandler(wxZipFSHandler())
+        wx.FileSystem_AddHandler(wx.ZipFSHandler())
         # Get the help working
         self.helpcontroller=wxHtmlHelpController()
         self.helpcontroller.AddBook(guihelper.gethelpfilename()+".htb")
@@ -302,8 +301,8 @@ class MainApp(wxApp):
 
         # now context help
         # (currently borken)
-        # self.helpprovider=wxHelpControllerHelpProvider(self.helpcontroller)
-        # wxHelpProvider_Set(provider)
+        # self.helpprovider=wx.HelpControllerHelpProvider(self.helpcontroller)
+        # wx.HelpProvider_Set(provider)
 
 
 
@@ -316,7 +315,7 @@ class MainApp(wxApp):
         self.made=True
         # make the main frame
         frame=MainWindow(None, -1, "BitPim", self.config)
-        frame.Connect(-1, -1, wxEVT_CALLBACK, frame.OnCallback)
+        frame.Connect(-1, -1, EVT_CALLBACK, frame.OnCallback)
 
         # make the worker thread
         wt=WorkerThread()
@@ -342,12 +341,12 @@ def run(*args):
 ### Main Window (frame) class
 ###
 
-class MainWindow(wxFrame):
+class MainWindow(wx.Frame):
     def __init__(self, parent, id, title, config):
-        wxFrame.__init__(self, parent, id, title,
-                         style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(self, parent, id, title,
+                         style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
 
-        wxGetApp().htmlprinter.SetParentFrame(self)
+        wx.GetApp().htmlprinter.SetParentFrame(self)
 
         sys.excepthook=Callback(self.excepthook)
         ### plumbing, callbacks        
@@ -374,9 +373,9 @@ class MainWindow(wxFrame):
 
         ### Menubar
 
-        menuBar = wxMenuBar()
+        menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
-        menu = wxMenu()
+        menu = wx.Menu()
         # menu.Append(guihelper.ID_FILENEW,  "&New", "Start from new")
         # menu.Append(guihelper.ID_FILEOPEN, "&Open", "Open a file")
         # menu.Append(guihelper.ID_FILESAVE, "&Save", "Save your work")
@@ -386,7 +385,7 @@ class MainWindow(wxFrame):
         menu.AppendSeparator()
         menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
-        menu=wxMenu()
+        menu=wx.Menu()
         menu.Append(guihelper.ID_EDITADDENTRY, "Add...", "Add an item")
         menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
         if guihelper.HasFullyFunctionalListView():
@@ -397,12 +396,12 @@ class MainWindow(wxFrame):
         menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
         menuBar.Append(menu, "&Edit");
 
-        menu=wxMenu()
+        menu=wx.Menu()
         menu.Append(guihelper.ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
         menuBar.Append(menu, "&Data")
 
-        menu=wxMenu()
+        menu=wx.Menu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
         menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
@@ -412,7 +411,7 @@ class MainWindow(wxFrame):
         menuBar.Append(menu, "&View")
         
 
-        menu=wxMenu()
+        menu=wx.Menu()
         menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
@@ -423,25 +422,25 @@ class MainWindow(wxFrame):
         
 
         ### toolbar
-        # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
-        self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxTB_TEXT)
-        #self.tb.SetToolBitmapSize(wxSize(32,32))
+        # self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.NO_BORDER|wx.TB_FLAT)
+        self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.TB_TEXT)
+        #self.tb.SetToolBitmapSize(wx.Size(32,32))
         sz=self.tb.GetToolBitmapSize()
         # work around a bug on Linux that returns random (large) numbers
-        if sz[0]<10 or sz[0]>100: sz=wxSize(32,32)
+        if sz[0]<10 or sz[0]>100: sz=wx.Size(32,32)
 
         if guihelper.HasFullyFunctionalListView():
             # The art names are the opposite way round than people would normally describe ...
-            self.tb.AddLabelTool(guihelper.ID_FV_LIST, "List", wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
+            self.tb.AddLabelTool(guihelper.ID_FV_LIST, "List", wx.ArtProvider_GetBitmap(wx.ART_REPORT_VIEW, wx.ART_TOOLBAR, sz),
                                   shortHelp="List View", longHelp="View items as a list")
-            self.tb.AddLabelTool(guihelper.ID_FV_ICONS, "Images", wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
+            self.tb.AddLabelTool(guihelper.ID_FV_ICONS, "Images", wx.ArtProvider_GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR, sz),
                                   shortHelp="Icon View", longHelp="View items as icons")
             self.tb.AddSeparator()
 
         # add and delete tools
-        self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wxArtProvider_GetBitmap(wxART_ADD_BOOKMARK, wxART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider_GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
                               shortHelp="Add", longHelp="Add an item")
-        self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wxArtProvider_GetBitmap(wxART_DEL_BOOKMARK, wxART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider_GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
                               shortHelp="Delete", longHelp="Delete item")
             
         # You have to make this call for the toolbar to draw itself properly
@@ -453,25 +452,25 @@ class MainWindow(wxFrame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
-        EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
-        EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
-        EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
-        EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
-        EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
-        EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
-        EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
-        EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
-        EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
-        EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
-        EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
-        EVT_MENU(self, guihelper.ID_FV_ICONS, self.OnFileViewIcons)
-        EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
-        EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
-        EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
-        EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
-        EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
-        EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
-        EVT_CLOSE(self, self.OnClose)
+        wx.EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
+        wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
+        wx.EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
+        wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
+        wx.EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
+        wx.EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
+        wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
+        wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
+        wx.EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
+        wx.EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
+        wx.EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
+        wx.EVT_MENU(self, guihelper.ID_FV_ICONS, self.OnFileViewIcons)
+        wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
+        wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
+        wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
+        wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
+        wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
+        wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
         ### if necessary (especially needed on Mac and Linux)
@@ -483,14 +482,14 @@ class MainWindow(wxFrame):
         self.configdlg=guiwidgets.ConfigDialog(self, self)
         if self.configdlg.needconfig():
             self.CloseSplashScreen()
-            if self.configdlg.ShowModal()!=wxID_OK:
+            if self.configdlg.ShowModal()!=wx.ID_OK:
                 self.OnExit()
                 return
         self.configdlg.updatevariables()
         
         ### notebook
-        self.nb=wxNotebook(self,-1, style=wxNO_FULL_REPAINT_ON_RESIZE)
-        # EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
+        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
+        # wx.EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
 
         ### notebook tabs
         self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
@@ -517,10 +516,10 @@ class MainWindow(wxFrame):
         if fv:
             menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
-            wxYield()
+            wx.Yield()
 
         # now register for notebook changes
-        EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
+        wx.EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
 
 
         # show the last page we were on
@@ -546,10 +545,10 @@ class MainWindow(wxFrame):
         if self.config.ReadInt("firstrun", True):
             self.config.WriteInt("firstrun", False)
             self.config.Flush()
-            wxCallAfter(self.OnHelpTour)
+            wx.CallAfter(self.OnHelpTour)
 
         # Populate all widgets from disk
-        wxCallAfter(self.OnPopulateEverythingFromDisk)
+        wx.CallAfter(self.OnPopulateEverythingFromDisk)
 
 
 
@@ -563,7 +562,7 @@ class MainWindow(wxFrame):
             except:
                 pass
             thesplashscreen=None
-            wxSafeYield(onlyIfNeeded=True)
+            wx.SafeYield(onlyIfNeeded=True)
 
     def OnExit(self,_=None):
         self.Close()
@@ -584,7 +583,7 @@ class MainWindow(wxFrame):
         assert isinstance(exception, SystemExit)
         # assume it worked
         self.Destroy()
-	wxGetApp().ExitMainLoop()
+	wx.GetApp().ExitMainLoop()
 
     # about and help
 
@@ -597,19 +596,19 @@ class MainWindow(wxFrame):
             str+=version.extrainfo+"\n\n"
         str+=version.contact
 
-        d=wxMessageDialog(self, str, "About BitPim", wxOK|wxICON_INFORMATION)
+        d=wx.MessageDialog(self, str, "About BitPim", wx.OK|wx.ICON_INFORMATION)
         d.ShowModal()
         d.Destroy()
         
     def OnHelpHelp(self, _):
         text=re.sub("[^A-Za-z]", "", self.nb.GetPageText(self.nb.GetSelection()))
-        wxGetApp().displayhelpid(getattr(helpids, "ID_TAB_"+text.upper()))
+        wx.GetApp().displayhelpid(getattr(helpids, "ID_TAB_"+text.upper()))
 
     def OnHelpContents(self, _):
-        wxGetApp().helpcontroller.DisplayContents()
+        wx.GetApp().helpcontroller.DisplayContents()
 
     def OnHelpTour(self, _=None):
-        wxGetApp().displayhelpid(helpids.ID_TOUR)
+        wx.GetApp().displayhelpid(helpids.ID_TOUR)
 
     def OnViewColumns(self, _):
         dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
@@ -654,10 +653,10 @@ class MainWindow(wxFrame):
         
 
     def OnFileImport(self,_):
-        dlg=wxFileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
-                         style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
+        dlg=wx.FileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
+                         style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
         path=None
-        if dlg.ShowModal()==wxID_OK:
+        if dlg.ShowModal()==wx.ID_OK:
             path=dlg.GetPath()
         dlg.Destroy()
         if path is None:
@@ -674,7 +673,7 @@ class MainWindow(wxFrame):
         dlg=self.dlggetphone
         print self.phoneprofile
         dlg.UpdateWithProfile(self.phoneprofile)
-        if dlg.ShowModal()!=wxID_OK:
+        if dlg.ShowModal()!=wx.ID_OK:
             return
         self.MakeCall(Request(self.wt.getdata, dlg),
                       Callback(self.OnDataGetPhoneResults))
@@ -731,7 +730,7 @@ class MainWindow(wxFrame):
         dlg=self.dlgsendphone
         print self.phoneprofile
         dlg.UpdateWithProfile(self.phoneprofile)
-        if dlg.ShowModal()!=wxID_OK:
+        if dlg.ShowModal()!=wx.ID_OK:
             return
         data={}
         convertors=[]
@@ -812,22 +811,22 @@ class MainWindow(wxFrame):
         self.ringerwidget.getfromfs(results)
         self.calendarwidget.getfromfs(results)
         # update controls
-        wxSafeYield(onlyIfNeeded=True)
+        wx.SafeYield(onlyIfNeeded=True)
         self.phonewidget.populate(results)
-        wxSafeYield(onlyIfNeeded=True)
+        wx.SafeYield(onlyIfNeeded=True)
         self.wallpaperwidget.populate(results)
-        wxSafeYield(onlyIfNeeded=True)
+        wx.SafeYield(onlyIfNeeded=True)
         self.ringerwidget.populate(results)
-        wxSafeYield(onlyIfNeeded=True)
+        wx.SafeYield(onlyIfNeeded=True)
         self.calendarwidget.populate(results)
         # close the splash screen if it is still up
         self.CloseSplashScreen()
         
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
-        if wxIsBusy():
-            wxMessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                         "BitPim is busy.", wxOK|wxICON_EXCLAMATION)
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
         else:
             self.configdlg.ShowModal()
 
@@ -884,10 +883,10 @@ class MainWindow(wxFrame):
     # Busy handling
     def OnBusyStart(self):
         self.SetStatusText("BUSY")
-        wxBeginBusyCursor(wxStockCursor(wxCURSOR_ARROWWAIT))
+        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
 
     def OnBusyEnd(self):
-        wxEndBusyCursor()
+        wx.EndBusyCursor()
         self.SetStatusText("Ready")
         self.OnProgressMajor(0,1)
 
@@ -930,18 +929,18 @@ class MainWindow(wxFrame):
         if isinstance(exception, common.CommsDeviceNeedsAttention):
             text="%s: %s" % (exception.device, exception.message)
             title="Device needs attention - "+exception.device
-            style=wxOK|wxICON_INFORMATION
-            help=lambda _: wxGetApp().displayhelpid(helpids.ID_DEVICE_NEEDS_ATTENTION)
+            style=wx.OK|wx.ICON_INFORMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_DEVICE_NEEDS_ATTENTION)
         elif isinstance(exception, common.CommsOpenFailure):
             text="%s: %s" % (exception.device, exception.message)
             title="Failed to open communications - "+exception.device
-            style=wxOK|wxICON_INFORMATION
-            help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_OPEN_DEVICE)
+            style=wx.OK|wx.ICON_INFORMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_FAILED_TO_OPEN_DEVICE)
         elif isinstance(exception, common.AutoPortsFailure):
             text=exception.message
             title="Failed to automatically detect port"
-            style=wxOK|wxICON_INFORMATION
-            help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_AUTODETECT_PORT)
+            style=wx.OK|wx.ICON_INFORMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_FAILED_TO_AUTODETECT_PORT)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
@@ -970,7 +969,7 @@ class MainWindow(wxFrame):
 ### Container for midi files
 ###  
 
-#class MidiFileList(wxListCtrl):
+#class MidiFileList(wx.ListCtrl):
 #    pass
 
 
@@ -1220,11 +1219,11 @@ class WorkerThread(WorkerThreadFramework):
         return results
 
 
-class FileSystemView(wxTreeListCtrl):
+class FileSystemView(wx.gizmos.TreeListCtrl):
 
-    # the gizmos.py shipped with wxPython 2.4.1.2 has wrong implementation
+    # the gizmos.py shipped with wx 2.4.1.2 has wrong implementation
     # of these three methods.  We have fixed versions here.  They will be removed
-    # when a later version of wxPython ships
+    # when a later version of wx ships
     def GetFirstChild(self, *_args, **_kwargs):
         val = gizmosc.wxTreeListCtrl_GetFirstChild(self, *_args, **_kwargs)
         return val
@@ -1239,7 +1238,7 @@ class FileSystemView(wxTreeListCtrl):
     # sort (somewhat lame imho)
     def __init__(self, mainwindow, parent, id=-1):
         self.datacolumn=False # used for debugging and inspection of values
-        wxTreeListCtrl.__init__(self, parent, id, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
+        wx.gizmos.TreeListCtrl.__init__(self, parent, id, style=wx.WANTS_CHARS|wx.TR_DEFAULT_STYLE)
         self.AddColumn("Name")
         self.AddColumn("Size")
         self.AddColumn("Date")
@@ -1249,24 +1248,24 @@ class FileSystemView(wxTreeListCtrl):
         if self.datacolumn:
             self.AddColumn("Extra Stuff")
             self.SetColumnWidth(3, 400)
-        self.SetColumnAlignment(1, wxLIST_FORMAT_RIGHT)
+        self.SetColumnAlignment(1, wx.LIST_FORMAT_RIGHT)
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
         self.SetPyData(self.root, None)
         self.SetItemHasChildren(self.root, True)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.dirhash={ "": 1}
-        EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
-        EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
+        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
+        wx.EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
 
-        self.filemenu=wxMenu()
+        self.filemenu=wx.Menu()
         self.filemenu.Append(guihelper.ID_FV_SAVE, "Save ...")
         self.filemenu.Append(guihelper.ID_FV_HEXVIEW, "Hexdump")
         self.filemenu.AppendSeparator()
         self.filemenu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.filemenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite ...")
 
-        self.dirmenu=wxMenu()
+        self.dirmenu=wx.Menu()
         self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
         self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
         self.dirmenu.AppendSeparator()
@@ -1281,21 +1280,21 @@ class FileSystemView(wxTreeListCtrl):
         self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
         self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
 
-        EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
-        EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
-        EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
-        EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
-        EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
-        EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
-        EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
+        wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
+        wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
     def OnRightUp(self, event):
         pt = event.GetPosition();
@@ -1394,9 +1393,9 @@ class FileSystemView(wxTreeListCtrl):
             ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
         else:
             ext="All files|*"
-        dlg=wxFileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR)
-        if dlg.ShowModal()==wxID_OK:
+        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
             f=open(dlg.GetPath(), "wb")
             f.write(contents)
             f.close()
@@ -1429,8 +1428,8 @@ class FileSystemView(wxTreeListCtrl):
 
     def OnFileOverwrite(self,_):
         path=self.itemtopath(self.GetSelection())
-        dlg=wxFileDialog(self, style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
-        if dlg.ShowModal()!=wxID_OK:
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
             dlg.Destroy()
             return
         infile=dlg.GetPath()
@@ -1448,8 +1447,8 @@ class FileSystemView(wxTreeListCtrl):
         self.OnDirListing(parentdir)
 
     def OnNewSubdir(self, _):
-        dlg=wxTextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
-        if dlg.ShowModal()!=wxID_OK:
+        dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
+        if dlg.ShowModal()!=wx.ID_OK:
             dlg.Destroy()
             return
         parent=self.itemtopath(self.GetSelection())
@@ -1469,8 +1468,8 @@ class FileSystemView(wxTreeListCtrl):
         
     def OnNewFile(self,_):
         parent=self.itemtopath(self.GetSelection())
-        dlg=wxFileDialog(self, style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
-        if dlg.ShowModal()!=wxID_OK:
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
             dlg.Destroy()
             return
         infile=dlg.GetPath()
@@ -1545,9 +1544,9 @@ class FileSystemView(wxTreeListCtrl):
             bn="root"
         bn+=".zip"
         ext="Zip files|*.zip|All Files|*"
-        dlg=wxFileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR)
-        if dlg.ShowModal()==wxID_OK:
+        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
             f=open(dlg.GetPath(), "wb")
             f.write(backup)
             f.close()
@@ -1561,15 +1560,15 @@ class FileSystemView(wxTreeListCtrl):
             bn="root"
         bn+=".zip"
         ext="Zip files|*.zip|All Files|*"
-        dlg=wxFileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
-                             style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
-        if dlg.ShowModal()!=wxID_OK:
+        dlg=wx.FileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
+                             style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
             return
         name=dlg.GetPath()
         if not zipfile.is_zipfile(name):
             dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" is not a valid zipfile.", "Zip file required",
-                                               lambda _: wxGetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
-                                               style=wxOK|wxICON_ERROR)
+                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
+                                               style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
             return
@@ -1578,8 +1577,8 @@ class FileSystemView(wxTreeListCtrl):
         if xx is not None:
             dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" has corrupted contents.  Use a repair utility to fix it",
                                                "Zip file corrupted",
-                                               lambda _: wxGetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
-                                               style=wxOK|wxICON_ERROR)
+                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
+                                               style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
             return
@@ -1589,8 +1588,8 @@ class FileSystemView(wxTreeListCtrl):
 
     def OnRestoreOK(self, zipf, names, parentdir):
         if len(names)==0:
-            wxMessageBox("You didn't select any files to restore!", "No files selected",
-                         wxOK|wxICON_EXCLAMATION)
+            wx.MessageBox("You didn't select any files to restore!", "No files selected",
+                         wx.OK|wx.ICON_EXCLAMATION)
             return
         l=[]
         for zipname, fsname in names:
@@ -1620,20 +1619,20 @@ class FileSystemView(wxTreeListCtrl):
         self.OnDirListing(parentdir)
 
         if len(ok) and len(fail)==0:
-            dlg=wxMessageDialog(mw, "All files restored ok", "All files restored",
-                                wxOK|wxICON_INFORMATION)
+            dlg=wx.MessageDialog(mw, "All files restored ok", "All files restored",
+                                wx.OK|wx.ICON_INFORMATION)
             dlg.Show(True)
             return
         if len(fail) and len(ok)==0:
-            wxMessageBox("All files failed to restore", "No files restored",
-                         wxOK|wxICON_ERROR)
+            wx.MessageBox("All files failed to restore", "No files restored",
+                         wx.OK|wx.ICON_ERROR)
             return
 
         op="Failed to restore some files.  Check the log for reasons.:\n\n"
         for s,n in fail:
             op+="   "+n+"\n"
 
-        wxMessageBox(op, "Some restores failed", wxOK|wxICON_ERROR)
+        wx.MessageBox(op, "Some restores failed", wx.OK|wx.ICON_ERROR)
             
 
     def OnDirRefresh(self, _):
@@ -1675,7 +1674,7 @@ class FileSystemView(wxTreeListCtrl):
             self.SetPyData(node, None)
         return node
 
-class RestoreDialog(wxDialog):
+class RestoreDialog(wx.Dialog):
     """A dialog that lists all the files that will be restored"""
     
     def __init__(self, parent, title, zipf, path, okcb):
@@ -1684,9 +1683,9 @@ class RestoreDialog(wxDialog):
         @param path: Placed before names in the archive.  Should not include a
                        trailing slash.
         """
-        wxDialog.__init__(self, parent, -1, title, style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
-        vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add( wxStaticText(self, -1, "Choose files to restore"), 0, wxALIGN_CENTRE|wxALL, 5)
+        wx.Dialog.__init__(self, parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add( wx.StaticText(self, -1, "Choose files to restore"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         nl=zipf.namelist()
         nl.sort()
@@ -1699,23 +1698,23 @@ class RestoreDialog(wxDialog):
 
         nnl=map(lambda i: prefix+i, nl)
 
-        self.clb=wxCheckListBox(self, -1, choices=nnl, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB, size=wxSize(200,300))
+        self.clb=wx.CheckListBox(self, -1, choices=nnl, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB, size=wx.Size(200,300))
 
         for i in range(len(nnl)):
             self.clb.Check(i, True)
 
-        vbs.Add( self.clb, 1, wxEXPAND|wxALL, 5)
+        vbs.Add( self.clb, 1, wx.EXPAND|wx.ALL, 5)
 
-        vbs.Add(wxStaticLine(self, -1, style=wxLI_HORIZONTAL), 0, wxEXPAND|wxALL, 5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
 
-        vbs.Add(self.CreateButtonSizer(wxOK|wxCANCEL|wxHELP), 0, wxALIGN_CENTER|wxALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
     
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
 
-        EVT_BUTTON(self, wxID_HELP, lambda _: wxGetApp().displayhelpid(helpids.ID_RESTOREDIALOG))
-        EVT_BUTTON(self, wxID_OK, self.OnOK)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_RESTOREDIALOG))
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOK)
         self.okcb=okcb
         self.zipf=zipf
         self.nl=zip(nl, nnl)
