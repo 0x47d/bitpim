@@ -175,25 +175,6 @@ class Phone(com_samsung_packet.Phone):
         results['wallpaper-index']=imagemedia
         return
         
-    def savegroups(self, data):
-        """Write the groups, sending only those groups that have had
-        a name change.  (So that ringers don't get messed up)"""
-        groups=data['groups']
-
-        groups_onphone=self.read_groups() # Get groups on phone
-
-        keys=groups.keys()
-        keys.sort()
-
-        for k in keys:
-            if groups[k]['name']!=groups_onphone[k]['name']:
-                if groups[k]['name']!="Unassigned":
-                    req=self.protocolclass.groupnamesetrequest()
-                    req.gid=k
-                    req.groupname=groups[k]['name']
-                    # Response will have ERROR, even though it works
-                    self.sendpbcommand(req, self.protocolclass.unparsedresponse, ignoreerror=True)
-        
     def _findmediaindex(self, index, name, pbentryname, type):
         if name is None:
             return 0
@@ -208,34 +189,6 @@ class Phone(com_samsung_packet.Phone):
         
         return 0
         
-    def makeentry(self, entry, data):
-        e=self.protocolclass.pbentry()
-
-        for k in entry:
-            # special treatment for lists
-            if k=='numbertypes' or k=='secrets':
-                continue
-            if k=='ringtone':
-            #    e.ringtone=self._findmediaindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
-                continue
-            elif k=='wallpaper':
-            #    e.wallpaper=self._findmediaindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
-                continue
-            elif k=='numbers':
-                #l=getattr(e,k)
-                for numberindex in range(self.protocolclass.NUMPHONENUMBERS):
-                    enpn=self.protocolclass.phonenumber()
-                    # l.append(enpn)
-                    e.numbers.append(enpn)
-                for i in range(len(entry[k])):
-                    numberindex=entry['numbertypes'][i]
-                    e.numbers[numberindex].number=entry[k][i]
-                    e.numbers[numberindex].secret=entry['secrets'][i]
-                continue
-            # everything else we just set
-            setattr(e, k, entry[k])
-        return e
-
     def savephonebook(self, data):
         "Saves out the phonebook"
 
