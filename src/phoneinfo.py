@@ -10,6 +10,23 @@
 
 """
 Module to display specific handset info.
+This module faciliates individual phones to provide specific phone info to be
+displayed.  The PhoneInfo has the following attributes:
+
+model: The phone model.
+manufacturer: The phone manufacturer.
+phone_number: The phone #.
+esn: Phone ESN.
+firmware_version: Phone firmware version.
+signal_quality: (0-100%) Phone reception quality.
+battery_level: (0-100%) Current battery level.
+
+To add (and display) other phone information:
+
+append(label_str, value_str)
+  ie. phone_info.append('Analog/Digital:', 'Digital')
+
+For an example of implementing this feature, please see module com_samsung.
 
 """
 
