@@ -223,7 +223,7 @@ class CommConnection:
     def readsome(self, log=True):
         self.readrequests+=1
         res=""
-        while 1:
+        while True:
             b=self.ser.inWaiting()
             if b:
                 res=res+self.read(b,0)
@@ -289,6 +289,12 @@ class _usbdevicewrapper:
     def __init__(self, dev, timeout):
         self.dev=dev
         self.timeout=int(timeout*1000)
+
+    def inWaiting(self):
+        # This will cause one byte at a time reads in the other code.
+        # It isn't really possible to fix until we have built in
+        # buffering for the comm stuff.
+        return 0
 
     def read(self, numchars=1):
         return self.dev.read(numchars, self.timeout)
