@@ -509,7 +509,7 @@ class codegen:
             print >>out, indent(3)+"self.__field_%s=%s(*args,**dict2)" % (f[1],f[3])
         # else error if any args
         else:
-            print >>out, indent(2)+"if len(args): raise TypeError('Unexpected arguments supplied')"
+            print >>out, indent(2)+"if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)"
         print >>out, indent(2)+"# Make all P fields that haven't already been constructed"
         for f in fields:
             if f[0]==tokens.FIELD and f[2]=='P':
