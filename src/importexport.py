@@ -29,6 +29,8 @@ import guihelper
 import vcard
 import phonenumber
 import guiwidgets
+import nameparser
+import phonebook
 
 # control
 def GetPhonebookImports():
@@ -131,7 +133,7 @@ class ImportDialog(wx.Dialog):
 
 
     def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
-                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
         
         vbs=wx.BoxSizer(wx.VERTICAL)
@@ -1656,18 +1658,75 @@ def GetPhonebookExports():
     
     return res
 
-class ExportVCardDialog(wx.Dialog):
+class BaseExportDialog(wx.Dialog):
+
+    def __init__(self, parent, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE):
+        wx.Dialog.__init__(self, parent, id=-1, title=title, style=style)
+        self._phonebook_module=phonebook.thephonewidget
+
+    def GetSelectionGui(self, parent):
+        "Returns a sizer containing the gui for selecting which items and which fields are exported"
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+
+        lsel=len(self._phonebook_module.GetSelectedRows())
+        lall=len(self._phonebook_module._data)
+        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
+        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
+        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
+        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
+        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(rbs, 3, wx.EXPAND|wx.ALL, 5)
+        self.rows_selected.SetValue(lsel>1)
+        self.rows_all.SetValue(not lsel>1)
+
+        vbs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Fields"), wx.VERTICAL)
+        cb=[]
+        for c in ("Everything", "Phone Numbers", "Addresses", "Email Addresses"):
+            cb.append(wx.CheckBox(self, -1, c))
+            vbs2.Add(cb[-1], 0, wx.EXPAND|wx.ALL, 5)
+
+        for c in cb:
+            c.Enable(False)
+        cb[0].SetValue(True)
+
+        hbs.Add(vbs2, 4, wx.EXPAND|wx.ALL, 5)
+
+        return hbs
+
+    def GetPhoneBookItems(self, includecount=False):
+        """Returns each item in the phonebook based on the settings
+        for all vs selected.  The fields are also trimmed to match
+        what the user requested.
+
+        @param includecount:  If this is true then the return is
+                 a tuple of (item, number, max) and you can use
+                 number and max to update a progress bar.  Note
+                 that some items may be skipped (eg if the user
+                 only wants records with phone numbers and some
+                 records don't have them)
+        """
+        
+        data=self._phonebook_module._data
+        if self.rows_all.GetValue():
+            rowkeys=data.keys()
+        else:
+            rowkeys=self.phonebook.GetSelectedRowKeys()
+        for i,k in enumerate(rowkeys):
+            # ::TODO:: look at fields setting
+            if includecount:
+                yield data[k],i,len(rowkeys)
+            else:
+                yield data[k]
+
+class ExportVCardDialog(BaseExportDialog):
 
     dialects=vcard.profiles.keys()
     dialects.sort()
     default_dialect='vcard2'
 
-    def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
-             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE):
-        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
-        import phonebook
-        self.phonebook=phonebook.thephonewidget
-
+    def __init__(self, parent, title):
+        BaseExportDialog.__init__(self, parent, title)
         # make the ui
         
         vbs=wx.BoxSizer(wx.VERTICAL)
@@ -1683,47 +1742,20 @@ class ExportVCardDialog(wx.Dialog):
 
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
 
-        vbs2=wx.BoxSizer(wx.VERTICAL)
+        hbs2=wx.BoxSizer(wx.HORIZONTAL)
 
         # dialects
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Dialect"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
-        self.dialectctrl=wx.ComboBox(self, -1, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=[vcard.profiles[d]['description'] for d in self.dialects])
+        hbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Dialect"), wx.VERTICAL)
+        self.dialectctrl=wx.ListBox(self, -1, style=wx.LB_SINGLE, choices=[vcard.profiles[d]['description'] for d in self.dialects])
         default=wx.GetApp().config.Read("vcard/export-format", self.default_dialect)
         if default not in self.dialects: default=self.default_dialect
         self.dialectctrl.SetSelection(self.dialects.index(default))
         hbs.Add(self.dialectctrl, 1, wx.ALL|wx.EXPAND, 5)
-        vbs2.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        
-        # selected or all?
-        lsel=len(self.phonebook.GetSelectedRows())
-        lall=len(self.phonebook._data)
-        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
-        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
-        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
-        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
-        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
-        vbs2.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        self.rows_selected.SetValue(lsel>1)
-        self.rows_all.SetValue(not lsel>1)
+        hbs2.Add(hbs, 2, wx.EXPAND|wx.ALL, 10)
+        hbs2.Add(self.GetSelectionGui(self), 5, wx.EXPAND|wx.ALL, 5)
 
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(vbs2, 1, wx.EXPAND|wx.ALL, 5)
-
-        vbs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Fields"), wx.VERTICAL)
-        cb=[]
-        for c in ("Everything", "Phone Numbers", "Addresses", "Email Addresses"):
-            cb.append(wx.CheckBox(self, -1, c))
-            vbs2.Add(cb[-1], 0, wx.EXPAND|wx.ALL, 5)
-
-        for c in cb:
-            c.Enable(False)
-        cb[0].SetValue(True)
-
-        hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 10)
-
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs2, 0, wx.EXPAND|wx.ALL, 5)
 
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
         vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
@@ -1746,23 +1778,16 @@ class ExportVCardDialog(wx.Dialog):
 
         dialect=None
         for k,v in vcard.profiles.items():
-            if v['description']==self.dialectctrl.GetValue():
+            if v['description']==self.dialectctrl.GetStringSelection():
                 dialect=k
                 break
 
         assert dialect is not None
 
-        data=self.phonebook._data
-        if self.rows_all.GetValue():
-            rowkeys=data.keys()
-        else:
-            rowkeys=self.phonebook.GetSelectedRowKeys()
-
         # ::TODO:: ask about overwriting existing file
         f=open(filename, "wt")
-        for k in rowkeys:
-            print >>f, vcard.output_entry(data[k], vcard.profiles[dialect]['profile'])
-
+        for record in self.GetPhoneBookItems():
+            print >>f, vcard.output_entry(record, vcard.profiles[dialect]['profile'])
         f.close()
         
         # save settings since we were succesful
@@ -1771,16 +1796,17 @@ class ExportVCardDialog(wx.Dialog):
         wx.GetApp().config.Flush()
         self.EndModal(wx.ID_OK)
 
-class ExporteGroupwareDialog(wx.Dialog):
+class ExporteGroupwareDialog(BaseExportDialog):
 
     ID_REFRESH=wx.NewId()
     ID_CHANGE=wx.NewId()
 
-    def __init__(self, parent, id, title, module, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
-             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE):
-        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
-        import phonebook
-        self.phonebook=phonebook.thephonewidget
+    _categorymessage="There is no way for BitPim to create categories on the eGroupware server "  \
+          "so you will have to create them yourself.  You can check to see which ones still need " \
+          "to be created."
+
+    def __init__(self, parent, title, module):
+        BaseExportDialog.__init__(self, parent, title)
 
         self.module=module
         
@@ -1792,12 +1818,12 @@ class ExporteGroupwareDialog(wx.Dialog):
         hbs.Add(wx.StaticText(self, -1, "URL"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
         self.curl=wx.StaticText(self, -1)
         hbs.Add(self.curl, 3, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
-        hbs.Add(wx.StaticText(self, -1, "Domain"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        hbs.Add(wx.StaticText(self, -1, "Domain"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.cdomain=wx.StaticText(self, -1)
         hbs.Add(self.cdomain, 1, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
-        hbs.Add(wx.StaticText(self, -1, "User"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
+        hbs.Add(wx.StaticText(self, -1, "User"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.cuser=wx.StaticText(self, -1)
-        hbs.Add(self.cuser, 1, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
+        hbs.Add(self.cuser, 1, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 5)
         self.cchange=wx.Button(self, self.ID_CHANGE, "Change ...")
         hbs.Add(self.cchange, 0, wx.ALL, 2)
         vbs.Add(hbs,0,wx.ALL,5)
@@ -1805,67 +1831,47 @@ class ExporteGroupwareDialog(wx.Dialog):
         self.sp=None
         self.setcreds()
 
-        # selected or all?
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-
-        lsel=len(self.phonebook.GetSelectedRows())
-        lall=len(self.phonebook._data)
-        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
-        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
-        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
-        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
-        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
-
-        self.rows_selected.SetValue(lsel>1)
-        self.rows_all.SetValue(not lsel>1)
-
-        wx.EVT_RADIOBUTTON(self, self.rows_selected.GetId(), self.DataUpdate)
-        wx.EVT_RADIOBUTTON(self, self.rows_all.GetId(), self.DataUpdate)
+        vbs.Add(self.GetSelectionGui(self), 0, wx.EXPAND|wx.ALL, 5)
 
 
-        vbs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Fields"), wx.VERTICAL)
-        cb=[]
-        for c in ("Everything", "Phone Numbers", "Addresses", "Email Addresses"):
-            cb.append(wx.CheckBox(self, -1, c))
-            vbs2.Add(cb[-1], 0, wx.EXPAND|wx.ALL, 5)
-
-        for c in cb:
-            c.Enable(False)
-        cb[0].SetValue(True)
-
-        hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 10)
-
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Category checker"),0, wx.ALL, 2)
-        hbs.Add(wx.Button(self, self.ID_REFRESH, "Refresh"), 0, wx.ALL|wx.ALIGN_RIGHT, 2)
-        vbs2=wx.BoxSizer(wx.VERTICAL)
-        vbs2.Add(hbs, 1, wx.EXPAND|wx.ALL, 2)
-        self.categoryinfo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
-        vbs2.Add(self.categoryinfo, 1, wx.EXPAND|wx.ALL, 2)
-
-        vbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 5)
+        # category checker
         
+        bs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category Checker"), wx.HORIZONTAL)
+        bs2.Add(wx.Button(self, self.ID_REFRESH, "Check"), 0, wx.ALL, 5)
+        self.categoryinfo=wx.TextCtrl(self, -1, self._categorymessage, style=wx.TE_MULTILINE|wx.TE_READONLY)
+        bs2.Add(self.categoryinfo, 1, wx.EXPAND|wx.ALL, 2)
+
+        vbs.Add(bs2, 0, wx.EXPAND|wx.ALL, 5)
 
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+
+        bs2=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Export Progress"), wx.VERTICAL)
+        self.progress=wx.Gauge(self, -1, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
+        self.progress_text=wx.StaticText(self, -1, "")
+        bs2.Add(self.progress, 0, wx.EXPAND|wx.ALL, 5)
+        bs2.Add(self.progress_text, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(bs2, 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
+        
+        # for some reason wx decides to make the dialog way taller
+        # than needed.  i can't figure out why.  sometimes wx just
+        # makes you go grrrrrrrr
         vbs.Fit(self)
 
-        wx.EVT_BUTTON(self, self.ID_REFRESH, self.DataUpdate)
+        wx.EVT_BUTTON(self, self.ID_REFRESH, self.CategoryCheck)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         
-        wx.CallAfter(self.DataUpdate)
-
     def OnChangeCreds(self,_):
         dlg=eGroupwareLoginDialog(self, self.module)
         newsp=dlg.GetSession()
         if newsp is not None:
             self.sp=newsp
             self.setcreds()
-            wx.CallAfter(self.DataUpdate)
 
     def setcreds(self):
         cfg=wx.GetApp().config
@@ -1878,7 +1884,7 @@ class ExporteGroupwareDialog(wx.Dialog):
             defuser="user"
         self.cuser.SetLabel(cfg.Read("egroupware/user", defuser))
 
-    def DataUpdate(self, evt=None):
+    def CategoryCheck(self, evt=None):
         if evt is not None:
             evt.Skip()
         if self.sp is None:
@@ -1903,24 +1909,112 @@ class ExporteGroupwareDialog(wx.Dialog):
             self.categoryinfo.SetValue("eGroupware doesn't have the following categories, which you will need to manually add:\n\n"+", ".join(nocats))
         else:
             self.categoryinfo.SetValue("eGroupware has all the categories you use")
+
+    def OnOk(self, _):
+        if self.sp is None:
+            self.sp=eGroupwareLoginDialog(self, self.module).GetSession(auto=True)
+            self.setcreds()
+        if self.sp is None:
+            return
+
+        setmax=-1
+        for record,pos,max in self.GetPhoneBookItems(includecount=True):
+            if max!=setmax:
+                setmax=max
+                self.progress.SetRange(max)
+            self.progress.SetValue(pos)
+            self.progress_text.SetLabel(nameparser.formatsimplename(record.get("names", [{}])[0]))
+            newid=self.sp.writecontact(self.FormatRecord(record))
+            # ::TODO:: update serial
+            print "newid is",newid
+
+        self.EndModal(wx.ID_OK)
+
+    def FormatRecord(self, record):
+        "Convert record into egroupware fields"
+
+        # note that mappings must be carefully chosen to ensure that importing from egroupware
+        # and then re-exporting doesn't change anything.
         
-    def GetPhoneBookItems(self):
-        # this needs to move into phonebook itself or a superclass
-        data=self.phonebook._data
-        if self.rows_all.GetValue():
-            rowkeys=data.keys()
-        else:
-            rowkeys=self.phonebook.GetSelectedRowKeys()
-        for k in rowkeys:
-            yield data[k]
+        res={'id': 0} # zero means create new record
+        # find existing egroupware id
+        for i in record.get("serials", []):
+            if i['sourcetype']=='egroupware':
+                res['id']=i['id']
+                break
+        # name (nb we don't do prefix or suffix since bitpim doesn't know about them)
+        res['n_given'],res['n_middle'],res['n_family']=nameparser.getparts(record.get("names", [{}])[0])
+        res['fn']=nameparser.formatsimplename(record.get("names", [{}])[0])
+        # addresses
+        for t,prefix in ("business", "adr_one"), ("home", "adr_two"):
+            a={}
+            adr=record.get("addresses", [])
+            for i in adr:
+                if i['type']==t:
+                    for p2,k in ("_street", "street"), ("_locality", "city"), ("_region", "state"), \
+                        ("_postalcode", "postalcode"), ("_countryname", "country"):
+                        res[prefix+p2]=i.get(k, "")
+                    if t=="business":
+                        res['org_name']=i.get("company","")
+                    break
+        # email
+        if "emails" in record:
+            for t,k in ("business", "email"), ("home", "email_home"):
+                for i in record["emails"]:
+                    if t=="business" and i.get("type",None)==t:
+                        res[k]=i.get("email")
+                        res[k+"_type"]="INTERNET"
+                        break
+                    if i.get("type",None)!="business":
+                        res[k]=i.get("email")
+                        res[k+"_type"]="INTERNET"
+                        break
+        # categories
+
+        # ::TODO::
+
+        # phone numbers
+        # t,k is bitpim type, egroupware type
+        for t,k in ("home", "tel_home"), ("cell", "tel_cell"), ('fax','tel_fax'), \
+                ('pager', 'tel_pager'), ('office', 'tel_work'):
+            if "numbers" in record:
+                v=""
+                for i in record['numbers']:
+                    if i['type']==t:
+                        v=i['number']
+                        break
+                res[k]=phonenumber.format(v)
+
+        # miscellaneous others
+        if "memos" in record:
+            memos=record.get("memos", [])
+            memos+=[{}]
+            res['note']=memos[0].get("memo","")
+        if "urls" in record:
+            urls=record.get("urls", [])
+            u=""
+            for url in urls:
+                if url.get("type", None)=="business":
+                    u=url["url"]
+                    break
+            if len(u)==0:
+                urls+=[{'url':""}]
+                u=urls[0]["url"]
+            res['url']=u
+
+        # that should be everything
+        return res
+            
+            
+        
 
 def OnFileExportVCards(parent):
-    dlg=ExportVCardDialog(parent, -1, "Export phonebook to vCards")
+    dlg=ExportVCardDialog(parent, "Export phonebook to vCards")
     dlg.ShowModal()
     dlg.Destroy()
 
 def OnFileExporteGroupware(parent):
     import native.egroupware
-    dlg=ExporteGroupwareDialog(parent, -1, "Export phonebook to eGroupware", native.egroupware)
+    dlg=ExporteGroupwareDialog(parent, "Export phonebook to eGroupware", native.egroupware)
     dlg.ShowModal()
     dlg.Destroy()
