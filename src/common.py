@@ -198,6 +198,9 @@ def writeversionindexfile(filename, dict, currentversion):
      f.write("FILEVERSION=%d\n" % (currentversion,))
      f.close()
 
+def formatexceptioneh(*excinfo):
+     print formatexception(excinfo)
+
 def formatexception(excinfo=None, lastframes=8):
      """Pretty print exception, including local variable information.
 
