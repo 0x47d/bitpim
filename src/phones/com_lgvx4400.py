@@ -9,6 +9,7 @@
 
 import common
 import commport
+import copy
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -262,14 +263,7 @@ class Phone:
             # end date.  We need to copy year, month, day from start
             entry['end']=entry['start'][:3]+entry['end'][3:]
             repeat=ord(data[pos+0xc])
-            if   repeat==0x10: repeat=None
-            elif repeat==0x11: repeat="daily"
-            elif repeat==0x12: repeat="monfri"
-            elif repeat==0x13: repeat="weekly"
-            elif repeat==0x14: repeat="monthly"
-            elif repeat==0x15: repeat="yearly"
-            else: repeat=`repeat`
-            entry['repeat']=repeat
+            entry['repeat']=self._calrepeatvalues[repeat]
             entry['?d']=readlsb(data[pos+0xd:pos+0x10])
             min=ord(data[pos+0x10])
             hour=ord(data[pos+0x11])
@@ -285,6 +279,105 @@ class Phone:
         result['calendar']=res
         return result
 
+    def savecalendar(self, dict, merge):
+        # what will be written to the files
+        data=""
+        dataexcept=""
+
+        # what are we working with
+        cal=dict['calendar']
+        newcal={}
+        keys=cal.keys()
+        keys.sort()
+
+        # number of entries
+        data+=makelsb(len(keys), 2)
+        
+        # play with each entry
+        for k in keys:
+            entry=cal[k]
+            pos=len(data)
+            entry['pos']=pos
+
+            # 4 bytes of offset
+            assert len(data)-pos==0
+            data+=makelsb(pos, 4)
+            # start
+            assert len(data)-pos==4
+            data+=makelsb(brewencodedate(*entry['start']),4)
+            # end
+            assert len(data)-pos==8
+            data+=makelsb(brewencodedate(*entry['end']), 4)
+            # repeat
+            assert len(data)-pos==0xc
+            repeat=None
+            for k,v in self._calrepeatvalues.items():
+                if entry['repeat']==v:
+                    repeat=k
+                    break
+            assert repeat is not None
+            data+=makelsb(repeat, 1)
+            # ?d
+            assert len(data)-pos==0xd
+            data+=makelsb(entry['?d'],3)
+            # alarm - first byte is mins, next is hours.  100 indicates not set
+            assert len(data)-pos==0x10
+            if entry['alarm'] is None:
+                hour=100
+                min=100
+            else:
+                assert entry['alarm']>=0
+                hour=entry['alarm']/60
+                min=entry['alarm']%60
+            data+=makelsb(min,1)
+            data+=makelsb(hour,1)
+            # changeserial
+            assert len(data)-pos==0x12
+            data+=makelsb(entry['changeserial'], 2)
+            # ringtone
+            assert len(data)-pos==0x14
+            data+=makelsb(entry['ringtone'], 1)
+            # description
+            assert len(data)-pos==0x15
+            data+=makestring( entry['description'], 39)
+
+            # sanity check
+            print len(data)
+            assert (len(data)-2)%60==0
+
+            # update exceptions if needbe
+            if entry.has_key('exceptions'):
+                for y,m,d in entry['exceptions']:
+                    dataexcept+=makelsb(pos,4)
+                    dataexcept+=makelsb(d,1)
+                    dataexcept+=makelsb(m,1)
+                    dataexcept+=makelsb(y,2)
+                    # sanity check
+                    assert len(dataexcept)%8==0
+
+            # put entry in nice shiny new dict we are building
+            entry=copy.copy(entry)
+            entry['pos']=pos
+            newcal[pos]=entry
+
+        # scribble everything out
+        self.writefile("sch/schedule.dat", data)
+        self.writefile("sch/schexception.dat", dataexcept)
+
+        # fix passed in dict
+        dict['calendar']=newcal
+
+        return dict
+        
+
+    _calrepeatvalues={
+        0x10: None,
+        0x11: 'daily',
+        0x12: 'monfri',
+        0x13: 'weekly',
+        0x14: 'monthly',
+        0x15: 'yearly'
+        }
     
     def writeindex(self, indexfile, index, maxentries=30):
         keys=index.keys()
@@ -1065,6 +1158,18 @@ def brewdecodedate(val):
     val>>=4
     year=val&0xfff # 12 bits
     return (year, month, day, hour, min)
+
+def brewencodedate(year, month, day, hour, minute):
+    val=year
+    val<<=4
+    val|=month
+    val<<=5
+    val|=day
+    val<<=5
+    val|=hour
+    val<<=6
+    val|=minute
+    return val
 
 # Some notes
 #

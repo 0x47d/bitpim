@@ -396,8 +396,8 @@ class GetPhoneDialog(wxDialog):
         gs.AddMany( [
             (wxStaticText(self, -1, "Get"), 0, wxEXPAND),
             (wxStaticText(self, -1, "Type"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Merge"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Overwrite"), 0, wxEXPAND)
+            (wxStaticText(self, -1, "Add"), 0, wxEXPAND),
+            (wxStaticText(self, -1, "Replace"), 0, wxEXPAND)
             ])
         self.cb=[]
         self.rb=[]
@@ -1292,10 +1292,10 @@ class DayViewDialog(wxDialog):
         lbs.Add(hbs2, 0, wxEXPAND)
 
         self.fieldnames=('description', 'start', 'end', 'repeat',
-        'alarm', 'ringtone', '?d')
+        'alarm', 'ringtone', '?d', 'changeserial')
         
         self.fielddesc=( 'Description', 'Start', 'End', 'Repeat',
-        'Alarm', 'Ringtone', '?Internal' )
+        'Alarm', 'Ringtone', '?Internal', 'changeserial' )
 
         # right hand bit with all fields
         gs=wxFlexGridSizer(-1,2,5,5)
