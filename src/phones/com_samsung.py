@@ -18,6 +18,7 @@ import commport
 from string import split,strip,atoi
 import time
 import re
+from DSV import DSV
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
@@ -80,7 +81,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             if len(s1):
                 s += s1
             else:
-                break;
+                break
 
         self.comm.ser.setTimeout(i)
         return s
@@ -139,7 +140,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
-                return split(split(s[0], ": ")[1], ",")
+                return DSV.importDSV([split(s[0], ": ")[1]])[0]
         except commport.ATError:
             pass
         return []
