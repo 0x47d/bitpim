@@ -45,6 +45,7 @@ version="13 December 2003"
 import sys
 import os
 import time
+import glob
 
 def _IsWindows():
     return sys.platform=='win32'
@@ -398,37 +399,28 @@ def _comscanlinux(maxnum=9):
     return results
 
 
-def _comscanmac(maxnum=9):
+def _comscanmac():
     """Get all the ports on Mac
-
-    Since I don't have a Mac, I would welcome correct code for this.  It
-    currently just looks for /dev/tty.usbserial99
     
-    @param maxnum: The highest numbered device to look for (eg maxnum of 17
-                   will look for ttyS0 ... ttys17)
+    Just look for /dev/cu.* entries, they all seem to populate here whether
+    USB->Serial, builtin, bluetooth, etc...
+
     """
     
     resultscount=0
     results={}
-    for prefix, description in ( 
-        ("/dev/cuaa", "Standard serial port"), 
-        ("/dev/tty.usbserial", "USB to serial port"), 
-        ):
-        for num in range(maxnum+1):
-            name=prefix+`num`
-            if not os.path.exists(name):
-                continue
-            res={}
-            res['name']=name
-            res['description']=description+" ("+name+")"
-            try:
-                f=open(name, "rw")
-                f.close()
-                res['available']=True
-            except:
-                res['available']=False
-            results[resultscount]=res
-            resultscount+=1
+    for name in glob.glob("/dev/cu.*"):
+       res={}
+       res['name']=name
+       res['description']="Serial Port"+" ("+name+")"
+       try:
+          f=open(name, "rw")
+          f.close()
+          res['available']=True
+       except:
+          res['available']=False
+       results[resultscount]=res
+       resultscount+=1
     return results
 
 ##def availableports():
