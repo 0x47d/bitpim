@@ -421,7 +421,7 @@ class SSLTransport(xmlrpclib.Transport):
 class ServerProxy(xmlrpclib.ServerProxy):
 
     def __init__(self, uri):
-        sslcontext=M2Crypto.SSL.Context("sslv3")
+        sslcontext=M2Crypto.SSL.Context("sslv23")
         xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext))
         
         
@@ -435,8 +435,8 @@ if __name__=='__main__':
         sys.exit(1)
 
     if sys.argv[1]=="server":
-        ctx=M2Crypto.SSL.Context("sslv3")
-        ctx.load_cert("host.pem", "privkey.pem")
+        ctx=M2Crypto.SSL.Context("sslv23")
+        ctx.load_cert("file.pem")
         server=Server('localhost', 4433, ctx)
         server.setDaemon(True)
         server.start()
