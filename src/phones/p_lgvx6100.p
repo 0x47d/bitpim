@@ -149,4 +149,4 @@ PACKET camindexentry:
 
 PACKET campicsdat:
     "the cam/pics.dat file"
-    * LIST {'length': 20, 'elementclass': camindexentry, 'createdefault': True} +items
+    * LIST {'length': 60, 'elementclass': camindexentry, 'createdefault': True} +items
