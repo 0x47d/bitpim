@@ -21,5 +21,8 @@
 	6001  USB to serial convertor
 		00  Serial connection
 
+# Prettier names for the classes
+C 0a  Data
+	00  Generic
 
 	
