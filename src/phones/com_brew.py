@@ -16,6 +16,10 @@ import com_phone
 import prototypes
 import common
 
+class BrewNotSupported(Exception):
+    """This phone not supported"""
+    pass
+
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
         if str is None:
@@ -321,6 +325,30 @@ class BrewProtocol:
             if baud:
                 if not self.comm.setbaudrate(baud):
                     continue
+            print "Baud="+`baud`
+            #try:
+            #    response=self.comm.sendatcommand("+GMM")
+            #    print "Response="+response
+            #    response=self.comm.readline()
+            #    print "Response="+response
+            #except:
+            #    continue
+            try:
+                print "Writing AT+GMM"
+                self.comm.write("AT+GMM\r\n")
+            except:
+                print "GMM Exception"
+                self.mode=self.MODENONE
+                self.comm.shouldloop=True
+                raise
+            try:
+                s=self.comm.readsome()
+                self.log("GMM: "+s)
+                if s.find("SPH-A700")>=0:
+                    raise BrewNotSupported("This phone is not supported by BitPim", self.desc)
+            except modeignoreerrortypes:
+                self.log("No response to AT+GMM")
+
             try:
                 self.comm.write("AT$QCDMG\r\n")
             except:
