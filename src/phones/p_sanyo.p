@@ -252,7 +252,7 @@ PACKET missedmiscrequest:
     500 UNKNOWN +pad
 
 PACKET bufferpartrequest:
-    * sanyoheader {'packettype': 0x0f} header
+    * sanyoheader {'packettype': 0x0f} +header
     502 UNKNOWN +pad
 
 PACKET bufferpartresponse:
@@ -278,7 +278,7 @@ PACKET phonenumber:
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
-    16 STRING {'raiseonunterminatedread': False} name
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False} name
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT email_len
     49 STRING email
@@ -341,9 +341,9 @@ PACKET ringerpicbuffer:
     # This 1000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 46 0F through 0X 47 0F
     P UINT {'constant': 300} numpbslots "Number of phone book slots"
-    * LIST {'length': self.numpbslots} ringtones:
+    * LIST {'length': self.numpbslots} +ringtones:
         1 UINT ringtone "ringtone index"
-    * LIST {'length': self.numpbslots} wallpapers:
+    * LIST {'length': self.numpbslots} +wallpapers:
         1 UINT wallpaper "wallpaper index"
     400 UNKNOWN +pad
 
@@ -356,26 +356,26 @@ PACKET pbsortbuffer:
     P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
     P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
     * LIST {'length': self.numpbslots, 'createdefault': True} +usedflags:
-        1 UINT +used "1 of slot in use"
+        1 UINT used "1 of slot in use"
     2 UINT slotsused
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
     2 UINT numemail "Num of slots with email"
     2 UINT numsecret
-    * LIST {'length': self.numpbslots} firsttypes:
+    * LIST {'length': self.numpbslots} +firsttypes:
         1 UINT firsttype "First phone number type in each slot"
-    * LIST {'length': self.numpbslots} sortorder:
-        2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} pbfirstletters
-    * LIST {'length': self.numpbslots} sortorder2: "Is this the same"
+    * LIST {'length': self.numpbslots} +sortorder:
+        2 UINT {'default': 0xffff} pbslot
+    300 STRING {'terminator': None} +pbfirstletters
+    * LIST {'length': self.numpbslots} +sortorder2: "Is this the same"
         2 UINT {'default': 0xffff} +pbslot
     * LIST {'length': self.numspeeddials} speeddialindex:
         2 UINT {'default': 0xffff} +pbslotandtype
     * LIST {'length': self.numlongnumbers} longnumbersindex:
         2 UINT {'default': 0xffff} +pbslotandtype
-    * LIST {'length': self.numpbslots} emails: "Sorted list of slots with Email"
+    * LIST {'length': self.numpbslots} +emails: "Sorted list of slots with Email"
         2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} emailfirstletters "First letters in sort order"
-    * LIST {'length': self.numpbslots} urls: "Sorted list of slots with a URL"
+    300 STRING {'terminator': None} +emailfirstletters "First letters in sort order"
+    * LIST {'length': self.numpbslots} +urls: "Sorted list of slots with a URL"
         2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} urlfirstletters "First letters in sort order"
+    300 STRING {'terminator': None} +urlfirstletters "First letters in sort order"
     66 UNKNOWN +pad
