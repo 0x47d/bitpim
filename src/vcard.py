@@ -70,7 +70,7 @@ class VFile:
             line+=":"
 
         b4=line[:colon]
-        line=line[colon+1:]
+        line=line[colon+1:].strip()
 
         # upper case and split on semicolons
         items=b4.upper().split(";")
@@ -140,7 +140,7 @@ class VCards:
         # find vcard start
         field=value=None
         for field,value in self.vfile:
-            while (field,value)!=(["BEGIN"], "VCARD"):
+            if (field,value)!=(["BEGIN"], "VCARD"):
                 continue
             found=True
             break
