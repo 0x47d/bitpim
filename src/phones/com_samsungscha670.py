@@ -70,7 +70,10 @@ class Phone(com_samsung.Phone):
     __wp_photo_dir="digital_cam"
     __wp_header_bytes=96	# Extra bytes in front of jpg
     __wp_ts_offset=47 		# Timestamp in yyyymmddHHMMSS format starts here
-    __rt_index_file="nvm/nvm/brew_melody"
+    __wp_index_file = "nvm/nvm/brew_image"
+    __rt_index_file = "nvm/nvm/brew_melody"
+    __rt_dir = "brew/ringer"
+    __wp_dir = "brew/shared"
 
     # The extra "User" entries are a temporary fix to allow round trip integrity of user
     # assigned ringtones for caller ID. Need to read /nvm/nvm/brew_melody to get true names
@@ -136,7 +139,11 @@ class Phone(com_samsung.Phone):
         results['groups']=groups
 
         # getting ringtone-index
-        self.log('Getting ringtone-index from ringers')
+#        rti = self.get_built_in_ringtone_index()	#test
+#        rti =  self.get_user_rt_index(rti)		#test
+#	print rti					#test
+#	print self.get_wallpaper_index()		#test
+	self.log('Getting ringtone-index from ringers')
         self.__ringtone_index=None
         pubsub.subscribe(self.ringtone_index_response, pubsub.ALL_RINGTONE_INDEX)
         pubsub.publish(pubsub.REQUEST_RINGTONE_INDEX)
@@ -151,16 +158,9 @@ class Phone(com_samsung.Phone):
         else:
             self.log('ringtone-index is blank, getting builtin ones')
             results['ringtone-index']=self.get_builtin_ringtone_index()
-
         self.setmode(self.MODEMODEM)
         self.log("Fundamentals retrieved")
         return results
-
-    def get_builtin_ringtone_index(self):
-        r={}
-        for k, n in enumerate(self.builtinringtones):
-            r[k]={ 'name': n, 'origin': 'builtin' }
-        return r
 
     def ringtone_index_response(self, msg=None):
         if msg is not None:
@@ -168,11 +168,45 @@ class Phone(com_samsung.Phone):
         else:
             self.__ringtone_index={}
 
-    def get_user_ringtone_index(self):
-	# See test_rt_list() in class FileEntries definition below for
-	# prototype of how this would work
+    def get_builtin_ringtone_index(self):	# Joe's version
         r={}
+        for k, n in enumerate(self.builtinringtones):
+            r[k]={ 'name': n, 'origin': 'builtin' }
+        return r
+
+    def get_built_in_ringtone_index(self): 	# Vic's version using AT command
+        r={}
+	s=self.comm.sendatcommand("#PUGSN?")
+	for rt in s[1:]:
+	    this_r = split(rt, ",")
+	    r[atoi(this_r[0])] = { 'name': this_r[2], 'origin': 'builtin' }
 	return r
+
+    def get_user_rt_index(self, r):		# IDs on phone needed for caller-ID
+	bi_cnt = len(r)
+	rtlist = self.getfilecontents(self.__rt_index_file)
+	offset=0
+        while offset < (40 * 77):
+	    rtid = ord(rtlist[offset+1])
+	    rtlen = ord(rtlist[offset+74])
+	    rtname = rtlist[offset+23:offset+23+rtlen][len(self.__rt_dir)+1:]
+	    if rtlen > 0:
+		r[rtid + bi_cnt] = { 'name': rtname, 'origin': 'ringtone' }
+	    offset+=77
+	return r
+
+    def get_wallpaper_index(self):		# IDs on phone needed for caller-ID
+	wpi = {}
+	imglist = self.getfilecontents(self.__wp_index_file)
+	offset=0
+        while offset < (30 * 76):
+	    imgid = ord(imglist[offset+1])
+	    imglen = ord(imglist[offset+73])
+	    imgname = imglist[offset+22:offset+22+imglen][len(self.__wp_dir)+1:]
+	    if imglen > 0:
+		wpi[imgid] = { 'name': imgname, 'origin': 'wallpaper' }	    
+	    offset+=76
+	return wpi
 
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -634,7 +668,7 @@ class Phone(com_samsung.Phone):
             imgName = pb_entry['wallpapers'][0]['wallpaper']
 	except:
 	    e[self.__pb_image_assign]='5'
-	print imgName
+	    imgName = "none"
 	# temporary placeholder:
 	# will eventually get  actual image names from /nvm/nvm/brew_image file
 	if (imgName == "brew_image") or (imgName == "none"):
@@ -642,10 +676,9 @@ class Phone(com_samsung.Phone):
 	    e[self.__pb_image_id]='0'			# brew_image caller-id on the
 	    e[self.__pb_contact_image]='""'		# phone but no other choice now
 	else:
-	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + split(pb_entry['wallpapers'][0]['wallpaper'],".")[0] + '"'
+	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + split(imgName,".")[0] + '"'
 	    e[self.__pb_image_assign]='3'
 	    e[self.__pb_image_id]='0'
-	print e[self.__pb_contact_image]
 	####### 
 	
         for k in self.__pb_blanks:
@@ -731,45 +764,8 @@ class FileEntries:
         self.__phone=phone
         self.__file_type, self.__index_type, self.__origin, self.__path, self.__max_file_len, self.__max_file_count=info
 
-    ####### Just a test to see if I can read this file correctly
-    ####### Doesn't really belong here
-    ####### Needed place where self.__phone.getfilecontents would work
-    def test_rt_list(self):
-	rtlist = self.__phone.getfilecontents("nvm/nvm/brew_melody")
-	offset=0
-        while offset < (40 * 77):
-	    rtid = ord(rtlist[offset+1])
-	    rtlen = ord(rtlist[offset+74])
-	    rtpath = rtlist[offset+23:offset+23+rtlen]
-	    if rtlen > 0:
-		print rtid, "'"+rtpath+"'"	    
-	    offset+=77
-
-    ####### Another file read test
-    def test_img_list(self):
-	imglist = self.__phone.getfilecontents("nvm/nvm/brew_image")
-	offset=0
-        while offset < (30 * 76):
-	    imgid = ord(imglist[offset+1])
-	    imglen = ord(imglist[offset+73])
-	    imgpath = imglist[offset+22:offset+22+imglen]
-	    if imglen > 0:
-		print imgid, "'"+imgpath+"'"	    
-	    offset+=76
-	maptoname = self.__phone.getfilecontents("nvm/nvm/dial_tbl")
-	offset=0
-        while offset < (500 * 95):
-	    imgflag = ord(maptoname[offset+54])
-	    if imgflag == 4:
-	    	imgid = ord(maptoname[offset+52])
-	    	name = maptoname[offset+22:offset+22+22]
-		print "'"+name+"'", imgid	    
-	    offset+=95
-
     #############
     def get_media(self, result):
-#	self.test_rt_list()
-#	self.test_img_list()
         self.__phone.log('Getting media for type '+self.__file_type)
         media=result.get(self.__file_type, {})
         idx=result.get(self.__index_type, {})
