@@ -415,6 +415,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 entry['alarm']=(starttime-alarmtime)/60
                 calres[i]=entry
                 entry['ringtone']=res.entry.alarm_type
+                entry['snoozedelay']=0
 
         result['calendar']=calres
         return result
@@ -469,7 +470,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
             e.dom=entry['start'][2]
 
-            timearray=entry['start']+(0,0,0,0)
+            timearray=entry['start']+[0,0,0,0]
             starttimelocal=time.mktime(timearray)
             if(starttimelocal<now and repeat==0):
                 e.flag=2 # In the past
@@ -477,7 +478,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 e.flag=1 # In the future
             e.start=starttimelocal-self._sanyoepochtounix
 
-            timearray=entry.get('end', entry['start'])+(0,0,0,0)
+            timearray=entry.get('end', entry['start'])+[0,0,0,0]
             e.end=time.mktime(timearray)-self._sanyoepochtounix
 
             alarmdiff=entry.get('alarm',0)
@@ -519,7 +520,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         @rtype: tuple
         @return: (year, month, day, hour, minute)
         """
-        return time.localtime(val+self._sanyoepochtounix)[:5]
+        return list(time.localtime(val+self._sanyoepochtounix)[:5])
 
     _calrepeatvalues={
         0: None,
