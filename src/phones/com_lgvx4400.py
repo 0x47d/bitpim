@@ -55,6 +55,10 @@ class Phone:
         self.seq=0
         self.retries=2  # how many retries when we get no response
 
+    def close(self):
+        self.comm.close()
+        self.comm=None
+
     def log(self, str):
         if self.logtarget:
             self.logtarget.log("%s: %s" % (self.desc, str))
