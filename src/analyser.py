@@ -178,7 +178,7 @@ class Analyser(wxFrame):
                     except Exception,e:
                         v="<Exception: "+e.__str__()+">"
                     s+=": "
-                    if isinstance(v, int) and not isinstance(v,bool):
+                    if isinstance(v, int) and not (sys.version_info[:2]>=(2,3) and not isinstance(v, bool)):
                         s+="%d 0x%x" % (v,v)
                     else:
                         s+=`v`
@@ -191,7 +191,7 @@ class Analyser(wxFrame):
                     self.addtreeitems(field, node)
         except Exception,e:
             str="<Exception: "+e.__str__()+">"
-            self.tree.AppendItem(parent,s)
+            self.tree.AppendItem(parent,str)
 
     def OnTreeSelection(self, evt):
         "User selected an item in the tree"
@@ -204,6 +204,7 @@ class Analyser(wxFrame):
             return
         begin=self.hex.XYToPosition(0, self.dataline+start/16)
         self.hex.ShowPosition(begin)
+        self.hex.Freeze()
         for offset in range(start,end):
             fudge=0
             
@@ -215,6 +216,7 @@ class Analyser(wxFrame):
             self.hex.SetStyle(line+9+offset*3, line+9+offset*3+3+fudge, self.highlightstyle)
             # and now the char
             self.hex.SetStyle(line+61+offset,  line+61+offset+1, self.highlightstyle)
+        self.hex.Thaw()
 
     def errorme(self, desc, exception=None):
         "Put exception information into the hex pane and output traceback to console"
