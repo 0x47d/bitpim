@@ -12,7 +12,7 @@
 import os
 import threading
 import copy
-
+import time
 import sqlite
 
 if __debug__:
@@ -116,7 +116,7 @@ class Database:
         return res
 
 
-    def savemajordict(self, tablename, dict):
+    def savemajordict(self, tablename, dict, timestamp=None):
         """This is the entrypoint for saving a first level dictionary
         such as the phonebook or calendar.
 
@@ -124,7 +124,11 @@ class Database:
         @param dict: The dictionary of record.  The key must be the uniqueid for each record.
                    The @L{extractbpserials} function can do the conversion for you for
                    phonebook and similar formatted records.
+        @param timestamp: the UTC time in seconds since the epoch.  This is 
         """
+
+        if timestamp is None:
+            timestamp=time.time()
 
         # work on a shallow copy of dict
         dict=dict.copy()
@@ -132,7 +136,7 @@ class Database:
         # make sure the table exists first
         if not self.doestableexist(tablename):
             # create table and include meta-fields
-            self.sql("create table %s (__rowid__ integer primary key, __timestamp__ TIMESTAMP, __deleted__ integer, __uid__ varchar)" % (idquote(tablename),))
+            self.sql("create table %s (__rowid__ integer primary key, __timestamp__, __deleted__ integer, __uid__ varchar)" % (idquote(tablename),))
 
         # get the latest values for each guid ...
         current=self.getmajordictvalues(tablename)
@@ -233,12 +237,12 @@ class Database:
             record["__uid__"]=k
             rk=record.keys()
             rk.sort()
-            cmd=["insert into", idquote(tablename), "("]
+            cmd=["insert into", idquote(tablename), "( [__timestamp__],"]
             cmd.append(",".join([idquote(r) for r in rk]))
-            cmd.extend([")", "values", "("])
+            cmd.extend([")", "values", "(?,"])
             cmd.append(",".join(["?" for r in rk]))
             cmd.append(")")
-            self.sql(" ".join(cmd), [_addsentinel(record[r]) for r in rk])
+            self.sql(" ".join(cmd), [timestamp]+[_addsentinel(record[r]) for r in rk])
         
     def updateindirecttable(self, tablename, indirects):
         # this is mostly similar to savemajordict, except we only deal
@@ -431,8 +435,63 @@ class Database:
         cmd.extend([")", "select * from", idquote("backup_"+tablename)])
         self.sql(" ".join(cmd))
 
+    def deleteold(self, tablename, uids=None, minvalues=3, maxvalues=5, keepoldest=93):
+        """Deletes old entries from the database.  The deletion is based
+        on either criterion of maximum values or age of values matching.
+
+        @param uids: You can limit the items deleted to this list of uids,
+             or None for all entries.
+        @param minvalues: always keep at least this number of values
+        @param maxvalues: maximum values to keep for any entry (you
+             can supply None in which case no old entries will be removed
+             based on how many there are).
+        @param keepoldest: values older than this number of days before
+             now are removed.  You can also supply None in which case no
+             entries will be removed based on age.
+        @returns: number of rows removed,number of rows remaining
+             """
+        if not self.doestableexist(tablename):
+            return (0,0)
+        
+        timecutoff=0
+        if keepoldest is not None:
+            timecutoff=time.time()-(keepoldest*24*60*60)
+        if maxvalues is None:
+            maxvalues=sys.maxint-1
+
+        if uids is None:
+            uids=[u[0] for u in self.sql("select distinct __uid__ from %s" % (idquote(tablename),))]
+
+        deleterows=[]
+
+        for uid in uids:
+            deleting=False
+            for count, (rowid, deleted, timestamp) in enumerate(
+                self.sql("select __rowid__,__deleted__, __timestamp__ from %s where __uid__=? order by __rowid__ desc" % (idquote(tablename),), [uid])):
+                if count<minvalues:
+                    continue
+                if deleting:
+                    deleterows.append(rowid)
+                    continue
+                if count>=maxvalues or timestamp<timecutoff:
+                    deleting=True
+                    if deleted:
+                        # we are ok, this is an old value now deleted, so we can remove it
+                        deleterows.append(rowid)
+                        continue
+                    # we don't want to delete current data (which may
+                    # be very old and never updated)
+                    if count>0:
+                        deleterows.append(rowid)
+                    continue
+
+        self.sqlmany("delete from %s where __rowid__=?" % (idquote(tablename),), [(r,) for r in deleterows])
+
+        return len(deleterows), self.sql("select count(*) from "+idquote(tablename)).next()[0]
+                    
+            
 def extractbpserials(dict):
-    """Changes dict keys to be the bitpim serial for each row"""
+    """Returns a new dict with keys being the bitpim serial for each row"""
     res={}
     
     for r in dict.keys():
@@ -459,7 +518,7 @@ if __name__=='__main__':
     phonebookmaster=phonebook
 
     def testfunc():
-        global phonebook, TRACE
+        global phonebook, TRACE, db
 
         db=Database(".", "testdb")
 
