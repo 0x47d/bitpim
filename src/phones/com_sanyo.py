@@ -777,6 +777,12 @@ class Profile:
     WALLPAPER_WIDTH=100
     WALLPAPER_HEIGHT=100
 
+    # which usb ids correspond to us
+    usbids=( ( 0x0474, 0x0701, 1),  # VID=Sanyo, PID=4900 internal USB interface
+        )
+    # which device classes we are.
+    deviceclasses=("modem",)
+
     def __init__(self):
         pass
     

@@ -775,6 +775,14 @@ class Profile:
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
 
+    # which usb ids correspond to us
+    usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB interface
+        ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
+        ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
+        )
+    # which device classes we are.  not we are not modem!
+    deviceclasses=("serial",)
+
     def __init__(self):
         pass
 
