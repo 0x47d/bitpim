@@ -71,10 +71,7 @@ class WallpaperView(guiwidgets.FileView):
         dict.update(self._data)
         names=None
         if want==self.SELECTED:
-            names=[]
-            for i in range(0,self.GetItemCount()):
-                if self.GetItemState(i, wx.LIST_MASK_STATE)&wx.LIST_STATE_SELECTED:
-                    names.append(self.GetItemText(i))
+            names=self.GetSelectedItemNames()
             if len(names)==0:
                 want=self.ALL
         if want==self.ALL:
@@ -101,6 +98,14 @@ class WallpaperView(guiwidgets.FileView):
             dict['wallpapers']=wp
                 
         return dict
+
+    def RemoveFromIndex(self, names):
+        for name in names:
+            wp=self._data['wallpaper-index']
+            for k in wp.keys():
+                if wp[k]['name']==name:
+                    del wp[k]
+                    self.modified=True
 
     def GetImage(self, file):
         """Gets the named image
