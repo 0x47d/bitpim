@@ -237,7 +237,7 @@ class ConfigDialog(wxDialog):
         gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
 
         gs.Add( wxStaticText(self, -1, "Phone Type"), 0, wxCENTER)
-        self.phonebox=wxComboBox(self, -1, style=wxCB_DROPDOWN|wxCB_READONLY|wxCB_SORT,choices=self.phonemodels.keys())
+        self.phonebox=wxComboBox(self, -1, "", style=wxCB_DROPDOWN|wxCB_READONLY|wxCB_SORT,choices=self.phonemodels.keys())
         gs.Add( self.phonebox, 0, wxEXPAND)
 
         bs=wxBoxSizer(wxVERTICAL)
