@@ -130,6 +130,11 @@ void wabmodule::FreeObject(LPSRowSet rows)
   wabobject->FreeBuffer(rows);
 }
 
+void wabmodule::FreeObject(LPSPropTagArray pa)
+{
+  wabobject->FreeBuffer(pa);
+}
+
 entryid* wabmodule::getpab()
 {
   ULONG cbpabeid;
@@ -214,6 +219,26 @@ wabrow* wabtable::getnextrow()
       return NULL;
     }
   return new wabrow(module, rowset);
+}
+
+// returns true on success
+bool wabtable::enableallcolumns()
+{
+  LPSPropTagArray props;
+  HRESULT hr=table->QueryColumns(TBL_ALL_COLUMNS, &props);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to get list of all columns");
+      return false;
+    }
+  hr=table->SetColumns(props, 0);
+  module.FreeObject(props);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to turn on all columns");
+      return false;
+    }
+  return true;
 }
 
 wabrow::~wabrow()
@@ -393,6 +418,14 @@ entryid* wabtable::makeentryid(unsigned long pointer, unsigned long len)
 {
   return new entryid((void*)pointer, len);
 }
+
+void wabtable::makebinarystring(char **result, size_t *resultlen, unsigned long pointer, unsigned long len)
+{
+  *result=(char*)pointer;
+  *resultlen=len;
+}
+
+
 
 entryid::entryid(void *d, size_t l)
   : data(0), len(l)

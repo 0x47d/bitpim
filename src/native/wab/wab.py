@@ -4,6 +4,8 @@ class WABException(Exception):
     def __init__(self):
         Exception.__init__(pywabimpl.cvar.errorstring)
 
+constants=pywabimpl.constants
+
 class WAB:
 
     def __init__(self, enableprofiles=True, filename=None):
@@ -16,7 +18,6 @@ class WAB:
         self._wab=pywabimpl.Initialize(enableprofiles, filename)
         if self._wab is None:
             raise WABException()
-        self._wab.thisown=1
 
     def rootentry(self):
         return pywabimpl.entryid()
@@ -25,7 +26,6 @@ class WAB:
         pe=self._wab.getpab()
         if pe is None:
             raise WABException()
-        pe.thisown=1
         return pe
 
     def getrootentry(self):
@@ -35,8 +35,7 @@ class WAB:
         x=self._wab.openobject(entryid)
         if x is None:
             raise WABException()
-        x.thisown=1
-        if x.gettype()==x.ABCONT:
+        if x.gettype()==constants.MAPI_ABCONT:
             return Container(x)
         return x
 
@@ -47,11 +46,14 @@ class Table:
     def __iter__(self):
         return self
 
+    def enableallcolumns(self):
+        if not self.obj.enableallcolumns():
+            raise WABException()
+
     def next(self):
         row=self.obj.getnextrow()
         if row is None:
             raise WABException()
-        row.thisown=1
         if row.IsEmpty():
             raise StopIteration()
         # we return a dict, built from row
@@ -84,24 +86,26 @@ class Table:
             return bool(v)
         elif key=='PR_ENTRYID':
             v=v.split(',')
-            eid=self.obj.makeentryid(int(v[0]), int(v[1]))
-            eid.thisown=1
-            return eid
+            return self.obj.makeentryid(int(v[0]), int(v[1]))
+        elif t=='binary':
+            v=v.split(',')
+            return self.obj.makebinarystring(int(v[0]), int(v[1]))
         print "Dunno how to handle key %s type %s value %s" % (key,t,v)
         return None
 
 class Container:
-    WAB_LOCAL_CONTAINERS=pywabimpl.wabobject.FLAG_WAB_LOCAL_CONTAINERS
-    WAB_PROFILE_CONTENTS=pywabimpl.wabobject.FLAG_WAB_PROFILE_CONTENTS
 
     def __init__(self, obj):
         self.obj=obj
 
     def items(self, flags=0):
+        """Returns items in the container
+
+        @param flags: WAB_LOCAL_CONTAINERS,WAB_PROFILE_CONTENTS
+        """
         x=self.obj.getcontentstable(flags)
         if x is None:
             raise WABException()
-        x.thisown=1
         return Table(x)
 
 
@@ -111,12 +115,20 @@ if __name__=='__main__':
     fn=None
     if len(sys.argv)>1:
         fn=sys.argv[1]
-    wab=WAB(False, fn)
+        wab=WAB(False, fn)
+    else:
+        wab=WAB()
     root=wab.openobject(wab.getrootentry())
-    items=root.items()
-    print items.count(), "items in root"
-    for i in items:
-        print i
+    for container in root.items(constants.WAB_LOCAL_CONTAINERS|constants.WAB_PROFILE_CONTENTS):
+        print container['PR_DISPLAY_NAME']
+        people=wab.openobject(container['PR_ENTRYID'])
+        items=people.items()
+        items.enableallcolumns()
+        for i in items:
+            print i
+            pass
+        
+
     
     
     

@@ -6,7 +6,8 @@
  */
 
 #ifdef SWIG
-%immutable;
+%immutable;  // nothing is modifiable
+%include "cstring.i"
 #endif
 
 
@@ -60,8 +61,13 @@ class wabmodule
 #ifndef SWIG
   wabmodule(const wabmodule&);
   void FreeObject(LPSRowSet rows);
+  void FreeObject(LPSPropTagArray ta);
 #endif
   ~wabmodule();
+#ifdef SWIG
+%newobject getpab;
+%newobject openobject;
+#endif
   entryid *getpab(void);
   class wabobject *openobject(const entryid&);
 };
@@ -79,16 +85,11 @@ class wabobject
   friend class wabmodule;
  public:
   ~wabobject();
-  typedef enum { STORE=MAPI_STORE, ADDRBOOK=MAPI_ADDRBOOK, FOLDER=MAPI_FOLDER,
-		 ABCONT=MAPI_ABCONT, MESSAGE=MAPI_MESSAGE, MAILUSER=MAPI_MAILUSER,
-		 ATTACH=MAPI_ATTACH, DISTLIST=MAPI_DISTLIST, PROFSECT=MAPI_PROFSECT,
-		 STATUS=MAPI_STATUS, SESSION=MAPI_SESSION, 
-		 FORMINFO=MAPI_FORMINFO }  thetype;
-  thetype gettype(void) const { return (thetype)type; }
+   unsigned long gettype() const { return type; }
+
 #ifdef SWIG
-  static // we need enum as class member in swig, not instance member
+  %newobject getcontentstable;
 #endif
-  enum {FLAG_WAB_LOCAL_CONTAINERS=WAB_LOCAL_CONTAINERS, FLAG_WAB_PROFILE_CONTENTS=WAB_PROFILE_CONTENTS} ;
   class wabtable* getcontentstable(unsigned long flags); 
 };
 
@@ -102,9 +103,19 @@ class wabtable
   wabtable(const wabmodule &mod, LPMAPITABLE t) : table(t), module(mod) {}
   friend class wabobject;
  public:
+#ifdef SWIG
+%newobject makeentryid;
+%cstring_output_allocate_size(char **TheData, size_t *TheLength,);
+#endif
   entryid* makeentryid(unsigned long pointer, unsigned long len);
+  void makebinarystring(char **TheData, size_t *TheLength, unsigned long pointer, unsigned long len);
+
   ~wabtable();
   int getrowcount();
+  bool enableallcolumns();
+#ifdef SWIG
+%newobject getnextrow;
+#endif
   class wabrow* getnextrow();
 };
 
@@ -125,6 +136,35 @@ class wabrow
   bool IsEmpty();
 };
 
+#ifdef SWIG
+// this is here to convince swig to make a class named constants with the various
+// members.  we do some sed magic on the swig generated code to get the correct
+// values
+class constants
+{
+  constants();
+  ~constants();
+ public:
+  
+  // PR_CONTAINER_FLAGS
+  static enum {AB_FIND_ON_OPEN, AB_MODIFIABLE, AB_RECIPIENTS, AB_SUBCONTAINERS, AB_UNMODIFIABLE} ;
+  // IABContainer::GetContentsTable 
+  static enum {WAB_LOCAL_CONTAINERS, WAB_PROFILE_CONTENTS} ;
+  // PR_OBJECT_TYPE
+  static enum {MAPI_STORE, MAPI_ADDRBOOK, MAPI_FOLDER, MAPI_ABCONT, MAPI_MESSAGE, 
+	       MAPI_MAILUSER, MAPI_ATTACH, MAPI_DISTLIST, MAPI_PROFSECT, MAPI_STATUS, 
+	       MAPI_SESSION, MAPI_FORMINFO };
+  // PR_DISPLAY_TYPE
+  static enum {DT_AGENT, DT_DISTLIST, DT_FOLDER, DT_FOLDER_LINK, DT_FORUM,
+	       DT_GLOBAL, DT_LOCAL, DT_MAILUSER, DT_MODIFIABLE, DT_NOT_SPECIFIC, DT_ORGANIZATION,
+	       DT_PRIVATE_DISTLIST, DT_REMOTE_MAILUSER, DT_WAN};
+
+};
+#endif
+
+#ifdef SWIG
+%newobject Initialize;
+#endif
 wabmodule* Initialize(bool enableprofiles=true, const char *INPUT=NULL);
 
 
