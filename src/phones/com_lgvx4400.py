@@ -86,7 +86,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return results
         
     def getphonebook(self,result):
-        """Reads the phonebook data.  The L{getfundamentals} informatation will
+        """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
         pbook={}
         # Bug in the phone.  if you repeatedly read the phone book it starts
@@ -704,12 +704,12 @@ class Profile:
         for name in freq:
             # existing entries remain unchanged
             key,value=self._getgroup(name, data['groups'])
-            if key is not None:
+            if key is not None and key!=0:
                 newgroups[key]=value
         # new entries get whatever numbers are free
         for name in freq:
             key,value=self._getgroup(name, newgroups)
-            if key is None:
+            if key is None or key==0:
                 for key in range(1,10):
                     if key not in newgroups:
                         newgroups[key]={'name': name, 'icon': 1}
