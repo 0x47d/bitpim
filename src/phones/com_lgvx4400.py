@@ -581,13 +581,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             
         # ringtones
         res['ringtones']=[]
-        if entry.ringtone>0:
+        if 'ringtone' in entry.getfields() and entry.ringtone>0:
             try:
                 tone=fundamentals['ringtone-index'][entry.ringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'call'})
             except:
                 print "can't find ringtone for index",entry.ringtone
-        if entry.msgringtone>0:
+        if 'msgringtone' in entry.getfields() and entry.msgringtone>0:
             try:
                 tone=fundamentals['ringtone-index'][entry.msgringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'message'})
