@@ -18,7 +18,6 @@ except ImportError:
     bitfling=None
 
 def IsBitFlingEnabled():
-    return False
     if bitfling is None:
         return False
     return True
@@ -33,7 +32,7 @@ class flinger:
         "Connects and returns version info of remote end, or an exception"
         if bitfling is None: return None
         # try and connect by getting version info
-        self.client=bitfling.client("https://%s:%s@%s:%d" % (username, password, host, port), self.certverifier)
+        self.client=bitfling.client(username, password, host, port, self.certverifier)
         res=self.client.getversion()
         print "flinger.connect returning",res
         return res

@@ -18,7 +18,7 @@ import time
 import copy
 import cStringIO
 import getpass
-import sha
+import sha,md5
 import zlib
 import base64
 import thread
@@ -448,7 +448,7 @@ class ConfigDialog(wx.Dialog):
         bitflingscan.flinger.SetCertVerifier(self.dispatchVerifyBitFlingCert)
         bitflingscan.flinger.setthreadeventloop(wx.SafeYield)
 
-    def dispatchVerifyBitFlingCert(self, addr, cert):
+    def dispatchVerifyBitFlingCert(self, addr, keytype, hostkey):
         """Handle a certificate verification from any thread
 
         The request is handed to the main gui thread, and then we wait for the
@@ -458,7 +458,7 @@ class ConfigDialog(wx.Dialog):
             q=Queue.Queue()
             self.bitflingresponsequeues[thread.get_ident()]=q
         print thread.get_ident(), "Posting BitFlingCertificateVerificationEvent"
-        wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, cert=cert, q=q))
+        wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, keytype=keytype, hostkey=hostkey, q=q))
         print thread.get_ident(), "After posting BitFlingCertificateVerificationEvent, waiting for response"
         res, exc = q.get()
         print thread.get_ident(), "Got response", res, exc
@@ -474,23 +474,24 @@ class ConfigDialog(wx.Dialog):
         We unpack the parameters, call the verification method"""
         print "_wrapVerifyBitFlingCert"
         
-        addr, cert, q = evt.addr, evt.cert, evt.q
-        self.VerifyBitFlingCert(addr, cert, q)
+        addr, keytype, hostkey, q = evt.addr, evt.keytype, evt.hostkey, evt.q
+        self.VerifyBitFlingCert(addr, keytype, hostkey, q)
 
-    def VerifyBitFlingCert(self, addr, cert, q):
-        print "VerifyBitFlingCert for", addr
+    def VerifyBitFlingCert(self, addr, keytype, hostkey, q):
+        print "VerifyBitFlingCert for", addr, "type",keytype
+        # ::TODO:: reject if not dsa
         # get fingerprint
-        fingerprint=sha.new(cert.as_der()).hexdigest()
+        fingerprint=md5.new(hostkey).hexdigest()
         # do we already know about it?
         existing=wx.GetApp().config.Read("bitfling/certificates/%s" % (addr[0],), "")
         if len(existing):
-            fp=existing.split("$", 1)[0]
+            fp=existing
             if fp==fingerprint:
                 q.put( (True, None) )
                 return
         # throw up the dialog
         print "asking user"
-        dlg=AcceptCertificateDialog(None, wx.GetApp().config, addr, cert, fingerprint, q)
+        dlg=AcceptCertificateDialog(None, wx.GetApp().config, addr, fingerprint, q)
         dlg.ShowModal()
 
     def OnClose(self, evt):
@@ -750,12 +751,11 @@ class CommPortDialog(wx.Dialog):
 
 class AcceptCertificateDialog(wx.Dialog):
 
-    def __init__(self, parent, config, addr, cert, fingerprint, q):
+    def __init__(self, parent, config, addr, fingerprint, q):
         parent=self.FindAGoodParent(parent)
         wx.Dialog.__init__(self, parent, -1, "Accept certificate?", style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.config=config
         self.q=q
-        self.cert=cert
         self.addr=addr
         self.fingerprint=fingerprint
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -765,19 +765,12 @@ class AcceptCertificateDialog(wx.Dialog):
         hbs.Add(wx.StaticText(self, -1, fingerprint), 1, wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        txt=wx.TextCtrl(self, -1, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.TE_DONTWRAP)
-        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
-        ta=wx.TextAttr(font=f)
-        txt.SetDefaultStyle(ta)
-        txt.AppendText(cert.as_text())
-        vbs.Add(txt, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         but=self.CreateButtonSizer(wx.YES|wx.NO|wx.HELP)
         vbs.Add(but, 0, wx.ALIGN_CENTER|wx.ALL, 10)
 
         self.SetSizer(vbs)
         vbs.Fit(self)
-        set_size(config, "AcceptCertificateDialog", self, screenpct=30, aspect=1)
 
         wx.EVT_BUTTON(self, wx.ID_YES, self.OnYes)
         wx.EVT_BUTTON(self, wx.ID_NO, self.OnNo)
@@ -786,9 +779,7 @@ class AcceptCertificateDialog(wx.Dialog):
 
 
     def OnYes(self, _):
-        self.savesize()
-        txt=base64.encodestring(zlib.compress(self.cert.as_text(), 9))
-        wx.GetApp().config.Write("bitfling/certificates/%s" % (self.addr[0],), "%s$%s" % (self.fingerprint, txt))
+        wx.GetApp().config.Write("bitfling/certificates/%s" % (self.addr[0],), self.fingerprint)
         wx.GetApp().config.Flush()
         if self.IsModal():
             self.EndModal(wx.ID_YES)
@@ -799,7 +790,6 @@ class AcceptCertificateDialog(wx.Dialog):
         self.q.put( (True, None) )
 
     def OnNo(self, _):
-        self.savesize()
         if self.IsModal():
             self.EndModal(wx.ID_NO)
         else:
@@ -807,9 +797,6 @@ class AcceptCertificateDialog(wx.Dialog):
         wx.CallAfter(self.Destroy)
         print "returning false from AcceptCertificateDialog"
         self.q.put( (False, None) )
-
-    def savesize(self):
-        save_size(self.config, "AcceptCertificateDialog", self.GetRect())
 
     def FindAGoodParent(self, suggestion):
         win=wx.Window_FindFocus()

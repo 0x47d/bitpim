@@ -14,8 +14,6 @@
 
 import sys
 
-raise ImportError()
-
 import xmlrpcstuff
 
 class client:
@@ -26,9 +24,9 @@ class client:
     # calling convention, and in the future deal with
     # backwards compatibility issues
     
-    def __init__(self, url, certverifier=None):
+    def __init__(self, username, password, host, port, certverifier=None):
         "The URL should include username and password if any"
-        self.server=xmlrpcstuff.ServerProxy(url, certverifier)
+        self.server=xmlrpcstuff.ServerProxy(username, password, host, port, certverifier)
 
     def getversion(self):
         return self.server.getversion()
