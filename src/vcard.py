@@ -15,6 +15,7 @@ VCARD is defined in RFC 2425 and 2426
 import sys
 import quopri
 import base64
+import common
 
 class VFileException(Exception):
     pass
@@ -67,8 +68,6 @@ class VFile:
         # upper case and split on semicolons
         items=b4.upper().split(";")
 
-        # ::TODO:: vcard 3.0 requires commas and semicolons to be backslash quoted
-        
         newitems=[]
         for i in items:
             # ::TODO:: probably delete anything preceding a '.'
@@ -207,8 +206,168 @@ class VCard:
             func=getattr(self, "_field_"+t, self._default_field)
             func(field, value, result)
 
+    # fields we ignore
+
+    def _field_LABEL(self, field, value, result):
+        # we use the ADR field instead
+        pass
+
+    # simple fields
+    
     def _field_FN(self, field, value, result):
         result[self._getfieldname("name", result)]=self.unquote(value)
+
+    def _field_TITLE(self, field, value, result):
+        result[self._getfieldname("title", result)]=self.unquote(value)
+    
+
+    #
+    #  Complex fields
+    # 
+
+    def _field_N(self, field, value, result):
+        value=self.splitandunquote(value)
+        familyname=givenname=additionalnames=honorificprefixes=honorificsuffixes=None
+        try:
+            familyname=value[0]
+            givenname=value[1]
+            additionalnames=value[2]
+            honorificprefixes=value[3]
+            honorificsuffixes=value[4]
+        except IndexError:
+            pass
+        if familyname is not None and len(familyname):
+            result[self._getfieldname("last name", result)]=familyname
+        if givenname is not None and len(givenname):
+            result[self._getfieldname("first name", result)]=givenname
+        if additionalnames is not None and len(additionalnames):
+            result[self._getfieldname("middle name", result)]=additionalnames
+        if honorificprefixes is not None and len(honorificprefixes):
+            result[self._getfieldname("prefix", result)]=honorificprefixes
+        if honorificsuffixes is not None and len(honorificsuffixes):
+            result[self._getfieldname("suffix", result)]=honorificsuffixes
+
+    def _field_ORG(self, field, value, result):
+        value=self.splitandunquote(value)
+        if len(value):
+            result[self._getfieldname("organisation", result)]=value[0]
+        for f in value[1:]:
+            result[self._getfieldname("organisational unit", result)]=f
+
+    def _field_TEL(self, field, value, result):
+        value=self.unquote(value)
+
+        # work out the types
+        types=[]
+        for f in field[1:]:
+            if f.startswith("TYPE="):
+                ff=f[len("TYPE=")+1:].split(",")
+            else: ff=[f]
+            types.extend(ff)
+
+        # type munging - we map vcard types to simpler ones
+        munge={ "BBS": "DATA", "MODEM": "DATA", "ISDN": "DATA", "CAR": "CELL", "PCS": "CELL" }
+        types=[munge.get(t, t) for t in types]
+
+        # types now reduced to home, work, msg, pref, voice, fax, cell, video, pager, data
+
+        # if type is in this list and voice not explicitly mentioned then it is not a voice type
+        antivoice=["FAX", "PAGER", "DATA"]
+        if "VOICE" in types:
+            voice=True
+        else:
+            voice=True # default is voice
+            for f in antivoice:
+                if f in types:
+                    voice=False
+                    break
+                
+        preferred="PREF" in types
+
+        # vcard allows numbers to be multiple things at the same time, such as home voice, home fax
+        # and work fax so we have to test for all variations
+
+        # if neither work or home is specified, then no default (otherwise things get really complicated)
+        iswork=False
+        ishome=False
+        if "WORK" in types: iswork=True
+        if "HOME" in types: ishome=True
+
+        if iswork and voice: self._setnumber(result, "work", value, preferred)
+        if ishome and voice: self._setnumber(result, "home", value, preferred)
+        if not iswork and not ishome and "FAX" in types:
+            # fax without explicit work or home
+            self._setnumber(result, "fax", value, preferred)
+        else:
+            if iswork and "FAX" in types: self._setnumber(result, "work fax", value, preferred)
+            if ishome and "FAX" in types: self._setnumber(result, "home fax", value, preferred)
+        if "CELL" in types: self._setnumber(result, "cell", value, preferred)
+        if "PAGER" in types: self._setnumber(result, "pager", value, preferred)
+        if "DATA" in types: self._setnumber(result, "data", value, preferred)
+            
+
+    def _setnumber(self, result, type, value, preferred):
+        if type not in result:
+            result[type]=value
+            return
+        if not preferred:
+            result[self._getfieldname(type, result)]=value
+            return
+        # we need to insert our value at the begining
+        numbers=[value]
+        for suffix in ("",)+range(2,100):
+            if type+str(suffix) in result:
+                numbers.append(result[type+str(suffix)])
+            else:
+                break
+        for suffix in ("",)+range(2,len(numbers)+1):
+            result[type+str(suffix)]
+
+    def _field_ADR(self, field, value, result):
+        # work out the type
+        preferred=False
+        type="business"
+        for f in field[1:]:
+            if f.startswith("TYPE="):
+                ff=f[len("TYPE=")+1:].split(",")
+            else: ff=[f]
+            for x in ff:
+                if x=="HOME":
+                    type="home"
+                if x=="PREF":
+                    preferred=True
+        
+        value=self.splitandunquote(value)
+        pobox=extendedaddress=streetaddress=locality=region=postalcode=country=None
+        try:
+            pobox=value[0]
+            extendedaddress=value[1]
+            streetaddress=value[2]
+            locality=value[3]
+            region=value[4]
+            postalcode=value[5]
+            country=value[6]
+        except IndexError:
+            pass
+        addr={}
+        if pobox is not None and len(pobox):
+            addr["pobox"]=pobox
+        if extendedaddress is not None and len(extendedaddress):
+            addr["street2"]=extendedaddress
+        if streetaddress is not None and len(streetaddress):
+            addr["street"]=streetaddress
+        if locality is not None and len(locality):
+            addr["city"]=locality
+        if region is not None and len(region):
+            addr["state"]=region
+        if postalcode is not None and len(postalcode):
+            addr["postalcode"]=postalcode
+        if country is not None and len(country):
+            addr["country"]=country
+        if len(addr):
+            if preferred:
+                addr["preferred"]=True
+            result[self._getfieldname("address", result)]=addr
 
     def _default_field(self, field, value, result):
         if field[0].startswith("X-"):
@@ -219,11 +378,32 @@ class VCard:
         print "value",value
 
     def unquote(self, value):
-        # ::TODO:: do this properly
+        # ::TODO:: do this properly (deal with all backslashes)
         value=value.replace(r"\;", ";")
         value=value.replace(r"\n", "\n")
         return value
 
+    def splitandunquote(self, value):
+        # also need a splitandsplitandunquote since some ; delimited fields are then comma delimited
+        res=[]
+        build=""
+        v=0
+        while v<len(value):
+            if value[v]==";":
+                res.append(build)
+                build=""
+                v+=1
+                continue
+            if value[v]=="\\":
+                build+=value[v:v+2]
+                v+=2
+                continue
+            build+=value[v]
+            v+=1
+        if len(build):
+            res.append(build)
+
+        return [self.unquote(v) for v in res]
 
     def version(self):
         "Best guess as to vcard version"
@@ -236,8 +416,9 @@ class VCard:
     def __repr__(self):
         str="Version: %s\n" % (`self.version()`)
         str+="Origin: %s\n" % (`self.origin()`)
+        str+=common.prettyprintdict(self._data)
         str+=`self.lines`
-        return str
+        return str+"\n"
 
 if __name__=='__main__':
 
