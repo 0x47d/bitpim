@@ -41,8 +41,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
 
     desc="LG-VX4400"
-    wallpaperindexfilename="download/dloadindex/brewImageIndex.map"
-    ringerindexfilename="download/dloadindex/brewRingerIndex.map"
+    wallpaperindexfilename="dloadindex/brewImageIndex.map"
+    ringerindexfilename="dloadindex/brewRingerIndex.map"
     protocolclass=p_lgvx4400
     serialsname='lgvx4400'
     
@@ -630,17 +630,17 @@ class Profile:
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=helper.getfullname(entry['names'],1,1,22)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
 
-                e['group']=self.makeone(helper.getcategory(entry['categories'],0,1), 0)
+                e['group']=self.makeone(helper.getcategory(entry.get('categories', []),0,1), 0)
 
-                e['emails']=self.filllist(helper.getemails(entry['emails'],0,3,48), 3, "")
+                e['emails']=self.filllist(helper.getemails(entry.get('emails', []) ,0,3,48), 3, "")
 
-                e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
+                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
 
-                e['memo']=self.makeone(helper.getmemos(entry['memos'], 0, 1, 32), "")
+                e['memo']=self.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
 
-                numbers=helper.getnumbers(entry['numbers'],1,5)
+                numbers=helper.getnumbers(entry.get('numbers', []),1,5)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for num in numbers:
@@ -649,7 +649,7 @@ class Profile:
                         if type==t:
                             # some voodoo to ensure the second home becomes home2
                             if i in e['numbertypes'] and t[-1]!='2':
-                                type.append('2')
+                                type+='2'
                                 continue
                             e['numbertypes'].append(i)
                             break
@@ -660,18 +660,18 @@ class Profile:
                 e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=self.filllist(e['numbers'], 5, "")
 
-                serial1=helper.getserial(entry['serials'], self.serialsname, data['uniqueserial'], 'serial1', 0)
-                serial2=helper.getserial(entry['serials'], self.serialsname, data['uniqueserial'], 'serial2', serial1)
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
 
                 e['serial1']=serial1
                 e['serial2']=serial2
                 
-                e['ringtone']=helper.getringtone(entry['ringtones'], 'call', 0)
-                e['msgringtone']=helper.getringtone(entry['ringtones'], 'message', 0)
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
+                e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', 0)
 
-                e['wallpaper']=helper.getwallpaper(entry['wallpapers'], 'call', 0)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', 0)
 
-                e['secret']=helper.getflag(entry['flags'], 'secret', False)
+                e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
 
                 results[pbentry]=e
                 
