@@ -323,6 +323,9 @@ Photos in /digital_cam.  Have the names "Image001, Image002 ...).  Bytes
 service (and thus didn't know the time.)  Picture is retrieved by
 removing the first 96 bytes of the file and saving it as a jpeg.
 
+Wallpapers (bmp or png) in /brew/shared
+Ringtones (mid or pmd) in brew/ringer
+
 Unlike most other phones we have looked at, there does not seem to be
 a file nvm/$SYS.ESN.
 
@@ -352,36 +355,67 @@ AT#PCMIT?
 #PCMIT: 1000,1,4,0,0,0,0,0,3,12,1,128,80,10,12,1,0,0,0,0,12,0,0,0,0,0
 
 OK
+AT#PUGSN?
+#PUGSN: (0-15)
+0,255,Inactive
+1,0,Bell 1
+2,0,Bell 2
+3,0,Bell 3
+4,0,Bell 4
+5,0,Bell 5
+6,1,Melody 1
+7,1,Melody 2
+8,1,Melody 3
+9,1,Melody 4
+10,1,Melody 5
+11,1,Melody 6
+12,1,Melody 7
+13,1,Melody 8
+14,1,Melody 9
+15,1,Melody 10
+OK
 
 >
 > I played around with Kermit and got the following result for my A670  
 > phone on a dummy contact entry for testing:
 >
-> at#PBOKR=30
-> #PBOKR: 30,10,4,15,"Contact name field  
-> =22",0,0,11111111111111111111111111111111,0,222222222222222222222222222 
-> 22222,0,33333333333333333333333333333333,0,4444444444444444444444444444 
-> 4444,0,55555555555555555555555555555555,0,Alias field is 48 characters  
-> long 56789012345678,0,,,"e.mail field is 48 characters long  
-> .............",3,0,"digital_cam/Image025",20041006T161147
->
-> 30:  I believe this test entry is the 30th contact i have entered in  
-> my phone
-> 10: This is assigned to location id 10 (speed dial 10)
-> 4:  Assigned to No Name group (0=Friend,1=Family,2=etc.)
-> 15: ID of unique ringtone assigned to this contact
-> Contact name (up to 22 chars)
-> 0: ?
 
-The 0 in the sixth returned field indicates that the Home number is  
-dialed when the Location id (=10, 2nd field) is used for speed dial.
-(0=Home, 1=Work, 2=Mobile, 3=Pager, 4=Fax)
+at#pbokr=42
+#PBOKR: 42,10,3,18,"A test",2,0,5550000000,0,5551111111,0,5552222222,0,5553333333,0,5554444444,0,Alias  (48  chars),0,,,"Email (48 chars)",3,0,"digital_cam/Image034",20041115T105543
 
-Also the 4th to the last field where this has a "3" is a "5" when I  
-test most of my real contacts. Could be related to the image file since  
-these latter don't have an associated image.
+OK
 
-Vic
+Field	Value 
+01	42	Phonebook slot
+02	10	Speeddial assignment
+03	3	Group assignment (0-4, friend,family, etc)
+04	18	Ringtone id (0-15 built-in; 16-55 listed in nvm/nvm/brew_melody)
+05	"A..."	Name of contact (22 chars max)
+06	2	Speed-dial selector (0=Home, 1=Work, 2=Mobile, 3=Pager, 4=Fax)
+07	0	Always?
+08	nnn	Home phone number (32 chars max)
+09	0	Always?
+10	nnn	Work phone number (32 chars max)
+11	0	Always?
+12	nnn	Mobile phone number (32 chars max)
+13	0	Always?
+14	nnn	Pager phone number (32 chars max)
+15	0	Always?
+16	nnn	Fax phone number (32 chars max)
+17	0	Always?
+18	"Al..."	Alias (48 chars max)
+19	0	Always?
+20	empty	?
+21	empty	?
+22	"em"	E-mail address (48 char max)
+23	3	Caller-id image flag (3=photo gallery, 4=wallpaper, 5=none)
+24	empty	ID of caller-id wallpaper when flag above=4
+25	"di..."	Path to caller-id gallery image when flag above=3
+26	"20..."	Timestamp
+
+Note on field #24: this id seems to be mapped to image file in /nvm/nvm/brew_image. Mapping of the id to phonebook contact name appears to be in /nvm/nvm/dial_tbl
+ 
+Vic Heintz
 
 ==========================================================================
 SPH-A700 Sprint  (AKA MM-A700?)
