@@ -16,6 +16,7 @@ import time
 import os
 import cStringIO
 import zipfile
+import re
 
 # wxPython modules
 from wxPython.wx import *
@@ -59,6 +60,7 @@ ID_DATASENDPHONE=1
 ID_VIEWLOGDATA=1
 ID_VIEWFILESYSTEM=1
 ID_HELPHELP=1
+ID_HELPCONTENTS=1
 ID_HELPTOUR=1
 ID_HELPABOUT=1
 
@@ -447,8 +449,9 @@ class MainWindow(wxFrame):
         
 
         menu=wxMenu()
-        menu.Append(ID_HELPHELP, "&Help", "Start online help")
+        menu.Append(ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(ID_HELPTOUR, "&Tour", "Tour of BitPim")
+        menu.Append(ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
         menu.AppendSeparator()
         menu.Append(ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
@@ -512,6 +515,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         EVT_MENU(self, ID_HELPABOUT, self.OnHelpAbout)
         EVT_MENU(self, ID_HELPHELP, self.OnHelpHelp)
+        EVT_MENU(self, ID_HELPCONTENTS, self.OnHelpContents)
         EVT_MENU(self, ID_HELPTOUR, self.OnHelpTour)
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
@@ -613,6 +617,10 @@ class MainWindow(wxFrame):
         d.Destroy()
         
     def OnHelpHelp(self, _):
+        text=re.sub("[^A-Za-z]", "", self.nb.GetPageText(self.nb.GetSelection()))
+        wxGetApp().displayhelpid(getattr(helpids, "ID_TAB_"+text.upper()))
+
+    def OnHelpContents(self, _):
         wxGetApp().helpcontroller.DisplayContents()
 
     def OnHelpTour(self, _=None):
