@@ -14,7 +14,8 @@ The following changes were made:
   - Removed very lengthy examples from the end (see the above URLs for
     them)
   - Added: setupxcopy() takes the template text and remembers it
-  - Added: xcopywithdns() does the copy with supplied DNS and remembered template
+  - Added: xcopywithdns() does the copy with supplied DNS (Document Name Space which is
+    a dict of variables) and remembered template
     and returns the resulting string
   - Exception handling for statements was added (xyaptu only did it for
     expressions)
