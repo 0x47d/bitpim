@@ -972,8 +972,9 @@ class WorkerThread(WorkerThreadFramework):
             try:
                 import com_lgvx4400
                 self.commphone=com_lgvx4400.Phone(self, comport)
-            except Exception,_:
+            except:
                 comport.close()
+                raise
 
 
     def getdata(self, req):
