@@ -294,6 +294,13 @@ class MainApp(wxApp):
             cfgstr="BitPim"  # nicely capitalized on Windows
         self.config=wxConfig(cfgstr, style=wxCONFIG_USE_LOCAL_FILE)
 
+        # for help to save prefs
+        self.SetAppName(cfgstr)
+        self.SetVendorName(cfgstr)
+
+        # setup help system
+        self.setuphelp()
+
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
 
@@ -301,6 +308,23 @@ class MainApp(wxApp):
         splash=MySplashScreen(self, self.config)
 
         return True
+
+    def setuphelpiwant(self):
+        """This is how the setuphelp code is supposed to be, but stuff is missing from wxPython"""
+        self.helpcontroller=wxBestHelpController()
+        self.helpcontroller.Initialize(gethelpfilename)
+
+    def setuphelp(self):
+        """Does all the nonsense to get help working"""
+        from wxPython.wx import wxFileSystem_AddHandler, wxZipFSHandler
+        import wxPython.html
+        from wxPython.htmlhelp import wxHtmlHelpController
+        # Add the Zip filesystem
+        wxFileSystem_AddHandler(wxZipFSHandler())
+        # Get the help working
+        self.helpcontroller=wxHtmlHelpController()
+        self.helpcontroller.AddBook(gethelpfilename()+".htb")
+        self.helpcontroller.UseConfig(self.config, "help")
 
     def makemainwindow(self):
         if self.made:
@@ -462,6 +486,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_EDITADDENTRY, self.OnEditAddEntry)
         EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         EVT_MENU(self, ID_HELPABOUT, self.OnHelpAbout)
+        EVT_MENU(self, ID_HELPHELP, self.OnHelpHelp)
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
 
@@ -534,7 +559,8 @@ class MainWindow(wxFrame):
         d.ShowModal()
         d.Destroy()
         
-        
+    def OnHelpHelp(self, _):
+        wxGetApp().helpcontroller.DisplayContents()
 
     def OnViewLogData(self, _):
         # toggle state of the log data
@@ -1294,6 +1320,12 @@ def getresourcefile(filename):
     @rtype: string
     """
     return os.path.join(resourcedirectory, filename)
+
+def gethelpfilename():
+    """Returns what name we use for the helpfile
+
+    Without trailing extension as wxBestHelpController figures that out"""
+    return os.path.join(resourcedirectory, "bitpim")
 
 # Where to find bitmaps etc
 resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
