@@ -39,6 +39,7 @@ class RingtoneEditor(wx.Panel):
         self.preview=phonebook.HTMLWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
+        self.type.SetSelection(0)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
@@ -140,6 +141,7 @@ class WallpaperEditor(wx.Panel):
         self.preview=phonebook.HTMLWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
+        self.type.SetSelection(0)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
