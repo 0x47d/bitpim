@@ -20,17 +20,6 @@ import StringIO
 import common
 import prototypes
 
-import p_brew
-import p_lg
-import p_lgvx4400
-import p_lgvx4500
-import p_lgvx6000
-import p_sanyo
-import p_sanyo4900
-import p_sanyo5300
-import p_sanyo5500
-import p_sanyo8100
-
 import hexeditor
 
 class Eventlist(wx.ListCtrl):
@@ -133,7 +122,7 @@ class Analyser(wx.Frame):
         if len(curclass):
             b=prototypes.buffer(curdata)
             try:
-                klass=eval(curclass)
+                klass=common.getfullname(curclass)
             except Exception,e:
                 self.errorme("Finding class",e)
                 wx.TipWindow(self.tree,self.errorinfo)
