@@ -66,11 +66,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         req=p_lgtm520.pbinforequest()
         res=self.sendpbcommand(req, p_lgtm520.pbnextentryresponse) ## NOT inforesponse
         for i in range(0, numentries):
-            entry={}
             ### Read current entry
-            entry['serials']=[ {'sourcetype': 'lgtm520', 'serial1': res.serial, 'serial2': res.data,
-                          'sourceuniqueid': result['uniqueserial']} ]
-            
             req=p_lgtm520.pbreadentryrequest()
             res=self.sendpbcommand(req, p_lgtm520.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
