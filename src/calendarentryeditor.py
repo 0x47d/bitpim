@@ -577,11 +577,6 @@ class Editor(wx.Dialog):
         self.setdirty(False)
         guiwidgets.set_size("CalendarEntryEditor", self, 50, 1.5)
 
-    def ShowModal(self):
-        res=wx.Dialog.ShowModal(self)
-        guiwidgets.save_size("CalendarEntryEditor", self.GetRect())
-        return res
-
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
         self.__current_entry=self.getcurrententry()
@@ -672,6 +667,7 @@ class Editor(wx.Dialog):
 
     def OnOk(self, evt):
         # save the current entry & exit
+        guiwidgets.save_size("CalendarEntryEditor", self.GetRect())
         if self.dirty:
             self.OnSaveButton(None)
         self.setdirty(False)
@@ -679,6 +675,7 @@ class Editor(wx.Dialog):
 
     def OnCancel(self, evt):
         # just exit
+        guiwidgets.save_size("CalendarEntryEditor", self.GetRect())
         self.setdirty(False)
         evt.Skip()
     
@@ -694,7 +691,6 @@ class Editor(wx.Dialog):
         self.updatelistbox(entry.id)
 
     def OnDeleteButton(self, evt):
-##        entry=self.getcurrententry()
         entry=self.__current_entry
         if entry is None:
             return
