@@ -45,18 +45,6 @@ import cStringIO
 
 import common
 
-def unescape(d):
-    if d.find("\x7d")<0: return d
-    res=list(d)
-    try:
-        start=0
-        while True:
-            p=res.index("\x7d", start)
-            res[p:p+2]=chr(ord(res[p+1])^0x20)
-            start=p+1
-    except ValueError:
-        return "".join(res)
-
 class ProtogenException(Exception):
     """Base class for exceptions encountered with data marshalling"""
     def __init__(self, *args, **kwargs):
@@ -72,7 +60,7 @@ class ValueNotSetException(ProtogenException):
     def __init__(self):
         ProtogenException.__init__(self, "The value for this object has not been set.")
 
-class ValueError(ProtogenException):
+class ValueException(ProtogenException):
     "Some sort of problem with the value"
     def __init__(self, str):
         ProtogenException.__init__(self,str)
@@ -197,7 +185,7 @@ class UINTlsb(BaseProtogenClass):
             self._value=self._constant
 
         if self._constant is not None and self._constant!=self._value:
-            raise ValueError("This field is a constant of %d.  You tried setting it to %d" % (self._constant, self._value))
+            raise ValueException("This field is a constant of %d.  You tried setting it to %d" % (self._constant, self._value))
 
 
     def readfrombuffer(self, buf):
@@ -213,7 +201,7 @@ class UINTlsb(BaseProtogenClass):
         self._value=res
         self._bufferendoffset=buf.getcurrentoffset()
         if self._constant is not None and self._value!=self._constant:
-            raise ValueError("The value read should be a constant of %d, but was %d instead" % (self._constant, self._value))
+            raise ValueException("The value read should be a constant of %d, but was %d instead" % (self._constant, self._value))
          
     def writetobuffer(self, buf):
         if self._sizeinbytes is None:
@@ -319,7 +307,7 @@ class STRING(BaseProtogenClass):
         elif len(args)==1:
             self._value=common.forceascii(args[0])
             if self._constant is not None and self._constant!=self._value:
-                raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+                raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         else:
             raise TypeError("Unexpected arguments "+`args`)
         if self._value is None and self._default is not None:
@@ -377,7 +365,7 @@ class STRING(BaseProtogenClass):
                     self._value=self._value[:-1]
 
         if self._constant is not None and self._value!=self._constant:
-            raise ValueError("The value read was not the constant")
+            raise ValueException("The value read was not the constant")
 
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -479,7 +467,7 @@ class SAMSTRING(BaseProtogenClass):
         elif len(args)==1:
             self._value=common.forceascii(args[0])
             if self._constant is not None and self._constant!=self._value:
-                raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+                raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         else:
             raise TypeError("Unexpected arguments "+`args`)
         if self._value is None and self._default is not None:
@@ -540,10 +528,10 @@ class SAMSTRING(BaseProtogenClass):
                 raise MissingQuotesException()
 
         if self._readescape:
-            self._value=unescape(self._value)
+            self._value=common.pppunescape(self._value)
             
         if self._constant is not None and self._value!=self._constant:
-            raise ValueError("The value read was not the constant")
+            raise ValueException("The value read was not the constant")
 
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -620,7 +608,7 @@ class SAMINT(SAMSTRING):
         try:
             ival=int(val)
         except:
-            raise ValueError("The field '%s' is not an integer" % (val))
+            raise ValueException("The field '%s' is not an integer" % (val))
 
         return ival
 
@@ -756,14 +744,14 @@ class COUNTEDBUFFEREDSTRING(BaseProtogenClass):
         elif len(args)==1:
             self._value=str(args[0])
             if self._constant is not None and self._constant!=self._value:
-                raise ValueError("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+                raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         else:
             raise TypeError("Unexpected arguments "+`args`)
         if self._value is None and self._default is not None:
             self._value=self._default
 
         if self._sizeinbytes is None:
-            raise ValueError("sizeinbytes must be specified for COUNTEDBUFFEREDSTRING")
+            raise ValueException("sizeinbytes must be specified for COUNTEDBUFFEREDSTRING")
 
         if self._value is not None:
             l=len(self._value)
@@ -779,11 +767,11 @@ class COUNTEDBUFFEREDSTRING(BaseProtogenClass):
 
         strlen=buf.getnextbyte()
         if strlen>self._sizeinbytes-1:
-            raise ValueError("counter specifies size of %d which is greater than remaining stringbuffer size of %d!" % (strlen, self._sizeinbytes-1))
+            raise ValueException("counter specifies size of %d which is greater than remaining stringbuffer size of %d!" % (strlen, self._sizeinbytes-1))
         self._value=buf.getnextbytes(self._sizeinbytes-1) # -1 due to counter byte
         self._value=self._value[:strlen]
         if self._constant is not None and self._value!=self._constant:
-            raise ValueError("The value read was not the constant")
+            raise ValueException("The value read was not the constant")
 
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -849,7 +837,7 @@ class DATA(BaseProtogenClass):
         elif len(args)==1:
             self._value=args[0]
             if self._constant is not None and self._constant!=self._value:
-                raise ValueError("This field is a constant and you set it to a different value")
+                raise ValueException("This field is a constant and you set it to a different value")
         else:
             raise TypeError("Unexpected arguments "+`args`)
         if self._value is None and self._default is not None:
@@ -882,7 +870,7 @@ class DATA(BaseProtogenClass):
             self._value=buf.getremainingbytes()
 
         if self._constant is not None and self._value!=self._constant:
-            raise ValueError("The value read was not the constant")
+            raise ValueException("The value read was not the constant")
         self._bufferendoffset=buf.getcurrentoffset()
 
     def writetobuffer(self, buf):
