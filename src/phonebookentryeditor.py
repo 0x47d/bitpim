@@ -811,7 +811,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         """Returns the index of the currently selected editor widget
 
         @raise IndexError: if there is no selected one"""
-        focuswin=wx.Window_FindFocus()
+        focuswin=wx.Window.FindFocus()
         win=focuswin
         while win is not None and win not in self.widgets:
             win=win.GetParent()
@@ -849,7 +849,11 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             return
         # get the current value of all widgets
         gets=[x.Get() for x in self.widgets]
-        pos=self.GetCurrentWidgetIndex()
+        try:
+            pos=self.GetCurrentWidgetIndex()
+        except IndexError:
+            wx.Bell()
+            return
         # remove the last widget (the UI, not the value)
         self.sizer.Remove(self.widgets[-1])
         self.widgets[-1].Destroy()
@@ -879,7 +883,11 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         @param delta: positive to move down, negative to move up
         """
         focuswin=wx.Window_FindFocus()
-        pos=self.GetCurrentWidgetIndex()
+        try:
+            pos=self.GetCurrentWidgetIndex()
+        except IndexError:
+            wx.Bell()
+            return
         if pos+delta<0:
             print "that would go off top"
             return
@@ -972,7 +980,7 @@ class Editor(wx.Dialog):
         ("Ringtones", "ringtones", RingtoneEditor),
         ]
 
-    def __init__(self, parent, data, title="Edit PhoneBook entry", keytoopenon=None, dataindex=None, factory=database.dictdataobjectfactory):
+    def __init__(self, parent, data, title="Edit PhoneBook Entry", keytoopenon=None, dataindex=None, factory=database.dictdataobjectfactory):
         """Constructor for phonebookentryeditor dialog
 
         @param parent: parent window
