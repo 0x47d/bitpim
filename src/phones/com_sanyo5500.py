@@ -23,10 +23,6 @@ import com_sanyomedia
 import com_sanyonewer
 import prototypes
 
-numbertypetab=( 'home', 'office', 'cell', 'pager',
-                    'data', 'fax', 'none' )
-
-
 class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo SCP-5500 cell phone"
 
@@ -34,14 +30,6 @@ class Phone(com_sanyonewer.Phone):
 
     FIRST_MEDIA_DIRECTORY=1
     LAST_MEDIA_DIRECTORY=3
-
-    NUM_MEDIA_DIRECTORIES=4
-    # Directories:
-    #    1: Camera Pictures and Videos.  MDM - Video
-    #                                    V   - Picture
-    #    2: Downloads
-    #    3: Cable uploads
-    #    4: Duplicate of directory 1 ??
 
     protocolclass=p_sanyo5500
     serialsname='scp5500'
@@ -58,25 +46,9 @@ class Phone(com_sanyonewer.Phone):
     calendar_defaultringtone=4
 
     def __init__(self, logtarget, commport):
-        com_sanyo.Phone.__init__(self, logtarget, commport)
-        com_sanyomedia.SanyoMedia.__init__(self)
+        com_sanyonewer.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=2):
-         
-        # writemode seems not need for this phone
-        res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=False, numsendretry=numsendretry)
-        return res
- 
-
-    def savecalendar(self, dict, merge):
-        req=self.protocolclass.beginendupdaterequest()
-        req.beginend=1 # Start update
-        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
-
-        self.writewait()
-        result = com_sanyo.Phone.savecalendar(self, dict, merge)
-    
 class Profile(com_sanyonewer.Profile):
 
     protocolclass=p_sanyo5500
@@ -91,6 +63,7 @@ class Profile(com_sanyonewer.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
     )
 
     def __init__(self):
