@@ -21,7 +21,7 @@ class ConversionFailed(Exception): pass
 
 helperdir=sys.path[0]
 if os.path.isfile(helperdir):
-    helperdir=os.path.dirnamer(helperdir)
+    helperdir=os.path.dirname(helperdir)
 helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
 
 osext={'win32': '.exe',
