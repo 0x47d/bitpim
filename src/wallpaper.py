@@ -275,7 +275,10 @@ class BPFSHandler(wx.FileSystemHandler):
         return None
 
     def OpenBPUserImageFile(self, location, name, **kwargs):
-        image=self.wpm.GetImage(name)
+        try:
+            image=self.wpm.GetImage(name)
+        except IOError:
+            return self.OpenBPImageFile(location, "wallpaper.png", **kwargs)
         return BPFSImageFile(self, location, img=image, **kwargs)
 
     def OpenBPImageFile(self, location, name, **kwargs):
@@ -309,19 +312,24 @@ class BPFSImageFile(wx.FSFile):
         b=wx.EmptyBitmap(width, height)
         mdc=wx.MemoryDC()
         mdc.SelectObject(b)
-        print bgcolor
         if bgcolor is not None and  len(bgcolor)==6:
+            transparent=None
             red=int(bgcolor[0:2],16)
             green=int(bgcolor[2:4],16)
             blue=int(bgcolor[4:6],16)
             print "bg is",red,green,blue
             mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(wx.Colour(red,green,blue), wx.SOLID))
         else:
-            mdc.SetBackground(wx.TRANSPARENT_BRUSH)        
+            bgcolor=None
+            transparent=wx.Colour(*(img.FindFirstUnusedColour()[1:]))
+            mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(transparent, wx.SOLID))
         mdc.Clear()
         mdc.SelectObject(b)
         mdc.DrawBitmap(img.ConvertToBitmap(), (width-img.GetWidth())/2, (height-img.GetHeight())/2, True)
         mdc.SelectObject(wx.NullBitmap)
+        if transparent is not None:
+            mask=wx.MaskColour(b, transparent)
+            b.SetMask(mask)
         
         f=common.gettempfilename("png")
         if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
