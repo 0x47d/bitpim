@@ -39,14 +39,16 @@ class VFile:
                 break
 
         # Hack for evolution.  If ENCODING is QUOTED-PRINTABLE then it doesn't
-        # offset the next line.
+        # offset the next line, so we look to see what the first char is
         normalcontinuations=True
         colon=line.find(':')
         if colon>0:
             if "quoted-printable" in line[:colon].lower().split(";"):
                 normalcontinuations=False
                 while line[-1]=="=":
-                    line=line[:-1]+self._getnextline()
+                    nextl=self._getnextline()
+                    if nextl[0] in ("\t", " "): nextl=nextl[1:]
+                    line=line[:-1]+nextl
 
         while normalcontinuations:
             nextline=self._lookahead()
@@ -185,6 +187,10 @@ class VCard:
             self.lines.append( (f,v) )
         self._parse(self.lines, self._data)
 
+    def getdata(self):
+        "Returns a dict of the data parsed out of the vcard"
+        return self._data
+
     def _getfieldname(self, name, dict):
         """Returns the fieldname to use in the dict.
 
@@ -218,6 +224,8 @@ class VCard:
     _field_CALADRURI=_field_ignore    # variant of above
     _field_FBURL=_field_ignore        # not stored in bitpim
     _field_REV=_field_ignore          # not stored in bitpim
+    _field_KEY=_field_ignore          # not stored in bitpim
+    _field_SOURCE=_field_ignore       # not stored in bitpim (although arguably part of serials)
 
 
     # simple fields
@@ -453,7 +461,8 @@ class VCard:
             self._setvalue(result, "address", addr, preferred)
 
     def _default_field(self, field, value, result):
-        if field[0].startswith("X-"):
+        ff=field[0].split(".")
+        if ff[0].startswith("X-") or (len(ff)>1 and ff[1].startswith("X-")):
             if __debug__:
                 print "ignoring custom field",field
             return
