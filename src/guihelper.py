@@ -181,4 +181,7 @@ def getresourcefiles(wildcard):
     return l
 
 # Where to find bitmaps etc
-resourcedirectory=os.path.abspath(os.path.join(sys.path[0], 'resources'))
+p=sys.path[0]
+if p.lower().endswith(".zip"): # zip importer in action
+    p=os.path.dirname(p)
+resourcedirectory=os.path.abspath(os.path.join(p, 'resources'))

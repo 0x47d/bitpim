@@ -15,8 +15,7 @@ contact="The BitPim home page is at http://bitpim.sf.net.  You can post any " \
 
 if testver:
     # Different strings in test versions
-    extrainfo="This is a test build of BitPim.  Only use it if directed by the " \
-               "BitPim developers.  You can find official releases at http://bitpim.sf.net"
+    extrainfo="This is a test build of BitPim which provides a work in progress.  You can find official releases at http://bitpim.sf.net"
     contact="For questions or feedback, please use the bitpim developer mailing list.  Details " \
              "are at the BitPim web site."
 
@@ -43,13 +42,14 @@ else:
     x.append(1000+release)
 dqver=x[:]
 del x
+dqverstr=".".join([`x` for x in dqver])
 
 author="Roger Binns"
 author_email="rogerb@users.sourceforge.net"
 url="http://bitpim.sourceforge.net"
 
-description="BitPim - see http://bitpim.sf.net"
-copyright="(C) Roger Binns <rogerb@users.sf.net> and others - see http://bitpim.sf.net"
+description="BitPim "+versionstring
+copyright="(C) 2003-2004 Roger Binns <rogerb@users.sf.net> and others - see http://bitpim.sf.net"
 
 if __name__=='__main__':
     # generated for the benefit of the help
