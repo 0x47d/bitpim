@@ -44,6 +44,7 @@ class Phone:
         self.logtarget=logtarget
         self.comm=commport
         self.mode=self.MODENONE
+        self.__msg=None
 
     def close(self):
         self.comm.close()
@@ -137,6 +138,12 @@ class Phone:
                 pass
         return False       
 
+    def reportinit(self, name, dict):
+        self.__msg=Report(name, dict)
+
+    def report(self, msg):
+        self.__msg.report(msg)
+
 class Profile:
 
     WALLPAPER_WIDTH=100
@@ -199,14 +206,22 @@ class NoFilesystem:
     def getfilecontents(self, name):
         self.__raisefna("filesystem (getfilecontents)")
 
-    
-        
+class Report:
+    """
+    Send a report back to the main gui to display info to users.
+    Mainly used to report results back to users after a send-data-to-phone
+    operation.
+    """
+    def __init__(self, name, dict):
+        self.__name=name
+        self.__msg={ 'name': name, 'text': '' }
+        if dict.has_key('messages'):
+            dict['messages'].append(self.__msg)
+        else:
+            dict['messages']=[self.__msg]
 
-        
-
-        
-
-        
+    def report(self, msg):
+        self.__msg['text'] += '\r\n'+msg
 
         
     
