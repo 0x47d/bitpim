@@ -195,7 +195,7 @@ class TreeParser(HTMLParser.HTMLParser):
 
 def applyhtmlstyles(html, styles):
     tp=TreeParser(html)
-    applystyles(tp.rootnode, styles)
+    _applystyles(tp.rootnode, styles)
     return tp.flatten()
 
 def _hasclass(node):
@@ -204,7 +204,7 @@ def _hasclass(node):
             return True
     return False
 
-def applystyles(node, styles):
+def _applystyles(node, styles):
     if len(node.data):
         return
 
@@ -221,7 +221,7 @@ def applystyles(node, styles):
         node.attrs=newattrs
 
     for c in node.children:
-        applystyles(c, styles)
+        _applystyles(c, styles)
 
 def _applystyle(node, style):
     if len(style)==0: return
@@ -301,7 +301,7 @@ if __name__=='__main__':
         }
 
     tp=TreeParser(src)
-    applystyles(tp.rootnode, styles)
+    _applystyles(tp.rootnode, styles)
     tp.printtree()
     print tp.flatten()
 
