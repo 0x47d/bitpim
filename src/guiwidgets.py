@@ -66,6 +66,7 @@ class LogWindow(wxPanel):
         if len(self.outstandingtext):
             self.tb.AppendText(self.outstandingtext)
             self.outstandingtext=""
+            self.tb.ScrollLines(-1)
 
     def log(self, str):
         now=time.time()
