@@ -15,7 +15,6 @@ import com_brew
 import com_phone
 import common
 import commport
-# from string import split,strip,atoi,join
 import time
 import re
 from DSV import DSV

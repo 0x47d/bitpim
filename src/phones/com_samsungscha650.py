@@ -14,7 +14,6 @@
 
 import re
 import sha
-from string import split,atoi,strip,join
 
 
 
