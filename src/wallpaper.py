@@ -641,3 +641,281 @@ def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1,
 
     return (cStringIO.StringIO(data), location, "image/png", "", wx.DateTime_Now())
 
+    
+class ImageCropSelect(wx.ScrolledWindow):
+
+    def __init__(self, parent, image, previewwindow=None, id=1, resultsize=(100,100), size=wx.DefaultSize, pos=wx.DefaultPosition, style=0):
+        wx.ScrolledWindow.__init__(self, parent, id=id, size=size, pos=pos, style=style|wx.FULL_REPAINT_ON_RESIZE)
+        self.previewwindow=previewwindow
+        self.bg=wx.Brush(parent.GetBackgroundColour())
+        self._bufbmp=None
+
+        self.anchors=0.1 * image.GetWidth(), 0.1 * image.GetHeight(), 0.9 * image.GetWidth(), 0.9 * image.GetHeight()
+        
+        wx.EVT_ERASE_BACKGROUND(self, lambda evt: None)
+        wx.EVT_PAINT(self, self.OnPaint)
+
+        self.image=image
+        self.setresultsize(resultsize)
+
+        # cursors for outside, inside, on selection, pressing bad mouse button
+        self.cursors=[wx.StockCursor(c) for c in (wx.CURSOR_ARROW, wx.CURSOR_HAND, wx.CURSOR_SIZING, wx.CURSOR_NO_ENTRY)]
+        self.clickpoint=None 
+        wx.EVT_MOTION(self, self.OnMotion)
+        wx.EVT_LEFT_DOWN(self, self.OnLeftDown)
+        wx.EVT_LEFT_UP(self, self.OnLeftUp)
+
+    def SetPreviewWindow(self, previewwindow):
+        self.previewwindow=previewwindow
+
+    def OnPaint(self, _):
+        sz=self.thebmp.GetWidth(), self.thebmp.GetHeight()
+        sz2=self.GetClientSize()
+        sz=max(sz[0],sz2[0])+32,max(sz[1],sz2[1])+32
+        if self._bufbmp is None or self._bufbmp.GetWidth()<sz[0] or self._bufbmp.GetHeight()<sz[1]:
+            self._bufbmp=wx.EmptyBitmap((sz[0]+64)&~8, (sz[1]+64)&~8)
+        dc=wx.BufferedPaintDC(self, self._bufbmp)
+        dc.DrawBitmap(self.thebmp, 0, 0, False)
+        # draw bounding box next
+        l,t,r,b=self.anchors
+        points=(l,t), (r,t), (r,b), (l,b)
+        dc.DrawLines( points+(points[0],) )
+        for x,y in points:
+            dc.DrawRectangle(x-5, y-5, 10, 10)
+
+    OUTSIDE=0
+    INSIDE=1
+    HANDLE_LT=2
+    HANDLE_RT=3
+    HANDLE_RB=4
+    HANDLE_LB=5
+            
+    def _hittest(self, evt):
+        l,t,r,b=self.anchors
+        within=lambda x,y,l,t,r,b:  l<=x<=r and t<=y<=b
+        x,y=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        for i,(ptx,pty) in enumerate(((l,t), (r,t), (r,b), (l,b))):
+            if within(x,y,ptx-5, pty-5, ptx+5,pty+5):
+                return self.HANDLE_LT+i
+        if within(x,y,l,t,r,b):
+            return self.INSIDE
+        return self.OUTSIDE
+            
+    def OnMotion(self, evt):
+        if evt.Dragging():
+            return self.OnMotionDragging(evt)
+        self.UpdateCursor(evt)
+
+    def UpdateCursor(self, evt):
+        ht=self._hittest(evt)
+        self.SetCursor(self.cursors[min(2,ht)])
+
+    def OnMotionDragging(self, evt):
+        if not evt.LeftIsDown() or self.clickpoint is None:
+            self.SetCursor(self.cursors[3])
+            return
+        xx,yy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        if self.clickpoint==self.INSIDE:
+            # calculate a new delta
+            deltax=xx-self.origevtpos[0]
+            deltay=yy-self.origevtpos[1]
+            newanchors=self.origanchors[0]+deltax, self.origanchors[1]+deltay, \
+                        self.origanchors[2]+deltax, self.origanchors[3]+deltay
+            iw=self.dimensions[0]
+            ih=self.dimensions[1]
+            # would box be out of bounds?
+            if newanchors[0]<0:
+                newanchors=0,newanchors[1], self.origanchors[2]-self.origanchors[0], newanchors[3]
+            if newanchors[1]<0:
+                newanchors=newanchors[0], 0, newanchors[2], self.origanchors[3]-self.origanchors[1]
+            if newanchors[2]>iw:
+                newanchors=iw-(self.origanchors[2]-self.origanchors[0]),newanchors[1],iw, newanchors[3]
+            if newanchors[3]>ih:
+                newanchors=newanchors[0],ih-(self.origanchors[3]-self.origanchors[1]), newanchors[2],ih
+            self.anchors=newanchors
+            self.Refresh(False)
+            self.updatepreview()
+            return
+        
+    def OnLeftDown(self, evt):
+        ht=self._hittest(evt)
+        if ht==self.OUTSIDE:
+            self.SetCursor(self.cursors[3])
+            return
+        self.clickpoint=ht
+        if ht==self.INSIDE:
+            xx,yy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+            self.origevtpos=xx,yy
+            self.origanchors=self.anchors
+        
+    def OnLeftUp(self, evt):
+        self.clickpoint=None
+        self.UpdateCursor(evt)
+
+    def setresultsize(self, (w,h)):
+        self.resultsize=w,h
+        self.aspectratio=ratio=float(w)/h
+        imgratio=float(self.image.GetWidth())/self.image.GetHeight()
+
+        neww=self.image.GetWidth()
+        newh=self.image.GetHeight()
+        if imgratio<ratio:
+            neww*=ratio/imgratio
+        elif imgratio>ratio:
+            newh*=imgratio/ratio
+
+        # ensure a minimum size
+        neww=max(neww, 50)
+        newh=max(newh, 50)
+
+        self.dimensions=neww,newh
+
+        dc=wx.MemoryDC()
+        self.thebmp=wx.EmptyBitmap(neww, newh)
+        dc.SelectObject(self.thebmp)
+        dc.SetBackground(self.bg)
+        dc.Clear()
+        dc.DrawBitmap(self.image.ConvertToBitmap(), neww/2-self.image.GetWidth()/2, newh/2-self.image.GetHeight()/2, True)
+        dc.SelectObject(wx.NullBitmap)
+        self.SetVirtualSize( (neww, newh) )
+        self.SetScrollRate(1,1)
+
+        # fixup anchors
+        l,t,r,b=self.anchors
+        l=min(neww-40, l)
+        r=min(neww-10, r)
+        if r-l<20: r=40
+        t=min(newh-40, t)
+        b=min(newh-10, b)
+        if b-t<20: b=40
+        aratio=float(r-l)/(b-t)
+        if aratio<ratio:
+            b=t+(r-l)/ratio
+        elif aratio>ratio:
+            r=l+(b-t)*ratio
+        self.anchors=l,t,r,b
+
+        self.updatepreview()
+        self.Refresh(False)
+
+    # updating the preview is expensive so it is done on demand.  We
+    # tell the preview window there has been an update and it calls
+    # back from its paint method
+    def updatepreview(self):
+        if self.previewwindow:
+            self.previewwindow.SetUpdated(self.GetPreview)
+
+    def GetPreview(self):
+        l,t,r,b=self.anchors
+        sub=self.thebmp.GetSubBitmap( (l,t,(r-l),(b-t)) )
+        sub=sub.ConvertToImage()
+        sub.Rescale(*self.resultsize)
+        return sub.ConvertToBitmap()
+
+class ImagePreview(wx.PyWindow):
+
+    def __init__(self, parent):
+        wx.PyWindow.__init__(self, parent)
+        wx.EVT_ERASE_BACKGROUND(self, lambda evt: None)
+        wx.EVT_PAINT(self, self.OnPaint)
+        self.bmp=wx.EmptyBitmap(1,1)
+        self.updater=None
+
+    def SetUpdated(self, updater):
+        self.updater=updater
+        self.Refresh(True)
+
+    def OnPaint(self, _):
+        if self.updater is not None:
+            self.bmp=self.updater()
+            self.updater=None
+        dc=wx.PaintDC(self)
+        dc.DrawBitmap(self.bmp, 0, 0, False)
+
+
+class ImagePreviewDialog(wx.Dialog):
+
+    def __init__(self, parent, image, filename, phoneprofile):
+        wx.Dialog.__init__(self, parent, -1, "Image Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
+        self.phoneprofile=phoneprofile
+        self.filename=filename
+        self.image=image
+
+        vbsouter=wx.BoxSizer(wx.VERTICAL)
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.cropselect=ImageCropSelect(self, image)
+        hbs.Add(self.cropselect, 1, wx.ALL|wx.EXPAND, 5)
+
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
+        self.imagepreview=ImagePreview(self)
+        self.cropselect.SetPreviewWindow(self.imagepreview)
+        vbs.Add(self.imagepreview, 0, wx.ALL, 5)
+        vbs.Add(wx.StaticText(self, -1, "Origin"), 0, wx.ALL, 5)
+        self.originbox=wx.ListBox(self)
+        vbs.Add(self.originbox, 0, wx.ALL|wx.EXPAND, 5)
+        vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
+        self.targetbox=wx.ListBox(self)
+        vbs.Add(self.targetbox, 0, wx.ALL|wx.ALL, 5)
+        hbs.Add(vbs, 0, wx.ALL, 5)
+
+        vbsouter.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
+        
+        vbsouter.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vbsouter.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        wx.EVT_LISTBOX(self, self.originbox.GetId(), self.OnOriginSelect)
+        wx.EVT_LISTBOX_DCLICK(self, self.originbox.GetId(), self.OnOriginSelect)
+
+        wx.EVT_LISTBOX(self, self.targetbox.GetId(), self.OnTargetSelect)
+        wx.EVT_LISTBOX_DCLICK(self, self.targetbox.GetId(), self.OnTargetSelect)
+
+        self.originbox.Set(phoneprofile.GetImageOrigins().keys())
+        self.originbox.SetSelection(0)
+        self.OnOriginSelect(None)
+        
+        self.SetSizer(vbsouter)
+        vbsouter.Fit(self)
+
+    def OnOriginSelect(self, _):
+        v=self.originbox.GetStringSelection()
+        assert v is not None
+        t=self.targetbox.GetStringSelection()
+        self.targets=self.phoneprofile.GetTargetsForImageOrigin(v)
+        keys=self.targets.keys()
+        keys.sort()
+        self.targetbox.Set(keys)
+        if t in keys:
+            self.targetbox.SetSelection(keys.index(t))
+        else:
+            self.targetbox.SetSelection(0)
+        self.OnTargetSelect(None)
+
+    def OnTargetSelect(self, _):
+        v=self.targetbox.GetStringSelection()
+        print "target is",v
+        w,h=self.targets[v]['dimensions']
+        self.imagepreview.SetSize( (w,h) )
+        self.cropselect.setresultsize( (w, h) )
+        
+
+
+if __name__=='__main__':
+
+    class FakeProfile:
+
+        def GetImageOrigins(self):
+            return {"images": None, "mms": None, "camera": None}
+
+        def GetTargetsForImageOrigin(self, origin):
+            return {"wallpaper": {'dimensions': (100,200)},
+                    "photoid": {'dimensions': (100, 150)},
+                    "outsidelcd": {'dimensions': (90,80)}}
+    
+    app=wx.PySimpleApp()
+    dlg=ImagePreviewDialog(None, wx.Image("test.jpg"), "foobar.png", FakeProfile())
+    dlg.ShowModal()
+    
+        
+        
