@@ -50,7 +50,8 @@ class USBBus:
     def devices(self):
         dev=self.bus.devices
         while dev is not None:
-            yield USBDevice(dev)
+            if dev.config is not None:
+               yield USBDevice(dev)
             dev=dev.next
         raise StopIteration()
 
