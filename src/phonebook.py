@@ -211,6 +211,8 @@ _getdatalist=[
     "Phone", ("numbers", 0, None, formatnumber),
     "Phone2", ("numbers", 1, None, formatnumber),
     "Phone3", ("numbers", 2, None, formatnumber),
+    "Phone4", ("numbers", 3, None, formatnumber),
+    "Phone5", ("numbers", 4, None, formatnumber),
     
     ]
 
@@ -1571,6 +1573,8 @@ class PhonebookPrintDialog(wx.Dialog):
         bs.Add(self.selected, 0, wx.EXPAND|wx.ALL, 2)
         bs.Add(self.all, 0, wx.EXPAND|wx.ALL, 2)
         hbs.Add(bs, 0, wx.EXPAND|wx.ALL, 2)
+        self.selected.SetValue(numselected>1)
+        self.all.SetValue(not (numselected>1))
 
         # Sort
         self.sortkeyscb=[]
@@ -1578,7 +1582,7 @@ class PhonebookPrintDialog(wx.Dialog):
         choices=["<None>"]+AvailableColumns
         for i in range(3):
             bs.Add(wx.StaticText(self, -1, ("Sort by", "Then")[i!=0]), 0, wx.EXPAND|wx.ALL, 2)
-            self.sortkeyscb.append(wx.ComboBox(self, -1, "<None>", choices=choices, style=wx.CB_READONLY))
+            self.sortkeyscb.append(wx.ComboBox(self, wx.NewId(), "<None>", choices=choices, style=wx.CB_READONLY))
             bs.Add(self.sortkeyscb[-1], 0, wx.EXPAND|wx.ALL, 2)
         hbs.Add(bs)
 
@@ -1610,7 +1614,7 @@ class PhonebookPrintDialog(wx.Dialog):
         vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 2)
 
         # bottom half - preview
-        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Preview"), wx.VERTICAL)
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Content Preview"), wx.VERTICAL)
         self.preview=bphtml.HTMLWindow(self, -1)
         bs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 2)
 
@@ -1621,6 +1625,74 @@ class PhonebookPrintDialog(wx.Dialog):
         vbs.Fit(self)
         # self.SetSize( (600, 500) )
 
-    def GetCurrentHTML(self):
-        pass
+        # event handlers
+        wx.EVT_BUTTON(self, self.ID_PRINTPREVIEW, self.OnPrintPreview)
+        wx.EVT_BUTTON(self, self.ID_PRINT, self.OnPrint)
+        wx.EVT_BUTTON(self, self.ID_PAGESETUP, self.OnPageSetup)
+        wx.EVT_RADIOBUTTON(self, self.selected.GetId(), self.UpdateHtml)
+        wx.EVT_RADIOBUTTON(self, self.all.GetId(), self.UpdateHtml)
+        for i in self.sortkeyscb:
+            wx.EVT_COMBOBOX(self, i.GetId(), self.UpdateHtml)
+        wx.EVT_LISTBOX(self, self.layout.GetId(), self.UpdateHtml)
+        wx.EVT_CHECKLISTBOX(self, self.styles.GetId(), self.UpdateHtml)
+        self.UpdateHtml()
 
+    def UpdateHtml(self,_=None):
+        self.html=self.GetCurrentHTML()
+        self.preview.SetPage(self.html)
+
+    def GetCurrentHTML(self):
+        # Setup a nice environment pointing at this module
+        vars={'phonebook': __import__(__name__) }
+        # which data do we want?
+        if self.all.GetValue():
+            rowkeys=self.phonewidget._data.keys()
+        else:
+            rowkeys=self.phonewidget.GetSelectedRows()
+        # sort the data
+        # we actually sort in reverse order of what the UI shows in order to get correct results
+        for keycb in (-1, -2, -3):
+            sortkey=self.sortkeyscb[keycb].GetValue()
+            if sortkey=="<None>": continue
+            # decorate
+            l=[(getdata(sortkey, self.phonewidget._data[key]), key) for key in rowkeys]
+            l.sort()
+            # undecorate
+            rowkeys=[key for val,key in l]
+        # finish up vars
+        vars['rowkeys']=rowkeys
+        vars['currentcolumns']=self.phonewidget.GetColumns()
+        vars['data']=self.phonewidget._data
+        # Use xyaptu
+        xcp=xyaptu.xcopier(None)
+        xcp.setupxcopy(self.layoutfiles[self.layout.GetStringSelection()])
+        html=xcp.xcopywithdns(vars)
+        # apply styles
+        sd={'styles': {}, '__builtins__': __builtins__ }
+        for i in range(self.styles.GetCount()):
+            if self.styles.IsChecked(i):
+                exec self.stylefiles[self.styles.GetString(i)] in sd,sd
+        try:
+            html=bphtml.applyhtmlstyles(html, sd['styles'])
+        except:
+            f=open("debug.html", "wt")
+            f.write(html)
+            f.close()
+            raise
+        return html
+
+    def OnPrintPreview(self, _):
+        wx.GetApp().htmlprinter.PreviewText(self.html)
+
+    def OnPrint(self, _):
+        wx.GetApp().htmlprinter.PrintText(self.html)
+
+    def OnPrinterSetup(self, _):
+        wx.GetApp().htmlprinter.PrinterSetup()
+
+    def OnPageSetup(self, _):
+        wx.GetApp().htmlprinter.PageSetup()
+
+
+def htmlify(string):
+    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
