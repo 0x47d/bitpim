@@ -746,7 +746,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         try:
             pos=self.GetCurrentWidgetIndex()
         except IndexError:
-            pos=None
+            pos=len(gets)-1
         self.widgets.append(self.childclass(self, len(self.widgets)))
         self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
         self.DoInstructionsLayout() 
