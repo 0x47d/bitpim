@@ -20,6 +20,7 @@ import re
 import sys
 import shutil
 import types
+import datetime
 
 # wx modules
 import wx
@@ -413,6 +414,30 @@ class MainApp(wx.App):
         self.SetTopWindow(self.frame)
         self.SetExitOnFrameDelete(True)
         self.ApplySafeMode()
+        self.CheckUpdate()
+
+    def CheckUpdate(self):
+        if self.frame is None:
+            return
+        # tell the frame to do a check-for-update
+        update_rate=self.config.Read('updaterate', '')
+        if not len(update_rate) or update_rate =='Never':
+            return
+        last_update=self.config.Read('last_update', '')
+        if len(last_update):
+            last_date=datetime.date(int(last_update[:4]), int(last_update[4:6]),
+                                    int(last_update[6:]))
+            if update_rate=='Biweekly':
+                next_date=last_date+datetime.timedelta(14)
+            else:
+                next_date=last_date+datetime.timedelta(30)
+        else:
+            next_date=last_date=datetime.date.today()
+        if datetime.date.today()<next_date:
+            return
+        self.frame.AddPendingEvent(\
+            wx.PyCommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED,
+                              guihelper.ID_HELP_UPDATE))
 
     def OnExit(self): 
         self.config.Flush()
@@ -764,10 +789,13 @@ class MainWindow(wx.Frame):
 
     def DoCheckUpdate(self):
         s=update.check_update()
+        if not len(s):
+            # Failed to update
+            return
         # update our config with the latest version and date
         self.config.Write('latest_version', s)
         self.config.Write('last_update',
-                          time.strftime('%Y%d%m', time.localtime()))
+                          time.strftime('%Y%m%d', time.localtime()))
         # update the status bar
         self.SetVersionsStatus()
 

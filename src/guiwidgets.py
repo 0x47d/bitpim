@@ -351,7 +351,7 @@ class ConfigDialog(wx.Dialog):
     if __debug__:
         phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile for normal use
                               })
-
+    update_choices=('Never', 'Biweekly', 'Monthly')
     setme="<setme>"
     ID_DIRBROWSE=wx.NewId()
     ID_COMBROWSE=wx.NewId()
@@ -392,13 +392,19 @@ class ConfigDialog(wx.Dialog):
         gs.Add( self.commbox, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
         gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
+        # Automatic check for update
+        gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.updatebox=wx.ComboBox(self, -1, self.update_choices[0],
+                                   style=wx.CB_DROPDOWN|wx.CB_READONLY,
+                                   choices=self.update_choices)
+        gs.Add(self.updatebox, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(4,2), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add(self.bitflingenabled, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(5,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -408,7 +414,6 @@ class ConfigDialog(wx.Dialog):
                 self.bitflingenabled.Enable(False)
         else:
             self.bitflingenabled=None
-
         # crud at the bottom
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
@@ -575,6 +580,8 @@ class ConfigDialog(wx.Dialog):
             self.bitflingenabled.SetValue(self.mw.config.ReadInt("bitfling/enabled", 0))
             self.ApplyBitFlingSettings()
         self.safemode.SetValue(self.mw.config.ReadInt("Safemode", 0))
+        self.updatebox.SetValue(self.mw.config.Read("updaterate",
+                                                    self.update_choices[0]))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -625,6 +632,8 @@ class ConfigDialog(wx.Dialog):
         if self.safemode.GetValue():
             wx.GetApp().SAFEMODE=True
         wx.GetApp().ApplySafeMode()
+        # check for update rate
+        self.mw.config.Write('updaterate', self.updatebox.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
