@@ -25,22 +25,65 @@ class SanyoMedia:
     "Download and upload media (ringers/wallpaper) from Sanyo Phones"
 
     NUM_MEDIA_DIRECTORIES=4
+    FIRST_MEDIA_DIRECTORY=2
+    LAST_MEDIA_DIRECTORY=3
+    CAMERA_DIRECTORY=1
     
     imagelocations=(
-        # offset, index file, files location, type, maximumentries
-        ( 150, 1, 1, "camera", 30),
+        # offset, directory #, indexflag, type, maximumentries
+        ( 300, 1, 1, "images", 30),
+        ( 300, 1, 0, "camera", 30),
         )
 
     def __init__(self):
         pass
 
+    def getmediaindices(self, results):
+        com_sanyo.SanyoPhonebook.getmediaindices(self, results)
+        ringermedia=results['ringtone-index']
+        imagemedia=results['wallpaper-index']
+        for idir in range(self.FIRST_MEDIA_DIRECTORY, self.LAST_MEDIA_DIRECTORY+1):
+            self.log("Indexing directory "+`idir`)
+            req=self.protocolclass.sanyochangedir()
+            req.dirindex=idir
+            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
+            req=self.protocolclass.sanyonumfilesrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
+            self.log("Directory "+`idir`+", File Count="+`res.count`)
+            nfiles=res.count
+            for ifile in range(nfiles):
+                req=self.protocolclass.sanyomediafilenamerequest()
+                req.index=ifile
+                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
+                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
+                if ifile == self.CAMERA_DIRECTORY:
+                    if res.num3==0:    # Original Camera Picture
+                        # Could convert filename to to a date
+                        imagemedia[ifile+1000*idir]={'name': "$camera_"+res.filename, 'origin': "camera"}
+                    else:
+                        imagemedia[res.num2]={'name': res.filename, 'origin': "camera"}
+                else:
+                    if res.num3==0:    # Original Camera Picture
+                        idx=ifile+1000*idir
+                    else:
+                        idx=res.num2
+                    fname=res.filename
+                    if fname.endswith(".jpg") or fname.endswith(".mp4"):
+                        imagemedia[idx]={'name': res.filename, 'origin': "images"}
+                    else:
+                        ringermedia[idx]={'name': res.filename, 'origin': "ringers"}
+        results['ringtone-index']=ringermedia
+        results['wallpaper-index']=imagemedia
+        return
+            
+        
     def getmediaindex(self, builtins, maps, results, key):
         media=com_sanyo.SanyoPhonebook.getmediaindex(self, builtins, maps, results, key)
         # the maps
         type=''
-        for offset,indexfile,idir,type,maxentries in maps:
+        for offset,indexfile,indextype,type,maxentries in maps:
             req=self.protocolclass.sanyochangedir()
-            req.dirindex=idir
+            req.dirindex=indexfile
             res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
             req=self.protocolclass.sanyonumfilesrequest()
             res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
@@ -72,11 +115,11 @@ class SanyoMedia:
         
     def getmedia(self, maps, result, key):
         media={}
-        for offset,indexfile,location,type,maxentries in maps:
-            index=self.getindex(location)
+        for offset,indexfile,indextype,type,maxentries in maps:
+            index=self.getindex(indexfile)
             for i in index:
                 try:
-                    media[index[i]]=self.getsanyofilecontents(location,i)
+                    media[index[i]]=self.getsanyofilecontents(indexfile,i)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
                     self.log("It was in the index, but not on the filesystem")
                     
