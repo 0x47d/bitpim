@@ -126,7 +126,7 @@ class BrewProtocol:
         keys.reverse()
         count=0
         for k in keys:
-            self.progressminor(count, len(keys), "Deleting "+k)
+            self.progress(count, len(keys), "Deleting "+k)
             count+=1
             if all[k]['type']=='directory':
                 self.rmdir(k)
