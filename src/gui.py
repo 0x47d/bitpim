@@ -880,6 +880,13 @@ class WorkerThread(WorkerThreadFramework):
             time.sleep(1)
         self.log("helper thread shut down")
         raise SystemExit("helper thread shutdown")
+
+
+    def clearcomm(self):
+        if self.commphone is None:
+            return
+        self.commphone.close()
+        self.commphone=None
         
     def setupcomm(self):
         if __debug__: self.checkthread()
