@@ -524,14 +524,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             if len(i.email):
                 res['emails'].append( {'email': i.email} )
         # urls
-        res['urls']=[ {'url': entry.url} ]
+        if len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
         # ringtones
         res['ringtones']=[ {'ringtone': entry.ringtone, 'use': 'call'},
                            {'ringtone': entry.msgringtone, 'use': 'message' } ] # ::TODO:: turn these into strings
         # private
         res['flags']=[ {'secret': entry.secret } ]
         # memos
-        res['memos']=[ {'memo': entry.memo } ]
+        if len(entry.memo):
+            res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
         res['wallpapers']=[ {'wallpaper': entry.wallpaper, 'use': 'call'} ]
         # numbers
@@ -540,7 +542,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             num=entry.numbers[i].number
             type=entry.numbertypes[i].numbertype
             if len(num):
-                res['numbers'].append({'number': num, 'type': numbertypetab[type]})
+                t=numbertypetab[type]
+                if t[-1]=='2':
+                    t=t[:-1]
+                res['numbers'].append({'number': num, 'type': t})
         return res
                     
     def makeentry(self, counter, entry, dict):
@@ -619,6 +624,10 @@ class Profile:
                     type=num['type']
                     for i,t in zip(range(100),numbertypetab):
                         if type==t:
+                            # some voodoo to ensure the second home becomes home2
+                            if i in e['numbertypes'] and t[-1]!='2':
+                                type.append('2')
+                                continue
                             e['numbertypes'].append(i)
                             break
                         if t=='none': # conveniently last entry
