@@ -106,7 +106,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 # ringtones
                 entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
                 # wallpapers
-                entry['wallpapers']=[{'wallpaper': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
+                entry['wallpapers']=[{'index': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
                 # Speed dial
                     
                 pbook[i]=entry 
@@ -282,7 +282,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             req=p_sanyo.phonebookslotupdaterequest()
             req.entry=entry
             res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
-            time.sleep(.70)
+            time.sleep(.10)
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
             sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
@@ -445,7 +445,7 @@ class Profile:
                 
                 e['ringtone']=helper.getringtone(entry['ringtones'], 'call', 0)
 
-                e['wallpaper']=helper.getwallpaper(entry['wallpapers'], 'call', 0)
+                e['wallpaper']=helper.getwallpaperindex(entry['wallpapers'], 'call', 0)
 
                 e['secret']=helper.getflag(entry['flags'], 'secret', False)
 
