@@ -17,9 +17,9 @@ about goal directed design.  I also have to apologise for it not quite living up
 It is fairly feature complete and supports all sorts of interaction, scrolling and customization
 of appearance"""
 
-from wxPython.wx import *
-from wxPython.lib.rcsizer import RowColSizer
-from wxPython.calendar import *
+import wx
+import wx.lib.rcsizer
+import wx.calendar
 import cStringIO
 import calendar
 import time
@@ -49,15 +49,15 @@ class CalendarCellAttributes:
     the defaults"""
     def __init__(self):
         # Set some defaults
-        self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(230,255,255), wxSOLID)
-        #self.cellbackground=wxBrush(wxColour(197,255,255), wxSOLID)
-        self.labelfont=wxFont(14, wxSWISS, wxNORMAL, wxNORMAL )
-        self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
-        self.labelalign=wxALIGN_RIGHT
-        self.timefont=wxFont(8, wxSWISS, wxNORMAL, wxNORMAL )
-        self.timeforeground=wxNamedColour("ORCHID")
-        self.entryfont=wxFont(9, wxSWISS, wxNORMAL, wxNORMAL )
-        self.entryforeground=wxNamedColour("BLACK")
+        self.cellbackground=wx.TheBrushList.FindOrCreateBrush(wx.Colour(230,255,255), wx.SOLID)
+        #self.cellbackground=wx.Brush(wx.Colour(197,255,255), wx.SOLID)
+        self.labelfont=wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL )
+        self.labelforeground=wx.NamedColour("CORNFLOWER BLUE")
+        self.labelalign=wx.ALIGN_RIGHT
+        self.timefont=wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL )
+        self.timeforeground=wx.NamedColour("ORCHID")
+        self.entryfont=wx.Font(9, wx.SWISS, wx.NORMAL, wx.NORMAL )
+        self.entryforeground=wx.NamedColour("BLACK")
         self.miltime=False
         self.initdone=True
 
@@ -71,7 +71,7 @@ class CalendarCellAttributes:
 
         @rtype: Bool
         @return:  True is it should be shown right aligned"""
-        return self.labelalign==wxALIGN_RIGHT
+        return self.labelalign==wx.ALIGN_RIGHT
 
     def ismiltime(self):
         """Are times shown in military (aka 24 hour) time?
@@ -84,14 +84,14 @@ class CalendarCellAttributes:
         """Set the cell background attributes
 
         Colour
-        @type dc: wxDC"""
+        @type dc: wx.DC"""
         dc.SetBackground(self.cellbackground)
 
     def setforlabel(self, dc, fontscale=1):
         """Set the attributes for the day label
 
         Colour, font
-        @type dc: wxDC
+        @type dc: wx.DC
         @param fontscale: You should multiply the font point size
                           by this number
         @type fontscale: float
@@ -104,7 +104,7 @@ class CalendarCellAttributes:
         """Set the attributes for the time of an event text
  
         Colour, font
-        @type dc: wxDC
+        @type dc: wx.DC
         @param fontscale: You should multiply the font point size
                           by this number
         @type fontscale: float
@@ -116,7 +116,7 @@ class CalendarCellAttributes:
         """Set the attributes for the label of an event text
  
         Colour, font
-        @type dc: wxDC
+        @type dc: wx.DC
         @param fontscale: You should multiply the font point size
                           by this number
         @type fontscale: float
@@ -127,8 +127,8 @@ class CalendarCellAttributes:
     def setscaledfont(self, dc, font, fontscale):
         """Changes the in the device context to the supplied font suitably scaled
 
-        @type dc: wxDC
-        @type font: wxFont
+        @type dc: wx.DC
+        @type font: wx.Font
         @type fontscale: float
         @return: Returns True if the scaling succeeded, and False if the font was already
                  too small to scale smaller (the smallest size will still have been
@@ -140,7 +140,7 @@ class CalendarCellAttributes:
         ps=int(font.GetPointSize()*fontscale)
         if ps<2:
             ps=2
-        f=wxTheFontList.FindOrCreateFont(ps, font.GetFamily(), font.GetStyle(), font.GetWeight())
+        f=wx.TheFontList.FindOrCreateFont(ps, font.GetFamily(), font.GetStyle(), font.GetWeight())
         dc.SetFont(f)
         if ps==2:
             return False
@@ -150,7 +150,7 @@ class CalendarCellAttributes:
 DefaultCalendarCellAttributes=CalendarCellAttributes()
 
                 
-class CalendarCell(wxWindow):
+class CalendarCell(wx.Window):
     """A control that is used for each day in the calendar
 
     As the user scrolls around the calendar, each cell is updated with new dates rather
@@ -159,8 +159,8 @@ class CalendarCell(wxWindow):
     
     fontscalecache=FontscaleCache()
 
-    def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wxSIMPLE_BORDER):
-        wxWindow.__init__(self, parent, id, style=style|wxWANTS_CHARS)
+    def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wx.SIMPLE_BORDER):
+        wx.Window.__init__(self, parent, id, style=style|wx.WANTS_CHARS)
         self.attr=attr
         self.day=33
         self.year=2033
@@ -169,9 +169,9 @@ class CalendarCell(wxWindow):
         self.needsupdate=True
         self.entries=()
 
-        EVT_PAINT(self, self.OnPaint)
-        EVT_SIZE(self, self.OnSize)
-        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        wx.EVT_PAINT(self, self.OnPaint)
+        wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.OnSize(None)
 
     def OnEraseBackground(self, _):
@@ -222,14 +222,14 @@ class CalendarCell(wxWindow):
            self.buffer.GetHeight()!=self.height:
             if self.buffer is not None:
                 del self.buffer
-            self.buffer=wxEmptyBitmap(self.width, self.height)
+            self.buffer=wx.EmptyBitmap(self.width, self.height)
 
-        mdc=wxMemoryDC()
+        mdc=wx.MemoryDC()
         mdc.SelectObject(self.buffer)
         self.attr.setforcellbackground(mdc)
         mdc.Clear()
         self.draw(mdc)
-        mdc.SelectObject(wxNullBitmap)
+        mdc.SelectObject(wx.NullBitmap)
         del mdc
 
     def OnPaint(self, _=None):
@@ -237,13 +237,13 @@ class CalendarCell(wxWindow):
         if self.needsupdate:
             self.needsupdate=False
             self.redraw()
-        dc=wxPaintDC(self)
+        dc=wx.PaintDC(self)
         dc.DrawBitmap(self.buffer, 0, 0, False)
 
     def draw(self, dc):
         """Draw ourselves
 
-        @type dc: wxDC"""
+        @type dc: wx.DC"""
         
         # do the label
         self.attr.setforlabel(dc)
@@ -337,21 +337,21 @@ class CalendarCell(wxWindow):
                 thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
                 break
 
-class CalendarLabel(wxWindow):
+class CalendarLabel(wx.Window):
     """The label window on the left of the day cells that shows the month with rotated text
 
     It uses double buffering etc for a flicker free experience"""
     
     def __init__(self, parent, cells, id=-1):
-        wxWindow.__init__(self, parent, id)
+        wx.Window.__init__(self, parent, id)
         self.needsupdate=True
         self.buffer=None
         self.cells=cells
-        EVT_PAINT(self, self.OnPaint)
-        EVT_SIZE(self, self.OnSize)
-        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
-        self.setfont(wxFont(20, wxSWISS, wxNORMAL, wxBOLD ))
-        self.settextcolour(wxNamedColour("BLACK"))
+        wx.EVT_PAINT(self, self.OnPaint)
+        wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        self.setfont(wx.Font(20, wx.SWISS, wx.NORMAL, wx.BOLD ))
+        self.settextcolour(wx.NamedColour("BLACK"))
         self.OnSize(None)
 
     def OnEraseBackground(self, _):
@@ -365,7 +365,7 @@ class CalendarLabel(wxWindow):
         if self.needsupdate:
             self.needsupdate=False
             self.redraw()
-        dc=wxPaintDC(self)
+        dc=wx.PaintDC(self)
         dc.DrawBitmap(self.buffer, 0, 0, False)
 
     def setfont(self, font):
@@ -384,14 +384,14 @@ class CalendarLabel(wxWindow):
            self.buffer.GetHeight()!=self.height:
             if self.buffer is not None:
                 del self.buffer
-            self.buffer=wxEmptyBitmap(self.width, self.height)
+            self.buffer=wx.EmptyBitmap(self.width, self.height)
 
-        mdc=wxMemoryDC()
+        mdc=wx.MemoryDC()
         mdc.SelectObject(self.buffer)
-        mdc.SetBackground(wxTheBrushList.FindOrCreateBrush(self.GetBackgroundColour(), wxSOLID))
+        mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(self.GetBackgroundColour(), wx.SOLID))
         mdc.Clear()
         self.draw(mdc)
-        mdc.SelectObject(wxNullBitmap)
+        mdc.SelectObject(wx.NullBitmap)
         del mdc
 
     def draw(self, dc):
@@ -419,7 +419,7 @@ class CalendarLabel(wxWindow):
             
             dc.DestroyClippingRegion()
             dc.SetClippingRegion(x,y,w,h)
-            dc.SetPen(wxThePenList.FindOrCreatePen("BLACK", 3, wxSOLID))
+            dc.SetPen(wx.ThePenList.FindOrCreatePen("BLACK", 3, wx.SOLID))
             # draw line at top and bottom
             if row!=0:
                 dc.DrawLine(x, y, x+w, y)
@@ -446,7 +446,7 @@ class CalendarLabel(wxWindow):
             row=endrow+1
 
 
-class Calendar(wxPanel):
+class Calendar(wx.Panel):
     """The main calendar control.
 
     You should subclass this clas and need to
@@ -473,33 +473,33 @@ class Calendar(wxPanel):
     attrselectedcell=None
 
     def _initvars(self):
-        # this is needed to avoid issues with the wx library not being initialised
+        # this is needed to avoid issues with the wx. library not being initialised
         # as the module is imported.  We initialise the values when the first
         # calendar constructor is run
         if Calendar.attrevenmonth is None:
             Calendar.attrevenmonth=CalendarCellAttributes()
         if Calendar.attroddmonth is None:
             Calendar.attroddmonth=CalendarCellAttributes()
-            Calendar.attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
+            Calendar.attroddmonth.cellbackground=wx.TheBrushList.FindOrCreateBrush( wx.Colour(255, 255, 230), wx.SOLID)
         if Calendar.attrselectedcell is None:
             Calendar.attrselectedcell=CalendarCellAttributes()
-            Calendar.attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxSOLID)
-            Calendar.attrselectedcell.labelfont=wxFont(17, wxSWISS, wxNORMAL, wxBOLD )
-            Calendar.attrselectedcell.labelforeground=wxNamedColour("BLACK")
+            Calendar.attrselectedcell.cellbackground=wx.TheBrushList.FindOrCreateBrush( wx.Colour(240,240,240), wx.SOLID)
+            Calendar.attrselectedcell.labelfont=wx.Font(17, wx.SWISS, wx.NORMAL, wx.BOLD )
+            Calendar.attrselectedcell.labelforeground=wx.NamedColour("BLACK")
     
     def __init__(self, parent, rows=5, id=-1):
         self._initvars()
-        wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS)
-        sizer=RowColSizer()
-        self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
-        sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
-        self.year=wxButton(self, self.ID_YEARBUTTON, "2003")
-        sizer.Add(self.year, flag=wxEXPAND, row=1, col=0)
+        wx.Panel.__init__(self, parent, id, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS)
+        sizer=wx.lib.rcsizer.RowColSizer()
+        self.upbutt=wx.BitmapButton(self, self.ID_UP, getupbitmapBitmap())
+        sizer.Add(self.upbutt, flag=wx.EXPAND, row=0,col=0, colspan=8)
+        self.year=wx.Button(self, self.ID_YEARBUTTON, "2003")
+        sizer.Add(self.year, flag=wx.EXPAND, row=1, col=0)
         p=1
         calendar.setfirstweekday(calendar.SUNDAY)
         for i in ( "Sun", "Mon", "Tue", "Wed" , "Thu", "Fri", "Sat" ):
-           sizer.Add(  wxStaticText( self, -1, i, style=wxALIGN_CENTER|wxALIGN_CENTER_VERTICAL),
-                       flag=wxALIGN_CENTER_VERTICAL|wxALIGN_CENTER_HORIZONTAL|wxEXPAND, row=1, col=p)
+           sizer.Add(  wx.StaticText( self, -1, i, style=wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL),
+                       flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, row=1, col=p)
            sizer.AddGrowableCol(p)
            p+=1
         self.numrows=rows
@@ -507,27 +507,27 @@ class Calendar(wxPanel):
         self.rows=[]
         for i in range(0, rows):
             self.rows.append( self.makerow(sizer, i+2) )
-        self.downbutt=wxBitmapButton(self, self.ID_DOWN, getdownbitmapBitmap())
-        sizer.Add(self.downbutt, flag=wxEXPAND, row=2+rows, col=0, colspan=8)
+        self.downbutt=wx.BitmapButton(self, self.ID_DOWN, getdownbitmapBitmap())
+        sizer.Add(self.downbutt, flag=wx.EXPAND, row=2+rows, col=0, colspan=8)
         self.label=CalendarLabel(self, map(lambda x: x[0], self.rows))
-        sizer.Add(self.label, flag=wxEXPAND, row=2, col=0, rowspan=self.numrows)
+        sizer.Add(self.label, flag=wx.EXPAND, row=2, col=0, rowspan=self.numrows)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
 
         self.popupcalendar=PopupCalendar(self, self)
 
-        EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
-        EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
-        EVT_BUTTON(self, self.ID_YEARBUTTON, self.OnYearButton)
-        EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        wx.EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
+        wx.EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
+        wx.EVT_BUTTON(self, self.ID_YEARBUTTON, self.OnYearButton)
+        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         # grab key down from all children
-        map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
+        map(lambda child: wx.EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
         # and mousewheel
-        map(lambda child: EVT_MOUSEWHEEL(child, self.OnMouseWheel), self.GetChildren())
+        map(lambda child: wx.EVT_MOUSEWHEEL(child, self.OnMouseWheel), self.GetChildren())
         # grab left down, left dclick from all cells
         for r in self.rows:
-            map(lambda cell: EVT_LEFT_DOWN(cell, self.OnLeftDown), r)
-            map(lambda cell: EVT_LEFT_DCLICK(cell, self.OnLeftDClick), r)
+            map(lambda cell: wx.EVT_LEFT_DOWN(cell, self.OnLeftDown), r)
+            map(lambda cell: wx.EVT_LEFT_DCLICK(cell, self.OnLeftDClick), r)
 
         self.selectedcell=(-1,-1)
         self.selecteddate=(-1,-1,-1)
@@ -583,7 +583,7 @@ class Calendar(wxPanel):
         sizer.AddGrowableRow(row)
         for i in range(0,7):
             res.append( CalendarCell(self, -1) )
-            sizer.Add( res[-1], flag=wxEXPAND, row=row, col=i+1)
+            sizer.Add( res[-1], flag=wx.EXPAND, row=row, col=i+1)
         return res
 
     def scrollby(self, amount):
@@ -750,18 +750,18 @@ class Calendar(wxPanel):
         print "The user wants to edit %04d-%02d-%02d" % (year,month,day)
 
 
-class PopupCalendar(wxDialog):
+class PopupCalendar(wx.Dialog):
     """The control that pops up when you click the year button"""
-    def __init__(self, parent, calendar, style=wxSIMPLE_BORDER):
-        wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP|style)
+    def __init__(self, parent, calendar, style=wx.SIMPLE_BORDER):
+        wx.Dialog.__init__(self, parent, -1, '', style=wx.STAY_ON_TOP|style)
         self.calendar=calendar
-        self.control=wxCalendarCtrl(self, 1, style=wxCAL_SUNDAY_FIRST, pos=(0,0))
+        self.control=wx.calendar.CalendarCtrl(self, 1, style=wx.calendar.CAL_SUNDAY_FIRST, pos=(0,0))
         sz=self.control.GetBestSize()
         self.SetSize(sz)
-        EVT_CALENDAR(self, self.control.GetId(), self.OnCalSelected)
+        wx.calendar.EVT_CALENDAR(self, self.control.GetId(), self.OnCalSelected)
 
     def Popup(self, year, month, day, event):
-        d=wxDateTimeFromDMY(day, month, year)
+        d=wx.DateTimeFromDMY(day, month, year)
         self.control.SetDate(d)
         btn=event.GetEventObject()
         pos=btn.ClientToScreen( (0,0) )
@@ -843,13 +843,13 @@ def getupbitmapData():
 D \x03\x00\x00\x00\x00IEND\xaeB`\x82' 
 
 def getupbitmapBitmap():
-    """Returns a wxBitmap of the up icon"""
-    return wxBitmapFromImage(getupbitmapImage())
+    """Returns a wx.Bitmap of the up icon"""
+    return wx.BitmapFromImage(getupbitmapImage())
 
 def getupbitmapImage():
-    """Returns wxImage of the up icon"""
+    """Returns wx.Image of the up icon"""
     stream = cStringIO.StringIO(getupbitmapData())
-    return wxImageFromStream(stream)
+    return wx.ImageFromStream(stream)
 
 def getdownbitmapData():
     """Returns raw data for the down icon"""
@@ -864,13 +864,13 @@ def getdownbitmapData():
 \x1f\xf8\xca\t\xael-\x16\x86\x00\x00\x00\x00IEND\xaeB`\x82' 
 
 def getdownbitmapBitmap():
-    """Returns a wxBitmap of the down icon"""
-    return wxBitmapFromImage(getdownbitmapImage())
+    """Returns a wx.Bitmap of the down icon"""
+    return wx.BitmapFromImage(getdownbitmapImage())
 
 def getdownbitmapImage():
-    """Returns wxImage of the down icon"""
+    """Returns wx.Image of the down icon"""
     stream = cStringIO.StringIO(getdownbitmapData())
-    return wxImageFromStream(stream)
+    return wx.ImageFromStream(stream)
 
 
  
@@ -878,15 +878,15 @@ def getdownbitmapImage():
 # If run by self, then is a nice demo
 
 if __name__=="__main__":
-    class MainWindow(wxFrame):
+    class MainWindow(wx.Frame):
         def __init__(self, parent, id, title):
-            wxFrame.__init__(self, parent, id, title, size=(800,600),
-                             style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
+            wx.Frame.__init__(self, parent, id, title, size=(800,600),
+                             style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
             #self.control=CalendarCell(self, 1) # test just the cell
             self.control=Calendar(self)
             self.Show(True)
     
-    app=wxPySimpleApp()
+    app=wx.PySimpleApp()
     frame=MainWindow(None, -1, "Calendar Test")
     if False: # change to True to do profiling
         import profile

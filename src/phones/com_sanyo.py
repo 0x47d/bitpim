@@ -15,7 +15,7 @@ import time
 import cStringIO
 import sha
 
-from wxPython.wx import *
+import wx
 
 # BitPim modules
 import com_brew
@@ -881,7 +881,7 @@ class Profile:
         "Converts the data to what will be used by the phone"
         results={}
 
-        lastnamefirst=wxGetApp().config.ReadInt("lastnamefirst")
+        lastnamefirst=wx.GetApp().config.ReadInt("lastnamefirst")
 
         slotsused={}
         for pbentry in data['phonebook']:
