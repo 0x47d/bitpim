@@ -394,7 +394,7 @@ class PhoneWidget(wx.Panel):
         split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
-        self.groups=[]
+        self.categories=[]
         self.modified=False
         self.table=wx.grid.Grid(split, wx.NewId())
         self.table.EnableGridLines(False)
@@ -421,9 +421,9 @@ class PhoneWidget(wx.Panel):
 
 
     def OnCategoriesUpdate(self, msg):
-        if self.groups!=msg.data:
+        if self.categories!=msg.data:
             print "categories updated"
-            self.groups=msg.data[:]
+            self.categories=msg.data[:]
             self.modified=True
 
     def OnIdle(self, _):
@@ -494,7 +494,7 @@ class PhoneWidget(wx.Panel):
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
-        dict['groups']=self.groups[:]
+        dict['categories']=self.categories[:]
         return dict
 
 
@@ -514,7 +514,7 @@ class PhoneWidget(wx.Panel):
             wx.MessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wx.OK|wx.ICON_EXCLAMATION)
             version=2
             dict['phonebook']={}
-            dict['groups']={}
+            dict['categories']={}
             
     def clear(self):
         self._data={}
@@ -534,12 +534,12 @@ class PhoneWidget(wx.Panel):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
-            dict['groups']={}
+            dict['categories']={}
         return dict
 
     def populate(self, dict):
         self.clear()
-        pubsub.publish(pubsub.MERGE_CATEGORIES, dict.get('groups', []))
+        pubsub.publish(pubsub.MERGE_CATEGORIES, dict.get('categories', []))
         pb=dict['phonebook']
         cats=[]
         for i in pb:
@@ -566,8 +566,8 @@ class PhoneWidget(wx.Panel):
             os.remove(os.path.join(self.thedir, f))
         d={}
         d['phonebook']=dict['phonebook']
-        if len(dict.get('groups', [])):
-            d['groups']=dict['groups']
+        if len(dict.get('categories', [])):
+            d['categories']=dict['categories']
         
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
@@ -678,7 +678,7 @@ class PhoneWidget(wx.Panel):
                 return i[name]
         return default
 
-    def importdata(self, importdata, groupinfo=[], merge=True):
+    def importdata(self, importdata, categoriesinfo=[], merge=True):
         if merge:
             d=self._data
         else:
@@ -691,7 +691,7 @@ class PhoneWidget(wx.Panel):
         if result is not None:
             d={}
             d['phonebook']=result
-            d['groups']=groupinfo
+            d['categories']=categoriesinfo
             self.populatefs(d)
             self.populate(d)
             
