@@ -63,6 +63,9 @@ class LogWindow(wxPanel):
 
         EVT_KEY_UP(self.tb, self.OnKeyUp)
 
+    def Clear(self):
+        self.tb.Clear()
+
     def OnIdle(self,_):
         if len(self.outstandingtext):
             self.tb.AppendText(self.outstandingtext)
