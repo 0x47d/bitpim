@@ -17,6 +17,7 @@ import cStringIO
 import StringIO
 import sys
 import traceback
+import tempfile
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):
@@ -140,14 +141,11 @@ class exceptionwrap:
           
      def __call__(self, *args, **kwargs):
           try:
-               print "in exception wrapped call"
-               res=self.callable(*args, **kwargs)
-               print `self.callable`, "returned", datatohexstring(res)
-               return res
+
+               return self.callable(*args, **kwargs)
           except:
-               import traceback
-               traceback.print_stack()
-               traceback.print_exc()
+               print "in exception wrapped call", `self.callable`
+               print formatexception()
                raise
 
 def readversionedindexfile(filename, dict, versionhandlerfunc, currentversion):
@@ -218,5 +216,12 @@ def formatexception(excinfo=None, lastframes=6):
                     print >>s,"(Exception occurred printing value)"
      return s.getvalue()
                     
-          
-     
+def gettempfilename(extension):
+    "Returns a filename to be used for a temporary file"
+    x=tempfile.NamedTemporaryFile(suffix="."+extension)
+    n=x.name
+    x.close()
+    del x
+    return n
+
+
