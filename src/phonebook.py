@@ -964,6 +964,89 @@ class PhoneWidget(wx.Panel):
                 
         return newl
 
+class ImportCellRenderer(wx.grid.PyGridCellRenderer):
+    def __init__(self):
+        wx.grid.PyGridCellRenderer.__init__(self)
+
+    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+
+        #dc.SetClippingRect(rect)
+
+        # clear the background
+        dc.SetBackgroundMode(wx.SOLID)
+        if isSelected:
+            dc.SetBrush(wx.Brush(wx.BLUE, wx.SOLID))
+            dc.SetPen(wx.Pen(wx.BLUE, 1, wx.SOLID))
+        else:
+            dc.SetBrush(wx.Brush(attr.GetBackgroundColour(), wx.SOLID))
+            dc.SetPen(wx.Pen(attr.GetBackgroundColour(), 1, wx.SOLID))
+        dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
+        if isSelected:
+            dc.SetPen(wx.Pen(wx.WHITE,1,wx.SOLID))
+        else:
+            dc.SetPen(wx.Pen(wx.BLACK,1,wx.SOLID))
+
+        dc.SetBackgroundMode(wx.TRANSPARENT)
+
+        text = grid.GetCellValue(row, col)
+        if text is not None and text!="":
+            origscale=dc.GetUserScale()
+            hdc=wx.html.HtmlDCRenderer()
+            hdc.SetDC(dc, 1)
+            hdc.SetSize(rect.width-2, 10000)
+            hdc.SetHtmlText(text.replace("\n", "<br>"))
+            hdc.Render(rect.x+2, rect.y+1, 0, False)
+            dc.SetUserScale(*origscale)
+            
+        #dc.DestroyClippingRegion()
+
+    def GetBestSize(self, grid, attr, dc, row, col):
+        text = grid.GetCellValue(row, col)
+
+        if text is None or text=="":
+            return wx.Size(10,10)
+
+        # an ugly hack - if there is no space in the value anywhere then the html widget doesn't wrap the line if
+        # it gets too narrow.  so we add an artificial space
+        if " " not in text: text+=" I"
+        
+        origscale=dc.GetUserScale()
+        # we now do a binary search to try to find the smallest width for which the height doesn't increase
+
+        widthlow=10
+        widthhigh=10000
+
+        height=20000
+
+        print text
+        while widthlow+1<widthhigh:
+            width=(widthlow+widthhigh)/2
+            print "trying",width,"low",widthlow,"high",widthhigh
+            hdc=wx.html.HtmlDCRenderer()
+            hdc.SetDC(dc, 1)
+            hdc.SetSize(width, 20000)
+            hdc.SetHtmlText(text.replace("\n", "<br>"))
+            newh=hdc.GetTotalHeight()
+            print "gives height",newh
+            dc.SetUserScale(*origscale) # restore scale
+            if height>newh:
+                height=newh
+                continue
+            if newh>height:
+                widthlow=width
+                continue
+            if newh<=height:
+                widthhigh=width
+                continue
+            
+            
+        return wx.Size(width, height)
+
+
+    def Clone(self):
+        return ImportCellRenderer()
+
+
 class ImportDataTable(wx.grid.PyGridTableBase):
     ADDED=0
     UNALTERED=1
@@ -981,6 +1064,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.unalteredattr.SetBackgroundColour("WHITE")
         self.changedattr=wx.grid.GridCellAttr()
         self.changedattr.SetBackgroundColour("LEMON CHIFFON")
+        self.changedattr.SetRenderer(ImportCellRenderer())
         self.deletedattr=wx.grid.GridCellAttr()
         self.deletedattr.SetBackgroundColour("ROSYBROWN1")
 
@@ -1046,7 +1130,9 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         if msg is not None:
             self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
-        self.GetView().AutoSizeColumns()
+        self.GetView().ProcessTableMessage(msg)
+        wx.CallAfter(self.GetView().AutoSizeColumns)
+        wx.CallAfter(self.GetView().AutoSizeRows)
     
 
 class ImportDialog(wx.Dialog):
@@ -1102,7 +1188,7 @@ class ImportDialog(wx.Dialog):
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
         self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
         self.grid.SetRowLabelSize(0)
-        self.grid.EnableDragRowSize(False)
+        self.grid.EnableDragRowSize(True)
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
 
@@ -1185,6 +1271,7 @@ class ImportDialog(wx.Dialog):
         return result
         
     def OnCellSelect(self, event):
+        event.Skip()
         row=self.rowdata[event.GetRow()]
         confidence,importid,existingid,resultid=row
         if resultid is not None:
