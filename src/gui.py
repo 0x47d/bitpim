@@ -236,22 +236,22 @@ class MySplashScreen(wxSplashScreen):
         dc=wxMemoryDC()
         dc.SelectObject(bmp)
         # where we start writing
-        x=10
-        y=20
+        x=25 
+        y=40
         # Product name
         str=version.name
-        dc.SetTextForeground( wxNamedColour("DARKORCHID4") )
-        dc.SetFont( wxFont(30, wxSWISS, wxNORMAL, wxNORMAL) )
+        dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
+        dc.SetFont( wxFont(25, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x, y)
-        y+=h+5 
+        y+=h+0
         # Version number
         str=version.versionstring
-        dc.SetTextForeground( wxNamedColour("GREY20") )
-        dc.SetFont( wxFont(20, wxSWISS, wxNORMAL, wxNORMAL) )
+        dc.SetTextForeground( wxNamedColour("ORANGE4") )
+        dc.SetFont( wxFont(15, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x+10, y)
-        y+=h+5
+        y+=h+0
         # all done
         dc.SelectObject(wxNullBitmap)
 
