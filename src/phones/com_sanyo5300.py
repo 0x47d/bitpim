@@ -26,10 +26,16 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo5300
     serialsname='scp5300'
     
-    builtinringtones=('Normal', 'None', 'Vibrate')
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
+                       '', '', '', '', '', '', '',
+                       'HallelujahSamba', 'Amazing Grace',
+                       'The Entertainer', 'Mozart Eine..', 'Canon',
+                       'Chopin Waltz', 'Brahms Hungar..', 'Asian Jingle',
+                       'Rodeo', 'Call Delivery', 'Toy Box' )
 
-    # A Guess
-    calendar_defaultringtone=4
+    calendar_defaultringtone=0
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
