@@ -218,10 +218,13 @@ def formatexception(excinfo=None, lastframes=6):
                     
 def gettempfilename(extension):
     "Returns a filename to be used for a temporary file"
-    x=tempfile.NamedTemporaryFile(suffix="."+extension)
-    n=x.name
-    x.close()
-    del x
-    return n
-
-
+    try:
+        # safest Python 2.3 method
+        x=tempfile.NamedTemporaryFile(suffix="."+extension)
+        n=x.name
+        x.close()
+        del x
+        return n
+    except:
+        # Predictable python 2.2 method
+        return tempfile.mktemp("."+extension)
