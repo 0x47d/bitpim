@@ -416,7 +416,7 @@ class MainApp(wx.App):
         self.SetTopWindow(self.frame)
         self.SetExitOnFrameDelete(True)
         self.ApplySafeMode()
-        self.CheckUpdate()
+        wx.CallAfter(self.CheckUpdate)
 
     update_delta={ 'Daily': 1, 'Weekly': 7, 'Monthly': 30 }
     def CheckUpdate(self):
@@ -597,12 +597,7 @@ class MainWindow(wx.Frame):
 
         ### toolbar
         self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.TB_TEXT)
-        # work around a bug in which the Mac toolbar icons are 4 pixels bigger
-        # in each dimension
-        if guihelper.IsMac():
-            self.tb.SetToolBitmapSize(wx.Size(27,27))
-        else:
-            self.tb.SetToolBitmapSize(wx.Size(32,32))
+        self.tb.SetToolBitmapSize(wx.Size(32,32))
         sz=self.tb.GetToolBitmapSize()
 
         # add and delete tools
