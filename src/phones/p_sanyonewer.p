@@ -117,9 +117,7 @@ PACKET evententry:
     7 UNKNOWN +pad2
     1 UINT location_len
     1 UNKNOWN +pad3
-    1 UINT {'default': 0} +dunno1
-    1 UINT {'default': 0} +dunno2
-    2 UINT {'default': 0} +dunno3 "Guess which are 1 and which are 2 byte numbers"
+    4 UINT alarmdiff "Displayed alarm time"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT alarm
