@@ -1074,6 +1074,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
             if row[i] is not None:
                 return getdata(self.columns[col], ptr[row[i]], "")
+        assert False, "Can't get here"
         return ""
 
     def GetHtmlCellValue(self, row, col, colour=None):
@@ -1132,16 +1133,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSize()
-
-        # due to an interaction bug between the grid and the splitter, we twiddle the
-        # size of the dialog which causes them to layout properly
-        
         self.GetView().Fit()
-        dlg=self.GetView().GetParent().GetParent()
-        w,h=dlg.GetSize()
-        dlg.SetSize( (w+1, h+1) )
-        dlg.SetSize( (w, h) )
-        
 
 def _htmlfixup(txt):
     if txt is None: return ""
@@ -1193,7 +1185,9 @@ class ImportDialog(wx.Dialog):
         splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         splitter.SetMinimumPaneSize(20)
 
-        self.grid=wx.grid.Grid(splitter, -1)
+        panel=wx.Panel(splitter, -1)
+
+        self.grid=wx.grid.Grid(panel, wx.NewId())
         self.grid.EnableGridLines(False)
         self.table=ImportDataTable(self)
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
@@ -1205,7 +1199,7 @@ class ImportDialog(wx.Dialog):
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
-        splitter.SplitVertically(self.grid, self.resultpreview, -200)
+        splitter.SplitVertically(panel, self.resultpreview, -200)
 
         vbs.Add(splitter, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
@@ -1220,6 +1214,7 @@ class ImportDialog(wx.Dialog):
 
         self.config = parent.mainwindow.config
         guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
+        self.splitter=splitter
 
     def DoMerge(self):
         """Merges all the importdata with existing data
