@@ -254,9 +254,11 @@ class SanyoPhonebook:
                                 break
 
                 # ringtones
-                entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
+                if ringpic.ringtones[i].ringtone>0:
+                    entry['ringtones']=[{'ringtone': self.serialsname+"Index_"+`ringpic.ringtones[i].ringtone`, 'use': 'call'}]
                 # wallpapers
-                entry['wallpapers']=[{'index': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
+                if ringpic.wallpapers[i].wallpaper>0:
+                    entry['wallpapers']=[{'wallpaper': self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`, 'use': 'call'}]
                     
                 pbook[count]=entry 
                 self.progress(count, numentries, res.entry.name)
@@ -292,6 +294,17 @@ class SanyoPhonebook:
             numberindex+=1
         return res
 
+    def _findmediaindex(self, name, pbentryname, type):
+        if name is None:
+            return 0
+        # Later require name to be of form "scp4900Index_NN".
+        pos=name.find('_')
+        if(pos>=0):
+            i=int(name[pos+1:])
+            return i
+        
+        return 0
+        
     def makeentry(self, entry, dict):
         # dict is unused at moment, will be used later to convert string ringtone/wallpaper to numbers??
         # This is stolen from com_lgvx4400 and modified for the Sanyo as
@@ -403,7 +416,7 @@ class SanyoPhonebook:
             # Put entry into newphonebooks
             entry=self.extractphonebookentry(entry, data)
             entry['ringtones']=[{'ringtone': ii['ringtone'], 'use': 'call'}]
-            entry['wallpapers']=[{'index': ii['wallpaper'], 'use': 'call'}]
+            entry['wallpapers']=[{'wallpaper': ii['wallpaper'], 'use': 'call'}]
             
 
 # Accumulate information in and needed for buffers
@@ -449,8 +462,8 @@ class SanyoPhonebook:
                 urlmap[ii['url']]=slot
                 sortstuff.numurl+=1
             # Add ringtone and wallpaper
-            ringpic.wallpapers[slot].wallpaper=ii['wallpaper']
-            ringpic.ringtones[slot].ringtone=ii['ringtone']
+            ringpic.wallpapers[slot].wallpaper=self._findmediaindex(ii['wallpaper'],ii['name'],'wallpaper')
+            ringpic.ringtones[slot].ringtone=self._findmediaindex(ii['ringtone'],ii['name'],'ringtone')
 
             newphonebook[slot]=entry
 
@@ -918,9 +931,8 @@ class Profile:
                         e['speeddials'].append(-1)
 
 
-                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
-
-                e['wallpaper']=helper.getwallpaperindex(entry.get('wallpapers', []), 'call', 0)
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
                 e['secret']=helper.getflag(entry.get('flags', []), 'secret', False)
 
