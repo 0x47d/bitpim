@@ -236,11 +236,6 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         # check for valid date/time entries
         for w in (self.__w['start'], self.__w['end']):
             if not w.IsValid() or w.IsEmpty():
-                # scold the user
-                dlg=wx.MessageDialog(self, "Invalid date/time entry !!", "Error Message",
-                                    wx.OK|wx.ICON_EXCLAMATION)
-                dlg.ShowModal()
-                dlg.Destroy()
                 w.SetFocus()
                 wx.Bell()
                 return False
@@ -881,8 +876,10 @@ class DVDateTimeControl(wx.Panel):
         self.__datetime_format="EUDATETIMEYYYYMMDD.HHMM"
         self.__date_format='EUDATEYYYYMMDD.'
         wx.Panel.__init__(self, parent, -1)
-        self.c=wx.lib.masked.textctrl.TextCtrl(self, id, "",
-                                autoformat=self.__datetime_format)
+        self.c=wx.lib.masked.textctrl.TextCtrl(\
+            self, id, "", autoformat=self.__datetime_format,
+            emptyBackgroundColour='Red',
+            invalidBackgroundColour='Red')
         bs=wx.BoxSizer(wx.HORIZONTAL)
         bs.Add(self.c,0,wx.EXPAND)
         self.SetSizer(bs)
@@ -962,7 +959,7 @@ class DVDateTimeControl(wx.Panel):
             else:
                 self.c.SetCtrlParameters(autoformat=self.__datetime_format)
         self.SetValue(v)
-    
+
 #------------------------------------------------------------------------------    
 class DVIntControl(wx.lib.intctrl.IntCtrl):
     # shows integer values
