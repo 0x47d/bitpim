@@ -33,9 +33,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
     "Talk to the Sanyo SCP-4900 cell phone"
     desc="SCP-4900"
 
+    # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
+    # plus a fudge factor of 5 days for no reason I can find
+    _sanyoepochtounix=315532800+450000
+
     getwallpapers=None
     getringtones=None
-    getcalendar=None
     
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
@@ -175,37 +178,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # Note: when looking at phone numbers on the phone, you will see
         # "H" instead of "P".  However, phone saves this internally as "P".
         return re.sub("[^0-9PT#*]", "", str)
-
-    def fakesendsanyobuffer(self, buffer, startcommand, comment):
-        self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
-        desc="Writing "+comment
-        numblocks=len(buffer)/500
-        offset=0
-        command=startcommand
-        for offset in range(0, len(buffer), 500):
-            self.progress(offset/500, numblocks, desc)
-            req=p_sanyo.bufferpartupdaterequest()
-            req.header.command=command
-            block=buffer[offset:]
-            l=min(len(block), 500)
-            block=block[:l]
-            req.data=block
-            command+=1
-            self.fakesendpbcommand(req, p_sanyo.bufferpartresponse)
-        
-    def fakesendpbcommand(self, request, responseclass, callsetmode=True):
-        if callsetmode:
-            self.setmode(self.MODEPHONEBOOK)
-        buffer=prototypes.buffer()
-        request.writetobuffer(buffer)
-        data=buffer.getvalue()
-        self.logdata("Sanyo phonebook request", data, request)
-
-        # parse data
-        buffer=prototypes.buffer(data)
-        res=responseclass()
-        res.readfrombuffer(buffer)
-        return res
 
     def savephonebook(self, data):
         # Overwrite the phonebook in the phone with the data.
@@ -385,6 +357,59 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
         return cidentry
     
+    def getcalendar(self,result):
+        # Read the event list from the phone.  Proof of principle code.
+        # For now, join the event name and location into a single event.
+        # description.
+        # Todo:
+        #   Read Call Alarms (reminder to call someone)
+        #   Read call history into calendar.
+        calres={}
+
+        req=p_sanyo.eventrequest()
+        maxevents=req.maxevents
+        for i in range(0, maxevents):
+            req.slot = i
+            res=self.sendpbcommand(req, p_sanyo.eventresponse)
+            if(res.entry.flag):
+                self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
+                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`+" "+`res.entry.dunno4`)
+                entry={}
+                entry['pos']=i
+                if(len(res.entry.location) > 0):
+                    entry['description']=res.entry.eventname+"/"+res.entry.location
+                else:
+                   entry['description']=res.entry.eventname
+               
+                starttime=res.entry.start
+                entry['start']=self.decodedate(starttime)
+                entry['end']=self.decodedate(res.entry.end)
+                entry['repeat']=self._calrepeatvalues[0]
+                alarmtime=res.entry.alarm
+                entry['alarm']=(starttime-alarmtime)/60
+                calres[i]=entry
+
+        result['calendar']=calres
+        return result
+
+    def decodedate(self,val):
+        """Unpack 32 bit value into date/time
+
+        @rtype: tuple
+        @return: (year, month, day, hour, minute)
+        """
+        return time.localtime(val+self._sanyoepochtounix)[:5]
+
+    _calrepeatvalues={
+        0: None,
+        1: 'daily',
+        2: 'weekly',
+        3: 'monthly',
+        4: 'yearly'
+        }
+
+
+
 class Profile:
 
     def makeone(self, list, default):
