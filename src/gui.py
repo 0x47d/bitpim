@@ -397,8 +397,9 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_FILEPRINT, "&Print...", "Print phonebook")
         # menu.AppendSeparator()
         menu.Append(guihelper.ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
+        if not guihelper.IsMac():
+            menu.AppendSeparator()
+            menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wx.Menu()
         menu.Append(guihelper.ID_EDITADDENTRY, "Add...", "Add an item")
@@ -407,8 +408,12 @@ class MainWindow(wx.Frame):
             menu.AppendSeparator()
             menu.Append(guihelper.ID_FV_ICONS, "View as Images", "Show items as images")
             menu.Append(guihelper.ID_FV_LIST, "View As List", "Show items as a report")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
+        if guihelper.IsMac():
+            wx.App_SetMacPreferencesMenuItemId(guihelper.ID_EDITSETTINGS)
+            menu.Append(guihelper.ID_EDITSETTINGS, "&Preferences...", "Edit Settings")
+        else:
+            menu.AppendSeparator()
+            menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
         menuBar.Append(menu, "&Edit");
 
         menu=wx.Menu()
@@ -427,11 +432,21 @@ class MainWindow(wx.Frame):
         
 
         menu=wx.Menu()
-        menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
+        if guihelper.IsMac():
+            menu.Append(guihelper.ID_HELPHELP, "&BitPim Help", "Help for the panel you are looking at")
+            menu.AppendSeparator()
+        else:
+            menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_HELPABOUT, "&About", "Display program information")
+        if guihelper.IsMac():
+            wx.App_SetMacAboutMenuItemId(guihelper.ID_HELPABOUT)
+            menu.Append(guihelper.ID_HELPABOUT, "&About BitPim", "Display program information")
+            wx.App_SetMacHelpMenuTitleName("&Help")
+            wx.App_SetMacExitMenuItemId(guihelper.ID_FILEEXIT)
+        else:
+            menu.AppendSeparator()
+            menu.Append(guihelper.ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
 
         
