@@ -36,6 +36,15 @@ PACKET indexfile:
     # A bit of a silly design again.  Entries with an index of 0xffff are
     # 'blank'.  Thus it is possible for numactiveitems and the actual
     # number of valid entries to be mismatched.
-    P UINT {'constant': 30} maxitems
     2 UINT numactiveitems
-    * LIST {'length': self.maxitems, 'elementclass': indexentry, 'createdefault': True} +items
+    * LIST {'elementclass': indexentry, 'createdefault': True} +items
+
+PACKET camindexentry:
+    1 UINT {'default': 0} +index
+    11 STRING {'default': ""} +name
+    4 LGCALDATE +taken
+    4 UINT {'default': 0x00ff0100} +dunno
+
+PACKET campicsdat:
+    "the cam/pics.dat file"
+    * LIST {'length': 20, 'elementclass': camindexentry, 'createdefault': True} +items
