@@ -101,7 +101,8 @@ class OutlookCalendarImportData:
         'start': None,
         'end': None,
         'categories': None,
-        'rpt_events': False
+        'rpt_events': False,
+        'no_alarm': False
         }
 
     # Outlook constants
@@ -166,7 +167,7 @@ class OutlookCalendarImportData:
                 ce.priority=ce.priority_low
             elif v==self.olImportanceHigh:
                 ce.priority=ce.priority_high
-        if e.get('alarm', False):
+        if not self.__filter.get('no_alarm', False) and e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
         ce.allday=e.get('allday', False)
         ce.start=e['start']
@@ -249,6 +250,7 @@ class OutlookCalendarImportData:
         cnt=0
         res={}
         single_rpt=self.__filter.get('rpt_events', False)
+        no_alarm=self.__filter.get('no_alarm', False)
         for k in self.__data:
             if self.__accept(k):
                 if k.get('repeat', False) and single_rpt:
@@ -256,6 +258,8 @@ class OutlookCalendarImportData:
                 else:
                     d=[k.copy()]
                 for n in d:
+                    if no_alarm:
+                        n['alarm']=False
                     res[cnt]=n
                     cnt+=1
         return res

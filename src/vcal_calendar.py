@@ -68,7 +68,8 @@ class VCalendarImportData(object):
         'start': None,
         'end': None,
         'categories': None,
-        'rpt_events': False
+        'rpt_events': False,
+        'no_alarm': False
         }
     __rrule_dow={
         'SU': 0x01, 'MO': 0x02, 'TU': 0x04, 'WE': 0x08, 'TH': 0x10,
@@ -178,7 +179,7 @@ class VCalendarImportData(object):
         v=e.get('priority', None)
         if v is not None:
             ce.priority=v
-        if e.get('alarm', False):
+        if not self.__filter.get('no_alarm', False) and e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
         ce_start=e.get('start', None)
         ce_end=e.get('end', None)
@@ -397,6 +398,8 @@ class VCalendarImportData(object):
                 else:
                     d=[k.copy()]
                 for n in d:
+                    if self.__filter.get('no_alarm', False):
+                        n['alarm']=False
                     res[cnt]=n
                     cnt+=1
         return res

@@ -203,9 +203,16 @@ class FilterDialog(wx.Dialog):
         fgs.Add(wx.StaticText(self, -1, 'Repeat Events:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
         self.__rpt_chkbox=wx.CheckBox(self, id=wx.NewId())
         self.__rpt_chkbox.Disable()
-        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_CENTRE, 0)
+        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_CENTRE|wx.TOP|wx.BOTTOM, 5)
         fgs.Add(wx.StaticText(self, -1, 'Import as multi-single events.'),
-                0, wx.ALIGN_CENTRE, 0)
+                0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        # alarm option
+        fgs.Add(wx.StaticText(self, -1, 'No Alarm'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER, 0)
+        self.__no_alarm_chkbox=wx.CheckBox(self, id=wx.NewId())
+        fgs.Add(self.__no_alarm_chkbox, 0, wx.ALIGN_CENTRE|wx.TOP|wx.BOTTOM, 5)
+        fgs.Add(wx.StaticText(self, -1, 'Turn off all events alarms.'),
+                0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        # category option
         fgs.Add(wx.StaticText(self, -1, 'Categories:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
         self.__cat_chkbox=wx.CheckBox(self, id=wx.NewId())
         fgs.Add(self.__cat_chkbox, 0, wx.ALIGN_CENTRE, 0)
@@ -267,6 +274,7 @@ class FilterDialog(wx.Dialog):
         self.__set_date(self.__end_date_chkbox, self.__end_date,
                         data.get('end', None))
         self.__set_rpt(data.get('rpt_events', False))
+        self.__no_alarm_chkbox.SetValue(data.get('no_alarm', False))
         self.__set_cats(self.__cat_chkbox, self.__cats, data.get('categories', None))
 
     def get(self):
@@ -282,6 +290,7 @@ class FilterDialog(wx.Dialog):
         else:
             r['end']=None
         r['rpt_events']=self.__rpt_chkbox.GetValue()
+        r['no_alarm']=self.__no_alarm_chkbox.GetValue()
         if self.__cat_chkbox.GetValue():
             c=[]
             for i in range(self.__cats.GetCount()):
