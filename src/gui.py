@@ -40,6 +40,7 @@ import wallpaper
 import ringers
 import guihelper
 import bpcalendar
+import bphtml
 
 ###
 ### Used to check our threading
@@ -272,7 +273,7 @@ class MainApp(wxApp):
         self.setuphelp()
 
         # html easy printing
-        self.htmlprinter=wxHtmlEasyPrinting()
+        self.htmlprinter=bphtml.HtmlEasyPrinting(None, self.config, "printing")
 
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
@@ -345,6 +346,8 @@ class MainWindow(wxFrame):
     def __init__(self, parent, id, title, config):
         wxFrame.__init__(self, parent, id, title,
                          style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
+
+        wxGetApp().htmlprinter.SetParentFrame(self)
 
         sys.excepthook=Callback(self.excepthook)
         ### plumbing, callbacks        
