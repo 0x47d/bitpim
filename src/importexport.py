@@ -1183,6 +1183,13 @@ class ImportQtopiaDesktopDialog(ImportDialog):
 
         import native.qtopiadesktop
 
+        filename=native.qtopiadesktop.getfilename()
+        if not os.path.isfile(filename):
+            wx.MessageBox(filename+" not found.", "Qtopia file not found", wx.ICON_EXCLAMATION|wx.OK)
+            self.data={}
+            self.columns=[]
+            return
+
         items=native.qtopiadesktop.getcontacts()
         
         # work out what keys are actually present
