@@ -623,7 +623,7 @@ class Phone:
 
     def _setmodelgdmgo(self):
         # see if we can turn on dm mode
-        for baud in (0, 115200, 19200, 230400, 38400):
+        for baud in (0, 115200, 19200, 38400, 230400):
             if baud:
                 self.comm.setbaudrate(baud)
             self.comm.write("AT$QCDMG\r\n")
