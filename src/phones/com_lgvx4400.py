@@ -170,7 +170,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
         # We then delete any entries that aren't in data
-        # We then write out our records, usng overwrite or append
+        # We then write out our records, using overwrite or append
         # commands as necessary
         serialupdates=[]
         existingpbook={} # keep track of the phonebook that is on the phone
@@ -669,7 +669,10 @@ class Profile:
         data['groups']=newgroups
 
     def convertphonebooktophone(self, helper, data):
-        "Converts the data to what will be used by the phone"
+        """Converts the data to what will be used by the phone
+
+        @param data: contains the dict returned by getfundamentals
+                     as well as where the results go"""
         results={}
 
         self.normalisegroups(helper, data)
