@@ -94,7 +94,7 @@ class CommConnection:
         # have we run out?
         if len(self.ports)==0:
             self.ports=None # so user can retry
-            raise common.AutoPortsFailure(filter(lambda x: x[0], self.portstried))
+            raise common.AutoPortsFailure(map(lambda x: x[0], self.portstried))
         # try first in list
         self.log("Trying next auto port")
         description=self.ports[0][1]['description']
