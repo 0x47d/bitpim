@@ -269,8 +269,10 @@ class MainApp(wx.App):
         self.SetAppName(cfgstr)
         self.SetVendorName(cfgstr)
 
-        # setup help system
-        self.setuphelp()
+        # we used to initialise help here, but in wxPython the stupid help window
+        # appeared on Windows just setting it up.  We now defer setting it up
+        # until it is needed
+        self.helpcontroller=None
 
         # html easy printing
         self.htmlprinter=bphtml.HtmlEasyPrinting(None, self.config, "printing")
@@ -288,7 +290,7 @@ class MainApp(wx.App):
 ##        self.helpcontroller=wx.BestHelpController()
 ##        self.helpcontroller.Initialize(gethelpfilename)
 
-    def setuphelp(self):
+    def _setuphelp(self):
         """Does all the nonsense to get help working"""
 
         # htmlhelp isn't correctly wrapper in wx package
@@ -304,10 +306,13 @@ class MainApp(wx.App):
         # self.helpprovider=wx.HelpControllerHelpProvider(self.helpcontroller)
         # wx.HelpProvider_Set(provider)
 
-
-
     def displayhelpid(self, id):
-        self.helpcontroller.Display(id)
+        if self.helpcontroller is None:
+            self._setuphelp()
+        if id is None:
+            self.helpcontroller.DisplayContents()
+        else:
+            self.helpcontroller.Display(id)
 
     def makemainwindow(self):
         if self.made:
@@ -661,7 +666,7 @@ class MainWindow(wx.Frame):
         wx.GetApp().displayhelpid(getattr(helpids, "ID_TAB_"+text.upper()))
 
     def OnHelpContents(self, _):
-        wx.GetApp().helpcontroller.DisplayContents()
+        wx.GetApp().displayhelpid(None)
 
     def OnHelpTour(self, _=None):
         wx.GetApp().displayhelpid(helpids.ID_TOUR)
