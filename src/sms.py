@@ -23,6 +23,11 @@ folder: string (where this item belongs: inbox, sent, draft, etc)
 flags: [{"locked": True/<False|None>}]
 msg_id: unique message id (hexstring sha encoded (datetime+text))
 
+The format for the Canned SMS Message item is standard.  It is an object with
+the following attributes:
+
+msg_list: ['msg1', 'msg2', ...] list of canned messages
+
 To implement SMS read for a phone module:
  Add an entry into Profile._supportedsyncs:
         ...
@@ -32,6 +37,12 @@ To implement SMS read for a phone module:
     def getsms(self, result, merge):
         ...
         return result
+
+The result dict key for the SMS messages is 'sms'.  The dict key for the
+canned messages is 'canned_msg'.  If there are any canned messages, it should
+be stored as result['canned_msg']={ 'canned_msg': CannedMsgEntry() }: in other
+words, there should be only one object in the dict, and this object stores the
+list of canned messages.
 
 """
 
@@ -56,6 +67,17 @@ class SMSDataObject(database.basedataobject):
             return;
         self.update(data.get_db_dict())
 smsobjectfactory=database.dataobjectfactory(SMSDataObject)
+
+#-------------------------------------------------------------------------------
+class CannedMsgDataObject(database.basedataobject):
+    _knownproperties=[]
+    _knownlistproperties=database.basedataobject._knownlistproperties.copy()
+    _knownlistproperties.update( { 'canned_msg': ['text'] })
+    def __init__(self, data=None):
+        if data is None or not isinstance(data, CannedMsgEntry):
+            return;
+        self.update(data.get_db_dict())
+cannedmsgobjectfactory=database.dataobjectfactory(CannedMsgDataObject)
 
 #-------------------------------------------------------------------------------
 class SMSEntry(object):
@@ -162,3 +184,48 @@ class SMSEntry(object):
     def __get_msg_id(self):
         return self.__data.get('msg_id', '')
     msg_id=property(fget=__get_msg_id)
+
+#-------------------------------------------------------------------------------
+class CannedMsgEntry(object):
+    __data_key='canned_msg'
+    def __init__(self):
+        self.__data={ 'serials': [] }
+        self.__create_id()
+
+    def get(self):
+        return copy.deepcopy(self.__data, {})
+    def set(self, d):
+        self.__data={}
+        self.__data.update(d)
+
+    def get_db_dict(self):
+        return self.get()
+    def set_db_dict(self, d):
+        self.set(d)
+
+    def __create_id(self):
+        "Create a BitPim serial for this entry"
+        self.__data.setdefault("serials", []).append(\
+            {"sourcetype": "bitpim", "id": str(time.time())})
+    def __get_id(self):
+        s=self.__data.get('serials', [])
+        for n in s:
+            if n.get('sourcetype', None)=='bitpim':
+                return n.get('id', None)
+        return None
+    id=property(fget=__get_id)
+
+    def __get_msg_list(self):
+        return [x['text'] for x in self.__data.get(self.__data_key, [])]
+    def __set_msg_list(self, v):
+        if v is None or not len(v):
+            if self.__data.has_key(self.__data_key):
+                del self.__data[self.__data_key]
+            return
+        if not isinstance(v, (list, tuple)) or\
+           not isinstance(v[0], (str, unicode)):
+            raise TypeError, 'not a list of strings'
+        self.__data[self.__data_key]=[{'text': x } for x in v]
+    msg_list=property(fget=__get_msg_list, fset=__set_msg_list)
+
+#-------------------------------------------------------------------------------
