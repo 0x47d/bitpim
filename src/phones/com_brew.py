@@ -395,19 +395,20 @@ def formatpacketerrorlog(str, origdata, data, klass):
     return str+" "+hd
 
 def escape(data):
-    if data.find("\x7e")<0 and data.find("\x7d")<0:
-        return data
-    res=""
-    for d in data:
-        if d=="\x7e": res+="\x7d\x5e"
-        elif d=="\x7d": res+="\x7d\x5d"
-        else: res+=d
-    return res
+    return data.replace("\x7d", "\x7d\x5d") \
+           .replace("\x7e", "\x7d\x5e")
 
 def unescape(d):
-    d=d.replace("\x7d\x5e", "\x7e")
-    d=d.replace("\x7d\x5d", "\x7d")
-    return d
+    if d.find("\x7d")<0: return d
+    res=list(d)
+    try:
+        start=0
+        while True:
+            p=res.index("\x7d", start)
+            res[p:p+2]=chr(ord(res[p+1])^0x20)
+            start=p+1
+    except ValueError:
+        return "".join(res)
 
 # See http://www.repairfaq.org/filipg/LINK/F_crc_v35.html for more info
 # on CRC
