@@ -252,19 +252,28 @@ class Phone:
             entry={}
             pos=2+i*60
             entry['pos']=readlsb(data[pos+0:pos+4])  # hex offset of entry within schedule file
-            if pos==-1: continue # blanked entry
+            if entry['pos']==-1: continue # blanked entry
             if exceptions.has_key(pos):
                 entry['exceptions']=exceptions[pos]
-            entry['start']=brewdecodedate(data[pos+4:pos+8])
-            entry['end']=brewdecodedate(data[pos+8:pos+0xc])
+            entry['start']=brewdecodedate(readlsb(data[pos+4:pos+8]))
+            entry['end']=brewdecodedate(readlsb(data[pos+8:pos+0xc]))
             # bug in phone - it only updates the hour and minutes field for
             # end date.  We need to copy year, month, day from start
             entry['end']=entry['start'][:3]+entry['end'][3:]
-            entry['repeat']=readlsb(data[pos+0xc:pos+0x10])
+            repeat=ord(data[pos+0xc])
+            if   repeat==0x10: repeat=None
+            elif repeat==0x11: repeat="daily"
+            elif repeat==0x12: repeat="monfri"
+            elif repeat==0x13: repeat="weekly"
+            elif repeat==0x14: repeat="monthly"
+            elif repeat==0x15: repeat="yearly"
+            else: repeat=`repeat`
+            entry['repeat']=repeat
+            entry['?d']=readlsb(data[pos+0xd:pos+0x10])
             min=ord(data[pos+0x10])
             hour=ord(data[pos+0x11])
             if min==100 or hour==100:
-                entry['alarm']=-1 # no alarm set
+                entry['alarm']=None # no alarm set
             else:
                 entry['alarm']=hour*60+min
             entry['changeserial']=readlsb(data[pos+0x12:pos+0x14])
