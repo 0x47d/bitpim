@@ -43,10 +43,8 @@ class CalendarCell(wxWindow):
         wxWindow.__init__(self, parent, id, style=style)
         self.attr=attr
         self.day=13
-        EVT_PAINT(self, self.OnPaint)
-        EVT_SIZE(self, self.OnSize)
-        self.OnSize(None)
 
+        # Some fake entries for testing
         self.entries=(
             (1, 88, "Early morning"),
             (10,15, "Some explanatory text" ),
@@ -56,12 +54,22 @@ class CalendarCell(wxWindow):
             (20,30, "Evening drinks"),
             )
 
+        EVT_PAINT(self, self.OnPaint)
+        EVT_SIZE(self, self.OnSize)
+        self.OnSize(None)
+
+
     def OnSize(self, _=None):
         self.width, self.height = self.GetClientSizeTuple()
+        self.buffer=wxEmptyBitmap(self.width, self.height)
+        mdc=wxMemoryDC()
+        mdc.SelectObject(self.buffer)
+        mdc.Clear()
+        self.draw(mdc)
 
     def OnPaint(self, _=None):
         dc=wxPaintDC(self)
-        self.draw(dc)
+        dc.DrawBitmap(self.buffer, 0, 0, False)
 
     def draw(self, dc):
         # do the label
@@ -140,7 +148,7 @@ class CalendarCell(wxWindow):
         
 class Calendar(wxPanel):
     def __init__(self, parent, rows=5, id=-1):
-        wxPanel.__init__(self, parent, id)
+        wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
         sizer=RowColSizer()
         self.upbutt=wxButton(self, -1, "^")
         sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
