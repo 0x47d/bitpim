@@ -861,6 +861,7 @@ class PhoneWidget(wx.Panel):
             d=self._data
         else:
             d={}
+        normalise_data(importdata)
         dlg=ImportDialog(self, d, importdata)
         result=None
         if dlg.ShowModal()==wx.ID_OK:
@@ -1608,21 +1609,33 @@ class ImportDialog(wx.Dialog):
 
         em=EntryMatcher(self.importdata, self.existingdata)
         usedexistingkeys=[]
-        for i in self.importdata:
+        for i in self.importdata.keys():
             # does it match existing entry
             matches=em.bestmatches(i)
             if len(matches):
+                # ::TODO:: potentially remember the other matches?
                 confidence, existingid=matches[0]
                 if confidence>90:
                     results[count]=self.MergeEntries(copy.deepcopy(self.existingdata[existingid]),
                                                      copy.deepcopy(self.importdata[i]))
-                    row[count]=(confidence, i, existingid, count)
+                    # did the imported data have no effect?
+                    checkresult=results[count].copy()
+                    checkexisting=self.existingdata[existingid].copy()
+                    # we allow for silent update of serials
+                    if "serials" in checkresult: del checkresult["serials"]
+                    if "serials" in checkexisting: del checkexisting["serials"]
+                    if checkexisting==checkresult:
+                        # imported had no effect on result, so pretend import never existed
+                        row[count]=("", None, existingid, count)
+                    else:
+                        row[count]=(confidence, i, existingid, count)
+                    # update counters etc
                     count+=1
                     usedexistingkeys.append(existingid)
                     continue
             # nope, so just add it
             results[count]=copy.deepcopy(self.importdata[i])
-            row[count]=(100, i, None, count)
+            row[count]=("", i, None, count)
             count+=1
         for i in self.existingdata:
             if i in usedexistingkeys: continue
@@ -1664,7 +1677,7 @@ class ImportDialog(wx.Dialog):
         
     def OnCellSelect(self, event):
         event.Skip()
-        row=self.rowdata[event.GetRow()]
+        row=self.table.GetRowData(event.GetRow())
         confidence,importid,existingid,resultid=row
         if resultid is not None:
             self.resultpreview.ShowEntry(self.resultdata[resultid])
@@ -2063,6 +2076,12 @@ except:
         sm.set_seq1(origfield)
         sm.set_seq2(impfield)
         return sm.ratio()
+
+def normalise_data(entries):
+    for k in entries:
+        # we only know about phone numbers so far ...
+        for n in entries[k].get("numbers", []):
+            n["number"]=phonenumber.normalise(n["number"])
 
 class ColumnSelectorDialog(wx.Dialog):
     "The dialog for selecting what columns you want to view"
