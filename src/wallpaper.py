@@ -17,6 +17,7 @@ import random
 
 # wx modules
 import wx
+import wx.lib.colourselect
 
 # my modules
 import guiwidgets
@@ -647,7 +648,7 @@ class ImageCropSelect(wx.ScrolledWindow):
     def __init__(self, parent, image, previewwindow=None, id=1, resultsize=(100,100), size=wx.DefaultSize, pos=wx.DefaultPosition, style=0):
         wx.ScrolledWindow.__init__(self, parent, id=id, size=size, pos=pos, style=style|wx.FULL_REPAINT_ON_RESIZE)
         self.previewwindow=previewwindow
-        self.bg=wx.Brush(parent.GetBackgroundColour())
+        self.bg=wx.Brush(wx.WHITE)
         self._bufbmp=None
 
         self.anchors=None
@@ -788,37 +789,29 @@ class ImageCropSelect(wx.ScrolledWindow):
         self.clickpoint=None
         self.UpdateCursor(evt)
 
+    def setlbcolour(self, colour):
+        self.bg=wx.Brush(colour)
+        self.remakebitmap()
+
     def setresultsize(self, (w,h)):
         self.resultsize=w,h
         self.aspectratio=ratio=float(w)/h
         imgratio=float(self.image.GetWidth())/self.image.GetHeight()
-
+        
         neww=self.image.GetWidth()
         newh=self.image.GetHeight()
         if imgratio<ratio:
             neww*=ratio/imgratio
         elif imgratio>ratio:
             newh*=imgratio/ratio
-
+            
         # ensure a minimum size
         neww=max(neww, 50)
         newh=max(newh, 50)
-
+        
         # update anchors if never set
         if self.anchors==None:
             self.anchors=0.1 * neww, 0.1 * newh, 0.9 * neww, 0.9 * newh
-
-        self.dimensions=neww,newh
-
-        dc=wx.MemoryDC()
-        self.thebmp=wx.EmptyBitmap(neww, newh)
-        dc.SelectObject(self.thebmp)
-        dc.SetBackground(self.bg)
-        dc.Clear()
-        dc.DrawBitmap(self.image.ConvertToBitmap(), neww/2-self.image.GetWidth()/2, newh/2-self.image.GetHeight()/2, True)
-        dc.SelectObject(wx.NullBitmap)
-        self.SetVirtualSize( (neww, newh) )
-        self.SetScrollRate(1,1)
 
         # fixup anchors
         l,t,r,b=self.anchors
@@ -834,6 +827,23 @@ class ImageCropSelect(wx.ScrolledWindow):
         elif aratio>ratio:
             r=l+(b-t)*ratio
         self.anchors=l,t,r,b
+
+        self.dimensions=neww,newh
+        self.thebmp=wx.EmptyBitmap(neww, newh)
+
+        self.remakebitmap()
+
+
+    def remakebitmap(self):
+        w,h=self.dimensions
+        dc=wx.MemoryDC()
+        dc.SelectObject(self.thebmp)
+        dc.SetBackground(self.bg)
+        dc.Clear()
+        dc.DrawBitmap(self.image.ConvertToBitmap(), w/2-self.image.GetWidth()/2, h/2-self.image.GetHeight()/2, True)
+        dc.SelectObject(wx.NullBitmap)
+        self.SetVirtualSize( (w, h) )
+        self.SetScrollRate(1,1)
 
         self.updatepreview()
         self.Refresh(False)
@@ -888,16 +898,21 @@ class ImagePreviewDialog(wx.Dialog):
         hbs.Add(self.cropselect, 1, wx.ALL|wx.EXPAND, 5)
 
         vbs=wx.BoxSizer(wx.VERTICAL)
-        vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
-        self.imagepreview=ImagePreview(self)
-        self.cropselect.SetPreviewWindow(self.imagepreview)
-        vbs.Add(self.imagepreview, 0, wx.ALL, 5)
+        self.colourselect=wx.lib.colourselect.ColourSelect(self, wx.NewId(), "Background ...", (255,255,255))
+        vbs.Add(self.colourselect, 0, wx.ALL|wx.EXPAND, 5)
+        wx.lib.colourselect.EVT_COLOURSELECT(self, self.colourselect.GetId(), self.OnBackgroundColour)
         vbs.Add(wx.StaticText(self, -1, "Origin"), 0, wx.ALL, 5)
         self.originbox=wx.ListBox(self)
         vbs.Add(self.originbox, 0, wx.ALL|wx.EXPAND, 5)
         vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
         self.targetbox=wx.ListBox(self)
         vbs.Add(self.targetbox, 0, wx.ALL|wx.ALL, 5)
+        vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
+        self.imagepreview=ImagePreview(self)
+        self.cropselect.SetPreviewWindow(self.imagepreview)
+        vbs.Add(self.imagepreview, 0, wx.ALL, 5)
+
+
         hbs.Add(vbs, 0, wx.ALL, 5)
 
         vbsouter.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
@@ -917,6 +932,9 @@ class ImagePreviewDialog(wx.Dialog):
         
         self.SetSizer(vbsouter)
         vbsouter.Fit(self)
+
+    def OnBackgroundColour(self, evt):
+        self.cropselect.setlbcolour(evt.GetValue())
 
     def OnOriginSelect(self, _):
         v=self.originbox.GetStringSelection()
@@ -949,6 +967,25 @@ class ImagePreviewDialog(wx.Dialog):
 
 if __name__=='__main__':
 
+    if __debug__:
+        def profile(filename, command):
+            import hotshot, hotshot.stats, os
+            file=os.path.abspath(filename)
+            profile=hotshot.Profile(file)
+            profile.run(command)
+            profile.close()
+            del profile
+            howmany=100
+            stats=hotshot.stats.load(file)
+            stats.strip_dirs()
+            stats.sort_stats('time', 'calls')
+            stats.print_stats(100)
+            stats.sort_stats('cum', 'calls')
+            stats.print_stats(100)
+            stats.sort_stats('calls', 'time')
+            stats.print_stats(100)
+            sys.exit(0)
+
     class FakeProfile:
 
         def GetImageOrigins(self):
@@ -958,10 +995,15 @@ if __name__=='__main__':
             return {"wallpaper": {'dimensions': (100,200)},
                     "photoid": {'dimensions': (100, 150)},
                     "outsidelcd": {'dimensions': (90,80)}}
-    
-    app=wx.PySimpleApp()
-    dlg=ImagePreviewDialog(None, wx.Image("test.jpg"), "foobar.png", FakeProfile())
-    dlg.ShowModal()
+
+    def run():
+        app=wx.PySimpleApp()
+        dlg=ImagePreviewDialog(None, wx.Image("test.jpg"), "foobar.png", FakeProfile())
+        dlg.ShowModal()
+
+    if __debug__ and True:
+        profile("wp.prof", "run()")
+    run()
     
         
         
