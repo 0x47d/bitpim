@@ -110,13 +110,15 @@ class Phone:
         # commands as necessary
         # finally we clear out any remaining entries
         existingpbook={}
+        self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
+        # similar loop to reading
         self.log("Reading number of phonebook entries before writing")
         res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
         ### Response 0x11
         # Byte 0x12 is number of entries
         numexistingentries=ord(res[0x12])
-        progressmax=numexistingentries+len(data['phonebook'].keys())
+        progressmax=numexistingentries+max(len(data['phonebook'].keys()),numexistingentries)
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
         for i in range(0, numexistingentries):
@@ -139,7 +141,7 @@ class Phone:
         numentries=len(pbook.keys())
         for i in range(0, max(numentries,numexistingentries)):
             progresscur+=1
-            if i>numentries:
+            if i>=numentries:
                 ii=existingpbook[i]
                 # no idea what the \x06 is about
                 data="\x01"+makelsb(ii['serial1'],4)+ \
@@ -154,7 +156,7 @@ class Phone:
                 cmd=0x03 # append
             else: cmd=0x04 # overwrite
             self.progress(progresscur, progressmax, "Writing "+pbook[entries[i]]['name'])
-            self.sendpbcommand(cmd, entry)
+            self.sendpbcommand(cmd, "\x01"+entry)
 
     def getcalendar(self,result):
         self.setmode(self.MODEBREW)
@@ -164,7 +166,10 @@ class Phone:
         # we have to retreive both the wallpapers and the index file
         wallpapers={}
         self.setmode(self.MODEBREW)
-        entries=self.getfilesystem("brew/shared")
+        try:
+            entries=self.getfilesystem("brew/shared")
+        except BrewNoSuchDirectoryException:
+            entries={}
         for file in entries:
             f=entries[file]
             if f['type']=='file':
@@ -181,8 +186,6 @@ class Phone:
 
         result['wallpaper-index']=index
         return result
-
-
 
     def savewallpapers(self, data):
         self.setmode(self.MODEBREW)
@@ -485,17 +488,17 @@ class Phone:
 
     def _setmodephonebook(self):
         try:
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         try:
             self.comm.setbaudrate(38400)
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         self._setmodelgdmgo()
         try:
-            self.sendpbcommand(0x15, "\x01\x00\x00\x00\x00\x00\x00")
+            self.sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
             return 1
         except: pass
         return 0
@@ -629,33 +632,29 @@ class Phone:
         # pass
 
         # bytes 4-7 serial
-        res['serial1']="%08x" % (readlsb(packet[4:8]),)
+        res['serial1']=readlsb(packet[4:8])
 
         # bytes 8-9  unknown
-        res['?offset008']=readhex(packet[8:0xa])
+        res['?offset008']=readlsb(packet[8:0xa])
 
         # bytes a-d another serial
-        res['serial2']="%08x" % (readlsb(packet[0xa:0xe]),)
+        res['serial2']=readlsb(packet[0xa:0xe])
 
         # byte e is entry number
-        res['#']=readhex(packet[0xe:0xf])
+        res['#']=readlsb(packet[0xe:0xf])
 
         # byte f is unknown
-        res['?offset00f']=readhex(packet[0xf:0x10])
+        res['?offset00f']=readlsb(packet[0xf:0x10])
 
         # Bytes 10-26 null terminated name
         res['name']=readstring(packet[0x10:0x27])
 
         # Byte 27 group
         b=packet[0x27]
-        try:
-            t=self.grouptab[ord(b)]
-        except:
-            t="%02x" % (ord(b),)
-        res['group']=t
+        res['group']=ord(b)
 
         # byte 28 some sort of number
-        res['?offset028']=readhex(packet[0x28:0x29])
+        res['?offset028']=readlsb(packet[0x28:0x29])
 
         # bytes 29-59 null terminated email1
         res['email1']=readstring(packet[0x29:0x60])
@@ -671,44 +670,27 @@ class Phone:
 
         # byte ed is ringtone
         b=packet[0xed]
-        try:
-            t=self.tonetab[ord(b)]
-        except:
-            t="%02x" % (ord(b),)
-        res['ringtone']=t
+        res['ringtone']=ord(b)
 
         # byte ee is message ringtone
         b=packet[0xee]
-        try:
-            t=self.tonetab[ord(b)]
-        except:
-            t="%02x" % (ord(b),)
-        res['msgringtone']=t
+        res['msgringtone']=ord(b)
 
         # byte ef is secret
         b=ord(packet[0xef])
-        if b:
-            res['secret']='true'
-        else:
-            res['secret']='false'
+        res['secret']=b
 
         # bytes f0-110 null terminated memo
         res['memo']=readstring(packet[0xf0:0x111])
 
         # byte 111
-        res['?offset111']=readhex(packet[0x111:0x112])
+        res['?offset111']=readlsb(packet[0x111:0x112])
         
         # bytes 112-116 are phone number types
         n=0
         for b in packet[0x112:0x117]:
             n+=1
-            try:
-                t=self.numbertypetab[ord(b)]
-            except:
-                t="%02x" % (ord(b),)
-            if len(t)==0:
-                t="%02x" % (ord(b),)
-            res['type'+chr(n+ord('0'))]=t
+            res['type'+chr(n+ord('0'))]=ord(b)
                 
 
         # bytes 117-147 number 1
@@ -727,17 +709,8 @@ class Phone:
         res['number5']=readstring(packet[0x1db:0x20c])
 
         # bytes 20c-210
-        res['?offset20c']=readhex(packet[0x20c:0x211])
+        res['?offset20c']=readlsb(packet[0x20c:0x211])
 
-        # remove all zero length string entries
-        # for i in res.keys():
-        #    if len(res[i])==0:
-        #        del res[i]
-        
-        # clean up phone numbers
-        for i in range(1,6):
-            if len(res['number'+`i`])==0:
-                res['type'+`i`]=""
         return res
 
     def makeentry(self, num, entry, dict):
@@ -747,7 +720,7 @@ class Phone:
         
         # bytes 4-7 serial1
         assert len(res)==4
-        res+=makelsb(entry['serial1'], 4)
+        res+=makelsb(entry.get('serial1', 0), 4)
 
         # bytes 8-9  unknown - always 0202
         assert len(res)==8
@@ -755,7 +728,7 @@ class Phone:
 
         # bytes a-d serial2
         assert len(res)==0x0a
-        res+=makelsb(entry['serial2'], 4)
+        res+=makelsb(entry.get('serial2', 0), 4)
 
         # byte e is entry number
         # we ignore what user supplied
@@ -768,11 +741,11 @@ class Phone:
 
         # Bytes 10-26 null terminated name
         assert len(res)==0x10
-        res+=makestring(entry['name'], 22)
+        res+=makestring(entry.get('name', "<unnamed>"), 23)
 
         # Byte 27 group
         assert len(res)==0x27
-        res+=makelsb(entry['group'], 1)
+        res+=makelsb(entry.get('group', 0), 1)
         
         # byte 28 some sort of number - always 0
         assert len(res)==0x28
@@ -780,37 +753,37 @@ class Phone:
 
         # bytes 29-59 null terminated email1
         assert len(res)==0x29
-        res+=makestring(entry['email1'], 55)
+        res+=makestring(entry.get('email1', ""), 49)
 
         # bytes 5a-8a null terminated email2
         assert len(res)==0x5a
-        res+=makestring(entry['email2'], 55)
+        res+=makestring(entry.get('email2', ""), 49)
 
         # bytes 8b-bb null terminated email3
         assert len(res)==0x8b
-        res+=makestring(entry['email3'], 55)
+        res+=makestring(entry.get('email3', ""), 49)
 
         # bytes bc-ec null terminated url
         assert len(res)==0xbc
-        res+=makestring(entry['url'], 49)
+        res+=makestring(entry.get('url', ""), 49)
 
         # byte ed is ringtone
         assert len(res)==0xed
-        res+=makelsb(entry['ringtone'], 1)
+        res+=makelsb(entry.get('ringtone', 0), 1)
 
         # byte ee is message ringtone
         assert len(res)==0xee
-        res+=makelsb(entry['msgringtone'], 1)
+        res+=makelsb(entry.get('msgringtone', 0) , 1)
 
         # byte ef is secret
         assert len(res)==0xef
-        if entry['secret']:
+        if entry.get('secret',0):
             res+="\x01"
         else: res+="\x00"
         
         # bytes f0-110 null terminated memo
         assert len(res)==0xf0
-        res+=makestring(entry['memo'], 33)
+        res+=makestring(entry.get('memo', ""), 33)
 
         # byte 111 - always zero or one entry is 0x0d
         assert len(res)==0x111
@@ -819,32 +792,31 @@ class Phone:
         # bytes 112-116 are phone number types
         assert len(res)==0x112
         for n in range(1,6):
-            res+=makelsb( entry['type'+`n`], 1)
+            res+=makelsb( entry.get('type'+`n`, 0), 1)
 
         # bytes 117-147 number 1
         assert len(res)==0x117
-        res+=makestring(entry['number1'], 49)
+        res+=makestring(entry.get('number1', ""), 49)
 
         # bytes 148-178 number 2
         assert len(res)==0x148
-        res+=makestring(entry['number2'], 49)
+        res+=makestring(entry.get('number2', ""), 49)
 
         # bytes 179-1a9 number 3
         assert len(res)==0x179
-        res+=makestring(entry['number3'], 49)
+        res+=makestring(entry.get('number3', ""), 49)
         
         # bytes 1aa-1da number 4
         assert len(res)==0x1aa
-        res+=makestring(entry['number4'], 49)
+        res+=makestring(entry.get('number4', ""), 49)
 
         # bytes 1db-20b number 5
         assert len(res)==0x1db
-        res+=makestring(entry['number5'], 49)
+        res+=makestring(entry.get('number5', ""), 49)
 
         # bytes 20c-210 five zeros
         assert len(res)==0x20c
         res+=makelsb(0, 5)
-
 
         # done
         assert len(res)==0x211
