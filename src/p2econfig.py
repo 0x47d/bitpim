@@ -12,6 +12,7 @@ dirs=[ '.\\resources' , '.' ]
 for ext in exts:
     for dir in dirs:
         for file in glob.glob(dir+"\\*."+ext):
+            if file==".\\resources\\group.png": continue # don't ship it for moment
             d=os.path.dirname(file)
             if not tbl.has_key(d):
                 tbl[d]=[]
