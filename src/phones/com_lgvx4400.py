@@ -558,7 +558,7 @@ def phonize(str):
 
     
 
-class Profile:
+class Profile(com_phone.Profile):
     serialsname='lgvx4400'
 
     WALLPAPER_WIDTH=120
@@ -579,7 +579,7 @@ class Profile:
     deviceclasses=("serial",)
 
     def __init__(self):
-        pass
+        com_phone.Profile.__init__(self)
 
     def makeone(self, list, default):
         "Returns one item long list"

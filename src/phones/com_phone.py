@@ -144,6 +144,9 @@ class Profile:
     # which device classes we are.
     deviceclasses=("modem", "serial")
 
+    def __init__(self):
+        pass
+
     _supportedsyncs=(
         )
 

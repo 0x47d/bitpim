@@ -881,7 +881,7 @@ def phonize(str):
     # "H" instead of "P".  However, phone saves this internally as "P".
     return re.sub("[^0-9PT#*]", "", str)
 
-class Profile:
+class Profile(com_phone.Profile):
     serialsname='sanyo'
 
     WALLPAPER_WIDTH=100
@@ -900,7 +900,7 @@ class Profile:
     deviceclasses=("modem",)
 
     def __init__(self):
-        pass
+        com_phone.Profile.__init__(self)
 
     # which sync types we deal with
     _supportedsyncs=(
@@ -910,13 +910,6 @@ class Profile:
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         )
 
-    def SyncQuery(self, source, action, type):
-        if (source, action, type) in self._supportedsyncs or \
-           (source, action, None) in self._supportedsyncs:
-            return True
-        return False
-
-    
 ### Some drop in replacement routines for phonebook.py that can be moved
 ### if they look OK.
     def _getentries(self, list, min, max, name):
