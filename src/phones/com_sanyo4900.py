@@ -56,9 +56,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
     def getphonebook(self,result):
         pbook={}
-        # For now, just read a handful of entries to get the hang of things.
-        # There are potentially 300 entries.  To know which one are actually
-        # in use we have to read in some buffers first.  
+        # Get Sort buffer so we know which of the 300 phone book slots
+        # are in use.
         buf=prototypes.buffer(self.getsanyobuffer(0x3c, 0x43, "sort buffer"))
         sortstuff=p_sanyo.pbsortbuffer()
         sortstuff.readfrombuffer(buf)
@@ -135,7 +134,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                     
                 for i in range(len(entry[k])):
                     numberindex=entry['numbertypes'][i]
-                    print i,numberindex,entry[k][i],len(e.numbers)
                     e.numbers[numberindex].number=entry[k][i]
                     e.numbers[numberindex].number_len=len(e.numbers[numberindex].number)
                 continue
@@ -146,9 +144,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
     def phonize(self, str):
         """Convert the phone number into something the phone understands
 
-        All digits, H, T, * and # are kept, everything else is removed"""
-        # Are P for the LGVX4400 and H for Sanyo the same?
-        return re.sub("[^0-9HT#*]", "", str)
+        All digits, P, T, * and # are kept, everything else is removed"""
+        # Note: when looking at phone numbers on the phone, you will see
+        # "H" instead of "P".  However, phone saves this internally as "P".
+        return re.sub("[^0-9PT#*]", "", str)
 
     def savephonebook(self, data):
         # We overwrite the phonebook in the phone with the data.
@@ -179,8 +178,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             sortstuff.urls.append(0xffff)
             ringpic.ringtones.append(0)
             ringpic.wallpapers.append(0)
+###
+### Initialize mappings
+###
+        namemap={}
+        emailmap={}
+        urlmap={}
+
+        callerid.numentries=0
         
-        pbook=data['phonebook']
+        pbook=data['phonephonebook']
         self.log("Putting phone into write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=1 # Start update
@@ -188,6 +195,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
         keys=pbook.keys()
         keys.sort()
+        sortstuff.slotsused=len(keys)
+        sortstuff.slotsused2=len(keys)
 
         progresscur=0
         progressmax=len(keys)+2+8+14 # Include the buffers
@@ -201,22 +210,60 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             self.log("Writing entry "+`i`+" - "+ii['name'])
             entry=self.makeentry(ii, data)
             req=p_sanyo.phonebookslotupdaterequest()
-            req.slot=slot
             req.entry=entry
 #            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
+
 # Accumulate information in and needed for buffers
-            sortstuff.usedflags[i].used=1
-            
+            sortstuff.usedflags[slot].used=1
+            sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]
+# Fill in Caller ID buffer
+            for i in range(len(ii['numbers'])):
+                if(callerid.numentries<500):
+                    cidentry=self.makecidentry(ii['numbers'][i],slot,ii['numbertypes'][i])
+                    callerid.items.append(cidentry)
+                    callerid.numentries+=1
+
+            namemap[ii['name']]=slot
+            emailmap[ii['email']]=slot
+            urlmap[ii['url']]=slot
+                    
         # Sort Names, Emails and Urls for the sort buffer
         
         # Now write out the 3 buffers
+        buffer=prototypes.buffer()
+        sortstuff.writetobuffer(buffer)
+        self.logdata("Write sort buffer", buffer.getvalue(), sortstuff)
+        # Write buffer.getvalue() to phone
+        buffer=prototypes.buffer()
+        callerid.writetobuffer(buffer)
+        self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
+        # Write buffer.getvalue() to phone
+        buffer=prototypes.buffer()
+        ringpic.writetobuffer(buffer)
+        self.logdata("Write ringer picture buffer", buffer.getvalue(), ringpic)
+        # Write buffer.getvalue() to phone
+
         
         self.log("Taking phone out of write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Start update
 #        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
         self.log("Please exit BITPIM and power cycle the phone")
-            
+        del data['phonephonebook']        
+
+    def makecidentry(self, number, slot, nindex):
+        "Prepare entry for caller ID lookup buffer"
+        
+        numstripped=re.sub("[^0-9HT#*]", "", number)
+        numonly=re.sub("^(\\d*).*$", "\\1", numstripped)
+
+        cidentry=p_sanyo.calleridentry()
+        cidentry.pbslotandtype=slot+((nindex+1)>>12)
+        cidentry.actualnumberlen=len(numonly)
+        cidentry.numberfragment=numonly[-10:]
+
+        return cidentry
+    
 class Profile:
 
     def makeone(self, list, default):
@@ -239,10 +286,16 @@ class Profile:
                 e['name']=helper.getfullname(entry['names'],1,1,16)[0]
 
 
-                e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), "")
+                if(entry.has_key('emails')):
+                    e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), "")
+                else:
+                    e['email']=""
                 e['email_len']=len(e['email'])
 
-                e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
+                if(entry.has_key('urls')):
+                    e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
+                else:
+                    e['url']=""
                 e['url_len']=len(e['url'])
 # Could put memo in email or url
 
@@ -252,10 +305,10 @@ class Profile:
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for num in numbers:
-                    type=num['type']
-                    for i,t in zip(range(100),numbertypetab):
-                        if type==t:
-                            e['numbertypes'].append(i)
+                    typename=num['type']
+                    for typenum,tnsearch in zip(range(100),numbertypetab):
+                        if typename==tnsearch:
+                            e['numbertypes'].append(typenum)
                             e['numbers'].append(num['number'])
 
                             break
@@ -277,5 +330,5 @@ class Profile:
             except helper.ConversionFailed:
                 continue
 
-        data['phonebook']=results
+        data['phonephonebook']=results
         return data
