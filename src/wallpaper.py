@@ -57,7 +57,7 @@ class WallpaperView(guiwidgets.FileView):
         'png': wx.BITMAP_TYPE_PNG,
         }
 
-    organizetypes=("Image Type", "Origin", "File Size") # Image Size
+    organizetypes=("Origin", "Image Type", "File Size") # Image Size
     
 
     def __init__(self, mainwindow, parent):
@@ -80,12 +80,15 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
 
         self.organizeinfo={}
-
+        last_mode=mainwindow.config.Read('imageorganizedby',
+                                         self.organizetypes[0])
         for k in self.organizetypes:
             id=wx.NewId()
             self.organizemenu.AppendRadioItem(id, k)
             wx.EVT_MENU(self, id, self.OrganizeChange)
             self.organizeinfo[id]=getattr(self, "organizeby_"+k.replace(" ",""))
+            if k==last_mode:
+                self.organizemenu.Check(id, True)
             
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
@@ -127,6 +130,8 @@ class WallpaperView(guiwidgets.FileView):
             self.OnListRequest() # broadcast changes
 
     def OrganizeChange(self, evt):
+        self.mainwindow.config.Write('imageorganizedby',
+                                     evt.GetEventObject().GetLabel(evt.GetId()))
         evt.GetEventObject().Check(evt.GetId(), True)
         self.OnRefresh()
 
