@@ -347,7 +347,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 for field in 'start','end','daybitmap','changeserial','snoozedelay','ringtone','description':
                     entry[field]=getattr(event,field)
                 # calculated ones
-                entry['repeat']=self._calrepeatvalues[event.repeat]
+                try:
+                    entry['repeat']=self._calrepeatvalues[event.repeat]
+                except KeyError:
+                    entry['repeat']=None
                 min=event.alarmminutes
                 hour=event.alarmhours
                 if min==100 or hour==100:
