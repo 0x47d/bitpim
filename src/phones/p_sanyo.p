@@ -26,6 +26,10 @@ _NUMCALLALARMSLOTS=15
 _NUMCALLHISTORY=20
  %}
 
+PACKET sanyoerror:
+    1 UINT errorcode
+    * UNKNOWN unknown
+
 PACKET firmwarerequest:
     1 UINT {'constant': 0x00} +command
 
