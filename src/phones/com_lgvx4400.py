@@ -13,6 +13,7 @@ import common
 import commport
 import copy
 import re
+import time
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -61,6 +62,10 @@ class Phone:
     MODEMODEM=3 # modem mode
     desc="LG-VX4400"
     terminator="\x7e"
+
+    # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
+    # plus a fudge factor of 4 days, 17 hours for no reason I can find
+    _brewepochtounix=315532800+406800
     
     def __init__(self, logtarget, commport):
         self.logtarget=logtarget
@@ -458,13 +463,7 @@ class Phone:
         f=data[stuffkey].keys()
         f.sort()
         self.log("Saving %s.  Merge=%d.  Files supplied %s" % (stuffkey, merge, ", ".join(f)))
-        # make the parent directory if needed
-        dirs=directory.split('/')
-        for i in range(0,len(dirs)):
-            try:
-                self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
-            except:
-                pass
+        self.mkdirs(directory)
 
         # get existing index
         index=self.getindex(indexfile)
@@ -569,6 +568,17 @@ class Phone:
         d=chr(len(name)+1)+name+"\x00"
         self.sendbrewcommand(0x00, d)
 
+    def mkdirs(self, directory):
+        if len(directory)<1:
+            return
+        dirs=directory.split('/')
+        for i in range(0,len(dirs)):
+            try:
+                self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
+            except:
+                pass
+
+
     def rmdir(self,name):
         self.log("Deleting directory '"+name+"'")
         d=chr(len(name)+1)+name+"\x00"
@@ -597,8 +607,14 @@ class Phone:
                 name=res[0x19:]
                 results[name]={ 'name': name, 'type': 'file',
                                 'size': readlsb(res[0x0f:0x13]),
-                                'date': brewdecodedate(readlsb(res[0x0b:0x0f])),
                                 'data': readhex(res[:0x19]) }
+                date=readlsb(res[0x0b:0x0f])
+                if date==0:
+                    results[name]['date']=(0, "")
+                else:
+                    date+=self._brewepochtounix
+                    results[name]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+
             except BrewNoMoreEntriesException:
                 break
 
