@@ -606,14 +606,15 @@ def idaudio_PCM(f):
        f.GetBytes(12, 4)!='fmt ' or f.GetLSBUint16(20)!=1:
         return None
     d={ 'format': 'PCM' }
-    d['size']=f.GetLSBUint32(4)
     d['numchannels']=f.GetLSBUint16(22)
     d['samplerate']=f.GetLSBUint32(24)
     d['byterate']=f.GetLSBUint32(28)
     d['blockalign']=f.GetLSBUint16(32)
     d['bitspersample']=f.GetLSBUint16(34)
     # compute the approximate duration
-    d['duration']=(d['size']-36.0)/(d['blockalign']*d['samplerate'])
+    subchunk1size=f.GetLSBUint32(16)
+    datasize=f.GetLSBUint32(20+subchunk1size+4)
+    d['duration']=float(datasize)/(d['blockalign']*d['samplerate'])
     return AudioFileInfo(f, **d)
 
 def fmts_PCM(afi):

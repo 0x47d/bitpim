@@ -578,7 +578,7 @@ class Profile(com_samsung.Profile):
 
     def QueryAudio(self, origin, currentextension, afi):
         # we don't modify any of these
-        if afi.format in ("MIDI", "QCP", "PMD"):
+        if afi.format in ("MIDI", "QCP", "PMD", "PCM"):
             return currentextension, afi
         return ('qcp', fileinfo.AudioFileInfo(afi, **{'format': 'QCP'}))
 
