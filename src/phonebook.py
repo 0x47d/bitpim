@@ -89,6 +89,7 @@ import re
 import time
 import random
 import sha
+import copy
 
 # GUI
 import wx
@@ -989,14 +990,14 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
 
         dc.SetBackgroundMode(wx.TRANSPARENT)
 
-        text = grid.GetCellValue(row, col)
+        text = grid.GetTable().GetHtmlCellValue(row, col)
         bphtml.drawhtml(dc,
                         wx.Rect(rect.x+2, rect.y+1, rect.width-4, rect.height-2),
                         text, scale=self.SCALE)
         dc.DestroyClippingRegion()
 
     def GetBestSize(self, grid, attr, dc, row, col):
-        text = grid.GetCellValue(row, col)
+        text = grid.GetTable().GetHtmlCellValue(row, col)
         return bphtml.getbestsize(dc, text, scale=self.SCALE)
 
     def Clone(self):
@@ -1008,6 +1009,8 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     UNALTERED=1
     CHANGED=2
     DELETED=3
+
+    htmltemplate=["Not set - "+`i` for i in range(8)]
     
     def __init__(self, widget):
         self.main=widget
@@ -1069,7 +1072,39 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             if row[i] is not None:
                 return getdata(self.columns[col], ptr[row[i]], "")
         return ""
-            
+
+    def GetHtmlCellValue(self, row, col):
+        try:
+            row=self.main.rowdata[self.rowkeys[row]]
+        except:
+            print "bad row", row
+            return "&gt;error&lt;"
+
+        if self.columns[col]=='Confidence':
+            return `row[0]`
+
+        # as an exercise in madness, try to redo this as a list comprehension
+        imported,existing,result=None,None,None
+        if row[1] is not None:
+            imported=getdata(self.columns[col], self.main.importdata[row[1]], None)
+        if row[2] is not None:
+            existing=getdata(self.columns[col], self.main.existingdata[row[2]], None)
+        if row[3] is not None:
+            result=getdata(self.columns[col], self.main.resultdata[row[3]], None)
+
+        # this code is both hacky and elegant!
+        idx=((imported is not None)<<2 ) + \
+            ((existing is not None)<<1 ) + \
+            (result is not None)
+
+        # ::TODO:: don't give so much detail if the imported/existing/result
+        # match each other after doing a "lossy" comparison (eg the phone
+        # numbers 1234567890 and 1-234-6790 should be considered the same)
+
+        return self.htmltemplate[idx] % { 'imported': _htmlfixup(imported),
+                                          'existing': _htmlfixup(existing),
+                                          'result': _htmlfixup(result) }
+
     def OnDataUpdated(self):
         newkeys=self.main.rowdata.keys()
         newkeys.sort()
@@ -1089,7 +1124,14 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         wx.CallAfter(self.GetView().AutoSizeColumns)
         wx.CallAfter(self.GetView().AutoSizeRows)
-    
+
+def _htmlfixup(txt):
+    if txt is None: return ""
+    return txt.replace("&", "&amp;").replace("<", "&gt;").replace(">", "&lt;") \
+           .replace("\r\n", "<br/>").replace("\r", "<br/>").replace("\n", "<br/>")
+
+ImportDataTable.htmltemplate[0]=""
+ImportDataTable.htmltemplate[7]="%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s<br><b><font size=-1>Existing</font></b> %(existing)s"
 
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
@@ -1166,6 +1208,16 @@ class ImportDialog(wx.Dialog):
 
         This can take quite a while!
         """
+
+        # We go to great lengths to ensure that a copy of the import
+        # and existing data is passed on to the routines we call and
+        # data structures being built.  Originally the code expected
+        # the called routines to make copies of the data they were
+        # copying/modifying, but it proved too error prone and often
+        # ended up modifying the original/import data passed in.  That
+        # had the terrible side effect of meaning that your original
+        # data got modified even if you pressed cancel!
+
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         count=0
         row={}
@@ -1179,18 +1231,19 @@ class ImportDialog(wx.Dialog):
             if len(matches):
                 confidence, existingid=matches[0]
                 if confidence>90:
-                    results[count]=self.MergeEntries(self.existingdata[existingid], self.importdata[i])
+                    results[count]=self.MergeEntries(copy.deepcopy(self.existingdata[existingid]),
+                                                     copy.deepcopy(self.importdata[i]))
                     row[count]=(confidence, i, existingid, count)
                     count+=1
                     usedexistingkeys.append(existingid)
                     continue
             # nope, so just add it
-            results[count]=self.importdata[i]
+            results[count]=copy.deepcopy(self.importdata[i])
             row[count]=(100, i, None, count)
             count+=1
         for i in self.existingdata:
             if i in usedexistingkeys: continue
-            results[count]=self.existingdata[i]
+            results[count]=copy.deepcopy(self.existingdata[i])
             row[count]=("", None, i, count)
             count+=1
         self.rowdata=row
@@ -1208,12 +1261,12 @@ class ImportDialog(wx.Dialog):
         for dict in i,o:
             for k in dict.keys():
                 if k not in intersect:
-                    result[k]=dict[k]
+                    result[k]=dict[k][:]
         # now only deal with keys in both
         for key in intersect:
             if key=="names":
                 # we ignore anything except the first name.  fields in existing take precedence
-                r=i["names"][0].copy()
+                r=i["names"][0]
                 for k in o["names"][0]:
                     r[k]=o["names"][0][k]
                 result["names"]=[r]
@@ -1413,7 +1466,7 @@ def mergenumberlists(orig, imp):
     """
     # results start with existing entries
     res=[]
-    res.extend(orig[:])
+    res.extend(orig)
     # look through each imported number
     for i in imp:
         num=cleannumber(i['number'])
@@ -1461,7 +1514,7 @@ def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
     """
     # results start with existing entries
     res=[]
-    res.extend(orig[:])
+    res.extend(orig)
     # look through each imported field
     for i in imp:
 
