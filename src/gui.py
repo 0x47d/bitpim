@@ -1076,8 +1076,8 @@ class WorkerThread(WorkerThreadFramework):
         self.setupcomm()
         self.progressmajor(0,0,"Listing files")
         files=self.dirlisting(path, recurse)
-        if len(path)<=1:
-            strip=1 # root dir
+        if path=="/" or path=="":
+            strip=0 # root dir
         else:
             strip=len(path)+1 # child
 
@@ -1571,7 +1571,7 @@ class RestoreDialog(wxDialog):
         nl.sort()
 
         prefix=path
-        if len(prefix)<=1:
+        if len(prefix)=="/" or prefix=="":
             prefix=""
         else:
             prefix+="/"
