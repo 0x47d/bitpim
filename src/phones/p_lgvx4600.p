@@ -9,7 +9,7 @@
 
 %{
 
-"""Various descriptions of data specific to LG VX4500"""
+"""Various descriptions of data specific to LG VX4600"""
 
 from prototypes import *
 
