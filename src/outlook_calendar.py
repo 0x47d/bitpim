@@ -129,14 +129,24 @@ class OutlookCalendarImportData:
         self.__exception_list=[]
 
     def __accept(self, entry):
-        # start & end time within specified filter
-        if self.__filter['start']is not None and \
-           entry['start'][:3]<self.__filter['start'][:3]:
-            return False
-        if self.__filter['end'] is not None and \
-           entry['end'][:3]>self.__filter['end'][:3] and \
-           entry['end'][:3]!=common_calendar.no_end_date[:3]:
-            return False
+        s_date=entry['start'][:3]
+        e_date=entry['end'][:3]
+        if entry.get('repeat', False):
+            # repeat event, must not fall outside the range
+            if self.__filter['start'] is not None and \
+               e_date<self.__filter['start'][:3]:
+                return False
+            if self.__filter['end'] is not None and \
+               s_date>self.__filter['end'][:3]:
+                return False
+        else:
+            # non-repeat event, must fall within the range
+            if self.__filter['start'] is not None and \
+               e_date<self.__filter['start'][:3]:
+                return False
+            if self.__filter['end'] is not None and \
+               e_date>self.__filter['end'][:3]:
+                return False
         # check the catefory
         c=self.__filter['categories']
         if c is None or not len(c):
