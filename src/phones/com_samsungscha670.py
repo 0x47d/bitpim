@@ -211,7 +211,7 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
     def savephonebook(self, data):
         "Saves out the phonebook"
 
-       if not self.is_online():
+        if not self.is_online():
             self.log("Failed to talk to phone")
             return data
 
