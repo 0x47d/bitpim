@@ -20,8 +20,10 @@ BOOL=BOOLlsb
 #
 
 NUMPHONEBOOKENTRIES=300
+NUMEMAILS=3
 NUMPHONENUMBERS=6
 NUMCALENDARENTRIES=70
+MAXNUMBERLEN=32
 
 NUMGROUPS=4
 
@@ -52,7 +54,7 @@ PACKET phonebookentry:
     * SAMSTRING email
     * SAMSTRING url
     * SAMDATE birthday
-    * SAMINT wallpaper
+    * SAMINT {'default': 20} wallpaper
     * SAMTIME {'terminator': None} timestamp "Use terminator None for last item"
 PACKET phonebookslotrequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKR='} +command
@@ -75,7 +77,7 @@ PACKET groupnameentry:
 
 PACKET groupnamesetrequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBGRW='} +command
-    * SAMINT {'terminator': None} +gid "Group #"
+    * SAMINT +gid "Group #"
     * SAMSTRING +groupname
     * SAMINT {'terminator': None, 'default': 0} +ringtone "Ringtone assignment"
     
