@@ -514,7 +514,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         # build up list into init
         init={}
-        for offset,indexfile,location,type,maxentries in self.imagelocations:
+        for offset,indexfile,location,type,maxentries in maps:
             init[type]={}
             for k in wpi.keys():
                 if wpi[k]['origin']==type:
@@ -546,10 +546,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             
         # we now have init[type] with the entries and index number as key (negative indices are
         # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
-        for offset,indexfile,location,type,maxentries in self.imagelocations:
+        for offset,indexfile,location,type,maxentries in maps:
             if type=="camera": break
             index=init[type]
-            dirlisting=self.getfilesystem(location)
+            try:
+                dirlisting=self.getfilesystem(location)
+            except com_brew.BrewNoSuchDirectoryException:
+                self.mkdirs(location)
+                dirlisting={}
             # rename keys to basename
             for i in dirlisting.keys():
                 dirlisting[i[len(location)+1:]]=dirlisting[i]
@@ -636,7 +640,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # tidy up - reread indices
         del results[mediakey] # done with it
         reindexfunction(results)
-        return data
+        return results
 
 
     def _normaliseindices(self, d):
