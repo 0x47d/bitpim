@@ -139,6 +139,8 @@ class Phone:
                 pass
         return False       
 
+    def getmemo(self, result):
+        return {}
 
 class Profile:
 
