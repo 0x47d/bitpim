@@ -18,10 +18,27 @@ import calendar
 import time
 
 
+class FontscaleCache(dict):
+    # cache results of what the scale factor is to fit a number of lines in a space is
+    def get(self, y, attr, numentries):
+        return dict.get(self, (y, id(attr), numentries), 1)
+    def set(self, y, attr, numentries, scale):
+        self[(y, id(attr),  numentries)]=scale
+    def uncache(self, *args):
+        # clear out any cached attrs listed in args (eg when they are changed)
+        keys=self.keys()
+        l2=[id(x) for x in args]
+        for y, idattr, numentries in keys:
+            if idattr in l2:
+                del self[ (y, idattr, numentries) ]
+
+thefontscalecache=FontscaleCache()
+
 class CalendarCellAttributes:
     def __init__(self):
         # Set some defaults
-        self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(197,255,255), wxSOLID)
+        self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(230,255,255), wxSOLID)
+        #self.cellbackground=wxBrush(wxColour(197,255,255), wxSOLID)
         self.labelfont=wxFont(20, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
@@ -30,6 +47,12 @@ class CalendarCellAttributes:
         self.entryfont=wxFont(15, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
         self.miltime=False
+        self.initdone=True
+
+    def __setattr__(self, k, v):
+        self.__dict__[k]=v
+        if hasattr(self, 'initdone'):
+            thefontscalecache.uncache(self)
 
     def isrightaligned(self):
         return self.labelalign==wxALIGN_RIGHT
@@ -41,28 +64,38 @@ class CalendarCellAttributes:
         dc.SetBackground(self.cellbackground)
 
     def setforlabel(self, dc, fontscale=1):
-        self.setscaledfont(dc, self.labelfont, fontscale)
         dc.SetTextForeground(self.labelforeground)
+        return self.setscaledfont(dc, self.labelfont, fontscale)
 
     def setfortime(self,dc, fontscale=1):
-        self.setscaledfont(dc, self.timefont, fontscale)
         dc.SetTextForeground(self.timeforeground)
+        return self.setscaledfont(dc, self.timefont, fontscale)
 
     def setforentry(self, dc, fontscale=1):
-        self.setscaledfont(dc, self.entryfont, fontscale)
         dc.SetTextForeground(self.entryforeground)
-
+        return self.setscaledfont(dc, self.entryfont, fontscale)
+                
     def setscaledfont(self, dc, font, fontscale):
+        "Returns False if the font is already at smallest scale"
         if fontscale==1:
             dc.SetFont(font)
-            return
-        f=wxTheFontList.FindOrCreateFont(font.GetPointSize()*fontscale, font.GetFamily(), font.GetStyle(), font.GetWeight())
+            return True
+        ps=int(font.GetPointSize()*fontscale)
+        if ps<2:
+            ps=2
+        f=wxTheFontList.FindOrCreateFont(ps, font.GetFamily(), font.GetStyle(), font.GetWeight())
         dc.SetFont(f)
+        if ps==2:
+            return False
+        return True
 
 
 DefaultCalendarCellAttributes=CalendarCellAttributes()
 
+                
 class CalendarCell(wxWindow):
+
+    fontscalecache=FontscaleCache()
 
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wxSIMPLE_BORDER):
         wxWindow.__init__(self, parent, id, style=style)
@@ -142,18 +175,19 @@ class CalendarCell(wxWindow):
             x=self.width-(w+5)
         dc.DrawText(`self.day`, x, 0)
 
-        entrystart=h
+        entrystart=h # +5
         dc.DestroyClippingRegion()
         dc.SetClippingRegion( 0, entrystart, self.width, self.height-entrystart)
 
-        fontscale=1.0
+        fontscale=thefontscalecache.get(self.height-entrystart, self.attr, len(self.entries))
         iteration=0
         while 1: # this loop scales the contents to fit the space available
+            y=entrystart
             iteration+=1
             # now calculate how much space is needed for the time fields
             self.attr.setfortime(dc, fontscale)
             boundingspace=10
-            space,_=dc.GetTextExtent(" ")
+            space,_=dc.GetTextExtent("i")
             timespace,timeheight=dc.GetTextExtent("88:88")
             if self.attr.ismiltime():
                 ampm=0
@@ -162,13 +196,13 @@ class CalendarCell(wxWindow):
 
             leading=0
 
-            self.attr.setforentry(dc, fontscale)
-            _,entryheight=dc.GetTextExtent(" ")
+            r=self.attr.setforentry(dc, fontscale)
+            if not r: iteration=-1 # font can't be made this small
+            _,entryheight=dc.GetTextExtent("I")
             firstrowheight=max(timeheight, entryheight)
 
             # Now draw each item
             lastap=""
-            y=entrystart+5
             for h,m,desc in self.entries:
                 x=0
                 self.attr.setfortime(dc, fontscale)
@@ -200,11 +234,20 @@ class CalendarCell(wxWindow):
                 dc.DrawText(desc, x, ey)
                 # that row is dealt with!
                 y+=firstrowheight
+            if iteration==1 and fontscale!=1:
+                # came from cache
+                break
+            if iteration==-1:
+                # update cache
+                thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
+                break # reached limit of font scaling
             if iteration<10 and y>self.height:
                 dc.Clear()
                 # how much too big were we?
-                fontscale=fontscale*float(self.height)/y
+                fontscale=fontscale*float(self.height-entrystart)/(y-entrystart)
+                print iteration, y, self.height, fontscale
             else:
+                thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
                 break
 
 class CalendarLabel(wxWindow):
@@ -321,7 +364,7 @@ class Calendar(wxPanel):
 
     attrevenmonth=CalendarCellAttributes()
     attroddmonth=CalendarCellAttributes()
-    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 219, 255), wxSOLID)
+    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 230, 255), wxSOLID)
     
     def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
@@ -527,4 +570,8 @@ if __name__=="__main__":
     
     app=wxPySimpleApp()
     frame=MainWindow(None, -1, "Calendar Test")
-    app.MainLoop()
+    if 0:
+        import profile
+        profile.run("app.MainLoop()", "fooprof")
+    else:
+        app.MainLoop()
