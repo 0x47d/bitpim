@@ -26,7 +26,7 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo5300
     serialsname='scp5300'
     
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',

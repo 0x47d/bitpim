@@ -26,7 +26,7 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo7200
     serialsname='scp7200'
 
-    builtinringtones=( 'None', 'Vibrate')
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice')
                       
     calendar_defaultringtone=0
 

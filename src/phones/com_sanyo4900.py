@@ -26,7 +26,7 @@ class Phone(com_sanyo.Phone):
     protocolclass=p_sanyo4900
     serialsname='scp4900'
 
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        '', '', '', '', '', '', '', '', '', '', '', '', '', '',
                        '', 'La Bamba', 'Foster Dreamer', 'Schubert March',

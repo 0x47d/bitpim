@@ -10,7 +10,7 @@
 """Talk to the Sanyo SCP-7300 (RL2000) cell phone
 
 Reports are that the 7300 can be written to with the 5500 bitpim code, so
-this module simply inhereits the 550 code.  The inheritance will likely
+this module simply inhereits the 5500 code.  The inheritance will likely
 be reversed as media features are added.  The 5500 has camera still and video
 features, while the 7300 does not have a camera.
 """
@@ -33,7 +33,7 @@ class Phone(com_sanyo5500.Phone):
     protocolclass=p_sanyo7300
     serialsname='scp7300'
 
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
