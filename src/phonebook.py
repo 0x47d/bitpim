@@ -107,6 +107,31 @@ import bphtml
 import guiwidgets
 import phonenumber
 import helpids
+import database
+
+
+###
+###  The object we use to store a record.  See detailed description of
+###  fields at top of file
+###
+
+class phonebookdataobject(database.basedataobject):
+    # no change to _knownproperties (all of ours are list properties)
+    _knownlistproperties=database.basedataobject._knownlistproperties.copy()
+    _knownlistproperties.update( {'names': ['title', 'first', 'middle', 'last', 'full', 'nickname'],
+                                  'categories': ['category'],
+                                  'emails': ['email', 'type'],
+                                  'urls': ['url', 'type'],
+                                  'ringtones': ['ringtone', 'use'],
+                                  'addresses': ['type', 'company', 'street', 'street2', 'city', 'state', 'postalcode', 'country'],
+                                  'wallpapers': ['wallpaper', 'use'],
+                                  'flags': ['secret'],
+                                  'memos': ['memo'],
+                                  'numbers': ['number', 'type', 'speeddial'],
+                                  # serials is in parent object
+                                  })
+
+phonebookobjectfactory=database.dataobjectfactory(phonebookdataobject)
 
 ###
 ### Phonebook entry display (Derived from HTML)
@@ -2705,9 +2730,7 @@ class PhonebookPrintDialog(wx.Dialog):
                 f=open("debug.html", "wt")
                 f.write(html)
                 f.close()
-            wx.EndBusyCursor()
             raise
-        wx.EndBusyCursor()
         return html
 
     GetCurrentHTML=guihelper.BusyWrapper(GetCurrentHTML)

@@ -36,9 +36,9 @@ class basedataobject(dict):
     For production runs we may be receiving data that was written out
     by a newer version of BitPim so we don't check or error."""
     # which properties we know about
-    _knownproperties=['foo']
+    _knownproperties=[]
     # which ones we know about that should be a list of dicts
-    _knownlistproperties={'serials': ['sourcetype', 'id', '*'], 'bar': ['bam']}
+    _knownlistproperties={'serials': ['sourcetype', '*']}
 
     if __debug__:
         # in debug code we check key name and value types
@@ -51,16 +51,38 @@ class basedataobject(dict):
                 assert isinstance(value, list), "list properties must be given a list as value"
                 # each list member must be a dict
                 for v in value:
-                    assert isinstance(v, dict), "each item in a list property must be a dict"
+                    self._check_property_dictvalue(name,v)
                 return
             # the value must be a basetype supported by apsw/SQLite
-            assert isinstance(value, (str, unicode, buffer, int, long)), "only serializable types supported for values"
+            assert isinstance(value, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
+
+        def __check_property_dictvalue(self, name, value):
+            assert isinstance(value, dict), "items in "+name+" (a list) must be dicts"
+            assert name in self._knownlistproperties
+            for key in value:
+                assert key in self._knownlistproperties[name] or '*' in self._knownlistproperties[name], "dict key "+key+" as member of item in list "+name+" is not known"
+                v=value[key]
+                assert isinstance(v, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
                 
         def update(self, items):
             assert isinstance(items, dict), "update only supports dicts" # Feel free to fix this code ...
             for k in items:
                 self.__check_property(self, k, items[k])
-            super(basedataobject,self).update(items)
+            super(basedataobject, self).update(items)
+
+        def __getitem__(self, name):
+            self.__check_property(name)
+            v=super(basedataobject, self).__getitem__(name)
+            if name in self._knownproperties: return v
+            assert isinstance(v,list), name+" takes list of dicts as value"
+            # check list item dict values are legit - sadly we only
+            # check when they are retrieved, not set.  I did try
+            # catching the append method, but the layers of nested
+            # namespaces got too confused
+            for value in v:
+                self.__check_property_dictvalue(name, value)
+            return v
+            
 
         def __setitem__(self, name, value):
             self.__check_property(name, value)
@@ -115,13 +137,17 @@ class dataobjectfactory:
     def __init__(self, dataobjectclass=basedataobject):
         self.dataobjectclass=dataobjectclass
 
-    def newdataobject(self, values={}):
-        v=self.dataobjectclass()
-        if len(values):
-            v.update(values)
-        return v
+    if __debug__:
+        def newdataobject(self, values={}):
+            v=self.dataobjectclass()
+            if len(values):
+                v.update(values)
+            return v
+    else:
+        def newdataobject(self, values={}):
+            return self.dataobjectclass(values)
 
-
+dictdataobjectfactory=dataobjectfactory(dict)
 
 
 def ExclusiveWrapper(method):
@@ -436,7 +462,7 @@ class Database:
             indirects[r]=res
                         
 
-    def getmajordictvalues(self, tablename):
+    def getmajordictvalues(self, tablename, factory=dictdataobjectfactory):
         if not self.doestableexist(tablename):
             return {}
 
@@ -453,7 +479,7 @@ class Database:
         for row in self.sqlmany("select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),), [(u,) for u in uids]):
             if row[deleted]:
                 continue
-            record={}
+            record=factory.newdataobject()
             for colnum,name,type in schema:
                 if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
                     continue
