@@ -7,7 +7,7 @@
 ###
 ### $Id$
 
-"Various helper routines"
+"Various helper routines for gui based code"
 
 # These routines were initially in gui.py but that led to circular imports
 # which confused the heck out of pychecker
@@ -248,3 +248,16 @@ else:
 
     common.strorunicode=strorunicode
     del strorunicode
+
+# mime-type stuff
+def GetOpenCommand(mimetypes, filename):
+    # go through list of mime-types until we can find a command for opening filename
+    for mt in mimetypes:
+        ft=wx.TheMimeTypesManager.GetFileTypeFromMimeType(mt)
+        if ft is None:
+            continue
+        cmd=ft.GetOpenCommand(filename)
+        if cmd is not None and len(cmd):
+            return cmd
+    return None
+    
