@@ -20,6 +20,8 @@ from wxPython.lib.maskededit import wxMaskedTextCtrl
 import common
 import gui
 import calendarcontrol
+import helpids
+import comscan
 
 ####
 #### A widget for displaying the phone information
@@ -460,31 +462,59 @@ class SendPhoneDialog(GetPhoneDialog):
 
 class ConfigDialog(wxDialog):
     setme="<setme>"
+    ID_DIRBROWSE=1
+    ID_COMBROWSE=2
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
         wxDialog.__init__(self, frame, id, title,
-                          style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE)
+                          style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
         self.mw=mainwindow
-        gs=wxFlexGridSizer(2, 2,  5 ,10)
+        gs=wxFlexGridSizer(2, 3,  5 ,10)
         gs.AddGrowableCol(1)
 
-        gs.Add( wxStaticText(self, -1, "Disk storage"), 0, wxEXPAND)
-        self.diskbox=wxTextCtrl(self, -1, self.setme)
+        gs.Add( wxStaticText(self, -1, "Disk storage"), 0, wxCENTER)
+        self.diskbox=wxTextCtrl(self, -1, self.setme, size=wxSize( 400, 10))
         gs.Add( self.diskbox, 0, wxEXPAND)
+        gs.Add( wxButton(self, self.ID_DIRBROWSE, "Browse ..."), 0, wxEXPAND)
 
-        gs.Add( wxStaticText(self, -1, "Com Port"), 0, wxEXPAND)
+        gs.Add( wxStaticText(self, -1, "Com Port"), 0, wxCENTER)
         self.commbox=wxTextCtrl(self, -1, self.setme)
         gs.Add( self.commbox, 0, wxEXPAND)
+        gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
 
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
         bs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 7)
         
         but=self.CreateButtonSizer(wxOK|wxCANCEL|wxHELP)
-        bs.Add(but, 0, wxEXPAND|wxALL, 10)
+        bs.Add(but, 0, wxCENTER, 10)
+
+        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
+        EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
+        EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
         
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
+
+    def OnHelp(self, _):
+        wxGetApp().displayhelpid(helpids.ID_SETTINGS_DIALOG)
+
+    def OnDirBrowse(self, _):
+        dlg=wxDirDialog(self, defaultPath=self.diskbox.GetValue(), style=wxDD_NEW_DIR_BUTTON)
+        res=dlg.ShowModal()
+        v=dlg.GetPath()
+        dlg.Destroy()
+        if res==wxID_OK:
+            self.diskbox.SetValue(v)
+
+    def OnComBrowse(self, _):
+        dlg=CommPortDialog(self, defaultport=self.commbox.GetValue())
+        res=dlg.ShowModal()
+        v=dlg.GetPort()
+        dlg.Destroy()
+        if res==wxID_OK:
+            self.commbox.SetValue(v)
+        
 
     def setfromconfig(self):
         if len(self.mw.config.Read("path", "")):
@@ -550,8 +580,18 @@ class ConfigDialog(wxDialog):
             self.updatevariables()
         return ec
 
+###
+### The select a comm port dialog box
+###
 
+class CommPortDialog(wxDialog):
+    def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto"):
+        wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+        self.parent=parent
+        self.port=defaultport
 
+    def GetPort(self):
+        return self.port
 
 ###
 ### File viewer
