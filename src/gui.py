@@ -788,14 +788,18 @@ class MainWindow(wxFrame):
         # call each widget to update fundamentals
         # for widget in self.calendarwidget, self.wallpaperwidget, self.ringerwidget, self.phonewidget:
         #    widget.updatefundamentals(data)
+        
         # call convertors
         for f in convertors:
             f(data)
-        import pprint
-        import StringIO
-        si=StringIO.StringIO()
-        pprint.pprint(data['phonebook'],si )
-        self.OnLog(si.getvalue())
+
+        if data.has_key('phonebook'):
+            import pprint
+            import StringIO
+            si=StringIO.StringIO()
+            pprint.pprint(data['phonebook'],si )
+            self.OnLog(si.getvalue())
+
         # Now scribble to phone
         self.MakeCall(Request(self.wt.senddata, data, todo),
                       Callback(self.OnDataSendPhoneResults, funcscb))
@@ -930,11 +934,13 @@ class MainWindow(wxFrame):
             help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_AUTODETECT_PORT)
             
         if text is not None:
+            self.OnLog("Error: "+title+"\n"+text)
             dlg=guiwidgets.AlertDialogWithHelp(self,text, title, help, style=style)
             dlg.ShowModal()
             dlg.Destroy()
             return True
         e=guiwidgets.ExceptionDialog(self, exception)
+        self.OnLog("Exception: "+e.getexceptiontext())
         e.ShowModal()
         e.Destroy()
         return True
