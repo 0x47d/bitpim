@@ -33,6 +33,7 @@ import common
 import version
 import helpids
 import comdiagnose
+import phonebook
 
 ###
 ### Used to check our threading
@@ -461,7 +462,7 @@ class MainWindow(wxFrame):
         self.nb=wxNotebook(self,-1)
 
         ### notebook tabs
-        self.phonewidget=guiwidgets.PhoneGrid(self, self.nb)
+        self.phonewidget=phonebook.PhoneWidget(self, self.nb)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=guiwidgets.WallpaperView(self, self.nb)
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
