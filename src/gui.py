@@ -54,6 +54,7 @@ ID_DATASENDPHONE=1
 ID_VIEWLOGDATA=1
 ID_VIEWFILESYSTEM=1
 ID_HELPHELP=1
+ID_HELPTOUR=1
 ID_HELPABOUT=1
 
 # alter files viewer modes
@@ -334,6 +335,8 @@ class MainApp(wxApp):
         # self.helpprovider=wxHelpControllerHelpProvider(self.helpcontroller)
         # wxHelpProvider_Set(provider)
 
+
+
     def displayhelpid(self, id):
         self.helpcontroller.Display(id)
 
@@ -434,6 +437,7 @@ class MainWindow(wxFrame):
 
         menu=wxMenu()
         menu.Append(ID_HELPHELP, "&Help", "Start online help")
+        menu.Append(ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.AppendSeparator()
         menu.Append(ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
@@ -497,6 +501,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         EVT_MENU(self, ID_HELPABOUT, self.OnHelpAbout)
         EVT_MENU(self, ID_HELPHELP, self.OnHelpHelp)
+        EVT_MENU(self, ID_HELPTOUR, self.OnHelpTour)
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
 
@@ -513,6 +518,12 @@ class MainWindow(wxFrame):
         if thesplashscreen is not None:
             wxSafeYield()
             thesplashscreen.Show(False)
+
+        # Show tour on first use
+        if self.config.ReadInt("firstrun", True):
+            self.config.WriteInt("firstrun", False)
+            self.config.Flush()
+            wxCallAfter(self.OnHelpTour)
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
@@ -571,6 +582,9 @@ class MainWindow(wxFrame):
         
     def OnHelpHelp(self, _):
         wxGetApp().helpcontroller.DisplayContents()
+
+    def OnHelpTour(self, _=None):
+        wxGetApp().displayhelpid(helpids.ID_TOUR)
 
     def OnViewLogData(self, _):
         # toggle state of the log data
