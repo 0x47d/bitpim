@@ -12,8 +12,6 @@
 import serial
 import common
 import time
-import threading
-import Queue
 try:
     import native.usb as usb
     usb=usb.usb
@@ -31,35 +29,6 @@ class CommTimeout(Exception):
         Exception.__init__(self, str)
         self.partial=partial
 
-
-
-class ReadingThread(threading.Thread):
-
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.inqueue=Queue.Queue()
-        self.outqueue=Queue.Queue()
-        self.setDaemon(True)
-        self.setName("Com reading thread")
-
-    def run(self):
-        while True:
-            item=self.inqueue.get()
-            if item is None:
-                break
-            res=None
-            ex=None
-            try:
-                res=item[0](*item[1], **item[2])
-            except Exception,e:
-                ex=(e,sys.exc_info())
-            self.outqueue.put( (ex, res) )
-
-
-readerthread=ReadingThread()
-readerthread.start()
-
-
 class CommConnection:
     usbwhine=0
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
@@ -70,7 +39,6 @@ class CommConnection:
         self.logtarget=logtarget
         self.clearcounters()
         if usb is None and self.usbwhine<1:
-            self.usbwhine+=1
             self.log("USB support is not available")
         self.success=False
         self.shouldloop=False
@@ -206,6 +174,13 @@ class CommConnection:
             self.log("Port speed "+`rate`+" not supported")
             return False
 
+    def write(self, data, log=True):
+        self.writerequests+=1
+        if log:
+            self.logdata("Writing", data)
+        self.ser.write(data)
+        self.writebytes+=len(data)
+
     def _isbrokendriver(self, e):
         if pywintypes is None or not isinstance(e, pywintypes.error) or e[0]!=121:
             return False
@@ -225,13 +200,6 @@ class CommConnection:
                 if not self._isbrokendriver(e):
                     raise
         raise CommTimeout()
-
-    def write(self, data, log=True):
-        self.writerequests+=1
-        if log:
-            self.logdata("Writing", data)
-        self.ser.write(data)
-        self.writebytes+=len(data)
 
     def read(self, numchars=1, log=True):
         self.readrequests+=1
@@ -302,35 +270,6 @@ class CommConnection:
             self.logdata("Read completed", res)
         return res
 
-    def writethenreaduntil(self, data, readuntilchar, logwrite=True, logreaduntil=True,
-                           logsuccessreaduntil=True, numfailuresreaduntil=0):
-        """This is an egregious hack to try and work around bugs in the LG VX4400.
-        Superficially it writes the data, then calls readuntil.  Behind the scenes
-        it actually issues the readuntil in a seperate thread and ensures it
-        starts before the write request"""
-        # drain the data coming back queue (eg if there were exceptions) in this method in the last call
-        while readerthread.outqueue.qsize():
-            readerthread.outqueue.get()
-        # tell the reader thread what to do
-        readerthread.inqueue.put( (self.readuntil, (readuntilchar, logreaduntil, logsuccessreaduntil, numfailuresreaduntil), {}) )
-        # kick our heels until we have seen it remove the queue item
-        a=0
-        while readerthread.inqueue.qsize():
-            # make busy work to chew up instructions
-            if a>100:
-                a=0
-            a+=1  
-        # a gratutious sleep to really ensure the reader thread has issued the read
-        time.sleep(0.05)
-        # actually do the write
-        self.write(data, logwrite)
-        # now wait for the data from the read queue
-        ex, res= readerthread.outqueue.get()
-        # re-raise the exception if there was one
-        if ex is not None:
-            raise ex[0],ex[1],ex[2]
-        return res
-
 class SilentException(Exception): pass
         
 class _usbdevicewrapper:
@@ -370,4 +309,3 @@ class _usbdevicewrapper:
                 pass
         # timed out
         return data
-
