@@ -1294,6 +1294,9 @@ class WorkerThread(WorkerThreadFramework):
                 self.commphone.mkdirs(d)
             self.writefile(name, contents)
             results.append( (True, name) )
+            # add a deliberate sleep - some phones (eg vx7000) get overwhelmed when writing
+            # lots of files in a tight loop
+            time.sleep(0.3)
 
         return results
 
