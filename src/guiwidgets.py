@@ -369,6 +369,8 @@ class ConfigDialog(wx.Dialog):
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
                == "<unconfigured>":
+                self.mw.config.WriteInt("bitfling/enabled", 0)
+                self.bitflingenabled.SetValue(False)
                 self.bitflingenabled.Enable(False)
         else:
             self.bitflingenabled=None
