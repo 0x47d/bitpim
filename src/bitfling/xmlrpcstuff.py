@@ -44,6 +44,7 @@ import base64
 import httplib
 import string
 import urllib
+import gc
 
 # required add ons
 import M2Crypto
@@ -123,9 +124,16 @@ class MySSLConnection(M2Crypto.SSL.Connection):
         if not hasattr(self, "_prior_makefile"):
             self._prior_makefile=M2Crypto.SSL.Connection.makefile(self, mode, bufsize)
         return self._prior_makefile
+
+    def close(self):
+        try:
+            self._prior_makefile.close()
+            del self._prior_makefile
+        except AttributeError:
+            pass
+        M2Crypto.SSL.Connection.close(self)
+        M2Crypto.SSL.Connection.__del__(self)
         
-
-
 # TODOs for the server side
 #
 #  - use a derived SSL.Connection class where we can check whether we want the other end
@@ -245,6 +253,7 @@ class Server(threading.Thread):
                 self.log("Connection from "+`peeraddr`+" closed")
                 try:
                     conn.close()
+                    conn.__del__()
                 except: # ignore exceptions as peer may have shut connection or who knows what else
                     pass
                 conn=None
@@ -452,38 +461,48 @@ class SSLTransport(xmlrpclib.Transport):
         self.connection=SSLConnection(self.sslt_sslctx, self.sslt_host, self.sslt_port, certverifier=self.certverifier)
         return self.connection
 
+    def _clearconnection(self):
+        del self.connection
+        self.connection=None
+        
     def request(self, host, handler, request_body, verbose=0, retries=1):
         user_passwd=self.sslt_user_passwd
         _host=self.sslt_host
 
-        h=self.getconnection()
-        
-        # What follows is as in xmlrpclib.Transport. (Except the authz bit.)
-        h.putrequest("POST", "/RPC2", skip_host=True)
+        while True:
+            try:
+                h=self.getconnection()
 
-        # required by HTTP/1.1
-        h.putheader("Host", _host)
+                # What follows is as in xmlrpclib.Transport. (Except the authz bit.)
+                h.putrequest("POST", "/RPC2", skip_host=True)
 
-        # required by XML-RPC
-        h.putheader("User-Agent", self.user_agent)
-        h.putheader("Content-Type", "text/xml")
-        h.putheader("Content-Length", str(len(request_body)))
+                # required by HTTP/1.1
+                h.putheader("Host", _host)
 
-        # Authorisation.
-        if user_passwd is not None:
-            auth=string.strip(base64.encodestring(user_passwd))
-            h.putheader('Authorization', 'Basic %s' % auth)
+                # required by XML-RPC
+                h.putheader("User-Agent", self.user_agent)
+                h.putheader("Content-Type", "text/xml")
+                h.putheader("Content-Length", str(len(request_body)))
 
-        h.endheaders()
+                # Authorisation.
+                if user_passwd is not None:
+                    auth=string.strip(base64.encodestring(user_passwd))
+                    h.putheader('Authorization', 'Basic %s' % auth)
 
-        h.sock.flush()
-        # body hasn't been sent, so we can retry without having problems
-        # print "state is",h.sock.get_state()
+                h.endheaders()
 
-        if request_body:
-            h.send(request_body)
+                h.sock.flush()
 
-        response = h.getresponse()
+                if request_body:
+                    h.send(request_body)
+
+                response = h.getresponse()
+            except (M2Crypto.SSL.SSLError, httplib.BadStatusLine):
+                if retries:
+                    self.clearconnection()
+                    retries-=1
+                    continue
+                raise
 
         errcode, errmsg, headers = response.status, response.reason, response.msg
 
