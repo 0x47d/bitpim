@@ -7,125 +7,134 @@
 ###
 ### $Id$
 
-
 """Communicate with a Samsung SCH-Axx phone using AT commands"""
-
-
 
 import com_phone
 from string import split,strip
 import time
 import re
 
-
-
 class Phone(com_phone.Phone):
 
-        "Talk to a Samsung phone using AT commands"
+    "Talk to a Samsung phone using AT commands"
 
-        desc="Samsung SCH-Axx phone"
+    desc="Samsung SCH-Axx phone"
 
-        __AT_str="AT"
-        __OK_str="\r\nOK\r\n"
-        __Error_str="\r\nERROR\r\n"
-        __read_timeout=0.1
+    __AT_str="AT"
+    __OK_str="\r\nOK\r\n"
+    __Error_str="\r\nERROR\r\n"
+    __read_timeout=0.1
 
+    def __init__(self, logtarget, commport):
 
-        def __init__(self, logtarget, commport):
+        com_phone.Phone.__init__(self, logtarget, commport)
+	self.is_online()
 
-            com_phone.Phone.__init__(self, logtarget, commport)
-            self.is_online()
+    def _get_at_response(self):
 
-        def _get_at_response(self):
+        s=self.comm.read(1, False)
+	if not len(s):
+	    return ''
 
-            s=self.comm.read(1, False)
-            if not len(s):
-                return ''
+	# got at least one char, try to read the rest with short timeout
 
-            # got at least one char, try to read the rest with short timeout
+	i=self.comm.ser.getTimeout()
+	self.comm.ser.setTimeout(self.__read_timeout)
+	while True:
+            s1=self.comm.read(1, False)
+            if len(s1):
+                s += s1
+            else:
+                break;
 
-            i=self.comm.ser.getTimeout()
-            self.comm.ser.setTimeout(self.__read_timeout)
-            while True:
-                s1=self.comm.read(1, False)
-                if len(s1):
-                    s += s1
-                else:
-                    break;
+        self.comm.ser.setTimeout(i)
+        return s
 
-            self.comm.ser.setTimeout(i)
+    def _send_at_cmd(self, cmd_str):
 
-            return s
+        self.comm.write(str(self.__AT_str+cmd_str+"\r"))
 
-        def _send_at_cmd(self, cmd_str):
+        return self._get_at_response()
 
-            self.comm.write(str(self.__AT_str+cmd_str+"\r"))
+    def is_online(self):
+        try:
+	    self.comm.sendatcommand("E0V1")
+	    return False
+        except ATError:
+	    return True
 
-            return self._get_at_response()
+    def pmode_on(self):
+        try:
+	    self.comm.sendatcommand("#PMODE=1")
+	    return False
+        except ATError:
+	    return True
 
-        def is_online(self):
+    def pmode_off(self):
+        try:
+	    self.comm.sendatcommand("#PMODE=0")
+	    return False
+        except ATError:
+	    return True
 
-            return self.__OK_str in self._send_at_cmd("E0V1")
+    def get_esn(self):
+        try:
+	    s=self.comm.sendatcommand("+gsn")
+	    if len(s):
+	        return split(s[0], ": ")[1]
+	except ATError:
+            pass
+        return ''
 
-        def pmode_on(self):
+    def get_groups(self, groups_range):
 
-            return self.__OK_str in self._send_at_cmd("#PMODE=1")
-
-        def pmode_off(self):
-
-            return self.__OK_str in self._send_at_cmd("#PMODE=0")
-
-        def get_esn(self):
-
-            s=self._send_at_cmd("+gsn")
-
-            if self.__OK_str in s:
-
-                return split(split(s, ": ")[1],"\r\n")[0]
-
-            return ''
-
-        def get_groups(self, groups_range):
-
-            g=[]
-            for i in groups_range:
-                s=self._send_at_cmd("#PBGRR=%d" % i)
-                if self.__OK_str in s:
-                    g.append(strip(split(split(s,": ")[1],",")[1], '"'))
+        g=[]
+	for i in groups_range:
+            try:
+                s=self.comm.sendatcommand("#PBGRR=%d" % i)
+                if len(s):
+                    g.append(strip(split(split(s[0],": ")[1],",")[1], '"'))
                 else:
                     g.append('')
-            return g
+            except ATError:
+                g.append('')
+	return g
 
-        def get_phone_entry(self, entry_index):
+    def get_phone_entry(self, entry_index):
+        try:
+            s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
+            if len(s):
+                return split(split(s, ": ")[1], ",")
+        except ATError:
+            pass
+        return []
 
-            s=self._send_at_cmd("#PBOKR=%d" % entry_index)
-            if s==self.__OK_str or s==self.__Error_str:
-                return []
+    def del_phone_entry(self, entry_index):
+        try:
+            s=self.comm.sendatcommand("#PBOKW=%d" % entry_index)
+        except ATError:
+            return False
 
-            return split(split(split(s, ": ")[1], "\r\n")[0], ",")
+    def save_phone_entry(self, entry_str):
+        try:
+            s=self.comm.sendatcommand("#PBOKW="+entry_str)
+        except ATError:
+            return False
 
-        def del_phone_entry(self, entry_index):
+    def get_time_stamp(self):
 
-            return self._send_at_cmd("#PBOKW=%d" % entry_index)==self.__OK_str
+        now = time.localtime(time.time())
+        return "%04d%02d%02dT%02d%02d%02d" % now[0:6]
 
-        def save_phone_entry(self, entry_str):
+    def phonize(self, str):
+        """Convert the phone number into something the phone understands
+        All digits, P, T, * and # are kept, everything else is removed"""
 
-            return self._send_at_cmd("#PBOKW="+entry_str)==self.__OK_str
-
-        def get_time_stamp(self):
-
-            now = time.localtime(time.time())
-            return "%04d%02d%02dT%02d%02d%02d" % now[0:6]
-
-        def phonize(self, str):
-            """Convert the phone number into something the phone understands
-            All digits, P, T, * and # are kept, everything else is removed"""
-
-            return re.sub("[^0-9PT#*]", "", str)
+        return re.sub("[^0-9PT#*]", "", str)
 
 
 
 class Profile(com_phone.Profile):
 
-        pass
+    pass
 

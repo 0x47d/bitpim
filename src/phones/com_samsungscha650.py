@@ -110,14 +110,18 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
 
     def _get_phone_num_count(self):
 
-        s=self._send_at_cmd("#PCBIT?")
-        if s==self.__OK_str or s==self.__Error_str:
+        try:
+            s=self.comm.sendatcommand("#PCBIT?")
+            if len(s)==0:
+                return 0
+            c=atoi(split(split(s[0], ": ")[1], ",")[7])-30
+            if c>len(self.__phone_entries_range):
+                # count out whack
+                c=0
+            return c
+            
+        except ATError:
             return 0
-        c=atoi(split(split(split(s, ": ")[1], "\r\n")[0], ",")[7])-30
-        if c>len(self.__phone_entries_range):
-            # count out whack
-            c=0
-        return c
 
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
