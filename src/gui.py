@@ -209,12 +209,30 @@ class WorkerThreadFramework(threading.Thread):
 ###
 
 class MySplashScreen(wxSplashScreen):
-    def __init__(self):
-        bmp=getbitmap("splashscreen")
-        wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
-                                2000, # two seconds
-                                None, -1)
-    
+    def __init__(self, app, config):
+        self.app=app
+        # how long are we going to be up for?
+        time=config.ReadInt("splashscreentime", 4000)
+        if time>0:
+            bmp=getbitmap("splashscreen")
+            wxSplashScreen.__init__(self, bmp, wxSPLASH_CENTRE_ON_SCREEN|wxSPLASH_TIMEOUT,
+                                    time,
+                                    None, -1)
+            wx.EVT_CLOSE(self, self.OnClose)
+            self.Show()
+            app.Yield(True)
+            return
+        # timeout is <=0 so don't show splash screen
+        self.goforit()
+
+    def goforit(self):
+        self.app.makemainwindow()
+        
+    def OnClose(self, evt):
+        self.Show(False)
+        self.goforit()
+        evt.Skip()
+
 ####
 #### Main application class.  Runs the event loop etc
 ####            
@@ -227,11 +245,6 @@ class MainApp(wxApp):
     def OnInit(self):
         # Routine maintenance
         wxInitAllImageHandlers()
-
-        # get the splash screen up
-        s=MySplashScreen()
-        s.Show()
-        self.Yield()
 
         # Thread stuff
         global mainthreadid
@@ -246,6 +259,12 @@ class MainApp(wxApp):
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
 
+        # get the splash screen up
+        splash=MySplashScreen(self, self.config)
+
+        return True
+
+    def makemainwindow(self):
         # make the main frame
         frame=MainWindow(None, -1, "BitPim", self.config)
         frame.Connect(-1, -1, wxEVT_CALLBACK, frame.OnCallback)
@@ -258,8 +277,6 @@ class MainApp(wxApp):
         frame.wt=wt
         self.frame=frame
         self.SetTopWindow(frame)
-        self.SetExitOnFrameDelete(True)
-        return True
 
     def OnExit(self):
         print "onexit"
@@ -415,6 +432,7 @@ class MainWindow(wxFrame):
 
         # Fake event to update menus/toolbars
         self.OnNotebookPageChanged()
+
 
     def OnExit(self,_=None):
         self.Close()
