@@ -36,6 +36,8 @@ ADD_CATEGORY=( 'request', 'addcategory') # data is list of strings
 MERGE_CATEGORIES=( 'request', 'mergecategories') # data is list of strings
 ALL_WALLPAPERS=( 'response', 'wallpapers') # data is list of strings
 REQUEST_WALLPAPERS=( 'request', 'wallpapers') # no data
+ALL_RINGTONES=( 'response', 'ringtones' ) # data is list of strings
+REQUEST_RINGTONES=( 'request', 'ringtones') # no data
 
 ###
 ### Actual code using pubsub library

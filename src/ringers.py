@@ -12,6 +12,7 @@ import bpaudio
 import guiwidgets
 import guihelper
 import os
+import pubsub
 
 ###
 ###  Midi
@@ -35,6 +36,12 @@ class RingerView(guiwidgets.FileView):
 
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
+        pubsub.subscribe(pubsub.REQUEST_RINGTONES, self, "OnListRequest")
+
+    def OnListRequest(self, msg=None):
+        l=[self._data['ringtone-index'][x]['name'] for x in self._data['ringtone-index']]
+        l.sort()
+        pubsub.publish(pubsub.ALL_RINGTONES, l)
 
     def OnIdle(self, _):
         "Save out changed data"
@@ -42,6 +49,7 @@ class RingerView(guiwidgets.FileView):
             print "Saving ringer information"
             self.modified=False
             self.populatefs(self._data)
+            self.OnListRequest() # broadcast changes
 
     def getdata(self,dict,want=guiwidgets.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.ringerpath, 'ringtone', 'ringtone-index')
@@ -53,7 +61,7 @@ class RingerView(guiwidgets.FileView):
                 if wp[k]['name']==name:
                     del wp[k]
                     self.modified=True
-
+            
     def OnAddFile(self, file):
         print "OnAddFile",file
         self.thedir=self.mainwindow.ringerpath
