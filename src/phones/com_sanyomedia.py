@@ -91,7 +91,7 @@ class SanyoMedia:
                         for ext in self.ringerexts:
                             if fname.endswith(ext):
                                 ringermedia[idx]={'name': res.filename, 'origin': "ringers"}
-                            break
+                                break
 
         results['ringtone-index']=ringermedia
         results['wallpaper-index']=imagemedia
