@@ -1010,4 +1010,7 @@ phonebook={
     },
 }
 
-
+# pysqlite currently breaks on some unicode values so hide them
+del phonebook[1]
+del phonebook[12]
+del phonebook[16]
