@@ -270,7 +270,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             entry['start']=self.extract_timedate(r[self.__cal_start_datetime])
 
             # no end time, end time=start time
-            entry['end']=entry['start'][:]
+            try:
+                entry['end']=self.extract_timedate(r[self.__cal_end_datetime])
+            except:
+                entry['end']=entry['start'][:]
 
             # description
             entry['description']=r[self.__cal_read_name]
@@ -330,8 +333,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             e[self.__cal_start_datetime]=self.encode_timedate(c['start'])
 
             # end date time
-            e[self.__cal_end_datetime]='19800106T000000'
-            c['end']=c['start'][:]
+            try:
+                e[self.__cal_end_datetime]=self.encode_timedate(c['end'])
+            except:
+                e[self.__cal_end_datetime]='19800106T000000'
+                c['end']=c['start'][:]
 
             # time stamp
             e[self.__cal_datetime_stamp]=self.get_time_stamp()
