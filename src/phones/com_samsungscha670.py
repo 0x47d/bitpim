@@ -85,15 +85,12 @@ class Phone(com_samsung.Phone):
 		       'User 00', 'User 01', 'User 02', 'User 03', 'User 04', 'User 05',
 		       'User 06', 'User 07', 'User 08', 'User 09', 'User 10', 'User 11',
 		       'User 12', 'User 13', 'User 14', 'User 15', 'User 16', 'User 17',
-		       'User 18', 'User 19', 'User 20', 'User 21', 'User 22', 'User 23',
-		       'User 24', 'User 25', 'User 26', 'User 27', 'User 28', 'User 29',
-		       'User 30', 'User 31', 'User 32', 'User 33', 'User 34', 'User 35',
-		       'User 36', 'User 37', 'User 38', 'User 39')
+		       'User 18', 'User 19')
     allringtones={}
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 40)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 30)
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
     __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 20, 200)
         
     def __init__(self, logtarget, commport):
@@ -105,7 +102,7 @@ class Phone(com_samsung.Phone):
 
     def getfundamentals(self, results):
 
-        """Gets information fundamental to interopating with the phone and UI.
+        """Gets information fundamental to interoperating with the phone and UI.
 
         Currently this is:
 
@@ -747,12 +744,10 @@ class Profile(com_samsung.Profile):
     serialsname='scha670'
 
     WALLPAPER_WIDTH=128
-    # WALLPAPER_HEIGHT=130
     WALLPAPER_HEIGHT=128
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
-    
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
 
@@ -821,9 +816,18 @@ class FileEntries:
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
         # check for max num of allowable files
-        if len(media) > self.__max_file_count:
-            self.__phone.log('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
-                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
+	media_cnt = len(media)
+	if self.__file_type == "wallpapers":
+	    # Don't count camera pix
+	    for k in media:
+		try:
+		    if media[k]['origin'] == "camera":
+		        media_cnt -= 1
+		except:
+		    pass
+        if media_cnt > self.__max_file_count:
+            self.__phone.log('This phone only supports %d %s.  You have %d %s.  Save %s aborted'% \
+                                (self.__max_file_count, self.__file_type, media_cnt, self.__file_type, self.__file_type))
             return result
         # check for file name length
         for k in media:
