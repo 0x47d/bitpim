@@ -129,6 +129,13 @@ def IsGtk():
     @rtype: Bool"""
     return wx.Platform=='__WXGTK__'
 
+def IsMac():
+    """Are we running on Mac
+
+    @rtype: Bool"""
+    return wx.Platform=='__WXMAC__'
+    
+
 def getbitmap(name):
     """Gets a bitmap from the resource directory
 
