@@ -293,7 +293,7 @@ class ConfigDialog(wxDialog):
         w=self.mw.config.ReadInt("combrowsewidth", 640)
         h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
-        dlg=CommPortDialog(self, defaultport=self.commbox.GetValue(), sashposition=p)
+        dlg=CommPortDialog(self, __import__(self.phonemodels[self.phonebox.GetValue()]), defaultport=self.commbox.GetValue(), sashposition=p)
         dlg.SetSize(wxSize(w,h))
         dlg.Centre()
         res=dlg.ShowModal()
@@ -415,11 +415,12 @@ class CommPortDialog(wxDialog):
     ID_SASH=4
     ID_SAVE=5
     
-    def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto", sashposition=0):
+    def __init__(self, parent, selectedphone, id=-1, title="Choose a comm port", defaultport="auto", sashposition=0):
         wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
         self.parent=parent
         self.port=defaultport
         self.sashposition=sashposition
+        self.selectedphone=selectedphone
         
         p=self # parent widget
 
@@ -468,7 +469,7 @@ class CommPortDialog(wxDialog):
         self.lb.Clear()
         self.Update()
         ports=comscan.comscan()+usbscan.usbscan()
-        self.portinfo=comdiagnose.diagnose(ports)
+        self.portinfo=comdiagnose.diagnose(ports, self.selectedphone)
         if len(self.portinfo):
             self.portinfo=[ ("Automatic", "auto",
                              "<p>BitPim will try to detect the correct port automatically when accessing your phone"

@@ -40,7 +40,7 @@ wW   driverdescription  string   some generic description of the driver
   L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
-version="13 December 2003"
+version="$Revision$"
 
 import sys
 import os
@@ -244,7 +244,12 @@ def _comscanwindows():
                         
                     if klass is None:
                         continue
-                    if klass.lower()!="ports":
+                    klass=klass.lower()
+                    if klass=='ports':
+                        klass='serial'
+                    elif klass=='modem':
+                        klass='modem'
+                    else:
                         continue
 
                     # verify COM is followed by digits only
@@ -257,6 +262,7 @@ def _comscanwindows():
                     res={}
 
                     res['name']=name.upper()
+                    res['class']=klass
 
                     # is the device active?
                     kp=inststr[len(enumstr)+1:].upper()
@@ -350,12 +356,12 @@ def _comscanlinux(maxnum=9):
     
     resultscount=0
     results={}
-    for prefix, description in ( 
-        ("/dev/cua", "Standard serial port"), 
-        ("/dev/ttyUSB", "USB to serial convertor"), 
-        ("/dev/usb/ttyUSB", "USB to serial convertor"), 
-        ("/dev/usb/tts/", "USB to serial convertor"),
-        ("/dev/input/ttyACM", "USB modem")
+    for prefix, description, klass in ( 
+        ("/dev/cua", "Standard serial port", "serial"), 
+        ("/dev/ttyUSB", "USB to serial convertor", "serial"), 
+        ("/dev/usb/ttyUSB", "USB to serial convertor", "serial"), 
+        ("/dev/usb/tts/", "USB to serial convertor", "serial"),
+        ("/dev/input/ttyACM", "USB modem", "modem")
         ):
         for num in range(maxnum+1):
             name=prefix+`num`
@@ -363,6 +369,7 @@ def _comscanlinux(maxnum=9):
                 continue
             res={}
             res['name']=name
+            res['class']=klass
             res['description']=description+" ("+name+")"
             dev=os.stat(name).st_rdev
             try:

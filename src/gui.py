@@ -991,6 +991,7 @@ class WorkerThread(WorkerThreadFramework):
                 autofunc=None
             comcfg=self.dispatchto.commparams
             comport=commport.CommConnection(self, self.dispatchto.commportsetting, autolistfunc=autofunc,
+                                            autolistargs=(self.dispatchto.phonemodule.Profile,),
                                             baud=comcfg['baud'], timeout=comcfg['timeout'],
                                             hardwareflow=comcfg['hardwareflow'],
                                             softwareflow=comcfg['softwareflow'],
