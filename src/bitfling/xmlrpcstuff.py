@@ -73,13 +73,13 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("WWW-Authenticate", "Basic realm=\"XMLRPC\"")
             self.end_headers()
             self.wfile.flush()
-##        except: # This should only happen if the module is buggy
-##            # internal error, report as HTTP server error
-##            if __debug__ and TRACE: print "error in handling xmlrpcrequest"
-##            self.close_connection=True
-##            self.send_response(500, "Internal Error")
-##            self.end_headers()
-##            self.wfile.flush()
+        except: # This should only happen if the module is buggy
+            # internal error, report as HTTP server error
+            if __debug__ and TRACE: print "error in handling xmlrpcrequest"
+            self.close_connection=True
+            self.send_response(500, "Internal Error")
+            self.end_headers()
+            self.wfile.flush()
         else:
             # got a valid XML RPC response
             self.send_response(200)
@@ -91,8 +91,6 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def finish(self):
         # do proper SSL shutdown sequence
-        import pdb
-        pdb.set_trace()
         self.wfile.flush()
         self.request.set_shutdown(M2Crypto.SSL.SSL_RECEIVED_SHUTDOWN | M2Crypto.SSL.SSL_SENT_SHUTDOWN)
         self.request.close()
@@ -103,6 +101,13 @@ class MySSLConnection(M2Crypto.SSL.Connection):
     def flush(self):
         res=M2Crypto.m2.bio_flush(self.sockbio)
         print "flush res is",res,"  bio pending bytes is",M2Crypto.m2.bio_ctrl_pending(self.sockbio)
+
+    def makefile(self, mode="rb", bufsize="ignored"):
+        if __debug__ and TRACE: print "%d: makefile %s" % (id(self), mode)
+        if not hasattr(self, "_prior_makefile"):
+            self._prior_makefile=M2Crypto.SSL.Connection.makefile(self, mode, bufsize)
+        return self._prior_makefile
+        
 
 
 # TODOs for the server side
