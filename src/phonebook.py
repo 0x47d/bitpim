@@ -724,7 +724,7 @@ class PhoneWidget(wx.Panel):
         return rows
 
     def OnDelete(self,_):
-        rows=GetSelectedRows()
+        rows=self.GetSelectedRows()
         self.table.ClearSelection()
         rowkeys=[]
         for r in rows:
