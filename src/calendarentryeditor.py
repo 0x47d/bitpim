@@ -481,6 +481,7 @@ class Editor(wx.Dialog):
         # specific entry
         self.entries=[]
         self.entrymap=[]
+        self.__current_entry=None
 
         # Dirty tracking.  We restrict what the user can do while editting an
         # entry to only be able to edit that entry.  'dirty' gets fired when
@@ -573,12 +574,11 @@ class Editor(wx.Dialog):
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         self.ignoredirty=False
         self.setdirty(False)
-        self.lastcurrententry=-1
-        
 
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
-        self.updatefields(self.getcurrententry())
+        self.__current_entry=self.getcurrententry()
+        self.updatefields(self.__current_entry)
         self.setdirty(False)
         self.__delete_btn.Enable(True)
 
@@ -588,11 +588,7 @@ class Editor(wx.Dialog):
         @Note: this returns the unedited form of the entry"""
         i=self.listbox.GetSelection()
         if i==-1:
-            if self.lastcurrententry>=0:
-                i=self.lastcurrententry
-            else:
-                return None
-        self.lastcurrententry=i
+            return None
         return self.getentry(i)
 
     def getentry(self, num):
@@ -610,7 +606,8 @@ class Editor(wx.Dialog):
             return
 
         # lets roll ..
-        entry=self.getcurrententry()
+##        entry=self.getcurrententry()
+        entry=self.__current_entry
 
         # is it a repeat?
         res=self.ANSWER_ORIGINAL
@@ -690,7 +687,10 @@ class Editor(wx.Dialog):
         self.updatelistbox(entry.id)
 
     def OnDeleteButton(self, evt):
-        entry=self.getcurrententry()
+##        entry=self.getcurrententry()
+        entry=self.__current_entry
+        if entry is None:
+            return
         # is it a repeat?
         res=self.ANSWER_ORIGINAL
         if entry.repeat is not None:
@@ -750,6 +750,7 @@ class Editor(wx.Dialog):
         self.listbox.Clear()
         selectitem=-1
         self.entrymap=[]
+        self.__current_entry=None
         # decorate
         for index, entry in enumerate(self.entries):
             if entry.allday:
