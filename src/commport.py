@@ -91,7 +91,7 @@ class CommConnection:
                 self.clearcounters()
                 return
             except serial.serialutil.SerialException,e:
-                ex=common.CommsOpenFailure(port, e.__str__())
+                ex=common.CommsOpenFailure(e.__str__(), port)
                 time.sleep(2)
         self.log("Open of comm port failed")
         raise ex
