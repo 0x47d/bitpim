@@ -25,16 +25,24 @@ PACKET pbheader:
     1 UINT sequence
     1 UINT flag
 
-PACKET dminitrequest:
+PACKET pbstartsyncrequest:
     * pbheader {'command': 0x00, 'flag': 0x01} +header
-    250 UNKNOWN +pad
+    250 UNKNOWN +pad  # is this many really necessary?
     
-PACKET dminitresponse:
+PACKET pbstartsyncresponse:
+    * pbheader header
+    * UNKNOWN unknown
+
+PACKET pbendsyncrequest:
+    * pbheader {'command': 0x07, 'flag': 0x01} +header
+    6 UNKNOWN +pad
+
+PACKET pbendsyncresponse:
     * pbheader header
     * UNKNOWN unknown
 
 PACKET pbinitrequest:
-    * pbheader {'command': 0x15, 'flag': 0x00} +header
+    * pbheader {'command': 0x15, 'flag': 0x01} +header
     6 UNKNOWN +pad
 
 PACKET pbinitresponse:
@@ -79,7 +87,6 @@ PACKET pbnextentryresponse:
     2 UNKNOWN dunno
     4 UINT lastchangedate "just a guess"
     2 UNKNOWN dunno2
-    1 UNKNOWN dunno3
     3 STRING {'terminator': None} namestart "First 3 characters of name"
     
 PACKET pbdeleteentryrequest:
