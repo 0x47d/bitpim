@@ -68,7 +68,10 @@ class ServerChannel(paramiko.Channel):
         @param conn:  The connectionthread object we are working for
         """
         while True:
-            length=int(self.readall(8))
+            try:
+                length=int(self.readall(8))
+            except ValueError:
+                return
             xml=self.readall(length)
             response=conn.processxmlrpcrequest(xml, self.get_transport().peeraddr,
                                            self.get_transport().bf_auth_username)
@@ -429,7 +432,11 @@ class CertificateNotAcceptedException(Exception):
     pass
 
 class ServerProxy:
+    logsetup=False
     def __init__(self, username, password, host, port, certverifier=None):
+        if not self.logsetup:
+            paramiko.util.log_to_file('serverproxy.log')
+            self.logsetup=True
         self.__username=username
         self.__password=password
         self.__host=host
@@ -460,9 +467,14 @@ class ServerProxy:
             res=self.__certverifier( (self.__host, self.__port), key)
             if not res:
                 raise CertificateNotAcceptedException("Certificate not accepted for  %s @ %s:%d" % (self.__username, self.__host, self.__port))
+            if not t.is_active():
+                raise Exception("Session has failed while waiting for certificate to be verified")
+
         event=threading.Event()
         t.auth_password(self.__username, self.__password, event)
-        event.wait(20)
+        event.wait()
+        if not t.is_active():
+            raise Exception("Authentication to %s failed:  Username %s, password %s" % (self.__host, `self.__username`, `self.__password`))
         self.__channel=t.open_channel("bitfling")
 
     def __ensure_channel(self):
