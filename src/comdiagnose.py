@@ -176,9 +176,9 @@ def autoguessports():
         np=[]
         for p in ports:
             if p.has_key("libusb"):
-                if p['usb-vendor']==vid and \
-                   p['usb-product']==pid and \
-                   p['usb-interface']==iface:
+                if p['usb-vendor#']==vid and \
+                   p['usb-product#']==pid and \
+                   p['usb-interface#']==iface:
                     res.append(p)
                     continue
                 np.append(p)
