@@ -12,6 +12,10 @@
 import serial
 import common
 import time
+try:
+    import native.usb as usb
+except:
+    usb=None
 
 # have to work around an annoying bug in LGE drivers
 try:
@@ -25,6 +29,7 @@ class CommTimeout(Exception):
         self.partial=partial
 
 class CommConnection:
+    usbwhine=0
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
                  softwareflow=0, autolistfunc=None, configparameters=None):
         self._brokennotifications=0
@@ -32,6 +37,8 @@ class CommConnection:
         self.port=port
         self.logtarget=logtarget
         self.clearcounters()
+        if usb is None and self.usbwhine<1:
+            self.log("USB support is not available")
         self.success=False
         self.shouldloop=False
         self.ports=None
