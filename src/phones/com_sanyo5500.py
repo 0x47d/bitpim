@@ -67,4 +67,4 @@ class Profile(com_sanyonewer.Profile):
     )
 
     def __init__(self):
-        com_sanyo.Profile.__init__(self)
+        com_sanyonewer.Profile.__init__(self)
