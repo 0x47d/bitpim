@@ -28,6 +28,9 @@ class Phone(com_sanyo.Phone):
     
     builtinringtones=('Normal', 'None', 'Vibrate')
 
+    # A Guess
+    calendar_defaultringtone=4
+
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE

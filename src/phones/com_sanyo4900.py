@@ -34,6 +34,7 @@ class Phone(com_sanyo.Phone):
                        'Brahms Hungarian', 'Star Spangled Banner', 'Rodeo',
                        'Birds', 'Toy Box' )
                       
+    calendar_defaultringtone=0
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
