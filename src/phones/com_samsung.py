@@ -20,6 +20,7 @@ import commport
 import copy
 import memo
 import time
+import todo
 import re
 from DSV import DSV
 
@@ -245,8 +246,23 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def save_memo_entry(self, entry_str):
         try:
-            print entry_str
             self.comm.sendatcommand('#PIMMW='+entry_str)
+            return True
+        except:
+            return False
+
+    def get_todo_entry(self, entry_index):
+        try:
+            s=self.comm.sendatcommand('#PITDR=%d' % entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
+
+    def save_todo_entry(self, entry_str):
+        try:
+            self.comm.sendatcommand("#PITDW="+entry_str)
             return True
         except:
             return False
@@ -700,3 +716,92 @@ class MemoList(object):
     def set(self, data):
         self.__data={}
         self.__data.update(data)
+
+#-------------------------------------------------------------------------------
+class TodoList(object):
+    __td_max_read_fields=6
+    __td_max_write_fields=5
+    __td_max_entries=20
+    __td_entry=0
+    __td_priority=1
+    __td_due_datetime=2
+    __td_datetime_stamp=3
+    __td_status=4
+    __td_subject=5
+    __td_write_subject=4
+    __td_max_len_name=32
+    
+    def __init__(self, phone, data={}):
+        self.__phone=phone
+        self.__data=data
+
+    def get(self):
+        return copy.deepcopy(self.__data, {})
+
+    def __extract_fields(self, s):
+        entry=todo.TodoEntry()
+        i=int(s[self.__td_priority])
+        if i:
+            entry.priority=1
+        else:
+            entry.priority=10
+        entry.due_date=s[self.__td_due_datetime][:8]
+        entry.summary=s[self.__td_subject]
+        return entry
+    
+    def read(self):
+        self.__data={}
+        cnt=0
+        for i in xrange(self.__td_max_entries):
+            s=self.__phone.get_todo_entry(i)
+            if not len(s):
+                self.__phone.progress(i+1, self.__td_max_entries,
+                                      'Getting blank entry: '+str(i))
+                continue
+            self.__phone.progress(i+1, self.__td_max_entries, s[self.__td_subject])
+            e=self.__extract_fields(s)
+            self.__data[e.id]=e
+   
+    def __encode_fields(self, i, entry):
+        e=['']*self.__td_max_write_fields
+        e[self.__td_entry]=`i`
+        if entry.priority<5:
+            e[self.__td_priority]='1'
+        else:
+            e[self.__td_priority]='0'
+        s=entry.due_date
+        if s is None or not len(s):
+            s=self.__phone.get_time_stamp()
+        else:
+            s+='T000000'
+        e[self.__td_due_datetime]=s
+        e[self.__td_datetime_stamp]=self.__phone.get_time_stamp()
+        e[self.__td_write_subject]='"'+entry.summary+'"'
+        return ','.join(e)
+        
+    def __write_entry(self, i, entry):
+        return self.__phone.save_todo_entry(self.__encode_fields(i, entry))
+
+    def validate(self):
+        for k,n in self.__data.items():
+            name=n.summary.replace('"', '')
+            if len(name)>self.__td_max_len_name:
+                name=name[:self.__td_max_len_name]
+            n.summary=name
+
+    def write(self):
+        keys=self.__data.keys()
+        keys.sort()
+        cnt=0
+        for k in keys:
+            n=self.__data[k]
+            if cnt>self.__td_max_entries:
+                break
+            if self.__write_entry(cnt, n):
+                cnt += 1
+            else:
+                self.__phone.log('Failed to save todo entry '+str(k))
+            self.__phone.progress(cnt, self.__td_max_entries, 'Saving entry: '+self.__data[k]['name'])
+        for i in xrange(cnt, self.__td_max_entries):
+            self.__phone.progress(i, self.__td_max_entries, 'Deleting entry: '+str(i))
+            self.__phone.save_todo_entry(`i`)

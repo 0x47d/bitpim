@@ -736,6 +736,24 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEMODEM)
         return r
 
+    def gettodo(self, result):
+        self.log("Getting todo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        td_l=com_samsung.TodoList(self)
+        td_l.read()
+        result['todo']=td_l.get()
+        self.setmode(self.MODEMODEM)
+        return result
+
+    def savetodo(self, result, merge):
+        self.log("Saving todo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        td_l=com_samsung.TodoList(self, result.get('todo', {}))
+        td_l.validate()
+        td_l.write()
+        self.setmode(self.MODEMODEM)
+        return result
+
     getmedia=None
 
 class Profile(com_samsung.Profile):
@@ -766,8 +784,10 @@ class Profile(com_samsung.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
-        ('memo', 'read', None),     # all todo list reading DJP
-        ('memo', 'write', 'OVERWRITE')  # all todo list writing DJP
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('todo', 'read', None),     # all todo list reading DJP
+        ('todo', 'write', 'OVERWRITE')  # all todo list writing DJP
         )
 
     def convertphonebooktophone(self, helper, data):
