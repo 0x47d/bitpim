@@ -27,7 +27,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG VX4400 cell phone"
     desc="LG-TM520/VX10"
 
-    getcalendar=None
     getwallpapers=None
     getringtones=None
     
@@ -85,6 +84,27 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res['numbers']=[]
         for number in entry.numbers:
             res['numbers'].append({'number': number.number, 'type': 'home' })
+
+
+    def getcalendar(self,result):
+        res={}
+        # Now read schedule
+        buf=prototypes.buffer(self.getfilecontents("sch/sch_00.dat"))
+        sc=p_lgtm520.schedulefile()
+        sc.readfrombuffer(buf)
+        self.logdata("Calendar", buf.getdata(), sc)
+        for event in sc.events:
+            entry={}
+            entry['pos']=event.pos
+            if entry['pos']==-1: continue # blanked entry
+            # normal fields
+            for field in 'start','description':
+                entry[field]=getattr(event,field)
+            res[event.pos]=entry
+
+        assert sc.numactiveitems==len(res)
+        result['calendar']=res
+        return result
 
 
 class Profile:

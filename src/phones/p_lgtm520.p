@@ -53,3 +53,14 @@ PACKET pbentry:
     2  UNKNOWN dunno2  "Need to determine secret, ringtone, voice tag in 2 dunnos"
     49 STRING {'raiseonunterminatedread': False} email
 
+
+PACKET scheduleevent:
+    2 UINT num1 "Probably the id"
+    4 UINT num2 "Probably the date"
+    2 UINT num3
+    32 STRING {'raiseonunterminatedread': False} description
+ 
+
+PACKET schedulefile:
+    * LIST {'elementclass': scheduleevent} +events
+
