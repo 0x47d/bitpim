@@ -15,10 +15,12 @@ import p_sanyo8100
 import com_brew
 import com_phone
 import com_sanyo
+import com_sanyomedia
 import prototypes
 
+import os
 
-class Phone(com_sanyo.Phone):
+class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     "Talk to the Sanyo SCP-8100 cell phone"
 
     desc="SCP-8100"
@@ -39,41 +41,8 @@ class Phone(com_sanyo.Phone):
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
+        com_sanyomedia.SanyoMedia.__init__(self)
         self.mode=self.MODENONE
-
-    def getwallpapers(self, results):
-        # Test code to list files on phone
-        for idir in range(1,5):
-            req=self.protocolclass.sanyochangedir()
-            req.dirindex=idir
-            res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
-
-            req=self.protocolclass.sanyonumpicsrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
-            self.log("Directory "+`idir`+", File Count="+`res.count`)
-            nfiles=res.count
-            for ifile in range(nfiles):
-                req=self.protocolclass.sanyomediafilenamerequest()
-                req.index=ifile
-                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`)
-                
-        return
-                     
-            
-        req=self.protocolclass.sanyomediaheader()
-        req.command=0x10
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-        req.command=0x13
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-
-        req=self.protocolclass.sanyomediafilename()
-        req.filename="testimage.jpg"
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-    
-        return 
 
     def getcalendar(self,result):
 

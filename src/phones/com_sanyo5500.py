@@ -19,16 +19,19 @@ import p_sanyo5500
 import com_brew
 import com_phone
 import com_sanyo
+import com_sanyomedia
 import prototypes
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
 
 
-class Phone(com_sanyo.Phone):
+class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     "Talk to the Sanyo SCP-5500 cell phone"
 
     desc="SCP-5500"
+
+    NUM_MEDIA_DIRECTORIES=5
 
     protocolclass=p_sanyo5500
     serialsname='scp5500'
@@ -46,6 +49,7 @@ class Phone(com_sanyo.Phone):
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
+        com_sanyomedia.SanyoMedia.__init__(self)
         self.mode=self.MODENONE
 
     def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=2):
@@ -123,6 +127,7 @@ class Profile(com_sanyo.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+#        ('wallpaper', 'read', None),  # all wallpaper reading
     )
 
     def __init__(self):
