@@ -193,7 +193,7 @@ class CommConnection:
         self.ser.write(data)
         self.writebytes+=len(data)
 
-    def sendatcommand(self, atcommand):
+    def sendatcommand(self, atcommand, ignoreerror=False):
         #print "sendatcommand: "+atcommand
         
         # Flush leftover characters
@@ -204,7 +204,7 @@ class CommConnection:
         fullline="AT"+atcommand
         self.write(str(fullline+"\r\n"))
         # Cache response
-        self.readatresponse()
+        self.readatresponse(ignoreerror)
 
         res=[]
         
@@ -213,8 +213,10 @@ class CommConnection:
             line=self.getcleanline()
         while line!="OK" and line:
             if line=="ERROR":
-                raise ATError
-            res.append(line)
+                if not ignoreerror:
+                    raise ATError
+            else:
+                res.append(line)
             line=self.getcleanline()
             
         return res
@@ -239,7 +241,7 @@ class CommConnection:
             self.readahead=self.readahead[i:]
         return firstline
         
-    def readatresponse(self, log=True):
+    def readatresponse(self, ignoreerror, log=True):
         """Read until OK, ERROR or a timeout"""
         self.readrequests+=1
         res=""
@@ -247,7 +249,7 @@ class CommConnection:
             b=self.ser.inWaiting()
             if b:
                 res=res+self.read(b,0)
-                if res.find("OK\r")>=0 or res.find("ERROR\r")>=0:
+                if res.find("OK\r")>=0 or (res.find("ERROR\r")>=0 and not ignoreerror):
                     break
                 continue
             r=self.read(1,0)
