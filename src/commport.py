@@ -29,6 +29,11 @@ class CommTimeout(Exception):
         Exception.__init__(self, str)
         self.partial=partial
 
+class ATError(Exception):
+    def __init__(self, str=None, partial=None):
+        Exception.__init__(self, str)
+        self.partial=partial
+
 class CommConnection:
     usbwhine=0
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
@@ -189,7 +194,7 @@ class CommConnection:
         self.writebytes+=len(data)
 
     def sendatcommand(self, atcommand):
-        print "sendatcommand: "+atcommand
+        #print "sendatcommand: "+atcommand
         
         # Flush leftover characters
         b=self.ser.inWaiting()
@@ -201,15 +206,18 @@ class CommConnection:
         # Cache response
         self.readatresponse()
 
-        nextline=self.peekline()
-        if nextline==fullline:
-            self.readline()  # Skip echoed lines
-        nextline=self.peekline()
-        if nextline=="OK":
-            return "OK"
-        if nextline=="ERROR":
-            return "ERROR"
-        return ""
+        res=[]
+        
+        line=self.getcleanline()
+        if line==fullline:
+            line=self.getcleanline()
+        while line!="OK" and line:
+            if line=="ERROR":
+                raise ATError
+            res.append(line)
+            line=self.getcleanline()
+            
+        return res
 
     def peekline(self):
         return self.getcleanline(peek=True)
