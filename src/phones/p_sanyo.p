@@ -443,6 +443,21 @@ PACKET ringerpicbuffer:
         1 UINT wallpaper "wallpaper index"
     400 UNKNOWN +pad
 
+PACKET wallpaperbuffer:
+    "Addition buffer of wallpaper assignment info"
+    # 1500 byte buffer
+    P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
+    P UINT {'constant': 0x69} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 1500} bufsize
+    P STRING {'default': "wallpaper assignment info"} +comment
+    * LIST {'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo} +wallpapers
+    
+PACKET wallpaperinfo:
+    "5 byte structure with info about wallpaper assignments"
+    1 UINT flag
+    2 UINT word1
+    2 UINT word2
+    
 PACKET pbsortbuffer:
     "Various arrays for sorting the phone book, speed dial, determining which"
     # slots are in use, etc.
