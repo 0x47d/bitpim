@@ -58,24 +58,17 @@ class Phone(com_samsung.Phone):
                     {'cell': __pb_mobile_num},
                     {'pager': __pb_pager_num},
                     {'fax': __pb_fax_num})
-
-    __cal_entries_range=xrange(20)
-    __cal_num_of_read_fields=7
-    __cal_num_of_write_fields=6
-    __cal_entry=0
-    __cal_start_datetime=1
-    __cal_end_datetime=2
-    __cal_datetime_stamp=3
-    __cal_alarm_type=4
-    __cal_read_name=6
-    __cal_write_name=5
-    __cal_alarm_values={
-        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    __pb_max_name_len=22
+    __pb_max_number_len=32
+    __pb_max_emails=1
+    
     builtinringtones=( 'Inactive',
                        'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
                        'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
                        'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10')
-    __ringtone_info=('ringtone', 'ringtone-index', 'user/sound/ringer')
+    # 'type name', 'type index name', 'dir path', 'max file name length', 'max file name count'    
+    __ringtone_info=('ringtone', 'ringtone-index', 'user/sound/ringer', 19, 20)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'nvm/brew/shared', 19, 20)
         
     def __init__(self, logtarget, commport):
 
@@ -97,7 +90,7 @@ class Phone(com_samsung.Phone):
         This method is called before we read the phonebook data or before we
         write phonebook data.
         """
-
+        
         if not self.is_online():
             self.log("Failed to talk to phone")
             return results
@@ -119,7 +112,8 @@ class Phone(com_samsung.Phone):
             if len(g_i):
                 groups[i]={ 'name': g_i }
         results['groups']=groups
-        results['ringtone-index']=self.get_builtin_ringtone_index()
+        if not results.has_key('ringtone-index'):
+            results['ringtone-index']=self.get_builtin_ringtone_index()
         self.pmode_off()
         self.log("Fundamentals retrieved")
         return results
@@ -217,12 +211,27 @@ class Phone(com_samsung.Phone):
 
     def savephonebook(self, data):
         "Saves out the phonebook"
-
+        self.reportinit('Save Phonebook', data)
         if not self.is_online():
+            self.report('Failed to talk to phone, operation aborted')
             self.log("Failed to talk to phone")
             return data
 
         pb_book=data['phonebook']
+        pb_groups=data['groups']
+        self.log('Validating phonebook entries.')
+        if len(pb_book)>len(self.__phone_entries_range):
+            self.report('Too many phone entries')
+            return data
+        for k in pb_book:
+            if not self.__validate_entry(pb_book[k], pb_groups):
+                self.report('Invalid entry, Save Phonebook aborted.')
+                return data
+        if self._has_duplicate_speeddial(pb_book):
+            self.report('Duplicate speed dial entries exist, Save Phonebook aborted')
+            return data
+        self.log('All entries validated')
+
         pb_locs=[False]*(len(self.__phone_entries_range)+1)
         pb_mem=[False]*len(pb_locs)
 
@@ -232,10 +241,6 @@ class Phone(com_samsung.Phone):
 
         # check and adjust for speeddial changes
         self.log("Processing speeddial data")
-        if self._has_duplicate_speeddial(pb_book):
-            self.log("Duplicate speed dial entries exist.  Write aborted")
-            return data
-
         for k in pb_book:
             self._update_speeddial(pb_book[k])
 
@@ -257,8 +262,10 @@ class Phone(com_samsung.Phone):
                 self.log("Deleted item: "+current_pb[k1]['names'][0]['full'])
                 # delete the entries from data and the phone
                 self.progress(0, 10, "Deleting "+current_pb[k1]['names'][0]['full'])
+                self.report('Deleting entry: '+current_pb[k1]['names'][0]['full'])
                 self._del_phone_entry(current_pb[k1])
         mem_idx, loc_idx = 1,1
+        
         # check for new entries & update serials
         self.log("Processing new & updated entries")
         serials_update=[]
@@ -285,10 +292,12 @@ class Phone(com_samsung.Phone):
                           'serial2': `mem_index` }
                 e['serials'].append(s1)
                 self.log("New entries: Name: "+e['names'][0]['full']+", s1: "+`loc_idx`+", s2: "+`mem_index`)
+                self.report('Adding new entry: '+e['names'][0]['full'])
                 serials_update.append((self._bitpim_serials(e), s1))
             self.progress(progresscur, progressmax, "Updating "+e['names'][0]['full'])
-            if not self._write_phone_entry(e, data["groups"]):
+            if not self._write_phone_entry(e, pb_groups):
                 self.log("Failed to save entry: "+e['names'][0]['full'])
+                self.report('Failed to save entry: '+e['names'][0]['full'])
             progresscur += 1
 
         # update existing and new entries
@@ -297,7 +306,87 @@ class Phone(com_samsung.Phone):
         self.pmode_off()
         return data
 
+    # validate a phonebook entry, return True if good, False otherwise
+    def __validate_entry(self, pb_entry, pb_groups):
+        try:
+            # validate name & alias
+            name=pb_entry['names'][0]['full']
+            if '"' in name:
+                self.report(name+': name cannot have any ["].')
+                return False
+            if not len(name) or len(name)>self.__pb_max_name_len:
+                self.report(name+': name is too long.')
+                return False
+            if pb_entry['names'][0].has_key('nickname'):
+                nick_name=pb_entry['names'][0]['nickname']
+                if '"' in nick_name:
+                    self.report(nick_name+': alias cannot have any ["].')
+                    return False
+                if len(nick_name)>self.__pb_max_number_len:
+                    self.report(nick_name+': alias is too long.')
+                    return False
+            # validate numbers
+            has_number_or_email=False
+            if pb_entry.has_key('numbers'):
+                for n in pb_entry['numbers']:
+                    if len(self.phonize(n['number']))>self.__pb_max_number_len:
+                        self.report(n['number']+': number is too long.')
+                        return False
+                    try:
+                        self._get_number_type(n['type'])
+                    except:
+                        self.report(n['number']+': setting type to home.')
+                        n['type']='home'
+                    has_number_or_email=True
+            # validate emails
+            if pb_entry.has_key('emails'):
+                if len(pb_entry['emails'])>self.__pb_max_emails:
+                    self.report(name+': Each entry can only have %d emails.'%str(self.__pb_max_emails))
+                    return False
+                email=pb_entry['emails'][0]['email']
+                if '"' in email:
+                    self.report(email+': email cannot have any ["].')
+                    return False
+                if len(email)>self.__pb_max_number_len:
+                    self.report(email+': email is too long.')
+                    return False
+                has_number_or_email=True
+            if not has_number_or_email:
+                self.report(name+': Entry has no numbers or emails')
+                return False
+            # validate groups
+            found=False
+            if pb_entry.has_key('categories') and len(pb_entry['categories']):
+                pb_cat=pb_entry['categories'][0]['category']
+                for k in pb_groups:
+                    if pb_groups[k]['name']==pb_cat:
+                        found=True
+                        break
+            if not found:
+                self.report(name+': category set to '+pb_groups[0]['name'])
+                pb_entry['categories']=[{'category': pb_groups[0]['name']}]
+            # validate ringtones
+            found=False
+            if pb_entry.has_key('ringtones') and len(pb_entry['ringtones']):
+                pb_rt=pb_entry['ringtones'][0]['ringtone']
+                # can only set to builtin-ringtone
+                for k in self.builtinringtones:
+                    if k==pb_rt:
+                        found=True
+                        break
+            if not found:
+                self.report(name+': ringtone set to '+self.builtinringtones[0])
+                pb_entry['ringtones']=[{'ringtone': self.builtinringtones[0],
+                                        'use': 'call' }]
+            # everything's cool
+            return True
+        except:
+            raise
+        
     def _has_duplicate_speeddial(self, pb_book):
+        if not pb_book.has_key('numbers') or not len(pb_book['numbers']):
+            # no number to check
+            return False
         b=[False]*(self.__pb_max_speeddials+1)
         for k in pb_book:
             for kk in pb_book[k]['numbers']:
@@ -489,23 +578,53 @@ class Phone(com_samsung.Phone):
         return self.save_phone_entry('0,'+join(e,','))
 
     def getringtones(self, result):
+        self.reportinit('Get Ringtones', result)
         result[self.__ringtone_info[1]]=self.get_builtin_ringtone_index()
         m=FileEntries(self, self.__ringtone_info)
         result['rebootphone']=1 # So we end up back in AT mode
-        return m.get_media(result)
+        r=m.get_media(result)
+        self.report('\r\nBITPIM is now resetting your phone.')
+        return r
 
     def saveringtones(self, result, merge):
+        self.reportinit('Save Ringtones', result)
         m=FileEntries(self, self.__ringtone_info)
         result['rebootphone']=1 # So we end up back in AT mode
-        return m.save_media(result)
+        r=m.save_media(result)
+        self.report('\r\nBITPIM is now resetting your phone.')
+        return r
 
-    getwallpapers=None
+    def getwallpapers(self, result):
+        self.reportinit('Get Wallpapers', result)
+        m=FileEntries(self, self.__wallpaper_info)
+        result['rebootphone']=1
+        r=m.get_media(result)
+        self.report('\r\nBITPIM is now resetting your phone.')
+        return r
+
+    def savewallpapers(self, result, merge):
+        self.reportinit('Save Wallpapers', result)
+        m=FileEntries(self, self.__wallpaper_info)
+        result['rebootphone']=1
+        r=m.save_media(result)
+        self.report('\r\nBITPIM is now restting your phone.')
+        return r
 
     getmedia=None
 
 class Profile(com_samsung.Profile):
 
     serialsname='scha650'
+
+    WALLPAPER_WIDTH=128
+    # WALLPAPER_HEIGHT=130
+    WALLPAPER_HEIGHT=160
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    WALLPAPER_CONVERT_FORMAT="png"
+    
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
 
     def __init__(self):
         com_samsung.Profile.__init__(self)
@@ -515,8 +634,10 @@ class Profile(com_samsung.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        # ('ringtone', 'read', None),   # all ringtone reading
-        # ('ringtone', 'write', 'OVERWRITE'),
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'write', 'OVERWRITE'),
         )
 
     def convertphonebooktophone(self, helper, data):
@@ -525,14 +646,14 @@ class Profile(com_samsung.Profile):
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
-        self.__file_type, self.__index_type, self.__path=info
+        self.__file_type, self.__index_type, self.__path, self.__max_file_len, self.__max_file_count=info
     def get_media(self, result):
         self.__phone.log('Getting media for type '+self.__file_type)
         media={}
         idx={}
         if result.has_key(self.__index_type):
             idx=result[self.__index_type]
-        idx_k=len(idx)
+        file_cnt, idx_k=0, len(idx)
         path_len=len(self.__path)+1
         try:
             file_list=self.__phone.getfilesystem(self.__path, 0)
@@ -543,16 +664,33 @@ class FileEntries:
                     media[index]=self.__phone.getfilecontents(k)
                     idx[idx_k]={ 'name': index, 'origin': self.__file_type }
                     idx_k+=1
+                    file_cnt += 1
                 except:
                     self.__phone.log('Failed to read file '+k)
+                    self.__phone.report('Failed to read '+self.__file_type+k)
         except:
             self.__phone.log('Failed to read dir '+self.__path)
         result[self.__file_type]=media
         result[self.__index_type]=idx
+        if file_cnt > self.__max_file_count:
+            self.__phone.report('This phone only supports %d %s.  %d %s read, weird things may happen.' % \
+                                (self.__max_file_count, self.__file_type,
+                                 file_cnt, self.__file_type))
         return result
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
+        # check for max num of allowable files
+        if len(media) > self.__max_file_count:
+            self.__phone.report('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
+                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
+            return result
+        # check for file name length
+        for k in media:
+            if len(media[k]['name']) > self.__max_file_len:
+                self.__phone.report('%s %s name is too long.  Save %s aborted'% \
+                                    (self.__file_type, media[k]['name'], self.__file_type))
+                return result
         # get existing dir listing
         try:
             dir_l=self.__phone.getfilesystem(self.__path)
@@ -562,21 +700,33 @@ class FileEntries:
         # check for files selected for deletion
         path_len=len(self.__path)+1
         for k in dir_l:
-            name=k[path_len+1:]
-            self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
+            name=k[path_len:]
+            # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
-            for k1 in idx:
-                self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
-                if idx[k1]['name']==name and idx[k1]['origin']==self.__file_type:
+            for k1 in media:
+                # self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
+                if media[k1]['name']==name:
                     found=True
                     break
             if not found:
                 self.__phone.log('Deleting file '+k)
+                self.__phone.report('Deleting file '+name)
+                try:
+                    self.__phone.rmfile(k)
+                except:
+                    self.__phone.log('Failed to rm file '+str(k))
+                    self.__phone.report('Failed to delete file '+k)
         # writing new/existing files
         for k in media:
             try:
-                name=idx[k]['name']
-                self.__phone.log('Writing file '+self.__path+'/'+name)
+                name=self.__path+'/'+media[k]['name']
+                if name in dir_l:
+                    self.__phone.log('File '+name+' exists')
+                else:
+                    self.__phone.log('Writing file '+name)
+                    self.__phone.report('Adding file '+media[k]['name'])
+                    self.__phone.writefile(name, media[k]['data'])
             except:
-                self.__phone.log('Failed to write file: '+self.__path+'/'+name)
+                self.__phone.log('Failed to write file: '+name)
+                self.__phone.report('Failed to write file: '+media[k]['name'])
         return result
