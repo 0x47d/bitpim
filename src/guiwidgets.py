@@ -582,6 +582,7 @@ class ConfigDialog(wx.Dialog):
         self.mw.wallpaperpath=self._fixup(os.path.join(path, "wallpaper"))
         self.mw.phonebookpath=self._fixup(os.path.join(path, "phonebook"))
         self.mw.calendarpath=self._fixup(os.path.join(path, "calendar"))
+        self.mw.databasepath=self._fixup(os.path.join(path, "bitpim.db"))
         self.mw.config.Write("path", path)
         self.mw.commportsetting=str(self.commbox.GetValue())
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)

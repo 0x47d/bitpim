@@ -12,14 +12,15 @@
 import os
 import copy
 import time
+import sha
+import random
+
 import apsw
 
-if __debug__:
-    # Change this to True to see what is going on under the hood.  It
-    # will produce a lot of output!
-    TRACE=False
-else:
-    TRACE=False
+###
+### The first section of this file deals with typical objects used to
+### represent data items and various methods for wrapping them.
+###
 
 
 
@@ -122,15 +123,42 @@ class basedataobject(dict):
             if name in self.keys():
                 del self[name]
 
-# an example of how to use (needs to be corrected for the list types to include fields in contained dicts)
-#class calendarobject(basedataobject):
-#    _knownproperties=['repeat', 'orange']
-#    _knownlistproperties=['serials']
-#
-#class phonebookobject(basedataobject):
-#    _knownproperties=basedataobject._knownproperties+["last modified"]
-#    _knownlistproperties=basedataobject._knownlistproperties+["categories", "memos"]
+    # various methods for manging serials
+    def GetBitPimSerial(self):
+        "Returns the BitPim serial for this item"
+        if "serials" not in self:
+            raise KeyError("no bitpim serial present")
+        for v in self.serials:
+            if v["sourcetype"]=="bitpim":
+                return v["id"]
+        raise KeyError("no bitpim serial present")
 
+    # rng seeded at startup
+    _persistrandom=random.Random()
+    _shathingy=None
+    def _getnextrandomid(self, item):
+        """Returns random ids used to give unique serial numbers to items
+
+        @param item: any object - its memory location is used to help randomness
+        @returns: a 20 character hexdigit string
+        """
+        if self._shathingy is None:
+            self._shathingy=sha.new()
+            self._shathingy.update(`self._persistrandom.random()`)
+        self._shathingy.update(`id(self)`)
+        self._shathingy.update(`self._persistrandom.random()`)
+        self._shathingy.update(`id(item)`)
+        return self._shathingy.hexdigest()
+
+    
+    def EnsureBitPimSerial(self):
+        "Ensures this entry has a serial"
+        if self.serials is None:
+            self.serials=[]
+        for v in self.serials:
+            if v["sourcetype"]=="bitpim":
+                return
+        self.serials.append({'sourcetype': "bitpim", "id": self.getnextrandomid(self.serials)})
 
 class dataobjectfactory:
     "Called by the code to read in objects when it needs a new object container"
@@ -147,7 +175,51 @@ class dataobjectfactory:
         def newdataobject(self, values={}):
             return self.dataobjectclass(values)
 
+
+def extractbitpimserials(dict):
+    """Returns a new dict with keys being the bitpim serial for each
+    row.  Each item must be derived from basedataobject"""
+
+    res={}
+    
+    for record in dict.itervalues():
+        res[record.GetBitPimSerial()]=record
+
+    return res
+
+def ensurebitpimserials(dict):
+    """Ensures that all records have a BitPim serial.  Each item must
+    be derived from basedataobject"""
+    for record in dict.itervalues():
+        record.EnsureBitPimSerial()
+
+def findentrywithbitpimserial(dict, serial):
+    """Returns the entry from dict whose bitpim serial matches serial"""
+    for record in dict.itervalues():
+        if record.GetBitPimSerial()==serial:
+            return record
+    raise KeyError("not item with serial "+serial+" found")
+        
+        
+
+
+# a factory that uses dicts to allocate new data objects
 dictdataobjectfactory=dataobjectfactory(dict)
+
+
+
+
+###
+### Actual database interaction is from this point on
+###
+
+
+if __debug__:
+    # Change this to True to see what is going on under the hood.  It
+    # will produce a lot of output!
+    TRACE=False
+else:
+    TRACE=False
 
 
 def ExclusiveWrapper(method):
@@ -642,20 +714,7 @@ class Database:
 
                     
             
-def extractbpserials(dict):
-    """Returns a new dict with keys being the bitpim serial for each row"""
-    res={}
-    
-    for r in dict.keys():
-        found=False
-        record=dict[r]
-        for v in record["serials"]:
-            if v["sourcetype"]=="bitpim":
-                found=True
-                res[v["id"]]=record
-                break
-        assert found
-    return res
+
 
 
 if __name__=='__main__':
