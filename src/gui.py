@@ -7,6 +7,7 @@
 ###
 ### $Id$
 
+"""The main gui code for BitPim"""
 
 # System modules
 import thread, threading
@@ -310,10 +311,10 @@ class MainApp(wxApp):
 
         return True
 
-    def setuphelpiwant(self):
-        """This is how the setuphelp code is supposed to be, but stuff is missing from wxPython"""
-        self.helpcontroller=wxBestHelpController()
-        self.helpcontroller.Initialize(gethelpfilename)
+##    def setuphelpiwant(self):
+##        """This is how the setuphelp code is supposed to be, but stuff is missing from wxPython"""
+##        self.helpcontroller=wxBestHelpController()
+##        self.helpcontroller.Initialize(gethelpfilename)
 
     def setuphelp(self):
         """Does all the nonsense to get help working"""
