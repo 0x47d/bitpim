@@ -14,7 +14,8 @@
 
 # only gui mode support at the moment
 
-import sys
-import gui
+if __name__ == '__main__':
+    import sys  
+    import gui
 
-gui.run(sys.argv)
+    gui.run(sys.argv)
