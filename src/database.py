@@ -468,7 +468,7 @@ class Database:
                         else:
                             indirects[r]=v
                 if len(indirects):
-                    self.updateindirecttable("phonebook__"+n, indirects)
+                    self.updateindirecttable(tablename+"__"+n, indirects)
                     for r in indirects.keys():
                         dict[r][n]=indirects[r]
 
