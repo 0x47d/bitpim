@@ -16,6 +16,7 @@ from wxPython.lib.rcsizer import RowColSizer
 import calendar
 import time
 
+
 class CalendarCellAttributes:
     def __init__(self):
         # Set some defaults
@@ -50,7 +51,7 @@ class CalendarCellAttributes:
         if fontscale==1:
             dc.SetFont(font)
             return
-        f=wxFont(font.GetPointSize()*fontscale, font.GetFamily(), font.GetStyle(), font.GetWeight())
+        f=wxTheFontList.FindOrCreateFont(font.GetPointSize()*fontscale, font.GetFamily(), font.GetStyle(), font.GetWeight())
         dc.SetFont(f)
 
 
