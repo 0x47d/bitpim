@@ -35,7 +35,7 @@ class RingerView(guiwidgets.FileView):
                                         rightsplit=200)
         self.SetColumns(["Name", "Length", "Origin", "Description"])
         self._data={'ringtone-index': {}}
-        self.wildcard="Ringtone Files|*.mid;*.qcp"
+        self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3"
 
         self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.modified=False
