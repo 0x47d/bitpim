@@ -262,7 +262,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         res={}
 
         res['serials']=[ {'sourcetype': self.serialsname,
-                          'serial1': entry.slot, 'serial2': entry.uslot,
+                          'slot': entry.slot,
                           'sourceuniqueid': fundamentals['uniqueserial']} ]
         # only one name
         res['names']=[ {'full': entry.name} ]
