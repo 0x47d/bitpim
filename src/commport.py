@@ -31,7 +31,7 @@ class CommTimeout(Exception):
 class CommConnection:
     usbwhine=0
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
-                 softwareflow=0, autolistfunc=None, configparameters=None):
+                 softwareflow=0, autolistfunc=None, autolistargs=None, configparameters=None):
         self._brokennotifications=0
         self.ser=None
         self.port=port
@@ -43,6 +43,7 @@ class CommConnection:
         self.shouldloop=False
         self.ports=None
         self.autolistfunc=autolistfunc
+        self.autolistargs=autolistargs
         self.configparameters=configparameters
         self.params=(baud,timeout,hardwareflow,softwareflow)
         assert port!="auto" or (port=="auto" and autolistfunc is not None)
@@ -120,7 +121,7 @@ class CommConnection:
     def _refreshautoports(self):
         # ensure we close current port first
         self.close()
-        self.ports=self.autolistfunc()
+        self.ports=self.autolistfunc(*self.autolistargs)
         assert self.ports is not None
         self.success=False
         self.portstried=self.ports
