@@ -923,16 +923,6 @@ class ImageCropSelect(wx.ScrolledWindow):
             mdcsub.SelectObject(wx.NullBitmap)
             return sub
 
-        # scaling up
-        # Mac is eye wateringly slow doing wx.Bitmap to wx.Image conversions so
-        # we use up extra memory keeping a copy of self.thebmp as an image        
-        if guihelper.IsMac():
-            if self.imageofthebmp is None:
-                self.imageofthebmp=self.thebmp.ConvertToImage()
-            sub=self.imageofthebmp.GetSubImage( (l,t,(r-l),(b-t)) )
-            sub.Rescale(w,h)
-            return sub.ConvertToBitmap()
-        # non-Mac
         sub=self.thebmp.GetSubBitmap( (l,t,(r-l),(b-t)) )
         sub=sub.ConvertToImage()
         sub.Rescale(w,h)
@@ -992,9 +982,7 @@ class ImagePreviewDialog(wx.Dialog):
 
         for one,(s,_) in enumerate(self.SCALES):
             if s==1: break
-        # Mac gets ticks completely wrong so we turn then off, even calling SetTickFreq
-        tickstyle=[wx.SL_AUTOTICKS,0][bool(guihelper.IsMac())]
-        self.slider=wx.Slider(self, -1, one, 0, len(self.SCALES)-1, style=wx.HORIZONTAL|tickstyle)
+        self.slider=wx.Slider(self, -1, one, 0, len(self.SCALES)-1, style=wx.HORIZONTAL|wx.SL_AUTOTICKS)
         wx.EVT_SCROLL(self, self.SetZoom)
         vbs.Add(self.slider, 0, wx.ALL|wx.EXPAND, 5)
         self.zoomlabel=wx.StaticText(self, -1, self.SCALES[one][1])

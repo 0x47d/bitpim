@@ -995,12 +995,7 @@ class Editor(wx.Dialog):
         self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
-        # work around a bug in which the mac toolbar icons are 4 pixels bigger
-        # in each dimension
-        if guihelper.IsMac():
-            tb.SetToolBitmapSize(wx.Size(27,27))
-        else:
-            tb.SetToolBitmapSize(wx.Size(32,32))
+        tb.SetToolBitmapSize(wx.Size(32,32))
         sz=tb.GetToolBitmapSize()
         tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_UP, wx.ART_TOOLBAR, sz), shortHelp="Move field up")
         tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_DOWN, wx.ART_TOOLBAR, sz), shortHelp="Move field down")
