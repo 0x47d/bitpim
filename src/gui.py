@@ -933,7 +933,7 @@ class FileSystemView(wxTreeCtrl):
         l=[]
         cookie=id(result)-10000
         child,cookie=self.GetFirstChild(item,cookie)
-        while cookie!=0:
+        for dummy in range(0,self.GetChildrenCount(item,False)):
             l.append(child)
             child,cookie=self.GetNextChild(item,cookie)
         # we now have a list of children in l
@@ -1105,7 +1105,7 @@ class FileSystemView(wxTreeCtrl):
             cookie=id(node)-10000
             foundnode=None
             child,cookie=self.GetFirstChild(node,cookie)
-            while cookie!=0:
+            for dummy in range(0, self.GetChildrenCount(node, False)):
                 d=self.GetItemText(child)
                 if d==dirs[n]:
                     node=child
