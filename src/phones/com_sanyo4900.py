@@ -48,28 +48,10 @@ class Profile(com_sanyo.Profile):
     protocolclass=p_sanyo4900
     serialsname='scp4900'
 
-        
-    # WALLPAPER_WIDTH=112
-    # WALLPAPER_HEIGHT=120
-    WALLPAPER_WIDTH=90
-    WALLPAPER_HEIGHT=96
-    MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
-    WALLPAPER_CONVERT_FORMAT="png"
+    WALLPAPER_WIDTH=120
+    WALLPAPER_HEIGHT=128
+    OVERSIZE_PERCENTAGE=100
     
-    MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
-       
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'write', 'OVERWRITE'),
-        ('ringtone', 'write', 'OVERWRITE'),
-        )
-
-
     def __init__(self):
         com_sanyo.Profile.__init__(self)
 
