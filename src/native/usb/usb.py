@@ -188,7 +188,7 @@ class USBEndpoint:
         return self.ep.bmAttributes&usb.USB_ENDPOINT_TYPE_MASK
 
     def address(self):
-        return self.ep.bEndpointAddress&usb.USB_ENDPOINT_ADDRESS_MASK
+        return self.ep.bEndpointAddress
 
     def maxpacketsize(self):
         return self.ep.wMaxPacketSize
