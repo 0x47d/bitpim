@@ -68,6 +68,10 @@ def formatname(name):
         res+=" ("+name["nickname"]+")"
     return res
 
+import phonenumber
+def formatnumber(number):
+    return phonenumber.format(number)
+
 def get_flag(entry, name, default=None):
     # looks for the named flag
     for flag in entry.get('flags', []):

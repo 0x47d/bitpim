@@ -50,7 +50,7 @@ alt="${htmlify(ringtone['use'])}: ${htmlify(ringtone['ringtone'])}"/><br/>
 <py-open>for rownum,number in zip(range(len(entry.get("numbers",[]))),entry.get("numbers",[])):</py-open>
 <tr class=${('numberroweven', 'numberrowodd')[rownum%2]}>
 <td class="numbertype">${htmlify(titlecase(number['type']))}</td>
-<td><code>${htmlify(number['number'])}</code></td>
+<td><code>${htmlify(formatnumber(number['number']))}</code></td>
 </tr>
 <py-close/>
 </table><br/>
