@@ -25,6 +25,9 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
 
     desc="SCP-8100"
 
+    FIRST_MEDIA_DIRECTORY=1
+    LAST_MEDIA_DIRECTORY=3
+
     protocolclass=p_sanyo8100
     serialsname='scp8100'
     
@@ -38,13 +41,15 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
                        'Disco' )
 
     calendar_defaultringtone=4
-    NUM_MEDIA_DIRECTORIES=3
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         com_sanyomedia.SanyoMedia.__init__(self)
         self.mode=self.MODENONE
 
+
+    # Demonstration code to show how call history can be read into
+    # the calendar
     def getcalendar(self,result):
 
         result=com_sanyo.Phone.getcalendar(self,result)
@@ -98,6 +103,7 @@ class Profile(com_sanyo.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'read', None),  # all wallpaper reading
+	('ringtone', 'read', None), # all ringtone reading
 #        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
 #        ('wallpaper', 'write', 'OVERWRITE'),
     )
