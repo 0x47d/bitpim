@@ -18,7 +18,7 @@ import com_sanyo
 import prototypes
 
 
-class Phone(com_phone.Phone):
+class Phone(com_sanyo.Phone):
     "Talk to the Sanyo SCP-5300 cell phone"
 
     desc="SCP-5300"
