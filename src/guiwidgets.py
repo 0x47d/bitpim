@@ -80,6 +80,9 @@ class LogWindow(wx.Panel):
     def Clear(self):
         self.tb.Clear()
 
+    def OnSelectAll(self, _):
+        self.tb.SetSelection(-1, -1)
+
     def OnIdle(self,_):
         if self.outstandingtext.tell():
             # this code is written to be re-entrant

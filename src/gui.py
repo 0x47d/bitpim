@@ -425,14 +425,14 @@ class MainWindow(wx.Frame):
 
         menu.AppendMenu(guihelper.ID_FILEEXPORT, "Export", expmenu)
 
-
         if not guihelper.IsMac():
             menu.AppendSeparator()
             menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wx.Menu()
-        menu.Append(guihelper.ID_EDITADDENTRY, "Add...", "Add an item")
-        menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete", "Delete currently selected entry")
+        menu.Append(guihelper.ID_EDITSELECTALL, "Select All\tCtrl+A", "Select All")
+        menu.Append(guihelper.ID_EDITADDENTRY, "New...\tCtrl+N", "Add an item")
+        menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete\tDel", "Delete currently selected entry")
         if guihelper.HasFullyFunctionalListView():
             menu.AppendSeparator()
             menu.Append(guihelper.ID_FV_ICONS, "View as Images", "Show items as images")
@@ -522,6 +522,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_FV_ICONS, self.OnFileViewIcons)
         wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.OnEditSelectAll)
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
@@ -930,6 +931,9 @@ class MainWindow(wx.Frame):
         self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
         # as is File Print
         self.GetMenuBar().Enable(guihelper.ID_FILEPRINT, widget is self.phonewidget)
+
+        # select all
+        self.GetMenuBar().Enable(guihelper.ID_EDITSELECTALL, hasattr(widget, "OnSelectAll"))
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):
@@ -944,6 +948,9 @@ class MainWindow(wx.Frame):
 
     def OnEditDeleteEntry(self, evt):
         self.nb.GetPage(self.nb.GetSelection()).OnDelete(evt)
+
+    def OnEditSelectAll(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnSelectAll(evt)
 
     # Busy handling
     def OnBusyStart(self):
