@@ -295,7 +295,7 @@ class VCard:
         types=[]
         for f in field[1:]:
             if f.startswith("TYPE="):
-                ff=f[len("TYPE=")+1:].split(",")
+                ff=f[len("TYPE="):].split(",")
             else: ff=[f]
             types.extend(ff)
 
@@ -303,8 +303,8 @@ class VCard:
         # does allow for random user defined types, so we look for them
         type=None
         for t in types:
-            if t=="HOME": type="HOME"
-            if t=="WORK": type="WORK"
+            if t=="HOME": type="home"
+            if t=="WORK": type="business"
             if t=="X400": return # we don't want no steenking X.400
 
         preferred="PREF" in types
@@ -323,14 +323,14 @@ class VCard:
         types=[]
         for f in field[1:]:
             if f.startswith("TYPE="):
-                ff=f[len("TYPE=")+1:].split(",")
+                ff=f[len("TYPE="):].split(",")
             else: ff=[f]
             types.extend(ff)
 
         type=None
         for t in types:
-            if t=="HOME": type="HOME"
-            if t=="WORK": type="WORK"
+            if t=="HOME": type="home"
+            if t=="WORK": type="business"
 
         preferred="PREF" in types
 
@@ -348,7 +348,7 @@ class VCard:
         types=[]
         for f in field[1:]:
             if f.startswith("TYPE="):
-                ff=f[len("TYPE=")+1:].split(",")
+                ff=f[len("TYPE="):].split(",")
             else: ff=[f]
             types.extend(ff)
 
@@ -380,13 +380,13 @@ class VCard:
         if "WORK" in types: iswork=True
         if "HOME" in types: ishome=True
 
-        if iswork and voice: self._setvalue(result, "phone", {"type": "work", "number": value}, preferred)
+        if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
         if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
         if not iswork and not ishome and "FAX" in types:
             # fax without explicit work or home
             self._setvalue(result, "phone", {"type": "fax", "number": value}, preferred)
         else:
-            if iswork and "FAX" in types: self._setvalue(result, "phone", {"type": "work fax", "number": value}, preferred)
+            if iswork and "FAX" in types: self._setvalue(result, "phone", {"type": "business fax", "number": value}, preferred)
             if ishome and "FAX" in types: self._setvalue(result, "phone", {"type": "home fax", "number": value}, preferred)
         if "CELL" in types: self._setvalue(result, "phone", {"type": "cell", "number": value}, preferred)
         if "PAGER" in types: self._setvalue(result, "phone", {"type": "pager", "number": value}, preferred)
@@ -426,7 +426,7 @@ class VCard:
         type="business"
         for f in field[1:]:
             if f.startswith("TYPE="):
-                ff=f[len("TYPE=")+1:].split(",")
+                ff=f[len("TYPE="):].split(",")
             else: ff=[f]
             for x in ff:
                 if x=="HOME":
