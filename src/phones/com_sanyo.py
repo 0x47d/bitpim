@@ -509,7 +509,6 @@ class SanyoPhonebook:
             entry=self.makeentry(ii, data)
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=entry
-            self.writewait()
             res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse, writemode=True)
             # Put entry into newphonebooks
             entry=self.extractphonebookentry(entry, data)
