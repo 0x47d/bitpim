@@ -55,7 +55,7 @@ class Phone(com_lgvx4400.Phone):
         # offset, index file, files location, type, maximumentries
         ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
         ( 80, "download/dloadindex/mmsRingerIndex.map", "mms/sound", "mms", 20),
-        ( 100, "download/dloadindex/DrmRingerIndex.map", "mms/sound/drm", "drm", 20)
+        ( 100, "download/dloadindex/mmsDrmRingerIndex.map", "mms/sound/drm", "drm", 20)
         )
 
     builtinimages= ('Beach Ball', 'Towerbridge', 'Sunflower', 'Beach',
