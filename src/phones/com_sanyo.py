@@ -339,10 +339,14 @@ class SanyoPhonebook:
         self.log("There are %d entries" % (numentries,))
         
         count = 0
+        res=self.protocolclass.phonebookentry()
+        usedefaultnum = 'defaultnum' in res.getfields()
+        print "usedefaultnum =",usedefaultnum
+
+        req=self.protocolclass.phonebookslotrequest()
         for i in range(0, self.protocolclass._NUMPBSLOTS):
             if sortstuff.usedflags[i].used:
                 ### Read current entry
-                req=self.protocolclass.phonebookslotrequest()
                 req.slot = i
                 res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
                 self.log("Read entry "+`i`+" - "+res.entry.name)
@@ -372,6 +376,32 @@ class SanyoPhonebook:
                         paper=self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`
                     entry['wallpapers']=[{'wallpaper': paper, 'use': 'call'}]
                     
+                # Set default number, swap with first number
+                if usedefaultnum:
+                    firsttype=res.entry.defaultnum-1
+                    if count==0:
+                        print count,firsttype
+                    if firsttype < len(self.numbertypetab):
+                        defaulttype=self.numbertypetab[firsttype]
+                        if count==0:
+                            print defaulttype
+                        k=0
+                        for j in range(len(entry['numbers'])):
+                            if count==0:
+                                print j
+                            if entry['numbers'][j]['type'] == defaulttype:
+                                k=j
+                                if count==0:
+                                    print "k=",k
+                                break
+                        if k>0:
+                            if count==0:
+                                print "Exchanging"
+                            exchange=entry['numbers'][k]
+                            for kk in range(k,0,-1):
+                                entry['numbers'][kk]=entry['numbers'][kk-1]
+                            entry['numbers'][0]=exchange
+            
                 pbook[count]=entry 
                 self.progress(count, numentries, res.entry.name)
                 count+=1
@@ -466,6 +496,7 @@ class SanyoPhonebook:
         # and then only writing those that are different, but all the buffers
         # would still need to be written.
         #
+
         newphonebook={}
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook in com_lgvx4400 for why this is necessary
@@ -477,6 +508,9 @@ class SanyoPhonebook:
         sortstuff=self.protocolclass.pbsortbuffer()
         ringpic=self.protocolclass.ringerpicbuffer()
         callerid=self.protocolclass.calleridbuffer()
+
+        res=self.protocolclass.phonebookentry()
+        usedefaultnum = 'defaultnum' in res.getfields()
 
         for i in range(self.protocolclass._NUMPBSLOTS):
             sortstuff.usedflags.append(0)
@@ -531,6 +565,8 @@ class SanyoPhonebook:
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
             self.log("Writing entry "+`slot`+" - "+ii['name'])
             entry=self.makeentry(ii, data)
+            if not usedefaultnum:
+                delattr(entry,'defaultnum')
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=entry
             res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse, writemode=True)
@@ -1240,6 +1276,7 @@ class Profile(com_phone.Profile):
                 e['speeddials']=[]
                 unusednumbers=[] # Hold duplicate types here
                 typesused={}
+                defaultnum=0
                 for num in numbers:
                     typename=num['type']
                     if(typesused.has_key(typename)):
@@ -1248,6 +1285,8 @@ class Profile(com_phone.Profile):
                     typesused[typename]=1
                     for typenum,tnsearch in zip(range(100),self.numbertypetab):
                         if typename==tnsearch:
+                            if defaultnum==0:
+                                defaultnum=typenum+1
                             number=phonize(num['number'])
                             if len(number)>self.protocolclass._MAXNUMBERLEN: # get this number from somewhere sensible
                                 # :: TODO:: number is too long and we have to either truncate it or ignore it?
@@ -1271,6 +1310,8 @@ class Profile(com_phone.Profile):
                             break
                     else:
                         break
+                    if defaultnum==0:
+                        defaultnum=trytype+1
                     number=phonize(num['number'])
                     if len(number)>self.protocolclass._MAXNUMBERLEN: # get this number from somewhere sensible
                         # :: TODO:: number is too long and we have to either truncate it or ignore it?
@@ -1282,11 +1323,17 @@ class Profile(com_phone.Profile):
                     else:
                         e['speeddials'].append(-1)
 
+                if defaultnum==0:
+                    if e['url_len'] > 0:
+                        defaultnum=8
+                    elif e['email_len'] > 0:
+                        defaultnum=9
 
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
                 e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
                 e['secret']=helper.getflag(entry.get('flags', []), 'secret', False)
+                e['defaultnum']=defaultnum
 
                 results[pbentry]=e
                 
