@@ -641,7 +641,10 @@ class Phone:
         n=0
         for b in packet[0x112:0x117]:
             n+=1
-            t=self.numbertypetab[ord(b)]
+            try:
+                t=self.numbertypetab[ord(b)]
+            except:
+                t="%02x" % (ord(b),)
             if len(t)==0:
                 t="%02x" % (ord(b),)
             res['type'+chr(n+ord('0'))]=t
