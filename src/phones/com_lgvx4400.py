@@ -50,7 +50,7 @@ class Phone:
     def __init__(self, logtarget, commport):
         self.logtarget=logtarget
         self.comm=commport
-        self.log("Phone initialised")
+        self.log("Attempting to contact phone")
         self.mode=self.MODENONE
         self.seq=0
         self.retries=2  # how many retries when we get no response
@@ -279,10 +279,12 @@ class Phone:
             entry['description']=readstring(data[pos+0x15:pos+0x3d])
             res[pos]=entry
 
+        assert numentries==len(res)
         result['calendar']=res
         return result
 
     def savecalendar(self, dict, merge):
+        # ::TODO:: obey merge param
         # what will be written to the files
         data=""
         dataexcept=""
@@ -630,7 +632,7 @@ class Phone:
             d=count  # block number
             count+=1
             if count==0x100: count=1
-            if d%5==0:
+            if d % 5==0:
                 self.progress(offset>>8,numblocks,desc)
             d=chr(d)
             if offset+0x100<len(contents):
@@ -703,6 +705,9 @@ class Phone:
 
         # failed
         self.mode=self.MODENONE
+        while self.comm.IsAuto():
+            self.comm.NextAutoPort()
+            return self.setmode(desiredmode)
         self.raisecommsexception("transitioning mode from %s to %s" \
                                  % (strmode, strdesiredmode))
         
@@ -731,7 +736,8 @@ class Phone:
         # see if we can turn on dm mode
         for baud in (0, 115200, 19200, 38400, 230400):
             if baud:
-                self.comm.setbaudrate(baud)
+                if not self.comm.setbaudrate(baud):
+                    continue
             self.comm.write("AT$QCDMG\r\n")
             try:
                 self.comm.readsome()
@@ -763,7 +769,8 @@ class Phone:
     def _setmodemodem(self):
         for baud in (0, 115200, 38400, 19200, 230400):
             if baud:
-                self.comm.setbaudrate(baud)
+                if not self.comm.setbaudrate(baud):
+                    continue
             self.comm.write("AT\r\n")
             try:
                 self.comm.readsome()
@@ -975,6 +982,9 @@ class Phone:
         return res
 
     def makeentry(self, num, entry, dict):
+        # ::TODO:: we need to update fields in entry/dict
+        # eg when removing non-numerics from phone numbers
+        # or chang ringtone names into ringtone numbers
         res=""
         # skip first four bytes - they are part of command
         res+="aaaa"  # added to help assertions
