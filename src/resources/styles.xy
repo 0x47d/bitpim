@@ -56,7 +56,7 @@ def formatname(name):
 
 def get_flag(entry, name, default=None):
     # looks for the named flag
-    for flag in entry['flags']:
+    for flag in entry.get('flags', []):
         if flag.has_key(name):
             return flag[name]
     return default
