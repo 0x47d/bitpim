@@ -170,8 +170,13 @@ def gethelpfilename():
     paths=( (j(resourcedirectory, "..", "help"), True),
             (resourcedirectory, False) )
 
+    if IsMSWindows():
+        name="bitpim.chm"
+    else:
+        name="bitpim.htb"
+
     for p,mention in paths:
-        if os.path.isfile(j(p, "bitpim.htb")):
+        if os.path.isfile(j(p, name)):
             if mention:
                 print "Using help file from "+p
             return j(p, "bitpim")

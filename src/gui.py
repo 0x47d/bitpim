@@ -311,9 +311,10 @@ class MainApp(wx.App):
             import win32help
             fname=guihelper.gethelpfilename()+".chm"
             if id is None:
-                win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOC)
-            else:
-                win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
+                id=helpids.ID_WELCOME
+            # unfortunately I can't get the stupid help viewer to also make the treeview
+            # on the left to go to the right place
+            win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
         else:
             if self.helpcontroller is None:
                 self._setuphelp()

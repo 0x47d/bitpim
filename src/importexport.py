@@ -1650,6 +1650,8 @@ def GetPhonebookExports():
     res=[]
     # Vcards - always possible
     res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
+    # eGroupware - always possible
+    res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
     
     return res
 
@@ -1772,5 +1774,10 @@ class ExportVCardDialog(wx.Dialog):
 
 def OnFileExportVCards(parent):
     dlg=ExportVCardDialog(parent, -1, "Export phonebook to vCards")
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExporteGroupware(parent):
+    dlg=ExporteGroupwareDialog(parent, -1, "Export phonebook to eGroupware")
     dlg.ShowModal()
     dlg.Destroy()
