@@ -63,8 +63,7 @@ class Display(wx.ScrolledWindow):
         self.EnableScrolling(False, False)
         self.datasource=datasource
         self._bufbmp=None
-        self._w, self._h=self.GetSize()
-        self._realw=self._w
+        self._w, self._h=-1,-1
         self.vheight, self.maxheight=self._h,self._h
         self.sections=[]
         self.sectionheights=[]
@@ -81,7 +80,6 @@ class Display(wx.ScrolledWindow):
             self.watermark=guihelper.getbitmap(watermark)
         else:
             self.watermark=None
-        self.relayoutpending=False
         self.UpdateItems()
 
     def OnScroll(self, evt):
@@ -89,17 +87,8 @@ class Display(wx.ScrolledWindow):
         evt.Skip()
 
     def OnSize(self, evt):
-        w,h=evt.GetSize()
-        # we do this check as it saves relayouts when making the window smaller
-        if w!=self._realw or h!=self._h:
-            self.ReLayout()
-        else:
-            if not self.relayoutpending:
-                print "saved a relayout"
-        self._w, self._h=evt.GetSize()
-        self._realw=self._w
-        if self.vheight>self._h:
-            self._w-=self._scrollbarwidth
+        self.Refresh(False)
+        evt.Skip()
 
     def OnEraseBackground(self, _):
         pass
@@ -127,6 +116,14 @@ class Display(wx.ScrolledWindow):
         #
         # - wx sometimes misbehaves if the window height isn't set to an exact multiple of the
         #   VSCROLLPIXELS
+
+        sz=self.GetClientSize()
+        if sz != (self._w,self._h):
+            self._w,self._h=sz
+            self.ReLayout()
+            # relayout may change size (scrollbar appearing/going away) so repeat in that case
+            if self.GetClientSize()!=sz:
+                return self.OnPaint(_)
 
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
@@ -175,10 +172,14 @@ class Display(wx.ScrolledWindow):
                 if bb is None:
                     bb=dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY()
                 assert len(bb)==4
-                assert bb[0]>=0 and bb[0]<self.itemsize[i][0]+extrawidth
-                assert bb[1]>=0 and bb[1]<self.itemsize[i][1]
-                assert bb[2]>=bb[0] and bb[2]<=self.itemsize[i][0]+extrawidth
-                assert bb[3]>=bb[1] and bb[3]<=self.itemsize[i][1]
+                try:
+                    assert bb[0]>=0 and bb[0]<self.itemsize[i][0]+extrawidth
+                    assert bb[1]>=0 and bb[1]<self.itemsize[i][1]
+                    assert bb[2]>=bb[0] and bb[2]<=self.itemsize[i][0]+extrawidth
+                    assert bb[3]>=bb[1] and bb[3]<=self.itemsize[i][1]
+                except:
+                    print "bb is",bb
+                    print "should be within",(self.itemsize[i][0]+extrawidth,self.itemsize[i][1])
             
                 self.boundingboxes[i][num]=bb
                 num+=1
@@ -303,15 +304,8 @@ class Display(wx.ScrolledWindow):
             cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
         return self.HitTestResult()
 
-    def ReLayout(self):
-        "Called if the window size has changed"
-        if self.relayoutpending:
-            return
-        self.relayoutpending=True
-        wx.CallAfter(self._ReLayout)
 
-    def _ReLayout(self):
-        self.relayoutpending=False
+    def ReLayout(self):
         self.itemsperrow=[]
         self.vheight=0
         for i,section in enumerate(self.sections):
@@ -341,10 +335,7 @@ class Display(wx.ScrolledWindow):
             self.items.append(items)
             self.boundingboxes.append( [None]*len(items) )
             self.selected.append( [False]*len(items) )
-        # we have to relayout immediately otherwise there could a be paint call
-        # between this function and relayout and the variables would be in an
-        # inconsistent state
-        self._ReLayout()
+        self.Refresh(False)
 
 
             
@@ -523,6 +514,8 @@ if __name__=="__main__":
                 # Linux gets bounding box wrong, so we deliberately return actual size
                 if guihelper.IsGtk():
                     return (0,0,width,height)
+                elif guihelper.IsMSWindows():
+                    return max(0,dc.MinX()), max(0, dc.MinY()), min(width, dc.MaxX()), min(height, dc.MaxY())
 
             def genhtml(self, selected):
                 if selected:
@@ -556,7 +549,7 @@ if __name__=="__main__":
         app.MainLoop()
     
     
-    if True:
+    if __debug__ and True:
         def profile(filename, command):
             import hotshot, hotshot.stats, os
             file=os.path.abspath(filename)
