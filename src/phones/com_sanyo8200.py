@@ -55,8 +55,11 @@ class Phone(com_sanyonewer.Phone):
 
 class Profile(com_sanyonewer.Profile):
 
-    protocolclass=p_sanyo8200
-    serialsname='pm8200'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+
+    WALLPAPER_WIDTH=132
+    WALLPAPER_HEIGHT=160
 
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
