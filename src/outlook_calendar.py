@@ -35,15 +35,9 @@ def to_bp_date(dict, v, oc):
     # convert a pyTime to (y, m, d, h, m)
     if not isinstance(v, pywintypes.TimeType):
         raise TypeError, 'illegal type'
-    try:
-        return time.localtime(int(v))[:5]
-    except:
-        pass
-    # check for no end date
-    if dict.get('NoEndDate', False):
+    if v.year>common_calendar.no_end_date[0]:
         return common_calendar.no_end_date
-    else:
-        raise ValueError, 'illegal value'
+    return (v.year, v.month, v.day, v.hour, v.minute)
 
 def bp_repeat_str(dict, v):
     if v is None:

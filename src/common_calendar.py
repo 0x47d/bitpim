@@ -24,6 +24,13 @@ no_end_date=(4000, 1, 1, 0, 0)
 
 def bp_date_str(dict, v):
     try:
+        if v[0]>=no_end_date[0]:
+            # no-end date, don't display it
+            if dict.get('allday', False):
+                return ''
+            else:
+                return '%02d:%02d'%v[3:]
+
         if dict.get('allday', False):
             return '%04d-%02d-%02d'%v[:3]
         else:
