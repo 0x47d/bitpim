@@ -111,7 +111,6 @@ class flinger:
 
     def devicereadsome(self, handle, numchars):
         self._configure()
-        print "bitflingscan devicereadsome"
         return self.client.devicereadsome(handle, numchars)
 
     def devicewritethenreaduntil(self, handle, data, char, numfailures):
@@ -300,7 +299,6 @@ class CommConnection:
         return res
 
     def readsome(self, log=True, numchars=-1):
-        print "bitflingscan readsome"
         res=flinger.devicereadsome(self.handle, numchars)
         if log:
             self.logdata("Reading remaining data", res)
