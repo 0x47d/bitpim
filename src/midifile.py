@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2005 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2005 Joe Pham <djpham@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.

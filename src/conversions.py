@@ -216,11 +216,35 @@ def converttowav(mp3filename, wavfilename, samplerate=None,
 
 def convertwavtoqcp(wavfile, qcpfile):
     pvconv=gethelperbinary('pvconv')
-    run(pvconv, shortfilename(wavfile), shortfilename(qcpfile))
+    w_name=shortfilename(wavfile)
+    q_name=common.stripext(w_name)+'.qcp'
+    try:
+        os.remove(q_name)
+    except:
+        pass
+    # Have not figured out how to specify output file for pvconv
+    run(pvconv, w_name)
+    # mv output file to qcpfile
+    try:
+        os.remove(qcpfile)
+    except:
+        pass
+    os.rename(q_name, qcpfile)
 
 def convertqcptowav(qcpfile, wavfile):
     pvconv=gethelperbinary('pvconv')
-    run(pvconv, shortfilename(qcpfile), shortfilename(wavfile))
+    q_name=shortfilename(qcpfile)
+    w_name=common.stripext(q_name)+'.wav'
+    try:
+        os.remove(w_name)
+    except:
+        pass
+    run(pvconv, q_name)
+    try:
+        os.remove(wavfile)
+    except:
+        pass
+    os.rename(w_name, wavfile)
 
 def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
     f=None
