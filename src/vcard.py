@@ -367,17 +367,17 @@ class VCard:
         if "WORK" in types: iswork=True
         if "HOME" in types: ishome=True
 
-        if iswork and voice: self._setvalue(result, "work", value, preferred)
-        if ishome and voice: self._setvalue(result, "home", value, preferred)
+        if iswork and voice: self._setvalue(result, "phone", {"type": "work", "number": value}, preferred)
+        if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
         if not iswork and not ishome and "FAX" in types:
             # fax without explicit work or home
-            self._setvalue(result, "fax", value, preferred)
+            self._setvalue(result, "phone", {"type": "fax", "number": value}, preferred)
         else:
-            if iswork and "FAX" in types: self._setvalue(result, "work fax", value, preferred)
-            if ishome and "FAX" in types: self._setvalue(result, "home fax", value, preferred)
-        if "CELL" in types: self._setvalue(result, "cell", value, preferred)
-        if "PAGER" in types: self._setvalue(result, "pager", value, preferred)
-        if "DATA" in types: self._setvalue(result, "data", value, preferred)
+            if iswork and "FAX" in types: self._setvalue(result, "phone", {"type": "work fax", "number": value}, preferred)
+            if ishome and "FAX" in types: self._setvalue(result, "phone", {"type": "home fax", "number": value}, preferred)
+        if "CELL" in types: self._setvalue(result, "phone", {"type": "cell", "number": value}, preferred)
+        if "PAGER" in types: self._setvalue(result, "phone", {"type": "pager", "number": value}, preferred)
+        if "DATA" in types: self._setvalue(result, "phone", {"type": "data", "number": value}, preferred)
             
 
     def _setvalue(self, result, type, value, preferred=False):
