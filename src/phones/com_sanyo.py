@@ -204,7 +204,7 @@ class SanyoPhonebook:
         
     def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=0, returnerror=False):
         if writemode:
-            numretry=2
+            numretry=3
         else:
             numretry=0
             
@@ -1172,11 +1172,11 @@ class Profile(com_phone.Profile):
     OVERSIZE_PERCENTAGE=100
     
     MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .`~!@#$%^&()-_=+[{]};\'"
     WALLPAPER_CONVERT_FORMAT="png"
     
     MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .`~!@#$%^&()-_=+[{]};\'"
 
     # which usb ids correspond to us
     usbids=( ( 0x0474, 0x0701, 1),  # VID=Sanyo, PID=4900 internal USB interface
