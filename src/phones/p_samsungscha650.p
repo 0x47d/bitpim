@@ -6,6 +6,7 @@
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
+
 %{
 # Text in this block is placed in the output file
 
@@ -34,8 +35,7 @@ BOOL=BOOLlsb
 
 PACKET pbslot:
     1  UINT c0                  # either 0 or 1
-    1  UINT pbbook_index        # index into pbbook
-    1  UINT c1                  # usually 0
+    2  UINT pbbook_index        # index into pbbook
     1  UINT status              # status of this slot
     *  LIST { 'length': 4 } timestamp:
         1   UINT    t
@@ -45,8 +45,7 @@ PACKET pbslots:
 
 PACKET pbentry:
     1  UINT  c0
-    1  UINT  mem_index
-    1  UINT  c2
+    2  UINT  mem_index
     1  UINT  c3
     2  UINT speed_dial_index
     2  UINT home_num_index
