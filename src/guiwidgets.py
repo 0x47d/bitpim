@@ -575,7 +575,7 @@ class MyFileDropTarget(wxFileDropTarget):
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
     # File we should ignore
-    skiplist= ( 'desktop.ini', 'thumbs.db' )
+    skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
     
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL):
         wxListCtrl.__init__(self, parent, id, style=style)
@@ -752,7 +752,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
                 d['result']={}
                 execfile(os.path.join(self.thedir, file), d, d)
                 result.update(d['result'])
-            elif file in self.skiplist:
+            elif file.lower() in self.skiplist:
                 # ignore windows detritus
                 continue
             else:
