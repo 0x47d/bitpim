@@ -157,6 +157,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numentries=res.numentries
         self.log("There are %d entries" % (numentries,))
+        # reset cursor
+        self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
         for i in range(0, numentries):
             ### Read current entry
             req=self.protocolclass.pbreadentryrequest()
@@ -214,6 +216,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         progressmax=numexistingentries+len(data['phonebook'].keys())
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
+        # reset cursor
+        self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
         for i in range(0, numexistingentries):
             ### Read current entry
             req=self.protocolclass.pbreadentryrequest()
@@ -914,13 +918,17 @@ class Profile:
                         # sorry no space for this category
                         e['group']=0
 
-                e['emails']=self.filllist(helper.getemails(entry.get('emails', []) ,0,3,48), 3, "")
+                emails=helper.getemails(entry.get('emails', []) ,0,3,48)
+                e['emails']=self.filllist(emails, 3, "")
 
                 e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
 
                 e['memo']=self.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
 
-                numbers=helper.getnumbers(entry.get('numbers', []),1,5)
+                # there must be at least one email address or phonenumber
+                minnumbers=1
+                if len(emails): minnumbers=0
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,5)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for num in numbers:
@@ -944,8 +952,6 @@ class Profile:
                         if t=='none': # conveniently last entry
                             e['numbertypes'].append(i)
                             break
-                if len(e['numbers'])==0:
-                    raise helper.ConversionFailed("The phone numbers didn't have any digits for this entry")
 
                 e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=self.filllist(e['numbers'], 5, "")
