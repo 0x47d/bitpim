@@ -377,6 +377,9 @@ class PhoneGrid(wxGrid):
 
     
 class LogWindow(wxPanel):
+
+    theanalyser=None
+    
     def __init__(self, parent):
         wxPanel.__init__(self,parent, -1, style=wxNO_FULL_REPAINT_ON_RESIZE)
         # have to use rich2 otherwise fixed width font isn't used on windows
@@ -423,7 +426,11 @@ class LogWindow(wxPanel):
             # or the whole buffer if it was nothing
             if data is None or len(data)==0:
                 data=self.tb.GetValue()
-            analyser.Analyser(data=data)
+            if self.theanalyser is None:
+                self.theanalyser=analyser.Analyser(data=data)
+            else:
+                self.theanalyser.Show()
+                self.theanalyser.newdata(data)
             evt.Skip()
             
 
