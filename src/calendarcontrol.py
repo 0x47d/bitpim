@@ -537,21 +537,21 @@ class Calendar(wx.Panel):
 
     def OnKeyDown(self, event):
         key=event.GetKeyCode()
-        if key==WXK_NEXT:
+        if key==wx.WXK_NEXT:
            self.scrollby( (self.numrows-1)*7)
-        elif key==WXK_PRIOR:
+        elif key==wx.WXK_PRIOR:
            self.scrollby( (self.numrows-1)*-7)
-        elif key==WXK_LEFT:
+        elif key==wx.WXK_LEFT:
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]-1) )
-        elif key==WXK_RIGHT:
+        elif key==wx.WXK_RIGHT:
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]+1) )
-        elif key==WXK_UP:
+        elif key==wx.WXK_UP:
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]-7) )
-        elif key==WXK_DOWN:
+        elif key==wx.WXK_DOWN:
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]+7) )
-        elif key==WXK_HOME:  # back a month
+        elif key==wx.WXK_HOME:  # back a month
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]-1, self.selecteddate[2]) )
-        elif key==WXK_END: # forward a month
+        elif key==wx.WXK_END: # forward a month
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]+1, self.selecteddate[2]) )
         # ::TODO:: activate edit code for return or space on a calendarcell
         else:
