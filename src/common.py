@@ -33,10 +33,11 @@ class IntegrityCheckFailed(Exception):
           self.message=message
                   
 class HelperBinaryNotFound(Exception):
-     def __init__(self, basename, fullname):
-          Exception.__init__(self, "Helper binary %s not found.  It should be %s" % (basename, fullname))
+     def __init__(self, basename, fullname, paths):
+          Exception.__init__(self, "Helper binary %s not found.  It should be in one of %s" % (fullname, ", ".join(paths)))
           self.basename=basename
           self.fullname=fullname
+          self.paths=paths
 
 class CommandExecutionFailed(Exception):
      def __init__(self, retcode, args):
