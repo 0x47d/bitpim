@@ -21,6 +21,9 @@ from wxPython.lib import colourdb
 from wxPython.help import *
 from wxPython.gizmos import wxTreeListCtrl
 
+# temp
+import wxPython.gizmosc as gizmosc
+
 # my modules
 import guiwidgets
 import common
@@ -629,7 +632,7 @@ class MainWindow(wxFrame):
         if self.filesystemwidget is None:
             for i in range(0, self.nb.GetPageCount()):
                 if self.nb.GetPageText(i)==logtitle:
-                    self.filesystemwidget=FileSystemView(self, self.nb)
+                    self.filesystemwidget=FileSystemView(self, self.nb, id=97)
                     self.nb.InsertPage(i, self.filesystemwidget, fstitle, True)
                     self.config.WriteInt("viewfilesystem", True)
                     return
@@ -1045,24 +1048,39 @@ class WorkerThread(WorkerThreadFramework):
         return self.commphone.rmdir(path)
 
 
-class FileSystemView(wxTreeCtrl):
+class FileSystemView(wxTreeListCtrl):
+
+    # the gizmos.py shipped with wxPython 2.4.1.2 has wrong implementation
+    # of these two methods.  We have fixed versions here.  They will be removed
+    # when a later version of wxPython ships
+    def GetFirstChild(self, *_args, **_kwargs):
+        val = gizmosc.wxTreeListCtrl_GetFirstChild(self, *_args, **_kwargs)
+        return val
+    def GetNextChild(self, *_args, **_kwargs):
+        val = gizmosc.wxTreeListCtrl_GetNextChild(self, *_args, **_kwargs)
+        return val
+    
+    
     # we have to add None objects to all nodes otherwise the tree control refuses
     # sort (somewhat lame imho)
-    def __init__(self, mainwindow, parent, idd=-1):
-        # I was using the id function hence idd instead of id
-        wxTreeCtrl.__init__(self, parent, idd, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
-        # self.AddColumn("Name")
-        # self.AddColumn("Size")
-        # self.SetMainColumn(0)
-        # self.SetColumnWidth(0, 200)
+    def __init__(self, mainwindow, parent, id=-1):
+        wxTreeListCtrl.__init__(self, parent, id, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
+        self.AddColumn("Name")
+        self.AddColumn("Size")
+        self.AddColumn("Date")
+        self.AddColumn("Extra Stuff")
+        self.SetMainColumn(0)
+        self.SetColumnWidth(0, 300)
+        self.SetColumnWidth(3, 400)
+        self.SetColumnAlignment(1, wxLIST_FORMAT_RIGHT)
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
         self.SetPyData(self.root, None)
         self.SetItemHasChildren(self.root, True)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.dirhash={ "": 1}
-        EVT_TREE_ITEM_EXPANDED(self, idd, self.OnItemExpanded)
-        EVT_TREE_ITEM_ACTIVATED(self,idd, self.OnItemActivated)
+        EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
+        EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
 
         self.filemenu=wxMenu()
         self.filemenu.Append(ID_FV_SAVE, "Save ...")
@@ -1089,6 +1107,7 @@ class FileSystemView(wxTreeCtrl):
         EVT_MENU(self.dirmenu, ID_FV_REFRESH, self.OnDirRefresh)
         EVT_RIGHT_DOWN(self, self.OnRightDown)
         EVT_RIGHT_UP(self, self.OnRightUp)
+        EVT_LIST_ITEM_RIGHT_CLICK(self, id, self.OnRightUp)
 
     def OnRightUp(self, event):
         pt = event.GetPosition();
@@ -1155,9 +1174,11 @@ class FileSystemView(wxTreeCtrl):
                 self.SetPyData(found, None)
                 made=1
             if result[file]['type']=='file':
-                print result[file]
                 self.dirhash[result[file]['name']]=0
                 self.SetItemHasChildren(found, False)
+                self.SetItemText(found, `result[file]['size']`, 1)
+                self.SetItemText(found, `result[file]['date']`, 2)
+                self.SetItemText(found, result[file]['data'], 3)
             else: # it is a directory
                 self.dirhash[result[file]['name']]=1
                 self.SetItemHasChildren(found, True)
