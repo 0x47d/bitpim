@@ -286,6 +286,9 @@ class ImportCSVDialog(wx.Dialog):
 
     def OnOk(self,_):
         "Ok button was pressed"
+        if self.preview.IsCellEditControlEnabled():
+            self.preview.HideCellEditControl()
+            self.preview.SaveEditControlValue()
         # ::TODO:: deal with save button
         self.EndModal(wx.ID_OK)
         
