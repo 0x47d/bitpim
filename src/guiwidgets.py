@@ -12,9 +12,9 @@ import copy
 # wx modules
 from wxPython.wx import *
 from wxPython.grid import *
-from wxPython.lib.timectrl import *
 from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
 from wxPython.lib.intctrl import *
+from wxPython.lib.maskededit import wxMaskedTextCtrl
 
 # my modules
 import common
@@ -1092,6 +1092,9 @@ class Calendar(calendarcontrol.Calendar):
             y,m,d=i['start'][0:3]
             if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
                 continue # we are before this entry
+            y,m,d=i['end'][0:3]
+            if year>y or (year==y and month>m) or (year==y and month==m and day>d):
+                continue # we are after this entry
             # look in exception list            
             if (year,month,day) in i.get('exceptions', ()):
                 continue # yup, so ignore
@@ -1305,9 +1308,9 @@ class DayViewDialog(wxDialog):
             t=wxStaticText(self, -1, desc, style=wxALIGN_LEFT)
             gs.Add(t)
             if field=='start':
-                c=DVTimeControl(self,self.ID_START)
+                c=DVDateTimeControl(self,self.ID_START)
             elif field=='end':
-                c=DVTimeControl(self,self.ID_END)
+                c=DVDateTimeControl(self,self.ID_END)
             elif field=='repeat':
                 c=DVRepeatControl(self, self.ID_REPEAT)
             elif field=='description':
@@ -1435,6 +1438,27 @@ class DayViewDialog(wxDialog):
 
     def OnSaveButton(self, _=None):
         """Callback for when user presses save"""
+
+        # whine if end is before start
+        start=self.fields['start'].GetValue()
+        end=self.fields['end'].GetValue()
+
+        # I want metric time!
+        if ( end[0]<start[0] ) or \
+           ( end[0]==start[0] and end[1]<start[1] ) or \
+           ( end[0]==start[0] and end[1]==start[1] and end[2]<start[2] ) or \
+           ( end[0]==start[0] and end[1]==start[1] and end[2]==start[2] and end[3]<start[3] ) or \
+           ( end[0]==start[0] and end[1]==start[1] and end[2]==start[2] and end[3]==start[3] and end[4]<start[4] ):
+            # scold the user
+            dlg=wxMessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
+                                wxOK|wxICON_EXCLAMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            # move focus
+            self.fields['end'].SetFocus()
+            return
+
+        # lets roll ..
         entry=self.getcurrententry()
 
         # is it a repeat?
@@ -1454,13 +1478,13 @@ class DayViewDialog(wxDialog):
         # update the fields
         for f in self.fields:
             control=self.fields[f]
-            if isinstance(control, DVTimeControl):
-                # which dated we use?
+            if isinstance(control, DVDateTimeControl):
+                # which date do we use?
                 if res==self.ANSWER_ORIGINAL:
-                    d=entry[f][0:3]
+                    d=control.GetValue()[0:3]
                 else:
                     d=self.date
-                v=list(d)+list(control.GetValue())
+                v=list(d)+list(control.GetValue())[3:]
             else:
                 v=control.GetValue()
 
@@ -1480,7 +1504,14 @@ class DayViewDialog(wxDialog):
 
         # tidy up
         self.setdirty(False)
-        self.refreshentries()
+        # did the user change the date on us?
+        date=tuple(newentry['start'][:3])
+        if tuple(self.date)!=date:
+            self.cw.showday(*date)
+            self.cw.setselection(*date)
+            self.setdate(*date)
+        else:
+            self.refreshentries()
         self.updatelistbox(newentry['pos'])
 
     def OnNewButton(self, _=None):
@@ -1601,7 +1632,7 @@ class DayViewDialog(wxDialog):
         active=True
         if entry is None:
             for i in self.fields:
-                self.fields[i].SetValue("")
+                self.fields[i].SetValue(None)
             active=False
         else:
             for i in self.fieldnames:
@@ -1667,31 +1698,71 @@ class DayViewDialog(wxDialog):
 
 
 
-class DVTimeControl(wxPanel):
-    """A time control customised to work in the dayview editor"""
+# We derive from wxPanel not the control directly.  If we derive from
+# wxMaskedTextCtrl then all hell breaks loose as our {Get|Set}Value
+# methods make the control malfunction big time
+class DVDateTimeControl(wxPanel):
+    """A datetime control customised to work in the dayview editor"""
     def __init__(self,parent,id):
+        f="EUDATETIMEYYYYMMDD.HHMM"
         wxPanel.__init__(self, parent, -1)
-        self.tc=wxTimeCtrl(self, id, display_seconds=False)
-        self.spin=wxSpinButton(self, -1, style=wxSP_VERTICAL, size=wxSize(-1,20))
-        self.tc.BindSpinButton(self.spin)
+        self.c=wxMaskedTextCtrl(self, id, "",
+                                autoformat=f,
+                                validRequired=True)
         bs=wxBoxSizer(wxHORIZONTAL)
-        bs.Add(self.tc,0,wxEXPAND)
-        bs.Add(self.spin,0, wxEXPAND)
+        bs.Add(self.c,0,wxEXPAND)
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
-        EVT_TIMEUPDATE(self, id, parent.OnMakeDirty)
+        EVT_TEXT(self.c, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
-        if isinstance(v, str):
-            assert len(v)==0  # blank string
-            self.tc.SetWxDateTime(wxDateTimeFromHMS(0, 0))
+        if v is None:
+            self.c.SetValue("")
             return
-        self.tc.SetWxDateTime(wxDateTimeFromHMS(v[3], v[4]))
+        ap="A"
+        v=list(v)
+        if v[3]>12:
+            v[3]-=12
+            ap="P"
+        elif v[3]==0:
+            v[3]=12
+        elif v[3]==12:
+            ap="P"
+        v=v+[ap]
+
+        # we have to supply what the user would type without the punctuation
+        # (try figuring that out from the "doc") and note the inconsitency
+        # with GetValue
+        str="%04d%02d%02d%02d%02d%s" % tuple(v)
+        self.c.SetValue( str )
 
     def GetValue(self):
-        t=self.tc.GetValue(as_wxDateTime=True)
-        return [t.GetHour(), t.GetMinute()]
+        # the actual value including all punctuation is returned
+        str=self.c.GetValue()
+        digits="0123456789"
+
+        # turn it back into a list
+        res=[]
+        val=None
+        for i in str:
+            if i in digits:
+                if val is None: val=0
+                val*=10
+                val+=int(i)
+            else:
+                if val is not None:
+                    res.append(val)
+                    val=None
+        # fixup am/pm
+        if str[-2]=='P' or str[-2]=='p':
+            if res[3]!=12: # 12pm is midday and left alone
+                res[3]+=12
+        elif res[3]==12: # 12 am
+            res[3]=0
+
+        return res
+
         
     
 class DVRepeatControl(wxChoice):
@@ -1704,8 +1775,6 @@ class DVRepeatControl(wxChoice):
         EVT_CHOICE(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
-        if isinstance(v,str) and len(v)==0:  # blank string
-            v=None
         assert v in self.vals
         self.SetSelection(self.vals.index(v))
 
@@ -1721,19 +1790,20 @@ class DVIntControl(wxIntCtrl):
         EVT_INT(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
-        if isinstance(v, str):
-            assert len(v)==0  # blank string
-            v=0
         if v is None:
             v=-1
-        assert isinstance(v, int)
         wxIntCtrl.SetValue(self,v)
         
 class DVTextControl(wxTextCtrl):
     def __init__(self, parent, id, value=""):
+        if value is None:
+            value=""
         wxTextCtrl.__init__(self, parent, id, value)
         EVT_TEXT(self, id, parent.OnMakeDirty)
-        
+
+    def SetValue(self, v):
+        if v is None: v=""
+        wxTextCtrl.SetValue(self,v)
 
         
 ###
