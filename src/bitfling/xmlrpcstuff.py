@@ -278,6 +278,8 @@ class Server(threading.Thread):
         self.ssh_server_key=servercert
         connection=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if not host:
+            host="0.0.0.0"
         if __debug__ and TRACE: print "Binding to host %s port %d" % (host, port)
         connection.bind( (host, port) )
         connection.listen(connectionthreadcount+5)
