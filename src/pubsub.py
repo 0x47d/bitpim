@@ -101,7 +101,7 @@ class CategoryManager:
         self.OnListRequest()
 
     def OnSetCategories(self, msg):
-        cats=msg.data
+        cats=msg.data[:]
         self.categories=cats
         self.categories.sort()
         self.OnListRequest()
