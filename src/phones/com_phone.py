@@ -181,6 +181,9 @@ class NoFilesystem:
     def offlinerequest(self, reset=False):
         self.__raisefna("offlinerequest")
 
+    def modemmoderequest(self):
+        self.__raisefna("modemmoderequest")
+
     def mkdir(self, name):
         self.__raisefna("filesystem (mkdir)")
         

@@ -1251,7 +1251,7 @@ class WorkerThread(WorkerThreadFramework):
         self.setupcomm()
         return self.commphone.rmdirs(path)
 
-    # offline/reboot
+    # offline/reboot/modemmode
     def phonerebootrequest(self):
         if __debug__: self.checkthread()
         self.setupcomm()
@@ -1261,6 +1261,11 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.offlinerequest()
+
+    def modemmoderequest(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.modemmoderequest()
 
     # backups etc
     def getbackup(self,path,recurse=0):
@@ -1375,6 +1380,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         self.dirmenu.AppendSeparator()
         self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
         self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
+        self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
 
         wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
         wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
@@ -1389,6 +1395,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, self.OnModemMode)
         wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
         wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
@@ -1616,6 +1623,15 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
                      Callback(self.OnPhoneOfflineResults) )
 
     def OnPhoneOfflineResults(self, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+
+    def OnModemMode(self,_):
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.modemmoderequest),
+                     Callback(self.OnModemModeResults) )
+
+    def OnModemModeResults(self, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
 

@@ -92,6 +92,17 @@ class BrewProtocol:
             self.log("Resetting phone")
             self.sendbrewcommand(req, p_brew.setmoderesponse)
             
+    def modemmoderequest(self):
+        # Perhaps we should modify sendbrewcommand to have an option to
+        # not wait for a response
+        self.log("Attempting to put phone in modem mode")
+        req=p_brew.setmodemmoderequest()
+        buffer=prototypes.buffer()
+        req.writetobuffer(buffer)
+        data=buffer.getvalue()
+        self.logdata("brew request", data, req)
+        data=escape(data+crcs(data))+self.brewterminator
+        self.comm.write(data)
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
