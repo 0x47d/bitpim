@@ -2271,7 +2271,7 @@ class MyStatusBar(wxStatusBar):
 
     def progressmajor(self, pos, max, desc=""):
         self.progressminor(0,1)
-        if len(desc):
+        if len(desc) and max:
             str="%d/%d %s" % (pos+1, max, desc)
         else:
             str=desc
