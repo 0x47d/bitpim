@@ -52,6 +52,7 @@ class Profile(com_sanyonewer.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
     )
 
     def __init__(self):
