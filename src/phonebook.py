@@ -780,12 +780,10 @@ class PhoneWidget(wx.Panel):
             d={}
         dlg=ImportDialog(self, d, importdata)
         result=None
-        # TEMPORARY WORKAROUND - DIALOG NOT DISPLAYED
-        if True or dlg.ShowModal()==wx.ID_OK:
+        if dlg.ShowModal()==wx.ID_OK:
             result=dlg.resultdata
-        if False:
-            guiwidgets.save_size(dlg.config, "ImportDialog", dlg.GetRect())
-            dlg.Destroy()
+        guiwidgets.save_size(dlg.config, "ImportDialog", dlg.GetRect())
+        dlg.Destroy()
         if result is not None:
             d={}
             d['phonebook']=result
@@ -1058,8 +1056,7 @@ class ImportDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
              wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
         self.config = parent.mainwindow.config
-        if False:
-            guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
+        guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
         # the data already in the phonebook
         self.existingdata=existingdata
         # the data we are importing
@@ -1068,10 +1065,6 @@ class ImportDialog(wx.Dialog):
         self.resultdata={}
         # each row to display showing what happened, with ids pointing into above data
         self.rowdata={}
-
-        ### TEMPORARY WORKAROUND - THIS DIALOG IS DISABLED UNTIL UI ISSUES CAN BE ADDRESSED
-        self.DoMerge()
-        return
 
         vbs=wx.BoxSizer(wx.VERTICAL)
         
@@ -1094,24 +1087,16 @@ class ImportDialog(wx.Dialog):
 
         hbs.Add(wx.StaticText(self, -1, " "), 0, wx.EXPAND|wx.LEFT, 10)
 
-        self.details=wx.CheckBox(self, wx.NewId(), "Original/Import Details")
-        self.details.SetValue(False)
-        hbs.Add(self.details, 0, wx.EXPAND|wx.LEFT, 25)
-
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
         splitterstyle=wx.SP_3D|wx.SP_LIVE_UPDATE
-        self.splitterstyle=splitterstyle
 
-        hsplit=wx.SplitterWindow(self,-1, style=splitterstyle)
-        hsplit.SetMinimumPaneSize(20)
+        splitter=wx.SplitterWindow(self,-1, style=splitterstyle)
+        splitter.SetMinimumPaneSize(20)
 
-        self.resultpreview=PhoneEntryDetailsView(hsplit, -1, "styles.xy", "pblayout.xy")
+        self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
-        vsplit=wx.SplitterWindow(hsplit, -1, style=splitterstyle)
-        vsplit.SetMinimumPaneSize(20)
-
-        self.grid=wx.grid.Grid(vsplit, -1)
+        self.grid=wx.grid.Grid(splitter, -1)
         self.grid.EnableGridLines(False)
         self.table=ImportDataTable(self)
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
@@ -1121,18 +1106,9 @@ class ImportDialog(wx.Dialog):
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
 
-        self.hhsplit=None
-        self.origpreview=None
-        self.importpreview=None
+        splitter.SplitVertically(self.grid, self.resultpreview, -250)
 
-        hsplit.SplitVertically(vsplit, self.resultpreview, -250)
-        vsplit.Initialize(self.grid)
-        # save these for OnDetailChanged
-        self.vsplit=vsplit
-        self.vsplitpos=-200
-        self.hhsplitpos=0
-
-        vbs.Add(hsplit, 1, wx.EXPAND|wx.ALL,5)
+        vbs.Add(splitter, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
 
         vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -1140,7 +1116,6 @@ class ImportDialog(wx.Dialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
 
-        wx.EVT_CHECKBOX(self, self.details.GetId(), self.OnDetailChanged)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
 
@@ -1178,9 +1153,7 @@ class ImportDialog(wx.Dialog):
             count+=1
         self.rowdata=row
         self.resultdata=results
-        # DISABLE CALL TEMPORARILY
-        if False:
-            self.table.OnDataUpdated()
+        self.table.OnDataUpdated()
         wx.EndBusyCursor()
 
     def MergeEntries(self, originalentry, importentry):
@@ -1211,47 +1184,14 @@ class ImportDialog(wx.Dialog):
 
         return result
         
-
     def OnCellSelect(self, event):
         row=self.rowdata[event.GetRow()]
         confidence,importid,existingid,resultid=row
-        if self.importpreview is not None:
-            if importid is not None:
-                self.importpreview.ShowEntry(self.importdata[importid])
-            else:
-                self.importpreview.ShowEntry({})
-        if self.origpreview is not None:
-            if existingid is not None:
-                self.origpreview.ShowEntry(self.existingdata[existingid])
-            else:
-                self.origpreview.ShowEntry({})
         if resultid is not None:
             self.resultpreview.ShowEntry(self.resultdata[resultid])
         else:
             self.resultpreview.ShowEntry({})
 
-
-    def OnDetailChanged(self, _):
-        "Show or hide the exiting/imported data previews"
-        # We destroy and recreate the bottom splitter with the two previews in
-        # them.  If that isn't done then the window doesn't draw properly amongst
-        # other issues
-        if self.details.GetValue():
-            hhsplit=wx.SplitterWindow(self.vsplit, -1, style=self.splitterstyle)
-            hhsplit.SetMinimumPaneSize(20)
-            self.origpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
-            self.importpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
-            hhsplit.SplitVertically(self.origpreview, self.importpreview, self.hhsplitpos)
-            self.hhsplit=hhsplit
-            self.vsplit.SplitHorizontally(self.grid, self.hhsplit, self.vsplitpos)
-        else:
-            self.vsplitpos=self.vsplit.GetSashPosition()
-            self.hhsplitpos=self.hhsplit.GetSashPosition()
-            self.vsplit.Unsplit()
-            self.hhsplit.Destroy()
-            self.origpreview=None
-            self.importpreview=None
-                        
 
 def dictintersection(one,two):
     return filter(two.has_key, one.keys())
