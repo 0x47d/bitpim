@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This software is under the Artistic license.
 ### Please see the accompanying LICENSE file
@@ -101,6 +101,7 @@ import xyaptu
 import guihelper
 import phonebookentryeditor
 import pubsub
+import nameparser
 
 ###
 ###  Enhanced HTML Widget
@@ -201,41 +202,6 @@ class PhoneEntryDetailsView(HTMLWindow):
 ### Functions used to get data from a record
 ###
 
-def formatname(name):
-    # Returns a string of the name in name.
-    # Since there can be many fields, we try to make sense of them
-    res=""
-    full=name.get("full", "")
-    fml=""
-
-    f=name.get("first", "")
-    m=name.get("middle", "")
-    l=name.get("last", "")
-    if len(f) or len(m) or len(l):
-        fml+=f
-        if len(m) and len(fml) and fml[-1]!=' ':
-            fml+=" "
-        fml+=m
-        if len(l) and len(fml) and fml[-1]!=' ':
-            fml+=" "
-        fml+=l
-
-    if len(fml) or len(full):
-        # are they the same
-        if fml==full:
-            res+=full
-        else:
-            # different
-            if len(full):
-                res+=full
-            if len(fml):
-                if len(res):
-                    res+=" | "
-                res+=fml
-
-    if name.has_key("nickname"):
-        res+=" ("+name["nickname"]+")"
-    return res
 
 def formatcategories(cats):
     return "; ".join([cat['category'] for cat in cats])
@@ -258,7 +224,12 @@ def formatnumber(number):
 # is converted to a dict below
 _getdatalist=[
     # column   (matchnum   match   func_or_field)
-    'Name', ("names", 0, None, formatname),
+    'Name', ("names", 0, None, nameparser.formatfullname),
+    'First', ("names", 0, None, nameparser.getfirst),
+    'Middle', ("names", 0, None, nameparser.getmiddle),
+    'Last', ("names", 0, None, nameparser.getlast),
+
+    # numbers are inserted here
 
     'Category', ("categories", 0,  None, "category"),
     'Category2', ("categories", 1,  None, "category"),
@@ -304,7 +275,7 @@ for pretty, actual in ("Home", "home"), ("Office", "office"), ("Cell", "cell"), 
     for suf,n in ("", 0), ("2", 1), ("3", 2):
         ll.append(pretty+suf)
         ll.append(("numbers", n, ("type", actual), 'number'))
-_getdatalist[2:2]=ll
+_getdatalist[8:8]=ll
 
 _getdatatable={}
 AvailableColumns=[]
@@ -361,31 +332,6 @@ def getdata(column, entry, default=None):
 
     return thevalue.get(formatter, default)
 
-
-
-def formatsimplename(name):
-    # like formatname, except we use the first matching component
-    if len(name.get("full", "")):
-        return name.get("full")
-    f=name.get("first", "")
-    m=name.get("middle", "")
-    l=name.get("last", "")
-    if len(f) or len(m) or len(l):
-        res=""
-        if len(f):
-            res+=f
-        if len(m):
-            if len(res) and res[-1]!=" ":
-                res+=" "
-            res+=m
-        if len(l):
-            if len(res) and res[-1]!=" ":
-                res+=" "
-            res+=l
-        return res
-    return name['nickname']
-
-        
 class CategoryManager:
 
     # this is only used to prevent the pubsub module
@@ -930,8 +876,13 @@ class PhoneWidget(wx.Panel):
 
     def getfullname(self, names, min, max, truncateat=None):
         "Return at least min and at most max fullnames from the names list"
-        # ::TODO:: possibly deal with some names having the fields, and some having full
-        return self._truncatefields(self._getfield(self._getentries(names, min, max, "names"), "full"), truncateat)
+        n=[nameparser.formatsimplename(nn) for nn in names]
+        if len(n)<min:
+            raise self.ConversionFailed("Too few names.  Need at least %d but there were only %d" % (min, len(n)))
+        if len(n)>max:
+            n=n[:max]
+            # ::TODO:: mention this
+        return self._truncatefields(n, truncateat)
 
     def getcategory(self, categories, min, max, truncateat=None):
         "Return at least min and at most max categories from the categories list"
@@ -1333,8 +1284,8 @@ class EntryMatcher:
 def comparenames(s,a):
     "Give a score on two names"
     sm=difflib.SequenceMatcher()
-    sm.set_seq1(formatsimplename(s[0]))
-    sm.set_seq2(formatsimplename(a[0]))
+    sm.set_seq1(nameparser.formatsimplename(s[0]))
+    sm.set_seq2(nameparser.formatsimplename(a[0]))
                     
     r=(sm.ratio()-0.6)*10
     return r
