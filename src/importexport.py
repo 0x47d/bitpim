@@ -38,7 +38,7 @@ def GetPhonebookImports():
     # CSV - always possible
     res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     # Vcards - always possible
-    res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
+    # res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Vcal - always possible
     res.append(('vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
     # Outlook
