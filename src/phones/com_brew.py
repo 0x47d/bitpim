@@ -145,8 +145,7 @@ class BrewProtocol:
             try:
                 req=p_brew.listfilerequest()
                 req.entrynumber=i
-                if len(dir): req.dirname=dir
-                else: req.dirname="/"
+                req.dirname=dir
                 res=self.sendbrewcommand(req,p_brew.listfileresponse)
                 results[res.filename]={ 'name': res.filename, 'type': 'file',
                                 'size': res.size }
