@@ -3,7 +3,7 @@
 
 name="bitpim"
 version="0.6"
-release="1"  # when rereleases of the same version happen, this gets incremented
+release="2"  # when rereleases of the same version happen, this gets incremented
 testver=2  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
 contact="The BitPim home page is at http://bitpim.sf.net.  You can post any " \
