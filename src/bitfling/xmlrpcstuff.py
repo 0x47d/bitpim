@@ -435,7 +435,7 @@ class ServerProxy:
     logsetup=False
     def __init__(self, username, password, host, port, certverifier=None):
         if not self.logsetup:
-            paramiko.util.log_to_file('serverproxy.log')
+            # paramiko.util.log_to_file('serverproxy.log')
             self.logsetup=True
         self.__username=username
         self.__password=password
