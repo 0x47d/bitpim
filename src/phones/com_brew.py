@@ -48,7 +48,7 @@ class BrewNameTooLongException(BrewCommandException):
         BrewCommandException.__init__(self, errnum, "Name is too long")
 
 
-modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,)
+modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
 class BrewProtocol:
     "Talk to a phone using the 'brew' protocol"
