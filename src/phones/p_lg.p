@@ -54,9 +54,8 @@ PACKET pbinitresponse:
     4 UINT numentries
     20 UNKNOWN dunno3
     4 UINT lastentry
-    19 UNKNOWN dunno4
-    2 UINT something2
-    2 UINT something3
+    20 UNKNOWN dunno4
+    4 UINT esn
     * STRING phonesoftware
 
 PACKET pbinforequest:
