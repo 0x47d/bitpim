@@ -44,11 +44,61 @@ else:
 
 def gethelperbinary(basename):
     "Returns the full pathname to the specified helper binary"
+    if basename=="pvconv":
+        return getpvconvbinary()
     f=os.path.join(helperdir, basename)+osext
     f=shortfilename(f)
     if not os.path.isfile(f):
-        raise common.HelperBinaryNotFound(basename, f)
+        raise common.HelperBinaryNotFound(basename, basename+osext, [helperdir])
     return f
+
+
+_foundpvconv=None
+
+def getpvconvbinary():
+    "PVConv can't be distributed with BitPim so the user has to install it and we have to find it"
+    global _foundpvconv
+    # check each time as user could delete or more binary
+    if _foundpvconv is not None and os.path.isfile(_foundpvconv):
+        return _foundpvconv
+    _foundpvconv=None
+    lookin=[]
+    if sys.platform=='win32':
+        binary="pvconv.exe"
+        lookin.append("c:\\bin")
+        from win32com.shell import shell, shellcon
+        path=shell.SHGetFolderPath(0, shellcon.CSIDL_PROGRAM_FILES, None, 0)
+        if path:
+            lookin.append(os.path.join(path, "Qualcomm"))
+            lookin.append(os.path.join(path, "pvconv"))
+        path=shell.SHGetFolderPath(0, shellcon.CSIDL_WINDOWS, None, 0)
+        if path:
+            lookin.append(path)
+    elif sys.platform=='linux2':
+        binary="pvconv"
+        lookin.append(_expand("~/bin"))
+        lookin.append(_expand("~"))
+        lookin.append(_expand("/usr/local/bin"))
+    elif sys.platform=='darwin':
+        binary="pvconv"
+        lookin.append(_expand("~/bin"))
+        lookin.append(_expand("~"))
+        lookin.append(_expand("/usr/local/bin"))
+        lookin.append(_expand("/usr/bin"))
+    else:
+        raise Exception("Unknown platform "+sys.platform)
+    for dir in lookin:
+        f=os.path.join(dir, binary)
+        if os.path.exists(f):
+            _foundpvconv=f
+            return _foundpvconv
+
+    raise common.HelperBinaryNotFound("pvconv", binary, lookin)
+        
+        
+
+def _expand(x):
+    return os.path.expandvars(os.path.expanduser(x))
 
 
 def run(*args):
