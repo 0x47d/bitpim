@@ -113,11 +113,18 @@ class WallpaperView(guiwidgets.FileView):
         if self.isBCI(file):
             image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         else:
-            image=wx.Image(file)
+            if file.endswith(".mp4"):
+                image=wx.Image(guihelper.getresourcefile('wallpaper.png'))
+                # Need to find a more appropriate graphic
+            else:
+                image=wx.Image(file)
         return image
 
     def GetItemSizedBitmap(self, item, width, height):
+        print item
         img=self.GetItemImage(item)
+        print width, height
+        print img.GetWidth(), img.GetHeight()
         if width!=img.GetWidth() or height!=img.GetHeight():
             if guihelper.IsMSWindows():
                 bg=None # transparent
@@ -164,7 +171,11 @@ class WallpaperView(guiwidgets.FileView):
         if self.isBCI(file):
             image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         else:
-            image=wx.Image(file)
+            if file.endswith(".mp4"):
+                image=wx.Image(guihelper.getresourcefile('wallpaper.png'))
+                # Need to find a more appropriate graphic
+            else:
+                image=wx.Image(file)
         # we use int to force the long to an int (longs print out with a trailing L which looks ugly)
         return image, int(os.stat(file).st_size)
 
