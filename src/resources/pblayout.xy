@@ -1,7 +1,11 @@
 <html>
+<head></head>
 <body bgcolor="#cdefab">
-<!-- Picture Ringtone Name Category row -->
+
 <table ${styles['table']}>
+
+<!-- Picture Ringtone Name Category row -->
+
 <tr>
 
 <td width="72" ${styles['wallpaperpanel']} >
@@ -22,13 +26,13 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 
 <td ${styles['namepanel']}>
 <py-open>for name in entry.get("names",[]):</py-open>
-<font ${styles["name"]}<b>${formatname(name)}</b></font><br>
+<font ${styles["name"]}><b>${formatname(name)}</b></font><br>
 <py-close/>
 </td>
 
 <td width="75" ${styles['categoryflagspanel']}>
 <py-open>for cat in entry.get("categories",[]):</py-open>
-<font ${styles["category"]}${cat['category']}</font><br>
+<font ${styles["category"]}>${cat['category']}</font><br>
 <py-close/>
 <br>
 <py-open>if has_flag(entry,"secret"):</py-open>
@@ -36,34 +40,38 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <py-close/>
 </td>
 </tr>
-</table><table ${styles['table']}>
-<!-- Numbers row -->
-<td ${styles['numberspanel']}>
+</table><br>
 
-<!-- Individual numbers also as a table -->
+<!-- Numbers rows -->
+<py-open>if len(entry.get("numbers", [])):</py-open>
 <table ${styles['table']}>
 <py-open>for rownum,number in zip(range(len(entry.get("numbers",[]))),entry.get("numbers",[])):</py-open>
 <tr ${styles['numberrow'][rownum%2]}>
-<td align="right" valign="center"><b>${titlecase(number['type'])}</b></td>
-<td valign="center" width="100%"><code>${number['number']}</code></td>
+<td width=75 align="right"><b>${titlecase(number['type'])}</b></td>
+<td><code>${number['number']}</code></td>
 </tr>
 <py-close/>
-</table>
-</td>
-</tr>
-</table>
+</table><br>
+<py-close/>
+
+
+<!-- URL rows -->
+<py-open>if len(entry.get("urls", [])):</py-open>
 <table ${styles['table']}>
 <tr>
-<!-- URLs as a list -->
 <td ${styles['urlpanel']}>
 <py-open>for url in entry.get("urls", []):</py-open>
 <font ${styles['url']}><a href="${url["url"]}">${url["url"]}</a></font> ${urltype(url)}<br>
 <py-close/>
 </td>
-
 </tr>
+</table><br>
+<py-close/>
 
-</table><table ${styles['table']}>
+
+<!-- Addresses rows -->
+<py-open>if len(entry.get("addresses", [])):</py-open>
+<table ${styles['table']}>
 <!-- Addresses as a list, addrwidth wide -->
 <py-line>addrwidth=2</py-line>
 <py-line>addrnum=-1</py-line>
@@ -83,8 +91,12 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <py-line>addrnum+=1</py-line>
 <td width="${int(100/addrwidth)}%" ${styles["address"][addrnum%addrwidth]}>&nbsp;</td>
 <py-close/>
-</table>
+</table><br>
+<py-close/>
+
+
 <!-- Memos -->
+<py-open>if len(entry.get("memos", [])):</py-open>
 <table ${styles['table']}>
 <td ${styles["memopanel"]} width="100%">
 <py-line>first=True</py-line>
@@ -93,7 +105,8 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 <p>${htmlify(memo["memo"])}
 </p>
 <py-close/>
-</table>
+</table><br>
+<py-close/>
 
 </body>
 </html>
