@@ -94,7 +94,7 @@ class BrewProtocol:
             
     def modemmoderequest(self):
         # Perhaps we should modify sendbrewcommand to have an option to
-        # not wait for a response
+        # not be picky about response.
         self.log("Attempting to put phone in modem mode")
         req=p_brew.setmodemmoderequest()
         buffer=prototypes.buffer()
@@ -103,6 +103,9 @@ class BrewProtocol:
         self.logdata("brew request", data, req)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         self.comm.write(data)
+        # Response could be text or a packet
+        self.comm.readsome(numchars=5)
+        self.mode=self.MODENONE # Probably should add a modem mode
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
