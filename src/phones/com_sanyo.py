@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Stephen Wood <saw@genhomepage.com>
+### Copyright (C) 2003 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This software is under the Artistic license.
 ### http://www.opensource.org/licenses/artistic-license.php
@@ -85,6 +85,21 @@ class SanyoPhonebook:
         self.log("expected size "+`buffersize`+"  actual "+`len(data)`)
         assert buffersize==len(data)
         return data
+
+    def sendsanyobuffer(self, buffer, startcommand, comment):
+        self.log("Writing "+comment+" "+`len(buffer)`+" bytes")
+        desc="Writing "+comment
+        numblocks=len(buffer)/500
+        offset=0
+        command=startcommand
+        for offset in range(0, len(buffer), 500):
+            req=p_sanyo.bufferpartupdaterequest()
+            block=buffer[offset:]
+            l=min(len(block), 500)
+            block=block[:l]
+            req.data=block
+            command+=1
+            self.sendpbcommand(req, p_sanyobufferpartresponse)
         
     def sendpbcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
