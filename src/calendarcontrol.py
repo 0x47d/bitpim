@@ -279,8 +279,6 @@ class CalendarCell(wxWindow):
             else:
                 ampm,_=dc.GetTextExtent("a")
 
-            leading=0
-
             r=self.attr.setforentry(dc, fontscale)
             if not r: iteration=-1 # font can't be made this small
             _,entryheight=dc.GetTextExtent("I")
@@ -740,7 +738,7 @@ class Calendar(wxPanel):
 class PopupCalendar(wxDialog):
     """The control that pops up when you click the year button"""
     def __init__(self, parent, calendar, style=wxSIMPLE_BORDER):
-        wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP)
+        wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP|style)
         self.calendar=calendar
         self.control=wxCalendarCtrl(self, 1, style=wxCAL_SUNDAY_FIRST, pos=(0,0))
         sz=self.control.GetBestSize()
