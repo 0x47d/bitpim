@@ -399,6 +399,8 @@ class MainApp(wx.App):
         # make the main frame
         self.frame=MainWindow(None, -1, "BitPim", self.config)
         self.frame.Connect(-1, -1, EVT_CALLBACK, self.frame.OnCallback)
+        if guihelper.IsMac():
+            self.frame.MacSetMetalAppearance(True)
 
         # make the worker thread
         wt=WorkerThread()
