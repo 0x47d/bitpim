@@ -22,6 +22,7 @@ import re
 from wxPython.wx import *
 from wxPython.lib import colourdb
 from wxPython.help import *
+from wxPython.html import *
 from wxPython.gizmos import wxTreeListCtrl
 
 # temp
@@ -269,6 +270,9 @@ class MainApp(wxApp):
 
         # setup help system
         self.setuphelp()
+
+        # html easy printing
+        self.htmlprinter=wxHtmlEasyPrinting()
 
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
