@@ -1424,7 +1424,6 @@ def mergenumberlists(orig, imp):
     res.extend(orig[:])
     # look through each imported number
     for i in imp:
-        print i
         num=cleannumber(i['number'])
         found=False
         for r in res:
@@ -1473,7 +1472,6 @@ def mergefields(orig, imp, field, threshold=0.88, cleaner=default_cleaner):
     res.extend(orig[:])
     # look through each imported field
     for i in imp:
-        print i
 
         impfield=cleaner(i[field])
         
