@@ -26,7 +26,6 @@ import sha
 
 # my modules
 import common
-import commport
 import copy
 import p_lgvx6000
 import com_lgvx4400
