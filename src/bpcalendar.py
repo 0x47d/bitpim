@@ -527,7 +527,7 @@ class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
     used to edit the content of one particular day."""
 
-    CURRENTFILEVERSION=4
+    CURRENTFILEVERSION=3
     
     def __init__(self, mainwindow, parent, id=-1):
         """constructor
@@ -789,11 +789,6 @@ class Calendar(calendarcontrol.Calendar):
             dict['result']['converted']=True    # already converted
 
         # 3 to 4 etc
-        if version==3:
-            version=4
-            dict['result']['calendar']=self.convert_dict(dict['result'].get('calendar', {}), 3, 4)
-
-        # 4 to 5 etc
 
     def convert_dict(self, dict, from_version, to_version, ringtone_index={}):
         """
@@ -806,32 +801,16 @@ class Calendar(calendarcontrol.Calendar):
             return self.__convert2to3(dict, ringtone_index)
         elif from_version==3 and to_version==2:
             return self.__convert3to2(dict, ringtone_index)
-        elif from_version==3 and to_version==4:
-            return self.__convert3to4(dict, ringtone_index)
         else:
             raise 'Invalid conversion'
 
-    def __convert3to4(self, dict, ringtone_index):
-        """
-        Convert calendar dict from version 3 to 4.
-        """
-        r={}
-        for k,e in dict.items():
-            r[k]=e
-            # update start & end to ISO string
-            r[k]['start']='%04d%02d%02dT%02d%02d'%\
-                           tuple(e['start']['date']+e['start']['time'])
-            r[k]['end']='%04d%02d%02dT%02d%02d'%\
-                         tuple(e['end']['date']+e['end']['time'])
-        return r
-        
     def __convert2to3(self, dict, ringtone_index):
         """
         Convert calendar dict from version 2 to 3.
         """
         r={}
         for k,e in dict.items():
-            ce=CalendarEntry(*e['start'][:3])
+            ce=CalendarEntry()
             ce.start=e['start']
             ce.end=e['end']
             ce.description=e['description']
@@ -857,7 +836,10 @@ class Calendar(calendarcontrol.Calendar):
                     repeat_entry.repeat_type=repeat_entry.monthly
                 else:
                     repeat_entry.repeat_type=repeat_entry.yearly
-                repeat_entry.suppressed=e.get('exceptions',[])
+                s=[]
+                for n in e.get('exceptions',[]):
+                    s.append(bptime.BPTime(n))
+                repeat_entry.suppressed=s
                 ce.repeat=repeat_entry
             r[ce.id]=ce
         return r
@@ -942,7 +924,10 @@ class Calendar(calendarcontrol.Calendar):
                 d['exceptions']=[]
                 d['daybitmap']=0
             else:
-                d['exceptions']=rp.suppressed
+                s=[]
+                for n in rp.suppressed:
+                    s.append(n.get())
+                d['exceptions']=s
                 if rp.repeat_type==rp.daily:
                     self.__convert_daily_events(e, d)
                 elif rp.repeat_type==rp.weekly:
@@ -957,5 +942,7 @@ class Calendar(calendarcontrol.Calendar):
             d['pos']=idx
             r[idx]=d
             idx+=1
-        print 'V2: ', r
+        if __debug__:
+            print 'Calendar.__convert3to2: V2 dict:'
+            print r
         return r
