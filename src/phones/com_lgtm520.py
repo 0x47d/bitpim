@@ -12,15 +12,12 @@
 "Talk to the LG TM520/VX10 cell phone"
 
 # standard modules
-import re
 import time
 import cStringIO
 import sha
 
 # my modules
 import common
-import commport
-import copy
 import p_lgtm520
 import com_brew
 import com_phone
@@ -30,6 +27,11 @@ import prototypes
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     "Talk to the LG TM520/VX10 cell phone"
     desc="LG-TM520/VX10"
+
+    # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
+    # plus a fudge factor of 5 days, 16 hours for no reason I can find
+    _tm520epochtounix=315532800+446400
+    _brewepochtounix=315532800+446400  # trying to override inherited entry
 
     getwallpapers=None
     getringtones=None
@@ -97,10 +99,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         res['emails']=[ {'email': entry.email} ]
         # 5 phone numbers
         res['numbers']=[]
+        numbernumber=0
         for type in ['home', 'office', 'mobile', 'pager', 'data/fax']:
                 res['numbers'].append({'number': entry.numbers[numbernumber].number, 'type': type })
         return res
-
 
     def getcalendar(self,result):
         res={}
@@ -112,16 +114,24 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         for event in sc.events:
             entry={}
             entry['pos']=event.pos
-            if entry['pos']==-1: continue # blanked entry
-            # normal fields
-            for field in 'start','description':
-                entry[field]=getattr(event,field)
+            date = event.date
+            if date == 0x11223344: continue  # blanked entry
+            date += self._tm520epochtounix
+            entry['start'] = self.decodedate(date)
+            entry['description'] = getattr(event,'description')
+            entry['repeat'] = None
             res[event.pos]=entry
 
-        assert sc.numactiveitems==len(res)
         result['calendar']=res
         return result
 
+    def decodedate(self,val):
+        """Unpack 32 bit value into date/time
+
+        @rtype: tuple
+        @return: (year, month, day, hour, minute)
+        """
+        return time.localtime(val)[:5]
 
 class Profile:
     pass
