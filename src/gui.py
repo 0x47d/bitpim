@@ -694,12 +694,14 @@ class MainWindow(wxFrame):
            widget is self.phonewidget:
             enableedit=True
         else: enableedit=False
-        
-        if IsGtk():
-            enablefv=False # crummy platform
-            
-        self.GetToolBar().EnableTool(ID_FV_ICONS, enablefv)
-        self.GetToolBar().EnableTool(ID_FV_LIST, enablefv)
+
+        # Toolbar
+        if HasFullyFunctionalListView():
+            self.GetToolBar().EnableTool(ID_FV_ICONS, enablefv)
+            self.GetToolBar().EnableTool(ID_FV_LIST, enablefv)
+        self.GetToolBar().EnableTool(ID_EDITADDENTRY, enableedit)
+        self.GetToolBar().EnableTool(ID_EDITDELETEENTRY, enableedit)
+        # menu items
         self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
         self.GetMenuBar().Enable(ID_FV_LIST, enablefv)
         self.GetMenuBar().Enable(ID_EDITADDENTRY, enableedit)
