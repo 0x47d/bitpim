@@ -798,11 +798,6 @@ class FileEntries:
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
-        # check for max num of allowable files
-        if len(media) > self.__max_file_count:
-            self.__phone.log('This phone only supports %d %s.  You have %d %s.  Operation aborted'% \
-                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
-            return result
         # check for file name length
         for k in media:
             if len(media[k]['name']) > self.__max_file_len:
@@ -832,11 +827,18 @@ class FileEntries:
                 except:
                     self.__phone.log('Failed to rm file '+str(k))
         # writing new/existing files
+        file_count=0
         for k in media:
             try:
                 origin=media[k].get('origin', None)
                 if origin is not None and origin != self.__origin:
                     continue
+                file_count+=1
+                if file_count>self.__max_file_count:
+                    # max # of files reached, bailing out
+                    self.__phone.log('This phone only supports %d %s.  Save operation stopped.'%\
+                                        (self.__max_file_count, self.__file_type))
+                    break
                 name=self.__path+'/'+media[k]['name']
                 if name in dir_l:
                     self.__phone.log('File '+name+' exists')
