@@ -694,6 +694,7 @@ class DayViewDialog(wx.Dialog):
             self.cw.DeleteEntry(entry)
         else:
             self.cw.DeleteEntryRepeat(entry, *self.date)
+        self.setdirty(False)
         self.refreshentries()
         self.updatelistbox(newpos)
         
