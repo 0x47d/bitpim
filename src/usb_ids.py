@@ -11,7 +11,6 @@
 
 import re
 
-blank_re = re.compile(r"^\s*$")
 vendor_re = re.compile(r"^([0-9A-Fa-f]{4,4})\s+(.*)$")
 device_re = re.compile(r"^\t([0-9A-Fa-f]{4,4})\s+(.*)$")
 iface_re = re.compile(r"^\t\t([0-9A-Fa-f]{2,2})\s+(.*)$")
@@ -44,7 +43,7 @@ class usbInfoObject:
 
 	def addChild(self, child):
 		""" Add a child to our list """
-		self.children[child.id] = child
+		self.children[int(child.id, 16)] = child
 
 	def getChild(self, child):
 		""" If we have a child matching the request, return it """
@@ -52,7 +51,7 @@ class usbInfoObject:
 			return self.children[child]
 		else:
 			return None
-
+	
 	def getChildren(self):
 		""" Return a list of all our children """
 		return self.children.values()
@@ -73,24 +72,23 @@ class usb_ids:
 		self.usbclasslist = USBClassList()
 		self.inVendor = 0
 		self.inClass = 0
-		
+		self.add_data(fname)
+
+	def add_data(self, fname):
 		try:
-			ufile = open(fname, "r")
+			ufile = open(fname, "rt")
 			try:	
 				aline = ufile.readline()
 				while aline != "":
-					aline = aline[:-1]
+					# Remove any EOL characters
+					while (aline[:-1] in ["\r", "\n"]):
+						aline = aline[:-1]
 
-					# Blank lines or comment resets our view
-					m = blank_re.match(aline)
-					if ((m) or (aline[0:] == "#")):
-						self.inVendor = 0
-						self.inClass = 0
-					
 					# Check for a vendor ID line
 					m = vendor_re.match(aline)
 					if (m):
 						self.inVendor = 1
+						self.inClass = 0
 						self.curr_vendor = VendorID(m.group(1), m.group(2))
 						self.vendorlist.addVendor(m.group(1), self.curr_vendor)
 
@@ -110,6 +108,7 @@ class usb_ids:
 					m = usbclass_re.match(aline)
 					if (m):
 						self.inClass = 1
+						self.inVendor = 0
 						self.curr_usbclass = USBClass(m.group(1), m.group(2))
 						self.usbclasslist.addClass(m.group(1), self.curr_usbclass)
 					
@@ -157,7 +156,7 @@ class VendorID(usbInfoObject):
 		self.addChild(device)
 
 	def getDevice(self, device):
-		""" Return the requested device, if we have it """
+		""" Return the requested device by ID, if we have it """
 		return self.getChild(device)
 
 	def getDevices(self):
@@ -173,7 +172,7 @@ class DeviceID(usbInfoObject):
 		self.addChild(interface)
 	
 	def getInterface(self, interface):
-		""" Return the requested interface, if we have it """
+		""" Return the requested interface by ID, if we have it """
 		return self.getChild(interface)
 
 	def getInterfaces(self):
@@ -198,34 +197,30 @@ class VendorList:
 
 	def addVendor(self, vID, vDesc):
 		""" Put this vendor into our dictionary """
-		self.vendorlist[vID] = vDesc
+		self.vendorlist[int(vID,16)] = vDesc
 
 	def getVendorInfo(self, vID, dID=None, iID=None):
 		""" Lookup info for vendor, device, interface - last two are optional """
 		# First things first... Get information if available....
-		# --- Vendor
 		self.vendor = self.device = self.iface = None
+		self.vDesc = self.dDesc = self.iDesc = None
+
+		# --- Vendor
 		if vID in self.vendorlist:
 			self.vendor = self.vendorlist[vID]
 			self.vDesc = self.vendor.description
-		else:
-			self.vDesc = "Unknown Vendor"
 
 		# --- Device
 		if self.vendor:
 			self.device = self.vendor.getDevice(dID)
 		if self.device:
 			self.dDesc = self.device.description
-		else:
-			self.dDesc = "Unknown Device"
 
 		# --- Interface
 		if self.device:
 			self.iface = self.device.getInterface(iID)
 		if self.iface:
 			self.iDesc = self.iface.description
-		else:
-			self.iDesc = "Unknown Interface"
 
 		# Now, decide how we were called, and return appropriately
 		if ((dID is None) and (iID is None)):
@@ -251,7 +246,7 @@ class USBClass(usbInfoObject):
 		self.addChild(subclass)
 
 	def getSubclass(self, subclass):
-		""" Return subclass, if we have it """
+		""" Return subclass by ID, if we have it """
 		return self.getChild(subclass)
 
 	def getSubclasses(self):
@@ -268,7 +263,7 @@ class USBClassSubclass(usbInfoObject):
 		self.addChild(protocol)
 
 	def getProtocol(self, protocol):
-		""" Return protocol, if we have it """
+		""" Return protocol as ID, if we have it """
 		return self.getChild(protocol)
 
 	def getProtocols(self):
@@ -293,34 +288,30 @@ class USBClassList:
 		self.classlist = {}
 
 	def addClass(self, cID, cDesc):
-		self.classlist[cID] = cDesc
+		self.classlist[int(cID, 16)] = cDesc
 
 	def getClassInfo(self, cID, sID=None, pID=None):
 		""" Lookup info for class, subclass, protocol - last two are optional """
 		# First things first... Get information if available....
-		# --- USB Class
 		self.usbclass = self.subclass = self.protocol = None
+		self.cDesc = self.sDesc = self.pDesc = None
+
+		# --- USB Class
 		if cID in self.classlist:
 			self.usbclass = self.classlist[cID]
 			self.cDesc = self.usbclass.description
-		else:
-			self.cDesc = "Unknown USB Class"
 
 		# --- USB Subclass
 		if self.usbclass:
 			self.subclass = self.usbclass.getSubclass(sID)
 		if self.subclass:
 			self.sDesc = self.subclass.description
-		else:
-			self.sDesc = "Unknown USB Subclass"
 
 		# --- USB Protocol
 		if self.subclass:
 			self.protocol = self.subclass.getProtocol(pID)
 		if self.protocol:
 			self.pDesc = self.protocol.description
-		else:
-			self.pDesc = "Unknown USB Protocol"
 
 		# Now, decide how we were called, and return appropriately
 		if ((sID is None) and (pID is None)):
@@ -332,6 +323,8 @@ class USBClassList:
 
 	def getUSBClassList(self):
 		return self.classlist.values()
+
+
 
 ###
 ###  Interactive testing code
@@ -360,17 +353,53 @@ if (__name__ == "__main__"):
 	myUSBids = usb_ids("resources/usb.ids")
 
 	# PRINT OUT THE WHOLE TREE AS A TEST CASE
-	print_vendor_info(myUSBids)
-	print_class_info(myUSBids)
+	# print_vendor_info(myUSBids)
+	# print_class_info(myUSBids)
+
+	# Our list is now internally decimal, so to lookup/inquire by hex
+	# You must convert to decimal before passing your inquiry in...
 
 	# Test lookup for various bits of USB Vendor/Device/Interface information
+	print "Inquire on Vendor 1452, Device 518, Iface 1 using various levels of detail:" 
 	vlist = myUSBids.getVendorList()
-	print vlist.getVendorInfo("05ac")
-	print vlist.getVendorInfo("05ac", "0206")
-	print vlist.getVendorInfo("05ac", "0206", "01")
+	print vlist.getVendorInfo(1452)
+	print vlist.getVendorInfo(1452, 518)
+	print vlist.getVendorInfo(1452, 518, 1)
+	print
 	
 	# Test lookup for various bits of USB Class/Subclass/Protocol information
+	print "Inquire on Class 8, Subclass 4, Protocol 0 using various levels of detail:" 
 	clist = myUSBids.getUSBClassList()
-	print clist.getClassInfo("08")
-	print clist.getClassInfo("08", "04")
-	print clist.getClassInfo("08", "04", "00")
+	print clist.getClassInfo(8)
+	print clist.getClassInfo(8, 4)
+	print clist.getClassInfo(8, 4, 0)
+	print
+
+	# For reference, this is how you'd inquire on hex values
+	# print vlist.getVendorInfo(int("05ac", 16))
+	# print vlist.getVendorInfo(int("05ac", 16), int("0206", 16))
+	# print vlist.getVendorInfo(int("05ac", 16), int("0206", 16), int("01", 16))
+	# print clist.getClassInfo(int("08", 16))
+	# print clist.getClassInfo(int("08", 16), int("04", 16))
+	# print clist.getClassInfo(int("08", 16), int("04", 16), int("00", 16))
+
+	# The following are in hex just becuase that way I can visually match them
+	# up with the entries in the test.ids file
+
+	# Now, let's test for something that doesn't exist:
+	print "Look up something with little detail in Internet file... 1004/6000/(00..02)"
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))
+	print
+
+	# Put the data in from our local copy
+	print "Add in our test data to override internet data"
+	myUSBids.add_data("resources/test.ids")
+	print
+	
+	# Now, it should be there
+	print "Check it again..."
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
+	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))
