@@ -96,8 +96,13 @@ class BrewProtocol:
                 if res.date==0:
                     results[res.filename]['date']=(0, "")
                 else:
-                    date=res.date+self._brewepochtounix
-                    results[res.filename]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                    try:
+                        date=res.date+self._brewepochtounix
+                        results[res.filename]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                    except:
+                        # invalid date - see SF bug #833517
+                        results[res.filename]['date']=(0, "")
+                    
 
             except BrewNoMoreEntriesException:
                 break
