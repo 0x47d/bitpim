@@ -51,10 +51,3 @@ struct usb_endpoint_descriptor *usb_endpoint_descriptor_index(struct usb_endpoin
 %cstring_output_withsize(char *bytesoutbuffer, int *bytesoutbuffersize);
 int usb_bulk_read_wrapped(struct usb_dev_handle *dev, int ep, char *bytesoutbuffer, int *bytesoutbuffersize, int timeout);
 
-// some stuff that may be missing
-#ifndef USB_ENDPOINT_IN
-#define USB_ENDPOINT_IN                 0x80
-#endif
-#ifndef USB_ENDPOINT_OUT
-#define USB_ENDPOINT_OUT                0x00
-#endif
