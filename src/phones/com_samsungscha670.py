@@ -756,8 +756,6 @@ class Phone(com_samsung.Phone):
 
     def getsms(self, result):
         return self._getsms(result)
-    def savesms(self, result, merge):
-        return self._savesms(result, merge)
 
     getmedia=None
 

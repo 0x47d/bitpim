@@ -605,9 +605,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         sms_l=SMSList(self)
         sms_l.read()
         result['sms']=sms_l.get()
-        canned_msg=CannedMsgList(self)
-        canned_msg.read()
-        result['canned_msg']=canned_msg.get()
         self.setmode(self.MODEMODEM)
         return result
     def _savesms(self, result, merge):
