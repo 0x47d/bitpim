@@ -76,7 +76,8 @@ numbers:
 serials:
 
   - sourcetype        identifies source driver in bitpim (eg "lgvx4400", "windowsaddressbook")
-  - sourceuniqueid    identifier for where the serial came from (eg ESN of phone, wab host/username)
+  - sourceuniqueid    (optional) identifier for where the serial came from (eg ESN of phone, wab host/username)
+                      (imagine having multiple phones of the same model to see why this is needed)
   - *                 other names of use to sourcetype
 """
 
@@ -579,10 +580,12 @@ class PhoneWidget(wx.Panel):
             self.modified=False
             self.populatefs(self.getdata({}))
 
+    # we use two random numbers to generate the serials.  _persistrandom
+    # is seeded at startup
     _persistrandom=random.Random()
     def EnsureBitPimSerials(self):
         "Make sure all entries have a BitPim serial"
-        rand2=random.Random()
+        rand2=random.Random() # this random is seeded when this function is called
         d={}
         for k in self._data:
             entry=self._data[k]
@@ -601,6 +604,51 @@ class PhoneWidget(wx.Panel):
                 entry["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
                 assert num.hexdigest() not in d
                 d[num.hexdigest()]=0
+
+    def updateserials(self, results):
+        "update the serial numbers after having written to the phone"
+        if not results.has_key('serialupdates'):
+            return
+
+        # each item is a tuple.  bpserial is the bitpim serialid,
+        # and updserial is what to update with.
+        for bpserial,updserial in results['serialupdates']:
+            # find the entry with bpserial
+            for k in self._data:
+                entry=self._data[k]
+                if not entry.has_key('serials'):
+                    continue
+                found=False
+                for serial in entry['serials']:
+                    if bpserial==serial:
+                        found=True
+                        break
+                if not found:
+                    # not this entry
+                    continue
+                # we will be updating this entry
+                # see if there is a matching serial for updserial that we will update
+                st=updserial['sourcetype']
+                remove=None
+                for serial in entry['serials']:
+                    if serial['sourcetype']!=st:
+                        continue
+                    if updserial.has_key("sourceuniqueid"):
+                        if updserial["sourceuniqueid"]!=serial.get("sourceuniqueid", None):
+                            continue
+                    remove=serial
+                    break
+                # remove if needbe
+                if remove is not None:
+                    for count,serial in zip(range(len(entry['serials'])), entry['serials']):
+                        if remove==serial:
+                            break
+                    del entry['serials'][count]
+                # add update on end
+                entry['serials'].append(updserial)
+        self.modified=True
+                    
+                    
 
     def OnCellSelect(self, event):
         event.Skip()
