@@ -32,6 +32,13 @@ _MAXCALENDARDESCRIPTION=38
 %}
 
 
+PACKET speeddial:
+    2 UINT {'default': 0xffff} +entry
+    1 UINT {'default': 0xff} +number
+
+PACKET speeddials:
+    * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
+
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
     50 STRING {'default': ""} +name
