@@ -27,18 +27,13 @@ import common
 ###  Enhanced HTML Widget
 ###
 
-_basefonts_gtk=[10,13,17,20,23,27,30]
-_basefonts_mac=[9,12,14,18,24,30,36]
-_basefonts_win=[7,8,10,12,16,22,30]
+_basefonts=[wx.html.HTML_FONT_SIZE_1, wx.html.HTML_FONT_SIZE_2,
+wx.html.HTML_FONT_SIZE_3, wx.html.HTML_FONT_SIZE_4,
+wx.html.HTML_FONT_SIZE_5, wx.html.HTML_FONT_SIZE_6,
+wx.html.HTML_FONT_SIZE_7 ]
 
 def getbasefontsizes(scale=1.0):
-    if guihelper.IsGtk():
-        bf=_basefonts_gtk
-    elif guihelper.IsMac():
-        bf=_basefonts_mac
-    else:
-        bf=_basefonts_win
-    return [int(scale*sz) for sz in bf]
+    return [int(scale*sz) for sz in _basefonts]
 
 class HTMLWindow(wx.html.HtmlWindow):
     """BitPim customised HTML Window
