@@ -316,7 +316,7 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wx.Dialog):
-    phonemodels={  'LG-VX4400': 'com_lgvx4400',
+    phonemodels={ 'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
                   'LG-VX6000': 'com_lgvx6000',
@@ -339,6 +339,7 @@ class ConfigDialog(wx.Dialog):
                   'SPH-A620 (VGA1000)': 'com_samsungspha620',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
+                  #'SK6100' : 'com_sk6100', 
                   'Other CDMA phone': 'com_othercdma',
                   }
 
