@@ -39,7 +39,9 @@ if __debug__:
 
 if __name__ == '__main__':
     import sys  
-
+    import encodings
+    import encodings.utf_8
+    
     if len(sys.argv)==2 and sys.argv[1]=="bitfling":
         import bitfling.bitfling
         #if True:
