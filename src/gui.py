@@ -38,6 +38,7 @@ import importexport
 import wallpaper
 import ringers
 import guihelper
+import bpcalendar
 
 ###
 ### Used to check our threading
@@ -491,7 +492,7 @@ class MainWindow(wxFrame):
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
         self.ringerwidget=ringers.RingerView(self, self.nb)
         self.nb.AddPage(self.ringerwidget, "Ringers")
-        self.calendarwidget=guiwidgets.Calendar(self, self.nb)
+        self.calendarwidget=bpcalendar.Calendar(self, self.nb)
         self.nb.AddPage(self.calendarwidget, "Calendar")
 
 
