@@ -748,8 +748,7 @@ class Profile(com_phone.Profile):
         if data['groups']!=newgroups:
             data['groups']=newgroups
             data['rebootphone']=True
-            self.log("Your phone will be rebooted because the groups have changed")
-
+            
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone
 
