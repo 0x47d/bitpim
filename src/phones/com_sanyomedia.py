@@ -59,6 +59,22 @@ class SanyoMedia:
             res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
             self.log("Directory "+`idir`+", File Count="+`res.count`)
             nfiles=res.count
+
+            for ifile in range(nfiles):
+                req=self.protocolclass.sanyomediafilenamerequest()
+                req.index=ifile
+                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
+                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`)
+        for idir in range(1,self.NUM_MEDIA_DIRECTORIES):
+            req=self.protocolclass.sanyochangedir()
+            req.dirindex=idir
+
+            res=self.sendpbcommand(req, self.protocolclass.sanyomediaresponse)
+
+            req=self.protocolclass.sanyonumpicsrequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyonumpicsresponse)
+            self.log("Directory "+`idir`+", File Count="+`res.count`)
+            nfiles=res.count
             try:
                 os.makedirs(`idir`)
             except:
@@ -73,6 +89,7 @@ class SanyoMedia:
                 while more==1:
                     req=self.protocolclass.sanyomediafragmentrequest()
                     req.fileindex=ifile
+                    time.sleep(0.3)
                     res=self.sendpbcommand(req,self.protocolclass.sanyomediafragmentresponse)
                     fout.write(res.data[0:res.length])
                     fout.flush()
