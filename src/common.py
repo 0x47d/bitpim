@@ -32,6 +32,18 @@ class IntegrityCheckFailed(Exception):
           self.device=device
           self.message=message
                   
+class HelperBinaryNotFound(Exception):
+     def __init__(self, basename, fullname):
+          Exception.__init__(self, "Helper binary %s not found.  It should be %s" % (basename, fullname))
+          self.basename=basename
+          self.fullname=fullname
+
+class CommandExecutionFailed(Exception):
+     def __init__(self, retcode, args):
+          Exception.__init__(self, "Command execution failed with code %d: %s" % (retcode, " ".join(args)))
+          self.retcode=retcode
+          self.args=args
+          
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):

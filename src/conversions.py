@@ -17,6 +17,33 @@ import wx
 
 import common
 
+helpderdir=sys.path[0]
+if os.path.isfile(helperdir):
+    helperdir=os.path.dirnamer(helperdir)
+helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
+
+osext={'win32': '.exe',
+       'darwin': '.mbin',
+       'linux2': '.lbin'} \
+       [sys.platform]
+
+def gethelperbinary(basename):
+    "Returns the full pathname to the specified helper binary"
+    f=os.path.join(helperdir, basename)+osext
+    if not os.path.isfile(f):
+        raise common.HelperBinaryNotFound(basename, f)
+    return f
+
+def run(*args):
+    """Runs the specified command (args[0]) with supplied parameters.
+
+    Note that your path is not searched for the command, and the shell
+    is not involved so no I/O redirection etc is possible."""
+    ret=os.spawnl( *( (os.P_WAIT, args[0])+args)) # looks like C code ...
+    if ret!=0:
+        raise common.CommandExecutionFailed(retcode, args)
+    
+
 def convertto8bitpng(pngdata, maxsize):
     "Convert a PNG file to 8bit color map"
 
@@ -37,9 +64,9 @@ def convertto8bitpng(pngdata, maxsize):
     if sys.platform=='linux2':
         osext=".lbin"
         
-    pngtopnmbin=os.path.join(helpersdirectory,'pngtopnm')+osext
-    ppmquantbin=os.path.join(helpersdirectory,'ppmquant')+osext
-    pnmtopngbin=os.path.join(helpersdirectory,'pnmtopng')+osext
+    pngtopnmbin=gethelperbinary('pngtopnm')
+    ppmquantbin=gethelperbinary('ppmquant')
+    pnmtopngbin=gethelperbinary('pnmtopng')
     print "pngtopnm: "+pngtopnmbin
     print "ppmquant: "+ppmquantbin
     print "pnmtopng: "+pnmtopngbin
@@ -93,21 +120,10 @@ def convertto8bitpng_joe(pngdata):
     if pngdata[1:4]!='PNG':
         return pngdata
     # get the path to helper
-    p=sys.path[0]
-    if os.path.isfile(p):
-        p=os.path.dirname(p)
-    helpersdirectory=os.path.abspath(os.path.join(p, 'helpers'))
-    print "Helper Directory: "+helpersdirectory
-    if sys.platform=='win32':
-        osext=".exe"
-    if sys.platform=='darwin':
-        osext=".mbin"
-    if sys.platform=='linux2':
-        osext=".lbin"
         
-    pngtopnmbin=os.path.join(helpersdirectory,'pngtopnm')+osext
-    ppmquantbin=os.path.join(helpersdirectory,'ppmquant')+osext
-    pnmtopngbin=os.path.join(helpersdirectory,'pnmtopng')+osext
+    pngtopnmbin=gethelperbinary('pngtopnm')
+    ppmquantbin=gethelperbinary('ppmquant')
+    pnmtopngbin=gethelperbinary('pnmtopng')
     print "pngtopnm: "+pngtopnmbin
     print "ppmquant: "+ppmquantbin
     print "pnmtopng: "+pnmtopngbin
