@@ -1482,7 +1482,7 @@ class MyStatusBar(wx.StatusBar):
     __major_progress_index=4
     __minor_progress_index=5
     __help_str_index=5
-    __pane_width=[200, 150, 50, 180, -1, -4]
+    __pane_width=[175, 175, 50, 180, -1, -4]
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
         self.sizechanged=False
