@@ -14,6 +14,7 @@
 #           29.09.2003  0.61 Fix bug in todo and callback lists.
 #           07.10.2003  0.70 Write dump file in format for BITPIM analyzer
 #           14.10.2003  0.71 Fix formatting of bitpim dump
+#           30.10.2003  0.72 Minor Fixups
 # 
 # 
 # Usage:
@@ -91,7 +92,7 @@
 #
 use Device::SerialPort;
 
-$scriptversion = "0.71 (14.10.2003)";
+$scriptversion = "0.72 (30.10.2003)";
 $devicename = "/dev/pcsphone";
 $expectedphonename = "SCP-4900";
 
@@ -220,12 +221,12 @@ for($icaslot=0;$icaslot<15;$icaslot++) {
     $packet=sendandreceive($p, pack("H6Cx501","0D240C",$icaslot));
     ($islot,$flag,$num1,$phonenum,$phonenumlen,$date1,$period,$day,$date2
      ,$name,$namelen,$phonenumtype,$phonenumslot,$num2) = 
-     unpack("x3CCCA49CVCCVA17CCvCx417",$packet);
+     unpack("x3CCCA49CVCCVA17CCvCx420",$packet);
     if($flag > 0) {
 	print $fh_out "Call Alarm Slot $icaslot($islot) $flag\n";
 	print $fh_out "Phone Number: $phonenum\n";
 	print $fh_out "Name: $name\n" if ($name);
-	print $fh_out "Phonebook entry: $phonenumslot ".$phonetypes[$phonenumtype]."\n"
+	print $fh_out "Phonebook entry: $phonenumslot ".$phonetypes[$phonenumtype-1]."\n"
 	    if ($phonenumslot != -1);
 	print $fh_out "Alarm: $date1(".msd_date2string($date1).")\n";
 	print $fh_out "Other Date: $date2(".msd_date2string($date2).")\n";
@@ -272,8 +273,8 @@ for($ifolder=0;$ifolder<100;$ifolder++) {
     print $fh_out "Folder Slot: $ifolder($islot) $flag\n";
     print $fh_out "Folder Name: $foldername\n";
     print $fh_out "Attributes:";
-    print $fh_out " Notify" if $icon;
-    print $fh_out " EnvelopeIcon" if $notify;
+    print $fh_out " Notify" if $notify;
+    print $fh_out " EnvelopeIcon" if $icon;
     print $fh_out "\n";
     print $fh_out "Autofile: $keyword\n" if $autofile;
     print $fh_out "\n";
