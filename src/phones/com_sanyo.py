@@ -33,7 +33,7 @@ class SanyoPhonebook:
     
     # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
     # plus a fudge factor of 5 days for no reason I can find
-    _sanyoepochtounix=315532800+450000
+    _sanyoepochtounix=315532800+432000;
 
     pbterminator="\x7e"
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
@@ -612,6 +612,10 @@ class SanyoPhonebook:
         newcal={}
         keys=cal.keys()
 
+        # Value to subtract from mktime results since there is no inverse
+        # of gmtime
+        zonedif=time.mktime(time.gmtime(0))-time.mktime(time.localtime(0))
+
         eventslot=0
         callslot=0
         progressmax=self.protocolclass._NUMEVENTSLOTS+self.protocolclass._NUMCALLALARMSLOTS
@@ -631,6 +635,7 @@ class SanyoPhonebook:
                 repeat=0
 
             phonenum=re.sub("\-","",descloc)
+            now=time.mktime(time.localtime(time.time()))-timedif
             if(phonenum.isdigit()):  # This is a phone number, use call alarm
                 self.log("Write calendar call alarm slot "+`callslot`+ " - "+descloc)
                 e=self.protocolclass.callalarmentry()
@@ -638,10 +643,9 @@ class SanyoPhonebook:
                 e.phonenum=phonenum
                 e.phonenum_len=len(e.phonenum)
                 
-                now=time.mktime(time.localtime(time.time()))
 
                 timearray=entry['start']+[0,0,0,0]
-                starttimelocal=time.mktime(timearray)
+                starttimelocal=time.mktime(timearray)-timedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
                 else:
@@ -674,10 +678,9 @@ class SanyoPhonebook:
                 e.eventname_len=len(e.eventname)
                 e.location=location
                 e.location_len=len(e.location)
-                now=time.mktime(time.localtime(time.time()))
 
                 timearray=entry['start']+[0,0,0,0]
-                starttimelocal=time.mktime(timearray)
+                starttimelocal=time.mktime(timearray)-timedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
                 else:
@@ -685,7 +688,7 @@ class SanyoPhonebook:
                 e.start=starttimelocal-self._sanyoepochtounix
 
                 timearray=entry.get('end', entry['start'])+[0,0,0,0]
-                e.end=time.mktime(timearray)-self._sanyoepochtounix
+                e.end=time.mktime(timearray)-self._sanyoepochtounix-timedif
 
                 alarmdiff=entry.get('alarm',0)
                 e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
@@ -760,7 +763,7 @@ class SanyoPhonebook:
         @rtype: tuple
         @return: (year, month, day, hour, minute)
         """
-        return list(time.localtime(val+self._sanyoepochtounix)[:5])
+        return list(time.gmtime(val+self._sanyoepochtounix)[:5])
 
     _calrepeatvalues={
         0: None,
