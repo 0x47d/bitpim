@@ -41,7 +41,7 @@ class LogWindow(wx.Panel):
 
     def __init__(self, parent):
         wx.Panel.__init__(self,parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
-        self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE| wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
+        self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE|wx.TE_RICH2|wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
         f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
         ta=wx.TextAttr(font=f)
         self.tb.SetDefaultStyle(ta)
@@ -65,10 +65,10 @@ class LogWindow(wx.Panel):
     def log(self, str):
         now=time.time()
         t=time.localtime(now)
-        if str[0]=="<": # already has time etc stamps
-            self.outstandingtext+=str+"\r\n"
+        if str[0]=="&": # already has time etc stamps
+            self.outstandingtext+=str[1:]+"\r\n"
         else:
-            self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
+            self.outstandingtext+="%d:%02d:%02d.%03d: %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
     def logexception(self, excinfo=None):
         str=formatexception(excinfo)
@@ -119,7 +119,7 @@ def formatexception(excinfo=None, lastframes=8):
                     continue
                print >>s,"%15s = " % (key,),
                try:
-                    print >>s,`value`[:60]
+                    print >>s,`value`[:160]
                except:
                     print >>s,"(Exception occurred printing value)"
      return s.getvalue()

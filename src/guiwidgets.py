@@ -33,6 +33,7 @@ import guihelper
 import pubsub
 import bpmedia
 import bphtml
+import bitflingscan
 
 ####
 #### A simple text widget that does nice pretty logging.
@@ -297,33 +298,49 @@ class ConfigDialog(wx.Dialog):
     ID_DIRBROWSE=1
     ID_COMBROWSE=2
     ID_RETRY=3
+    ID_BITFLING=4
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
         wx.Dialog.__init__(self, frame, id, title,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.mw=mainwindow
 
-        gs=wx.FlexGridSizer(2, 3,  5 ,10)
+        gs=wx.FlexGridSizer(0, 3,  5 ,10)
         gs.AddGrowableCol(1)
 
+        # where we store our files
         gs.Add( wx.StaticText(self, -1, "Disk storage"), 0, wx.CENTER)
         self.diskbox=wx.TextCtrl(self, -1, self.setme, size=wx.Size( 400, 10))
         gs.Add( self.diskbox, 0, wx.EXPAND)
         gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), 0, wx.EXPAND)
 
-        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.CENTER)
-        self.commbox=wx.TextCtrl(self, -1, self.setme)
-        gs.Add( self.commbox, 0, wx.EXPAND)
-        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), 0, wx.EXPAND)
-
+        # phone type
         gs.Add( wx.StaticText(self, -1, "Phone Type"), 0, wx.CENTER)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, 0, wx.EXPAND)
+        gs.Add( self.phonebox, 0, wx.EXPAND|wx.CENTER)
+        gs.Add( 1,1, 0, wx.EXPAND) # blank
 
+        # com port
+        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.CENTER)
+        self.commbox=wx.TextCtrl(self, -1, self.setme)
+        gs.Add( self.commbox, 0, wx.EXPAND)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), 0, wx.EXPAND)
+
+        # bitfling
+        if bitflingscan.IsBitFlingEnabled():
+            gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.CENTER)
+            self.bitflingenabled=wx.CheckBox(self, -1, "Enabled")
+            gs.Add(self.bitflingenabled, 0, wx.CENTER)
+            gs.Add(1,1, 0, wx.EXPAND)
+        else:
+            self.bitflingenabled=False
+
+        # crud at the bottom
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
+        bs.Add(1,1, 1, wx.EXPAND|wx.ALL, 5) # takes up slack
         bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
         but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)

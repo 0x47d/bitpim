@@ -14,4 +14,18 @@
 
 import xmlrpcstuff
 
-print "BitFling client imported"
+class client:
+    "A BitFling client"
+
+    # although we could just inherit straight from
+    # ServerProxy, this code is here to help ensure
+    # calling convention, and in the future deal with
+    # backwards compatibility issues
+    
+    def __init__(self, url):
+        "The URL should include username and password if any"
+        self.server=xmlrpcstuff.ServerProxy(url)
+
+    def getversion(self):
+        return self.server.getversion()
+    

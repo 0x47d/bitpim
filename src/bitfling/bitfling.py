@@ -18,6 +18,11 @@ import cStringIO
 import os
 import random
 import sha
+import thread
+import fnmatch
+import socket
+import threading
+import time
 
 # m2 stuff
 import M2Crypto
@@ -42,6 +47,7 @@ ID_EXIT=wx.NewId()
 
 XmlServerEvent, EVT_XMLSERVER = wx.lib.newevent.NewEvent()
 
+guithreadid=thread.get_ident()
 
 if guihelper.IsMSWindows(): parentclass=wx.TaskBarIcon
 else: parentclass=wx.Frame
@@ -243,6 +249,8 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
                     pos=i
                     break
             assert pos!=-1
+        # clear the is connection allowed cache
+        self.mw.icacache={}
         v=self.mw.authinfo[itemnum]
         username=v[0]
         expires=v[2]
@@ -389,6 +397,13 @@ class MainWindow(wx.Frame):
         self.taskwin=None # set later
         wx.Frame.__init__(self, parent, id, title, style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION)
 
+        print sys.excepthook
+        sys.excepthook=self.excepthook
+        print sys.excepthook
+
+        self.authinfo={}  # updated by config panel
+        self.icacache={}  # used by IsConnectionAllowed
+
         # Establish config stuff
         cfgstr='bitfling'
         if guihelper.IsMSWindows():
@@ -438,7 +453,91 @@ class MainWindow(wx.Frame):
 
         self.xmlrpcserver=None
         wx.CallAfter(self.StartIfICan)
+
+
+    def IsConnectionAllowed(self, peeraddr, username=None, password=None):
+        """Verifies if a connection is allowed
+
+        If username and password are supplied (as should be the case if calling this method
+        before executing some code) then they are checked as being from a valid address
+        as well.
+
+        If username and password are not supplied then this method checks if any
+        of the authentication rules allow a connection from the peeraddr.  This form
+        is used immediately after calling accept() on a socket, but before doing
+        anything else."""
+        # Note that this method is not called in the main thread, and any variables could be
+        # updated underneath us.  Be threadsafe and only use atomic methods on shared data!
         
+        v=(peeraddr[0], username, password)
+        if username is not None and password is None:
+            assert False, "No password supplied"
+            return False # not allowed to have None as password
+        print "ica of "+`v`
+        val=self.icacache.get(v, None)
+        if val is not None:
+            allowed, expires = val
+            if allowed:
+                if self._has_expired(expires):
+                    msg="Connection from %s no longer allowed due to expiry" % (peeraddr[0],)
+                    if username is not None:
+                        msg+=".  Username "+`username`
+                    self.Log(msg)
+                    return False
+                return True
+            return False
+
+        ret_allowed=False
+        ret_expiry=0  # an expiry of zero is infinite, so this will be overridden by any specific expiries
+        for uname, pwd, expires, addresses in self.authinfo.values():  # values() is threadsafe
+            # do any of the addresses match?
+            if not self._does_address_match(peeraddr[0], addresses):
+                continue
+            # check username/password if username supplied
+            if username is not None:
+                if  username!=uname:
+                    continue
+                # check password
+                if not self._verify_password(password, pwd):
+                    self.Log("Wrong password supplied for user %s from %s" % (`username`, peeraddr[0]))
+                continue
+            # remember expiry value (largest value)
+            ret_expiry=max(ret_expiry, expires)
+            ret_allowed=True
+            
+        # recurse so that correct log messages about expiry get generated
+        self.icacache[v]=ret_allowed, ret_expiry
+        return self.IsConnectionAllowed(peeraddr, username, password)
+            
+    def _does_address_match(self, peeraddr, addresses):
+        """Returns if the peeraddr matches any of the supplied addresses"""
+        # note this function can be called from any thread.  do not access any data
+        for addr in addresses:
+            # the easy case
+            if peeraddr==addr: return True
+            # is addr a glob pattern?
+            if '*' in addr or '?' in addr or '[' in addr:
+                if fnmatch.fnmatch(peeraddr, addr):
+                    return True
+            # ::TODO::  addr/bits style checking - see Python cookbook 10.5 for code
+            # ok, do dns lookup on it
+            ips=[]
+            try:
+                ips=socket.getaddrinfo(addr, None)
+            except:
+                pass
+            for _, _, _, _, ip in ips:
+                if peeraddr==ip[0]:
+                    return True
+        return False
+
+    def _has_expired(self, expires):
+        if expires==0:
+            return False
+        if time.time()>expires:
+            return True
+        return False
+                            
     def CloseRequested(self, evt):
         if evt.CanVeto():
             self.Show(False)
@@ -446,6 +545,7 @@ class MainWindow(wx.Frame):
             return
         self.taskwin.GoAway()
         evt.Skip()
+        sys.excepthook=sys.__excepthook__
 
     def OnXmlServerEvent(self, msg):
         if msg.cmd=="log":
@@ -464,10 +564,22 @@ class MainWindow(wx.Frame):
         self.Show(False)
 
     def Log(self, text):
-        self.lw.log(text)
+        if thread.get_ident()!=guithreadid:
+            wx.PostEvent(self, XmlServerEvent(cmd="log", data=text))
+        else:
+            self.lw.log(text)
 
     def LogException(self, exc):
-        self.lw.logexception(exc)
+        if thread.get_ident()!=guithreadid:
+            # need to send it to guithread
+            wx.PostEvent(self, XmlServerEvent(cmd="log", data="Exception in thread "+threading.currentThread().getName()))
+            wx.PostEvent(self, XmlServerEvent(cmd="logexception", data=exc))
+        else:
+            self.lw.logexception(exc)
+
+    def excepthook(self, *args):
+        """Replacement exception handler that sends stuff to our log window"""
+        self.LogException(args)
 
     def GetCertificateFilename(self):
         """Return certificate filename
@@ -551,8 +663,7 @@ class XMLRPCService(xmlrpcstuff.Server):
         wx.PostEvent(self.mainwin, XmlServerEvent(cmd="logexception", data=exc))
 
     def OnNewAccept(self, clientaddr):
-        # wx.PostEvent(self.mainwin, XmlServerEvent(kw=arg, kw=arg ...) )
-        return True
+        return self.mainwin.IsConnectionAllowed(clientaddr)
 
     def OnNewConnection(self, clientaddr, _):
         return True

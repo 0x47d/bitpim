@@ -153,7 +153,12 @@ class Server(threading.Thread):
             d=`self.data`
             if len(d)>40:
                 d=d[:40]
-            return "Message: cmd=%d data=%s" % (self.cmd, d)
+            str=`self.cmd`
+            for i in dir(self):
+                if i.startswith("CMD_") and getattr(self, i)==self.cmd:
+                    str=i
+                    break
+            return "Message: cmd=%s data=%s" % (str, d)
     
     class ConnectionThread(threading.Thread):
 
@@ -176,7 +181,7 @@ class Server(threading.Thread):
         def log(self, str):
             now=time.time()
             t=time.localtime(now)
-            timestr="<%d:%02d:%02d.%03d>"  % ( t[3], t[4], t[5],  int((now-int(now))*1000))
+            timestr="&%d:%02d:%02d.%03d"  % ( t[3], t[4], t[5],  int((now-int(now))*1000))
             msg=Server.Message(Server.Message.CMD_LOG, data="%s: %s: %s" % (timestr, self.getName(), str))
             self.requestqueue.put(msg)
 
@@ -199,7 +204,8 @@ class Server(threading.Thread):
                         self.log("Connection from "+`peeraddr`+" not accepted")
                         sock.close()
                         continue
-                    ssl = M2Crypto.SSL.Connection(self.ctx, sock)
+                    self.log("Connection from "+`peeraddr`+" accepted")
+                    ssl = M2Crypto.SSL.Connection(self.server.sslcontext, sock)
                     ssl.addr = peeraddr
                     ssl.setup_ssl()
                     ssl.set_accept_state()
@@ -208,7 +214,7 @@ class Server(threading.Thread):
                 except:
                     self.logexception("Exception in accept", sys.exc_info())
                     continue
-                if __debug__ and TRACE: print self.getName()+": Connection from "+`peeraddr`
+                if __debug__ and TRACE: print self.getName()+": SSL connection from "+`peeraddr`
                 peercert=conn.get_peer_cert()
                 msg=Server.Message(Server.Message.CMD_NEW_CONNECTION_REQUEST, self.responsequeue, peeraddr, peercert)
                 self.requestqueue.put(msg)
@@ -216,16 +222,21 @@ class Server(threading.Thread):
                 assert resp.cmd==resp.CMD_NEW_CONNECTION_RESPONSE
                 ok=resp.data
                 if not ok:
-                    self.log("Connection from "+`peeraddr`+" rejected")
+                    self.log("SSL connection from "+`peeraddr`+" rejected")
                     conn.close()
                     continue
-                self.log("Connection from "+`peeraddr`+" accepted")
+                self.log("SSL connection from "+`peeraddr`+" accepted")
                 if __debug__ and TRACE: print self.getName()+": Setting timeout to "+`self.server.connectionidlebreak`
                 conn.set_socket_read_timeout(M2Crypto.SSL.timeout(self.server.connectionidlebreak))
                 self.reqhandlerclass(conn, peeraddr, self)
                 if __debug__ and TRACE: print self.getName()+": Reqhandler returns - closing connection"
                 msg=Server.Message(Server.Message.CMD_CONNECTION_CLOSE,  None, peeraddr, peercert)
                 self.requestqueue.put(msg)
+                self.log("Connection from "+`peeraddr`+" closed")
+                try:
+                    conn.close()
+                except: # ignore exceptions as peer may have shut connection or who knows what else
+                    pass
                 conn=None
 
         def processxmlrpcrequest(self, data, client_addr, username, password):
@@ -255,6 +266,7 @@ class Server(threading.Thread):
         if __debug__ and TRACE: print "Binding to host %s port %d" % (host, port)
         connection.bind( (host, port) )
         connection.listen(connectionthreadcount+5)
+        self.sslcontext=sslcontext
         self.timecheck=timecheck
         self.connectionidlebreak=connectionidlebreak
         self.wantshutdown=False
@@ -275,7 +287,10 @@ class Server(threading.Thread):
                 msg=self.workqueue.get(True, self.timecheck)
             except Queue.Empty:
                 continue
-            self.processmessage(msg)
+            try:
+                self.processmessage(msg)
+            except:
+                sys.excepthook(*sys.exc_info())
         
     def run22(self):
         while not self.wantshutdown:
@@ -283,7 +298,11 @@ class Server(threading.Thread):
                 msg=self.workqueue.get(True)
             except Queue.Empty:
                 continue
-            self.processmessage(msg)
+            try:
+                self.processmessage(msg)
+            except:
+                sys.excepthook(*sys.exc_info())
+                
 
     if sys.version_info>=(2,3):
         run=run23
