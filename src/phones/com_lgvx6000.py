@@ -48,53 +48,33 @@ class Phone(com_lgvx4400.Phone):
     # more VX6000 indices
     imagelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 10, wallpaperindexfilename, "brew/shared", "images", 30) ,
+        ( 10, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 30) ,
         ( 0xc8, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 20),
         ( 0xdc, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
         ( cameraoffset, None, None, "camera", 20) # special entry to make some loops easier
         )
+
+    ringtonelocations=(
+        # offset, index file, files location, type, maximumentries
+        ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
+        ( 80, "download/dloadindex/mmsRingerIndex.map", "mms/sound", "mms", 20),
+        ( 100, "download/dloadindex/DrmRingerIndex.map", "mms/sound/drm", "drm", 20)
+        )
+
+    builtinimages= ('Beach Ball', 'Towerbridge', 'Sunflower', 'Beach',
+                    'Fish', 'Sea', 'Snowman')
+
+    builtinringtones= ('Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5', 'Ring 6',
+                       'Annen Polka', 'Leichte Kavallerie Overture',
+                       'Beethoven Symphony No. 9', 'Paganini', 'Bubble', 'Fugue',
+                       'Polka', 'Mozart Symphony No. 40', 'Cuckoo Waltz', 'Rodetzky',
+                       'Funicula', 'Hallelujah', 'Trumpets', 'Trepak', 'Prelude', 'Mozart Aria',
+                       'William Tell overture', 'Spring', 'Slavonic', 'Fantasy')
+                       
     
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
-        self.log("Attempting to contact phone")
         self.mode=self.MODENONE
-
-    def getwallpaperindices(self, results, verify=False):
-        """Gets the wallpapers
-
-        @param results: places results in this dict
-        @param verify: checks the files exist
-        """
-        wp={}
-
-        # builtins
-        c=1
-        for name in 'Beach Ball', 'Towerbridge', 'Sunflower', 'Beach', 'Fish', 'Sea', 'Snowman':
-            wp[c]={'name': name, 'origin': 'builtin' }
-            c+=1
-
-        # the 3 different maps
-        for offset,indexfile,location,type,maxentries in self.imagelocations:
-            if type=="camera": continue
-            if verify:
-                dirlisting=self.getfilesystem(location)
-            index=self.getindex(indexfile)
-            for i in index:
-                if verify:
-                    if location+"/"+index[i] not in dirlisting:
-                        print "skipping",index[i],"in verify"
-                        continue
-                wp[i+offset]={'name': index[i], 'origin': type}
-                
-        # camera
-
-        # (we don't do verify on the camera since we assume it is always correct)
-        index=self.getcameraindex()
-        for i in index:
-            wp[i+self.cameraoffset]=index[i]
-
-        results['wallpaper-index']=wp
-        return wp
 
     def getcameraindex(self):
         buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
@@ -110,27 +90,6 @@ class Phone(com_lgvx4400.Phone):
                 index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
 
-    def getwallpapers(self, result):
-        papers={}
-        # the ordinary images
-        for offset,indexfile,location,type,maxentries in self.imagelocations:
-            if type=="camera": continue
-            index=self.getindex(indexfile)
-            for i in index:
-                try:
-                    papers[index[i]]=self.getfilecontents(location+"/"+index[i])
-                except com_brew.BrewNoSuchFileException:
-                    self.log("It was in the index, but not on the filesystem")
-        # now for the camera stuff
-        index=self.getcameraindex()
-        for i in index:
-            try:
-                papers[index[i]['name']]=self.getfilecontents("cam/pic%02d.jpg" % (i,))
-            except com_brew.BrewNoSuchFileException:
-                self.log("It was in the index, but not on the filesystem")
-        result['wallpapers']=papers
-        return result
-                
     def savewallpapers(self, results, merge):
         "Actually saves out the wallpapers"
         print results.keys()
