@@ -190,7 +190,11 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         return res
 
     def GetValue(self, row, col):
-        entry=self.main._data[self.rowkeys[row]]
+        try:
+            entry=self.main._data[self.rowkeys[row]]
+        except:
+            print "bad row", row
+            return "<error>"
         if col==0:
             names=entry.get("names", [{'full': '<not set>'}])
             name=names[0]
@@ -461,3 +465,68 @@ class BPFSHandler(wx.FileSystemHandler):
             print "handling url",location
             return True
         return False
+
+    def OpenFile(self, filesystem, location):
+        proto=self.GetProtocol(location)
+        r=self.GetRightLocation(location)
+        params=r.split(';')
+        r=params[0]
+        params=params[1:]
+        p={}
+        for param in params:
+            x=param.find('=')
+            key=param[:x]
+            value=param[x+1:]
+            try:
+                p[key]=int(value)
+            except:
+                p[key]=value
+        if proto=="bpimage":
+            return self.OpenBPImageFile(location, r, **p)
+        elif proto=="bpuserimage":
+            return self.OpenBPUserImageFile(location, r, **p)
+        return None
+
+    def OpenBPUserImageFile(self, location, name, **kwargs):
+        return None
+
+    def OpenBPImageFile(self, location, name, **kwargs):
+        f=gui.getresourcefile(name)
+        if not os.path.isfile(f):
+            return None
+
+        return BPFSImageFile(self, location, f, **kwargs)
+
+class BPFSImageFile(wx.FSFile):
+    """Handles image files
+
+    All files are internally converted to PNG
+    """
+
+    def __init__(self, fshandler, location, name, data=None, width=32, height=32):
+        wx.FSFile.__init__(self)
+        self.fshandler=fshandler
+        self.location=location
+
+        if data is None:
+            img=wx.Image(name)
+        else:
+            wx.ImageFromStream(StringInputStream(data))
+
+        b=wx.EmptyBitmap(width, height)
+        mdc=wx.MemoryDC()
+        mdc.SelectObject(b)
+        mdc.SetBackgroundMode(wx.TRANSPARENT)
+        mdc.Clear()
+        
+        mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
+
+
+class StringInputStream(wx.InputStream):
+
+    def __init__(self, data):
+        wx.InputStream.__init__(self)
+        self.data=data
+
+    
+        
