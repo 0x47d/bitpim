@@ -87,6 +87,8 @@ import webbrowser
 import difflib
 import re
 import time
+import random
+import sha
 
 # GUI
 import wx
@@ -577,6 +579,29 @@ class PhoneWidget(wx.Panel):
             self.modified=False
             self.populatefs(self.getdata({}))
 
+    _persistrandom=random.Random()
+    def EnsureBitPimSerials(self):
+        "Make sure all entries have a BitPim serial"
+        rand2=random.Random()
+        d={}
+        for k in self._data:
+            entry=self._data[k]
+            found=False
+            for s in entry.get("serials", []):
+                if s.get("sourcetype", "")=="bitpim":
+                    assert s["id"] not in d
+                    d[s["id"]]=0
+                    found=True
+                    break
+            if not found:
+                num=sha.new()
+                num.update(`self._persistrandom.random()`)
+                num.update(`rand2.random()`)
+                if "serials" not in entry: entry["serials"]=[]
+                entry["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
+                assert num.hexdigest() not in d
+                d[num.hexdigest()]=0
+
     def OnCellSelect(self, event):
         event.Skip()
         row=event.GetRow()
@@ -637,6 +662,7 @@ class PhoneWidget(wx.Panel):
         self.preview.ShowEntry(entry)
 
     def getdata(self, dict):
+        self.EnsureBitPimSerials()
         dict['phonebook']=self._data.copy()
         dict['categories']=self.categories[:]
         return dict
@@ -657,8 +683,8 @@ class PhoneWidget(wx.Panel):
         if version==1:
             wx.MessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wx.OK|wx.ICON_EXCLAMATION)
             version=2
-            dict['phonebook']={}
-            dict['categories']=[]
+            dict['result']['phonebook']={}
+            dict['result']['categories']=[]
             
     def clear(self):
         self._data={}
