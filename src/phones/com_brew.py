@@ -35,6 +35,11 @@ class BrewNoSuchFileException(BrewCommandException):
     def __init__(self, errnum=0x06):
         BrewCommandException.__init__(self, errnum, "No such file")
 
+class BrewBadPathnameException(BrewCommandException):
+    def __init__(self, errnum=0x1a):
+        BrewCommandException.__init__(self, errnum, "Bad pathname")
+    
+
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,)
 
 class BrewProtocol:
@@ -269,6 +274,8 @@ class BrewProtocol:
                     raise BrewNoSuchDirectoryException()
                 if err==0x06:
                     raise BrewNoSuchFileException()
+                if err==0x1a:
+                    raise BrewBadPathnameException()
                 raise BrewCommandException(err)
         # parse data
         buffer=prototypes.buffer(data)
