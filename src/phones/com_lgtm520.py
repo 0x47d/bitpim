@@ -118,7 +118,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             if date == 0x11223344: continue  # blanked entry
             date += self._tm520epochtounix
             entry['start'] = self.decodedate(date)
-            entry['description'] = getattr(event,'description')
+            entry['description'] = event.description
             entry['repeat'] = None
             res[event.pos]=entry
 
