@@ -9,6 +9,7 @@
 
 import serial
 import common
+import time
 
 class CommTimeout(Exception):
     def __init__(self, str=None, partial=None):
@@ -29,6 +30,7 @@ class CommConnection:
                 return
             except serial.serialutil.SerialException,e:
                 ex=common.CommsOpenFailure(port, e.__str__())
+                time.sleep(2)
         raise ex
 
 
@@ -43,6 +45,7 @@ class CommConnection:
     def setbaudrate(self, rate):
         self.log("Changing rate to "+`rate`)
         self.ser.setBaudrate(rate)
+        time.sleep(.5)
 
     def write(self, data, log=1):
         if log:
