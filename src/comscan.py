@@ -216,7 +216,8 @@ def _comscanwindows():
                         kp=inststr[len(enumstr)+1:].upper()
                         if kp in activedrivers:
                             res['active']=True
-                            res['driverstatus']=activedrivers[kp]
+                            if activedrivers[kp] is not None:
+                                res['driverstatus']=activedrivers[kp]
                             # available?
                             try:
                                 f=open(name, "rw")
