@@ -543,10 +543,22 @@ class PhoneWidget(wx.Panel):
                 return i[name]
         return default
 
-    def importdata(self, importdata):
-        dlg=ImportDialog(self, self._data, importdata)
-        dlg.ShowModal()
-        print dlg.resultdata
+    def importdata(self, importdata, merge=True):
+        if merge:
+            d=self._data
+        else:
+            d={}
+        dlg=ImportDialog(self, d, importdata)
+        result=None
+        if dlg.ShowModal()==wx.ID_OK:
+            result=dlg.resultdata
+        dlg.Destroy()
+        if result is not None:
+            d={}
+            d['phonebook']=result
+            self.populatefs(d)
+            self.populate(d)
+            
 
 
 class ImportDataTable(wx.grid.PyGridTableBase):
@@ -612,9 +624,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
         for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
             if row[i] is not None:
-                res=getdata(self.columns[col], ptr[row[i]], None)
-                if res is not None:
-                    return res
+                return getdata(self.columns[col], ptr[row[i]], "")
         return ""
             
     def OnDataUpdated(self):
@@ -725,6 +735,11 @@ class ImportDialog(wx.Dialog):
         wx.CallAfter(self.DoMerge)
 
     def DoMerge(self):
+        """Merges all the importdata with existing data
+
+        This can take quite a while!
+        """
+        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         count=0
         row={}
         results={}
@@ -736,25 +751,52 @@ class ImportDialog(wx.Dialog):
             matches=em.bestmatches(i)
             if len(matches):
                 confidence, existingid=matches[0]
-                print confidence,self.importdata[i]['names'],self.existingdata[existingid]['names']
                 if confidence>90:
-                    results[count]=self.existingdata[existingid]
+                    results[count]=self.MergeEntries(self.existingdata[existingid], self.importdata[i])
                     row[count]=(confidence, i, existingid, count)
                     count+=1
                     usedexistingkeys.append(existingid)
                     continue
-            # just add it
+            # nope, so just add it
             results[count]=self.importdata[i]
             row[count]=(100, i, None, count)
             count+=1
         for i in self.existingdata:
             if i in usedexistingkeys: continue
             results[count]=self.existingdata[i]
-            row[count]=(100, None, i, count)
+            row[count]=("", None, i, count)
             count+=1
         self.rowdata=row
         self.resultdata=results
         self.table.OnDataUpdated()
+        wx.EndBusyCursor()
+
+    def MergeEntries(self, originalentry, importentry):
+        "Take an original and a merge entry and join them together return a dict of the result"
+        o=originalentry
+        i=importentry
+        result={}
+        # Get the intersection.  Anything not in this is not controversial
+        intersect=dictintersection(o,i)
+        for dict in i,o:
+            for k in dict.keys():
+                if k not in intersect:
+                    result[k]=dict[k]
+        # now only deal with keys in both
+        for key in intersect:
+            if key=="names":
+                # we ignore anything except the first name.  fields in existing take precedence
+                r=i["names"][0].copy()
+                for k in o["names"][0]:
+                    r[k]=o["names"][0][k]
+                result["names"]=[r]
+            elif key=="numbers":
+                result['numbers']=mergenumberlists(o['numbers'], i['numbers'])
+            else:
+                result[key]=o[key]+i[key]
+
+        return result
+        
 
     def OnCellSelect(self, event):
         row=self.rowdata[event.GetRow()]
@@ -934,3 +976,47 @@ def compareallfields(s,a,fields,threshold=0.8,lookat=3):
         args.append({'value': str})
     args.extend( ['value', threshold, lookat] )
     return comparefields(*args)
+
+def mergenumberlists(orig, imp):
+    """Return the results of merging two lists of numbers
+
+    We compare the sanitised numbers (ie after punctuation etc is stripped
+    out).  If they are the same, then the original is kept (since the number
+    is the same, and the original most likely has the correct punctuation).
+
+    Otherwise the imported entries overwrite the originals
+    """
+    # results start with existing entries
+    res=[]
+    res.extend(orig[:])
+    # look through each imported number
+    for i in imp:
+        print i
+        num=cleannumber(i['number'])
+        found=False
+        for r in res:
+            if num==cleannumber(r['number']):
+                # an existing entry was matched so we stop
+                found=True
+                if i.has_key('speeddial'):
+                    r['speeddial']=i['speeddial']
+                break
+        if found:
+            continue
+
+        # we will be replacing one of the same type
+        found=False
+        for r in res:
+            if i['type']==r['type']:
+                r['number']=i['number']
+                if i.has_key('speeddial'):
+                    r['speeddial']=i['speeddial']
+                found=True
+                break
+        if found:
+            continue
+        # ok, just add it on the end then
+        res.append(i)
+
+    return res
+
