@@ -288,6 +288,26 @@ def list_union(*lists):
                     res.append(item)
      return res
 
+# some obfuscation
+# obfuscate pwd
+_magic=[ord(x) for x in "IamAhaPp12&s]"]
+
+# the oldies are the best
+def obfus_encode(str):
+    res=[]
+    for i in range(len(str)):
+        res.append(ord(str[i])^_magic[i%len(_magic)])
+    return "".join(["%02x" % (x,) for x in res])
+
+def obfus_decode(str):
+    res=[]
+    for i in range(0, len(str), 2):
+        res.append(int(str[i:i+2], 16))
+    x=""
+    for i in range(len(res)):
+        x+=chr(res[i]^_magic[i%len(_magic)])
+    return x
+
 # unicode byte order markers to codecs
 # this really should be part of the standard library
 

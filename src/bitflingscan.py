@@ -11,6 +11,7 @@
 as well as providing the rest of the BitFling interface"""
 
 import sys
+import common
 
 try:
     import bitfling.client as bitfling
@@ -110,24 +111,8 @@ class flinger:
 # ensure there is a singleton
 flinger=flinger()
 
-# obfuscate pwd
-_magic=[ord(x) for x in "IamAhaPp12&s]"]
-
-# the oldies are the best
-def encode(str):
-    res=[]
-    for i in range(len(str)):
-        res.append(ord(str[i])^_magic[i%len(_magic)])
-    return "".join(["%02x" % (x,) for x in res])
-
-def decode(str):
-    res=[]
-    for i in range(0, len(str), 2):
-        res.append(int(str[i:i+2], 16))
-    x=""
-    for i in range(len(res)):
-        x+=chr(res[i]^_magic[i%len(_magic)])
-    return x
+encode=common.obfus_encode
+decode=common.obfus_decode
 
 # Unfortunately we have to do some magic to deal with threads
 # correctly.  This code is called both from the gui/foreground thread
