@@ -627,9 +627,9 @@ class FileViewNew(bpmedia.MediaDisplayer):
     ALL=2
 
     # maximum length of a filename
-    maxlen=31
+    maxlen=-1  # set via phone profile
     # acceptable characters in a filename
-    filenamechars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
+    filenamechars=None # set via phone profile
 
     def __init__(self, mainwindow, parent, xyfile, stylefile, topsplit=None, bottomsplit=None, rightsplit=None):
         bpmedia.MediaDisplayer.__init__(self, parent, xyfile, stylefile, topsplit, bottomsplit, rightsplit)
@@ -656,8 +656,8 @@ class FileViewNew(bpmedia.MediaDisplayer):
 
         wx.EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        #EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
-        #EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
+        #wx.EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
         wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
 
@@ -729,6 +729,75 @@ class FileViewNew(bpmedia.MediaDisplayer):
 
     def GetSelectedItemNames(self):
         return [i['name'] for i in self.GetAllSelectedItems()]
+
+    def OnDropFiles(self, _, dummy, filenames):
+        # There is a bug in that the most recently created tab
+        # in the notebook that accepts filedrop receives these
+        # files, not the most visible one.  We find the currently
+        # viewed tab in the notebook and send the files there
+        target=self # fallback
+        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        if isinstance(t, FileView) or isinstance(t, FileViewNew):
+            # changing target in dragndrop
+            target=t
+        target.OnAddFiles(filenames)
+
+    def OnAdd(self, _=None):
+        dlg=wx.FileDialog(self, "Choose files", style=wx.OPEN|wx.MULTIPLE, wildcard=self.wildcard)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.OnAddFiles(dlg.GetPaths())
+        dlg.Destroy()
+
+    def OnAddFiles(self,_):
+        raise Exception("not implemented")
+
+    def getshortenedbasename(self, filename, newext=''):
+        filename=basename(filename)
+        if not 'A' in self.filenamechars:
+            filename=filename.lower()
+        if not 'a' in self.filenamechars:
+            filename=filename.upper()
+        if len(newext):
+            filename=stripext(filename)
+        filename="".join([x for x in filename if x in self.filenamechars])
+        if len(newext):
+            filename+='.'+newext
+        if len(filename)>self.maxlen:
+            chop=len(filename)-self.maxlen
+            filename=stripext(filename)[:-chop]+'.'+getext(filename)
+        return os.path.join(self.thedir, filename)
+
+    def genericgetdata(self,dict,want, mediapath, mediakey, mediaindexkey):
+        # this was originally written for wallpaper hence using the 'wp' variable
+        dict.update(self._data)
+        names=None
+        if want==self.SELECTED:
+            names=self.GetSelectedItemNames()
+            if len(names)==0:
+                want=self.ALL
+
+        if want==self.ALL:
+            names=[item['name'] for item in self.GetAllItems()]
+
+        if names is not None:
+            wp={}
+            i=0
+            for name in names:
+                file=os.path.join(mediapath, name)
+                f=open(file, "rb")
+                data=f.read()
+                f.close()
+                wp[i]={'name': name, 'data': data}
+                for k in self._data[mediaindexkey]:
+                    if self._data[mediaindexkey][k]['name']==name:
+                        v=self._data[mediaindexkey][k].get("origin", "")
+                        if len(v):
+                            wp[i]['origin']=v
+                            break
+                i+=1
+            dict[mediakey]=wp
+                
+        return dict
 
 
 class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
@@ -866,12 +935,15 @@ class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
         # viewed tab in the notebook and send the files there
         target=self # fallback
         t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
-        if isinstance(t, FileView):
+        if isinstance(t, FileView) or isinstance(t, FileViewNew):
             # changing target in dragndrop
             target=t
+        target.OnAddFiles(filenames)
+
+    def OnAddFiles(self, filenames):
         self.Freeze()
         for f in filenames:
-            target.OnAddFile(f)
+            self.OnAddFile(f)
         self.Thaw()
 
     def OnAdd(self, _=None):
