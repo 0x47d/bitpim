@@ -40,7 +40,7 @@ class SanyoPhonebook:
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
 
     def __init__(self):
-        pass
+        self.numbertypetab=numbertypetab
     
     def _setmodelgdmgo(self):
         # see if we can turn on dm mode
@@ -331,8 +331,8 @@ class SanyoPhonebook:
         for i in range(self.protocolclass._NUMSPEEDDIALS):
             speedslot.append(sortstuff.speeddialindex[i].pbslotandtype & 0xfff)
             numtype=(sortstuff.speeddialindex[i].pbslotandtype>>12)-1
-            if(numtype >= 0 and numtype <= len(numbertypetab)):
-                speedtype.append(numbertypetab[numtype])
+            if(numtype >= 0 and numtype <= len(self.numbertypetab)):
+                speedtype.append(self.numbertypetab[numtype])
             else:
                 speedtype.append("")
 
@@ -400,7 +400,7 @@ class SanyoPhonebook:
         # 7 phone numbers
         res['numbers']=[]
         numberindex = 0
-        for type in numbertypetab:
+        for type in self.numbertypetab:
             if len(entry.numbers[numberindex].number):
                 res['numbers'].append({'number': entry.numbers[numberindex].number, 'type': type })
             
@@ -925,6 +925,7 @@ class Profile(com_phone.Profile):
     deviceclasses=("modem",)
 
     def __init__(self):
+        self.numbertypetab=numbertypetab
         com_phone.Profile.__init__(self)
 
     # which sync types we deal with
@@ -1061,7 +1062,7 @@ class Profile(com_phone.Profile):
                         unusednumbers.append(num)
                         continue
                     typesused[typename]=1
-                    for typenum,tnsearch in zip(range(100),numbertypetab):
+                    for typenum,tnsearch in zip(range(100),self.numbertypetab):
                         if typename==tnsearch:
                             number=phonize(num['number'])
                             if len(number)>self.protocolclass._MAXNUMBERLEN: # get this number from somewhere sensible
@@ -1078,11 +1079,11 @@ class Profile(com_phone.Profile):
                             break
 
 # Now stick the unused numbers in unused types
-                trytype=len(numbertypetab)
+                trytype=len(self.numbertypetab)
                 for num in unusednumbers:
                     while trytype>0:
                         trytype-=1
-                        if not typesused.has_key(numbertypetab[trytype]):
+                        if not typesused.has_key(self.numbertypetab[trytype]):
                             break
                     else:
                         break
