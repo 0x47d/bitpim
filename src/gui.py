@@ -1139,18 +1139,14 @@ class FileSystemView(wxTreeListCtrl):
     def GetNextChild(self, *_args, **_kwargs):
         val = gizmosc.wxTreeListCtrl_GetNextChild(self, *_args, **_kwargs)
         return val
-    def HitTest(self, pt):
-        val1, val2, val3 = gizmosc.wxTreeListCtrl_HitTest(self, wxPoint(pt.x, pt.y+self._BIAS))
-        val1 = wxTreeItemIdPtr(val1)
-        val1.thisown = 1
-        return (val1, val2, val3)
-    
-    
+    def HitTest(self, point):
+        w = self.GetMainWindow()
+        return gizmosc.wxTreeListCtrl_HitTest(self, self.ScreenToClient(w.ClientToScreen(point)))
+
     # we have to add None objects to all nodes otherwise the tree control refuses
     # sort (somewhat lame imho)
     def __init__(self, mainwindow, parent, id=-1):
         self.datacolumn=False # used for debugging and inspection of values
-        self._BIAS=0
         wxTreeListCtrl.__init__(self, parent, id, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
         self.AddColumn("Name")
         self.AddColumn("Size")
@@ -1164,7 +1160,6 @@ class FileSystemView(wxTreeListCtrl):
         self.SetColumnAlignment(1, wxLIST_FORMAT_RIGHT)
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
-        self._BIAS=self.GetBoundingRect(self.root).GetHeight()+self.GetSpacing()
         self.SetPyData(self.root, None)
         self.SetItemHasChildren(self.root, True)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
