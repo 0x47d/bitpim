@@ -157,8 +157,8 @@ def random_wallpaper_files(directory, minnumber=0, maxnumber=100):
     print "Generating",len(names),"wallpaper files"
 
     import wx
+    app=wx.PySimpleApp()
     from wxPython.lib import colourdb
-    wx.InitAllImageHandlers()
     colourdb.updateColourDB()
     colours=colourdb.getColourList()
 
