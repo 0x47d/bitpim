@@ -40,14 +40,16 @@ PACKET pbinitrequest:
 PACKET pbinitresponse:
     * pbheader header
     4 UNKNOWN dunno1
-    4 UINT something1
+    2 UINT something1
+    4 UINT firstentry
     4 UNKNOWN dunno2
-    2 UNKNOWN dunno3
-    2 UINT numentries
-    22 UNKNOWN dunno3
+    4 UINT numentries
+    20 UNKNOWN dunno3
+    4 UINT lastentry
+    19 UNKNOWN dunno4
+    2 UINT something2
     2 UINT something3
-    22 UNKNOWN dunno4
-    41 STRING phonesoftware
+    * STRING phonesoftware
 
 PACKET pbinforequest:
     * pbheader {'command': 0x11, 'flag': 0x01} +header
