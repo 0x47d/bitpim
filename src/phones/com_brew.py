@@ -230,6 +230,7 @@ class BrewProtocol:
         data=buffer.getvalue()
         self.logdata("brew request", data, request)
         data=escape(data+crcs(data))+self.brewterminator
+        firsttwo=data[:2]
         try:
             self.comm.write(data, log=False) # we logged above
 	    data=self.comm.readuntil(self.terminator, logsuccess=False)
@@ -238,6 +239,13 @@ class BrewProtocol:
             self.raisecommsexception("manipulating the filesystem")
         self.comm.success=True
         data=unescape(data)
+        # sometimes there is junk at the begining, eg if the user
+        # turned off the phone and back on again. ::TODO:: if there
+        # is more than one 7e in the escaped data we should start
+        # after the first one
+        d=data.find(firsttwo)
+        if d>0:
+            data=data[d:]
         # take off crc and terminator ::TODO:: check the crc
         data=data[:-3]
         
