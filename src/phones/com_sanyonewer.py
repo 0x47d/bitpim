@@ -36,6 +36,7 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
                        'Disco', 'Toy Box', 'Rodeo' )
 
     calendar_defaultringtone=4
+    calendar_defaultcaringtone=4
     calendar_tonerange=xrange(18,26)
     calendar_toneoffset=8
 
