@@ -14,8 +14,23 @@ import bphtml
 
 """The dialog for editing a phonebook entry"""
 
+myEVT_DIRTY_UI=wx.NewEventType()
+EVT_DIRTY_UI=wx.PyEventBinder(myEVT_DIRTY_UI, 1)
 
-class RingtoneEditor(wx.Panel):
+class DirtyUIBase(wx.Panel):
+    """ Base class to add the capability to generate a DirtyUI event"""
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+        self.dirty=self.ignore_dirty=False
+
+    def OnDirtyUI(self, evt):
+        if self.dirty or self.ignore_dirty:
+            return
+        self.dirty=True
+        self.GetEventHandler().ProcessEvent(\
+            wx.PyCommandEvent(myEVT_DIRTY_UI, self.GetId()))
+        
+class RingtoneEditor(DirtyUIBase):
     "Edit a ringtone"
 
     # this is almost an exact clone of the wallpaper editor
@@ -23,14 +38,14 @@ class RingtoneEditor(wx.Panel):
     unnamed="Select:"
     unknownselprefix=": "
 
-    choices=["call", "message"]
+    choices=["call", "message", "calendar"]
 
     ID_LIST=wx.NewId()
 
     _bordersize=3
 
     def __init__(self, parent, _):
-        wx.Panel.__init__(self, parent, -1)
+        DirtyUIBase.__init__(self, parent)
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Ringtone"), wx.HORIZONTAL)
 
         vs=wx.BoxSizer(wx.VERTICAL)
@@ -66,7 +81,8 @@ class RingtoneEditor(wx.Panel):
             self.ringtone.Append(p)
         self.Set(cur)
 
-    def OnLBClicked(self, _=None):
+    def OnLBClicked(self, evt=None):
+        self.OnDirtyUI(evt)
         self._updaterequested=False
         v=self.Get().get('ringtone', None)
         self.SetPreview(v)
@@ -80,11 +96,18 @@ class RingtoneEditor(wx.Panel):
             pass
 
     def Set(self, data):
-        wp=data.get("ringtone", self.unnamed)
+        self.ignore_dirty=True
+        if data is None:
+            wp=self.unnamed
+            type='call'
+        else:
+            wp=data.get("ringtone", self.unnamed)
+            type=data.get("type", "call")
 
         self.SetPreview(wp)
-        type=data.get("type", "call")
-        if type=="message":
+        if type=='calendar':
+            self.type.SetSelection(2)
+        elif type=="message":
             self.type.SetSelection(1)
         else:
             self.type.SetSelection(0)
@@ -92,11 +115,13 @@ class RingtoneEditor(wx.Panel):
         # zero len?
         if len(wp)==0:
             self.ringtone.SetSelection(0)
+            self.ignore_dirty=self.dirty=False
             return
 
         # try using straight forward name
         try:
             self.ringtone.SetStringSelection(wp)
+            self.ignore_dirty=self.dirty=False
             return
         except:
             pass
@@ -104,6 +129,7 @@ class RingtoneEditor(wx.Panel):
         # ok, with unknownselprefix
         try:
             self.ringtone.SetStringSelection(self.unknownselprefix+wp)
+            self.ignore_dirty=self.dirty=False
             return
         except:
             pass
@@ -111,8 +137,10 @@ class RingtoneEditor(wx.Panel):
         # ok, just add it
         self.ringtone.InsertItems([self.unknownselprefix+wp], 1)
         self.ringtone.SetStringSelection(self.unknownselprefix+wp)
+        self.ignore_dirty=self.dirty=False
 
     def Get(self):
+        self.ignore_dirty=self.dirty=False
         res={}
         rt=self.ringtone.GetStringSelection()
         if rt==self.unnamed:
@@ -125,19 +153,19 @@ class RingtoneEditor(wx.Panel):
         return res
         
         
-class WallpaperEditor(wx.Panel):
+class WallpaperEditor(DirtyUIBase):
 
     unnamed="Select:"
     unknownselprefix=": "
 
-    choices=["call", "message"]
+    choices=["call", "message", "calendar"]
 
     ID_LIST=wx.NewId()
 
     _bordersize=3 # border inside HTML widget
     
     def __init__(self, parent, _):
-        wx.Panel.__init__(self, parent, -1)
+        DirtyUIBase.__init__(self, parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Wallpaper"), wx.HORIZONTAL)
 
@@ -163,6 +191,7 @@ class WallpaperEditor(wx.Panel):
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
+        wx.EVT_LISTBOX(self, self.ID_LIST, self.OnDirtyUI)
         self._updaterequested=False # see OnSize for why this exists
         wx.EVT_SIZE(self.preview, self.OnPreviewResize)
 
@@ -186,7 +215,7 @@ class WallpaperEditor(wx.Panel):
             self.wallpaper.Append(p)
         self.Set(cur)
 
-    def OnLBClicked(self, _=None):
+    def OnLBClicked(self, evt=None):
         self._updaterequested=False
         v=self.Get().get('wallpaper', None)
         self.SetPreview(v)
@@ -201,22 +230,31 @@ class WallpaperEditor(wx.Panel):
             self.preview.SetPage('<img src="bpuserimage:%s;width=%d;height=%d">' % (name,w,h))        
 
     def Set(self, data):
-        wp=data.get("wallpaper", self.unnamed)
+        self.ignore_dirty=True
+        if data is None:
+            wp=self.unnamed
+            type='call'
+        else:
+            wp=data.get("wallpaper", self.unnamed)
+            type=data.get("type", "call")
 
         self.SetPreview(wp)
-        type=data.get("type", "call")
         if type=="message":
             self.type.SetSelection(1)
+        elif type=='calendar':
+            self.type.SetSelection(2)
         else:
             self.type.SetSelection(0)
 
         if len(wp)==0:
-            self.wallpaper.SetSelection(wp)
+            self.wallpaper.SetSelection(0)
+            self.ignore_dirty=self.dirty=False
             return
 
         # try using straight forward name
         try:
             self.wallpaper.SetStringSelection(wp)
+            self.ignore_dirty=self.dirty=False
             return
         except:
             pass
@@ -224,6 +262,7 @@ class WallpaperEditor(wx.Panel):
         # ok, with unknownselprefix
         try:
             self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
+            self.ignore_dirty=self.dirty=False
             return
         except:
             pass
@@ -231,8 +270,10 @@ class WallpaperEditor(wx.Panel):
         # ok, just add it
         self.wallpaper.InsertItems([self.unknownselprefix+wp], 1)
         self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
+        self.ignore_dirty=self.dirty=False
 
     def Get(self):
+        self.ignore_dirty=self.dirty=False
         res={}
         wp=self.wallpaper.GetStringSelection()
         if wp==self.unnamed:
@@ -243,8 +284,6 @@ class WallpaperEditor(wx.Panel):
             res['wallpaper']=wp
             res['use']=self.type.GetStringSelection()
         return res
-        
-        
 
 class CategoryManager(wx.Dialog):
 
@@ -363,14 +402,14 @@ class CategoryManager(wx.Dialog):
         self.UpdateLBs()
                
 
-class CategoryEditor(wx.Panel):
+class CategoryEditor(DirtyUIBase):
 
     # we have to have an entry with a special string for the unnamed string
 
     unnamed="Select:"
 
     def __init__(self, parent, pos):
-        wx.Panel.__init__(self, parent, -1)
+        DirtyUIBase.__init__(self, parent)
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
 
         self.categories=[self.unnamed]
@@ -385,6 +424,9 @@ class CategoryEditor(wx.Panel):
             wx.EVT_BUTTON(self, self.but.GetId(), self.OnManageCategories)
         else:
             hs.Add(wx.StaticText(self, -1, ""), 2, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        wx.EVT_LISTBOX(self, self.category.GetId(), self.OnDirtyUI)
+        wx.EVT_LISTBOX_DCLICK(self, self.category.GetId(), self.OnDirtyUI)
 
         self.SetSizer(hs)
         hs.Fit(self)
@@ -409,36 +451,49 @@ class CategoryEditor(wx.Panel):
                 self.category.SetStringSelection(self.unnamed)
 
     def Get(self):
+        self.ignore_dirty=self.dirty=False
         v=self.category.GetStringSelection()
         if len(v) and v!=self.unnamed:
             return {'category': v}
         return {}
 
     def Set(self, data):
-        v=data.get("category", self.unnamed)
+        self.ignore_dirty=True
+        if data is None:
+            v=self.unnamed
+        else:
+            v=data.get("category", self.unnamed)
         try:
             self.category.SetStringSelection(v)
         except:
             assert v!=self.unnamed
             self.category.SetStringSelection(self.unnamed)
+        self.ignore_dirty=self.dirty=False
                 
-class MemoEditor(wx.Panel):
+class MemoEditor(DirtyUIBase):
 
     def __init__(self, parent, _):
-        wx.Panel.__init__(self, parent, -1)
+        DirtyUIBase.__init__(self, parent)
 
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.VERTICAL)
 
         self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE, size=(-1, 150))
         vs.Add(self.memo, 0, wx.EXPAND|wx.ALL, 5)
-
+        wx.EVT_TEXT(self, self.memo.GetId(), self.OnDirtyUI)
         self.SetSizer(vs)
         vs.Fit(self)
 
     def Set(self, data):
-        self.memo.SetValue(data.get("memo", ""))
+        self.ignore_dirty=True
+        if data is None:
+            s=''
+        else:
+            s=data.get('memo', '')
+        self.memo.SetValue(s)
+        self.ignore_dirty=self.dirty=False
 
     def Get(self):
+        self.ignore_dirty=self.dirty=False
         if len(self.memo.GetValue()):
             return {'memo': self.memo.GetValue()}
         return {}
@@ -962,7 +1017,10 @@ class Editor(wx.Dialog):
             if key==keytoopenon:
                 nb.SetSelection(len(self.tabs))
             self.tabs.append(widget)
-            if self.data.has_key(key):
+            if key is None: # DJP
+                # the fields are in data, not in data[key]
+                widget.Populate([self.data])
+            elif self.data.has_key(key):    #DJP
                 widget.Populate(self.data[key])
                 if key==keytoopenon and dataindex is not None:
                     widget.SetFocusOnValue(dataindex)
@@ -982,12 +1040,17 @@ class Editor(wx.Dialog):
         for i in range(len(self.tabsfactory)):
             widget=self.nb.GetPage(i)
             data=widget.Get()
+            key=self.tabsfactory[i][1]  # DJP
             if len(data):
-                res[self.tabsfactory[i][1]]=data
+                if key is None: # DJP
+                    res.update(data[0])
+                else:
+                    res[key]=data
             else:
                 # remove the key
                 try:
-                    del res[self.tabsfactory[i][1]]
+                    if key is not None: # DJP
+                        del res[key]
                 except KeyError:
                     # which may not have existed ...
                     pass

@@ -784,6 +784,7 @@ class MainWindow(wx.Frame):
         if results['sync'].has_key('calendar'):
             v=results['sync']['calendar']
             if v=='MERGE': raise Exception("Not implemented")
+            results['calendar_version']=self.phoneprofile.BP_Calendar_Version
             self.calendarwidget.populatefs(results)
             self.calendarwidget.populate(results)
             
@@ -832,6 +833,7 @@ class MainWindow(wx.Frame):
         if v!=dlg.NOTREQUESTED:
             merge=True
             if v==dlg.OVERWRITE: merge=False
+            data['calendar_version']=self.phoneprofile.BP_Calendar_Version
             self.calendarwidget.getdata(data)
             todo.append( (self.wt.writecalendar, "Calendar", merge) )
 

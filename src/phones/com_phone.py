@@ -142,6 +142,8 @@ class Phone:
 
 class Profile:
 
+    BP_Calendar_Version=2
+
     WALLPAPER_WIDTH=100
     WALLPAPER_HEIGHT=100
     MAX_WALLPAPER_BASENAME_LENGTH=64

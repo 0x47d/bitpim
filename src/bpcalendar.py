@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 ### BITPIM
 ###
 ### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
@@ -12,6 +11,44 @@
 """Calendar user interface and data for bitpim.
 
 This module has a bp prefix so it doesn't clash with the system calendar module
+
+Version 3:
+
+The format for the calendar is standardised.  It is a dict with the following
+fields:
+(Note: hour fields are in 24 hour format)
+'string id': CalendarEntry object.
+
+CalendarEntry properties:
+description - 'string description'
+location - 'string location'
+priority - None=no priority, int from 1-10, 1=highest priority
+alarm - how many minutes beforehand to set the alarm (use 0 for on-time, None or -1 for no alarm)
+allday - True for an allday event, False otherwise
+start - (year, month, day, hour, minute) as integers
+end - (year, month, day, hour, minute) as integers
+serials - list of dicts of serials.
+repeat - None, or RepeatEntry object
+id - string id of this object.  Created the same way as bpserials IDs for phonebook entries.
+notes - string notes
+category - string category
+ringtone - string ringtone assignment
+wallpaper - string wallpaper assignment.
+
+CalendarEntry methods:
+get() - return a copy of the internal dict
+set(dict) - set the internal dict with the supplied dict
+is_active(y, m, d) - True if this event is active on (y,m,d)
+suppress_repeat_entry(y,m,d) - exclude (y,m,d) from this repeat event.
+
+RepeatEntry properties:
+repeat_type - one of daily, weekly, monthly, or yearly.
+interval - for daily: repeat every nth day.  For weekly, for every nth week.
+dow - bitmap of which day of week are being repeated.
+suppressed - list of (y,m,d) being excluded from this series.
+
+--------------------------------------------------------------------------------
+Version 2:
 
 The format for the calendar is standardised.  It is a dict with the following
 fields:
@@ -66,6 +103,9 @@ exceptions:
 import os
 import copy
 import calendar
+import datetime
+import random
+import sha
 import time
 
 # wx stuff
@@ -76,14 +116,327 @@ import wx.lib.intctrl
 
 # my modules
 import calendarcontrol
+import calendarentryeditor  # DJP
 import common
 import helpids
 
+#-------------------------------------------------------------------------------
+class RepeatEntry(object):
+    # class constansts
+    daily='daily'
+    weekly='weekly'
+    monthly='monthly'
+    yearly='yearly'
+    __interval=0
+    __dow=1
+    __dom=0
+    __moy=1
+
+    def __init__(self, repeat_type=daily):
+        self.__type=repeat_type
+        self.__data=[0,0]
+        self.__suppressed=[]
+
+    def get(self):
+        # return a dict representing internal data
+        # mainly used for populatefs
+        r={}
+        if self.__type==self.daily:
+            r[self.daily]= { 'interval': self.__data[self.__interval] }
+        elif self.__type==self.weekly:
+            r[self.weekly]= { 'interval': self.__data[self.__interval],
+                                    'dow': self.__data[self.__dow] }
+        elif self.__type==self.monthly:
+            r[self.monthly]=None
+        else:
+            r[self.yearly]=None
+        r['suppressed']=self.__suppressed
+        return r
+
+    def set(self, data):
+        # setting data from a dict, mainly used for getfromfs
+        if data.has_key(self.daily):
+            # daily type
+            self.repeat_type=self.daily
+            self.interval=data[self.daily]['interval']
+        elif data.has_key(self.weekly):
+            # weekly type
+            self.repeat_type=self.weekly
+            self.interval=data[self.weekly]['interval']
+            self.dow=data[self.weekly]['dow']
+        elif data.has_key(self.monthly):
+            self.repeat_type=self.monthly
+        else:
+            self.repeat_type=self.yearly
+        self.suppressed=data.get('suppressed', [])
+
+    def __check_daily(self, s, d):
+        if self.interval:
+            # every nth day
+            return (int((d-s).days)%self.interval)==0
+        else:
+            # every weekday
+            return d.weekday()<5
+
+    def __check_weekly(self, s, d):
+        # check if at least one day-of-week is specified, if not default to the
+        # start date
+        if self.dow==0:
+            self.dow=1<<(s.isoweekday()%7)
+        # check to see if this is the nth week
+        day_of_week=d.isoweekday()%7  # Sun=0, ..., Sat=6
+        sun_0=s-datetime.timedelta(s.isoweekday()%7)
+        sun_1=d-datetime.timedelta(day_of_week)
+        if ((sun_1-sun_0).days/7)%self.interval:
+            # wrong week
+            return False
+        # check for the right weekday
+        return ((1<<day_of_week)&self.dow) != 0
+
+    def __check_monthly(self, s, d):
+        return d.day==s.day
+
+    def __check_yearly(self, s, d):
+        return d.month==s.month and d.day==s.day
+
+    def is_active(self, s, d):
+        # check in the suppressed list
+        if (d.year, d.month, d.day) in self.__suppressed:
+            # in the list, not part of this repeat
+            return False
+        # determine if the date is active
+        if self.repeat_type==self.daily:
+            return self.__check_daily(s, d)
+        elif self.repeat_type==self.weekly:
+            return self.__check_weekly(s, d)
+        elif self.repeat_type==self.monthly:
+            return self.__check_monthly(s, d)
+        elif self.repeat_type==self.yearly:
+            return self.__check_yearly(s, d)
+        else:
+            return False
+
+    def __get_type(self):
+        return self.__type
+    def __set_type(self, repeat_type):
+        if repeat_type in (self.daily, self.weekly,
+                    self.monthly, self.yearly):
+            self.__type = repeat_type
+        else:
+            raise AttributeError, 'type'
+    repeat_type=property(fget=__get_type, fset=__set_type)
+    
+    def __get_interval(self):
+        if self.__type in (self.daily, self.weekly):
+            return self.__data[self.__interval]
+        raise AttributeError, 'interval'
+    def __set_interval(self, interval):
+        if self.__type in (self.daily, self.weekly):
+            self.__data[self.__interval]=interval
+        else:
+            raise AttributeError, 'interval'
+    interval=property(fget=__get_interval, fset=__set_interval)
+
+    def __get_dow(self):
+        if self.__type in (self.daily, self.weekly):
+            return self.__data[self.__dow]
+        raise AttributeError, 'dow'
+    def __set_dow(self, dow):
+        if self.__type in (self.daily, self.weekly):
+            self.__data[self.__dow]=dow
+        else:
+            raise AttributeError, 'dow'
+    dow=property(fget=__get_dow, fset=__set_dow)
+
+    def __get_suppressed(self):
+        return self.__suppressed
+    def __set_suppressed(self, d):
+        self.__suppressed=d
+    def add_suppressed(self, y, m, d):
+        self.__suppressed.append((y, m, d))
+    suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
+
+#-------------------------------------------------------------------------------
+class CalendarEntry(object):
+    def __init__(self, year, month, day):
+        self.__data={}
+        # setting default values
+        self.__data['start']={ 'date': (year, month, day) }
+        self.__data['end']={ 'date': (year, month, day) }
+        self.__data['description']=''
+        self.__data['location']=''
+        self.__data['priority']=None
+        self.__data['alarm']=-1
+        self.__data['allday']=False
+        self.__data['repeat']=None
+        self.__data['serials']=[]
+        self.__create_id()
+
+    def get(self):
+        r=copy.deepcopy(self.__data, _nil={})
+        if self.repeat is not None:
+            r['repeat']=self.repeat.get()
+        return r
+
+    def set(self, data):
+        self.__data=copy.deepcopy(data)
+        if self.repeat is not None:
+            r=RepeatEntry()
+            r.set(self.repeat)
+            self.repeat=r
+
+    def is_active(self, y, m ,d):
+        # return true if if this event is active on this date,
+        # mainly used for repeating events.
+        s=datetime.date(*self.start[:3])
+        e=datetime.date(*self.end[:3])
+        d=datetime.date(y, m, d)
+        if d<s or d>e:
+            # before start date, after end date
+            return False
+        if self.repeat is None:
+            # not a repeat event, within range so it's good
+            return True
+        # repeat event: check if it's in range.
+        return self.repeat.is_active(s, d)
+
+    def suppress_repeat_entry(self, y, m, d):
+        if self.repeat is None:
+            # not a repeat entry, do nothing
+            return
+        self.repeat.add_suppressed(y, m, d)
+        
+    def __get_description(self):
+        return self.__data.get('description', '')
+    def __set_description(self, desc):
+        self.__data['description']=desc
+    description=property(fget=__get_description, fset=__set_description)
+
+    def __get_location(self):
+        return self.__data.get('location', '')
+    def __set_location(self, location):
+        self.__data['location']=location
+    location=property(fget=__get_location, fset=__set_location)
+
+    def __get_priority(self):
+        return self.__data.get('priority', None)
+    def __set_priority(self, priority):
+        if priority is None or priority==0:
+            self.__data['priority']=None
+        else:
+            self.__data['priority']=priority
+    priority=property(fget=__get_priority, fset=__set_priority)
+
+    def __get_alarm(self):
+        return self.__data.get('alarm', -1)
+    def __set_alarm(self, alarm):
+        self.__data['alarm']=alarm
+    alarm=property(fget=__get_alarm, fset=__set_alarm)
+
+    def __get_allday(self):
+        return self.__data.get('allday', False)
+    def __set_allday(self, allday):
+        self.__data['allday']=allday
+    allday=property(fget=__get_allday, fset=__set_allday)
+
+    def __get_start(self):
+        d=self.__data['start']['date']
+        t=self.__data['start'].get('time', None)
+        if t is None:
+            return d+[0,0]
+        return d+t
+    def __set_start(self, datetime):
+        self.__data['start']['date']=datetime[:3]
+        if len(datetime)>3:
+            self.__data['start']['time']=datetime[3:5]
+        else:
+            if self.__data['start'].has_key('time'):
+                del self.__data['start']['time']
+    start=property(fget=__get_start, fset=__set_start)
+    
+    def __get_end(self):
+        d=self.__data['end']['date']
+        t=self.__data['end'].get('time', None)
+        if t is None:
+            return d
+        return d+t
+    def __set_end(self, datetime):
+        self.__data['end']['date']=datetime[:3]
+        if len(datetime)>3:
+            self.__data['end']['time']=datetime[3:5]
+        else:
+            if self.__data['end'].has_key('time'):
+                del self.__data['end']['time']
+    end=property(fget=__get_end, fset=__set_end)
+
+    def __get_serials(self):
+        return self.__data.get('serials', None)
+    def __set_serials(self, serials):
+        self.__data['serials']=serials
+    serials=property(fget=__get_serials, fset=__set_serials)
+
+    def __get_repeat(self):
+        return self.__data.get('repeat', None)
+    def __set_repeat(self, repeat):
+        self.__data['repeat']=repeat
+    repeat=property(fget=__get_repeat, fset=__set_repeat)
+
+    def __get_id(self):
+        s=self.__data.get('serials', [])
+        for n in s:
+            if n.get('sourcetype', None)=='bitpim':
+                return n.get('id', None)
+        return None
+    def __set_id(self, id):
+        s=self.__data.get('serials', [])
+        for n in s:
+            if n.get('sourcetype', None)=='bitpim':
+                n['id']=id
+                return
+        self.__data['serials'].append({'sourcetype': 'bitpim', 'id': id } )
+    id=property(fget=__get_id, fset=__set_id)
+
+    def __get_notes(self):
+        return self.__data.get('notes', '')
+    def __set_notes(self, s):
+        self.__data['notes']=s
+    notes=property(fget=__get_notes, fset=__set_notes)
+
+    def __get_category(self):
+        return self.__data.get('category', '')
+    def __set_category(self, s):
+        self.__data['category']=s
+    category=property(fget=__get_category, fset=__set_category)
+
+    def __get_ringtone(self):
+        return self.__data.get('ringtone', '')
+    def __set_ringtone(self, rt):
+        self.__data['ringtone']=rt
+    ringtone=property(fget=__get_ringtone, fset=__set_ringtone)
+
+    def __get_wallpaper(self):
+        return self.__data.get('wallpaper', '')
+    def __set_wallpaper(self, wp):
+        self.__data['wallpaper']=wp
+    wallpaper=property(fget=__get_wallpaper, fset=__set_wallpaper)
+
+    # we use two random numbers to generate the serials.  _persistrandom
+    # is seeded at startup
+    _persistrandom=random.Random()
+    def __create_id(self):
+        "Create a BitPim serial for this entry"
+        rand2=random.Random() # this random is seeded when this function is called
+        num=sha.new()
+        num.update(`self._persistrandom.random()`)
+        num.update(`rand2.random()`)
+        self.__data["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
+
+#-------------------------------------------------------------------------------
 class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
     used to edit the content of one particular day."""
 
-    CURRENTFILEVERSION=2
+    CURRENTFILEVERSION=3
     
     def __init__(self, mainwindow, parent, id=-1):
         """constructor
@@ -99,14 +452,18 @@ class Calendar(calendarcontrol.Calendar):
         self.repeating=[]  # nb this is stored unsorted
         self._data={} # the underlying data
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
-        self.dialog=DayViewDialog(self, self)
-        self._nextpos=-1  # pos ids for events we make
+        self.dialog=calendarentryeditor.Editor(self)
 
     def getdata(self, dict):
         """Return underlying calendar data in bitpim format
 
         @return:   The modified dict updated with at least C{dict['calendar']}"""
-        dict['calendar']=self._data
+        if dict.get('calendar_version', None)==2:
+            # return a version 2 dict
+            dict['calendar']=self.__convert3to2(self._data,
+                                                dict.get('ringtone-index', None))
+        else:
+            dict['calendar']=copy.deepcopy(self._data, _nil={})
         return dict
 
     def updateonchange(self):
@@ -130,7 +487,7 @@ class Calendar(calendarcontrol.Calendar):
                      should call L{newentryfactory} to make
                      an entry that you then modify
         """
-        self._data[entry['pos']]=entry
+        self._data[entry.id]=entry
         self.updateonchange()
 
     def DeleteEntry(self, entry):
@@ -142,17 +499,13 @@ class Calendar(calendarcontrol.Calendar):
         @param entry: an entry.  It must contain a C{pos} field
                       corresponding to an existing entry
         """
-        del self._data[entry['pos']]
+        del self._data[entry.id]
         self.updateonchange()
 
     def DeleteEntryRepeat(self, entry, year, month, day):
         """Deletes a specific repeat of an entry
-
         See L{DeleteEntry}"""
-        e=self._data[entry['pos']]
-        if not e.has_key('exceptions'):
-            e['exceptions']=[]
-        e['exceptions'].append( (year, month, day) )
+        self._data[entry.id].suppress_repeat_entry(year, month, day)
         self.updateonchange()
         
     def ChangeEntry(self, oldentry, newentry):
@@ -160,8 +513,8 @@ class Calendar(calendarcontrol.Calendar):
 
         The entries on disk are updated by this function.
         """
-        assert oldentry['pos']==newentry['pos']
-        self._data[newentry['pos']]=newentry
+        assert oldentry.id==newentry.id
+        self._data[newentry.id]=newentry
         self.updateonchange()
 
     def getentrydata(self, year, month, day):
@@ -172,74 +525,36 @@ class Calendar(calendarcontrol.Calendar):
         res=self.entrycache.get( (year,month,day), None)
         if res is not None:
             return res
-        dayofweek=calendar.weekday(year, month, day)
-        dayofweek=(dayofweek+1)%7 # normalize to sunday == 0
-        res=[]
         # find non-repeating entries
-        fixed=self.entries.get((year,month,day), [])
-        res.extend(fixed)
-        # now find repeating entries
-        repeats=[]
+        res=self.entries.get((year,month,day), [])
         for i in self.repeating:
-            y,m,d=i['start'][0:3]
-            if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
-                continue # we are before this entry
-            y,m,d=i['end'][0:3]
-            if year>y or (year==y and month>m) or (year==y and month==m and day>d):
-                continue # we are after this entry
-            # look in exception list            
-            if (year,month,day) in i.get('exceptions', ()):
-                continue # yup, so ignore
-            repeating=i['repeat']
-            if repeating=='daily':
-                repeats.append(i)
-                continue
-            if repeating=='monfri':
-                if dayofweek>0 and dayofweek<6:
-                    repeats.append(i)
-                continue
-            if repeating=='weekly':
-                if i['dayofweek']==dayofweek:
-                    repeats.append(i)
-                continue
-            if repeating=='monthly':
-                if day==i['start'][2]:
-                    repeats.append(i)
-                continue
-            if repeating=='yearly':
-                if day==i['start'][2] and month==i['start'][1]:
-                    repeats.append(i)
-                continue
-            assert False, "Unknown repeat type \""+repeating+"\""
-
-        res.extend(repeats)
+            if i.is_active(year, month, day):
+                res.append(i)
         self.entrycache[(year,month,day)] = res
         return res
         
     def newentryfactory(self, year, month, day):
         """Returns a new 'blank' entry with default fields
 
-        @rtype: dict"""
-        res={}
+        @rtype: CalendarEntry
+        """
+        # create a new entry
+        res=CalendarEntry(year, month, day)
+        # fill in default start & end data
         now=time.localtime()
-        res['start']=(year, month, day, now.tm_hour, now.tm_min)
-        res['end']=[year, month, day, now.tm_hour, now.tm_min]
+        event_start=(year, month, day, now.tm_hour, now.tm_min)
+        event_end=[year, month, day, now.tm_hour, now.tm_min]
         # we make end be the next hour, unless it has gone 11pm
         # in which case it is 11:59pm
-        if res['end'][3]<23:
-            res['end'][3]+=1
-            res['end'][4]=0
+        if event_end[3]<23:
+            event_end[3]+=1
+            event_end[4]=0
         else:
-            res['end'][3]=23
-            res['end'][4]=59
-        res['repeat']=None
-        res['description']='New event'
-        res['changeserial']=1
-        res['snoozedelay']=0
-        res['alarm']=None
-        res['daybitmap']=0
-        res['ringtone']=0
-        res['pos']=self.allocnextpos()
+            event_end[3]=23
+            event_end[4]=59
+        res.start=event_start
+        res.end=event_end
+        res.description='New Event'
         return res
 
     def getdaybitmap(self, start, repeat):
@@ -249,27 +564,15 @@ class Calendar(calendarcontrol.Calendar):
         dayofweek=(dayofweek+1)%7 # normalize to sunday == 0
         return [2048,1024,512,256,128,64,32][dayofweek]
 
-    def allocnextpos(self):
-        """Allocates a unique id for a new entry
-
-        Negative integers are used to avoid any clashes with existing
-        entries from the phone.  The existing data is checked to
-        ensure there is no clash.
-
-        @rtype: int"""
-        while True:
-            self._nextpos,res=self._nextpos-1, self._nextpos
-            if res not in self._data:
-                return res
-        # can't get here but pychecker cant figure that out
-        assert False
-        return -1
-        
     def OnGetEntries(self, year, month, day):
         """return pretty printed sorted entries for date
         as required by the parent L{calendarcontrol.Calendar} for
         display in a cell"""
-        res=[(i['start'][3], i['start'][4], i['description']) for i in self.getentrydata(year, month,day)]
+        entry_list=self.getentrydata(year, month, day)
+        res=[ (i.start[3], i.start[4], i.description) \
+              for i in entry_list if not i.allday ]
+        res += [ (None, None, i.description) \
+                 for i in entry_list if i.allday ]
         res.sort()
         return res
 
@@ -284,22 +587,23 @@ class Calendar(calendarcontrol.Calendar):
             
     def populate(self, dict):
         """Updates the internal data with the contents of C{dict['calendar']}"""
-        self._data=dict['calendar']
+        if dict.get('calendar_version', None)==2:
+            # Cal dict version 2, need to convert to current ver(3)
+            self._data=self.__convert2to3(dict.get('calendar', {}),
+                                          dict.get('ringtone-index', {}))
+        else:
+            self._data=dict.get('calendar', {})
         self.entrycache={}
         self.entries={}
         self.repeating=[]
 
         for entry in self._data:
             entry=self._data[entry]
-            y,m,d,h,min=entry['start']
-            if entry['repeat'] is None:
-                if not self.entries.has_key( (y,m,d) ): self.entries[(y,m,d)]=[]
-                self.entries[(y,m,d)].append(entry)
-                continue
-            if entry['repeat']=='weekly':
-                # we could pay attention to daybitmap here ...
-                entry['dayofweek']=(calendar.weekday(y,m,d)+1)%7
-            self.repeating.append(entry)
+            y,m,d,h,min=entry.start
+            if entry.repeat is None:
+                self.entries.setdefault((y,m,d), []).append(entry)
+            else:
+                self.repeating.append(entry)
 
         self.RefreshAllEntries()
 
@@ -316,9 +620,18 @@ class Calendar(calendarcontrol.Calendar):
             # delete them all!
             os.remove(os.path.join(self.thedir, f))
 
-        d={}
-        d['calendar']=dict['calendar']
-        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
+        if dict.get('calendar_version', None)==2:
+            # Cal dict version 2, need to convert to current ver(3)
+            cal_dict=self.__convert2to3(dict.get('calendar', {}),
+                                        dict.get('ringtone-index', {}))
+        else:
+            cal_dict=dict.get('calendar', {})
+
+        rr={}
+        for k, e in cal_dict.items():
+            rr[k]=e.get()
+        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"),
+                                     {'calendar': rr}, self.CURRENTFILEVERSION)
         return dict
 
     def getfromfs(self, dict):
@@ -337,9 +650,21 @@ class Calendar(calendarcontrol.Calendar):
         if not os.path.isdir(self.thedir):
             raise Exception("Bad directory for calendar '"+self.thedir+"'")
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
-            d={'result': {}}
-            common.readversionedindexfile(os.path.join(self.thedir, "index.idx"), d, self.versionupgrade, self.CURRENTFILEVERSION)
-            dict.update(d['result'])
+            dct={'result': {}}
+            common.readversionedindexfile(os.path.join(self.thedir, "index.idx"),
+                                          dct, self.versionupgrade,
+                                          self.CURRENTFILEVERSION)
+            if dct['result'].has_key('converted'):
+                dict.update({ 'calendar': dct['result']['calendar'] })
+                return dict
+            tdy=datetime.date.today()
+            y,m,d=(tdy.year, tdy.month, tdy.day)
+            r={}
+            for k,e in dct['result'].get('calendar', {}).items():
+                ce=CalendarEntry(y, m, d)
+                ce.set(e)
+                r[k]=ce
+            dict.update({ 'calendar': r })
         else:
             dict['calendar']={}
         return dict
@@ -365,655 +690,158 @@ class Calendar(calendarcontrol.Calendar):
                 del entry['?d']
 
         # 2 to 3 etc
+        if version==2:
+            version=3
+            dict['result']['calendar']=self.convert_dict(dict['result'].get('calendar', {}), 2, 3)
+            dict['result']['converted']=True    # already converted
 
+        # 3 to 4 etc
 
-class DayViewDialog(wx.Dialog):
-    """Used to edit the entries on one particular day"""
-
-    # ids for the various controls
-    ID_PREV=1
-    ID_NEXT=2
-    ID_ADD=3
-    ID_DELETE=4
-    ID_CLOSE=5
-    ID_LISTBOX=6
-    ID_START=7
-    ID_END=8
-    ID_REPEAT=9
-    ID_DESCRIPTION=10
-    ID_SAVE=11
-    ID_HELP=12
-    ID_REVERT=13
-
-    # results on asking if the user wants to change the original (repeating) entry, just
-    # this instance, or cancel
-    ANSWER_ORIGINAL=1
-    ANSWER_THIS=2
-    ANSWER_CANCEL=3
-
-    def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
-        # This method is a good illustration of why people use gui designers :-)
-        self.cw=calendarwidget
-        wx.Dialog.__init__(self, parent, id, title, style=wx.DEFAULT_DIALOG_STYLE)
-
-        # overall container
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        
-        prev=wx.Button(self, self.ID_PREV, "<", style=wx.BU_EXACTFIT)
-        next=wx.Button(self, self.ID_NEXT, ">", style=wx.BU_EXACTFIT)
-        self.title=wx.StaticText(self, -1, "Date here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
-
-        # top row container 
-        hbs1=wx.BoxSizer(wx.HORIZONTAL)
-        hbs1.Add(prev, 0, wx.EXPAND)
-        hbs1.Add(self.title, 1, wx.EXPAND)
-        hbs1.Add(next, 0, wx.EXPAND)
-        vbs.Add(hbs1, 0, wx.EXPAND)
-
-        # list box and two buttons below
-        self.listbox=wx.ListBox(self, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        add=wx.Button(self, self.ID_ADD, "New")
-        hbs2=wx.BoxSizer(wx.HORIZONTAL)
-        hbs2.Add(add, 1, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, border=5)
-        
-        # sizer for listbox
-        lbs=wx.BoxSizer(wx.VERTICAL)
-        lbs.Add(self.listbox, 1, wx.EXPAND|wx.BOTTOM, border=5)
-        lbs.Add(hbs2, 0, wx.EXPAND)
-
-        self.fieldnames=('description', 'start', 'end', 'repeat',
-        'alarm', 'ringtone', 'changeserial', 'snoozedelay')
-        
-        self.fielddesc=( 'Description', 'Start', 'End', 'Repeat',
-        'Alarm', 'Ringtone', 'changeserial', 'Snooze Delay' )
-
-        # right hand bit with all fields
-        gs=wx.FlexGridSizer(-1,2,5,5)
-        gs.AddGrowableCol(1)
-        self.fields={}
-        for desc,field in zip(self.fielddesc, self.fieldnames):
-            t=wx.StaticText(self, -1, desc, style=wx.ALIGN_LEFT)
-            gs.Add(t)
-            if field=='start':
-                c=DVDateTimeControl(self,self.ID_START)
-            elif field=='end':
-                c=DVDateTimeControl(self,self.ID_END)
-            elif field=='repeat':
-                c=DVRepeatControl(self, self.ID_REPEAT)
-            elif field=='description':
-                c=DVTextControl(self, self.ID_DESCRIPTION, "dummy")
-            else:
-                print "field",field,"needs an id"
-                c=DVIntControl(self, -1)
-            gs.Add(c,0,wx.EXPAND)
-            self.fields[field]=c
-
-        # buttons below fields
-        delete=wx.Button(self, self.ID_DELETE, "Delete")
-        revert=wx.Button(self, self.ID_REVERT, "Revert")
-        save=wx.Button(self, self.ID_SAVE, "Save")
-
-        hbs4=wx.BoxSizer(wx.HORIZONTAL)
-        hbs4.Add(delete, 1, wx.ALIGN_CENTRE|wx.LEFT, border=10)
-        hbs4.Add(revert, 1, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, border=10)
-        hbs4.Add(save, 1, wx.ALIGN_CENTRE|wx.RIGHT, border=10)
-
-        # fields and buttons together
-        vbs2=wx.BoxSizer(wx.VERTICAL)
-        vbs2.Add(gs, 1, wx.EXPAND|wx.BOTTOM, border=5)
-        vbs2.Add(hbs4, 0, wx.EXPAND|wx.ALIGN_CENTRE)
-
-        # container for everything below title row
-        hbs3=wx.BoxSizer(wx.HORIZONTAL)
-        hbs3.Add(lbs, 1, wx.EXPAND|wx.ALL, 5)
-        hbs3.Add(vbs2, 2, wx.EXPAND|wx.ALL, 5)
-
-        vbs.Add(hbs3, 1, wx.EXPAND)
-
-        # horizontal rules plus help and cancel buttons
-        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        help=wx.Button(self, self.ID_HELP, "Help")
-        close=wx.Button(self, self.ID_CLOSE, "Close")
-        hbs4=wx.BoxSizer(wx.HORIZONTAL)
-        hbs4.Add(help, 0, wx.ALL, 5)
-        hbs4.Add(close, 0, wx.ALL, 5)
-        vbs.Add(hbs4, 0, wx.ALIGN_RIGHT|wx.ALL, 5)
-
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
-
-        # delete is disabled until an item is selected
-        self.FindWindowById(self.ID_DELETE).Enable(False)
-
-        wx.EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
-        wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
-        wx.EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
-        wx.EVT_BUTTON(self, self.ID_REVERT, self.OnRevertButton)
-        wx.EVT_BUTTON(self, self.ID_CLOSE, self.OnCloseButton)
-        wx.EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
-        wx.EVT_BUTTON(self, self.ID_DELETE, self.OnDeleteButton)
-        wx.EVT_BUTTON(self, self.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_EDITING_CALENDAR_EVENTS))
-        wx.EVT_BUTTON(self, self.ID_PREV, self.OnPrevDayButton)
-        wx.EVT_BUTTON(self, self.ID_NEXT, self.OnNextDayButton)
-
-        # this is allegedly called automatically but didn't work for me
-        wx.EVT_CLOSE(self, self.OnCloseWindow)
-
-        # Tracking of the entries in the listbox.  Each entry is a dict. Entries are just the
-        # entries in a random order.  entrymap maps from the order in the listbox to a
-        # specific entry
-        self.entries=[]
-        self.entrymap=[]
-
-        # Dirty tracking.  We restrict what the user can do while editting an
-        # entry to only be able to edit that entry.  'dirty' gets fired when
-        # they make any updates.  Annoyingly, controls generate change events
-        # when they are updated programmatically as well as by user interaction.
-        # ignoredirty is set when we are programmatically updating controls
-        self.dirty=None
-        self.ignoredirty=False 
-        self.setdirty(False)
-
-    def AskAboutRepeatDelete(self):
-        """Asks the user if they wish to delete the original (repeating) entry, or this instance
-
-        @return: An C{ANSWER_} constant
+    def convert_dict(self, dict, from_version, to_version, ringtone_index={}):
         """
-        return self._AskAboutRecurringEvent("Delete recurring event?", "Do you want to delete all the recurring events, or just this one?", "Delete")
-
-    def AskAboutRepeatChange(self):
-        """Asks the user if they wish to change the original (repeating) entry, or this instance
-
-        @return: An C{ANSWER_} constant
+        Convert the calendatr dict from one version to another.
+        Currently only support conversion between version 2 and 3.
         """
-        return self._AskAboutRecurringEvent("Change recurring event?", "Do you want to change all the recurring events, or just this one?", "Change")
-
-    def _AskAboutRecurringEvent(self, caption, text, prefix):
-        dlg=RecurringDialog(self, caption, text, prefix)
-        res=dlg.ShowModal()
-        dlg.Destroy()
-        if res==dlg.ID_THIS:
-            return self.ANSWER_THIS
-        if res==dlg.ID_ALL:
-            return self.ANSWER_ORIGINAL
-        if res==dlg.ID_CANCEL:
-            return self.ANSWER_CANCEL
-        assert False
-
-    def OnListBoxItem(self, _=None):
-        """Callback for when user clicks on an event in the listbox"""
-        self.updatefields(self.getcurrententry())
-        self.setdirty(False)
-        self.FindWindowById(self.ID_DELETE).Enable(True)
-
-    def getcurrententry(self):
-        """Returns the entry currently being viewed
-
-        @Note: this returns the unedited form of the entry"""
-        return self.getentry(self.listbox.GetSelection())
-
-    def getentry(self, num):
-        """maps from entry number in listbox to an entry in entries
-
-        @type num: int
-        @rtype: entry(dict)"""
-        return self.entries[self.entrymap[num]]
-
-    def OnSaveButton(self, _=None):
-        """Callback for when user presses save"""
-
-        # check if the dates are ok
-        for x in 'start', 'end':
-            if not self.fields[x].IsValid():
-                self.fields[x].SetFocus()
-                wx.Bell()
-                return
-
-        # whine if end is before start
-        start=self.fields['start'].GetValue()
-        end=self.fields['end'].GetValue()
-
-        # I want metric time!
-        if ( end[0]<start[0] ) or \
-           ( end[0]==start[0] and end[1]<start[1] ) or \
-           ( end[0]==start[0] and end[1]==start[1] and end[2]<start[2] ) or \
-           ( end[0]==start[0] and end[1]==start[1] and end[2]==start[2] and end[3]<start[3] ) or \
-           ( end[0]==start[0] and end[1]==start[1] and end[2]==start[2] and end[3]==start[3] and end[4]<start[4] ):
-            # scold the user
-            dlg=wx.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
-                                wx.OK|wx.ICON_EXCLAMATION)
-            dlg.ShowModal()
-            dlg.Destroy()
-            # move focus
-            self.fields['end'].SetFocus()
-            return
-
-        # lets roll ..
-        entry=self.getcurrententry()
-
-        # is it a repeat?
-        res=self.ANSWER_ORIGINAL
-        if entry['repeat'] is not None:
-            # ask the user
-            res=self.AskAboutRepeatChange()
-            if res==self.ANSWER_CANCEL:
-                return
-        # where do we get newentry template from?
-        if res==self.ANSWER_ORIGINAL:
-            newentry=copy.copy(entry)
-            # this will have no effect until we don't display the changeserial field
-            newentry['changeserial']=entry['changeserial']+1
+        if dict is None:
+            return None
+        if from_version==2 and to_version==3:
+            return self.__convert2to3(dict, ringtone_index)
+        elif from_version==3 and to_version==2:
+            return self.__convert3to2(dict, ringtone_index)
         else:
-            newentry=self.cw.newentryfactory(*self.date)
+            raise 'Invalid conversion'
 
-        # update the fields
-        for f in self.fields:
-            control=self.fields[f]
-            if isinstance(control, DVDateTimeControl):
-                # which date do we use?
-                if res==self.ANSWER_ORIGINAL:
-                    d=control.GetValue()[0:3]
+    def __convert2to3(self, dict, ringtone_index):
+        """
+        Convert calendar dict from version 2 to 3.
+        """
+        r={}
+        for k,e in dict.items():
+            ce=CalendarEntry(*e['start'][:3])
+            ce.start=e['start']
+            ce.end=e['end']
+            ce.description=e['description']
+            ce.alarm=e['alarm']
+            ce.ringtone=ringtone_index.get(e['ringtone'], {}).get('name', '')
+            repeat=e['repeat']
+            if repeat is None:
+                ce.repeat=None
+            else:
+                repeat_entry=RepeatEntry()
+                if repeat=='daily':
+                    repeat_entry.repeat_type=repeat_entry.daily
+                    repeat_entry.interval=1
+                elif repeat=='monfri':
+                    repeat_entry.repeat_type=repeat_entry.daily
+                    repeat_entry.interval=0
+                elif repeat=='weekly':
+                    repeat_entry.repeat_type=repeat_entry.weekly
+                    repeat_entry.interval=1
+                    dow=datetime.date(*e['start'][:3]).isoweekday()%7
+                    repeat_entry.dow=1<<dow
+                elif repeat=='monthly':
+                    repeat_entry.repeat_type=repeat_entry.monthly
                 else:
-                    d=self.date
-                v=list(d)+list(control.GetValue())[3:]
+                    repeat_entry.repeat_type=repeat_entry.yearly
+                repeat_entry.suppressed=e.get('exceptions',[])
+                ce.repeat=repeat_entry
+            r[ce.id]=ce
+        return r
+
+    def __convert_daily_events(self, e, d):
+        """ Conver a daily event from v3 to v2 """
+        rp=e.repeat
+        if rp.interval==1:
+            # repeat everyday
+            d['repeat']='daily'
+        elif rp.interval==0:
+            # repeat every weekday
+            d['repeat']='monfri'
+        else:
+            # the interval is every nth day, with n>1
+            # generate exceptions for those dates that are N/A
+            d['repeat']='daily'
+            t0=datetime.date(*e.start[:3])
+            t1=datetime.date(*e.end[:3])
+            delta_t=datetime.timedelta(1)
+            while t0<=t1:
+                if not e.is_active(t0.year, t0.month, t0.day):
+                    d['exceptions'].append((t0.year, t0.month, t0.day))
+                t0+=delta_t
+
+    def __convert_weekly_events(self, e, d, idx):
+        """
+        Convert a weekly event from v3 to v2
+        """
+        rp=e.repeat
+        dow=rp.dow
+        t0=datetime.date(*e.start[:3])
+        t1=t3=datetime.date(*e.end[:3])
+        delta_t=datetime.timedelta(1)
+        delta_t7=datetime.timedelta(7)
+        if (t1-t0).days>6:
+            # end time is more than a week away
+            t1=t0+datetime.timedelta(6)
+        d['repeat']='weekly'
+        res={}
+        while t0<=t1:
+            dow_0=t0.isoweekday()%7
+            if (1<<dow_0)&dow:
+                # we have a hit, generate a weekly repeat event here
+                dd=copy.deepcopy(d)
+                dd['start']=(t0.year, t0.month, t0.day, e.start[3], e.start[4])
+                dd['daybitmap']=self.getdaybitmap(dd['start'], dd['repeat'])
+                # generate exceptions for every nth week case
+                t2=t0
+                while t2<=t3:
+                    if not e.is_active(t2.year, t2.month, t2.day):
+                        dd['exceptions'].append((t2.year, t2.month, t2.day))
+                    t2+=delta_t7
+                # done, add it to the dict
+                dd['pos']=idx
+                res[idx]=dd
+                idx+=1
+            t0+=delta_t
+        return idx, res
+
+    def __convert3to2(self, dict, ringtone_index):
+        """Convert calendar dict from version 3 to 2."""
+        r={}
+        idx=0
+        for k,e in dict.items():
+            d={}
+            d['start']=e.start
+            d['end']=e.end
+            d['description']=e.description
+            d['alarm']=e.alarm
+            d['changeserial']=1
+            d['snoozedelay']=0
+            d['ringtone']=0 # by default
+            try:
+                d['ringtone']=[i for i,r in ringtone_index.items() \
+                               if r.get('name', '')==e.ringtone][0]
+            except:
+                pass
+            rp=e.repeat
+            if rp is None:
+                d['repeat']=None
+                d['exceptions']=[]
+                d['daybitmap']=0
             else:
-                v=control.GetValue()
-
-            # if we are changing a repeat, reset the new entry's repeat is off
-            if f=='repeat' and res==self.ANSWER_THIS:
-                v=None
- 
-            newentry[f]=v
-
-        # update the daybitmap field
-        newentry['daybitmap']=self.cw.getdaybitmap(newentry['start'], newentry['repeat'])
-
-        # update calendar widget
-        if res==self.ANSWER_ORIGINAL:
-            self.cw.ChangeEntry(entry, newentry)
-        else:
-            # delete the repeat and add this new entry
-            self.cw.DeleteEntryRepeat(entry, *self.date)
-            self.cw.AddEntry(newentry)
-
-        # tidy up
-        self.setdirty(False)
-        # did the user change the date on us?
-        date=tuple(newentry['start'][:3])
-        if tuple(self.date)!=date:
-            self.cw.showday(*date)
-            self.cw.setselection(*date)
-            self.setdate(*date)
-        else:
-            self.refreshentries()
-        self.updatelistbox(newentry['pos'])
-
-    def OnPrevDayButton(self, _):
-        y,m,d=self.date
-        y,m,d=calendarcontrol.normalizedate(y,m,d-1)
-        self.setdate(y,m,d)
-        self.cw.setday(y,m,d)
-
-    def OnNextDayButton(self, _):
-        y,m,d=self.date
-        y,m,d=calendarcontrol.normalizedate(y,m,d+1)
-        self.setdate(y,m,d)
-        self.cw.setday(y,m,d)
-
-    def OnNewButton(self, _=None):
-        entry=self.cw.newentryfactory(*self.date)
-        self.cw.AddEntry(entry)
-        self.refreshentries()
-        self.updatelistbox(entry['pos'])
-
-    def OnRevertButton(self, _=None):
-        # We basically pretend the user has selected the item in the listbox again (which they
-        # can't actually do as it is disabled)
-        self.OnListBoxItem()
-
-    def OnDeleteButton(self, _=None):
-        entry=self.getcurrententry()
-        # is it a repeat?
-        res=self.ANSWER_ORIGINAL
-        if entry['repeat'] is not None:
-            # ask the user
-            res=self.AskAboutRepeatDelete()
-            if res==self.ANSWER_CANCEL:
-                return
-        enum=self.listbox.GetSelection()
-        if enum+1<len(self.entrymap):
-            # try and find entry after current one
-            newpos=self.getentry(enum+1)['pos']
-        elif enum-1>=0:
-            # entry before as we are deleting last entry
-            newpos=self.getentry(enum-1)['pos']
-        else:
-            newpos=None
-        if res==self.ANSWER_ORIGINAL:
-            self.cw.DeleteEntry(entry)
-        else:
-            self.cw.DeleteEntryRepeat(entry, *self.date)
-        self.setdirty(False)
-        self.refreshentries()
-        self.updatelistbox(newpos)
-        
-    def OnCloseWindow(self, event):
-        # only allow closing to happen if the close button is
-        # enabled
-        if self.FindWindowById(self.ID_CLOSE).IsEnabled():
-            self.Show(False)
-        else:
-            # veto it if allowed
-            if event.CanVeto():
-                event.Veto()
-                wx.Bell()
-
-    def OnCloseButton(self, _=None):
-        self.Show(False)
-
-    def setdate(self, year, month, day):
-        """Sets the date we are editing entries for
-
-        @Note: The list of entries is updated"""
-        d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
-        self.date=year,month,day
-        self.title.SetLabel(d)
-        self.refreshentries()
-        self.updatelistbox()
-        self.updatefields(None)
-
-    def refreshentries(self):
-        """re-requests the list of entries for the currently visible date from the main calendar"""
-        self.entries=self.cw.getentrydata(*self.date)
-
-    def updatelistbox(self, entrytoselect=None):
-        """
-        Updates the contents of the listbox.  It will re-sort the contents.
-
-        @param entrytoselect: The integer id of an entry to select.  Note that
-                              this is an event id, not an index
-        """
-        self.listbox.Clear()
-        selectitem=-1
-        self.entrymap=[]
-        # decorate
-        for index, entry in enumerate(self.entries):
-            e=( entry['start'][3:5], entry['end'][3:5], entry['description'], entry['pos'],  index)
-            self.entrymap.append(e)
-        # time ordered
-        self.entrymap.sort()
-        # now undecorate
-        self.entrymap=[index for ign0, ign1, ign2, ign3, index in self.entrymap]
-        # add listbox entries
-        for curpos, index in enumerate(self.entrymap):
-            e=self.entries[index]
-            if e['pos']==entrytoselect:
-                selectitem=curpos
-            if 0: # ampm/miltime config here ::TODO::
-                str="%2d:%02d" % (e['start'][3], e['start'][4])
-            else:
-                hr=e['start'][3]
-                ap="am"
-                if hr>=12:
-                    ap="pm"
-                    hr-=12
-                if hr==0: hr=12
-                str="%2d:%02d %s" % (hr, e['start'][4], ap)
-            str+=" "+e['description']
-            self.listbox.Append(str)
-
-        # Select an item if requested
-        if selectitem>=0:
-            self.listbox.SetSelection(selectitem)
-            self.OnListBoxItem() # update fields
-        else:
-            # disable fields since nothing is selected
-            self.updatefields(None)
-            
-        # disable delete if there are no entries!
-        if len(self.entries)==0:
-            self.FindWindowById(self.ID_DELETE).Enable(False)
-            
-    def updatefields(self, entry):
-        self.ignoredirty=True
-        active=True
-        if entry is None:
-            for i in self.fields:
-                self.fields[i].SetValue(None)
-            active=False
-        else:
-            for i in self.fieldnames:
-                self.fields[i].SetValue(entry[i])
-
-        # manipulate field widgets
-        for i in self.fields:
-            self.fields[i].Enable(active)
-
-        self.ignoredirty=False
-
-    # called from various widget update callbacks
-    def OnMakeDirty(self, _=None):
-        """A public function you can call that will set the dirty flag"""
-        self.setdirty(True)
-
-    def setdirty(self, val):
-        """Set the dirty flag
-
-        The various buttons in the dialog are enabled/disabled as appropriate
-        for the new state.
-        
-        @type  val: Bool
-        @param val: True to mark edit fields as different from entry (ie
-                    editing has taken place)
-                    False to make them as the same as the entry (ie no
-                    editing or the edits have been discarded)
-        """
-        if self.ignoredirty:
-            return
-        self.dirty=val
-        if self.dirty:
-            # The data has been modified, so we only allow working
-            # with this data
-            
-            # enable save, revert, delete
-            self.FindWindowById(self.ID_SAVE).Enable(True)
-            self.FindWindowById(self.ID_REVERT).Enable(True)
-            self.FindWindowById(self.ID_DELETE).Enable(True)
-            # disable close, left, right, new
-            self.FindWindowById(self.ID_CLOSE).Enable(False)
-            self.FindWindowById(self.ID_PREV).Enable(False)
-            self.FindWindowById(self.ID_NEXT).Enable(False)
-            self.FindWindowById(self.ID_ADD).Enable(False)
-            # can't play with listbox now
-            self.FindWindowById(self.ID_LISTBOX).Enable(False)
-        else:
-            # The data is now clean and saved/reverted or deleted
-            
-            # disable save, revert,
-            self.FindWindowById(self.ID_SAVE).Enable(False)
-            self.FindWindowById(self.ID_REVERT).Enable(False)
-
-            # enable delete, close, left, right, new
-            self.FindWindowById(self.ID_CLOSE).Enable(True)
-            self.FindWindowById(self.ID_DELETE).Enable(len(self.entries)>0) # only enable if there are entries
-            self.FindWindowById(self.ID_PREV).Enable(True)
-            self.FindWindowById(self.ID_NEXT).Enable(True)
-            self.FindWindowById(self.ID_ADD).Enable(True)
-
-            # can choose another item in listbox
-            self.FindWindowById(self.ID_LISTBOX).Enable(True)
-
-
-
-# We derive from wxPanel not the control directly.  If we derive from
-# wx.MaskedTextCtrl then all hell breaks loose as our {Get|Set}Value
-# methods make the control malfunction big time
-class DVDateTimeControl(wx.Panel):
-    """A datetime control customised to work in the dayview editor"""
-    def __init__(self,parent,id):
-        f="EUDATETIMEYYYYMMDD.HHMM"
-        wx.Panel.__init__(self, parent, -1)
-        self.c=wx.lib.masked.textctrl.TextCtrl(self, id, "",
-                                autoformat=f)
-        bs=wx.BoxSizer(wx.HORIZONTAL)
-        bs.Add(self.c,0,wx.EXPAND)
-        self.SetSizer(bs)
-        self.SetAutoLayout(True)
-        bs.Fit(self)
-        wx.EVT_TEXT(self.c, id, parent.OnMakeDirty)
-
-    def SetValue(self, v):
-        if v is None:
-            self.c.SetValue("")
-            return
-        ap="A"
-        v=list(v)
-        if v[3]>12:
-            v[3]-=12
-            ap="P"
-        elif v[3]==0:
-            v[3]=12
-        elif v[3]==12:
-            ap="P"
-        v=v+[ap]
-
-        # we have to supply what the user would type without the punctuation
-        # (try figuring that out from the "doc")
-        str="%04d%02d%02d%02d%02d%s" % tuple(v)
-        self.c.SetValue( str )
-        self.c.Refresh()
-
-    def GetValue(self):
-        # The actual value including all punctuation is returned
-        # GetPlainValue can get it with all digits run together
-        str=self.c.GetValue()
-        digits="0123456789"
-
-        # turn it back into a list
-        res=[]
-        val=None
-        for i in str:
-            if i in digits:
-                if val is None: val=0
-                val*=10
-                val+=int(i)
-            else:
-                if val is not None:
-                    res.append(val)
-                    val=None
-        # fixup am/pm
-        if str[-2]=='P' or str[-2]=='p':
-            if res[3]!=12: # 12pm is midday and left alone
-                res[3]+=12
-        elif res[3]==12: # 12 am
-            res[3]=0
-
-        return res
-
-    def IsValid(self):
-        return self.c.IsValid()
-    
-class DVRepeatControl(wx.Choice):
-    """Shows the calendar repeat values"""
-    vals=[None, "daily", "monfri", "weekly", "monthly", "yearly"]
-    desc=["None", "Daily", "Mon - Fri", "Weekly", "Monthly", "Yearly" ]
-
-    def __init__(self, parent, id):
-        wx.Choice.__init__(self, parent, id, choices=self.desc)
-        wx.EVT_CHOICE(self, id, parent.OnMakeDirty)
-
-    def SetValue(self, v):
-        assert v in self.vals
-        self.SetSelection(self.vals.index(v))
-
-    def GetValue(self):
-        s=self.GetSelection()
-        if s<0: s=0
-        return self.vals[s]
-
-class DVIntControl(wx.lib.intctrl.IntCtrl):
-    # shows integer values
-    def __init__(self, parent, id):
-        wx.lib.intctrl.IntCtrl.__init__(self, parent, id, limited=True)
-        wx.lib.intctrl.EVT_INT(self, id, parent.OnMakeDirty)
-
-    def SetValue(self, v):
-        if v is None:
-            v=-1
-        wx.lib.intctrl.IntCtrl.SetValue(self,v)
-        
-class DVTextControl(wx.TextCtrl):
-    def __init__(self, parent, id, value=""):
-        if value is None:
-            value=""
-        wx.TextCtrl.__init__(self, parent, id, value)
-        wx.EVT_TEXT(self, id, parent.OnMakeDirty)
-
-    def SetValue(self, v):
-        if v is None: v=""
-        wx.TextCtrl.SetValue(self,v)
-
-
-###
-### Dialog box for asking the user what they want to for a recurring event.
-### Used when saving changes or deleting entries in the DayViewDialog
-###
-
-class RecurringDialog(wx.Dialog):
-    """Ask the user what they want to do about a recurring event
-
-    You should only use this as a modal dialog.  ShowModal() will
-    return one of:
-
-      - ID_THIS:   change just this event
-      - ID_ALL:    change all events
-      - ID_CANCEL: user cancelled dialog"""
-    ID_THIS=1
-    ID_ALL=2
-    ID_CANCEL=3
-    ID_HELP=4 # hide from epydoc
-
-    def __init__(self, parent, caption, text, prefix):
-        """Constructor
-
-        @param parent: frame to parent this to
-        @param caption: caption of the dialog (eg C{"Change recurring event?"})
-        @param text: text displayed in the dialog (eg C{"This is a recurring event.  What would you like to change?"})
-        @param prefix: text prepended to the buttons (eg the button says " this" so the prefix would be "Change" or "Delete")
-        """
-        wx.Dialog.__init__(self, parent, -1, caption,
-                          style=wx.CAPTION)
-
-        # eveything sits inside a vertical box sizer
-        vbs=wx.BoxSizer(wx.VERTICAL)
-
-        # the explanatory text
-        t=wx.StaticText(self, -1, text)
-        vbs.Add(t, 1, wx.EXPAND|wx.ALL,10)
-
-        # horizontal line
-        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 3)
-
-        # buttons at bottom
-        buttonsizer=wx.BoxSizer(wx.HORIZONTAL)
-        for id, label in (self.ID_THIS,   "%s %s" % (prefix, "this")), \
-                         (self.ID_ALL,    "%s %s" % (prefix, "all")), \
-                         (self.ID_CANCEL, "Cancel"), \
-                         (self.ID_HELP,   "Help"):
-            b=wx.Button(self, id, label)
-            wx.EVT_BUTTON(self, id, self._onbutton)
-            buttonsizer.Add(b, 5, wx.ALIGN_CENTER|wx.ALL, 5)
-
-        # plumb in sizers
-        vbs.Add(buttonsizer, 0, wx.EXPAND|wx.ALL,2)
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
-
-
-    def _onbutton(self, evt):
-        if evt.GetId()==self.ID_HELP:
-            pass # :::TODO::: some sort of help ..
-        else:
-            self.EndModal(evt.GetId())
+                d['exceptions']=rp.suppressed
+                if rp.repeat_type==rp.daily:
+                    self.__convert_daily_events(e, d)
+                elif rp.repeat_type==rp.weekly:
+                    idx, rr=self.__convert_weekly_events(e, d, idx)
+                    r.update(rr)
+                    continue
+                elif rp.repeat_type==rp.monthly:
+                    d['repeat']='monthly'
+                elif rp.repeat_type==rp.yearly:
+                    d['repeat']='yearly'
+                d['daybitmap']=self.getdaybitmap(d['start'], d['repeat'])
+            d['pos']=idx
+            r[idx]=d
+            idx+=1
+        print 'V2: ', r
+        return r

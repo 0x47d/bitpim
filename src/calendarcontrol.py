@@ -303,31 +303,32 @@ class CalendarCell(wx.PyWindow):
             lastap=""
             for h,m,desc in self.entries:
                 x=0
-                self.attr.setfortime(dc, fontscale)
-                # bounding
-                x+=boundingspace # we don't draw anything yet
-                timey=y
-                if timeheight<firstrowheight:
-                    timey+=(firstrowheight-timeheight)/2
-                text=""
-                
-                if self.attr.ismiltime():
-                    ap=""
-                else:
-                    ap="a"
-                    if h>=12: ap="p"
-                    h%=12
-                    if h==0: h=12
-                    if ap==lastap:
+                if h is not None:
+                    self.attr.setfortime(dc, fontscale)
+                    # bounding
+                    x+=boundingspace # we don't draw anything yet
+                    timey=y
+                    if timeheight<firstrowheight:
+                        timey+=(firstrowheight-timeheight)/2
+                    text=""
+                    
+                    if self.attr.ismiltime():
                         ap=""
                     else:
-                        lastap=ap
-                if h<10: text+=" "
-                
-                text+="%d:%02d%s" % (h,m,ap)
-                dc.DrawText(text, x, timey)
-                x+=timespace
-                if not self.attr.ismiltime: x+=ampm
+                        ap="a"
+                        if h>=12: ap="p"
+                        h%=12
+                        if h==0: h=12
+                        if ap==lastap:
+                            ap=""
+                        else:
+                            lastap=ap
+                    if h<10: text+=" "
+                    
+                    text+="%d:%02d%s" % (h,m,ap)
+                    dc.DrawText(text, x, timey)
+                    x+=timespace
+                    if not self.attr.ismiltime: x+=ampm
                 
                 self.attr.setforentry(dc, fontscale)
                 ey=y

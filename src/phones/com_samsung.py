@@ -399,9 +399,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def savecalendar(self, dict, merge):
         
-        if not self.is_online():
-            self.log("Failed to talk to phone")
-            return dict
+        self.log("Sending calendar entries")
+
         cal=dict['calendar']
         cal_len=len(cal)
         l=len(self.__cal_entries_range)
@@ -469,6 +468,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         for k in range(cal_cnt, l):
             self.progress(k, l, "Deleting entry %d" % k)
             self.save_calendar_entry(`k`)
+
+        self.setmode(self.MODEMODEM)
 
         return dict
 
