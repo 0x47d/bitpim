@@ -132,7 +132,7 @@ PACKET eventresponse:
     436 UNKNOWN pad
 
 PACKET eventupdaterequest:
-    * sanyoheader {'packettype': 0x0c, 'command':0x23} +header
+    * sanyowriteheader {'packettype': 0x0c, 'command':0x23} +header
     * evententry entry
     436 UNKNOWN +pad
         
@@ -167,7 +167,7 @@ PACKET callalarmresponse:
     417 UNKNOWN pad
 
 PACKET callalarmupdaterequest:
-    * sanyoheader {'packettype': 0x0c, 'command':0x24} +header
+    * sanyowriteheader {'packettype': 0x0c, 'command':0x24} +header
     * callalarmentry entry
     417 UNKNOWN +pad
 
