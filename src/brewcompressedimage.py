@@ -149,7 +149,7 @@ def getimage(file):
     # print "number of objects/frames/palettes?  no idea on order: %d, %d, %d" % (numitem1, numitem2, numitem3)
     numpalettes=numitem1  # just a guess
     numotherthing=numitem2 # no idea what they are, possibly 'frames' as in the doc
-    numimages=numitem3 # images, probbaly 'object' as in the doc
+    numimages=numitem3 # images, probably 'object' as in the doc
     # ? (0)
     assert readlsb(data[0x18:0x1a])==0
     # palette depth?
