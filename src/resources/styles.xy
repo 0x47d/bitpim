@@ -1,9 +1,9 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
 ###
-### This software is under the Artistic license.
-### Please see the accompanying LICENSE file
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
 
@@ -95,8 +95,11 @@ def formataddress(address):
     res=""
     for field in "type", "company", "street", "street2", "city", "state", "postalcode", "country":
         if address.has_key(field):
-            res+=address[field]+"<br/>"
+            res+=htmlify(address[field])+"<br/>"
     return res
 
 def htmlify(string):
-    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+    return string.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+
+        
+	

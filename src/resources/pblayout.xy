@@ -13,8 +13,8 @@
 <td class='wallpaperpanel'>
 <py-open>for wallpaper in entry.get("wallpapers", []):</py-open>
 <py-open>if wallpaper.get('wallpaper', None) is not None:</py-open>
-<img src="bpuserimage:${wallpaper['wallpaper']};width=64;height=64"
-alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"/><br/>
+<img src="bpuserimage:${htmlify(wallpaper['wallpaper'])};width=64;height=64"
+alt="${htmlify(wallpaper['use'])}: ${htmlify(wallpaper['wallpaper'])}"/><br/>
 <py-close/>
 <py-close/>
 </td>
@@ -22,19 +22,19 @@ alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"/><br/>
 <td class='ringtonepanel'>
 <py-open>for ringtone in entry.get("ringtones", []):</py-open>
 <img src="bpimage:ringer.png;width=16;height=16"
-alt="${ringtone['use']}: ${ringtone['ringtone']}"/><br/>
+alt="${htmlify(ringtone['use'])}: ${htmlify(ringtone['ringtone'])}"/><br/>
 <py-close/>
 </td>
 
 <td class='namepanel'>
 <py-open>for name in entry.get("names",[]):</py-open>
-<span class="name">${formatname(name)}</span><br/>
+<span class="name">${htmlify(formatname(name))}</span><br/>
 <py-close/>
 </td>
 
 <td class='categoryflagspanel'>
 <py-open>for cat in entry.get("categories",[]):</py-open>
-<span class="category">${cat['category']}</span><br/>
+<span class="category">${htmlify(cat['category'])}</span><br/>
 <py-close/>
 <br/>
 <py-open>if has_flag(entry,"secret"):</py-open>
@@ -49,8 +49,8 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"/><br/>
 <table class="table">
 <py-open>for rownum,number in zip(range(len(entry.get("numbers",[]))),entry.get("numbers",[])):</py-open>
 <tr class=${('numberroweven', 'numberrowodd')[rownum%2]}>
-<td class="numbertype">${titlecase(number['type'])}</td>
-<td><code>${number['number']}</code></td>
+<td class="numbertype">${htmlify(titlecase(number['type']))}</td>
+<td><code>${htmlify(number['number'])}</code></td>
 </tr>
 <py-close/>
 </table><br/>
@@ -61,7 +61,7 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"/><br/>
 <table class='table'>
 <py-open>for rownum,email in zip(range(len(entry.get("emails",[]))),entry.get("emails",[])):</py-open>
 <tr class=${('emailroweven', 'emailrowodd')[rownum%2]}>
-<td><span class="email"><a href="mailto:${email['email']}">${email['email']}</a></span></td>
+<td><span class="email"><a href="mailto:${htmlify(email['email'])}">${htmlify(email['email'])}</a></span></td>
 </tr>
 <py-close/>
 </table><br/>
@@ -75,7 +75,7 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"/><br/>
 <tr>
 <td class='urlpanel'>
 <py-open>for url in entry.get("urls", []):</py-open>
-<span class='url'><a href="${url["url"]}">${url["url"]}</a></span> ${urltype(url)}<br/>
+<span class='url'><a href="${url["url"]}">${htmlify(url["url"])}</a></span> ${urltype(url)}<br/>
 <py-close/>
 </td>
 </tr>
