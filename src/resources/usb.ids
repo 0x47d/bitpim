@@ -199,12 +199,12 @@
 	4018  WebCam Vista
 	401c  Creative WebCam NX [PD1110]
 	4100  Nomad Jukebox 2 MP3 player
-        4101  Nomad Jukebox 3 MP3 player  
+	4101  Nomad Jukebox 3 MP3 player  
 	4106  Nomad MuVo MP3 Player
-        4108  Nomad Jukebox Zen MP3 player
-        410b  Nomad Jukebox Zen USB 2.0 MP3 player
-        4109  Nomad Jukebox Zen NX MP3 player
-        4110  Nomad Jukebox Zen Xtra MP3 player
+	4108  Nomad Jukebox Zen MP3 player
+	410b  Nomad Jukebox Zen USB 2.0 MP3 player
+	4109  Nomad Jukebox Zen NX MP3 player
+	4110  Nomad Jukebox Zen Xtra MP3 player
 	4111  Dell Digital Jukebox
 041f  LCS Telegraphics
 0420  Chips and Technologies
@@ -648,6 +648,7 @@
 	0002  CY7C63x0x Thermometer
 	1002  CY7C63001 R100 FM Radio
 	5500  HID->COM RS232 Adapter
+	6560  CY7C65640 USB-2.0 "TetraHub"
 	8613  CY7C68013 EZ-USB FX2 USB 2.0 Development Kit
 	d5d5  CY7C63x0x Zoltrix Z-Boxer GamePad
 	f000  CY30700 Licorice evaluation board
@@ -766,6 +767,7 @@
 	8007  Zaurus C-700 PDA
 	9014  IM-DR80 Portable NetMD Player
 	9031  Zaurus C-750/C-760 PDA
+	9032  Zaurus SL-6000
 04de  MindShare, Inc.
 04df  Interlink Electronics
 04e1  Iiyama North America, Inc.
@@ -888,7 +890,8 @@
 	1080  NET1080 USB-USB Bridge
 	a4a0  Linux-USB "Gadget Zero"
 	a4a1  Linux-USB Ethernet Gadget
-	a4a4  Linux-USB user-mode source/sink
+	a4a3  Linux-USB user-mode isochronous source/sink
+	a4a4  Linux-USB user-mode bulk source/sink
 	a4a5  Linux-USB File Storage Gadget
 	a4a6  Linux-USB Serial Gadget
 0526  Temic MHS S.A.
@@ -3202,6 +3205,7 @@
 22b8  Motorola PCS
 	0005  V.60c/V.60i GSM Phone
 	1005  T280e GSM/GPRS Phone
+	2821  T720 GSM Phone
 	2822  V.120e GSM Phone
 	3802  C330 GSM Phone
 22b9  eTurboTouch Technology, Inc.
@@ -3331,6 +3335,9 @@ C 08  Mass Storage
 		01  Control/Bulk
 		50  Bulk (Zip)
 C 09  Hub
+	00  Unused
+		01  Single TT
+		02  TT per port
 C 0a  Data
 	00  Unused
 		30  I.430 ISDN BRI
