@@ -181,7 +181,7 @@ class MySplashScreen(wxSplashScreen):
     def __init__(self, app, config):
         self.app=app
         # how long are we going to be up for?
-        time=config.ReadInt("splashscreentime", 3000)
+        time=config.ReadInt("splashscreentime", 2500)
         if time>0:
             bmp=guihelper.getbitmap("splashscreen")
             self.drawnameandnumber(bmp)
@@ -397,7 +397,10 @@ class MainWindow(wxFrame):
 
         menu=wxMenu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
+        menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
+        menu.Append(guihelper.ID_VIEWCLEARLOGS, "Clear logs", "Clears the contents of the log panes")
+        menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View filesystem", "View filesystem on the phone")
         menuBar.Append(menu, "&View")
         
@@ -449,6 +452,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
         EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
+        EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
         EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
         EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
         EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
@@ -467,18 +471,13 @@ class MainWindow(wxFrame):
             self.SetSize( (640, 480) )
 
 
-        # Show tour on first use
-        if self.config.ReadInt("firstrun", True):
-            self.config.WriteInt("firstrun", False)
-            self.config.Flush()
-            if guihelper.IsMSWindows():
-                wxCallAfter(self.OnHelpTour)
-
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
         if self.configdlg.needconfig():
+            self.CloseSplashScreen()
             if self.configdlg.ShowModal()!=wxID_OK:
                 self.OnExit()
+                return
         self.configdlg.updatevariables()
         
         ### notebook
@@ -510,14 +509,11 @@ class MainWindow(wxFrame):
         if fv:
             menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
-            wxYield(True)
+            wxYield()
 
         # now register for notebook changes
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
 
-
-        # Populate all widgets from disk
-        wxCallAfter(self.OnPopulateEverythingFromDisk)
 
         # show the last page we were on
         pg=self.config.Read("viewnotebookpage", "")
@@ -538,17 +534,28 @@ class MainWindow(wxFrame):
         ### Lets go visible
         self.Show()
 
+        # Show tour on first use
+        if self.config.ReadInt("firstrun", True):
+            self.config.WriteInt("firstrun", False)
+            self.config.Flush()
+            wxCallAfter(self.OnHelpTour)
+
+        # Populate all widgets from disk
+        wxCallAfter(self.OnPopulateEverythingFromDisk)
+
+
+
+    def CloseSplashScreen(self):
         ### remove splash screen if there is one
         global thesplashscreen
         if thesplashscreen is not None:
-            wxSafeYield(onlyIfNeeded=True)
             try:
 		# on Linux this is often already deleted and generates an exception
                 thesplashscreen.Show(False)
             except:
                 pass
             thesplashscreen=None
-
+            wxSafeYield(onlyIfNeeded=True)
 
     def OnExit(self,_=None):
         self.Close()
@@ -802,7 +809,8 @@ class MainWindow(wxFrame):
         self.ringerwidget.populate(results)
         wxSafeYield(onlyIfNeeded=True)
         self.calendarwidget.populate(results)
-
+        # close the splash screen if it is still up
+        self.CloseSplashScreen()
         
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
@@ -872,6 +880,11 @@ class MainWindow(wxFrame):
 
 
     # progress and logging
+    def OnViewClearLogs(self, _):
+        self.lw.Clear()
+        if self.lwdata is not None:
+            self.lwdata.Clear()
+
     def OnProgressMinor(self, pos, max, desc=""):
         self.GetStatusBar().progressminor(pos, max, desc)
 
@@ -896,6 +909,7 @@ class MainWindow(wxFrame):
         and the caller should not do any further processing"""
         if exception is None: return False
         assert isinstance(exception, Exception)
+        self.CloseSplashScreen()
         text=None
         title=None
         style=None
