@@ -258,7 +258,7 @@ class SanyoPhonebook:
                 # wallpapers
                 entry['wallpapers']=[{'index': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
                     
-                pbook[i]=entry 
+                pbook[count]=entry 
                 self.progress(count, numentries, res.entry.name)
                 count+=1
         
@@ -536,6 +536,7 @@ class SanyoPhonebook:
         calres={}
 
         req=self.protocolclass.eventrequest()
+        count=0
         for i in range(0, self.protocolclass._NUMEVENTSLOTS):
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
@@ -558,7 +559,8 @@ class SanyoPhonebook:
                 entry['alarm']=(starttime-alarmtime)/60
                 entry['ringtone']=res.entry.alarm_type
                 entry['snoozedelay']=0
-                calres[i]=entry
+                calres[count]=entry
+                count+=1
 
         req=self.protocolclass.callalarmrequest()
         for i in range(0, self.protocolclass._NUMCALLALARMSLOTS):
@@ -578,7 +580,8 @@ class SanyoPhonebook:
                 entry['alarm']=0
                 entry['ringtone']=0
                 entry['snoozedelay']=0
-                calres[i]=entry
+                calres[count]=entry
+                count+=1
 
         result['calendar']=calres
         return result
