@@ -27,7 +27,6 @@ from wxPython.html import *
 
 # my modules
 import common
-import gui
 import calendarcontrol
 import helpids
 import comscan
@@ -35,6 +34,7 @@ import comdiagnose
 import brewcompressedimage
 import bpaudio
 import analyser
+import guihelper
 
 ####
 #### A simple text widget that does nice pretty logging.
@@ -300,7 +300,7 @@ class ConfigDialog(wxDialog):
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
-            if gui.IsMSWindows(): # we want subdir of my documents on windows
+            if guihelper.IsMSWindows(): # we want subdir of my documents on windows
                     # nice and painful
                     import _winreg
                     x=_winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
@@ -522,7 +522,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
         self.maxlen=255
-        if (style&wxLC_REPORT)==wxLC_REPORT or gui.HasFullyFunctionalListView():
+        if (style&wxLC_REPORT)==wxLC_REPORT or guihelper.HasFullyFunctionalListView():
             # some can't do report and icon style
             self.InsertColumn(0, "Name")
             self.InsertColumn(1, "Bytes", wxLIST_FORMAT_RIGHT)
@@ -530,24 +530,24 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             self.SetColumnWidth(0, 200)
             
         self.menu=wxMenu()
-        self.menu.Append(gui.ID_FV_OPEN, "Open")
+        self.menu.Append(guihelper.ID_FV_OPEN, "Open")
         self.menu.AppendSeparator()
-        self.menu.Append(gui.ID_FV_DELETE, "Delete")
+        self.menu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.menu.AppendSeparator()
-        self.menu.Append(gui.ID_FV_RENAME, "Rename")
-        self.menu.Append(gui.ID_FV_REFRESH, "Refresh")
-        self.menu.Append(gui.ID_FV_PROPERTIES, "Properties")
+        self.menu.Append(guihelper.ID_FV_RENAME, "Rename")
+        self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+        self.menu.Append(guihelper.ID_FV_PROPERTIES, "Properties")
 
         self.addfilemenu=wxMenu()
-        self.addfilemenu.Append(gui.ID_FV_ADD, "Add ...")
-        self.addfilemenu.Append(gui.ID_FV_REFRESH, "Refresh")
+        self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
+        self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        EVT_MENU(self.menu, gui.ID_FV_REFRESH, self.OnRefresh)
-        EVT_MENU(self.addfilemenu, gui.ID_FV_REFRESH, self.OnRefresh)
-        EVT_MENU(self.addfilemenu, gui.ID_FV_ADD, self.OnAdd)
-        EVT_MENU(self.menu, gui.ID_FV_OPEN, self.OnLaunch)
-        EVT_MENU(self.menu, gui.ID_FV_DELETE, self.OnDelete)
-        EVT_MENU(self.menu, gui.ID_FV_PROPERTIES, self.OnProperties)
+        EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
+        EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
 
         EVT_LEFT_DCLICK(self, self.OnLaunch)
         # copied from the demo - much voodoo
@@ -729,7 +729,7 @@ class RingerView(FileView):
         self.InsertColumn(3, "Index")
         self.InsertColumn(4, "Description")
         il=wxImageList(32,32)
-        il.Add(gui.getbitmap("ringer"))
+        il.Add(guihelper.getbitmap("ringer"))
         self.AssignImageList(il, wxIMAGE_LIST_NORMAL)
         self._data={}
         self._data['ringtone']={}
@@ -815,209 +815,6 @@ class RingerView(FileView):
 
         # 1 to 2 etc
 
-###
-###  Bitmaps
-###
-
-class WallpaperView(FileView):
-    CURRENTFILEVERSION=1
-    ID_DELETEFILE=2
-    ID_IGNOREFILE=3
-    
-    def __init__(self, mainwindow, parent, id=-1):
-        FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL|wxLC_AUTOARRANGE )
-        if gui.HasFullyFunctionalListView():
-            self.InsertColumn(2, "Size")
-            self.InsertColumn(3, "Index")
-        self._data={}
-        self._data['wallpaper']={}
-        self._data['wallpaper-index']={}
-        self.maxlen=19
-        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
-        self.usewidth=120
-        self.useheight=98
-
-        self.addfilemenu.Insert(1,gui.ID_FV_PASTE, "Paste")
-        EVT_MENU(self.addfilemenu, gui.ID_FV_PASTE, self.OnPaste)
-
-    def isBCI(self, filename):
-        """Returns True if the file is a Brew Compressed Image"""
-        # is it a bci file?
-        f=open(filename, "rb")
-        four=f.read(4)
-        f.close()
-        if four=="BCI\x00":
-            return True
-        return False
-        
-    def getdata(self,dict):
-        dict.update(self._data)
-        return dict
-
-    def populate(self, dict):
-        self.DeleteAllItems()
-        self._data={}
-        self._data['wallpaper']=dict['wallpaper'].copy()
-        self._data['wallpaper-index']=dict['wallpaper-index'].copy()
-        il=wxImageList(self.usewidth,self.useheight)
-        self.AssignImageList(il, wxIMAGE_LIST_NORMAL)
-        count=0
-        keys=dict['wallpaper'].keys()
-        keys.sort()
-        for i in keys:
-            # ImageList barfs big time when adding bmps that came from
-            # gifs
-            file=os.path.join(self.mainwindow.wallpaperpath, i)
-            if self.isBCI(file):
-                image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-            else:
-                image=wxImage(file)
-
-            if not image.Ok():
-                dlg=AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
-                                  ( ("Delete", self.ID_DELETEFILE), ("Ignore", self.ID_IGNOREFILE), ("Help", wxID_HELP)),
-                                  lambda _: wxGetApp().displayhelpid(helpids.ID_INVALID_FILE_MESSAGE))
-                x=dlg.ShowModal()
-                dlg.Destroy()
-                print "result is",x
-                if x==self.ID_DELETEFILE:
-                    os.remove(file)
-                continue
-            
-            width=min(image.GetWidth(), self.usewidth)
-            height=min(image.GetHeight(), self.useheight)
-            img=image.GetSubImage(wxRect(0,0,width,height))
-            if width!=self.usewidth or height!=self.useheight:
-                b=wxEmptyBitmap(self.usewidth, self.useheight)
-                mdc=wxMemoryDC()
-                mdc.SelectObject(b)
-                mdc.Clear()
-                mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
-                mdc.SelectObject(wxNullBitmap)
-                bitmap=b
-            else:
-                bitmap=img.ConvertToBitmap()
-            pos=-1
-            try: pos=il.Add(bitmap)
-            except: pass
-            if pos<0:  # sadly they throw up a dialog as well
-                dlg=wxMessageDialog(self, "Failed to add to imagelist image in '"+file+"'",
-                                "Imagelist got upset", style=wxOK|wxICON_ERROR)
-                dlg.ShowModal()
-                il.Add(wxNullBitmap)
-            item={}
-            item['name']=i
-            item['data']=dict['wallpaper'][i]
-            item['index']=-1
-            for ii in dict['wallpaper-index']:
-                if dict['wallpaper-index'][ii]==i:
-                    item['index']=ii
-                    break
-            self.InsertImageStringItem(count, item['name'], count)
-            if gui.HasFullyFunctionalListView():
-                self.SetStringItem(count, 0, item['name'])
-                self.SetStringItem(count, 1, `len(item['data'])`)
-                self.SetStringItem(count, 2, "%d x %d" % (image.GetWidth(), image.GetHeight()))
-                self.SetStringItem(count, 3, `item['index']`)
-            image.Destroy()
-            count+=1
-
-    def OnPaste(self, _=None):
-        do=wxBitmapDataObject()
-        wxTheClipboard.Open()
-        success=wxTheClipboard.GetData(do)
-        wxTheClipboard.Close()
-        if not success:
-            wxMessageBox("There isn't an image in the clipboard", "Error")
-            return
-        # work out a name for it
-        self.thedir=self.mainwindow.wallpaperpath
-        for i in range(255):
-            name="clipboard"+`i`+".bmp"
-            if not os.path.exists(os.path.join(self.thedir, name)):
-                break
-        self.OnAddImage(wxImageFromBitmap(do.GetBitmap()), name)
-
-    def OnAddFile(self, file):
-        self.thedir=self.mainwindow.wallpaperpath
-        # special handling for BCI files
-        if self.isBCI(file):
-            target=os.path.join(self.thedir, os.path.basename(file))
-            src=open(file, "rb")
-            dest=open(target, "wb")
-            dest.write(src.read())
-            dest.close()
-            src.close()
-            self.OnRefresh()
-            return
-        img=wxImage(file)
-        if not img.Ok():
-            dlg=wxMessageDialog(self, "Failed to understand the image in '"+file+"'",
-                                "Image not understood", style=wxOK|wxICON_ERROR)
-            dlg.ShowModal()
-            return
-        self.OnAddImage(img,file)
-
-    def OnAddImage(self, img, file):
-        # Everything else is converted to BMP
-        target=self.getshortenedbasename(file, 'bmp')
-        if target==None: return # user didn't want to
-        obj=img
-        # if image is more than 20% bigger or 60% smaller than screen, resize
-        if img.GetWidth()>self.usewidth*120/100 or \
-           img.GetHeight()>self.useheight*120/100 or \
-           img.GetWidth()<self.usewidth*60/100 or \
-           img.GetHeight()<self.useheight*60/100:
-            bitmap=wxEmptyBitmap(self.usewidth, self.useheight)
-            mdc=wxMemoryDC()
-            mdc.SelectObject(bitmap)
-            # scale the source.  we use int arithmetic with 10000 being 1.000
-            sfactorw=self.usewidth*10000/img.GetWidth()
-            sfactorh=self.useheight*10000/img.GetHeight()
-            sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=img.GetWidth()*sfactor/10000
-            newheight=img.GetHeight()*sfactor/10000
-            self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
-                                                            img.GetHeight(), newwidth,
-                                                            newheight))
-            img.Rescale(newwidth, newheight)
-            # figure where to place image to centre it
-            posx=self.usewidth-(self.usewidth+newwidth)/2
-            posy=self.useheight-(self.useheight+newheight)/2
-            # background fill in white
-            mdc.Clear()
-            mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
-            obj=bitmap
-            
-        if not obj.SaveFile(target, wxBITMAP_TYPE_BMP):
-            os.remove(target)
-            dlg=wxMessageDialog(self, "Failed to convert the image in '"+file+"'",
-                                "Image not converted", style=wxOK|wxICON_ERROR)
-            dlg.ShowModal()
-            return
-            
-        self.OnRefresh()
-
-    def populatefs(self, dict):
-        self.thedir=self.mainwindow.wallpaperpath
-        return self.genericpopulatefs(dict, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
-
-    def getfromfs(self, result):
-        self.thedir=self.mainwindow.wallpaperpath
-        return self.genericgetfromfs(result, 'wallpaper', 'wallpaper-index', self.CURRENTFILEVERSION)
-
-    def versionupgrade(self, dict, version):
-        """Upgrade old data format read from disk
-
-        @param dict:  The dict that was read in
-        @param version: version number of the data on disk
-        """
-
-        # version 0 to 1 upgrade
-        if version==0:
-            version=1  # the are the same
-
-        # 1 to 2 etc
 
 
 ###
