@@ -506,7 +506,7 @@ class SAMSTRING(BaseProtogenClass):
             # read in entire rest of packet
             # Ignore maxsizeinbytes
             # Check for leading and trailing quotes later
-            self._value=getremainingbytes()
+            self._value=buf.getremainingbytes()
         else:
             # Possibly quoted string.  If first character is not a quote, read until
             # terminator or end of line.  Exception will be thrown after reading if
