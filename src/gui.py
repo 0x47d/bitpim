@@ -419,7 +419,7 @@ class MainWindow(wxFrame):
 
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
-        self.tb=self.CreateToolBar(wxTB_HORIZONTAL)
+        self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxTB_TEXT|wxTB_FLAT)
         sz=self.tb.GetToolBitmapSize()
         # work around a bug on Linux that returns random (large) numbers
         if sz[0]<10 or sz[0]>100: sz=wxSize(32,32)
