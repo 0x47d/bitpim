@@ -661,29 +661,30 @@ class MainWindow(wxFrame):
         self.OnLog(`results['sync']`)
         # phonebook
         if results['sync'].has_key('phonebook'):
-            v=results['sync'].has_key('phonebook')
+            v=results['sync']['phonebook']
 
+            print "phonebookmergesetting is",v
             if v=='MERGE': 
                 merge=True
             else:
                 merge=False
-            self.phonewidget.importdata(results['phonebook'], merge)
+            self.phonewidget.importdata(results['phonebook'], results.get('groups', []), merge)
                 
         # wallpaper
         if results['sync'].has_key('wallpaper'):
-            v=results['sync'].has_key('wallpaper')
+            v=results['sync']['wallpaper']
             if v=='MERGE': raise Exception("Not implemented")
             self.wallpaperwidget.populatefs(results)
             self.wallpaperwidget.populate(results)
         # ringtone
         if results['sync'].has_key('ringtone'):
-            v=results['sync'].has_key('ringtone')
+            v=results['sync']['ringtone']
             if v=='MERGE': raise Exception("Not implemented")
             self.ringerwidget.populatefs(results)
             self.ringerwidget.populate(results)
         # calendar
         if results['sync'].has_key('calendar'):
-            v=results['sync'].has_key('calendar')
+            v=results['sync']['calendar']
             if v=='MERGE': raise Exception("Not implemented")
             self.calendarwidget.populatefs(results)
             self.calendarwidget.populate(results)
