@@ -196,7 +196,7 @@ def getfolderfromid(id, default=False):
             if "address book" in f['type']:
                 return f["folderid"]
         # brute force
-        return getfolders[0]['folderid']
+        return getfolders()[0]['folderid']
 
     return None
 
