@@ -368,7 +368,7 @@ class Database:
                         cmd.extend([idquote(d), "isnull"])
                     else:
                         cmd.extend([idquote(d), "=", "?"])
-                        params.append(v)
+                        params.append(_addsentinel(v))
                 found=None
                 for found in self.sql(" ".join(cmd), params):
                     # get matching row
