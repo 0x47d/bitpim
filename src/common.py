@@ -267,3 +267,11 @@ def getfullname(name):
                pass
      # ok, we should have the name now
      return eval(name, dict, dict)
+
+def list_union(*lists):
+     res=[]
+     for l in lists:
+          for item in l:
+               if item not in res:
+                    res.append(item)
+     return res
