@@ -151,7 +151,13 @@ class Session:
             res=dict([(k,v) for k,v in res.items() if len(v)])
             yield res
 
-            
+    def getcategories(self):
+        "Get the list of categories"
+        # egroupware returns a dict with each key being an asciized integer
+        # id.  The same field is present in the dict value, so we just return
+        # the values
+        return [v for k,v in self.sp.addressbook.boaddressbook.categories(True).items()]
+    
             
 if __name__=='__main__':
     import sys
