@@ -28,7 +28,10 @@ def bp_date_str(dict, v):
             return '%04d-%02d-%02d'%v[:3]
         else:
             return '%04d-%02d-%02d  %02d:%02d'% v
+    except (ValueError, TypeError):
+        return ''
     except:
+        if __debug__: raise
         return ''
 
 def bp_alarm_str(dict, v):
@@ -41,7 +44,10 @@ def bp_alarm_str(dict, v):
                 return 'Ontime'
         else:
             return ''
+    except (ValueError, TypeError):
+        return ''
     except:
+        if __debug__: raise
         return ''
 
 def category_str(dict, v):
@@ -54,7 +60,10 @@ def category_str(dict, v):
                 else:
                     s=d
         return s
+    except (ValueError, TypeError):
+        return ''
     except:
+        if __debug__: raise
         return ''
 
 #-------------------------------------------------------------------------------

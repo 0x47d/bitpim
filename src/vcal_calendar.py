@@ -85,6 +85,7 @@ class VCalendarImportData(object):
             ('DTSTART', 'start', self.__conv_date),
             ('SUMMARY', 'description', None),
             ('AALARM', 'alarm', self.__conv_alarm),
+            ('DALARM', 'alarm', self.__conv_alarm),
             ('RRULE', 'repeat', self.__conv_repeat),
             ('EXDATE', 'exceptions', self.__conv_exceptions),
             ]
@@ -161,7 +162,7 @@ class VCalendarImportData(object):
                 ce.end=bp_t.get()[:1]+ce.end[1:]
         else:
             # forever duration
-            ce.end=common_calendar.no_end_date
+            ce.end=common_calendar.no_end_date[:3]+ce.end[3:]
         # add the list of exceptions
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])
@@ -424,7 +425,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
     def OnImport(self, evt):
         wx.BeginBusyCursor()
         dlg=wx.ProgressDialog('VCalendar Import',
-                              'Importing Outlook Data, please wait ...',
+                              'Importing vCalendar Data, please wait ...',
                               parent=self)
         self.__oc.read(self.folderctrl.GetValue())
         self.populate(self.__oc.get_display_data())
