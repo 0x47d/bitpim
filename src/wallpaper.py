@@ -22,6 +22,7 @@ import guiwidgets
 import brewcompressedimage
 import guihelper
 import common
+import helpids
 
 ###
 ###  Wallpaper pane
@@ -87,7 +88,7 @@ class WallpaperView(guiwidgets.FileView):
             image=self.GetImage(i)
 
             if not image.Ok():
-                dlg=AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
+                dlg=guiwidgets.AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
                                   ( ("Delete", self.ID_DELETEFILE), ("Ignore", self.ID_IGNOREFILE), ("Help", wx.ID_HELP)),
                                   lambda _: wx.GetApp().displayhelpid(helpids.ID_INVALID_FILE_MESSAGE))
                 x=dlg.ShowModal()
