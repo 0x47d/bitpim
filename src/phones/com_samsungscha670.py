@@ -91,9 +91,9 @@ class Phone(com_samsung.Phone):
     allringtones={}
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 17, 20)
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
     __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 17, 10)
-    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 17, 40)
+    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 19, 40)
         
     def __init__(self, logtarget, commport):
 
@@ -711,11 +711,11 @@ class Profile(com_samsung.Profile):
 
     WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=128
-    MAX_WALLPAPER_BASENAME_LENGTH=17
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
     WALLPAPER_CONVERT_FORMAT="bmp"
-    MAX_RINGTONE_BASENAME_LENGTH=17
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
 
     def __init__(self):
         com_samsung.Profile.__init__(self)
@@ -808,6 +808,7 @@ class FileEntries:
         # check for file name length
         for k in media:
             if len(media[k]['name']) > self.__max_file_len:
+		print self.__max_file_len, len(media[k]['name'])
                 self.__phone.log('%s %s name is too long.  Operation aborted'% \
                                     (self.__file_type, media[k]['name']))
                 return result
