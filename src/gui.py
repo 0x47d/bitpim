@@ -519,7 +519,8 @@ class MainWindow(wx.Frame):
         # for now. Maybe set a global variable that settings aren't there
         # and fire a timer event after the main window has opened??
         if guihelper.IsMac():
-            self.configdlg.setdefaults()
+            if self.configdlg.needconfig():
+               self.configdlg.setdefaults()
         else:
             if self.configdlg.needconfig():
                 self.CloseSplashScreen()
