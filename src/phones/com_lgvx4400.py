@@ -832,8 +832,9 @@ class Profile(com_phone.Profile):
                             break
                     # deal with speed dial
                     sd=num.get("speeddial", -1)
-                    if sd>=self.protocolclass._FIRSTSPEEDDIAL and sd<=self.protocolclass._LASTSPEEDDIAL:
-                        speeds[sd]=(e['bitpimserial'], numindex)
+                    if self.protocolclass._NUMSPEEDDIALS:
+                        if sd>=self.protocolclass._FIRSTSPEEDDIAL and sd<=self.protocolclass._LASTSPEEDDIAL:
+                            speeds[sd]=(e['bitpimserial'], numindex)
 
                 e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=helper.filllist(e['numbers'], 5, "")
