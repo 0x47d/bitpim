@@ -79,7 +79,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
         speedslot=[]
         speedtype=[]
-        for i in range(sortstuff.numspeeddials):
+        for i in range(p_sanyo._NUMSPEEDDIALS):
             speedslot.append(sortstuff.speeddialindex[i].pbslotandtype & 0xfff)
             numtype=(sortstuff.speeddialindex[i].pbslotandtype>>12)-1
             if(numtype >= 0 and numtype <= len(numbertypetab)):
@@ -91,7 +91,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         self.log("There are %d entries" % (numentries,))
         
         count = 0
-        for i in range(0, sortstuff.numpbslots):
+        for i in range(0, p_sanyo._NUMPBSLOTS):
             if sortstuff.usedflags[i].used:
                 ### Read current entry
                 req=p_sanyo.phonebookslotrequest()
@@ -106,12 +106,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                         for k in range(len(entry['numbers'])):
                             if(entry['numbers'][k]['type']==speedtype[j]):
                                 entry['numbers'][k]['speeddial']=j+2
+                                break
 
                 # ringtones
                 entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
                 # wallpapers
                 entry['wallpapers']=[{'index': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
-                # Speed dial
                     
                 pbook[i]=entry 
                 self.progress(count, numentries, res.entry.name)
@@ -199,7 +199,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         ringpic=p_sanyo.ringerpicbuffer()
         callerid=p_sanyo.calleridbuffer()
 
-        for i in range(sortstuff.numpbslots):
+        for i in range(p_sanyo._NUMPBSLOTS):
             sortstuff.usedflags.append(0)
             sortstuff.firsttypes.append(0)
             sortstuff.sortorder.append(0xffff)
@@ -209,10 +209,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             ringpic.ringtones.append(0)
             ringpic.wallpapers.append(0)
 
-        for i in range(sortstuff.numspeeddials):
+        for i in range(p_sanyo._NUMSPEEDDIALS):
             sortstuff.speeddialindex.append(0xffff)
 
-        for i in range(sortstuff.numlongnumbers):
+        for i in range(p_sanyo._NUMLONGNUMBERS):
             sortstuff.longnumbersindex.append(0xffff)
         
             
@@ -255,9 +255,24 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             req=p_sanyo.phonebookslotupdaterequest()
             req.entry=entry
             res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse, writemode=True)
+            # Put entry into newphonebooks
+            entry=self.extractphonebookentry(entry, data)
+            entry['ringtones']=[{'ringtone': ii['ringtone'], 'use': 'call'}]
+            entry['wallpapers']=[{'index': ii['wallpaper'], 'use': 'call'}]
+            
+
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
-            sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
+            if(len(ii['numbers'])):
+                sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
+            else:
+                if(len(ii['email'])):
+                    sortstuff.firsttypes[slot].firsttype=8
+                elif(len(ii['url'])):
+                    sortstuff.firsttypes[slot].firsttype=9
+                else:
+                    sortstuff.firsttypes[slot].firsttype=0
+                    
 # Fill in Caller ID buffer
 # Want to move this out of this loop.  Callerid buffer is 500 numbers, but
 # can potentially hold 2100 numbers.  Would like to preferentially put the
@@ -266,15 +281,19 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 nindex=ii['numbertypes'][i]
                 speeddial=ii['speeddials'][i]
                 code=slot+((nindex+1)<<12)
-                if(speeddial>=2 and speeddial<=9):
+                if(speeddial>=2 and speeddial<=p_sanyo._NUMSPEEDDIALS+1):
                     sortstuff.speeddialindex[speeddial-2]=code
+                    for k in range(len(entry['numbers'])):
+                        if(entry['numbers'][k]['type']==nindex):
+                            entry['numbers'][k]['speeddial']=speeddial
+                            break
                 if(callerid.numentries<callerid.maxentries):
                     phonenumber=ii['numbers'][i]
                     cidentry=self.makecidentry(phonenumber,slot,nindex)
                     callerid.items.append(cidentry)
                     callerid.numentries+=1
-                    if(len(phonenumber)>sortstuff.longphonenumberlen):
-                        if(nlongphonenumbers<sortstuff.numlongnumbers):
+                    if(len(phonenumber)>p_sanyo._LONGPHONENUMBERLEN):
+                        if(nlongphonenumbers<p_sanyo._NUMLONGNUMBERS):
                             sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=code
 
             namemap[ii['name']]=slot
@@ -287,6 +306,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             # Add ringtone and wallpaper
             ringpic.wallpapers[slot].wallpaper=ii['wallpaper']
             ringpic.ringtones[slot].ringtone=ii['ringtone']
+
+            newphonebook[slot]=entry
+
                     
         # Sort Names, Emails and Urls for the sort buffer
         # The phone sorts case insensitive and puts numbers after the
@@ -337,12 +359,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
         time.sleep(1.0)
 
+
+        data['phonebook']=newphonebook
+        del data['phonephonebook']
+
         self.log("Taking phone out of write mode")
+        self.log("Please wait for phone to restart before doing other phone operations")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Stop update
         res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse, writemode=True)
-        self.log("Please wait for phone to restart before doing other phone operations")
-        del data['phonephonebook']
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
@@ -419,35 +444,54 @@ class Profile:
         assert len(list)==1
         return list[0]
 
-# Processes phone book for writing to Sanyo.  But does not leave phone book
-# in a bitpim compatible format.  Need to understand exactly what bitpim
-# is expecting the method to do.
+    # Processes phone book for writing to Sanyo.  But does not leave phone book
+    # in a bitpim compatible format.  Need to understand exactly what bitpim
+    # is expecting the method to do.
+
     def convertphonebooktophone(self, helper, data):
         "Converts the data to what will be used by the phone"
         results={}
+
+        slotsused={}
+        for pbentry in data['phonebook']:
+            entry=data['phonebook'][pbentry]
+            serial1=helper.getserial(entry.get('serials', []), 'scp4900', data['uniqueserial'], 'serial1', -1)
+            if(serial1 >= 0 and serial1 < p_sanyo._NUMPBSLOTS):
+                slotsused[serial1]=1
+
+        lastunused=0 # One more than last unused slot
+        
         for pbentry in data['phonebook']:
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=helper.getfullname(entry['names'],1,1,16)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,16)[0]
                 e['name_len']=len(e['name'])
 
-                if(entry.has_key('emails')):
-                    e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), "")
-                else:
-                    e['email']=""
+                serial1=helper.getserial(entry.get('serials', []), 'scp4900', data['uniqueserial'], 'serial1', -1)
+
+                if(serial1 >= 0 and serial1 < p_sanyo._NUMPBSLOTS):
+                    e['slot']=serial1
+                else:  # A new entry.  Must find unused slot
+                    while(slotsused.has_key(lastunused)):
+                        lastunused+=1
+                        if(lastunused >= p_sanyo._NUMPBSLOTS):
+                            raise helper.ConversionFailed()
+                    e['slot']=lastunused
+                    slotsused[lastunused]=1
+                
+                e['slotdup']=e['slot']
+
+                e['email']=self.makeone(helper.getemails(entry.get('emails', []),0,1,48), "")
                 e['email_len']=len(e['email'])
 
-                if(entry.has_key('urls')):
-                    e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
-                else:
-                    e['url']=""
+                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
                 e['url_len']=len(e['url'])
 # Could put memo in email or url
 
 # Just copy numbers with exact matches now.  Later try to fit in entries
 # that don't match (or duplicates of a type) into ununused places.
-                numbers=helper.getnumbers(entry['numbers'],1,7)
+                numbers=helper.getnumbers(entry.get('numbers', []),0,7)
                 e['numbertypes']=[]
                 e['numbers']=[]
                 e['speeddials']=[]
@@ -464,21 +508,17 @@ class Profile:
 
                             break
 
-                serial1=helper.getserial(entry['serials'], 'scp4900', data['uniqueserial'], 'serial1', 0)
-                serial2=helper.getserial(entry['serials'], 'scp4900', data['uniqueserial'], 'serial2', serial1)
 
-                e['slot']=serial1
-                e['slotdup']=serial2
-                
-                e['ringtone']=helper.getringtone(entry['ringtones'], 'call', 0)
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
 
-                e['wallpaper']=helper.getwallpaperindex(entry['wallpapers'], 'call', 0)
+                e['wallpaper']=helper.getwallpaperindex(entry.get('wallpapers', []), 'call', 0)
 
-                e['secret']=helper.getflag(entry['flags'], 'secret', False)
+                e['secret']=helper.getflag(entry.get('flags', []), 'secret', False)
 
                 results[pbentry]=e
                 
             except helper.ConversionFailed:
+                self.log("No Free Slot for "+e['name'])
                 continue
 
         data['phonephonebook']=results
