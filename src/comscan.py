@@ -42,7 +42,6 @@ wW   driverdescription  string   some generic description of the driver
 version="20 August 2003"
 
 import sys
-import string
 import os
 
 def _IsWindows():
@@ -84,7 +83,7 @@ if _IsWindows():
             try:
                 k=_winreg.OpenKey(self.rootkey, key)
             except:
-                return ()
+                return []
             index=0
             res=[]
             while 1:
@@ -279,11 +278,11 @@ def _comscanlinux(maxnum=9):
     
     resultscount=0
     results={}
-    for prefix, description in ( \
-        ("/dev/ttyS", "Standard serial port"), \
-        ("/dev/ttyUSB", "USB to serial convertor"), \
-        ("/dev/usb/ttyUSB", "USB to serial convertor"), \
-        ("/dev/usb/tts/", "USB to serial convertor") \
+    for prefix, description in ( 
+        ("/dev/cua", "Standard serial port"), 
+        ("/dev/ttyUSB", "USB to serial convertor"), 
+        ("/dev/usb/ttyUSB", "USB to serial convertor"), 
+        ("/dev/usb/tts/", "USB to serial convertor") 
         ):
         for num in range(maxnum+1):
             name=prefix+`num`
@@ -315,8 +314,9 @@ def _comscanmac(maxnum=9):
     
     resultscount=0
     results={}
-    for prefix, description in ( \
-        ("/dev/tty.usbserial", "USB to serial port"), \
+    for prefix, description in ( 
+        ("/dev/cuaa", "Standard serial port"), 
+        ("/dev/tty.usbserial", "USB to serial port"), 
         ):
         for num in range(maxnum+1):
             name=prefix+`num`
