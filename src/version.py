@@ -13,6 +13,7 @@ import time
 
 name="BitPim"
 version="0.7.15"
+vendor="official"
 release=0  # when rereleases of the same version happen, this gets incremented
 testver=0  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
@@ -23,9 +24,8 @@ def isdevelopmentversion(): return int(version.split(".")[1])%2
 
 if isdevelopmentversion():
     # Different strings in development versions
-    extrainfo="This is a development of BitPim which provides a work in progress.  You can find stable releases at http://www.bitpim.org"
-    contact="For questions or feedback, please use the bitpim developer mailing list.  Details " \
-             "are at the BitPim web site."
+    extrainfo="This is a development of BitPim which provides a work in progress.  You can find older stable releases at http://www.bitpim.org"
+    contact="For questions or feedback, please read the support page in the About section of the online help."
 
 versionstring=version
 if testver>0:

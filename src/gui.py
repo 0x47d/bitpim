@@ -220,7 +220,7 @@ class MySplashScreen(wx.SplashScreen):
         # Version number
         x=58
         y=127
-        str=version.versionstring
+        str=version.versionstring+"-"+version.vendor
         dc.SetTextForeground( wx.NamedColour("MEDIUMBLUE") )
         dc.SetFont( self._gimmethedamnsizeirequested(15, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
         w,h=dc.GetTextExtent(str)
@@ -661,7 +661,8 @@ class MainWindow(wx.Frame):
     def OnHelpAbout(self,_):
         import version
 
-        str="BitPim Version "+version.versionstring
+        str="BitPim Version "+version.versionstring+" - "+version.vendor
+        if version.isdevelopmentversion(): str+="\nDevelopment Version"
         str+="\n\n"
         if len(version.extrainfo):
             str+=version.extrainfo+"\n\n"
