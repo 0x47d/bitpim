@@ -780,7 +780,7 @@ class RingerView(FileView):
         self.InsertColumn(3, "Index")
         self.InsertColumn(4, "Description")
         il=wxImageList(32,32)
-        il.Add(self.mainwindow.getbitmap("ringer"))
+        il.Add(gui.getbitmap("ringer"))
         self.AssignImageList(il, wxIMAGE_LIST_NORMAL)
         self._data={}
         self._data['ringtone']={}
