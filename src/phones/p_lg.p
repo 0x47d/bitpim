@@ -65,9 +65,9 @@ PACKET pbinforequest:
 PACKET pbinforesponse:
     * pbheader header
     4 UNKNOWN dunno1
-    2 UNKNOWN dunno2
+    2 UINT extra
     4 UNKNOWN dunno3
-    4 UNKNOWN dunno4
+    * UNKNOWN {'sizeinbytes': self.extra } dunno4
     1 UINT numentries
 
 PACKET pbreadentryrequest:
