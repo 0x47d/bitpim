@@ -52,9 +52,11 @@ class CommConnection:
                 pass
             self.ser=None
 
-    def _openport(self, port, baud, timeout, hardwareflow, softwareflow):
+    def _openport(self, port, baud, timeout, hardwareflow, softwareflow, description=None):
         self.log("Opening port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
                  (port, baud, float(timeout), hardwareflow, softwareflow) )
+        if description is not None:
+            self.log(description)
         # we try twice since some platforms fail the first time
         for dummy in range(2):
             try:
@@ -90,17 +92,17 @@ class CommConnection:
         # have we run out?
         if len(self.ports)==0:
             self.ports=None # so user can retry
-            raise common.AutoPortsFailure(self.portstried)
+            raise common.AutoPortsFailure(filter(self.portstried, lambda x: x[0]))
         # try first in list
         self.log("Trying next auto port")
-        self.port=self.ports[0]
+        description=self.ports[0][1]['description']
+        self.port=self.ports[0][0]
         self.ports=self.ports[1:]
         try:
-            self._openport(self.port, *self.params)
+            self._openport(self.port, *(self.params+(description,)))
         except common.CommsOpenFailure:
             self.NextAutoPort()
             
-
     def clearcounters(self):
         self.readbytes=0
         self.readrequests=0
