@@ -192,65 +192,6 @@ class SanyoMedia:
         return self.getmedia(self.ringerexts, result, 'ringtone')
 
     
-    def mediatestcode(self, results):
-        # Test code to list files on phone
-        for idir in range(1,self.NUM_MEDIA_DIRECTORIES+1):
-            req=self.protocolclass.sanyochangedir()
-            req.dirindex=idir
-
-            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
-
-            req=self.protocolclass.sanyonumfilesrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
-            self.log("Directory "+`idir`+", File Count="+`res.count`)
-            nfiles=res.count
-
-            for ifile in range(nfiles):
-                req=self.protocolclass.sanyomediafilenamerequest()
-                req.index=ifile
-                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
-    
-        for idir in range(1,self.NUM_MEDIA_DIRECTORIES+1):
-            req=self.protocolclass.sanyochangedir()
-            req.dirindex=idir
-
-            res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
-
-            req=self.protocolclass.sanyonumfilesrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
-            self.log("Directory "+`idir`+", File Count="+`res.count`)
-            nfiles=res.count
-            try:
-                os.makedirs(`idir`)
-            except:
-                pass
-            for ifile in range(nfiles):
-                req=self.protocolclass.sanyomediafilenamerequest()
-                req.index=ifile
-                res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                fout=open(`idir`+"/"+res.filename, "wb")
-                fout.write(self.getsanyofilecontents(idir,ifile))
-                fout.flush()
-                fout.close()
-                
-        return
-                     
-            
-        req=self.protocolclass.sanyomediaheader()
-        req.command=0x10
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-        req.command=0x13
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-
-        req=self.protocolclass.sanyomediafilename()
-        req.filename="testimage.jpg"
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-    
-        return 
-
     def getsanyofilecontents(self, directory, fileindex):
         "Get file # index from directory # directory"
         start=time.time()
