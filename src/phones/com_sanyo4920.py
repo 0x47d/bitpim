@@ -62,14 +62,9 @@ class Profile(com_sanyonewer.Profile):
     protocolclass=p_sanyo4920
     serialsname='rl4920'
 
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('wallpaper', 'read', None),  # all wallpaper reading
-        ('ringtone', 'read', None),   # all ringtone reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-    )
+    WALLPAPER_WIDTH=128
+    WALLPAPER_HEIGHT=112
+    OVERSIZE_PERCENTAGE=100
 
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
