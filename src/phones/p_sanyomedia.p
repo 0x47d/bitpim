@@ -42,11 +42,17 @@ PACKET sanyochangedir:
     170 UNKNOWN +pad
     2 UINT dirindex
     
-PACKET sanyonumpicsrequest:
+PACKET sanyochangedirresponse:
+    * sanyomediaheader header
+    169 UNKNOWN +pad
+    1 UINT status
+    2 UINT dirindex
+    
+PACKET sanyonumfilesrequest:
     * sanyomediaheader {'command': 0x72} +header
     172 UNKNOWN +pad
 
-PACKET sanyonumpicsresponse:
+PACKET sanyonumfilesresponse:
     * sanyomediaheader header
     165 UNKNOWN +pad1
     1 UINT count
