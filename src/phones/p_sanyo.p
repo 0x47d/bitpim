@@ -469,7 +469,7 @@ PACKET pbsortbuffer:
     * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
-    2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
+    2 UINT slotsused2  "# slots containing a phone number"
     2 UINT numemail "Num of slots with email"
     2 UINT numurl "Num of slots with URL"
     * LIST {'length': _NUMPBSLOTS} +firsttypes:
@@ -477,7 +477,7 @@ PACKET pbsortbuffer:
     * LIST {'length': _NUMPBSLOTS} +sortorder:
         2 UINT {'default': 0xffff} pbslot
     * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
-    * LIST {'length': _NUMPBSLOTS} +sortorder2: "Is this the same"
+    * LIST {'length': _NUMPBSLOTS} +sortorder2: "Sort order for entries with phone numbers"
         2 UINT {'default': 0xffff} pbslot
     * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
         2 UINT {'default': 0xffff} pbslotandtype
