@@ -509,7 +509,10 @@ class MainWindow(wx.Frame):
             ret_allowed=True
 
         if not ret_allowed:
-            self.Log("No valid credentials for user %s from %s" % (username, peeraddr[0]))
+            if username is not None:
+                self.Log("No valid credentials for user %s from %s" % (username, peeraddr[0]))
+            else:
+                self.Log("No defined users for address "+`peeraddr`)
             
         # recurse so that correct log messages about expiry get generated
         self.icacache[v]=ret_allowed, ret_expiry
