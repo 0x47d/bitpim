@@ -141,6 +141,9 @@ class usb_ids:
 	def lookupdevice(self, vendor, product=None, interface=None):
 		return self.vendorlist.getVendorInfo(vendor, product, interface)		
 
+	def lookupclass(self, klass, subclass=None, protocol=None):
+		return self.usbclasslist.getClassInfo(klass, subclass, protocol)
+
 	def getVendorList(self):
 		""" Return the object representing the list of vendors """
 		return self.vendorlist
