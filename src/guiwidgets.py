@@ -316,7 +316,7 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wx.Dialog):
-    phonemodels={ # 'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile
+    phonemodels={ 'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile
                   'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
@@ -582,7 +582,7 @@ class ConfigDialog(wx.Dialog):
         self.mw.wallpaperpath=self._fixup(os.path.join(path, "wallpaper"))
         self.mw.phonebookpath=self._fixup(os.path.join(path, "phonebook"))
         self.mw.calendarpath=self._fixup(os.path.join(path, "calendar"))
-        self.mw.databasepath=self._fixup(os.path.join(path, "bitpim.db"))
+        oldpath=self.mw.config.Read("path", "")
         self.mw.config.Write("path", path)
         self.mw.commportsetting=str(self.commbox.GetValue())
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
@@ -607,6 +607,7 @@ class ConfigDialog(wx.Dialog):
             self.mw.config.WriteInt("bitfling/enabled", self.mw.bitflingenabled)
         # ensure config is saved
         self.mw.config.Flush()
+        self.mw.EnsureDatabase(path, oldpath)
         
 
     def _fixup(self, path):

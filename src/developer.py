@@ -25,6 +25,7 @@ class DeveloperPanel(wx.Panel):
         else:
             self.locals=locals.copy()
         self.locals.update(self.getlocals())
+        
         cmd=wx.py.shell.Shell(split, locals=self.locals)
         
         self.htmlw=wx.html.HtmlWindow(split)
@@ -43,47 +44,38 @@ class DeveloperPanel(wx.Panel):
             'app': wx.GetApp(),
             'tables': self.tables,
             'rows': self.rows,
-            'opendb': self.opendb,
             }
 
-
-    def opendb(self, filename):
-        import sqlite
-        self.locals['connection']=sqlite.connect(filename)
-        self.locals['cursor']=self.locals['connection'].cursor()
-
-
-    def sql(self, *cmd):
-        "Executes sql statement"
-        cursor=self.locals['cursor']
-        cursor.execute(*cmd)
-        for res in cursor:
-            print res
+    def sql(self, cmd, bindings=()):
+        "Executes sql statement and prints result"
+        for row in self.locals['db'].sql(cmd,bindings):
+            print row
 
     def tables(self):
         "Gets list of all tables"
-        cursor=self.locals['cursor']
+        cursor=self.locals['db'].cursor
         html="<h1>All tables</h1>"
         html+="<table>"
-        cursor.execute("select name,sql from sqlite_master where type='table' order by name")
-        for name,s in cursor:
+        for name,s in cursor.execute("select name,sql from sqlite_master where type='table' order by name"):
             html+="<tr><td valign=top>&nbsp;<br><b>%s</b><td valign=top><pre>%s</pre></tr>" % (name, htmlify(s))
         html+="</table>"
         self.htmlw.SetPage(html)
 
     def rows(self, table):
         "Shows rows from table"
-        cursor=self.locals['cursor']
+        cursor=self.locals['db'].cursor
         html="<h1>All rows in %s</h1>" % (htmlify(table),)
         cursor.execute("select * from "+table)
-        if cursor.description is None:
+        try:
+            cursor.getdescription()
+        except:
             html+="<p>No data"
             self.htmlw.SetPage(html)
             return
 
         html+="<table border=1 cellpadding=3>"
         html+="<tr>"
-        for col in cursor.description:
+        for col in cursor.getdescription():
             html+="<th>%s<br>%s" % (htmlify(col[0]), `col[1]`)
         html+="</tr>"
         for vals in cursor:

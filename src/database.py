@@ -44,12 +44,15 @@ class basedataobject(dict):
     if __debug__:
         # in debug code we check key name and value types
 
-        def __check_property(self,name,value=None):
+        def _check_property(self,name,value=None):
+            # filter out normal gunk
+            if value is None and name in ('__deepcopy__',): raise AttributeError(name)
+            # check it
             assert isinstance(name, (str, unicode)), "keys must be a string type"
-            assert name in self._knownproperties or name in self._knownlistproperties, "unknown property name"
+            assert name in self._knownproperties or name in self._knownlistproperties, "unknown property named '"+name+"'"
             if value is None: return
             if name in getattr(self, "_knownlistproperties"):
-                assert isinstance(value, list), "list properties must be given a list as value"
+                assert isinstance(value, list), "list properties ("+name+") must be given a list as value"
                 # each list member must be a dict
                 for v in value:
                     self._check_property_dictvalue(name,v)
@@ -57,7 +60,7 @@ class basedataobject(dict):
             # the value must be a basetype supported by apsw/SQLite
             assert isinstance(value, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
 
-        def __check_property_dictvalue(self, name, value):
+        def _check_property_dictvalue(self, name, value):
             assert isinstance(value, dict), "items in "+name+" (a list) must be dicts"
             assert name in self._knownlistproperties
             for key in value:
@@ -68,11 +71,11 @@ class basedataobject(dict):
         def update(self, items):
             assert isinstance(items, dict), "update only supports dicts" # Feel free to fix this code ...
             for k in items:
-                self.__check_property(self, k, items[k])
+                self._check_property(k, items[k])
             super(basedataobject, self).update(items)
 
         def __getitem__(self, name):
-            self.__check_property(name)
+            self._check_property(name)
             v=super(basedataobject, self).__getitem__(name)
             if name in self._knownproperties: return v
             assert isinstance(v,list), name+" takes list of dicts as value"
@@ -81,27 +84,27 @@ class basedataobject(dict):
             # catching the append method, but the layers of nested
             # namespaces got too confused
             for value in v:
-                self.__check_property_dictvalue(name, value)
+                self._check_property_dictvalue(name, value)
             return v
             
 
         def __setitem__(self, name, value):
-            self.__check_property(name, value)
+            self._check_property(name, value)
             super(basedataobject,self).__setitem__(name, value)
 
         def __setattr__(self, name, value):
             # note that we map setattr to update the dict
-            self.__check_property(name, value)
+            self._check_property(name, value)
             self.__setitem__(name, value)
 
         def __getattr__(self, name):
-            self.__check_property(name)
+            self._check_property(name)
             if name in self.keys():
                 return self[name]
             return None
 
         def __delattr__(self, name):
-            self.__check_property(name)
+            self._check_property(name)
             if name in self.keys():
                 del self[name]
 
@@ -142,13 +145,13 @@ class basedataobject(dict):
         @param item: any object - its memory location is used to help randomness
         @returns: a 20 character hexdigit string
         """
-        if self._shathingy is None:
-            self._shathingy=sha.new()
-            self._shathingy.update(`self._persistrandom.random()`)
-        self._shathingy.update(`id(self)`)
-        self._shathingy.update(`self._persistrandom.random()`)
-        self._shathingy.update(`id(item)`)
-        return self._shathingy.hexdigest()
+        if basedataobject._shathingy is None:
+            basedataobject._shathingy=sha.new()
+            basedataobject._shathingy.update(`basedataobject._persistrandom.random()`)
+        basedataobject._shathingy.update(`id(self)`)
+        basedataobject._shathingy.update(`basedataobject._persistrandom.random()`)
+        basedataobject._shathingy.update(`id(item)`)
+        return basedataobject._shathingy.hexdigest()
 
     
     def EnsureBitPimSerial(self):
@@ -158,7 +161,7 @@ class basedataobject(dict):
         for v in self.serials:
             if v["sourcetype"]=="bitpim":
                 return
-        self.serials.append({'sourcetype': "bitpim", "id": self.getnextrandomid(self.serials)})
+        self.serials.append({'sourcetype': "bitpim", "id": self._getnextrandomid(self.serials)})
 
 class dataobjectfactory:
     "Called by the code to read in objects when it needs a new object container"
@@ -199,7 +202,11 @@ def findentrywithbitpimserial(dict, serial):
         if record.GetBitPimSerial()==serial:
             return record
     raise KeyError("not item with serial "+serial+" found")
-        
+
+def ensurerecordtype(dict, factory):
+    for key,record in dict.iteritems():
+        if not isinstance(record, basedataobject):
+            dict[key]=factory.newdataobject(record)
         
 
 
@@ -229,16 +236,17 @@ def ExclusiveWrapper(method):
     # note that the existing threading safety checks in apsw will
     # catch any thread abuse issues.
 
-    
+
     def _transactionwrapper(*args, **kwargs):
 
-        cursor=getattr(args[0], "cursor")
-        excounter=getattr(args[0], "excounter")
-        excounter+=1
-        setattr(args[0], "excounter", excounter)
-        setattr(args[0], "transactionwrite", False)
-        if excounter==1:
-            cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
+        # nb self is the Database instance
+        self=args[0]
+        self.excounter+=1
+        self.transactionwrite=False
+        if self.excounter==1:
+            print "BEGIN EXCLUSIVE TRANSACTION"
+            self.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
+            self._schemacache={}
         try:
             try:
                 success=True
@@ -247,22 +255,23 @@ def ExclusiveWrapper(method):
                 success=False
                 raise
         finally:
-            excounter=getattr(args[0], "excounter")
-            excounter-=1
-            setattr(args[0], "excounter", excounter)
-            if excounter==0:
-                w=getattr(args[0], "transactionwrite")
+            self.excounter-=1
+            if self.excounter==0:
+                w=self.transactionwrite
                 if success:
                     if w:
-                        cursor.execute("COMMIT TRANSACTION")
+                        cmd="COMMIT TRANSACTION"
                     else:
-                        cursor.execute("END TRANSACTION")
+                        cmd="END TRANSACTION"
                 else:
                     if w:
-                        cursor.execute("ROLLBACK TRANSACTION")
+                        cmd="ROLLBACK TRANSACTION"
                     else:
-                        cursor.execute("END TRANSACTION")
-
+                        cmd="END TRANSACTION"
+                print cmd
+                self.cursor.execute(cmd)
+                
+    setattr(_transactionwrapper, "__doc__", getattr(method, "__doc__"))
     return _transactionwrapper
 
 
@@ -276,11 +285,20 @@ def idquote(s):
     The value returned is quoted in square brackets"""
     return '['+s+']'
 
+class IntegrityCheckFailed(Exception): pass
+
 class Database:
 
-    def __init__(self, directory, filename):
-        self.connection=apsw.Connection(os.path.join(directory, filename))
+    def __init__(self, filename):
+        self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
+        # we always do an integrity check first
+        icheck=[]
+        for row in self.cursor.execute("pragma integrity_check"):
+            icheck.extend(row)
+        icheck="\n".join(icheck)
+        if icheck!="ok":
+            raise IntegrityCheckFailed(icheck)
         # exclusive lock counter
         self.excounter=0
         # this should be set to true by any code that writes - it is
@@ -443,7 +461,10 @@ class Database:
                     record=dict[r]
                     v=record.get(n,None)
                     if v is not None:
-                        indirects[r]=v
+                        if not len(v): # set zero length lists to None
+                            record[n]=None
+                        else:
+                            indirects[r]=v
                 if len(indirects):
                     self.updateindirecttable("phonebook__"+n, indirects)
                     for r in indirects.keys():
@@ -547,7 +568,7 @@ class Database:
             elif name=='__uid__':
                 uid=colnum
         # get all relevant rows
-        indirects=[]
+        indirects={}
         for row in self.sqlmany("select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),), [(u,) for u in uids]):
             if row[deleted]:
                 continue
@@ -555,20 +576,18 @@ class Database:
             for colnum,name,type in schema:
                 if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
                     continue
-                if type=="value":
+                if type=="valueBLOB":
                     record[name]=row[colnum]
                     continue
                 assert type=="indirectBLOB"
-                record[name]=row[colnum]
                 if name not in indirects:
-                    indirects.append(name)
+                    indirects[name]=[]
+                indirects[name].append( (row[uid], row[colnum]) )
             res[row[uid]]=record
         # now get the indirects
-        for name in indirects:
-            for r in res:
-                v=res[r].get(name,None)
-                if v is not None:
-                    res[r][name]=self._getindirect(v)
+        for name,values in indirects.iteritems():
+            for uid,v in values:
+                res[uid][name]=self._getindirect(v)
         return res
 
     def _getindirect(self, what):
@@ -652,6 +671,7 @@ class Database:
             cmd.append(idquote(n))
         cmd.extend([")", "select * from", idquote("backup_"+tablename)])
         self.sql(" ".join(cmd))
+        self.sql("drop table "+idquote("backup_"+tablename))
 
     def deleteold(self, tablename, uids=None, minvalues=3, maxvalues=5, keepoldest=93):
         """Deletes old entries from the database.  The deletion is based
@@ -707,10 +727,59 @@ class Database:
 
         return len(deleterows), self.sql("select count(*) from "+idquote(tablename)).next()[0]
 
+    def savelist(self, tablename, values):
+        """Just save a list of items (eg categories).  There is no versioning or transaction history.
+
+        Internally the table has two fields.  One is the actual value and the other indicates if
+        the item is deleted.
+        """
+
+        # a tuple of the quoted table name
+        tn=(idquote(tablename),)
+        
+        if not self.doestableexist(tablename):
+            self.sql("create table %s (__rowid__ integer primary key, item, __deleted__ integer)" % tn)
+
+        # some code to demonstrate my lack of experience with SQL ....
+        delete=[]
+        known=[]
+        revive=[]
+        for row, item, dead in self.sql("select __rowid__,item,__deleted__ from %s" % tn):
+            known.append(item)
+            if item in values:
+                # we need this row
+                if dead:
+                    revive.append((row,))
+                continue
+            if dead:
+                # don't need this entry and it is dead anyway
+                continue
+            delete.append((row,))
+        create=[(v,) for v in values if v not in known]
+
+        # update table as appropriate
+        self.sqlmany("update %s set __deleted__=0 where __rowid__=?" % tn, revive)
+        self.sqlmany("update %s set __deleted__=1 where __rowid__=?" % tn, delete)
+        self.sqlmany("insert into %s (item, __deleted__) values (?,0)" % tn, create)
+        if __debug__:
+            vdup=values[:]
+            vdup.sort()
+            vv=self.loadlist(tablename)
+            vv.sort()
+            assert vdup==vv
+
+    def loadlist(self, tablename):
+        """Loads a list of items (eg categories)"""
+        if not self.doestableexist(tablename):
+            return []
+        return [v[0] for v in self.sql("select item from %s where __deleted__=0" % (idquote(tablename),))]
+        
     # various operations need exclusive access to the database
     savemajordict=ExclusiveWrapper(savemajordict)
     getmajordictvalues=ExclusiveWrapper(getmajordictvalues)
     deleteold=ExclusiveWrapper(deleteold)
+    savelist=ExclusiveWrapper(savelist)
+    loadlist=ExclusiveWrapper(loadlist)
 
                     
             
@@ -741,7 +810,7 @@ if __name__=='__main__':
         if iterations >1:
             TRACE=False
 
-        db=Database(".", "testdb")
+        db=Database("testdb")
 
 
         b4=time.time()

@@ -87,8 +87,6 @@ import cStringIO
 import difflib
 import re
 import time
-import random
-import sha
 import copy
 
 # GUI
@@ -659,33 +657,6 @@ class PhoneWidget(wx.Panel):
             self.modified=False
             self.populatefs(self.getdata({}))
 
-    # we use two random numbers to generate the serials.  _persistrandom
-    # is seeded at startup
-    _persistrandom=random.Random()
-    def EnsureBitPimSerials(self):
-        "Make sure all entries have a BitPim serial"
-        rand2=random.Random() # this random is seeded when this function is called
-        d={}  # this keeps track of which ids we have seen
-        for k in self._data:
-            entry=self._data[k]
-            found=False
-            for s in entry.get("serials", []):
-                if s["sourcetype"]=="bitpim":
-                    assert s["id"] not in d
-                    d[s["id"]]=entry
-                    found=True
-                    break
-            if not found:
-                num=sha.new()
-                num.update(`self._persistrandom.random()`)
-                num.update(`rand2.random()`)
-                if "serials" not in entry: entry["serials"]=[]
-                entry["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
-                if __debug__:
-                    print "assigning bpserialid", num.hexdigest()
-                assert num.hexdigest() not in d
-                d[num.hexdigest()]=entry
-
     def updateserials(self, results):
         "update the serial numbers after having written to the phone"
         if not results.has_key('serialupdates'):
@@ -761,7 +732,7 @@ class PhoneWidget(wx.Panel):
     def OnAdd(self, _):
         dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]})
         if dlg.ShowModal()==wx.ID_OK:
-            data=dlg.GetData()
+            data=phonebookobjectfactory.newdataobject(dlg.GetData())
             while True:
                 key=int(time.time())
                 if key in self._data:
@@ -808,7 +779,6 @@ class PhoneWidget(wx.Panel):
         dlg.Destroy()
 
     def getdata(self, dict):
-        self.EnsureBitPimSerials()
         dict['phonebook']=self._data.copy()
         dict['categories']=self.categories[:]
         return dict
@@ -872,24 +842,24 @@ class PhoneWidget(wx.Panel):
 
     def getfromfs(self, dict):
         self.thedir=self.mainwindow.phonebookpath
-        try:
-            os.makedirs(self.thedir)
-        except:
-            pass
-        if not os.path.isdir(self.thedir):
-            raise Exception("Bad directory for phonebook '"+self.thedir+"'")
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
-            d={'result': {}}
+            d={'result': {'phonebook': {}, 'categories': []}}
             common.readversionedindexfile(os.path.join(self.thedir, "index.idx"), d, self.versionupgrade, self.CURRENTFILEVERSION)
-            dict.update(d['result'])
-        else:
-            dict['phonebook']={}
-            dict['categories']=[]
-        return dict
+            pb=d['result']['phonebook']
+            database.ensurerecordtype(pb, phonebookobjectfactory)
+            pb=database.extractbitpimserials(pb)
+            self.mainwindow.database.savemajordict("phonebook", pb)
+            self.mainwindow.database.savelist("categories", d['result']['categories'])
+            # now that save is succesful, move file out of the way
+            os.rename(os.path.join(self.thedir, "index.idx"), os.path.join(self.thedir, "index-is-now-in-database.bak"))
+        # read info from the database
+        dict['phonebook']=self.mainwindow.database.getmajordictvalues("phonebook", phonebookobjectfactory)
+        dict['categories']=self.mainwindow.database.loadlist("categories")
+            
 
     def populate(self, dict):
         self.clear()
-        pubsub.publish(pubsub.MERGE_CATEGORIES, dict.get('categories', []))
+        pubsub.publish(pubsub.MERGE_CATEGORIES, dict['categories'])
         pb=dict['phonebook']
         cats=[]
         for i in pb:
@@ -904,22 +874,8 @@ class PhoneWidget(wx.Panel):
         self.modified=True
 
     def populatefs(self, dict):
-        self.thedir=self.mainwindow.phonebookpath
-        try:
-            os.makedirs(self.thedir)
-        except:
-            pass
-        if not os.path.isdir(self.thedir):
-            raise Exception("Bad directory for phonebook '"+self.thedir+"'")
-        for f in os.listdir(self.thedir):
-            # delete them all!
-            os.remove(os.path.join(self.thedir, f))
-        d={}
-        d['phonebook']=dict['phonebook']
-        if len(dict.get('categories', [])):
-            d['categories']=dict['categories']
-        
-        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
+        self.mainwindow.database.savemajordict("phonebook", database.extractbitpimserials(dict["phonebook"]))
+        self.mainwindow.database.savelist("categories", dict["categories"])
         return dict
 
     def importdata(self, importdata, categoriesinfo=[], merge=True):
@@ -936,6 +892,8 @@ class PhoneWidget(wx.Panel):
         dlg.Destroy()
         if result is not None:
             d={}
+            database.ensurerecordtype(result, phonebookobjectfactory)
+            database.ensurebitpimserials(result)
             d['phonebook']=result
             d['categories']=categoriesinfo
             self.populatefs(d)

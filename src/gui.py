@@ -18,6 +18,7 @@ import cStringIO
 import zipfile
 import re
 import sys
+import shutil
 
 # wx modules
 import wx
@@ -39,6 +40,7 @@ import guihelper
 import bpcalendar
 import bphtml
 import bitflingscan
+import database
 
 ###
 ### Used to check our threading
@@ -400,6 +402,8 @@ class MainWindow(wx.Frame):
         self.lw=None
         self.lwdata=None
         self.filesystemwidget=None
+
+        self.database=None
         
         ### Status bar
 
@@ -561,7 +565,7 @@ class MainWindow(wx.Frame):
         ### notebook tabs
         if self.config.ReadInt("console", 0):
             import developer
-            self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self} ), "Console")
+            self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self, 'db': self.database} ), "Console")
         self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
@@ -1060,9 +1064,25 @@ class MainWindow(wx.Frame):
         assert isinstance(cbresult, Callback)
         self.wt.q.put( (request, cbresult) )
 
+    # remember our size and position
+
     def saveSize(self):
         guiwidgets.save_size("MainWin", self.GetRect())
 
+    # deal with the database
+    def EnsureDatabase(self, newpath, oldpath):
+        newdbpath=os.path.abspath(os.path.join(newpath, "bitpim.db"))
+        if oldpath is not None and len(oldpath) and oldpath!=newpath:
+            # copy database to new location
+            if self.database:
+                self.database=None # cause it to be closed
+            olddbpath=os.path.abspath(os.path.join(oldpath, "bitpim.db"))
+            if os.path.exists(olddbpath) and not os.path.exists(newdbpath):
+                shutil.copyfile(olddbpath, newdbpath)
+        self.database=None # allow gc
+        self.database=database.Database(newdbpath)
+            
+        
 
 ###
 ### Container for midi files
