@@ -72,7 +72,8 @@ class SanyoMedia:
                         # Could convert filename to to a date
                         imagemedia[ifile+1000*idir]={'name': "$camera_"+res.filename, 'origin': "camera"}
                     else:
-                        imagemedia[res.num3]={'name': res.filename, 'origin': "camera"}
+                        # Wallet pictures
+                        imagemedia[res.num3]={'name': res.filename, 'origin': "images"}
                 else:
                     if res.num3==0:    # Original Camera Picture
                         idx=ifile+1000*idir
