@@ -359,7 +359,7 @@ class Database:
 
         @param tablename: name of the table to use
         @param dict: The dictionary of record.  The key must be the uniqueid for each record.
-                   The @L{extractbpserials} function can do the conversion for you for
+                   The @L{extractbitpimserials} function can do the conversion for you for
                    phonebook and similar formatted records.
         @param timestamp: the UTC time in seconds since the epoch.  This is 
         """
@@ -793,9 +793,29 @@ if __name__=='__main__':
     import sys
     import time
     import os
+
+    class phonebookdataobject(basedataobject):
+        # no change to _knownproperties (all of ours are list properties)
+        _knownlistproperties=basedataobject._knownlistproperties.copy()
+        _knownlistproperties.update( {'names': ['title', 'first', 'middle', 'last', 'full', 'nickname'],
+                                      'categories': ['category'],
+                                      'emails': ['email', 'type'],
+                                      'urls': ['url', 'type'],
+                                      'ringtones': ['ringtone', 'use'],
+                                      'addresses': ['type', 'company', 'street', 'street2', 'city', 'state', 'postalcode', 'country'],
+                                      'wallpapers': ['wallpaper', 'use'],
+                                      'flags': ['secret'],
+                                      'memos': ['memo'],
+                                      'numbers': ['number', 'type', 'speeddial'],
+                                      # serials is in parent object
+                                      })
+
+    phonebookobjectfactory=dataobjectfactory(phonebookdataobject)
     
     # use the phonebook out of the examples directory
     execfile(os.getenv("DBTESTFILE", "examples/phonebook-index.idx"))
+
+    ensurerecordtype(phonebook, phonebookobjectfactory)
 
     phonebookmaster=phonebook
 
@@ -822,25 +842,25 @@ if __name__=='__main__':
             phonebook=phonebookmaster.copy()
             
             # write it out
-            db.savemajordict("phonebook", extractbpserials(phonebook))
+            db.savemajordict("phonebook", extractbitpimserials(phonebook))
 
             # check what we get back is identical
             v=db.getmajordictvalues("phonebook")
-            assert v==extractbpserials(phonebook)
+            assert v==extractbitpimserials(phonebook)
 
             # do a deletion
             del phonebook[17] # james bond @ microsoft
-            db.savemajordict("phonebook", extractbpserials(phonebook))
+            db.savemajordict("phonebook", extractbitpimserials(phonebook))
             # and verify
             v=db.getmajordictvalues("phonebook")
-            assert v==extractbpserials(phonebook)
+            assert v==extractbitpimserials(phonebook)
 
             # modify a value
             phonebook[15]['addresses'][0]['city']="Bananarama"
-            db.savemajordict("phonebook", extractbpserials(phonebook))
+            db.savemajordict("phonebook", extractbitpimserials(phonebook))
             # and verify
             v=db.getmajordictvalues("phonebook")
-            assert v==extractbpserials(phonebook)
+            assert v==extractbitpimserials(phonebook)
 
         after=time.time()
 
@@ -857,7 +877,7 @@ if __name__=='__main__':
             print "\ttotal time was",after-b4,"seconds for",iterations*10,"iterations"
             print
             print "testing repeated writes"
-            x=extractbpserials(phonebook)
+            x=extractbitpimserials(phonebook)
             k=x.keys()
             b4=time.time()
             for i in xrange(iterations*10):
