@@ -10,6 +10,7 @@
 "Displays a number of sections each with a number of items"
 
 import wx
+import wx.html
 
 import guihelper
 
@@ -34,7 +35,8 @@ class Display(wx.ScrolledWindow):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
-        # wx.EVT_SCROLLWIN(self, self.OnScroll)
+        if watermark is not None:
+            wx.EVT_SCROLLWIN(self, self.OnScroll)
         self.bgbrush=wx.TheBrushList.FindOrCreateBrush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.SOLID)
         if watermark:
             self.watermark=guihelper.getbitmap(watermark)
@@ -42,6 +44,10 @@ class Display(wx.ScrolledWindow):
             self.watermark=None
         self.relayoutpending=False
         self.ReLayout()
+
+    def OnScroll(self, evt):
+        self.Refresh(False)
+        evt.Skip()
 
     def OnSize(self, evt):
         w,h=evt.GetSize()
@@ -88,16 +94,28 @@ class Display(wx.ScrolledWindow):
         origin=self.GetViewStart()[1]*self.VSCROLLPIXELS
         dc.SetBackground(self.bgbrush)
         dc.Clear()
+        # draw watermark
         if self.watermark:
             # place in the middle
             # dc.DrawBitmap(self.watermark, self._w/2-self.watermark.GetWidth()/2, origin+self._h/2-self.watermark.GetHeight()/2, True)
             # place in bottom right
             dc.DrawBitmap(self.watermark, self._w-self.watermark.GetWidth(), origin+self._h-self.watermark.GetHeight(), True)
+
+        # draw each section
         cury=0
         for i, section in enumerate(self.sections):
-            dc.SetDeviceOrigin(0, +cury )
+            dc.SetDeviceOrigin(0, cury )
             section.Draw(dc, self._w)
             cury+=self.sectionheights[i]
+            # now draw items in this section
+            for num,item in enumerate(self.items[i]):
+                dc.SetDeviceOrigin((num%self.itemsperrow)*self.itemsize[0], cury+(num/self.itemsperrow)*self.itemsize[1])
+                dc.ResetBoundingBox()
+                item.Draw(dc, self.itemsize[0], self.itemsize[1], False)
+                #print "bb",dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY()
+            cury+=(len(self.items[i])+self.itemsperrow-1)/self.itemsperrow*self.itemsize[1]
+                    
+        # must do this or the world ends ...
         dc.SetDeviceOrigin(0,0)
 
     def ReLayout(self):
@@ -109,11 +127,18 @@ class Display(wx.ScrolledWindow):
     def _ReLayout(self):
         self.relayoutpending=False
         self.sections=self.datasource.GetSections()
+        self.items=[]
+        self.itemsize=self.datasource.GetItemSize()
+        self.itemsperrow=max(self._w/self.itemsize[0],1)
         self.sectionheights=[]
         self.vheight=0
         for i,section in enumerate(self.sections):
             self.sectionheights.append(section.GetHeight())
-        self.vheight+=sum(self.sectionheights)
+            self.vheight+=self.sectionheights[-1]
+            items=self.datasource.GetItemsFromSection(i,section)
+            rows=(len(items)+self.itemsperrow-1)/self.itemsperrow
+            self.vheight+=rows*self.itemsize[1]
+            self.items.append(items)
 
         # You can't adjust self._w here to take into account the presence of the
         # scrollbar since a size event is generated after the call to setscrollbars
@@ -122,10 +147,10 @@ class Display(wx.ScrolledWindow):
         # set the height we want wx to think the window is
         self.maxheight=max(self.vheight,self._h)
         # adjust scrollbar
-        self.SetScrollbars(0,1,0,self.maxheight,0, self.GetViewStart()[1])
+        self.SetScrollbars(0,1,0,self.vheight,0, self.GetViewStart()[1])
         self.SetScrollRate(0, self.VSCROLLPIXELS)
 
-class SectionHeader:
+class SectionHeader(object):
     "A generic section header implementation"
 
     def __init__(self, label):
@@ -134,10 +159,10 @@ class SectionHeader:
 
     def InitAttributes(self):
         "Initialise our font and colours"
-        self.font=wx.TheFontList.FindOrCreateFont(60, family=wx.SWISS, style=wx.NORMAL, weight=wx.NORMAL)
-        self.font2=wx.TheFontList.FindOrCreateFont(60, family=wx.SWISS, style=wx.NORMAL, weight=wx.LIGHT)
-        self.fontcolour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_BTNTEXT)
-        self.font2colour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_BTNSHADOW)
+        self.font=wx.TheFontList.FindOrCreateFont(20, family=wx.SWISS, style=wx.NORMAL, weight=wx.NORMAL)
+        self.font2=wx.TheFontList.FindOrCreateFont(20, family=wx.SWISS, style=wx.NORMAL, weight=wx.LIGHT)
+        self.fontcolour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNTEXT)
+        self.font2colour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNSHADOW)
         dc=wx.MemoryDC()
         w,h,d,l=dc.GetFullTextExtent("I", font=self.font)
         self.height=h+3
@@ -161,6 +186,21 @@ class SectionHeader:
         dc.SetTextForeground(oldc)
         dc.SetFont(oldf)
                 
+class Item(object):
+    """A generic item implementation.
+
+    You don't need to inherit from this - it is mainly to document what you have to implement."""
+
+    def Draw(self, dc, width, height, selected):
+        """Draw yourself into the available space.  0,0 will be your top left.
+
+        @param dc:  The device context to draw into
+        @param width: maximum space to use
+        @param height: maximum space to use
+        @param selected: if the item is currently selected"""
+        raise NotImplementedError()
+    
+
 
 class DataSource:
     "This is the model"
@@ -168,17 +208,55 @@ class DataSource:
     def GetSections(self):
         "Return a list of section headers"
         raise NotImplementedError()
-    
+
+    def GetItemSize(self):
+        "Return (width, height of each item)"
+        return (160, 80)
+
+    def GetItemsFromSection(sectionnumber,sectionheader):
+        """Return a list of the items for the section.
+
+        @param sectionnumber: the index into the list returned by L{GetSections}
+        @param sectionheader: the section header object from that list
+        """
+        raise NotImplementedError()
 
 if __name__=="__main__":
+    app=wx.PySimpleApp()
+
+    class TestItem(Item):
+
+        def __init__(self, label):
+            super(TestItem,self).__init__()
+            self.label=label
+
+        def Draw(self, dc, width, height, selected):
+            us=dc.GetUserScale()
+            hdc=wx.html.HtmlDCRenderer()
+            hdc.SetDC(dc, 1)
+            hdc.SetSize(width, height)
+            hdc.SetHtmlText(self.genhtml(), '.', True)
+            hdc.Render(0,0)
+            del hdc
+            # restore scale hdc messes
+            dc.SetUserScale(*us)
+
+        def genhtml(self):
+            return """<table><tr><td valign=top><img src="resources/wallpaper.png" width=48 height=48><td valign=top><b>%s</b><br>BMP format<br>123x925<br>Camera</tr></table>""" \
+                   % (self.label, )
 
     class TestDS(DataSource):
 
         def GetSections(self):
             return [SectionHeader(x) for x in ("Camera", "Wallpaper", "Oranges", "Lemons")]
 
+        def GetItemsFromSection(self, sectionnumber, sectionheader):
+            return [TestItem("%s %s-#%d" % (l,sectionheader.label,i)) for i,l in enumerate(sectionheader.label)]
+        
+        def GetItemSize(self):
+            "Return (width, height of each item)"
+            return (200, 80)
 
-    app=wx.PySimpleApp()
     f=wx.Frame(None)
     ds=TestDS()
     d=Display(f,ds, "wallpaper-watermark")
