@@ -613,6 +613,49 @@ class Profile(com_samsung.Profile):
         d['format']='QCP'
         return ('qcp', fileinfo.AudioFileInfo(afi, **d))
 
+    # fill in your own image origins using these
+    stockimageorigins={
+        "images": {'meta-help': 'General images'},
+        "mms": {'meta-help': 'Multimedia Messages'},
+        "drm": {'meta-help': 'DRM protected images'},
+        "camera": {'meta-help': 'Camera images'},
+        "wallpapers": { 'meta-help': 'Generic wallpapers'}
+        }
+    # Override in derived class - use this template.  Avoid defining new origins -
+    # instead add them to the stock list and use that.  That will ensure the
+    # same string and description are used for all phones.
+    imageorigins={}
+    imageorigins.update(common.getkv(stockimageorigins, "wallpapers"))
+
+    stockimagetargets={
+        # You need to override in your GetTargetsForImageOrigin function and update
+        # for ImgFileInfo fields
+        "128x128 BMP wallpaper": {'meta-help': 'Display as wallpaper'},
+        "128x128 PNG wallpaper": {'meta-help': 'Display as wallpaper'},
+        "128x160 BMP wallpaper": {'meta-help': 'Display as wallpaper'},
+        "128x160 PNG wallpaper": {'meta-help': 'Display as wallpaper'},
+        }
+
+    def GetImageOrigins(self):
+        # Note: only return origins that you can write back to the phone
+        return self.imageorigins
+
+    def GetTargetsForImageOrigin(self, origin):
+        targets={}
+        targets.update(common.getkv(self.stockimagetargets,
+                                    "128x128 BMP wallpaper",
+                                  {'width': 128, 'height': 128, 'format': "BMP"}))
+        targets.update(common.getkv(self.stockimagetargets,
+                                    "128x128 PNG wallpaper",
+                                  {'width': 128, 'height': 128, 'format': "PNG"}))
+        targets.update(common.getkv(self.stockimagetargets,
+                                    "128x160 BMP wallpaper",
+                                  {'width': 128, 'height': 160, 'format': "BMP"}))
+        targets.update(common.getkv(self.stockimagetargets,
+                                    "128x160 PNG wallpaper",
+                                  {'width': 128, 'height': 160, 'format': "PNG"}))
+        return targets
+
 #-------------------------------------------------------------------------------
 class FileEntries:
     def __init__(self, phone, info):
