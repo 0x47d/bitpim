@@ -97,15 +97,19 @@ class Profile(com_sanyo.Profile):
     protocolclass=p_sanyo8100
     serialsname='scp8100'
 
+    WALLPAPER_WIDTH=120
+    WALLPAPER_HEIGHT=144
+    OVERSIZE_PERCENTAGE=100
+
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
-	('ringtone', 'read', None), # all ringtone reading
-#        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
-#        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'read', None),   # all ringtone reading
     )
 
     def __init__(self):
