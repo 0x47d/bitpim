@@ -20,13 +20,14 @@ from string import split,atoi,strip,join
 
 # my modules
 import common
+import p_brew
 import com_brew
 import com_samsung
 import com_phone
 
 
 
-class Phone(com_brew.BrewProtocol,com_samsung.Phone):
+class Phone(com_samsung.Phone):
     "Talk to the Samsung SCH-A670 Cell Phone"
 
     desc="SCH-A670"
@@ -63,7 +64,6 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
         "Calls all the constructors and sets initial modes"
 
         com_samsung.Phone.__init__(self, logtarget, commport)
-	com_brew.BrewProtocol.__init__(self)
         self.mode=self.MODENONE
 
     def getfundamentals(self, results):
@@ -483,10 +483,12 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
 
 
 
-class Profile(com_phone.Profile):
+class Profile(com_samsung.Profile):
 
+    serialsname='scha670'
+    
     def __init__(self):
-        com_phone.Profile.__init__(self)
+        com_samsung.Profile.__init__(self)
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
@@ -495,4 +497,3 @@ class Profile(com_phone.Profile):
 
     def convertphonebooktophone(self, helper, data):
         return data
-
