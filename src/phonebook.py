@@ -87,6 +87,7 @@ class PhoneWidget(wxTextCtrl):
         wxTextCtrl.__init__(self, parent, id, style=wxTE_RICH2|wxTE_MULTILINE|wxTE_PROCESS_TAB)
         self.mainwindow=mainwindow
         self._data={}
+        self.groupdict={}
         EVT_IDLE(self, self.OnIdle)
 
     def OnIdle(self, _):
