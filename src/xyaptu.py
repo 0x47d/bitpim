@@ -16,12 +16,20 @@ The following changes were made:
   - Added: setupxcopy() takes the template text and remembers it
   - Added: xcopywithdns() does the copy with supplied DNS and remembered template
     and returns the resulting string
+  - Exception handling for statements was added (xyaptu only did it for
+    expressions)
+  - The default behaviour for exceptions now puts a dump of the exception
+    into the generated output as an HTML <!-- --> style comment so you
+    can view source to find out what has happened.  My common library
+    exception formatter (which also dumps local variables) is used.
+  
 
 """
 
 import sys
 import re
 import string
+import common
 
 ## "Yet Another Python Templating Utility, Version 1.2"
 
@@ -34,7 +42,7 @@ _never = _nevermatch()     # one reusable instance of it suffices
 def identity(string, why):
     "A do-nothing-special-to-the-input, just-return-it function"
     return string
-def nohandle(string):
+def nohandle(*args):
     "A do-nothing handler that just re-raises the exception"
     raise
 
@@ -77,7 +85,11 @@ class copier:
                 stat = self.preproc(stat, 'exec')
                 stat = '%s _cb(%s,%s)' % (stat,i+1,j)
                 # for debugging, uncomment...: print "-> Executing: {"+stat+"}"
-                exec stat in self.globals,self.locals
+                try:
+                    exec stat in self.globals,self.locals
+                except:
+                    # not as good as it could be
+                    self.ouf.write(str(self.handle(stat,self.locals,self.globals)))
                 i=j+1
             else:       # normal line, just copy with substitution
                 self.ouf.write(self.regex.sub(repl,line))
@@ -161,7 +173,7 @@ class xcopier(copier):
       yinf = StringIO(self._x2y_translate(inputText))
       # we have to build the list since you can only run
       # readline/s once on a file
-      self.remembered=[line for line in yinf.readline()]
+      self.remembered=[line for line in yinf.readlines()]
       
   def xcopywithdns(self, dns):
       from cStringIO import StringIO
@@ -244,11 +256,13 @@ class xcopier(copier):
     return xStr
 
   # Handle expressions that do not evaluate
-  def _handleBadExps(self, s):
+  def _handleBadExps(self, s, locals=None, globals=None):
     ' Handle expressions that do not evaluate '
     if self.dbg: 
       self.dbgOuf.write('!!! ERROR: failed to evaluate expression: %s \n' % s)
-    return '***! %s !***' % s
+    res="<!-- EXCEPTION: \nExpression: "+s+"\n"
+    res+=common.formatexception()+"\n-->"
+    return res+('***! %s !***' % s)
 
   # Preprocess code
   def _preProcess(self, s, why):
