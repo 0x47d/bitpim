@@ -189,7 +189,6 @@ class WorkerThreadFramework(threading.Thread):
                 ex.gui_exc_info=sys.exc_info()
             wxPostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
             if isinstance(ex, SystemExit):
-                print "worker thread is exiting"
                 raise ex
 
     def progressminor(self, pos, max, desc=""):
@@ -357,7 +356,6 @@ class MainApp(wxApp):
         self.SetExitOnFrameDelete(True)
 
     def OnExit(self):
-        print "onexit"
         sys.excepthook=sys.__excepthook__
         self.config.Flush()
 
@@ -599,7 +597,6 @@ class MainWindow(wxFrame):
                     self.filesystemwidget=FileSystemView(self, self.nb)
                     self.nb.InsertPage(i, self.filesystemwidget, fstitle, True)
                     return
-            print "ooops"
             return
         self.filesystemwidget=None
         for i in range(0, self.nb.GetPageCount()):
@@ -726,6 +723,7 @@ class MainWindow(wxFrame):
         
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
+        # ::TODO:: don't allow this to appear if we are busy
         self.configdlg.ShowModal()
 
     # deal with graying out/in menu items on notebook page changing
