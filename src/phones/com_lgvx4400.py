@@ -112,7 +112,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         @param key: key to place results in
         """
 
-        self.log("Reading "+key+" indices")
+        self.log("Reading "+key)
         media={}
 
         # builtins
@@ -681,7 +681,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         if len(entry.url):
             res['urls']=[ {'url': entry.url} ]
         # private
-        res['flags']=[ {'secret': entry.secret } ]
+        if entry.secret:
+            # we only supply secret if it is true
+            res['flags']=[ {'secret': entry.secret } ]
         # memos
         if len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
@@ -722,9 +724,17 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
         return res
+
+    def _findmediainindex(self, index, name, pbentryname, type):
+        if name is None:
+            return 0
+        for i in index:
+            if index[i]['name']==name:
+                return i
+        self.log("%s: Unable to find %s %s in the index. Setting to default." % (pbentryname, type, name))
+        return 0
                     
     def makeentry(self, counter, entry, dict):
-        # dict is unused at moment, will be used later to convert string ringtone/wallpaper to numbers
         e=self.protocolclass.pbentry()
         e.entrynumber=counter
         
@@ -736,9 +746,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                     if k=='numbers':
                         item=self.phonize(item)
                     l.append(item)
-                continue
-            # everything else we just set
-            setattr(e,k,entry[k])
+            elif k=='ringtone':
+                e.ringtone=self._findmediainindex(dict['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
+            elif k=='msgringtone':
+                e.msgringtone=self._findmediainindex(dict['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
+            elif k=='wallpaper':
+                e.wallpaper=self._findmediainindex(dict['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
+            else:
+                # everything else we just set
+                setattr(e,k,entry[k])
 
         return e
 
@@ -899,10 +915,9 @@ class Profile:
                 e['serial1']=serial1
                 e['serial2']=serial2
                 
-                # e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
-                # e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', 0)
-                # e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', 0)
-                e['ringtone']=e['msgringtone']=e['wallpaper']=0
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
                 e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
 
