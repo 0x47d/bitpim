@@ -310,7 +310,7 @@ class STRING(BaseProtogenClass):
             if self._terminator is not None:
                 pos=self._value.find(chr(self._terminator))
                 if pos>=0:
-                    self._value=self._value[pos]
+                    self._value=self._value[:pos]
                 elif self._raiseonunterminatedread:
                     raise NotTerminatedException()
         else:
