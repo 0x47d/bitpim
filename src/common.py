@@ -132,7 +132,7 @@ def prettyprintdict(dictionary, indent=0):
                          res+="%s%s:\n%s[\n" % (istr*indent,`k`,istr*(indent+1))
                          for item in v:
                               res+=prettyprintdict(item, indent+2)
-                         res+="%s]\n" % (istr*(indent+1))
+                         res+="%s],\n" % (istr*(indent+1))
                          continue
                res+="%s%s: %s,\n" % (istr*indent, `k`, `v`)
 
