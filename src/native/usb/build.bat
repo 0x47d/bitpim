@@ -4,7 +4,7 @@ set PYTHONDIR=c:\python23
 set PYTHONLIB=python23
 
 @rem Create MinGW compatible Python library if appropriate
-@if exist %PYTHONDIR%\lib%PYTHONLIB%.a goto libok
+@if exist %PYTHONDIR%\libs\lib%PYTHONLIB%.a goto libok
 @REM this only works on NT/XP
 pexports %systemroot%\system32\%PYTHONLIB%.dll > %PYTHONLIB%.def
 dlltool --dllname %PYTHONLIB%.dll --def %PYTHONLIB%.def --output-lib %PYTHONDIR%\libs\lib%PYTHONLIB%.a
