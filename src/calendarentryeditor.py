@@ -37,13 +37,14 @@ class RepeatEditor(pb_editor.DirtyUIBase):
     def __init__(self, parent, _):
         pb_editor.DirtyUIBase.__init__(self, parent)
         # overall container
-        self.__main_bs=wx.BoxSizer(wx.HORIZONTAL)
+        self.__main_bs=wx.BoxSizer(wx.VERTICAL)
         # vertical sizebox & checkboxes for different repreat options
+        hbs_1=wx.BoxSizer(wx.HORIZONTAL)
         self.__repeat_option_rb = wx.RadioBox(
                 self, -1, "Repeat Types:", wx.DefaultPosition, wx.DefaultSize,
                 self.__repeat_options, 1, wx.RA_SPECIFY_COLS)
         wx.EVT_RADIOBOX(self, self.__repeat_option_rb.GetId(), self.OnRepeatType)
-        self.__main_bs.Add(self.__repeat_option_rb, 0, wx.LEFT, 5)
+        hbs_1.Add(self.__repeat_option_rb, 0, wx.LEFT, 5)
         # daily options widgets
         self.__option_bs=wx.BoxSizer(wx.VERTICAL)
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Daily Options:'), wx.VERTICAL)
@@ -81,7 +82,16 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         vbs.Add(hbs, 0, wx.LEFT, 5)
         self.__option_bs.Add(vbs, 0, wx.LEFT, 5)
         self.__weekly_option_bs=vbs
-        self.__main_bs.Add(self.__option_bs, 0, wx.LEFT, 5)
+        hbs_1.Add(self.__option_bs, 0, wx.LEFT, 5)
+        self.__main_bs.Add(hbs_1, 0, wx.LEFT|wx.TOP, 5)
+        # the exceptions list
+        hbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Excluded Dates:'), wx.HORIZONTAL)
+        self.__exception_list=wx.ListBox(self, -1)
+        hbs.Add(self.__exception_list, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
+        exception_del=wx.Button(self, -1, 'Include')
+        wx.EVT_BUTTON(self, exception_del.GetId(), self.OnIncludeException)
+        hbs.Add(exception_del, 0, wx.LEFT|wx.TOP, 5)
+        self.__main_bs.Add(hbs, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
         # all done
         self.SetSizer(self.__main_bs)
         self.SetAutoLayout(True)
@@ -91,6 +101,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
     def populate(self, data):
         if data is None:
             self.__repeat_option_rb.SetSelection(0)
+            self.__exception_list.Clear()
             self.OnRepeatType(None)
             return
         rt=data.repeat_type
@@ -113,6 +124,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             self.__repeat_option_rb.SetSelection(3)
         else:
             self.__repeat_option_rb.SetSelection(4)
+        self.__exception_list.Set(data.get_suppressed_list())
         self.OnRepeatType(None)
 
     def Set(self, data):
@@ -161,6 +173,10 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             r.repeat_type=r.monthly
         else:
             r.repeat_type=r.yearly
+        # get the list of exceptions
+        r.suppressed=[str(self.__exception_list.GetString(i)) \
+           for i in range(self.__exception_list.GetCount())]
+        # and return the result
         return r
 
     def OnRepeatType(self, evt):
@@ -174,6 +190,15 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self.__option_bs.Layout()
         self.OnDirtyUI(evt)
 
+    def OnIncludeException(self, evt):
+        print 'OnIncludeException'
+        s=self.__exception_list.GetSelections()
+        if not len(s):
+            # nothing selected
+            return
+        self.__exception_list.Delete(s[0])
+        self.OnDirtyUI(evt)
+        
 #------------------------------------------------------------------------------
 class GeneralEditor(pb_editor.DirtyUIBase):
     __dict_key_index=0
@@ -604,10 +629,7 @@ class Editor(wx.Dialog):
             newentry.repeat=None
         else:
             # get data from the repeat tab
-            old_repeat=newentry.repeat
             newentry.repeat=self.__widgets[self.__repeat_page].Get()
-            if old_repeat is not None:
-                newentry.repeat.suppressed=old_repeat.suppressed
         # and other tabs as well
         newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', None)
         newentry.categories=self.__widgets[self.__categories_page].Get()
