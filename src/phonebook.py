@@ -84,7 +84,6 @@ serials:
 # Standard imports
 import os
 import cStringIO
-import difflib
 import re
 import time
 import copy
@@ -2066,6 +2065,10 @@ class EntryMatcher:
                 s=source[key]
                 a=against[key]
                 count+=1
+                if s==a:
+                    score+=40*len(s)
+                    continue
+                
                 if key=="names":
                     score+=comparenames(s,a)
                 elif key=="numbers":
@@ -2093,12 +2096,7 @@ class EntryMatcher:
 
 def comparenames(s,a):
     "Give a score on two names"
-    sm=difflib.SequenceMatcher()
-    sm.set_seq1(nameparser.formatsimplename(s[0]))
-    sm.set_seq2(nameparser.formatsimplename(a[0]))
-                    
-    r=(sm.ratio()-0.6)*10
-    return r
+    return (jarowinkler(nameparser.formatsimplename(s[0]), nameparser.formatsimplename(a[0]))-0.6)*10
 
 def cleanurl(url, mode="compare"):
     """Returns lowercase url with the "http://" prefix removed and in lower case
@@ -2129,16 +2127,13 @@ def comparenumbers(s,a):
 
     """
 
-    sm=difflib.SequenceMatcher()
     ss=[cleannumber(x['number']) for x in s]
     aa=[cleannumber(x['number']) for x in a]
 
     candidates=[]
     for snum in ss:
-        sm.set_seq2(snum)
         for anum in aa:
-            sm.set_seq1(anum)
-            candidates.append( (sm.ratio(), snum, anum) )
+            candidates.append( (jarowinkler(snum, anum), snum, anum) )
 
     candidates.sort()
     candidates.reverse()
@@ -2156,16 +2151,13 @@ def comparenumbers(s,a):
 
 def comparefields(s,a,valuekey,threshold=0.8,lookat=3):
     """Compares the valuekey field in source and against lists returning a score for closeness of match"""
-    sm=difflib.SequenceMatcher()
     ss=[x[valuekey] for x in s if x.has_key(valuekey)]
     aa=[x[valuekey] for x in a if x.has_key(valuekey)]
 
     candidates=[]
     for sval in ss:
-        sm.set_seq2(sval)
         for aval in aa:
-            sm.set_seq1(aval)
-            candidates.append( (sm.ratio(), sval, aval) )
+            candidates.append( (jarowinkler(sval, aval), sval, aval) )
 
     candidates.sort()
     candidates.reverse()
