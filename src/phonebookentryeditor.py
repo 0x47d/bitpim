@@ -831,7 +831,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         Returns a tuple of (path, settings).  path corresponds
         to the hierarchy with an editor (eg a panel contains a
         radiobox contains the radio button widget).  settings
-        means something to L{SetWidgetPathAndSettings).  For example,
+        means something to L{SetWidgetPathAndSettings}.  For example,
         if the widget is a text widget it contains the current insertion
         point and selection."""
         # we find where the control is in the hierarchy of widgetfrom
