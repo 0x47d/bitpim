@@ -33,33 +33,45 @@ NUMGROUPS=4
 # returns or line feeds.
 
 PACKET phonenumber:
-    * SAMSTRING {'quotechar': None} number
-    * SAMINT secret
+    * SAMSTRING {'quotechar': None, 'default': ""} +number
+    * SAMINT {'default': 0} +secret
 
 PACKET phonebookslotresponse:
     * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
-    * phonebookentry entry
+    * pbentry entry
 
-PACKET phonebookentry:
+PACKET pbentry:
     * SAMINT slot "Internal Slot"
     * SAMINT uslot "User Slot, Speed dial"
     * SAMINT group
     * SAMINT ringtone
     * SAMSTRING name
     * SAMINT speeddial "Which phone number assigned to speed dial uslot"
-    * SAMINT dunno1
-    * LIST {'length': NUMPHONENUMBERS, 'elementclass': phonenumber} numbers
-    * SAMSTRING {'quotechar': None} dunno3
-    * SAMSTRING {'quotechar': None} dunno4
+    * SAMINT {'default': 0} +dunno1
+    * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
+    * SAMSTRING {'quotechar': None, 'default': ""} +dunno3
+    * SAMSTRING {'quotechar': None, 'default': ""} +dunno4
     * SAMSTRING email
     * SAMSTRING url
-    * SAMDATE birthday
-    * SAMINT {'default': 20} wallpaper
-    * SAMTIME {'terminator': None} timestamp "Use terminator None for last item"
+    * SAMDATE {'default': ""} +birthday
+    * SAMINT {'default': 20} +wallpaper
+    * SAMTIME {'terminator': None, 'default': (1980,1,1,12,0,0)} +timestamp "Use terminator None for last item"
+
 PACKET phonebookslotrequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKR='} +command
     * SAMINT {'terminator': None} +slot "Internal Slot"
 
+PACKET phonebooksloterase:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW='} +command
+    * SAMINT {'terminator': None} +slot "Internal Slot"
+
+PACKET phonebookslotupdaterequest:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
+    * pbentry entry
+    
+PACKET phonebookslotupdateresponse:
+    * UKNOWN pad
+    
 PACKET groupnamerequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBGRR='} +command
     * SAMINT {'terminator': None} +gid "Group #"
@@ -97,7 +109,7 @@ PACKET esnresponse:
     * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
     * SAMSTRING {'quotechar': None, 'terminator': None} esn
 
-PACKET pbentry:
+PACKET filepbentry:
     1 UINT  dunno1
     1 UINT  dunno2
     1 UINT  dunno3
@@ -127,7 +139,7 @@ PACKET pbentry:
 
 PACKET pbbook:
     * pbentry dummy
-    * LIST  { 'length': 300, 'elementclass': pbentry } +entry
+    * LIST  { 'length': 300, 'elementclass': filepbentry } +entry
 
 PACKET image:
     1 UINT inuse
