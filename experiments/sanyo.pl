@@ -580,7 +580,7 @@ sub packetdump {
 
     if($direction == 2) {
 	if($len > 6900) {
-	    $packdesc = "calllerid";
+	    $packdesc = "callerid";
 	} elsif ($len > 3900) {
 	    $packdesc = "pbsort";
 	} else {
