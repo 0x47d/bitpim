@@ -473,18 +473,26 @@ class codegen:
         print >>out, indent(2)+"# What was supplied to this function"
         print >>out, indent(2)+"dict.update(kwargs)"
         print >>out, indent(2)+"# Parent constructor"
-        print >>out, indent(2)+"super(%s,self).__init__(**kwargs)"%(namestuff[1],)
+        print >>out, indent(2)+"super(%s,self).__init__(**dict)"%(namestuff[1],)
         fieldlist=[]
         for f in fields:
             if f[0]==tokens.FIELD:
                 fieldlist.append(f[1])
-        print >>out, indent(2)+"# Take a look at arguments supplied and apply them"
+        print >>out, indent(2)+"# What fields do we have?"
         print >>out, indent(2)+"self.__fields="+`fieldlist`
-        print >>out, indent(2)+"keys=dict.keys()"
+        print >>out, indent(2)+"if self._ismostderived(%s):" % (classname,)
+        print >>out, indent(3)+"self._update(args,dict)"
+        print >>out, "\n"
+        # update function
+        print >>out, indent()+"def _update(self, args, kwargs):"
+        print >>out, indent(2)+"super(%s,self)._update(args,kwargs)"%(namestuff[1],)
+        print >>out, indent(2)+"keys=kwargs.keys()"
         print >>out, indent(2)+"for key in keys:"
         print >>out, indent(3)+"if key in self.__fields:"
-        print >>out, indent(4)+"setattr(self, key, dict[key])"
-        print >>out, indent(4)+"del dict[key]"
+        print >>out, indent(4)+"setattr(self, key, kwargs[key])"
+        print >>out, indent(4)+"del kwargs[key]"
+        print >>out, indent(2)+"# Were any unrecognized kwargs passed in?"
+        print >>out, indent(2)+"self._complainaboutunusedargs(%s,kwargs)" % (namestuff[1],)
         # if only field, pass stuff on to it
         if len(fields)==1:
             print >>out, indent(2)+"if len(args):"
@@ -496,14 +504,12 @@ class codegen:
             for xx in 4,5:
                 if f[xx] is not None:
                     print >>out, indent(3)+"dict2.update("+f[xx]+")"
-            print >>out, indent(3)+"dict2.update(dict)"
-            print >>out, indent(3)+"dict=dict2"
+            print >>out, indent(3)+"dict2.update(kwargs)"
+            print >>out, indent(3)+"kwargs=dict2"
             print >>out, indent(3)+"self.__field_%s=%s(*args,**dict2)" % (f[1],f[3])
         # else error if any args
         else:
             print >>out, indent(2)+"if len(args): raise TypeError('Unexpected arguments supplied')"
-        print >>out, indent(2)+"# Were any unrecognized kwargs passed in?"
-        print >>out, indent(2)+"self._complainaboutunusedargs(%s,dict)" % (namestuff[1],)
         print >>out, indent(2)+"# Make all P fields that haven't already been constructed"
         for f in fields:
             if f[0]==tokens.FIELD and f[2]=='P':
@@ -520,7 +526,8 @@ class codegen:
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
-                    print >>out, indent(i)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
+                    print >>out, indent(i)+"try: self.__field_%s" % (f[1],)
+                    print >>out, indent(i)+"except:"
                     self.makefield(out, i+1, f, isreading=False)
                 print >>out, indent(i)+"sz+=self.__field_"+f[1]+".packetsize()"
             elif f[0]==tokens.CONDITIONALSTART:
@@ -540,7 +547,8 @@ class codegen:
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
-                    print >>out, indent(i)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
+                    print >>out, indent(i)+"try: self.__field_%s" % (f[1],)
+                    print >>out, indent(i)+"except:"
                     self.makefield(out, i+1, f, isreading=False)
                 print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buf)"
             elif f[0]==tokens.CONDITIONALSTART:
@@ -578,12 +586,14 @@ class codegen:
                 # get
                 print >>out, indent()+"def __getfield_%s(self):" % (f[1],)
                 if '+' in f[7]:
-                    print >>out, indent(2)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
+                    print >>out, indent(2)+"try: self.__field_%s" % (f[1],)
+                    print >>out, indent(2)+"except:"
                     self.makefield(out, 3, f)
                 print >>out, indent(2)+"return self.__field_%s.getvalue()\n" % (f[1],)
                 # set
                 print >>out, indent()+"def __setfield_%s(self, value):" % (f[1],)
                 self.makefield(out, 2, f, "value,", isreading=False)
+                print >>out, ""
                 # del
                 print >>out, indent()+"def __delfield_%s(self): del self.__field_%s\n" % (f[1], f[1])
                 # Make it a property
