@@ -19,6 +19,7 @@ import cStringIO
 
 # wx. modules
 import wx
+import wx.html
 import wx.lib.mixins.listctrl
 
 # my modules
@@ -497,7 +498,7 @@ class CommPortDialog(wx.Dialog):
         # the listbox and textbox in a splitter
         splitter=wx.SplitterWindow(p, self.ID_SASH, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.lb=wx.ListBox(splitter, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        self.tb=bphtml.HTMLWindow(splitter, self.ID_TEXTBOX, size=wx.Size(400,400)) # default style is auto scrollbar
+        self.tb=wx.html.HtmlWindow(splitter, self.ID_TEXTBOX, size=wx.Size(400,400)) # default style is auto scrollbar
         splitter.SplitHorizontally(self.lb, self.tb, sashposition)
 
         # the buttons
@@ -712,6 +713,10 @@ class FileViewNew(bpmedia.MediaDisplayer):
         if indexkey not in result:
             result[indexkey]={}
         return result
+
+    def OnRefresh(self,_=None):
+        self.populate(self._data)
+
 
 class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
     # ::TODO:: be resilient to conversion failures in ringer

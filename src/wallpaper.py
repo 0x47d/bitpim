@@ -157,6 +157,9 @@ class WallpaperView(guiwidgets.FileViewNew):
             self.modified=True
         
     def populate(self, dict):
+        if self._data['wallpaper-index']!=dict['wallpaper-index']:
+            self._data['wallpaper-index']=dict['wallpaper-index'].copy()
+            self.modified=True
         newitems=[]
         existing=self.GetAllItems()
         keys=dict['wallpaper-index'].keys()
@@ -170,8 +173,8 @@ class WallpaperView(guiwidgets.FileViewNew):
             newentry={}
             # look through existing to see if we already have a match
             for i in existing:
-                if entry['name']==existing[i]['name']:
-                    newentry.update(existing[i])
+                if entry['name']==i['name']:
+                    newentry.update(i)
                     break
             # fill in newentry
             newentry.update(entry)
