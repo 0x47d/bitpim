@@ -153,12 +153,10 @@ class GetPhoneDialog(wx.Dialog):
 
     # type of action ("pretty name", "name used to query profile")
     types= ( ("Add", MERGE),
-             ("Replace", OVERWRITE))
+             ("Replace All", OVERWRITE))
 
     HELPID=helpids.ID_GET_PHONE_DATA
 
-    # ::TODO:: ok button should be grayed out unless at least one category is
-    # picked
     def __init__(self, frame, title, id=-1):
         wx.Dialog.__init__(self, frame, id, title,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
@@ -191,7 +189,7 @@ class GetPhoneDialog(wx.Dialog):
                 if not self._dowesupport(source, self.actions[0][1], tval):
                     self.rb[-1].Enable(False)
                     self.rb[-1].SetValue(False)
-                gs.Add(self.rb[-1], 0, wx.EXPAND|wx.ALIGN_CENTRE)
+                gs.Add(self.rb[-1], 0, wx.ALIGN_CENTRE)
 
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
@@ -236,7 +234,7 @@ class GetPhoneDialog(wx.Dialog):
 
     # this is what BitPim itself supports - the phones may support a subset
     _notsupported=(
-        ('phonebook', 'read', MERGE), # sort of is
+        # ('phonebook', 'read', MERGE), # sort of is
         ('calendar', 'read', MERGE),
         ('wallpaper', 'read', MERGE),
         ('ringtone', 'read', MERGE))
