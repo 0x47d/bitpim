@@ -1631,10 +1631,11 @@ def OnFileImporteGroupwareContacts(parent):
 def OnFileImportOutlookCalendar(parent):
     import native.outlook
     import outlook_calendar
+    import pubsub
     dlg=outlook_calendar.OutlookImportCalDialog(parent, -1,
                                                 'Import Outlook Calendar')
-    if dlg.ShowModal()==wx.ID_OK:
-        import pubsub
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
         # ask phonebook to merge our categories
         pubsub.publish(pubsub.MERGE_CATEGORIES,
                        dlg.get_categories()[:])
@@ -1642,14 +1643,27 @@ def OnFileImportOutlookCalendar(parent):
         calendar_r={ 'calendar': dlg.get() }
         parent.calendarwidget.populate(calendar_r)
         parent.calendarwidget.populatefs(calendar_r)
+    elif res==outlook_calendar.OutlookImportCalDialog.ID_ADD:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # get existing data
+        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
+        # and add the imported data
+        calendar_r.update(dlg.get())
+        # and save it
+        parent.calendarwidget.populate({ 'calendar': calendar_r } )
+        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
+    # all done
     dlg.Destroy()
     native.outlook.releaseoutlook()
 
 def OnFileImportVCal(parent):
     import vcal_calendar
+    import pubsub
     dlg=vcal_calendar.VcalImportCalDialog(parent, -1, 'Import vCalendar')
-    if dlg.ShowModal()==wx.ID_OK:
-        import pubsub
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
         # ask phonebook to merge our categories
         pubsub.publish(pubsub.MERGE_CATEGORIES,
                        dlg.get_categories()[:])
@@ -1657,6 +1671,18 @@ def OnFileImportVCal(parent):
         calendar_r={ 'calendar': dlg.get() }
         parent.calendarwidget.populate(calendar_r)
         parent.calendarwidget.populatefs(calendar_r)
+    elif res==vcal_calendar.VcalImportCalDialog.ID_ADD:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # get existing data
+        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
+        # and add the imported data
+        calendar_r.update(dlg.get())
+        # and save it
+        parent.calendarwidget.populate({ 'calendar': calendar_r } )
+        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
+    # all done
     dlg.Destroy()
         
 ###

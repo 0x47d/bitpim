@@ -387,6 +387,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         ('alarm', 'Alarm', 80, common_calendar.bp_alarm_str),
         ('categories', 'Category', 150, common_calendar.category_str)
         ]
+    ID_ADD=wx.NewId()
     def __init__(self, parent, id, title):
         self.__oc=VCalendarImportData()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
@@ -415,12 +416,14 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         id_import=wx.NewId()
         hbs.Add(wx.Button(self, id_import, 'Import'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_OK, 'Replace All'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, self.ID_ADD, 'Add'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         id_filter=wx.NewId()
         hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)       
         main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, id_import, self.OnImport)
         wx.EVT_BUTTON(self, id_filter, self.OnFilter)
+        wx.EVT_BUTTON(self, self.ID_ADD, self.OnAdd)
 
     def OnImport(self, evt):
         wx.BeginBusyCursor()
@@ -446,9 +449,11 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
         dlg.set(self.__oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
-            print dlg.get()
             self.__oc.set_filter(dlg.get())
             self.populate(self.__oc.get_display_data())
+
+    def OnAdd(self, evt):
+        self.EndModal(self.ID_ADD)
 
     def get(self):
         return self.__oc.get()
