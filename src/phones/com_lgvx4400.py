@@ -110,7 +110,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         @param results: places results in this dict
         @param maps: the list of index files and locations
         @param key: key to place results in
-g        """
+        """
+
+        self.log("Reading "+key+" indices")
         media={}
 
         # builtins
@@ -131,7 +133,7 @@ g        """
             # (we don't do verify on the camera since we assume it is always correct)
             index=self.getcameraindex()
             for i in index:
-                media[i+self.cameraoffset]=index[i]
+                media[i+offset]=index[i]
 
         results[key]=media
         return media
@@ -140,11 +142,8 @@ g        """
         return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
 
     def getringtoneindices(self, results):
-        # ringtone index
-        self.log("Reading ringtone indices")
-        results['ringtone-index']=self.getindex(self.ringerindexfilename)
-        return results
-        
+        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
@@ -437,23 +436,6 @@ g        """
         0x15: 'yearly'
         }
     
-    def writeindex(self, indexfile, index, maxentries=30):
-        keys=index.keys()
-        keys.sort()
-        writing=min(len(keys), maxentries)
-        if len(keys)>maxentries:
-            self.log("Warning:  You have too many entries (%d) for index %s.  Only writing out first %d." % (len(keys), indexfile, writing))
-        ifile=self.protocolclass.indexfile()
-        ifile.numactiveitems=writing
-        for i in keys[:writing]:
-            entry=self.protocolclass.indexentry()
-            entry.index=i
-            entry.name=index[i]
-            ifile.items.append(entry)
-        buf=prototypes.buffer()
-        ifile.writetobuffer(buf)
-        self.logdata("Writing %d index entries to %s" % (writing,indexfile), buf.getvalue(), ifile)
-        self.writefile(indexfile, buf.getvalue())
 
     def getindex(self, indexfile):
         "Read an index file"
@@ -471,25 +453,6 @@ g        """
                 index[i.index]=i.name
         return index
         
-    def getprettystuff(self, result, directory, datakey, indexfile, indexkey):
-        """Get wallpaper/ringtone etc"""
-        # we have to be careful because files from other stuff could be
-        # in the directory.  Consequently we ONLY consult the index.  However
-        # the index may be corrupt so we cope with it having entries for
-        # files that don't exist
-        index=self.getindex(indexfile)
-
-        stuff={}
-        for i in index:
-            try:
-                file=self.getfilecontents(directory+"/"+index[i])
-                stuff[index[i]]=file
-            except com_brew.BrewNoSuchFileException:
-                self.log("It was in the index, but not on the filesystem")
-        result[datakey]=stuff
-
-        return result
-
     def getmedia(self, maps, result, key):
         media={}
         # the maps
@@ -517,115 +480,180 @@ g        """
     def getwallpapers(self, result):
         return self.getmedia(self.imagelocations, result, 'wallpapers')
 
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
 
-    def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey, merge):
-        f=data[stuffkey].keys()
-        f.sort()
-        self.log("Saving %s.  Merge=%d.  Files supplied %s" % (stuffkey, merge, ", ".join(f)))
-        self.mkdirs(directory)
+    def savewallpapers(self, results, merge):
+        return self.savemedia('wallpapers', 'wallpaper-index', self.imagelocations, results, merge, self.getwallpaperindices)
 
-        # get existing index
-        index=self.getindex(indexfile)
+    def saveringtones(self, results, merge):
+        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
 
-        # Now the only files we care about are those named in the index and in data[stuffkey]
-        # The operations below are specially ordered so that we don't reuse index keys
-        # from existing entries (even those we are about to delete).  This seems like
-        # the right thing to do.
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+        """Actually saves out the media
 
-        # Get list of existing files
-        entries=self.getfilesystem(directory)
+        @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
+        @param mediaindexkey:  index key (eg 'wallpaper-index')
+        @param maps: list index files and locations
+        @param results: results dict
+        @param merge: are we merging or overwriting what is there?
+        @param reindexfunction: the media is re-indexed at the end.  this function is called to do it
+        """
+        print results.keys()
+        # I humbly submit this as the longest function in the bitpim code ...
+        # wp and wpi are used as variable names as this function was originally
+        # written to do wallpaper.  it works just fine for ringtones as well
+        wp=results[mediakey].copy()
+        wpi=results[mediaindexkey].copy()
+        # remove builtins
+        for k in wpi.keys():
+            if wpi[k]['origin']=='builtin':
+                del wpi[k]
 
-        # if we aren't merging, delete all files in index we aren't going to overwrite
-        # we do this first to make space for new entrants
-        if not merge:
-            for i in index:
-                if self._fileisin(entries, index[i]) and index[i] not in data[stuffkey]:
-                    fullname=directory+"/"+index[i]
-                    self.rmfile(fullname)
-                    del entries[fullname]
+        # sort results['mediakey'+'-index'] into origin buckets
 
-        # Write out the files
-        files=data[stuffkey]
-        keys=files.keys()
-        keys.sort()
-        for file in keys:
-            fullname=directory+"/"+file
-            self.writefile(fullname, files[file])
-            entries[fullname]={'name': fullname}
-                    
-        # Build up the index
-        for i in files:
-            # entries in the existing index take priority
-            if self._getindexof(index, i)<0:
-                # Look in new index
-                num=self._getindexof(data[stuffindexkey], i)
-                if num<0 or num in index: # if already in index, allocate new one
-                    num=self._firstfree(index, data[stuffindexkey])
-                assert not index.has_key(num)
-                index[num]=i
+        # build up list into init
+        init={}
+        for offset,indexfile,location,type,maxentries in self.imagelocations:
+            init[type]={}
+            for k in wpi.keys():
+                if wpi[k]['origin']==type:
+                    index=k-offset
+                    name=wpi[k]['name']
+                    data=None
+                    del wpi[k]
+                    for w in wp.keys():
+                        if wp[w]['name']==name:
+                            data=wp[w]['data']
+                            del wp[w]
+                    if not merge and data is None:
+                        # delete the entry
+                        continue
+                    init[type][index]={'name': name, 'data': data}
 
-        # Delete any duplicate index entries, keeping lowest numbered one
-        seen=[]
-        keys=index.keys()
-        keys.sort()
-        for i in keys:
-            if index[i] in seen:
-                del index[i]
-            else:
-                seen.append( index[i] )
+        # init now contains everything from wallpaper-index
+        print init.keys()
+        # now look through wallpapers and see if anything remaining was assigned a particular
+        # origin
+        for w in wp.keys():
+            o=wp[w].get("origin", "")
+            if o is not None and len(o) and o in init:
+                idx=-1
+                while idx in init[o]:
+                    idx-=1
+                init[o][idx]=wp[w]
+                del wp[w]
+            
+        # we now have init[type] with the entries and index number as key (negative indices are
+        # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
+        for offset,indexfile,location,type,maxentries in self.imagelocations:
+            if type=="camera": break
+            index=init[type]
+            dirlisting=self.getfilesystem(location)
+            # rename keys to basename
+            for i in dirlisting.keys():
+                dirlisting[i[len(location)+1:]]=dirlisting[i]
+                del dirlisting[i]
+            # what we will be deleting
+            dellist=[]
+            if not merge:
+                # get existing wpi for this location
+                wpi=results[mediaindexkey]
+                for i in wpi:
+                    entry=wpi[i]
+                    if entry['origin']==type:
+                        # it is in the original index, are we writing it back out?
+                        delit=True
+                        for idx in index:
+                            if index[idx]['name']==entry['name']:
+                                delit=False
+                                break
+                        if delit:
+                            if entry['name'] in dirlisting:
+                                dellist.append(entry['name'])
+                            else:
+                                print "%s in %s index but not filesystem" % (entry['name'], type)
+            # go ahead and delete unwanted files
+            print "deleting",dellist
+            for f in dellist:
+                self.rmfile(location+"/"+f)
+            #  slurp up any from wp we can take
+            while len(index)<maxentries and len(wp):
+                idx=-1
+                while idx in index:
+                    idx-=1
+                k=wp.keys()[0]
+                index[idx]=wp[k]
+                del wp[k]
+            # normalise indices
+            index=self._normaliseindices(index)  # hey look, I called a function!
+            # move any overflow back into wp
+            if len(index)>maxentries:
+                keys=index.keys()
+                keys.sort()
+                for k in keys[maxentries:]:
+                    idx=-1
+                    while idx in wp:
+                        idx-=1
+                    wp[idx]=index[k]
+                    del index[k]
+            # write out the new index
+            keys=index.keys()
+            keys.sort()
+            ifile=self.protocolclass.indexfile()
+            ifile.numactiveitems=len(keys)
+            for k in keys:
+                entry=self.protocolclass.indexentry()
+                entry.index=k
+                entry.name=index[k]['name']
+                ifile.items.append(entry)
+            while len(ifile.items)<maxentries:
+                ifile.items.append(self.protocolclass.indexentry())
+            buffer=prototypes.buffer()
+            ifile.writetobuffer(buffer)
+            self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
+            self.writefile(indexfile, buffer.getvalue())
+            # Write out files - we compare against existing dir listing and don't rewrite if they
+            # are the same size
+            for k in keys:
+                entry=index[k]
+                data=entry.get("data", None)
+                if data is None:
+                    if entry['name'] not in dirlisting:
+                        self.log("Logic error.  I have no data for "+entry['name']+" and it isn't already in the filesystem")
+                    continue
+                if entry['name'] in dirlisting and len(data)==dirlisting[entry['name']]['size']:
+                    self.log("Skipping writing %s/%s as there is already a file of the same length" % (location,entry['name']))
+                    continue
+                self.writefile(location+"/"+entry['name'], data)
+        # did we have too many
+        if len(wp):
+            for k in wp:
+                self.log("Unable to put %s on the phone as there weren't any spare index entries" % (wp[k]['name'],))
+                
+        # Note that we don't write to the camera area
 
-        # Verify all index entries are present
-        for i in index.keys():
-            if not self._fileisin(entries, index[i]):
-                del index[i]
-
-        # Write out index
-        self.writeindex(indexfile, index)
-
-        if stuffkey=='wallpapers':
-            self.getwallpaperindices(data)
-        else:
-            self.getringtoneindices(data)
-
-        del data[stuffkey]
+        # tidy up - reread indices
+        del results[mediakey] # done with it
+        reindexfunction(results)
         return data
 
 
-    def savewallpapers(self, data, merge):
-        return self.saveprettystuff(data, "brew/shared", self.wallpaperindexfilename,
-                                    'wallpapers', 'wallpaper-index', merge)
-        
-    def saveringtones(self,data, merge):
-        return self.saveprettystuff(data, "user/sound/ringer", self.ringerindexfilename,
-                                    'ringtone', 'ringtone-index', merge)
-
-
-    def _fileisin(self, entries, file):
-        # see's if file is in entries (entries has full pathname, file is just filename)
-        for i in entries:
-            if com_brew.brewbasename(entries[i]['name'])==file:
-                return True
-        return False
-
-    def _getindexof(self, index, file):
-        # gets index number of file from index
-        for i in index:
-            if index[i]==file:
-                return i
-        return -1
-
-    def _firstfree(self, index1, index2):
-        # finds first free index number taking into account both indexes
-        l=index1.keys()
-        l.extend(index2.keys())
-        for i in range(0,255):
-            if i not in l:
-                return i
-        return -1
-
-    def getringtones(self, result):
-        return self.getprettystuff(result, "user/sound/ringer", "ringtone", self.ringerindexfilename,
-                                   "ringtone-index")
+    def _normaliseindices(self, d):
+        "turn all negative keys into positive ones for index"
+        res={}
+        keys=d.keys()
+        keys.sort()
+        keys.reverse()
+        for k in keys:
+            if k<0:
+                for c in range(999999):
+                    if c not in keys and c not in res:
+                        break
+                res[c]=d[k]
+            else:
+                res[k]=d[k]
+        return res
 
     def extractphonebookentry(self, entry, fundamentals):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
