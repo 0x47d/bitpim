@@ -2092,8 +2092,6 @@ class EntryMatcher:
                     score+=comparefields(s,a,"url")
                 elif key=="emails":
                     score+=comparefields(s,a,"email")
-                elif key=="urls":
-                    score+=comparefields(s,a,"url")
                 elif key=="addresses":
                     score+=compareallfields(s,a, ("company", "street", "street2", "city", "state", "postalcode", "country"))
                 else:
