@@ -56,6 +56,28 @@ PACKET readfileblockresponse:
     2 UINT datasize
     * DATA {'sizeinbytes': self.datasize} data
     
+PACKET listdirectoriesrequest:
+    * requestheader {'command': 0x02} +header
+    * STRING {'terminator': 0, 'pascal': True} dirname
+
+PACKET listdirectoriesresponse:
+    * responseheader header
+    2 UINT numentries
+    2 UINT datalen
+    * LIST {'length': self.numentries} items:
+        * STRING subdir
     
-    
-    
+PACKET listfilerequest:
+    "This gets one directory entry (files only) at a time"
+    * requestheader {'command': 0x0b} +header
+    4 UINT entrynumber
+    * STRING {'terminator': 0, 'pascal': True} dirname
+
+PACKET listfileresponse:
+    * responseheader header
+    4 UINT entrynumber  
+    4 UNKNOWN unknown1  
+    4 UINT date         
+    4 UINT size         
+    5 UNKNOWN unknown2   
+    * STRING {'terminator': None, 'pascal': True} filename # no terminator for some reason

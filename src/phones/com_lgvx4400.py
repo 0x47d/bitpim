@@ -605,40 +605,33 @@ class Phone:
 
         self.log("Listing dir '"+dir+"'")
         
-        d=chr(len(dir)+1)+dir+"\x00"
-        d2=d
-        if len(dir)==0: # to list files on root, must start with /
-            d2=chr(len("/")+1)+"/"+"\x00"
-
         # self.log("file listing 0x0b command")
-        for i in range(0,1000):
-            data=makelsb(i,4)+d2
+        for i in range(10000):
             try:
-                res=self.sendbrewcommand(0x0b, data)
-                name=res[0x19:]
-                results[name]={ 'name': name, 'type': 'file',
-                                'size': readlsb(res[0x0f:0x13]),
-                                'data': readhex(res[:0x19]) }
-                date=readlsb(res[0x0b:0x0f])
-                if date==0:
-                    results[name]['date']=(0, "")
+                req=p_brew.listfilerequest()
+                req.entrynumber=i
+                if len(dir): req.dirname=dir
+                else: req.dirname="/"
+                res=self.newsendbrewcommand(req,p_brew.listfileresponse)
+                results[res.filename]={ 'name': res.filename, 'type': 'file',
+                                'size': res.size }
+                if res.date==0:
+                    results[res.filename]['date']=(0, "")
                 else:
-                    date+=self._brewepochtounix
-                    results[name]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                    date=res.date+self._brewepochtounix
+                    results[res.filename]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
 
             except BrewNoMoreEntriesException:
                 break
 
         # i tried using 0x0a command to list subdirs but that fails when
         # mingled with 0x0b commands
-        # self.log("dir listing 0x02 command")
-        res=self.sendbrewcommand(0x02, d)
-        pos=7
-        while pos<len(res):
-            subdir=readstring(res[pos:])
-            pos=pos+len(subdir)+1
-            if len(subdir)==0:
-                break
+        req=p_brew.listdirectoriesrequest()
+        req.dirname=dir
+
+        res=self.newsendbrewcommand(req, p_brew.listdirectoriesresponse)
+        for i in range(res.numentries):
+            subdir=res.items[i].subdir
             if len(dir):
                 subdir=dir+"/"+subdir
             results[subdir]={ 'name': subdir, 'type': 'directory' }
@@ -908,9 +901,24 @@ class Phone:
         data=self.comm.readuntil(self.terminator, logsuccess=False)
         self.comm.success=True
         data=self.unescape(data)
-        data=data[:-3] # take off crc and terminator ::TODO:: check the crc
-        buffer=prototypes.buffer(data)
+        # take off crc and terminator ::TODO:: check the crc
+        data=data[:-3]
+        
+        # log it
         self.logdata("brew response", data, responseclass)
+
+        # look for errors
+        if data[2]!="\x00":
+                err=ord(data[2])
+                if err==0x1c:
+                    raise BrewNoMoreEntriesException()
+                if err==0x08:
+                    raise BrewNoSuchDirectoryException()
+                if err==0x06:
+                    raise BrewNoSuchFileException()
+                raise BrewCommandException(err)
+        # parse data
+        buffer=prototypes.buffer(data)
         res=responseclass()
         res.readfrombuffer(buffer)
         return res
