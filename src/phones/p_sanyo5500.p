@@ -32,6 +32,7 @@ _NUMCALLALARMSLOTS=15
 #fa 00 02 3c 0f   -  1034 bytes total
 
 #fa 00 02 28 0c
+#fa 00 03 for writing
 
 # Eventually move to p_sanyo.p because this header is
 # used by many phones.
@@ -41,6 +42,11 @@ PACKET sanyofaheader:
 
 PACKET sanyoheader:
     * sanyofaheader {'faset': 0x02} +preamble
+    1 UINT command
+    1 UINT packettype
+
+PACKET sanyowriteheader:
+    * sanyofaheader {'faset': 0x03} +preamble
     1 UINT command
     1 UINT packettype
 
@@ -59,6 +65,11 @@ PACKET phonebookslotrequest:
     2 UINT slot
     512 UNKNOWN +pad
 #    1024 UNKNOWN +pad
+
+PACKET phonebookslotupdaterequest:
+    * sanyowriteheader {'packettype': 0x0c, 'command': 0x28} +header
+    * phonebookentry entry
+    569 UNKNOWN +pad
 
 PACKET phonenumber:
     1 UINT {'default': 0} +number_len
@@ -93,6 +104,11 @@ PACKET bufferpartresponse:
     * sanyoheader header
     1024 DATA data
     2 UNKNOWN pad
+
+PACKET bufferpartupdaterequest:
+    * sanyowriteheader {'packettype': 0x0f} +header
+    1024 DATA data
+    2 UNKNOWN +pad
 
 PACKET calleridbuffer:
     "Index so that phone can show a name instead of number"
