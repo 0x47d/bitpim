@@ -218,11 +218,11 @@ class SanyoPhonebook:
         data=buffer.getvalue()
         self.logdata("Sanyo phonebook request", data, request)
         firsttwo=data[:2]
-        data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
+        data=common.pppescape(data+common.crcs(data))+common.pppterminator
         isendretry=numsendretry
         while isendretry>=0:
             try:
-                rdata=self.comm.writethenreaduntil(data, False, self.pbterminator, logreaduntilsuccess=False, numfailures=numretry)
+                rdata=self.comm.writethenreaduntil(data, False, common.pppterminator, logreaduntilsuccess=False, numfailures=numretry)
                 break
             except com_phone.modeignoreerrortypes:
                 if isendretry>0:
@@ -241,14 +241,14 @@ class SanyoPhonebook:
         # turned off the phone and back on again.  So if there is more
         # than one 7e in the escaped data we should start after the
         # second to last one
-        d=rdata.rfind(self.pbterminator,0,-1)
+        d=rdata.rfind(common.pppterminator,0,-1)
         if d>=0:
             self.log("Multiple Sanyo packets in data - taking last one starting at "+`d+1`)
             self.logdata("Original Sanyo data", origdata, None)
             rdata=rdata[d+1:]
 
         # turn it back to normal
-        data=com_brew.unescape(rdata)
+        data=common.pppunescape(rdata)
 
         # Sometimes there is other crap at the beginning.  But it might
         # be a Sanyo error byte.  So strip off bytes from the beginning
@@ -259,7 +259,7 @@ class SanyoPhonebook:
         crcok=False
         for i in range(0,d+1):
             trydata=data[i:-3]
-            if com_brew.crcs(trydata)==crc:
+            if common.crcs(trydata)==crc:
                 crcok=True
                 break
 
