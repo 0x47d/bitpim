@@ -371,22 +371,26 @@ class Phone:
 
     def getfilesystem(self, dir="", recurse=0):
         results={}
-        
+
         self.log("Getting dir '"+dir+"'")
         self.setmode(self.MODEBREW)
+
         
         d=chr(len(dir)+1)+dir+"\x00"
+        d2=d
+        if len(dir)==0: # to list files on root, must start with /
+            d2=chr(len("/")+1)+"/"+"\x00"
+        
 
         # self.log("file listing 0x0b command")
-        if len(dir): # phone doesn't respond to listing files of root
-            for i in range(0,1000):
-                data=makelsb(i,4)+d
-                try:
-                    res=self.sendbrewcommand(0x0b, data)
-                    name=res[0x19:-3]
-                    results[name]={ 'name': name, 'type': 'file', 'data': readhex(res) }
-                except BrewNoMoreEntriesException:
-                    break
+        for i in range(0,1000):
+            data=makelsb(i,4)+d2
+            try:
+                res=self.sendbrewcommand(0x0b, data)
+                name=res[0x19:-3]
+                results[name]={ 'name': name, 'type': 'file', 'data': readhex(res) }
+            except BrewNoMoreEntriesException:
+                break
 
         # i tried using 0x0a command to list subdirs but that fails when
         # mingled with 0x0b commands
