@@ -244,8 +244,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         assert False, "Bad column "+`col`
 
     def GetAttr(self, row, col, another):
-        print row,col,another
-        return [self.evenattr, self.oddattr][row%2]
+        return [self.evenattr, self.oddattr][row%2].Clone()
 
 class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
