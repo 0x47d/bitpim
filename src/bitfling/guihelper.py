@@ -12,6 +12,9 @@
 import time
 import os
 import sys
+import StringIO
+import traceback
+
 
 import wx
 
@@ -39,6 +42,9 @@ class LogWindow(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self,parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
         self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE| wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
+        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
+        ta=wx.TextAttr(font=f)
+        self.tb.SetDefaultStyle(ta)
         self.sizer=wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.tb, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
@@ -59,7 +65,65 @@ class LogWindow(wx.Panel):
     def log(self, str):
         now=time.time()
         t=time.localtime(now)
-        self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
+        if str[0]=="<": # already has time etc stamps
+            self.outstandingtext+=str+"\r\n"
+        else:
+            self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
+
+    def logexception(self, excinfo=None):
+        str=formatexception(excinfo)
+        self.log(str)
+
+
+def formatexception(excinfo=None, lastframes=8):
+     """Pretty print exception, including local variable information.
+
+     See Python Cookbook, recipe 14.4.
+
+     @param excinfo: tuple of information returned from sys.exc_info when
+               the exception occurred.  If you don't supply this then
+               information about the current exception being handled
+               is used
+     @param lastframes: local variables are shown for these number of
+                  frames
+     @return: A pretty printed string
+               """
+     if excinfo is None:
+          excinfo=sys.exc_info()
+
+     s=StringIO.StringIO()
+     traceback.print_exception(*excinfo, **{'file': s})
+     tb=excinfo[2]
+
+     while True:
+          if not tb.tb_next:
+               break
+          tb=tb.tb_next
+     stack=[]
+     f=tb.tb_frame
+     while f:
+          stack.append(f)
+          f=f.f_back
+     stack.reverse()
+     if len(stack)>lastframes:
+          stack=stack[-lastframes:]
+     print >>s, "\nVariables by last %d frames, innermost last" % (lastframes,)
+     for frame in stack:
+          print >>s, ""
+          print >>s, "Frame %s in %s at line %s" % (frame.f_code.co_name,
+                                                    frame.f_code.co_filename,
+                                                    frame.f_lineno)
+          for key,value in frame.f_locals.items():
+               # filter out modules
+               if type(value)==type(sys):
+                    continue
+               print >>s,"%15s = " % (key,),
+               try:
+                    print >>s,`value`[:60]
+               except:
+                    print >>s,"(Exception occurred printing value)"
+     return s.getvalue()
+
 
 # Where to find bitmaps etc
 p=sys.path[0]

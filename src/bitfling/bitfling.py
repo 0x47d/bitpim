@@ -178,19 +178,21 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
         butadd=wx.Button(self, wx.NewId(), "Add ...")
         hbs.Add(butadd, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
-        butedit=wx.Button(self, wx.NewId(), "Edit ...")
-        butedit.Enable(False)
-        hbs.Add(butedit, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.butedit=wx.Button(self, wx.NewId(), "Edit ...")
+        self.butedit.Enable(False)
+        hbs.Add(self.butedit, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
-        butdelete=wx.Button(self, wx.NewId(), "Delete")
-        butdelete.Enable(False)
-        hbs.Add(butdelete, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.butdelete=wx.Button(self, wx.NewId(), "Delete")
+        self.butdelete.Enable(False)
+        hbs.Add(self.butdelete, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
         wx.EVT_BUTTON(self, butadd.GetId(), self.OnAddAuth)
+        wx.EVT_BUTTON(self, self.butedit.GetId(), self.OnEditAuth)
+        wx.EVT_BUTTON(self, self.butdelete.GetId(), self.OnDeleteAuth)
 
         # and the authorization listview
-        self.authlist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT)
+        self.authlist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT|wx.LC_SINGLE_SEL)
         self.authlist.InsertColumn(0, "User")
         self.authlist.InsertColumn(1, "Allowed Addresses")
         self.authlist.InsertColumn(2, "Expires")
@@ -203,11 +205,16 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
         self.itemDataMap={}
         wx.lib.mixins.listctrl.ColumnSorterMixin.__init__(self,3)
 
+        wx.EVT_LIST_ITEM_ACTIVATED(self.authlist, self.authlist.GetId(), self.OnEditAuth)
+        wx.EVT_LIST_ITEM_SELECTED(self.authlist, self.authlist.GetId(), self.OnAuthListItemFondled)
+        wx.EVT_LIST_ITEM_DESELECTED(self.authlist, self.authlist.GetId(), self.OnAuthListItemFondled)
+        wx.EVT_LIST_ITEM_FOCUSED(self.authlist, self.authlist.GetId(), self.OnAuthListItemFondled)
+
         # devices
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Devices"), wx.VERTICAL)
         buttoggle=wx.Button(self, wx.NewId(), "Toggle Allowed")
         bs.Add(buttoggle, 0, wx.ALL, 5)
-        self.devicelist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT)
+        self.devicelist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT|wx.LC_SINGLE_SEL)
         self.devicelist.InsertColumn(0, "Allowed")
         self.devicelist.InsertColumn(1, "Name")
         self.devicelist.InsertColumn(2, "Available")
@@ -231,7 +238,11 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
         if itemnum in self.itemDataMap:
             # find item by looking for ItemData, and set pos
             # to corresponding pos in list
-            raise Exception("need to implement this")
+            for i in range(self.authlist.GetItemCount()):
+                if self.authlist.GetItemData(i)==itemnum:
+                    pos=i
+                    break
+            assert pos!=-1
         v=self.mw.authinfo[itemnum]
         username=v[0]
         expires=v[2]
@@ -279,6 +290,42 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
                     break
         dlg.Destroy()
 
+    def OnDeleteAuth(self, _):
+        item=self._getselectedlistitem(self.authlist)
+        key=self.authlist.GetItemData(item)
+        del self.mw.authinfo[key]
+        self.authlist.DeleteItem(item)
+        self.mw.config.DeleteEntry("user-"+`key`)
+        self.mw.config.Flush()
+
+    def _getselectedlistitem(self, listctrl):
+        "Finds the selected item in a listctrl since the wx methods don't actually work"
+        i=-1
+        while True:
+            nexti=listctrl.GetNextItem(i, state=wx.LIST_STATE_SELECTED)
+            if nexti<0:
+                break
+            i=nexti
+            return i
+        return None
+
+    def OnAuthListItemFondled(self, _):
+        "Called whenever list items are selected, unselectected or similar fondling"
+        selitem=self._getselectedlistitem(self.authlist)
+        self.butedit.Enable(selitem is not None)
+        self.butdelete.Enable(selitem is not None)
+
+    def OnEditAuth(self, _):
+        "Called to edit the currently selected entry"
+        item=self._getselectedlistitem(self.authlist)
+        key=self.authlist.GetItemData(item)
+        username,password,expires,addresses=self.mw.authinfo[key]
+        dlg=AuthItemDialog(self, "Edit Entry", username=username, password=password, expires=expires, addresses=addresses)
+        if dlg.ShowModal()==wx.ID_OK:
+            username,password,expires,addresses=dlg.GetValue()
+            self.mw.authinfo[key]=username,password,expires,addresses
+            self._updateauthitemmap(key)
+        dlg.Destroy()
 
 class AuthItemDialog(wx.Dialog):
 
@@ -400,10 +447,15 @@ class MainWindow(wx.Frame):
         self.taskwin.GoAway()
         evt.Skip()
 
-    def OnXmlServerEvent(self, evt):
-        # do event processing here
-        # evt is instance of XmlServerEvent
-        pass
+    def OnXmlServerEvent(self, msg):
+        if msg.cmd=="log":
+            self.Log(msg.data)
+        elif msg.cmd=="logexception":
+            self.LogException(msg.data)
+        else:
+            assert False, "bad message "+`msg`
+            pass
+            
 
     def OnExitButton(self, _):
         self.Close(True)
@@ -413,6 +465,9 @@ class MainWindow(wx.Frame):
 
     def Log(self, text):
         self.lw.log(text)
+
+    def LogException(self, exc):
+        self.lw.logexception(exc)
 
     def GetCertificateFilename(self):
         """Return certificate filename
@@ -441,7 +496,12 @@ class MainWindow(wx.Frame):
             if self.xmlrpcserver is not None:
                 self.xmlrpcserver.Stop()
                 self.xmlrpcserver=None
+            if certfile is None:
+                self.Log("Unable to start as there is no certificate")
+            if port is None:
+                self.Log("Unable to start as there is no port configured")
             return
+        self.Log("Starting on port "+`port`)
         ctx=M2Crypto.SSL.Context("sslv23")
         ctx.load_cert(certfile)
         self.xmlrpcserver=XMLRPCService(self, host, port, ctx)
@@ -483,6 +543,12 @@ class XMLRPCService(xmlrpcstuff.Server):
     def __init__(self, mainwin, host, port, ctx):
         self.mainwin=mainwin
         xmlrpcstuff.Server.__init__(self, host, port, ctx)
+
+    def OnLog(self, msg):
+        wx.PostEvent(self.mainwin, XmlServerEvent(cmd="log", data=msg))
+
+    def OnLogException(self, exc):
+        wx.PostEvent(self.mainwin, XmlServerEvent(cmd="logexception", data=exc))
 
     def OnNewAccept(self, clientaddr):
         # wx.PostEvent(self.mainwin, XmlServerEvent(kw=arg, kw=arg ...) )

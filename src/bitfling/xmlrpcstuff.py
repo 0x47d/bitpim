@@ -132,13 +132,14 @@ class Server(threading.Thread):
         # These are in the order things happen.  Logging happens all the time, and we
         # cycle XMLRPC requests and responses for the lifetime of a connection
         CMD_LOG=0                            # data is log message
-        CMD_NEW_ACCEPT_REQUEST=1
-        CMD_NEW_ACCEPT_RESPONSE=2
-        CMD_NEW_CONNECTION_REQUEST=3
-        CMD_NEW_CONNECTION_RESPONSE=4
-        CMD_XMLRPC_REQUEST=5
-        CMD_XMLRPC_RESPONSE=6
-        CMD_CONNECTION_CLOSE=7
+        CMD_LOG_EXCEPTION=1                   # data is sys.exc_info()
+        CMD_NEW_ACCEPT_REQUEST=2
+        CMD_NEW_ACCEPT_RESPONSE=3
+        CMD_NEW_CONNECTION_REQUEST=4
+        CMD_NEW_CONNECTION_RESPONSE=5
+        CMD_XMLRPC_REQUEST=6
+        CMD_XMLRPC_RESPONSE=7
+        CMD_CONNECTION_CLOSE=8
 
         
         def __init__(self, cmd, respondqueue=None, clientaddr=None, peercert=None, data=None):
@@ -175,8 +176,13 @@ class Server(threading.Thread):
         def log(self, str):
             now=time.time()
             t=time.localtime(now)
-            timestr="%d:%02d:%02d.%03d"  % ( t[3], t[4], t[5],  int((now-int(now))*1000))
+            timestr="<%d:%02d:%02d.%03d>"  % ( t[3], t[4], t[5],  int((now-int(now))*1000))
             msg=Server.Message(Server.Message.CMD_LOG, data="%s: %s: %s" % (timestr, self.getName(), str))
+            self.requestqueue.put(msg)
+
+        def logexception(self, str, excinfo):
+            self.log(str)
+            msg=Server.Message(Server.Message.CMD_LOG_EXCEPTION, data=excinfo)
             self.requestqueue.put(msg)
                             
         def run(self):
@@ -193,14 +199,14 @@ class Server(threading.Thread):
                         self.log("Connection from "+`peeraddr`+" not accepted")
                         sock.close()
                         continue
-                    ssl = Connection(self.ctx, sock)
+                    ssl = M2Crypto.SSL.Connection(self.ctx, sock)
                     ssl.addr = peeraddr
                     ssl.setup_ssl()
                     ssl.set_accept_state()
                     ssl.accept_ssl()
                     conn=ssl
                 except:
-                    self.log("Exception in accept: %s:%s" % sys.exc_info()[:2])
+                    self.logexception("Exception in accept", sys.exc_info())
                     continue
                 if __debug__ and TRACE: print self.getName()+": Connection from "+`peeraddr`
                 peercert=conn.get_peer_cert()
@@ -289,11 +295,14 @@ class Server(threading.Thread):
             self.OnUserMessage(msg)
             return
         if __debug__ and TRACE:
-            if msg.cmd!=msg.CMD_LOG:
+            if not msg.cmd in (msg.CMD_LOG, msg.CMD_LOG_EXCEPTION):
                 print "Processing message "+`msg`
         resp=None
         if msg.cmd==msg.CMD_LOG:
             self.OnLog(msg.data)
+            return
+        elif msg.cmd==msg.CMD_LOG_EXCEPTION:
+            self.OnLogException(msg.data)
             return
         elif msg.cmd==msg.CMD_NEW_ACCEPT_REQUEST:
             ok=self.OnNewAccept(msg.clientaddr)
@@ -315,6 +324,11 @@ class Server(threading.Thread):
     def OnLog(self, str):
         """Process a log message"""
         print str
+
+    def OnLogException(self, exc):
+        """Process an exception message"""
+        print exc[:2]
+
 
     def OnNewAccept(self, clientaddr):
         """Decide if we accept a new new connection"""
