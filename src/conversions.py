@@ -47,7 +47,11 @@ def gethelperbinary(basename):
     if basename=="pvconv":
         return getpvconvbinary()
     f=os.path.join(helperdir, basename)+osext
-    f=shortfilename(f)
+    try:
+        f=shortfilename(f)
+    except:
+        # this craps out if the helper does not exist!
+        raise common.HelperBinaryNotFound(basename, basename+osext, [helperdir])
     if not os.path.isfile(f):
         raise common.HelperBinaryNotFound(basename, basename+osext, [helperdir])
     return f
@@ -392,3 +396,13 @@ def convertavitobmp(avi_file_name, frame_num=0):
     except:
         pass
     return img
+
+def helperavailable(helper_name):
+    try:
+        f=gethelperbinary(helper_name)
+        return True
+    except common.HelperBinaryNotFound:
+        return False
+    except:
+        if __debug__: raise
+        return False

@@ -835,6 +835,11 @@ class FileEntries:
         return result
 
     def get_video(self, result, video_file_name):
+        if not conversions.helperavailable('bmp2avi'):
+            # helper not available , just bail
+            self.__phone.log('Helper bmp2avi not found, cannot retrieve '+\
+                             video_file_name)
+            return result
         self.__phone.log('Getting video file '+video_file_name)
         media=result.get(self.__file_type, {})
         idx=result.get(self.__index_type, {})
