@@ -87,6 +87,7 @@ class PhoneDataTable(wxPyGridTableBase):
         # we do them in reverse order so that we don't have to worry about row numbers
         # changing under us
         print "delete - rows chosen=",rows
+        print "keys b4", self._data.keys()
         rows.sort()
         rows.reverse()
         for row in rows:
@@ -97,9 +98,13 @@ class PhoneDataTable(wxPyGridTableBase):
             self.GetView().ProcessTableMessage(msg)
         if len(rows):
             self.needswrite=True
+        print "keys after", self._data.keys()
 
     def OnAdd(self, currow):
+        print "add - keys b4", self._data.keys()
         self.sequence+=1
+        while self.sequence in self._data:
+            self.sequence+=1
         self._data[self.sequence]=self.blankentry.copy()
         if currow+1==self.numrows:
             msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_APPENDED, 1)
@@ -110,6 +115,7 @@ class PhoneDataTable(wxPyGridTableBase):
         self.numrows+=1
         self.GetView().ProcessTableMessage(msg)
         self.needswrite=True
+        print "keys after", self._data.keys()
 
     def getcolumn(self,name):
         if len(self.labels)==0:
