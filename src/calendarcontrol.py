@@ -661,6 +661,7 @@ class Calendar(wxPanel):
 
    
     def setselection(self, year, month, day):
+       """Selects the specifed date if it is visible"""
        self.selecteddate=(year,month,day)
        d=calendar.weekday(year, month, day)
        d=(d+1)%7
