@@ -1482,7 +1482,7 @@ class MyStatusBar(wx.StatusBar):
     __major_progress_index=4
     __minor_progress_index=5
     __help_str_index=5
-    __pane_width=[175, 175, 50, 180, -1, -4]
+    __pane_width=[200, 220, 50, 180, -1, -4]
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
         self.sizechanged=False
@@ -1509,7 +1509,7 @@ class MyStatusBar(wx.StatusBar):
     def Reposition(self):
         self.sizeChanged = False
         rect=self.GetFieldRect(self.__gauge_index)
-        self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+4))
+        self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+2))
         self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
 
     def progressminor(self, pos, max, desc=""):
@@ -1525,19 +1525,25 @@ class MyStatusBar(wx.StatusBar):
             str=desc
         self.SetStatusText(str, self.__major_progress_index)
 
+    def __adjust_and_set_field(self, string, pane):
+        dc=wx.ClientDC(self)
+        (w,h)=dc.GetTextExtent(string)
+        self.__pane_width[pane]=w
+        self.SetStatusWidths(self.__pane_width)
+        self.SetStatusText(string, pane)
     def GetHelpPane(self):
         return self.__help_str_index
     def set_app_status(self, str=''):
         self.SetStatusText(str, self.__app_status_index)
     def set_phone_model(self, str=''):
-        self.SetStatusText(str, self.__phone_model_index)
+        self.__adjust_and_set_field(str, self.__phone_model_index)
     def set_versions(self, current, latest=''):
         s='BitPim '+current
         if len(latest):
             s+='/Latest '+latest
         else:
             s+='/Latest <Unknown>'
-        self.SetStatusText(s, self.__version_index)
+        self.__adjust_and_set_field(s, self.__version_index)
 
 ###
 ###  A MessageBox with a help button
