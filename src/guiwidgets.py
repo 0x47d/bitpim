@@ -1338,6 +1338,9 @@ class Calendar(calendarcontrol.Calendar):
             self._nextpos,res=self._nextpos-1, self._nextpos
             if res not in self._data:
                 return res
+        # can't get here but pychecker cant figure that out
+        assert False
+        return -1
         
     def OnGetEntries(self, year, month, day):
         """return pretty printed sorted entries for date
@@ -2050,32 +2053,57 @@ class RecurringDialog(wxDialog):
             self.EndModal(evt.GetId())
 
 ###
-### Copied from wxPython.lib.dialogs.  This one is different in that it
-### uses a larger text control (standard one on windows is limited to
-### 32KB of text)
+### A dialog showing a message in a fixed font, with a help button
 ###
 
-from wxPython.lib.layoutf import Layoutf
-
-class FixedScrolledMessageDialog(wx.wxDialog):
+class MyFixedScrolledMessageDialog(wxDialog):
     """A dialog displaying a readonly text control with a fixed width font"""
-    def __init__(self, parent, msg, caption, pos = wxDefaultPosition, size = (850,600)):
-        wxDialog.__init__(self, parent, -1, caption, pos, size,
-                          style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxNO_FULL_REPAINT_ON_RESIZE)
-        text = wxTextCtrl(self, 1,
-                          style=wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 |
-                          wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP  )
+    def __init__(self, parent, msg, caption, helpid, pos = wxDefaultPosition, size = (850,600)):
+        wxDialog.__init__(self, parent, -1, caption, pos, size)
+
+        text=wxTextCtrl(self, 1,
+                        style=wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 |
+                        wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP  )
         # Fixed width font
         f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
         ta=wxTextAttr(font=f)
         text.SetDefaultStyle(ta)
-        ok = wxButton(self, wxID_OK, "OK")
-        text.SetConstraints(Layoutf('t=t5#1;b=t5#2;l=l5#1;r=r5#1', (self,ok)))
-        ok.SetConstraints(Layoutf('b=b5#1;x%w50#1;w!80;h!25', (self,)))
-        self.SetAutoLayout(1)
-        self.Layout()
+
         text.AppendText(msg) # if i supply this in constructor then the font doesn't take
         text.ShowPosition(text.XYToPosition(0,0))
+
+        # vertical sizer
+        vbs=wxBoxSizer(wxVERTICAL)
+        vbs.Add(text, 1, wxEXPAND|wxALL, 10)
+
+        # buttons
+        vbs.Add(self.CreateButtonSizer(wxOK|wxHELP), 0, wxALIGN_RIGHT|wxALL, 10)
+
+        # plumb
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+
+        EVT_BUTTON(self, wxID_HELP, lambda _,helpid=helpid: wxGetApp().displayhelpid(helpid))
+
+###
+###  Dialog that deals with exceptions
+###
+import StringIO
+import traceback
+
+class ExceptionDialog(MyFixedScrolledMessageDialog):
+    def __init__(self, frame, exception, title="Exception"):
+        s=StringIO.StringIO()
+        s.write("An unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
+        if hasattr(exception, 'gui_exc_info'):
+            traceback.print_exception(exception.gui_exc_info[0],
+                                      exception.gui_exc_info[1],
+                                      exception.gui_exc_info[2],
+                                      file=s)
+        else:
+            s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
+
+        MyFixedScrolledMessageDialog.__init__(self, frame, s.getvalue(), title, helpids.ID_EXCEPTION_DIALOG)
 
 ###
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
@@ -2136,10 +2164,7 @@ class AlertDialogWithHelp(wxDialog):
         hbs.Add(wxStaticText(p, -1, message), 1, wxCENTER|wxALL, 10)
 
         # the buttons
-        #buttsizer=wxBoxSizer(wxHORIZONTAL)
-        #buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxCENTER|wxALL, 10)
-        #buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxCENTER|wxALL, 10)
-        buttsizer=self.CreateButtonSizer(wxHELP|style) # CreateButtonSizer seems to make buttons in wrong order
+        buttsizer=self.CreateButtonSizer(wxHELP|style)
 
         # Both vertical
         vbs=wxBoxSizer(wxVERTICAL)
@@ -2161,16 +2186,3 @@ class AlertDialogWithHelp(wxDialog):
         # ::TODO:: rest of these
         # fallthru
         return wxART_INFORMATION
-
-        
-
-
-
-if __name__=='__main__':
-    def func(_): print "helpfunc called"
-    app=wxPySimpleApp()
-    dlg=wxMessageDialog(None, "Test of builtin", "builtin", wxOK|wxHELP|wxICON_INFORMATION)
-    dlg.ShowModal()
-    dlg=AlertDialogWithHelp(None, -1, "A test", "title bar", func)
-    dlg.ShowModal()
-        
