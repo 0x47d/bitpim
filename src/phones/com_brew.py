@@ -465,6 +465,9 @@ def formatpacketerrorlog(str, origdata, data, klass):
         hd+="\nOriginal Data - "+`len(data)`+" bytes\n"+common.datatohexstring(origdata)
     return str+" "+hd
 
+# The CRC and escaping mechanisms are the same as used in PPP, HDLC and
+# various other standards.
+
 def escape(data):
     return data.replace("\x7d", "\x7d\x5d") \
            .replace("\x7e", "\x7d\x5e")
@@ -476,7 +479,7 @@ def unescape(d):
         start=0
         while True:
             p=res.index("\x7d", start)
-            res[p:p+2]=chr(ord(res[p+1])^0x20)
+            res[p:p+2]=chr(ord(res[p+1])+0x20)
             start=p+1
     except ValueError:
         return "".join(res)
