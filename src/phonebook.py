@@ -1747,14 +1747,21 @@ class ImportDialog(wx.Dialog):
         columnname=self.table.GetColLabelValue(col)
         _, importkey, existingkey, resultkey=self.table.GetRowData(row)
 
-        resultvalue=None
-        if resultkey is not None:
-            resultvalue=getdata(columnname, self.resultdata[resultkey], None)
 
-        self.menu.Enable(self.ID_REVERT_TO_EXISTING, existingkey is not None 
-                             and getdata(columnname, self.existingdata[existingkey], None)!= resultvalue)
-        self.menu.Enable(self.ID_REVERT_TO_IMPORTED, importkey is not None
+        if columnname=="Confidence":
+            self.menu.Enable(self.ID_REVERT_TO_EXISTING, False)
+            self.menu.Enable(self.ID_REVERT_TO_IMPORTED, False)
+            self.menu.Enable(self.ID_CLEAR_FIELD, False)
+        else:
+            resultvalue=None
+            if resultkey is not None:
+                resultvalue=getdata(columnname, self.resultdata[resultkey], None)
+
+            self.menu.Enable(self.ID_REVERT_TO_EXISTING, existingkey is not None 
+                                 and getdata(columnname, self.existingdata[existingkey], None)!= resultvalue)
+            self.menu.Enable(self.ID_REVERT_TO_IMPORTED, importkey is not None
                              and getdata(columnname, self.importdata[importkey], None) != resultvalue)
+            self.menu.Enable(self.ID_CLEAR_FIELD, True)
 
         self.menu.Enable(self.ID_IMPORTED_MISMATCH, importkey is not None)
         # pop it up
@@ -1884,6 +1891,8 @@ class ImportDialog(wx.Dialog):
         data=self.resultdata[k]
         if col is not None:
             columnname=self.table.GetColLabelValue(col)
+            if columnname=="Confidence":
+                columnname="Name"
         else:
             columnname="Name"
         datakey, dataindex=getdatainfo(columnname, data)
