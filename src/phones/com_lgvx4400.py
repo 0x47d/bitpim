@@ -65,15 +65,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
         # now read groups
-        self.log("Reading group information")
-        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-        g=p_lgvx4400.pbgroups()
-        g.readfrombuffer(buf)
-        self.logdata("Groups read", buf.getdata(), g)
-        groups={}
-        for i in range(g.numgroups):
-            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
-        results['groups']=groups
+     ##   self.log("Reading group information")
+##        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
+##        g=p_lgvx4400.pbgroups()
+##        g.readfrombuffer(buf)
+##        self.logdata("Groups read", buf.getdata(), g)
+##        groups={}
+##        for i in range(g.numgroups):
+##            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
+##        results['groups']=groups
         # wallpaper index
         self.log("Reading wallpaper indices")
         results['wallpaper-index']=self.getindex('dloadindex/brewImageIndex.map')
