@@ -180,41 +180,55 @@ _getdatalist=[
     'Category', ("categories", 0,  None, "category", False),
     'Category2', ("categories", 1,  None, "category", False),
     'Category3', ("categories", 2,  None, "category", False),
+    'Category4', ("categories", 3,  None, "category", False),
+    'Category5', ("categories", 4,  None, "category", False),
     'Categories', ("categories", None, None, formatcategories, True),
 
-    "Phone", ("numbers", 0, None, formatnumber, True),
-    "Phone2", ("numbers", 1, None, formatnumber, True),
-    "Phone3", ("numbers", 2, None, formatnumber, True),
-    "Phone4", ("numbers", 3, None, formatnumber, True),
-    "Phone5", ("numbers", 4, None, formatnumber, True),
-    "Phone6", ("numbers", 5, None, formatnumber, True),
-    "Phone7", ("numbers", 6, None, formatnumber, True),
-    "Phone8", ("numbers", 7, None, formatnumber, True),
-    "Phone9", ("numbers", 8, None, formatnumber, True),
-    "Phone10", ("numbers", 9, None, formatnumber, True),
+    "Phone", ("numbers", 0, None, formatnumber, False),
+    "Phone2", ("numbers", 1, None, formatnumber, False),
+    "Phone3", ("numbers", 2, None, formatnumber, False),
+    "Phone4", ("numbers", 3, None, formatnumber, False),
+    "Phone5", ("numbers", 4, None, formatnumber, False),
+    "Phone6", ("numbers", 5, None, formatnumber, False),
+    "Phone7", ("numbers", 6, None, formatnumber, False),
+    "Phone8", ("numbers", 7, None, formatnumber, False),
+    "Phone9", ("numbers", 8, None, formatnumber, False),
+    "Phone10", ("numbers", 9, None, formatnumber, False),
     
     # phone numbers are inserted here
 
     'Email', ("emails", 0, None, "email", True),
     'Email2', ("emails", 1, None, "email", True),
     'Email3', ("emails", 2, None, "email", True),
+    'Email4', ("emails", 3, None, "email", True),
+    'Email5', ("emails", 4, None, "email", True),
     'Business Email', ("emails", 0, ("type", "business"), "email", False),
+    'Business Email2', ("emails", 1, ("type", "business"), "email", False),
     'Home Email', ("emails", 0, ("type", "home"), "email", False),
+    'Home Email2', ("emails", 1, ("type", "home"), "email", False),
 
     'URL', ("urls", 0, None, "url", True),
     'URL2', ("urls", 1, None, "url", True),
     'URL3', ("urls", 2, None, "url", True),
+    'URL4', ("urls", 3, None, "url", True),
+    'URL5', ("urls", 4, None, "url", True),
     'Business URL', ("urls", 0, ("type", "business"), "url", False),
+    'Business URL2', ("urls", 1, ("type", "business"), "url", False),
     'Home URL', ("urls", 0, ("type", "home"), "url", False),
+    'Home URL2', ("urls", 1, ("type", "home"), "url", False),
 
     'Ringtone', ("ringtones", 0, ("use", "call"), "ringtone", True),
     'Message Ringtone', ("ringtones", 0, ("use", "message"), "ringtone", True),
 
     'Address', ("addresses", 0, None, formataddress, True),
     'Address2', ("addresses", 1, None, formataddress, True),
-    'Address3', ("addresses", 1, None, formataddress, True),
+    'Address3', ("addresses", 2, None, formataddress, True),
+    'Address4', ("addresses", 3, None, formataddress, True),
+    'Address5', ("addresses", 4, None, formataddress, True),
     'Home Address', ("addresses", 0, ("type", "home"), formataddress, False),
+    'Home Address2', ("addresses", 1, ("type", "home"), formataddress, False),
     'Business Address', ("addressess", 0, ("type", "business"), formataddress, False),
+    'Business Address2', ("addressess", 1, ("type", "business"), formataddress, False),
 
     "Wallpaper", ("wallpapers", 0, None, "wallpaper", True),
 
@@ -223,6 +237,8 @@ _getdatalist=[
     "Memo", ("memos", 0, None, "memo", True),
     "Memo2", ("memos", 1, None, "memo", True),
     "Memo3", ("memos", 2, None, "memo", True),
+    "Memo4", ("memos", 3, None, "memo", True),
+    "Memo5", ("memos", 4, None, "memo", True),
 
     ]
 
@@ -230,8 +246,8 @@ ll=[]
 for pretty, actual in ("Home", "home"), ("Office", "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"), ("Data", "data"):
     for suf,n in ("", 0), ("2", 1), ("3", 2):
         ll.append(pretty+suf)
-        ll.append(("numbers", n, ("type", actual), 'number', False))
-_getdatalist[36:36]=ll
+        ll.append(("numbers", n, ("type", actual), 'number', True))
+_getdatalist[40:40]=ll
 
 _getdatatable={}
 AvailableColumns=[]
