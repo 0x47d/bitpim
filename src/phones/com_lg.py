@@ -393,6 +393,81 @@ class LGIndexedMedia:
         reindexfunction(results)
         return results
 
+
+class LGNewIndexedMedia:
+    "Implements media for LG phones that use the new index format"
+    
+    def __init__(self):
+        pass
+
+    def getmediaindex(self, builtins, maps, results, key):
+        """Gets the media (wallpaper/ringtone) index
+
+        @param builtins: the builtin list on the phone
+        @param results: places results in this dict
+        @param maps: the list of index files and locations
+        @param key: key to place results in
+        """
+
+        self.log("Reading "+key)
+        media={}
+
+        # builtins
+        for i,n in enumerate(builtins): # nb zero based index whereas previous phones used 1
+            media[i]={'name': n, 'origin': 'builtin'}
+
+        # maps
+        for type, location, _ in maps:
+            for item in self.getindex(location):
+                media[item.index]={
+                    'name': basename(item.filename),
+                    'filename': item.filename
+                    }
+                if item.date!=0:
+                    media[item.index]['date']=item.date
+
+        # finish
+        results[key]=media
+
+    def getindex(self, filename):
+        "read an index file"
+        try:
+            buf=prototypes.buffer(self.getfilecontents(filename))
+        except com_brew.BrewNoSuchFileException:
+            return []
+
+        g=self.protocolclass.indexfile()
+        g.readfrombuffer(buf)
+        self.logdata("Index file %s read with %d entries" % (filename, len(g.items)), buf.getdata(), g)
+        return g.items
+
+    def getmedia(self, maps, results, key):
+        media={}
+
+        for _,location, _ in maps:
+            for item in self.getindex(location):
+                try:
+                    media[basename(item.filename)]=self.getfilecontents(item.filename)
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
+                    self.log("It was in the index, but not on the filesystem")
+
+        results[key]=media
+        return results
+        
+
+    def getwallpaperindices(self, results):
+        return self.getmediaindex(self.builtinwallpapers, self.wallpaperlocations, results, 'wallpaper-index')
+
+    def getringtoneindices(self, results):
+        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+
+    def getwallpapers(self, result):
+        return self.getmedia(self.wallpaperlocations, result, 'wallpapers')
+
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
+            
+
 class LGDirectoryMedia:
     """The media is stored one per directory with .desc and body files"""
 

@@ -50,15 +50,14 @@ PACKET speeddials:
     * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
     
 PACKET indexentry:
-    2 UINT {'default': 0xffff} +index
-    50 STRING {'default': ""} +name
+    2 UINT index
+    2 UINT type
+    84 STRING filename  "includes full pathname"
+    4 UINT {'default': 0} +date "i think this is bitfield of the date"
+    4 UINT dunno
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
-    # A bit of a silly design again.  Entries with an index of 0xffff are
-    # 'blank'.  Thus it is possible for numactiveitems and the actual
-    # number of valid entries to be mismatched.
-    2 UINT numactiveitems
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 PACKET camindexentry:

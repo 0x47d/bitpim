@@ -31,7 +31,7 @@ import com_phone
 import com_lg
 import prototypes
 
-class Phone(com_lgvx4400.Phone):
+class Phone(com_lg.LGNewIndexedMedia,com_lgvx4400.Phone):
     "Talk to the LG VX7000 cell phone"
 
     desc="LG-VX7000"
@@ -39,35 +39,26 @@ class Phone(com_lgvx4400.Phone):
     protocolclass=p_lgvx7000
     serialsname='lgvx7000'
 
-    # more VX6000 indices
-    imagelocations=(
-        # offset, index file, files location, type, maximumentries
-        ( 10, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 30) ,
-        ( 0xc8, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 20),
-        ( 0xdc, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
-        ( 0x82, None, None, "camera", 20) # nb camera must be last
-        )
-
-    imagelocations= ()
-
-    ringtonelocations=(
-        # offset, index file, files location, type, maximumentries
-        ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
-        ( 150, "download/dloadindex/mmsRingerIndex.map", "mms/sound", "mms", 20),
-        ( 180, "download/dloadindex/mmsDrmRingerIndex.map", "mms/sound/drm", "drm", 20)
-        )
-
-    ringtonelocations=()
-
-    builtinimages= ('Beach Ball', 'Towerbridge', 'Sunflower', 'Beach',
-                    'Fish', 'Sea', 'Snowman')
-
     builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps') + \
                       tuple(['Ringtone '+`n` for n in range(1,11)]) + \
                       ('No Ring',)
+
+    ringtonelocations= (
+        # type file  lowest number to use
+        ( 'ringers', 'dload/sound.dat', 100),
+        )
+
+    builtinwallpapers = () # none
+
+    wallpaperlocations= (
+        # type file lowest number to use
+        ( 'images', 'dload/image.dat', 100),
+        )
+        
     
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
+        com_lg.LGNewIndexedMedia.__init__(self)
         self.mode=self.MODENONE
 
 class Profile(com_lgvx4400.Profile):
