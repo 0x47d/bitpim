@@ -36,6 +36,10 @@ struct usb_endpoint_descriptor *usb_endpoint_descriptor_index(struct usb_endpoin
 // usb_bulk_write - binary string with length
 %apply (char *STRING, int LENGTH) { (char *bytes, int size) }
 
+// these types occur in Linux and SWIG doesn't know they are ints unless we tell
+typedef unsigned short u_int16_t;
+typedef unsigned char u_int8_t;
+
 %include usb.h
 
 // various wrappers and convenience functions

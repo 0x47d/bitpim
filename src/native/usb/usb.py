@@ -5,6 +5,8 @@
 ### are LGPL)
 ###
 
+from __future__ import generators
+
 import libusb as usb
 
 # grab some constants and put them in our namespace
