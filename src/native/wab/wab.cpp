@@ -160,8 +160,40 @@ wabobject::~wabobject()
 wabobject::wabobject(const wabmodule& mod, ULONG t, LPUNKNOWN i)
   : iface(i), type(t), module(mod)
 {
-  
+}
 
+wabtable* wabobject::getcontentstable(unsigned long flags)
+{
+  if(type!=MAPI_ABCONT)
+    {
+      errorme(0, "Object is not a container");
+      return NULL;
+    }
+  LPMAPITABLE table;
+  HRESULT hr=((LPABCONT)iface)->GetContentsTable(flags, &table);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to GetContentsTable");
+      return NULL;
+    }
+  return new wabtable(module, table);
+}
+
+wabtable::~wabtable()
+{
+  table->Release();
+}
+
+int wabtable::getrowcount()
+{
+  ULONG l;
+  HRESULT hr=table->GetRowCount(0, &l);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to get rowcount");
+      return -1;
+    }
+  return (int)l;
 }
 
 // see mapitypes.h for these names and ranges

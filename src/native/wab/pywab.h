@@ -84,8 +84,8 @@ class wabobject
 		 STATUS=MAPI_STATUS, SESSION=MAPI_SESSION, 
 		 FORMINFO=MAPI_FORMINFO }  thetype;
   thetype gettype(void) const { return (thetype)type; }
-  enum {FLAG_WAB_LOCAL_CONTAINERS=WAB_LOCAL_CONTAINERS, FLAG_WAB_PROFILE_CONTENTS=WAB_PROFILE_CONTENTS} ;
-  class wabtable* getcontentstable(unsigned flags); 
+  static enum {FLAG_WAB_LOCAL_CONTAINERS=WAB_LOCAL_CONTAINERS, FLAG_WAB_PROFILE_CONTENTS=WAB_PROFILE_CONTENTS} ;
+  class wabtable* getcontentstable(unsigned long flags); 
 };
 
 class wabtable
@@ -96,8 +96,10 @@ class wabtable
   void operator=(wabtable&);
   // private constructor
   wabtable(const wabmodule &mod, LPMAPITABLE t) : table(t), module(mod) {}
+  friend class wabobject;
  public:
   ~wabtable();
+  int getrowcount();
 };
 
 wabmodule* Initialize(bool enableprofiles=true, const char *INPUT=NULL);

@@ -40,10 +40,33 @@ class WAB:
             return Container(x)
         return x
 
+class Table:
+    def __init__(self, obj):
+        self.obj=obj
+
+    def next(self):
+        # play with LPSRowSet
+        pass
+
+    def count(self):
+        i=self.obj.getrowcount()
+        if i<0:
+            raise WABException()
+        return i
+
 class Container:
+    WAB_LOCAL_CONTAINERS=pywabimpl.wabobject.FLAG_WAB_LOCAL_CONTAINERS
+    WAB_PROFILE_CONTENTS=pywabimpl.wabobject.FLAG_WAB_PROFILE_CONTENTS
 
     def __init__(self, obj):
         self.obj=obj
+
+    def items(self, flags=0):
+        x=self.obj.getcontentstable(flags)
+        if x is None:
+            raise WABException()
+        x.thisown=1
+        return Table(x)
 
 
 
@@ -54,7 +77,9 @@ if __name__=='__main__':
         fn=sys.argv[1]
     wab=WAB(False, fn)
     root=wab.openobject(wab.getrootentry())
-    print root
-    print root.gettype()
-    print dir(root)
+    items=root.items()
+    print items.count(), "items in root"
+    items=root.items(root.WAB_LOCAL_CONTAINERS|root.WAB_PROFILE_CONTENTS)
+    print items.count(), "local/profile items"
+    
     
