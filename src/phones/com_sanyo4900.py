@@ -39,22 +39,6 @@ class Phone(com_sanyo.Phone):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-    def savewallpapers(self, results, merge):
-        return
-        req=self.protocolclass.sanyomediaheader()
-        req.command=0x10
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-        req.command=0x13
-        req.subcommand=0
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-
-        req=self.protocolclass.sanyomediafilename()
-        req.filename="testimage.jpg"
-        self.sendpbcommand(req, self.protocolclass.sanyomediaresponse, writemode=True)
-    
-        return 
-
 class Profile(com_sanyo.Profile):
 
     protocolclass=p_sanyo4900
