@@ -9,7 +9,7 @@
 ###
 ### $Id$
 
-# This design is with aplogies to Alan Cooper
+# This design is with apologies to Alan Cooper
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
@@ -181,7 +181,11 @@ class CalendarCell(wxWindow):
 
         fontscale=thefontscalecache.get(self.height-entrystart, self.attr, len(self.entries))
         iteration=0
-        while 1: # this loop scales the contents to fit the space available
+         # this loop scales the contents to fit the space available
+         # we do it as a loop because even when we ask for a smaller font
+         # after finding out that it was too big the first time, the
+         # smaller font may not be as small as we requested
+        while 1:
             y=entrystart
             iteration+=1
             # now calculate how much space is needed for the time fields
@@ -249,7 +253,7 @@ class CalendarCell(wxWindow):
                 dc.Clear()
                 # how much too big were we?
                 fontscale=fontscale*float(self.height-entrystart)/(y-entrystart)
-                print iteration, y, self.height, fontscale
+                # print iteration, y, self.height, fontscale
             else:
                 thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
                 break
@@ -369,8 +373,10 @@ class Calendar(wxPanel):
     attrevenmonth=CalendarCellAttributes()
     attroddmonth=CalendarCellAttributes()
     attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
+    attrselectedcell=CalendarCellAttributes()
+    attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxCROSS_HATCH)
     
-    def __init__(self, parent, rows=9, id=-1):
+    def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS)
         sizer=RowColSizer()
         self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
@@ -395,19 +401,41 @@ class Calendar(wxPanel):
         sizer.Add(self.label, flag=wxEXPAND, row=2, col=0, rowspan=self.numrows)
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
+
         EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
         EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
         EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
-        # EVT_KEY_DOWN(self, self.OnKeyDown)
+        # grab key down from all children
         map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
 
+        self.selectedcell=(-1,-1)
+        self.selecteddate=(-1,-1,-1)
+
+        self.showday(*time.localtime()[:3]+(self.showrow,))
+        self.setday(*time.localtime()[:3])
+
     def OnKeyDown(self, event):
-        print "keydown"
         key=event.GetKeyCode()
         if key==WXK_NEXT:
-            self.scrollby( (self.numrows-1)*7)
+           self.scrollby( (self.numrows-1)*7)
         elif key==WXK_PRIOR:
-            self.scrollby( (self.numrows-1)*-7)
+           self.scrollby( (self.numrows-1)*-7)
+        elif key==WXK_LEFT:
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]-1) )
+        elif key==WXK_RIGHT:
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]+1) )
+        elif key==WXK_UP:
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]-7) )
+        elif key==WXK_DOWN:
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1], self.selecteddate[2]+7) )
+        elif key==WXK_HOME:  # back a month
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]-1, self.selecteddate[2]) )
+        elif key==WXK_END: # forward a month
+           self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]+1, self.selecteddate[2]) )
+        else:
+           event.Skip()  # control can have it
+
+
 
     def OnEraseBackground(self, _):
         pass
@@ -427,37 +455,77 @@ class Calendar(wxPanel):
                 y,m,d=normalizedate(y,m,d+amount)
                 self.updaterow(row, y,m,d)
         self.label.changenotify()
+        self.setselection(*self.selecteddate)
 
     def OnScrollDown(self, _=None):
         # user has pressed scroll down button
         self.scrollby(7)
-
+        
     def OnScrollUp(self, _=None):
-        # user has pressed scroll up button
-        self.scrollby(-7)
+       # user has pressed scroll up button
+       self.scrollby(-7)
 
     def setday(self, year, month, day):
-        # makes specified day be shown and selected
-        d=calendar.weekday(year, month, day)
-        d=(d+1)%7
+       # makes specified day be shown and selected
+       print "setday", year, month, day
+       self.showday(year, month, day)
+       self.setselection(year, month, day)
+       
+    def showday(self, year, month, day, rowtoshow=-1):
+       # ensures specified day is onscreen
+       # if rowtoshow is >=0 then it will be forced to appear in that row
+       # check first cell
+       y,m,d=self.rows[0][0].year, self.rows[0][0].month, self.rows[0][0].day
+       if rowtoshow==-1:
+          if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
+             print "showday", year,month,day, "off top of screen"
+             print y,m,d
+             rowtoshow=0
+       # check last cell   
+       y,m,d=self.rows[-1][-1].year, self.rows[-1][-1].month, self.rows[-1][-1].day
+       if rowtoshow==-1:
+          if year>y or (year>=y and month>m) or (year>=y and month>=m and day>d):
+             print "showday", year,month,day, "off bottom of screen"
+             print y,m,d
+             rowtoshow=self.numrows-1
+       if rowtoshow!=-1:
+          print "now showing on row", rowtoshow
+          d=calendar.weekday(year, month, day)
+          d=(d+1)%7
+          
+          d=day-d # go back to begining of week
+          d-=7*rowtoshow # then begining of screen
+          y,m,d=normalizedate(year, month, d)
+          for row in range(0,self.numrows):
+             self.updaterow(row, *normalizedate(y, m, d+7*row))
 
-        r=self.showrow
+    def setselection(self, year, month, day):
+       self.selecteddate=(year,month,day)
+       d=calendar.weekday(year, month, day)
+       d=(d+1)%7
+       for row in range(0, self.numrows):
+          cell=self.rows[row][d]
+          if cell.year==year and cell.month==month and cell.day==day:
+             self._unselect()
+             self.rows[row][d].setattr(self.attrselectedcell)
+             self.selectedcell=(row,d)
+             return
 
-        day-=d # go back to begining of week
-        day-=7*self.showrow # then begining of screen
-        y,m,d=normalizedate(year, month, day)
-        for row in range(0,self.numrows):
-            self.updaterow(row, *normalizedate(year, month, day+7*row))
+    def _unselect(self):
+       if self.selectedcell!=(-1,-1):
+          self.updatecell(*self.selectedcell)
+          self.selectedcell=(-1,-1)
 
-    def updatecell(self, row, column, y, m, d):
-        self.rows[row][column].setdate(y,m,d)
-        if m%2:
-            self.rows[row][column].setattr(self.attroddmonth)
-        else:
-            self.rows[row][column].setattr(self.attrevenmonth)
-        if row==0 and column==0:
-            self.year.SetLabel(`y`)
-        # ::TODO:: get events for this day
+    def updatecell(self, row, column, y=-1, m=-1, d=-1):
+       if y!=-1:
+          self.rows[row][column].setdate(y,m,d)
+       if self.rows[row][column].month%2:
+          self.rows[row][column].setattr(self.attroddmonth)
+       else:
+          self.rows[row][column].setattr(self.attrevenmonth)
+       if y!=-1 and row==0 and column==0:
+          self.year.SetLabel(`y`)
+        # ::TODO:: get events for this day if y,m,d !=-1
 
     def updaterow(self, row, y, m, d):
         daysinmonth=monthrange(y, m)
@@ -561,8 +629,6 @@ if __name__=="__main__":
                              style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
             #self.control=CalendarCell(self, 1) # test just the cell
             self.control=Calendar(self)
-            now=time.localtime()
-            self.control.setday(now[0], now[1], now[2])
             self.Show(True)
     
     app=wxPySimpleApp()
