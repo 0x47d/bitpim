@@ -55,6 +55,10 @@ class CommsOpenFailure(CommsException):
     """Failed to open the communications port/device"""
     pass
 
+class CommsWrongPort(CommsException):
+     """The wrong port has been selected, typically the modem port on an LG composite device"""
+     pass
+
 class AutoPortsFailure(CommsException):
      """Failed to auto detect a useful port"""
      def __init__(self, portstried):

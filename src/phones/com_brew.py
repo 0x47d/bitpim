@@ -344,6 +344,11 @@ class BrewProtocol:
         # log it
         self.logdata("brew response", data, responseclass)
 
+        if firsttwo=="Y\x0c" and data==firsttwo:
+            # we are getting an echo - the modem port has been selected
+            # instead of diagnostics port
+            raise common.CommsWrongPort("The port you are using is echoing data back, and is not valid for Brew data.  Most likely you have selected the modem interface when you should be using the diagnostic interface.", self.desc)
+
         # look for errors
         if data[0]=="Y" and data[2]!="\x00":  # Y is 0x59 which is brew command prefix
                 err=ord(data[2])
