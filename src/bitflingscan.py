@@ -30,7 +30,6 @@ class flinger:
 
     def connect(self, username, password, host, port):
         "Connects and returns version info of remote end, or an exception"
-        if bitfling is None: return None
         # try and connect by getting version info
         self.client=bitfling.client(username, password, host, port, self.certverifier)
         res=self.client.getversion()
@@ -107,8 +106,10 @@ class BitFlingWorkerThread(threading.Thread):
         # do we need event loop?
         loopfunc=self.eventloops.get(thread.get_ident(), None)
         if loopfunc is not None:
+            print thread.get_ident(), "entering busy wait loop"
             while qres.empty():
                 loopfunc()
+            print thread.get_ident(), "exit busy wait loop"
         print thread.get_ident(), "callfunc about to read results back for", func
         res, exc = qres.get()
         print thread.get_ident(), "callfunc results for", func, "are", (res,exc)
@@ -162,8 +163,16 @@ class CallWrapper:
         return v
     
 
-BitFlingWorkerThread=BitFlingWorkerThread()
-BitFlingWorkerThread.start()
+if IsBitFlingEnabled():
+    BitFlingWorkerThread=BitFlingWorkerThread()
+    BitFlingWorkerThread.start()
 
-# wrap it all up
-flinger=CallWrapper(BitFlingWorkerThread, flinger)
+    # wrap it all up
+    flinger=CallWrapper(BitFlingWorkerThread, flinger)
+else:
+    class flinger:
+        def __getattr__(self, name):
+            raise Exception("BitFling is not enabled")
+        def __setattr__(self, name, value):
+            raise Exception("BitFling is not enabled")
+    flinger=flinger()

@@ -453,6 +453,7 @@ class ConfigDialog(wx.Dialog):
 
         The request is handed to the main gui thread, and then we wait for the
         results"""
+        print thread.get_ident(),"dispatchVerifyBitFlingCert called"
         q=self.bitflingresponsequeues.get(thread.get_ident(), None)
         if q is None:
             q=Queue.Queue()
