@@ -1800,9 +1800,9 @@ class ExporteGroupwareDialog(BaseExportDialog):
     ID_REFRESH=wx.NewId()
     ID_CHANGE=wx.NewId()
 
-    _categorymessage="There is no way for BitPim to create categories on the eGroupware server "  \
-          "so you will have to create them yourself.  You can check to see which ones still need " \
-          "to be created."
+    _categorymessage="eGroupware doesn't create categories correctly via XML-RPC, so you should manually create them via the web interface.  " \
+           "Click to see which ones should be manually created." 
+
 
     def __init__(self, parent, title, module):
         BaseExportDialog.__init__(self, parent, title)
@@ -1905,7 +1905,7 @@ class ExporteGroupwareDialog(BaseExportDialog):
         nocats=[c for c in cats if c not in egcats]
 
         if len(nocats):
-            self.categoryinfo.SetValue("eGroupware doesn't have the following categories, which you will need to manually add:\n\n"+", ".join(nocats))
+            self.categoryinfo.SetValue("eGroupware doesn't have the following categories, which you should manually add:\n\n"+", ".join(nocats))
         else:
             self.categoryinfo.SetValue("eGroupware has all the categories you use")
 
@@ -1916,21 +1916,22 @@ class ExporteGroupwareDialog(BaseExportDialog):
         if self.sp is None:
             return
 
-        # get the list of categories
-        cats=dict( [(v['name'], v['id']) for v in self.sp.getcategories()] )
 
         doesntexistaction=None
-
+        catsmodified=True # load categories 
         # write out each one
         setmax=-1
         for record,pos,max in self.GetPhoneBookItems(includecount=True):
+            if catsmodified:
+                # get the list of categories
+                cats=dict( [(v['name'], v['id']) for v in self.sp.getcategories()] )
             if max!=setmax:
                 setmax=max
                 self.progress.SetRange(max)
             self.progress.SetValue(pos)
             self.progress_text.SetLabel(nameparser.formatsimplename(record.get("names", [{}])[0]))
             wx.SafeYield()
-            rec=self.FormatRecord(record, cats)
+            catsmodified,rec=self.FormatRecord(record, cats)
             if rec['id']!=0:
                 # we have an id, but the record could have been deleted on the eg server, so
                 # we check
@@ -1971,7 +1972,13 @@ class ExporteGroupwareDialog(BaseExportDialog):
 
 
     def FormatRecord(self, record, categories):
-        "Convert record into egroupware fields"
+        """Convert record into egroupware fields
+
+        We return a tuple of  (egw formatted record, if we update categories)
+
+        If the second part is True, the categories should be re-read from the server after writing the record."""
+
+        catsmodified=False
 
         # note that mappings must be carefully chosen to ensure that importing from egroupware
         # and then re-exporting doesn't change anything.
@@ -1984,6 +1991,9 @@ class ExporteGroupwareDialog(BaseExportDialog):
                 break
         # name (nb we don't do prefix or suffix since bitpim doesn't know about them)
         res['n_given'],res['n_middle'],res['n_family']=nameparser.getparts(record.get("names", [{}])[0])
+        for nf in 'n_given', 'n_middle', 'n_family':
+            if res[nf] is None:
+                res[nf]="" # set None fields to blank string
         res['fn']=nameparser.formatsimplename(record.get("names", [{}])[0])
         # addresses
         for t,prefix in ("business", "adr_one"), ("home", "adr_two"):
@@ -2009,12 +2019,20 @@ class ExporteGroupwareDialog(BaseExportDialog):
                         break
 
         # categories
-
-        cats=[categories.get(cat['category'],None)  for cat in record.get("categories", [])]
-        # filter out nones
-        cats=[c for c in cats if c is not None]
-        record['cat_id']=cats
+        cats={}
+        for cat in record.get("categories", []):
+            c=cat['category']
+            v=categories.get(c, None)
+            if v is None:
+                catsmodified=True
+                for i in xrange(0,-999999,-1):
+                    if `i` not in cats:
+                        break
+            else:
+                i=`v`
+            cats[i]=str(c)
             
+        res['cat_id']=cats
 
         # phone numbers
         # t,k is bitpim type, egroupware type
@@ -2046,7 +2064,7 @@ class ExporteGroupwareDialog(BaseExportDialog):
             res['url']=u
 
         # that should be everything
-        return res
+        return catsmodified,res
 
     _ACTION_RECREATE=1
     _ACTION_IGNORE=2
