@@ -92,7 +92,7 @@ class LGPhonebook:
         # turned off the phone and back on again.  So if there is more
         # than one 7e in the escaped data we should start after the
         # second to last one
-        d=data.find(self.pbterminator,0,-1)
+        d=data.rfind(self.pbterminator,0,-1)
         if d>=0:
             self.log("Multiple LG packets in data - taking last one starting at "+`d+1`)
             self.logdata("Original LG data", origdata, None)
