@@ -215,9 +215,9 @@ class WorkerThreadFramework(threading.Thread):
         if self.dispatchto.wantlog:
             wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logcb, str))
 
-    def logdata(self, str, data):
+    def logdata(self, str, data, klass=None):
         if self.dispatchto.wantlog:
-            wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data))
+            wxPostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data, klass))
 
 
 ###
@@ -860,9 +860,9 @@ class MainWindow(wxFrame):
         if self.lwdata is not None:
             self.lwdata.log(str)
 
-    def OnLogData(self, str, data):
+    def OnLogData(self, str, data, klass=None):
         if self.lwdata is not None:
-            self.lwdata.logdata(str,data)
+            self.lwdata.logdata(str,data, klass)
 
     def excepthook(self, type, value, traceback):
         value.gui_exc_info=(type,value,traceback)

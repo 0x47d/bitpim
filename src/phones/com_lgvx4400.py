@@ -86,6 +86,10 @@ class Phone:
         if self.logtarget:
             self.logtarget.log("%s: %s" % (self.desc, str))
 
+    def logdata(self, str, data, klass=None):
+        if self.logtarget:
+            self.logtarget.logdata("%s: %s" % (self.desc, str), data, klass)
+
     def progress(self, pos, max, desc):
         if self.logtarget:
             self.logtarget.progress(pos, max, desc)
@@ -134,6 +138,7 @@ class Phone:
             entry=self.extractphonebookentry(res)
             xx=p_lgvx4400.readphoneentryresponse()
             xx.readfrombuffer(prototypes.buffer(res))
+            self.logdata("Read entry", res, xx)
             pbook[i]=entry 
             self.progress(i, numentries, entry['name'])
             #### Advance to next entry
