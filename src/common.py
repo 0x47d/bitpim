@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -33,6 +33,10 @@ class IntegrityCheckFailed(Exception):
           Exception.__init__(self, "%s: %s" % (device, message))
           self.device=device
           self.message=message
+
+class PhoneBookBusyException(Exception):
+     "The phonebook is busy on the phone"
+     pass
                   
 class HelperBinaryNotFound(Exception):
      def __init__(self, basename, fullname, paths):

@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -1178,6 +1178,11 @@ class MainWindow(wx.Frame):
             title="Failed to find PureVoice converter"
             style=wx.OK|wx.ICON_INFORMATION
             help=lambda _: wx.GetApp().displayhelpid(helpids.ID_NO_PVCONV)
+        elif isinstance(exception, common.PhoneBookBusyException):
+            text="The phonebook is busy on your phone.\nExit back to the main screen and then repeat the operation."
+            title="Phonebook busy on phone"
+            style=wx.OK|wx.ICON_INFORMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_PHONEBOOKBUSY)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
