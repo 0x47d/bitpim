@@ -316,16 +316,19 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     def getcalendar(self,result):
         res={}
         # Read exceptions file first
-        buf=prototypes.buffer(self.getfilecontents("sch/schexception.dat"))
-        ex=self.protocolclass.scheduleexceptionfile()
-        ex.readfrombuffer(buf)
-        self.logdata("Calendar exceptions", buf.getdata(), ex)
-        exceptions={}
-        for i in ex.items:
-            try:
-                exceptions[i.pos].append( (i.year,i.month,i.day) )
-            except KeyError:
-                exceptions[i.pos]=[ (i.year,i.month,i.day) ]
+        try:
+            buf=prototypes.buffer(self.getfilecontents("sch/schexception.dat"))
+            ex=self.protocolclass.scheduleexceptionfile()
+            ex.readfrombuffer(buf)
+            self.logdata("Calendar exceptions", buf.getdata(), ex)
+            exceptions={}
+            for i in ex.items:
+                try:
+                    exceptions[i.pos].append( (i.year,i.month,i.day) )
+                except KeyError:
+                    exceptions[i.pos]=[ (i.year,i.month,i.day) ]
+        except com_brew.BrewNoSuchFileException:
+            exceptions={}
 
         # Now read schedule
         buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
@@ -777,8 +780,8 @@ class Profile:
 
     # which usb ids correspond to us
     usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB interface
-        ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
+        ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
         )
     # which device classes we are.  not we are not modem!
     deviceclasses=("serial",)
