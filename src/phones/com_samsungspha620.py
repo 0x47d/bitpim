@@ -253,5 +253,7 @@ class Profile(com_samsung_packet.Profile):
         ('ringtone', 'read', None),   # all ringtone reading
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('todo', 'read', None),     # all todo list reading
+        #('todo', 'write', 'OVERWRITE'),  # all todo list writing
         )
 
