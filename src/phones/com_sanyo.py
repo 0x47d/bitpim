@@ -14,6 +14,7 @@ import com_brew
 import com_phone
 import p_sanyo
 import prototypes
+import cStringIO
 
 class SanyoPhonebook:
 
@@ -66,6 +67,25 @@ class SanyoPhonebook:
         except com_phone.modeignoreerrortypes:
             pass
         return 0
+        
+    def getsanyobuffer(self, startcommand, stopcommand, comment):
+        # Read buffer parts and concatenate them together
+        desc="Reading "+comment
+        buffersize=(stopcommand-startcommand+1)*500
+        data=cStringIO.StringIO()
+        for command in range(startcommand, stopcommand+1):
+            self.progress(data.tell(), buffersize, desc)
+            req=p_sanyo.bufferpartrequest()
+            req.header.command=command
+            res=self.sendpbcommand(req, p_sanyo.bufferpartresponse);
+            data.write(res.data)
+
+        self.progress(1,1,desc)
+
+        data=data.getvalue()
+        self.log("expected size "+`buffersize`+"  actual "+`len(data)`)
+        assert buffersize==len(data)
+        return data
         
     def sendpbcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
