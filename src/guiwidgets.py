@@ -281,7 +281,7 @@ class PhoneDataTable(wxPyGridTableBase):
             return wxGRID_VALUE_BOOL
         elif self.labels[col] in self.groupnames:
             return self.grouptypename
-        return wxGRID_VALUE_STRING
+        return wxGRID_VALUE_STRING+":50"
 
     def SetValue(self, row, col, value):
         if self.labels[col] in self.typesnames:
@@ -1102,6 +1102,9 @@ class WallpaperView(FileView):
         self.usewidth=120
         self.useheight=98
 
+        self.addfilemenu.Insert(1,gui.ID_FV_PASTE, "Paste")
+        EVT_MENU(self.addfilemenu, gui.ID_FV_PASTE, self.OnPaste)
+
     def isBCI(self, filename):
         """Returns True if the file is a Brew Compressed Image"""
         # is it a bci file?
@@ -1184,6 +1187,22 @@ class WallpaperView(FileView):
             image.Destroy()
             count+=1
 
+    def OnPaste(self, _=None):
+        do=wxBitmapDataObject()
+        wxTheClipboard.Open()
+        success=wxTheClipboard.GetData(do)
+        wxTheClipboard.Close()
+        if not success:
+            wxMessageBox("There isn't an image in the clipboard", "Error")
+            return
+        # work out a name for it
+        self.thedir=self.mainwindow.wallpaperpath
+        for i in range(255):
+            name="clipboard"+`i`+".bmp"
+            if not os.path.exists(os.path.join(self.thedir, name)):
+                break
+        self.OnAddImage(wxImageFromBitmap(do.GetBitmap()), name)
+
     def OnAddFile(self, file):
         self.thedir=self.mainwindow.wallpaperpath
         # special handling for BCI files
@@ -1196,15 +1215,18 @@ class WallpaperView(FileView):
             src.close()
             self.OnRefresh()
             return
-        # Everything else is converted to BMP
-        target=self.getshortenedbasename(file, 'bmp')
-        if target==None: return # user didn't want to
         img=wxImage(file)
         if not img.Ok():
             dlg=wxMessageDialog(self, "Failed to understand the image in '"+file+"'",
                                 "Image not understood", style=wxOK|wxICON_ERROR)
             dlg.ShowModal()
             return
+        self.OnAddImage(img,file)
+
+    def OnAddImage(self, img, file):
+        # Everything else is converted to BMP
+        target=self.getshortenedbasename(file, 'bmp')
+        if target==None: return # user didn't want to
         obj=img
         # if image is more than 20% bigger or 60% smaller than screen, resize
         if img.GetWidth()>self.usewidth*120/100 or \
