@@ -468,15 +468,27 @@ class Calendar(wxPanel):
     ID_DOWN=2
     ID_YEARBUTTON=3
 
-    attrevenmonth=CalendarCellAttributes()
-    attroddmonth=CalendarCellAttributes()
-    attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
-    attrselectedcell=CalendarCellAttributes()
-    attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxSOLID)
-    attrselectedcell.labelfont=wxFont(17, wxSWISS, wxNORMAL, wxBOLD )
-    attrselectedcell.labelforeground=wxNamedColour("BLACK")
+    attrevenmonth=None
+    attroddmonth=None
+    attrselectedcell=None
+
+    def _initvars(self):
+        # this is needed to avoid issues with the wx library not being initialised
+        # as the module is imported.  We initialise the values when the first
+        # calendar constructor is run
+        if Calendar.attrevenmonth is None:
+            Calendar.attrevenmonth=CalendarCellAttributes()
+        if Calendar.attroddmonth is None:
+            Calendar.attroddmonth=CalendarCellAttributes()
+            Calendar.attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
+        if Calendar.attrselectedcell is None:
+            Calendar.attrselectedcell=CalendarCellAttributes()
+            Calendar.attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxSOLID)
+            Calendar.attrselectedcell.labelfont=wxFont(17, wxSWISS, wxNORMAL, wxBOLD )
+            Calendar.attrselectedcell.labelforeground=wxNamedColour("BLACK")
     
     def __init__(self, parent, rows=5, id=-1):
+        self._initvars()
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS)
         sizer=RowColSizer()
         self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
