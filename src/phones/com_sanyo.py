@@ -106,20 +106,6 @@ class SanyoPhonebook:
                 print c,name
             c+=1
 
-        # the maps
-        type=''
-        for offset,indexfile,location,type,maxentries in maps:
-            if type=="camera": break
-            index=self.getindex(indexfile)
-            for i in index:
-                media[i+offset]={'name': index[i], 'origin': type}
-
-        # camera must be last
-        if type=="camera":
-            index=self.getcameraindex()
-            for i in index:
-                media[i+offset]=index[i]
-
         results[key]=media
         return media
 
