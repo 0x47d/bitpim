@@ -359,6 +359,11 @@ class MainWindow(wxFrame):
         ### Lets go visible
         self.Show()
 
+        ### Double check our size is meaningful, and make bigger
+        ### if necessary (especially needed on Mac)
+        if min(self.GetSize())<100:
+            self.SetSize( (640, 480) )
+
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
         if self.configdlg.needconfig():
