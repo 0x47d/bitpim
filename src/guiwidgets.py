@@ -343,6 +343,7 @@ class ConfigDialog(wx.Dialog):
         # Retrieve saved settings... Use 40% of screen if not specified
         confDlgRect=retrieve_size(self.mw.config, "ConfigDialog", 40)
         self.SetDimensions(confDlgRect.x, confDlgRect.y, confDlgRect.width, confDlgRect.height)
+        wx.EVT_CLOSE(self, self.OnClose)
 
     def OnCancel(self, _):
         self.saveSize()
@@ -393,7 +394,11 @@ class ConfigDialog(wx.Dialog):
         dlg.Destroy()
         if res==wx.ID_OK:
             self.commbox.SetValue(v)
-        
+
+    def OnClose(self, evt):
+        self.saveSize()
+        # Don't destroy the dialong, just put it away...
+        self.EndModal(wx.ID_CANCEL)
 
     def setfromconfig(self):
         if len(self.mw.config.Read("path", "")):
@@ -555,6 +560,7 @@ class CommPortDialog(wx.Dialog):
         # Retrieve saved settings... Use 40% of screen if not specified
         self.dlgRect=retrieve_size(self.parent.mw.config, "CommDialog", 40)
         self.SetDimensions(self.dlgRect.x, self.dlgRect.y, self.dlgRect.width, self.dlgRect.height)
+        wx.EVT_CLOSE(self, self.OnClose)
 
     def OnSashChange(self, _=None):
         self.sashposition=self.FindWindowById(self.ID_SASH).GetSashPosition()
@@ -625,7 +631,12 @@ class CommPortDialog(wx.Dialog):
         self.EndModal(wx.ID_OK)
 
     def OnHelp(self, _):
-        wx.GetApp().displayhelpid(helpids.ID_COMMSETTINGS_DIALOG)        
+        wx.GetApp().displayhelpid(helpids.ID_COMMSETTINGS_DIALOG)
+
+    def OnClose(self, evt):
+        self.saveSize()
+        # Don't destroy the dialong, just put it away...
+        self.EndModal(wx.ID_CANCEL)
 
     def GetPort(self):
         return self.port
