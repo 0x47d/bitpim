@@ -7,7 +7,10 @@
 // deal with data being returned
 int usb_bulk_read_wrapped(usb_dev_handle *dev, int ep, char *bytesoutbuffer, int *bytesoutbuffersize, int timeout)
  {
-   int res=usb_bulk_read(dev, ep, bytesoutbuffer, *bytesoutbuffersize, timeout);
+   int res;
+   Py_BEGIN_ALLOW_THREADS
+   res=usb_bulk_read(dev, ep, bytesoutbuffer, *bytesoutbuffersize, timeout);
+   Py_END_ALLOW_THREADS
    if (res<=0)
      *bytesoutbuffersize=0;
    else
