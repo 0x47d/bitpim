@@ -23,6 +23,7 @@ import sys
 import wx
 import wx.lib.colourdb
 import wx.gizmos
+import wx.html
 
 # my modules
 import guiwidgets
@@ -289,13 +290,12 @@ class MainApp(wx.App):
 
     def setuphelp(self):
         """Does all the nonsense to get help working"""
-        import wx.html
+
         # htmlhelp isn't correctly wrapper in wx package
-        from wxPython.htmlhelp import wxHtmlHelpController
         # Add the Zip filesystem
         wx.FileSystem_AddHandler(wx.ZipFSHandler())
         # Get the help working
-        self.helpcontroller=wxHtmlHelpController()
+        self.helpcontroller=wx.html.HtmlHelpController()
         self.helpcontroller.AddBook(guihelper.gethelpfilename()+".htb")
         self.helpcontroller.UseConfig(self.config, "help")
 
