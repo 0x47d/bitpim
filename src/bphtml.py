@@ -323,8 +323,7 @@ class HtmlEasyPrinting:
             assert False, "preview problem"
             return
         self.frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
-        self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", screenpct=90, aspect=0.58)
-        self.frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
+        guiwidgets.set_size(self.config, "PrintPreview", self.frame, screenpct=90, aspect=0.58)
         wx.EVT_CLOSE(self.frame, self.OnPreviewClose)
         self.frame.Initialize()
         # self.frame.SetPosition(self.parent.GetPosition())
@@ -404,7 +403,7 @@ class HtmlEasyPrinting:
 
     def OnPreviewClose(self, event):
         guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
-        self.frame.Destroy()
+        event.Skip()
         
 if __name__=='__main__':
     src="""

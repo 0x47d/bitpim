@@ -358,6 +358,9 @@ class ConfigDialog(wx.Dialog):
         self.SetAutoLayout(True)
         bs.Fit(self)
 
+        # Retrieve saved settings... (we only care about position)
+        set_size(self.mw.config, "ConfigDialog", self, screenpct=-1,  aspect=3.5)
+
         wx.EVT_CLOSE(self, self.OnClose)
 
     def OnCancel(self, _):
@@ -417,6 +420,7 @@ class ConfigDialog(wx.Dialog):
         dlg.Destroy()
 
     def OnClose(self, evt):
+        self.saveSize()
         # Don't destroy the dialong, just put it away...
         self.EndModal(wx.ID_CANCEL)
 
@@ -574,8 +578,7 @@ class CommPortDialog(wx.Dialog):
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
 
         # Retrieve saved settings... Use 40% of screen if not specified
-        self.dlgRect=retrieve_size(self.parent.mw.config, "CommDialog", screenpct=60)
-        self.SetDimensions(self.dlgRect.x, self.dlgRect.y, self.dlgRect.width, self.dlgRect.height)
+        set_size(self.parent.mw.config, "CommDialog", self, screenpct=60)
         wx.EVT_CLOSE(self, self.OnClose)
 
     def OnSashChange(self, _=None):
@@ -701,6 +704,12 @@ class BitFlingSettingsDialog(wx.Dialog):
         vbs.Add(gs, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         self.SetSizer(vbs)
         vbs.Fit(self)
+        set_size(wx.GetApp().config, "BitFlingConfigDialog", self, -20, 0.5)
+
+    def ShowModal(self):
+        res=wx.Dialog.ShowModal(self)
+        save_size(wx.GetApp().config, "BitFlingConfigDialog", self.GetRect())
+        return res
 
     def SaveSettings(self, config):
         "Copy settings from dialog fields into config object"
@@ -1407,27 +1416,42 @@ class AnotherDialog(wx.Dialog):
         # fallthru
         return wx.ART_INFORMATION
 
-def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
-    # sanity check for supplied percentage, if they give us .25 instead of 25
-    if screenpct <= 1:
-        screenpct *= 100
-    if screenpct > 100:
-        screenpct = 100
-    
+def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
+    """Sets remembered/calculated dimensions/position for window
+
+    @param confobj: the wx.Config object
+    @param confname: subkey to store/get this windows's settings from
+    @param window:  the window object itself
+    @param screenpct: percentage of the screen the window should occupy.
+             If this value is negative then the window will not be resized,
+             only repositioned (unless the current size is silly)
+    @param aspect:  aspect ratio.  If greater than one then it is
+             how much wider than tall the window is, and if less
+             than one then the other way round
+    """
+
     # Get screen size, scale according to percentage supplied
     screenSize = wx.GetDisplaySize()
     if (aspect >= 1):
-        newWidth = screenSize.x * screenpct / 100
-        newHeight = screenSize.y * screenpct / aspect / 100
+        newWidth = screenSize.x * abs(screenpct) / 100
+        newHeight = screenSize.y * abs(screenpct) / aspect / 100
     else:
-        newWidth = screenSize.x * screenpct * aspect / 100
-        newHeight = screenSize.y * screenpct / 100
-        
-    # Retrieve values (if any) from config database for this config object
-    rs_width  = confobj.ReadInt(confname + "/width", int(newWidth))
-    rs_height = confobj.ReadInt(confname + "/height", int(newHeight))
-    rs_x = confobj.ReadInt(confname + "/x", 0)
-    rs_y = confobj.ReadInt(confname + "/y", 50)
+        newWidth = screenSize.x * abs(screenpct) * aspect / 100
+        newHeight = screenSize.y * abs(screenpct) / 100
+
+    if screenpct<=0:
+        rs_width,rs_height=window.GetSizeTuple()
+    else:
+        # Retrieve values (if any) from config database for this config object
+        rs_width  = confobj.ReadInt(confname + "/width", int(newWidth))
+        rs_height = confobj.ReadInt(confname + "/height", int(newHeight))
+
+    # suitable magic number to show not configured.  it is an exercise for the reader
+    # why it isn't -65536 (hint: virtual desktops)
+    unconfigured=-65245
+
+    rs_x = confobj.ReadInt(confname + "/x", unconfigured)
+    rs_y = confobj.ReadInt(confname + "/y", unconfigured)
 
     # Check for small window
     if rs_height < 25:
@@ -1452,13 +1476,21 @@ def retrieve_size(confobj, confname, screenpct=50, aspect=1.0):
             rs_height = screenSize.y - 50
 
     # Off the screen?  Just pull it back a little bit so it's visible....
-    if rs_x > screenSize.x:
+    if rs_x!=unconfigured and rs_x > screenSize.x:
         rs_x = screenSize.x - 50
-    if rs_y > screenSize.y:
+    if rs_y!=unconfigured and rs_y > screenSize.y:
         rs_y = screenSize.y - 50
-    
-    newRect = wx.Rect(rs_x, rs_y, rs_width, rs_height)
-    return newRect
+
+    if screenpct<=0 and (rs_width,rs_height)==window.GetSizeTuple():
+        # set position only, and no need to resize
+        if rs_x!=unconfigured and rs_y!=unconfigured:
+            window.SetPosition(wx.Point(rs_x, rs_y))
+    else:
+        if rs_x==unconfigured or rs_y==unconfigured:
+            window.SetSize(wx.Size(rs_width, rs_height))
+        else:
+            window.SetDimensions(rs_x, rs_y, rs_width, rs_height)
+
 
 def save_size(confobj, confname, myRect):
     x = myRect.x
