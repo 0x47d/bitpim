@@ -1,8 +1,9 @@
 *.pyc
 *.pyo
-build
-dist
-bitpim-out.iss
-i386
 apidoc
+bitpim-out.iss
+build
 check.out
+dist
+i386
+pyxr
