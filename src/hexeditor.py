@@ -189,7 +189,7 @@ if __name__=='__main__':
     class MainWindow(wx.Frame):
         def __init__(self, parent, id, title):
             wx.Frame.__init__(self, parent, id, title, size=(800,600),
-                             style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
+                             style=wx.DEFAULT_FRAME_STYLE)
             self.control=HexEditor(self)
             self.Show(True)
     app=wx.PySimpleApp()

@@ -73,7 +73,7 @@ class Analyser(wx.Frame):
         @param data: data to show.  If None, then it will be obtained from the clipboard
         """
         wx.Frame.__init__(self, parent, id, title, size=(800,750),
-                         style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
+                         style=wx.DEFAULT_FRAME_STYLE)
 
 
         topsplit=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)

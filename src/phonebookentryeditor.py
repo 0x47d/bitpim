@@ -250,7 +250,7 @@ class CategoryManager(wx.Dialog):
 
     def __init__(self, parent, title="Manage Categories"):
         wx.Dialog.__init__(self, parent, -1, title, style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|
-                           wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+                           wx.RESIZE_BORDER)
 
         vs=wx.BoxSizer(wx.VERTICAL)
         hs=wx.BoxSizer(wx.HORIZONTAL)

@@ -376,7 +376,7 @@ class MenuCallback:
 class MainWindow(wx.Frame):
     def __init__(self, parent, id, title, config):
         wx.Frame.__init__(self, parent, id, title,
-                         style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
+                         style=wx.DEFAULT_FRAME_STYLE)
 
         # does bitfling work?  -- commented out for moment
         # import bitfling.client
@@ -555,7 +555,7 @@ class MainWindow(wx.Frame):
         self.configdlg.updatevariables()
         
         ### notebook
-        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
+        self.nb=wx.Notebook(self,-1)
         # wx.EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
 
         ### notebook tabs

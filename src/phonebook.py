@@ -521,7 +521,7 @@ class PhoneWidget(wx.Panel):
         self._data={}
         self.categories=[]
         self.modified=False
-        self.table=wx.grid.Grid(split, wx.NewId(), style=wx.NO_FULL_REPAINT_ON_RESIZE)
+        self.table=wx.grid.Grid(split, wx.NewId())
         self.table.EnableGridLines(False)
         # which columns?
         cur=config.Read("phonebookcolumns", "")
@@ -1479,7 +1479,7 @@ class ImportDialog(wx.Dialog):
 
     def __init__(self, parent, existingdata, importdata):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
-             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         # the data already in the phonebook
         self.existingdata=existingdata
@@ -1524,10 +1524,10 @@ class ImportDialog(wx.Dialog):
 
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE|wx.NO_FULL_REPAINT_ON_RESIZE)
+        splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         splitter.SetMinimumPaneSize(20)
 
-        self.grid=wx.grid.Grid(splitter, wx.NewId(), style=wx.NO_FULL_REPAINT_ON_RESIZE)
+        self.grid=wx.grid.Grid(splitter, wx.NewId())
         self.table=ImportDataTable(self)
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
         self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
@@ -1936,7 +1936,7 @@ class ImportedEntryMatchDialog(wx.Dialog):
     
     def __init__(self, parent, choices, match):
         wx.Dialog.__init__(self, parent, id=-1, title="Select Import Entry Match", style=wx.CAPTION|
-             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE)
+             wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         self.choices=choices
         self.importdialog=parent

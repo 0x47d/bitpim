@@ -61,9 +61,9 @@ class LogWindow(wx.Panel):
     theanalyser=None
     
     def __init__(self, parent):
-        wx.Panel.__init__(self,parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
+        wx.Panel.__init__(self,parent, -1)
         # have to use rich2 otherwise fixed width font isn't used on windows
-        self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE| wx.TE_RICH2|wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
+        self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE| wx.TE_RICH2|wx.TE_DONTWRAP|wx.TE_READONLY)
         f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
         ta=wx.TextAttr(font=f)
         self.tb.SetDefaultStyle(ta)
@@ -1227,7 +1227,7 @@ class MyFixedScrolledMessageDialog(wx.Dialog):
 
         text=wx.TextCtrl(self, 1,
                         style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 |
-                        wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP  )
+                        wx.TE_DONTWRAP  )
         # Fixed width font
         f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
         ta=wx.TextAttr(font=f)
