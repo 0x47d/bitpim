@@ -352,7 +352,8 @@ class SanyoPhonebook:
         sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
 
         # Get the ringer and wall paper assignments
-        ringpic = self.getsanyobuffer(self.protocolclass.ringerpicbuffer)
+        if serialsname!='mm7400':
+            ringpic = self.getsanyobuffer(self.protocolclass.ringerpicbuffer)
 
         speedslot=[]
         speedtype=[]
@@ -389,21 +390,22 @@ class SanyoPhonebook:
                                 entry['numbers'][k]['speeddial']=j+2
                                 break
 
-                # ringtones
-                if ringpic.ringtones[i].ringtone>0:
-                    try:
-                        tone=result['ringtone-index'][ringpic.ringtones[i].ringtone]['name']
-                    except:
-                        tone=self.serialsname+"Index_"+`ringpic.ringtones[i].ringtone`
-                    entry['ringtones']=[{'ringtone': tone, 'use': 'call'}]
+                if serialsname!='mm7400':
+                    # ringtones
+                    if ringpic.ringtones[i].ringtone>0:
+                        try:
+                            tone=result['ringtone-index'][ringpic.ringtones[i].ringtone]['name']
+                        except:
+                            tone=self.serialsname+"Index_"+`ringpic.ringtones[i].ringtone`
+                        entry['ringtones']=[{'ringtone': tone, 'use': 'call'}]
 
-                # wallpapers
-                if ringpic.wallpapers[i].wallpaper>0:
-                    try:
-                        paper=result['wallpaper-index'][ringpic.wallpapers[i].wallpaper]['name']
-                    except:
-                        paper=self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`
-                    entry['wallpapers']=[{'wallpaper': paper, 'use': 'call'}]
+                    # wallpapers
+                    if ringpic.wallpapers[i].wallpaper>0:
+                        try:
+                            paper=result['wallpaper-index'][ringpic.wallpapers[i].wallpaper]['name']
+                        except:
+                            paper=self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`
+                        entry['wallpapers']=[{'wallpaper': paper, 'use': 'call'}]
                     
                 # Set default number, swap with first number
                 if usedefaultnum:
@@ -695,7 +697,8 @@ class SanyoPhonebook:
         # Now write out the 3 buffers
         self.sendsanyobuffer(sortstuff)
 
-        self.sendsanyobuffer(ringpic)
+        if serialsname!='mm7400':
+            self.sendsanyobuffer(ringpic)
         
         self.sendsanyobuffer(callerid)
         
