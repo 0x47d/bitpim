@@ -64,7 +64,7 @@ def convertto8bitpng(pngdata, maxsize):
     while size>maxsize or ncolormax-ncolor>1:
         ncolor=ncolortry
         os.system(ppmquantbin+' '+`ncolortry`+' '+pnm+ '|'+pnmtopngbin + ' > '+png)
-        f.open(png,"rb")
+        f=open(png,"rb")
         pngquantdata=f.read()
         f.close()
         os.remove(png)
