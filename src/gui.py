@@ -1134,6 +1134,16 @@ class WorkerThread(WorkerThreadFramework):
                 self.rmfile(k)
         self.rmdir(path)
 
+    # offline/reboot
+    def phonerebootrequest(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.offlinerequest(reset=True)
+
+    def phoneofflinerequest(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.offlinerequest()
 
     # backups etc
     def getbackup(self,path,recurse=0):
@@ -1255,6 +1265,9 @@ class FileSystemView(wxTreeListCtrl):
         self.dirmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
         self.dirmenu.AppendSeparator()
         self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
+        self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
 
         EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
         EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
@@ -1267,6 +1280,8 @@ class FileSystemView(wxTreeListCtrl):
         EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
         EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
         EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
+        EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
         EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
         EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
@@ -1474,6 +1489,29 @@ class FileSystemView(wxTreeListCtrl):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         self.OnDirListing(parentdir)
+
+    def OnPhoneReboot(self,_):
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.phonerebootrequest),
+                     Callback(self.OnPhoneRebootResults) )
+
+    def OnPhoneRebootResults(self, exception, _):
+        # special case - we always clear the comm connection
+        # it is needed if the reboot succeeds, and if it didn't
+        # we probably have bad comms anyway
+        mw=self.mainwindow
+        mw.wt.clearcomm()
+        if mw.HandleException(exception): return
+
+    def OnPhoneOffline(self,_):
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.phoneofflinerequest),
+                     Callback(self.OnPhoneOfflineResults) )
+
+    def OnPhoneOfflineResults(self, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+
 
     def OnBackupTree(self, _):
         self.OnBackup(recurse=100)
