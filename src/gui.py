@@ -774,13 +774,6 @@ class MainWindow(wxFrame):
         for f in convertors:
             f(data)
 
-        if data.has_key('phonebook'):
-            import pprint
-            import StringIO
-            si=StringIO.StringIO()
-            pprint.pprint(data['phonebook'],si )
-            self.OnLog(si.getvalue())
-
         # Now scribble to phone
         self.MakeCall(Request(self.wt.senddata, data, todo),
                       Callback(self.OnDataSendPhoneResults, funcscb))
