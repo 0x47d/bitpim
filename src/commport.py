@@ -13,6 +13,12 @@ import serial
 import common
 import time
 
+# have to work around an annoying bug in LGE drivers
+try:
+    import pywintypes
+except:
+    pywintypes=None
+
 class CommTimeout(Exception):
     def __init__(self, str=None, partial=None):
         Exception.__init__(self, str)
@@ -21,6 +27,7 @@ class CommTimeout(Exception):
 class CommConnection:
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
                  softwareflow=0, autolistfunc=None, configparameters=None):
+        self._brokennotifications=0
         self.ser=None
         self.port=port
         self.logtarget=logtarget
@@ -141,9 +148,34 @@ class CommConnection:
         self.ser.write(data)
         self.writebytes+=len(data)
 
+    def _isbrokendriver(self, e):
+        if pywintypes is None or not isinstance(e, pywintypes.error) or e[0]!=121:
+            return False
+        return True
+
+    def _brokendriverread(self, numchars):
+        # we handle timeouts ourselves in this code
+        self._brokennotifications+=1
+        if self._brokennotifications==3:
+            self.log("This driver is broken - enabling workaround")
+        basetime=time.time()
+        while time.time()-basetime<self.params[1]:
+            try:
+                res=self.ser.read(numchars)
+                return res
+            except Exception,e:
+                if not self._isbrokendriver(e):
+                    raise
+        raise CommTimeout()
+
     def read(self, numchars=1, log=True):
         self.readrequests+=1
-        res=self.ser.read(numchars)
+        try:
+            res=self.ser.read(numchars)
+        except Exception,e:
+            if not self._isbrokendriver(e):
+                raise
+            res=self._brokendriverread(numchars)
         if log:
             self.logdata("Reading exact data - requested "+`numchars`, res)
         self.readbytes+=len(res)
