@@ -67,7 +67,7 @@ class Phone:
         """
         assert wait == False
         assert self.logtarget
-        self.logtarget.log("<!= alert wait=%s =!>%s: %s" % (`wait`, self.desc, message)
+        self.logtarget.log("<!= alert wait=%s =!>%s: %s" % (`wait`, self.desc, message))
 
     def progress(self, pos, max, desc):
         "Update the progress meter"
