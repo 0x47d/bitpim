@@ -8,9 +8,12 @@
 ### $Id$
 
 import wx
-import wx.lib.scrolledpanel
+import fixedscrolledpanel
 
 class Editor(wx.Dialog):
+
+    ID_DOWN=wx.NewId()
+    ID_UP=wx.NewId()
 
     def __init__(self, parent, data, title="Edit PhoneBook entry"):
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -19,8 +22,8 @@ class Editor(wx.Dialog):
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
         sz=tb.GetToolBitmapSize()
         print sz
-        tb.AddLabelTool(12, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
-        tb.AddLabelTool(13, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
+        tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
+        tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
 
         tb.Realize()
         vs.Add(tb, 0, wx.EXPAND|wx.BOTTOM, 5)
@@ -30,21 +33,67 @@ class Editor(wx.Dialog):
 
         vs.Add(nb,1,wx.EXPAND|wx.ALL,5)
 
-        self.namewidget=wx.lib.scrolledpanel.ScrolledPanel(self.nb)
+        self.namewidget=fixedscrolledpanel.wxScrolledPanel(self.nb)
         self.namewidgetsizer=wx.BoxSizer(wx.VERTICAL)
         self.namewidget.SetSizer(self.namewidgetsizer)
-
-        for i in range(2):
-            self.MakeNamePane()
+        self.namewidgets=[]
+        for i in range(12):
+            self.MakeNamePane(i)
 
         nb.AddPage(self.namewidget, "Names")
-        nb.AddPage(wx.StaticText(self.nb, -1, "Testing"), "Tets")
-
+        nb.AddPage(wx.StaticText(self.nb, -1, "Testing"), "Test")
         self.SetSizer(vs)
+
+        wx.EVT_TOOL(self, self.ID_UP, self.MoveUp)
+        wx.EVT_TOOL(self, self.ID_DOWN, self.MoveDown)
+
+    def MoveUp(self, _):
+        focuswin=wx.Window_FindFocus()
+        parent=focuswin
+        while parent is not None:
+            if parent in self.namewidgets:
+                self.reorderwidgets(parent, -1)
+                return
+            parent=parent.GetParent()
+        print "not found"
+                
+    def MoveDown(self, _):
+        focuswin=wx.Window_FindFocus()
+        parent=focuswin
+        while parent is not None:
+            if parent in self.namewidgets:
+                self.reorderwidgets(parent, +1)
+                return
+            parent=parent.GetParent()
+        print "not found"
+
+    def reorderwidgets(self, which, delta):
+        pos=-1
+        for i in range(len(self.namewidgets)):
+            if which==self.namewidgets[i]:
+                pos=i
+                break
+        if pos<0:
+            print "eh?"
+            return
+        self.namewidgets=self.namewidgets[:pos]+self.namewidgets[pos+1:]
+        pos+=delta
+        if pos<0: pos=0
+        elif pos>len(self.namewidgets): pos=len(self.namewidgets)
+        self.namewidgets[pos:pos]=[which]
+        for i in range(len(self.namewidgets)):
+            res=self.namewidgetsizer.Remove(self.namewidgets[i])
+            print "remove",i,res
+        for i in range(len(self.namewidgets)):
+            self.namewidgetsizer.Add(self.namewidgets[i], 0, wx.EXPAND|wx.ALL, 5)
+        self.namewidgetsizer.Layout()
+        wx.CallAfter(self.namewidget.MakeChildVisible, wx.Window_FindFocus())
+        print "relayed out"
+        print "pos of first is",self.namewidgets[0].GetPosition()
         
     def MakeNamePane(self,pos=-1):
         p=wx.Panel(self.namewidget,-1)
-        vs=wx.StaticBoxSizer(wx.StaticBox(p, -1, "Name Details"), wx.VERTICAL)
+        vs=wx.StaticBoxSizer(wx.StaticBox(p, -1, "Name Details "+`pos`), wx.VERTICAL)
         hstop=wx.BoxSizer(wx.HORIZONTAL)
         hsbot=wx.BoxSizer(wx.HORIZONTAL)
         hstop.Add(wx.StaticText(p, -1, "First"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
@@ -61,6 +110,7 @@ class Editor(wx.Dialog):
         vs.Add(hsbot, 0, wx.EXPAND|wx.ALL, 5)
         p.SetSizer(vs)
         vs.Fit(p)
+        self.namewidgets.append(p)
         self.namewidgetsizer.Add(p,0,wx.EXPAND|wx.ALL, 5)
         self.namewidget.SetupScrolling()
         return p
