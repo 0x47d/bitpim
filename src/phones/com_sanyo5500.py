@@ -31,7 +31,13 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
 
     desc="SCP-5500"
 
-    NUM_MEDIA_DIRECTORIES=5
+    NUM_MEDIA_DIRECTORIES=4
+    # Directories:
+    #    1: Camera Pictures and Videos.  MDM - Video
+    #                                    V   - Picture
+    #    2: Downloads
+    #    3: Cable uploads
+    #    4: Duplicate of directory 1 ??
 
     protocolclass=p_sanyo5500
     serialsname='scp5500'
@@ -118,16 +124,18 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         result = com_sanyo.Phone.savecalendar(self, dict, merge)
     
 class Profile(com_sanyo.Profile):
-
     protocolclass=p_sanyo5500
     serialsname='scp5500'
 
+    WALLPAPER_WIDTH=132
+    WALLPAPER_HEIGHT=176
+    
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-#        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
     )
 
     def __init__(self):
