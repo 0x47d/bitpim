@@ -386,8 +386,11 @@ class LogWindow(wxPanel):
         self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
     def logdata(self, str, data):
-        self.log("%s - Data %d bytes" % (str, len(data),))
-        self.log(common.datatohexstring(data))
+        if data is not None:
+            self.log("%s - Data %d bytes" % (str, len(data),))
+            self.log("\n"+common.datatohexstring(data))        
+        else:
+            self.log(str)
 
 
 ###
@@ -656,10 +659,10 @@ class CommPortDialog(wxDialog):
 
         # the buttons
         buttsizer=wxGridSizer(1, 4)
-        buttsizer.Add(wxButton(p, wxID_CANCEL, "Cancel"), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, self.ID_REFRESH, "Refresh"), 0, wxALL, 10)
         buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, self.ID_REFRESH, "Refresh"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxALL, 10)
+        buttsizer.Add(wxButton(p, wxID_CANCEL, "Cancel"), 0, wxALL, 10)
 
         # vertical join of the two
         vbs=wxBoxSizer(wxVERTICAL)
