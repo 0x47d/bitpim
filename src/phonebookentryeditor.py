@@ -189,7 +189,7 @@ class MemoEditor(wx.Panel):
 
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.VERTICAL)
 
-        self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
+        self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE, size=(-1, 150))
         vs.Add(self.memo, 0, wx.EXPAND|wx.ALL, 5)
 
         self.SetSizer(vs)
