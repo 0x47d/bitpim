@@ -404,14 +404,17 @@ class BPFSImageFile(wx.FSFile):
     All files are internally converted to PNG
     """
 
-    def __init__(self, fshandler, location, name=None, img=None, width=32, height=32, bgcolor=None):
+    def __init__(self, fshandler, location, name=None, img=None, width=-1, height=-1, bgcolor=None):
         self.fshandler=fshandler
         self.location=location
 
         if img is None:
             img=wx.Image(name)
 
-        b=ScaleImageIntoBitmap(img, width, height, bgcolor)
+        if width>0 and height>0:
+            b=ScaleImageIntoBitmap(img, width, height, bgcolor)
+        else:
+            b=img.ConvertToBitmap()
         
         f=common.gettempfilename("png")
         if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
