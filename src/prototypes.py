@@ -74,10 +74,10 @@ class BaseProtogenClass(object):
     def packetsize(self):
         "Returns size in bytes that we occupy"
         raise NotImplementedError("packetsize()")
-    def writetobuffer(self, buffer):
-        "Scribble ourselves to the buffer"
+    def writetobuffer(self, buf):
+        "Scribble ourselves to the buf"
         raise NotImplementedError("writetobuffer()")
-    def readfrombuffer(self, buffer):
+    def readfrombuffer(self, buf):
         "Get our value from the buffer"
         raise NotImplementedError("readfrombuffer()")
     def getvalue(self):
@@ -106,7 +106,7 @@ class BaseProtogenClass(object):
         to always call this helper as the last line of your constructor.
 
         @param klass:  This should be the class you are calling this function from
-        @param dict:   The keyword arguments
+        @param dict:   The keyword arguments still in play
         """
         if len(dict) and self.__class__.__mro__[0]==klass:
             raise TypeError('Unexpected keyword args supplied: '+`dict`)
@@ -170,34 +170,34 @@ class UINTlsb(BaseProtogenClass):
             raise ValueError("This field is a constant of %d.  You tried setting it to %d" % (self._constant, self._value))
 
 
-    def readfrombuffer(self, buffer):
+    def readfrombuffer(self, buf):
         if self._sizeinbytes is None:
             raise SizeNotKnownException()
-        self._bufferstartoffset=buffer.getcurrentoffset()
+        self._bufferstartoffset=buf.getcurrentoffset()
         # lsb read
         res=0
         shift=0
         for dummy in range(self._sizeinbytes):
-            res|=buffer.getnextbyte()<<shift
+            res|=buf.getnextbyte()<<shift
             shift+=8
         self._value=res
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
         if self._constant is not None and self._value!=self._constant:
             raise ValueError("The value read should be a constant of %d, but was %d instead" % (self._constant, self._value))
          
-    def writetobuffer(self, buffer):
+    def writetobuffer(self, buf):
         if self._sizeinbytes is None:
             raise SizeNotKnownException()
         if self._value is None:
             raise ValueNotSetException()
         
-        self._bufferstartoffset=buffer.getcurrentoffset()
+        self._bufferstartoffset=buf.getcurrentoffset()
         # lsb write
         res=self._value
         for dummy in range(self._sizeinbytes):
-            buffer.appendbyte(res&0xff)
+            buf.appendbyte(res&0xff)
             res>>=8
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
     def packetsize(self):
         if self._sizeinbytes is None:
@@ -232,8 +232,8 @@ class BOOLlsb(UINTlsb):
         if self._value is not None:
             self._value=bool(self._value)
 
-    def readfrombuffer(self, buffer):
-        UINTlsb.readfrombuffer(self,buffer)
+    def readfrombuffer(self, buf):
+        UINTlsb.readfrombuffer(self,buf)
         self._boolme()
     
 
@@ -308,15 +308,15 @@ class STRING(BaseProtogenClass):
                     if len(self._value) and self._terminator is not None:
                         self._value=self._value[:-1]
 
-    def readfrombuffer(self, buffer):
-        self._bufferstartoffset=buffer.getcurrentoffset()
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
 
         if self._pascal:
-            self._sizeinbytes=buffer.getnextbyte()
+            self._sizeinbytes=buf.getnextbyte()
 
         if self._sizeinbytes is not None:
             # fixed size
-            self._value=buffer.getnextbytes(self._sizeinbytes)
+            self._value=buf.getnextbytes(self._sizeinbytes)
             if self._terminator is not None:
                 pos=self._value.find(chr(self._terminator))
                 if pos>=0:
@@ -326,12 +326,12 @@ class STRING(BaseProtogenClass):
         else:
             if self._terminator is None:
                 # read in entire rest of packet
-                self._value=buffer.getremainingbytes()
+                self._value=buf.getremainingbytes()
             else:
                 # read up to terminator
                 self._value=""
-                while buffer.hasmore():
-                    self._value+=chr(buffer.getnextbyte())
+                while buf.hasmore():
+                    self._value+=chr(buf.getnextbyte())
                     if self._value[-1]==chr(self._terminator):
                         break
                 if self._value[-1]!=chr(self._terminator):
@@ -343,28 +343,28 @@ class STRING(BaseProtogenClass):
         if self._constant is not None and self._value!=self._constant:
             raise ValueError("The value read was not the constant")
 
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
-    def writetobuffer(self, buffer):
+    def writetobuffer(self, buf):
         if self._value is None:
             raise ValueNotSetException()
                 
-        self._bufferstartoffset=buffer.getcurrentoffset()
+        self._bufferstartoffset=buf.getcurrentoffset()
         if self._pascal:
             l=len(self._value)
             if self._terminator is not None:
                 l+=1
-            buffer.appendbyte(l)
-        buffer.appendbytes(self._value)
+            buf.appendbyte(l)
+        buf.appendbytes(self._value)
         l=len(self._value)
         if self._terminator is not None:
-            buffer.appendbyte(self._terminator)
+            buf.appendbyte(self._terminator)
             l+=1
         if self._sizeinbytes is not None:
             if l<self._sizeinbytes:
-                buffer.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
+                buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
 
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
     def packetsize(self):
         if self._sizeinbytes is not None:
@@ -434,33 +434,40 @@ class DATA(BaseProtogenClass):
         if self._value is not None:
             if self._sizeinbytes is not None:
                 l=len(self._value)
-                if l>self._sizeinbytes:
+                if l<self._sizeinbytes:
+                    if self._pad is not None:
+                        self._value+=chr(self._pad)*(self._sizeinbytes-l)
+
+                l=len(self._value)
+
+                if l!=self._sizeinbytes:
                     if self._raiseonwrongsize:
                         raise ValueLengthException(l, self._sizeinbytes)
-                    
-                    self._value=self._value[:self._sizeinbytes]
+                    else:
+                        self._value=self._value[:self._sizeinbytes]
 
-    def readfrombuffer(self, buffer):
-        self._bufferstartoffset=buffer.getcurrentoffset()
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
 
         if self._sizeinbytes is not None:
             # fixed size
-            self._value=buffer.getnextbytes(self._sizeinbytes)
+            self._value=buf.getnextbytes(self._sizeinbytes)
         else:
             # read in entire rest of packet
-            self._value=buffer.getremainingbytes()
+            self._value=buf.getremainingbytes()
 
         if self._constant is not None and self._value!=self._constant:
             raise ValueError("The value read was not the constant")
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
-    def writetobuffer(self, buffer):
+    def writetobuffer(self, buf):
         if self._value is None:
             raise ValueNotSetException()
                 
-        self._bufferstartoffset=buffer.getcurrentoffset()
-        buffer.appendbytes(self._value)
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferstartoffset=buf.getcurrentoffset()
+        buf.appendbytes(self._value)
+        self._bufferendoffset=buf.getcurrentoffset()
 
     def packetsize(self):
         if self._sizeinbytes is not None:
@@ -490,10 +497,10 @@ class UNKNOWN(DATA):
         """
         dict={'pad':0 , 'default': ""}
         dict.update(kwargs)
-        super(UNKNOWN,self).__init__(*args, **kwargs)
+        super(UNKNOWN,self).__init__(*args, **dict)
 
         if self._ismostderived(UNKNOWN):
-            self._update(args,kwargs)
+            self._update(args,dict)
 
     def _update(self, args, kwargs):
         super(UNKNOWN,self)._update(args, kwargs)
@@ -553,35 +560,35 @@ class LIST(BaseProtogenClass):
         if len(args):
             self.extend(args)
 
-    def readfrombuffer(self,buffer):
-        self._bufferstartoffset=buffer.getcurrentoffset()
+    def readfrombuffer(self,buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
         # delete all existing items
         while len(self):
             del self[0]
             
         if self._length is None:
             # read rest of buffer
-            while buffer.hasmore():
+            while buf.hasmore():
                 x=self._makeitem()
-                x.readfrombuffer(buffer)
+                x.readfrombuffer(buf)
                 self._thelist.append(x)
         else:
             for dummy in range(self._length):
                 # read specified number of items
                 x=self._makeitem()
-                x.readfrombuffer(buffer)
+                x.readfrombuffer(buf)
                 self._thelist.append(x)
 
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
-    def writetobuffer(self, buffer):
-        self._bufferstartoffset=buffer.getcurrentoffset()
+    def writetobuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
 
         self._ensurelength()
         for i in self:
-            i.writetobuffer(buffer)
+            i.writetobuffer(buf)
 
-        self._bufferendoffset=buffer.getcurrentoffset()
+        self._bufferendoffset=buf.getcurrentoffset()
 
     def packetsize(self):
         self._ensurelength()
