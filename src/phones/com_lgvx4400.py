@@ -106,7 +106,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 ringers[g.items[i].index]=g.items[i].name
         results['ringtone-index']=ringers
         self.log("Fundamentals retrieved")
-        self.log(common.prettyprintdict(results))
         return results
         
     def getphonebook(self,result):
@@ -253,55 +252,51 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     def getcalendar(self,result):
         res={}
         # Read exceptions file first
-        data=self.getfilecontents("sch/schexception.dat")
+        buf=prototypes.buffer(self.getfilecontents("sch/schexception.dat"))
+        ex=p_lgvx4400.scheduleexceptionfile()
+        ex.readfrombuffer(buf)
+        self.logdata("Calendar exceptions", buf.getdata(), ex)
         exceptions={}
-        for i in range(0,len(data)/8):
-            pos=8*i
-            offset=readlsb(data[pos:pos+4])
-            d=ord(data[pos+4])
-            m=ord(data[pos+5])
-            y=readlsb(data[pos+6:pos+8])
+        for i in ex.items:
             try:
-                exceptions[offset].append( (y,m,d) )
+                exceptions[i.pos].append( (i.year,i.month,i.day) )
             except KeyError:
-                exceptions[offset]=[ (y,m,d) ]
+                exceptions[i.pos]=[ (i.year,i.month,i.day) ]
 
         # Now read schedule
-        data=self.getfilecontents("sch/schedule.dat")
-        numentries=readlsb(data[0:2])
-        for i in range(0, (len(data)-2)/60):
+        buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
+        sc=p_lgvx4400.schedulefile()
+        sc.readfrombuffer(buf)
+        self.logdata("Calendar", buf.getdata(), sc)
+        for event in sc.events:
             entry={}
-            pos=2+i*60
-            entry['pos']=readlsb(data[pos+0:pos+4])  # hex offset of entry within schedule file
+            entry['pos']=event.pos
             if entry['pos']==-1: continue # blanked entry
-            if exceptions.has_key(pos):
-                entry['exceptions']=exceptions[pos]
-            entry['start']=brewdecodedate(readlsb(data[pos+4:pos+8]))
-            entry['end']=brewdecodedate(readlsb(data[pos+8:pos+0xc]))
-            repeat=ord(data[pos+0xc])
-            entry['repeat']=self._calrepeatvalues[repeat]
-            entry['daybitmap']=readlsb(data[pos+0xd:pos+0x10])
-            min=ord(data[pos+0x10])
-            hour=ord(data[pos+0x11])
+            # normal fields
+            for field in 'start','end','daybitmap','changeserial','snoozedelay','ringtone','description':
+                entry[field]=getattr(event,field)
+            # calculated ones
+            entry['repeat']=self._calrepeatvalues[event.repeat]
+            min=event.alarmminutes
+            hour=event.alarmhours
             if min==100 or hour==100:
                 entry['alarm']=None # no alarm set
             else:
                 entry['alarm']=hour*60+min
-            entry['changeserial']=readlsb(data[pos+0x12:pos+0x13])
-            entry['snoozedelay']=readlsb(data[pos+0x13:pos+0x14])
-            entry['ringtone']=ord(data[pos+0x14])
-            entry['description']=readstring(data[pos+0x15:pos+0x3d])
-            res[pos]=entry
+            # Exceptions
+            if exceptions.has_key(event.pos):
+                entry['exceptions']=exceptions[event.pos]
+            res[event.pos]=entry
 
-        assert numentries==len(res)
+        assert sc.numactiveitems==len(res)
         result['calendar']=res
         return result
 
     def savecalendar(self, dict, merge):
         # ::TODO:: obey merge param
         # what will be written to the files
-        data=""
-        dataexcept=""
+        eventsf=p_lgvx4400.schedulefile()
+        exceptionsf=p_lgvx4400.scheduleexceptionfile()
 
         # what are we working with
         cal=dict['calendar']
@@ -310,37 +305,27 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         keys.sort()
 
         # number of entries
-        data+=makelsb(len(keys), 2)
+        eventsf.numactiveitems=len(keys)
         
         # play with each entry
         for k in keys:
+            # entry is what we will return to user
             entry=cal[k]
-            pos=len(data)
-            entry['pos']=pos
-
-            # 4 bytes of offset
-            assert len(data)-pos==0
-            data+=makelsb(pos, 4)
-            # start
-            assert len(data)-pos==4
-            data+=makelsb(brewencodedate(*entry['start']),4)
-            # end
-            assert len(data)-pos==8
-            data+=makelsb(brewencodedate(*entry['end']), 4)
-            # repeat
-            assert len(data)-pos==0xc
+            data=p_lgvx4400.scheduleevent()
+            data.pos=eventsf.packetsize()
+            entry['pos']=data.pos
+            # simple copy of these fields
+            for field in 'start', 'end', 'daybitmap', 'changeserial', 'snoozedelay','ringtone','description':
+                setattr(data,field,entry[field])
+            # And now the special ones
             repeat=None
             for k,v in self._calrepeatvalues.items():
                 if entry['repeat']==v:
                     repeat=k
                     break
             assert repeat is not None
-            data+=makelsb(repeat, 1)
-            # daybitmap
-            assert len(data)-pos==0xd
-            data+=makelsb(entry['daybitmap'],3)
-            # alarm - first byte is mins, next is hours.  100 indicates not set
-            assert len(data)-pos==0x10
+            data.repeat=repeat
+            # alarm 100 indicates not set
             if entry['alarm'] is None or entry['alarm']<0:
                 hour=100
                 min=100
@@ -348,41 +333,33 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 assert entry['alarm']>=0
                 hour=entry['alarm']/60
                 min=entry['alarm']%60
-            data+=makelsb(min,1)
-            data+=makelsb(hour,1)
-            # changeserial
-            assert len(data)-pos==0x12
-            data+=makelsb(entry['changeserial'], 1)
-            # snoozedelay
-            data+=makelsb(entry['snoozedelay'], 1)
-            # ringtone
-            assert len(data)-pos==0x14
-            data+=makelsb(entry['ringtone'], 1)
-            # description
-            assert len(data)-pos==0x15
-            data+=makestring( entry['description'], 39)
-
-            # sanity check
-            assert (len(data)-2)%60==0
+            data.alarmminutes=min
+            data.alarmhours=hour
 
             # update exceptions if needbe
             if entry.has_key('exceptions'):
                 for y,m,d in entry['exceptions']:
-                    dataexcept+=makelsb(pos,4)
-                    dataexcept+=makelsb(d,1)
-                    dataexcept+=makelsb(m,1)
-                    dataexcept+=makelsb(y,2)
-                    # sanity check
-                    assert len(dataexcept)%8==0
+                    de=p_lgvx4400.scheduleexception()
+                    de.pos=data.pos
+                    de.day=d
+                    de.month=m
+                    de.year=y
+                    exceptionsf.items.append(de)
 
             # put entry in nice shiny new dict we are building
             entry=copy.copy(entry)
-            entry['pos']=pos
-            newcal[pos]=entry
+            newcal[data.pos]=entry
+            eventsf.events.append(data)
 
         # scribble everything out
-        self.writefile("sch/schedule.dat", data)
-        self.writefile("sch/schexception.dat", dataexcept)
+        buf=prototypes.buffer()
+        eventsf.writetobuffer(buf)
+        self.logdata("Writing calendar", buf.getvalue(), eventsf)
+        self.writefile("sch/schedule.dat", buf.getvalue())
+        buf=prototypes.buffer()
+        exceptionsf.writetobuffer(buf)
+        self.logdata("Writing calendar exceptions", buf.getvalue(), exceptionsf)
+        self.writefile("sch/schexception.dat", buf.getvalue())
 
         # fix passed in dict
         dict['calendar']=newcal
