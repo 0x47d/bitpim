@@ -11,7 +11,91 @@ import wx
 from  wxPython.lib.grids import wxFlexGridSizer
 import fixedscrolledpanel
 import pubsub
+import phonebook
 
+
+class WallpaperEditor(wx.Panel):
+
+    unnamed="Select:"
+    unknownselprefix=": "
+
+    choices=["call", "message"]
+
+    ID_LIST=wx.NewId()
+
+    def __init__(self, parent, _):
+        wx.Panel.__init__(self, parent, -1)
+
+        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Wallpaper"), wx.HORIZONTAL)
+
+        vs=wx.BoxSizer(wx.VERTICAL)
+
+        self.preview=phonebook.HTMLWindow(self, -1)
+        self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
+        vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
+        vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
+
+        self.wallpaper=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
+        hs.Add(self.wallpaper, 1, wx.EXPAND|wx.ALL, 5)
+
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+        wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
+
+    def OnLBClicked(self, _):
+        v=self.Get().get('wallpaper', None)
+        self.SetPreview(v)
+
+    def SetPreview(self, name):
+        if name is None:
+            self.preview.SetPage('')
+        else:
+            self.preview.SetPage('<img src="bpuserimage:%s;width=64;height=64">' % (name,))        
+
+    def Set(self, data):
+        wp=data.get("wallpaper", self.unnamed)
+
+        self.SetPreview(wp)
+        type=data.get("type", "call")
+        if type=="message":
+            self.type.SetSelection(1)
+        else:
+            self.type.SetSelection(0)
+
+        # try using straight forward name
+        try:
+            self.wallpaper.SetStringSelection(wp)
+            return
+        except:
+            pass
+
+        # ok, with unknownselprefix
+        try:
+            self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
+            return
+        except:
+            pass
+
+        # ok, just add it
+        self.wallpaper.InsertItems([self.unknownselprefix+wp], 1)
+        self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
+
+    def Get(self):
+        res={}
+        wp=self.wallpaper.GetStringSelection()
+        if wp==self.unnamed:
+            return res
+        if wp.startswith(self.unknownselprefix):
+            wp=wp[len(self.unknownselprefix):]
+        res['wallpaper']=wp
+        res['use']=self.type.GetStringSelection()
+        return res
+        
+        
 
 class CategoryManager(wx.Dialog):
 
@@ -60,7 +144,7 @@ class CategoryManager(wx.Dialog):
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
 
     def OnUpdateCategories(self, msg):
-        cats=msg.data
+        cats=msg.data[:]
         if self.curlist is None:
             self.curlist=cats
 
@@ -153,7 +237,7 @@ class CategoryEditor(wx.Panel):
         dlg.Show()
 
     def OnUpdateCategories(self, msg):
-        cats=msg.data
+        cats=msg.data[:]
         print "categories updating to",cats
         cats=[self.unnamed]+cats
         if self.categories!=cats:
@@ -458,6 +542,14 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         self.childclass=childclass
         self.SetupScrolling()
 
+    def Get(self):
+        res=[]
+        for i in self.widgets:
+            g=i.Get()
+            if len(g):
+                res.append(g)
+        return res
+
     def Populate(self, data):
         callsus=False
         while len(data)>len(self.widgets):
@@ -604,6 +696,7 @@ class Editor(wx.Dialog):
         ("URLs", "urls", URLEditor),
         ("Memos", "memos", MemoEditor),
         ("Categories", "categories", CategoryEditor),
+        ("Wallpapers", "wallpapers", WallpaperEditor),
         ]
 
     def __init__(self, parent, data, title="Edit PhoneBook entry"):
@@ -636,6 +729,9 @@ class Editor(wx.Dialog):
             if self.data.has_key(key):
                 widget.Populate(self.data[key])
 
+        vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
         self.SetSizer(vs)
 
         wx.EVT_TOOL(self, self.ID_UP, self.MoveUp)
@@ -643,6 +739,15 @@ class Editor(wx.Dialog):
         wx.EVT_TOOL(self, self.ID_ADD, self.Add)
         wx.EVT_TOOL(self, self.ID_DELETE, self.Delete)
 
+    def GetData(self):
+        res={}
+        for i in range(len(self.tabsfactory)):
+            widget=self.nb.GetPage(i)
+            data=widget.Get()
+            if len(data):
+                res[self.tabsfactory[i][1]]=data
+        return res
+            
     def MoveUp(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Move(-1)
     
