@@ -1536,6 +1536,11 @@ class PhonebookPrintDialog(wx.Dialog):
     ID_PRINTPREVIEW=wx.NewId()
     ID_CLOSE=wx.ID_CANCEL
     ID_HELP=wx.NewId()
+    ID_TEXTSCALE=wx.NewId()
+
+    textscales=[ (0.4, "Teeny"), (0.6, "Tiny"), (0.8, "Small"), (1.0, "Normal"), (1.2, "Large"), (1.4, "Ginormous") ]
+    # we reverse the order so the slider seems more natural
+    textscales.reverse()
 
     def __init__(self, phonewidget, mainwindow, config):
         wx.Dialog.__init__(self, mainwindow, id=-1, title="Print PhoneBook", style=wx.CAPTION|
@@ -1567,16 +1572,30 @@ class PhonebookPrintDialog(wx.Dialog):
         numselected=len(phonewidget.GetSelectedRows())
         numtotal=len(phonewidget._data)
 
-        # selection
+        # selection and scale
+        vbs2=wx.BoxSizer(wx.VERTICAL)
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
         self.selected=wx.RadioButton(self, self.ID_SELECTED, "Selected (%d)" % (numselected,), style=wx.RB_GROUP)
         self.all=wx.RadioButton(self, self.ID_SELECTED, "All (%d)" % (numtotal,) )
         bs.Add(self.selected, 0, wx.EXPAND|wx.ALL, 2)
         bs.Add(self.all, 0, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(bs, 0, wx.EXPAND|wx.ALL, 2)
         self.selected.SetValue(numselected>1)
         self.all.SetValue(not (numselected>1))
+        vbs2.Add(bs, 0, wx.EXPAND|wx.ALL, 2)
 
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Text Scale"), wx.HORIZONTAL)
+        for i in range(len(self.textscales)):
+            if self.textscales[i][0]==1.0:
+                sv=i
+                break
+        self.textscaleslider=wx.Slider(self, self.ID_TEXTSCALE, sv, 0, len(self.textscales)-1, style=wx.SL_VERTICAL|wx.SL_AUTOTICKS)
+        self.scale=1
+        bs.Add(self.textscaleslider, 0, wx.EXPAND|wx.ALL, 2)
+        self.textscalelabel=wx.StaticText(self, -1, "Normal")
+        bs.Add(self.textscalelabel, 0, wx.ALIGN_CENTRE)
+        vbs2.Add(bs, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 2)
+        
         # Sort
         self.sortkeyscb=[]
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Sorting"), wx.VERTICAL)
@@ -1586,14 +1605,14 @@ class PhonebookPrintDialog(wx.Dialog):
             self.sortkeyscb.append(wx.ComboBox(self, wx.NewId(), "<None>", choices=choices, style=wx.CB_READONLY))
             self.sortkeyscb[-1].SetSelection(0)
             bs.Add(self.sortkeyscb[-1], 0, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(bs)
+        hbs.Add(bs, 0, wx.EXPAND|wx.ALL, 4)
 
         # Layout and style
         vbs2=wx.BoxSizer(wx.VERTICAL) # they are on top of each other
         bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Layout"), wx.VERTICAL)
         k=self.layoutfiles.keys()
         k.sort()
-        self.layout=wx.ListBox(self, self.ID_LAYOUT, style=wx.LB_SINGLE|wx.LB_NEEDED_SB|wx.LB_HSCROLL, choices=k)
+        self.layout=wx.ListBox(self, self.ID_LAYOUT, style=wx.LB_SINGLE|wx.LB_NEEDED_SB|wx.LB_HSCROLL, choices=k, size=(150,-1))
         self.layout.SetSelection(0)
         bs.Add(self.layout, 1, wx.EXPAND|wx.ALL, 2)
         vbs2.Add(bs, 1, wx.EXPAND|wx.ALL, 2)
@@ -1626,7 +1645,6 @@ class PhonebookPrintDialog(wx.Dialog):
 
         self.SetSizer(vbs)
         vbs.Fit(self)
-        # self.SetSize( (600, 500) )
 
         # event handlers
         wx.EVT_BUTTON(self, self.ID_PRINTPREVIEW, self.OnPrintPreview)
@@ -1638,7 +1656,15 @@ class PhonebookPrintDialog(wx.Dialog):
             wx.EVT_COMBOBOX(self, i.GetId(), self.UpdateHtml)
         wx.EVT_LISTBOX(self, self.layout.GetId(), self.UpdateHtml)
         wx.EVT_CHECKLISTBOX(self, self.styles.GetId(), self.UpdateHtml)
+        wx.EVT_COMMAND_SCROLL(self, self.textscaleslider.GetId(), self.UpdateSlider)
         self.UpdateHtml()
+
+    def UpdateSlider(self, evt):
+        pos=evt.GetPosition()
+        if self.textscales[pos][0]!=self.scale:
+            self.scale=self.textscales[pos][0]
+            self.textscalelabel.SetLabel(self.textscales[pos][1])
+            self.preview.SetFontScale(self.scale)
 
     def UpdateHtml(self,_=None):
         wx.CallAfter(self._UpdateHtml)
@@ -1693,10 +1719,10 @@ class PhonebookPrintDialog(wx.Dialog):
         return html
 
     def OnPrintPreview(self, _):
-        wx.GetApp().htmlprinter.PreviewText(self.html)
+        wx.GetApp().htmlprinter.PreviewText(self.html, scale=self.scale)
 
     def OnPrint(self, _):
-        wx.GetApp().htmlprinter.PrintText(self.html)
+        wx.GetApp().htmlprinter.PrintText(self.html, scale=self.scale)
 
     def OnPrinterSetup(self, _):
         wx.GetApp().htmlprinter.PrinterSetup()
