@@ -1,4 +1,3 @@
-# -*- coding: mbcs -*-
 # Created by makepy.py version 0.4.91
 # By python version 2.3.4 (#53, May 25 2004, 21:17:02) [MSC v.1200 32 bit (Intel)]
 # From type library 'msoutl9.olb'
