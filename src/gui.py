@@ -350,6 +350,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_FV_ICONS, self.OnFileViewIcons)
         EVT_MENU(self, ID_EDITADDENTRY, self.OnEditAddEntry)
         EVT_MENU(self, ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
+        EVT_MENU(self, ID_HELPABOUT, self.OnHelpAbout)
         EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
 
@@ -394,6 +395,25 @@ class MainWindow(wxFrame):
         assert isinstance(exception, SystemExit)
         # assume it worked
         self.Destroy()
+
+    # about and help
+
+    def OnHelpAbout(self,_):
+        import version
+
+        str="BitPim Version "+version.version
+        if version.testver:
+            str+="-test"+`version.testver`
+        str+="\n\n"
+        if len(version.extrainfo):
+            str+=version.extrainfo+"\n\n"
+        str+=version.contact
+
+        d=wxMessageDialog(self, str, "About BitPim", wxOK|wxICON_INFORMATION)
+        d.ShowModal()
+        d.Destroy()
+        
+        
 
     def OnViewLogData(self, _):
         # toggle state of the log data
