@@ -1708,7 +1708,12 @@ class ImportDialog(wx.Dialog):
             event.Skip()
             row=self.table.GetRowData(event.GetRow())
         else:
-            row=self.table.GetRowData(self.grid.GetGridCursorRow())
+            gcr=self.grid.GetGridCursorRow()
+            if gcr>=0:
+                row=self.table.GetRowData(gcr)
+            else: # table is empty
+                row=None,None,None,None
+                
         confidence,importid,existingid,resultid=row
         if resultid is not None:
             self.resultpreview.ShowEntry(self.resultdata[resultid])
