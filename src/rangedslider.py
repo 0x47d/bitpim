@@ -97,6 +97,17 @@ class RangedSlider(wx.PyWindow):
         dc.DrawBitmap(self.bmpstart, start+int(width*self.posstart)+self.hotstart[0], y+self.hotstart[1], True)
         dc.DrawBitmap(self.bmpend, start+int(width*self.posend)+self.hotend[0], y+self.hotend[1], True)
 
+    def _isinimage(self, image, relx, rely):
+        "Works out if click is in image, and not transparent area of image"
+        if image.HasAlpha():
+            return image.GetAlpha(relx, rely)>0
+        if image.HasMask():
+            return not (image.GetRed(relx, rely)==image.GetMaskRed() and
+                        image.GetGreen(relx, rely)==image.GetMaskGreen() and
+                        image.GetBlue(relx, rely)==image.GetMaskBlue())
+        # we have no way of telling, so say yes
+        return True
+
     def OnLeftDown(self, evt):
         x,y=evt.GetX(), evt.GetY()
         sz=self.GetClientSize()
@@ -107,21 +118,21 @@ class RangedSlider(wx.PyWindow):
         xx,yy=start+int(width*self.poscurrent)+self.hotcurrent[0], liney+self.hotcurrent[1]
         if xx<=x<xx+self.imgcurrent.GetWidth() and yy<=y<yy+self.imgcurrent.GetHeight():
             relx,rely=x-xx,y-yy
-            if self.imgcurrent.GetAlpha(relx, rely)>0:
+            if self._isinimage(self.imgcurrent, relx, rely):
                 print "oncurrent"
                 self.clickinfo=0,x,self.poscurrent
                 return
         xx,yy=start+int(width*self.posstart)+self.hotstart[0], liney+self.hotstart[1]
         if xx<=x<xx+self.imgstart.GetWidth() and yy<=y<yy+self.imgstart.GetHeight():
             relx,rely=x-xx,y-yy
-            if self.imgstart.GetAlpha(relx, rely)>0:
+            if self._isinimage(self.imgstart, relx, rely):
                 print "onstart"
                 self.clickinfo=1,x,self.posstart
                 return
         xx,yy=start+int(width*self.posend)+self.hotend[0], liney+self.hotend[1]
         if xx<=x<xx+self.imgend.GetWidth() and yy<=y<yy+self.imgend.GetHeight():
             relx,rely=x-xx,y-yy
-            if self.imgend.GetAlpha(relx, rely)>0:
+            if self._isinimage(self.imgend, relx, rely):
                 print "onend"
                 self.clickinfo=2,x,self.posend
                 return
