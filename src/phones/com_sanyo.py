@@ -617,12 +617,7 @@ class SanyoPhonebook:
 
         data['phonebook']=newphonebook
         del data['phonephonebook']
-
-        self.log("Taking phone out of write mode")
-        self.log("Please wait for phone to restart before doing other phone operations")
-        req=self.protocolclass.beginendupdaterequest()
-        req.beginend=2 # Stop update
-        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+        data['rebootphone'] = 1
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
@@ -869,6 +864,8 @@ class SanyoPhonebook:
 
 #        dict['calendar'] = cal
 #        Not mucking with passed in calendar yet
+        dict['rebootphone'] = 1
+        return dict
 
     def decodedate(self,val):
         """Unpack 32 bit value into date/time
