@@ -412,13 +412,9 @@ class ConfigDialog(wx.Dialog):
         if self.diskbox.GetValue()==self.setme:
             if guihelper.IsMSWindows(): # we want subdir of my documents on windows
                     # nice and painful
-                    import _winreg
-                    x=_winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
-                    y=_winreg.OpenKey(x, r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
-                    str=_winreg.QueryValueEx(y, "Personal")[0]
-                    _winreg.CloseKey(y)
-                    _winreg.CloseKey(x)
-                    path=os.path.join(str, "bitpim")
+                    from win32com.shell import shell, shellcon
+                    path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+                    path=os.path.join(str(path), "bitpim")
             else:
                 path=os.path.expanduser("~/.bitpim-files")
             self.diskbox.SetValue(path)
