@@ -74,6 +74,24 @@ class SafeFileWrapper:
         if v is None: return v
         return ord(v)
 
+class SafeStringWrapper(SafeFileWrapper):
+    """
+    Wraps a string object letting you get various parts w/o exceptions.
+    Mainly used by the com_* modules as part of writing media to the phone.
+    """
+    def __init__(self, string):
+        if isinstance(string, str):
+            self.file=None
+            self.data=string
+            self.size=len(string)
+        else:
+            self.size=-1
+            self.__class__=FailedFile
+
+    def GetBytes(self, offset, length):
+        if (offset+length)<=self.size:
+            return self.data[offset:offset+length]
+        
 class ImgFileInfo:
     "Wraps information about an image file"
 
@@ -346,6 +364,14 @@ def identify_imagefile(filename):
         if obj is not None:
             return thefileinfocache.set(filename,obj)
     return thefileinfocache.set(filename,ImgFileInfo(fo))
+
+def identify_imagestring(string):
+    # identify an image format based on the image data string
+    fo=SafeStringWrapper(string)
+    for f in imageids:
+        obj=f(fo)
+        if obj is not None:
+            return obj
 
 class AudioFileInfo:
     "Wraps information about an audio file"

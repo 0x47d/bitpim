@@ -802,6 +802,7 @@ class Profile(com_samsung.Profile):
         return self.imageorigins
 
     def GetTargetsForImageOrigin(self, origin):
+        # right now, supporting just 'images' origin
         if origin=='images':
             return self.imagetargets
 
@@ -993,9 +994,11 @@ class FileEntries:
                                     (self.__max_file_count, self.__file_type))
                 break
             if self.__origin=='images':
-                # ugly hack to make it work for this build
-                # realy NEED to work on this!!!
-                if n['name'][-4:]=='.jpg':
+                file_info=fileinfo.identify_imagestring(n['data'])
+                if file_info is None:
+                    # image format we don't know about, skip for now
+                    continue
+                if file_info.format=='JPEG':
                     # jpeg file/picture ID files
                     mms_file_name, file_hdr=self.__to_mms_jpg(n['name'], len(n['data']))
                     file_name=self.__path+'/'+mms_file_name
@@ -1003,7 +1006,8 @@ class FileEntries:
                 else:
                     # wallpaper files
                     file_name='brew/shared/'+n['name']
-                    file_contents=n['data']
+                    # try to optimize png image files
+                    file_contents=conversions.convertto8bitpng_joe(n['data'])
             else:
                 file_name=self.__path+'/'+n['name']
                 file_contents=n['data']
