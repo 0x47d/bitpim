@@ -21,12 +21,15 @@ import getpass
 import sha
 import zlib
 import base64
+import thread
+import Queue
 
 # wx. modules
 import wx
 import wx.html
 import wx.lib.mixins.listctrl
 import wx.lib.intctrl
+import wx.lib.newevent
 
 # my modules
 import common
@@ -40,6 +43,12 @@ import pubsub
 import bpmedia
 import bphtml
 import bitflingscan
+
+###
+### BitFling cert stuff
+###
+
+BitFlingCertificateVerificationEvent, EVT_BITFLINGCERTIFICATEVERIFICATION = wx.lib.newevent.NewEvent()
 
 ####
 #### A simple text widget that does nice pretty logging.
@@ -312,6 +321,8 @@ class ConfigDialog(wx.Dialog):
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.mw=mainwindow
 
+        self.bitflingresponsequeues={}
+
         gs=wx.FlexGridSizer(0, 3,  5 ,10)
         gs.AddGrowableCol(1)
 
@@ -338,7 +349,7 @@ class ConfigDialog(wx.Dialog):
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
-            bitflingscan.flinger.certverifier=self.VerifyBitFlingCert
+            self.SetupBitFlingCertVerification()
             gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, -1, "Enabled")
             gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
@@ -429,7 +440,37 @@ class ConfigDialog(wx.Dialog):
             dlg.SaveSettings()
         dlg.Destroy()
 
+
+    def SetupBitFlingCertVerification(self):
+        EVT_BITFLINGCERTIFICATEVERIFICATION(self, self._wrapVerifyBitFlingCert)
+        bitflingscan.flinger.SetCertVerifier(self.dispatchVerifyBitFlingCert)
+
+    def dispatchVerifyBitFlingCert(self, addr, cert):
+        q=self.bitflingresponsequeues.get(thread.get_ident(), None)
+        if q is None:
+            q=Queue.Queue()
+            self.bitflingresponsequeues[thread.get_ident()]=q
+        print "Posting BitFlingCertificateVerificationEvent"
+        wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, cert=cert, q=q))
+        res, exc = q.get()
+        print "Got response", res, exc
+        if exc is not None:
+            ex=exc[1]
+            ex.traceback=exc[2]
+            raise ex
+        return res
+        
+    def _wrapVerifyBitFlingCert(self, evt):
+        print "_wrapVerifyBitFlingCert"
+        addr, cert, q = evt.addr, evt.cert, evt.q
+        try:
+            res=self.VerifyBitFlingCert(addr, cert)
+            q.put( (res, None) )
+        except:
+            q.put( (None, sys.exc_info()) )
+
     def VerifyBitFlingCert(self, addr, cert):
+        print "VerifyBitFlingCert for", addr
         # get fingerprint
         fingerprint=sha.new(cert.as_der()).hexdigest()
         # do we already know about it?
@@ -437,8 +478,10 @@ class ConfigDialog(wx.Dialog):
         if len(existing):
             fp=existing.split("$", 1)[0]
             if fp==fingerprint:
+                print "already in config"
                 return
         # throw up the dialog
+        print "asking user"
         dlg=AcceptCertificateDialog(self, wx.GetApp().config, addr, cert, fingerprint)
         if dlg.ShowModal()==wx.ID_YES:
             txt=base64.encodestring(zlib.compress(cert.as_text(), 9))

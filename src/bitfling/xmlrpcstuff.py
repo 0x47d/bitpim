@@ -517,10 +517,13 @@ class ServerProxy(xmlrpclib.ServerProxy):
         sslcontext=M2Crypto.SSL.Context("sslv23")
         xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext, certverifier))
         
+
+# ensure we are correctly set up for threading
+import M2Crypto.threading
+M2Crypto.threading.init()
+
         
 if __name__=='__main__':
-    import M2Crypto.threading
-    M2Crypto.threading.init()
     if len(sys.argv)<2:
         print "You must supply arguments - one of"
         print "  server"
