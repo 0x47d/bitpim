@@ -15,7 +15,7 @@ import com_brew
 import com_phone
 import common
 import commport
-from string import split,strip,atoi
+from string import split,strip,atoi,join
 import time
 import re
 from DSV import DSV
@@ -29,7 +29,23 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     __OK_str="\r\nOK\r\n"
     __Error_str="\r\nERROR\r\n"
     __read_timeout=0.1
-
+    # Calendar class vars
+    __cal_entries_range=xrange(20)
+    __cal_num_of_read_fields=7
+    __cal_num_of_write_fields=6
+    __cal_entry=0
+    __cal_start_datetime=1
+    __cal_end_datetime=2
+    # if your phone does not support and end-datetime, set this to a default value
+    # if it does support end-datetime, set this to None
+    __cal_end_datetime_value='19800106T000000'
+    __cal_datetime_stamp=3
+    __cal_alarm_type=4
+    __cal_read_name=6
+    __cal_write_name=5
+    __cal_alarm_values={
+        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
@@ -269,10 +285,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             # start time date
             entry['start']=self.extract_timedate(r[self.__cal_start_datetime])
 
-            # no end time, end time=start time
-            try:
+            
+            if self.__cal_end_datetime_value is None:
+                # valid end time
                 entry['end']=self.extract_timedate(r[self.__cal_end_datetime])
-            except:
+            else:
+                # no end time, end time=start time
                 entry['end']=entry['start'][:]
 
             # description
@@ -306,14 +324,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             entry['ringtone']=0
 
     def savecalendar(self, dict, merge):
+        self.reportinit('Save Calendar', dict)
         if not self.is_online():
             self.log("Failed to talk to phone")
+            self.report('Failed to talk to phone, operation aborted.')
             return dict
         cal=dict['calendar']
         cal_len=len(cal)
         l=len(self.__cal_entries_range)
         if cal_len > l:
-            self.log("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
+            self.report("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
             return dict
         self.pmode_on()
         self.log("Saving calendar entries")
@@ -333,10 +353,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             e[self.__cal_start_datetime]=self.encode_timedate(c['start'])
 
             # end date time
-            try:
+            if self.__cal_end_datetime_value is None:
+                # valid end-datetime
                 e[self.__cal_end_datetime]=self.encode_timedate(c['end'])
-            except:
-                e[self.__cal_end_datetime]='19800106T000000'
+            else:
+                # no end-datetime, set to start-datetime
+                e[self.__cal_end_datetime]=self.__cal_end_datetime_value
                 c['end']=c['start'][:]
 
             # time stamp
@@ -350,7 +372,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                     e[self.__cal_alarm_type]=i
                     break
             if e[self.__cal_alarm_type] is None:
-                self.log("Invalid alarm value (%s), reset to 0" % str(alarm))
+                self.report(c['description']+": Alarm value not specified, set to -1.")
                 e[self.__cal_alarm_type]='0'
                 c['alarm']=self.__cal_alarm_values['0']
 
@@ -360,7 +382,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             # and save it
             self.progress(cal_cnt+1, l, "Updating "+c['description'])
             if not self.save_calendar_entry(join(e, ",")):
-                self.log("Failed to save item: "+c['description'])
+                self.report("Failed to save item: "+c['description'])
             else:
                 cal_cnt += 1
 
