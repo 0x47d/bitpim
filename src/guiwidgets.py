@@ -152,7 +152,7 @@ class PhoneDataTable(wxPyGridTableBase):
             return ""
 
     def GetTypeName(self, row, col):
-        print "GetTypeName",row,col
+        # print "GetTypeName",row,col
         return wxGRID_VALUE_STRING
 
     def SetValue(self, row, col, value):
