@@ -17,7 +17,7 @@ import wx
 
 import common
 
-helpderdir=sys.path[0]
+helperdir=sys.path[0]
 if os.path.isfile(helperdir):
     helperdir=os.path.dirnamer(helperdir)
 helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
@@ -39,6 +39,7 @@ def run(*args):
 
     Note that your path is not searched for the command, and the shell
     is not involved so no I/O redirection etc is possible."""
+    print args
     ret=os.spawnl( *( (os.P_WAIT, args[0])+args)) # looks like C code ...
     if ret!=0:
         raise common.CommandExecutionFailed(retcode, args)
@@ -154,3 +155,24 @@ def convertto8bitpng_joe(pngdata):
     os.remove(pnm)
     print 'old size: ',len(pngdata),', new size: ',len(pngquantdata)
     return pngquantdata
+
+
+def converttomp3(inputfilename, bitrate, samplerate, channels):
+    """Reads inputfilename and returns data for an mp3 conversion
+
+    @param bitrate: bitrate to use in khz (ie 16 is 16000 bits per second)
+    @param samplerate: audio sampling rate in Hertz
+    @param channels: 1 is mono, 2 is stereo
+    """
+    ffmpeg=gethelperbinary("ffmpeg")
+    wavfile=common.gettempfilename("wav")
+    mp3file=common.gettempfilename("mp3")
+    try:
+        run(ffmpeg, "-i", inputfilename, wavfile)
+        run(ffmpeg, "-i", wavfile, "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, mp3file)
+        return open(mp3file, "rb").read()
+    finally:
+        try: os.remove(wavfile)
+        except: pass
+        try: os.remove(mp3file)
+        except: pass
