@@ -140,7 +140,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
-                return DSV.importDSV([split(s[0], ": ")[1]])[0]
+                return DSV.importDSV([split(s[0], ': ')[1]])[0]
         except commport.ATError:
             pass
         return []
@@ -171,13 +171,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         return re.sub("[^0-9PT#*]", "", str)
 
     def get_calendar_entry(self, entry_index):
-        s=self._send_at_cmd('#PISHR=%d' % entry_index)
-        if s==self.__OK_str or s==self.__Error_str:
-            return []
-        return split(split(split(s, ": ")[1], "\r\n")[0], ",")
+        try:
+            s=self.comm.sendatcommand('#PISHR=%d' % entry_index)
+            if len(s):
+                return DSV.importDSV([split(s[0], ': ')[1]])[0]
+        except commport.ATError:
+            pass
+        return []
 
     def save_calendar_entry(self, entry_str):
-        return self._send_at_cmd('#PISHW='+entry_str)==self.__OK_str
+        try:
+            self.comm.sendatcommand('#PISHW='+entry_str)
+            return True
+        except:
+            return False
 
     def extract_timedate(self, td):
         # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
@@ -185,7 +192,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def encode_timedate(self, td):
         # reverse if extract_timedate
-        return "%04d%02d%02dT%02d%02d00" % (td[0], td[1], td[2], td[3], td[4])
+        return "%04d%02d%02dT%02d%02d00" % tuple(td)
 
     def csvsplit(self, line):
         """Parse a Samsung comma separated list."""
