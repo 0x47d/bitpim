@@ -134,8 +134,12 @@ class MemoryInputStream(wx.InputStream, ReadMethodFixup):
 
 class FileInputStream(wx.InputStream, ReadMethodFixup):
     def __init__(self, name):
-        f=open(name, "rb")
-        wx.InputStream.__init__(self,f)
+        self.f=open(name, "rb")
+        wx.InputStream.__init__(self,self.f)
+
+    def __del__(self):
+        self.f.close()
+    
 
 def getimage(stream, intoImage=None):
     """Returns a wxImage of the stream specified"""
@@ -251,12 +255,10 @@ class BCIImageHandler(wx.ImageHandler):
         return self.m_mimetype
 
     def LoadFile(self, image, stream, verbose, index):
-        # try:
-        if 1:
+        try:
             getimage(stream, image)
             return True
-        else:
-        #except:
+        except:
             return False
 
 try:
