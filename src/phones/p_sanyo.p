@@ -1,10 +1,10 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
-### Copyright (C) 2003 Stephen Wood <sawecw@users.sf.net>
+### Copyright (C) 2003-2004 Stephen Wood <sawecw@users.sf.net>
 ###
-### This software is under the Artistic license.
-### http://www.opensource.org/licenses/artistic-license.php
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id$
 
@@ -137,7 +137,7 @@ PACKET evententry:
     14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
-    1 UINT alarm_type "0: Beep, 1: Voice, 2: Silent"
+    1 UINT ringtone "0: Beep, 1: Voice, 2: Silent"
     1 UINT {'default': 0} +dunno1
     1 UINT {'default': 0} +dunno2
     2 UINT {'default': 0} +dunno3 "Guess which are 1 and which are 2 byte numbers"
@@ -164,6 +164,7 @@ PACKET callalarmrequest:
     501 UNKNOWN +pad
 
 PACKET callalarmentry:
+    P UINT {'constant': 0} ringtone
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
     1 UINT {'default': 0} +dunno1 "Related to Snooze?"
