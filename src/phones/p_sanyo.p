@@ -209,10 +209,45 @@ PACKET foldernameresponse:
     467 UNKNOWN pad
 
 PACKET messagerequest:
-    * UNKNOWN unknown
+    * sanyoheader {'packettype': 0x0c,
+                   'command': 0xe1} +header
+    1 UINT slot
+    501 UNKNOWN +pad
 
+PACKET messageentry:
+    1 UINT slot
+    1 UINT messagetype
+    1 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UINT dunno4
+    1 UINT dunno5
+    1 UINT dunno6
+    1 UINT dunno7
+    1 UINT dunno8
+    1 UINT dunno9
+    1 UINT dunno10
+    1 UINT dunno11
+    1 UINT message_len
+    255 STRING message "Text of the notification"
+    1 UNKNOWN pad1
+    1 UINT year
+    1 UINT month
+    1 UINT day
+    1 UINT hour
+    1 UINT minute
+    1 UINT second
+    1 UINT phonenum_len
+    33 STRING phonenum
+    1 UINT dunno12
+    38 UNKNOWN pad2
+    1 UINT dunno13
+    1 UINT folder
+    
 PACKET messageresponse:
-    * UNKNOWN unknown
+    * sanyoheader header
+    * messageentry entry
+    151 UNKNOWN pad
 
 # Call History
 PACKET outgoingrequest:
@@ -323,9 +358,9 @@ PACKET t9response:
     * UNKNOWN unknown
 
 PACKET calleridentry:
-    2 UINT {'default': 0xffff} +pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
-    1 UINT +actualnumberlen "Length of the actual phone number"
-    10 STRING {'raiseonunterminatedread': False} +numberfragment
+    2 UINT {'default': 0xffff} pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
+    1 UINT actualnumberlen "Length of the actual phone number"
+    10 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False} numberfragment
 
 PACKET calleridbuffer:
     "Index so that phone can show a name instead of number"
@@ -360,7 +395,7 @@ PACKET pbsortbuffer:
     2 UINT slotsused
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
     2 UINT numemail "Num of slots with email"
-    2 UINT numsecret
+    2 UINT numurl "Num of slots with URL"
     * LIST {'length': self.numpbslots} +firsttypes:
         1 UINT firsttype "First phone number type in each slot"
     * LIST {'length': self.numpbslots} +sortorder:
