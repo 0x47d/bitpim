@@ -45,14 +45,17 @@ def bp_alarm_str(dict, v):
         return ''
 
 def category_str(dict, v):
-    s=''
-    for d in v:
-        if len(d):
-            if len(s):
-                s+=', '+d
-            else:
-                s=d
-    return s
+    try:
+        s=''
+        for d in v:
+            if len(d):
+                if len(s):
+                    s+=', '+d
+                else:
+                    s=d
+        return s
+    except:
+        return ''
 
 #-------------------------------------------------------------------------------
 class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
