@@ -725,7 +725,7 @@ class PhoneWidget(wx.Panel):
         dlg.Destroy()
 
     def OnAdd(self, _):
-        dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]})
+        dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]}, keytoopenon="names", dataindex=0)
         if dlg.ShowModal()==wx.ID_OK:
             data=phonebookobjectfactory.newdataobject(dlg.GetData())
             data.EnsureBitPimSerial()

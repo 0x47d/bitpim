@@ -949,9 +949,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
                         
     def SetFocusOnValue(self, index):
         """Sets focus to the editor widget corresponding to the supplied index"""
-        # ::TODO:: this doesn't work on Linux for unknown reasons.  I
-        # even tried all sorts of levels of wx.CallAfter
-        self.widgets[index].SetFocus()
+        wx.CallAfter(self.widgets[index].SetFocus)
 
 class Editor(wx.Dialog):
     "The Editor Dialog itself.  It contains panes for the various field types."
@@ -1018,7 +1016,7 @@ class Editor(wx.Dialog):
             if key==keytoopenon:
                 nb.SetSelection(len(self.tabs))
             self.tabs.append(widget)
-            if key is None: # DJP
+            if key is None: 
                 # the fields are in data, not in data[key]
                 widget.Populate([self.data])
             elif self.data.has_key(key):
