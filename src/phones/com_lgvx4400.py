@@ -266,6 +266,7 @@ class Phone:
                 self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
             except:
                 pass
+
         # clean out any existing entries that we aren't overwriting
         files=data[stuffkey]
         entries=self.getfilesystem(directory)
@@ -273,11 +274,13 @@ class Phone:
             f=entries[file]
             if f['type']=='file' and brewbasename(f['name']) not in files:
                 self.rmfile(file)
+
         # Write out the files
         keys=files.keys()
         keys.sort()
         for file in keys:
             self.writefile(directory+"/"+file, files[file])
+
         # Check all the indexes actually point at files
         index=data[stuffindexkey]
         keys=index.keys()
@@ -286,16 +289,24 @@ class Phone:
                 self.log("removing index "+`i`+" that points to non-existent file "+index[i])
                 del index[i]
 
+        # Delete any duplicates
+        seen=[]
+        for i in index.keys():
+            if index[i] in seen:
+                del index[i]
+            else:
+                seen.append( index[i] )
+
         # Generate the index entries
         for f in files:
             num=-1
             for key in index.keys():
-                if index[key]==file:
+                if index[key]==f:
                     num=key
                     break
             if num==-1:
                 num=self._firstfree(index)
-                index[num]=file
+                index[num]=f
 
         # Now write out index
         keys=index.keys()
