@@ -1268,6 +1268,86 @@ class FileView(wx.Panel):
                 
         return dict
 
+class FileViewDisplayItem(object):
+
+    datakey="Someone forgot to set me"
+    PADDING=3
+
+    def __init__(self, view, key, mediapath):
+        self.view=view
+        self.key=key
+        self.thumbsize=10,10
+        self.mediapath=mediapath
+        self.setvals()
+        self.lastw=None
+
+    def setvals(self):
+        me=self.view._data[self.datakey][self.key]
+        self.name=me['name']
+        self.origin=me.get('origin', None)
+        self.filename=os.path.join(self.mediapath, self.name)
+        self.fileinfo=self.view.GetFileInfo(self.filename)
+        self.size=self.fileinfo.size
+        self.short=self.fileinfo.shortdescription()
+        self.long=self.fileinfo.longdescription()
+        self.thumb=None
+        self.selbbox=None
+        self.lines=[self.name, self.short,
+                    '%.1f kb' % (self.size/1024.0,)]
+        if self.origin:
+            self.lines.append(self.origin)
+
+    def setthumbnailsize(self, thumbnailsize):
+        self.thumbnailsize=thumbnailsize
+        self.thumb=None
+        self.selbox=None
+
+    def Draw(self, dc, width, height, selected):
+        if self.thumb is None:
+            self.thumb=self.view.GetItemThumbnail(self.name, self.thumbnailsize[0], self.thumbnailsize[1])
+        redrawbbox=False
+        if selected:
+            if self.lastw!=width or self.selbbox is None:
+                redrawbbox=True
+            else:
+                oldb=dc.GetBrush()
+                oldp=dc.GetPen()
+                dc.SetBrush(self.view.item_selection_brush)
+                dc.SetPen(self.view.item_selection_pen)
+                dc.DrawRectangle(*self.selbbox)
+                dc.SetBrush(oldb)
+                dc.SetPen(oldp)
+        dc.DrawBitmap(self.thumb, self.PADDING+self.thumbnailsize[0]/2-self.thumb.GetWidth()/2, self.PADDING, True)
+        xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
+        yoff=self.PADDING*2
+        widthavailable=width-xoff-self.PADDING
+        maxw=0
+        old=dc.GetFont()
+        for i,line in enumerate(self.lines):
+            dc.SetFont(self.view.item_line_font[i])
+            w,h=DrawTextWithLimit(dc, xoff, yoff, line, widthavailable, self.view.item_guardspace, self.view.item_term)
+            maxw=max(maxw,w)
+            yoff+=h
+        dc.SetFont(old)
+        self.lastw=width
+        self.selbbox=(0,0,xoff+maxw+self.PADDING,max(yoff+self.PADDING,self.thumb.GetHeight()+self.PADDING*2))
+        if redrawbbox:
+            return self.Draw(dc, width, height, selected)
+        return self.selbbox
+
+    def DisplayTooltip(self, parent, rect):
+        res=["Name: "+self.name, "Origin: "+(self.origin, "default")[self.origin is None],
+             'File size: %.1f kb (%d bytes)' % (self.size/1024.0, self.size), "\n"+self.datatype+" information:\n", self.long]
+        # tipwindow takes screen coordinates so we have to transform
+        x,y=parent.ClientToScreen(rect[0:2])
+        return wx.TipWindow(parent, "\n".join(res), 1024, wx.Rect(x,y,rect[2], rect[3]))
+
+    def RemoveFromIndex(self):
+        del self.view._data[self.datakey][self.key]
+        self.view.modified=True
+        self.view.OnRefresh()
+        
+
 ###
 ### Various platform independent filename functions
 ###

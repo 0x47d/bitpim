@@ -32,82 +32,10 @@ import fileinfo
 ###  Wallpaper pane
 ###
 
-class DisplayItem(object):
+class DisplayItem(guiwidgets.FileViewDisplayItem):
 
-    PADDING=3
-
-    def __init__(self, view, key):
-        self.view=view
-        self.key=key
-        self.thumbsize=10,10
-        self.setvals()
-        self.lastw=None
-
-    def setvals(self):
-        me=self.view._data['wallpaper-index'][self.key]
-        self.name=me['name']
-        self.origin=me.get('origin', None)
-        self.filename=os.path.join(self.view.mainwindow.wallpaperpath, self.name)
-        self.fileinfo=self.view.GetFileInfo(self.filename)
-        self.size=self.fileinfo.size
-        self.short=self.fileinfo.shortdescription()
-        self.long=self.fileinfo.longdescription()
-        self.thumb=None
-        self.selbbox=None
-        self.lines=[self.name, self.short,
-                    '%.1f kb' % (self.size/1024.0,)]
-        if self.origin:
-            self.lines.append(self.origin)
-
-    def setthumbnailsize(self, thumbnailsize):
-        self.thumbnailsize=thumbnailsize
-        self.thumb=None
-        self.selbox=None
-
-    def Draw(self, dc, width, height, selected):
-        if self.thumb is None:
-            self.thumb=self.view.GetItemThumbnail(self.name, self.thumbnailsize[0], self.thumbnailsize[1])
-        redrawbbox=False
-        if selected:
-            if self.lastw!=width or self.selbbox is None:
-                redrawbbox=True
-            else:
-                oldb=dc.GetBrush()
-                oldp=dc.GetPen()
-                dc.SetBrush(self.view.item_selection_brush)
-                dc.SetPen(self.view.item_selection_pen)
-                dc.DrawRectangle(*self.selbbox)
-                dc.SetBrush(oldb)
-                dc.SetPen(oldp)
-        dc.DrawBitmap(self.thumb, self.PADDING+self.thumbnailsize[0]/2-self.thumb.GetWidth()/2, self.PADDING, True)
-        xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
-        yoff=self.PADDING*2
-        widthavailable=width-xoff-self.PADDING
-        maxw=0
-        old=dc.GetFont()
-        for i,line in enumerate(self.lines):
-            dc.SetFont(self.view.item_line_font[i])
-            w,h=guiwidgets.DrawTextWithLimit(dc, xoff, yoff, line, widthavailable, self.view.item_guardspace, self.view.item_term)
-            maxw=max(maxw,w)
-            yoff+=h
-        dc.SetFont(old)
-        self.lastw=width
-        self.selbbox=(0,0,xoff+maxw+self.PADDING,max(yoff+self.PADDING,self.thumb.GetHeight()+self.PADDING*2))
-        if redrawbbox:
-            return self.Draw(dc, width, height, selected)
-        return self.selbbox
-
-    def DisplayTooltip(self, parent, rect):
-        res=["Name: "+self.name, "Origin: "+(self.origin, "default")[self.origin is None],
-             'File size: %.1f kb (%d bytes)' % (self.size/1024.0, self.size), "\nImage information:\n", self.long]
-        # tipwindow takes screen coordinates so we have to transform
-        x,y=parent.ClientToScreen(rect[0:2])
-        return wx.TipWindow(parent, "\n".join(res), 1024, wx.Rect(x,y,rect[2], rect[3]))
-
-    def RemoveFromIndex(self):
-        del self.view._data['wallpaper-index'][self.key]
-        self.view.modified=True
-        self.view.OnRefresh()
+    datakey="wallpaper-index"
+    datatype="Image"  # this is used in the tooltip
         
 
 
@@ -197,7 +125,7 @@ class WallpaperView(guiwidgets.FileView):
 
     def GetSections(self):
         # get all the items
-        items=[DisplayItem(self, key) for key in self._data['wallpaper-index']]
+        items=[DisplayItem(self, key, self.mainwindow.wallpaperpath) for key in self._data['wallpaper-index']]
         # prune out ones we don't have images for
         items=[item for item in items if os.path.exists(item.filename)]
 

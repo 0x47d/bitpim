@@ -17,82 +17,17 @@ import pubsub
 import aggregatedisplay
 import wallpaper
 import common
+import fileinfo
 
 ###
 ###  Ringers
 ###
 
-class DisplayItem(object):
+class DisplayItem(guiwidgets.FileViewDisplayItem):
 
-    PADDING=3
+    datakey='ringtone-index'
+    datatype='Audio' # used in the tooltip
 
-    def __init__(self, view, key):
-        self.view=view
-        self.key=key
-        self.thumbsize=10,10
-        self.setvals()
-        self.lastw=None
-
-    def setvals(self):
-        me=self.view._data['ringtone-index'][self.key]
-        self.name=me['name']
-        self.origin=me.get('origin', None)
-        self.filename=os.path.join(self.view.mainwindow.ringerpath, self.name)
-        try:
-            self.size=os.stat(self.filename).st_size
-        except OSError:
-            self.size=-1
-        self.thumb=None
-        self.selbbox=None
-        self.lines=[self.name, common.getext(self.name), '%.1f kb' % (self.size/1024.0,)]
-        if self.origin:
-            self.lines.append(self.origin)
-
-    def setthumbnailsize(self, thumbnailsize):
-        self.thumbnailsize=thumbnailsize
-        self.thumb=None
-        self.selbox=None
-
-    def Draw(self, dc, width, height, selected):
-        if self.thumb is None:
-            self.thumb=self.view.GetItemThumbnail(self.name, self.thumbnailsize[0], self.thumbnailsize[1])
-        redrawbbox=False
-        if selected:
-            if self.lastw!=width or self.selbbox is None:
-                redrawbbox=True
-            else:
-                oldb=dc.GetBrush()
-                oldp=dc.GetPen()
-                dc.SetBrush(self.view.item_selection_brush)
-                dc.SetPen(self.view.item_selection_pen)
-                dc.DrawRectangle(*self.selbbox)
-                dc.SetBrush(oldb)
-                dc.SetPen(oldp)
-        dc.DrawBitmap(self.thumb, self.PADDING, self.PADDING, True)
-        xoff=self.PADDING+self.thumbnailsize[0]+self.PADDING
-        yoff=self.PADDING*2
-        widthavailable=width-xoff-self.PADDING
-        maxw=0
-        old=dc.GetFont()
-        for i,line in enumerate(self.lines):
-            dc.SetFont(self.view.item_line_font[i])
-            w,h=guiwidgets.DrawTextWithLimit(dc, xoff, yoff, line, widthavailable, self.view.item_guardspace, self.view.item_term)
-            maxw=max(maxw,w)
-            yoff+=h
-        dc.SetFont(old)
-        self.lastw=width
-        self.selbbox=(0,0,xoff+maxw+self.PADDING,max(yoff+self.PADDING,self.thumb.GetHeight()+self.PADDING*2))
-        if redrawbbox:
-            return self.Draw(dc, width, height, selected)
-        return self.selbbox
-
-    def RemoveFromIndex(self):
-        del self.view._data['ringtone-index'][self.key]
-        self.view.modified=True
-        self.view.OnRefresh()
-
-    def DisplayTooltip(self, parent, rect):
-        return None
 
 class RingerView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
@@ -147,14 +82,17 @@ class RingerView(guiwidgets.FileView):
         dc=wx.MemoryDC()
         dc.SelectObject(wx.EmptyBitmap(100,100))
         h=dc.GetTextExtent("I")[1]
-        x.itemsize=x.thumbsize[0]+120, max(x.thumbsize[1], h*4)+DisplayItem.PADDING*2
+        x.itemsize=x.thumbsize[0]+140, max(x.thumbsize[1], h*4+DisplayItem.PADDING)+DisplayItem.PADDING*2
         return [x]
 
     def GetItemSize(self, sectionnumber, sectionheader):
         return sectionheader.itemsize
 
+    def GetFileInfo(self, filename):
+        return fileinfo.identify_audiofile(filename)
+
     def GetItemsFromSection(self, sectionnumber, sectionheader):
-        items=[DisplayItem(self, key) for key in self._data['ringtone-index']]
+        items=[DisplayItem(self, key, self.mainwindow.ringerpath) for key in self._data['ringtone-index']]
         # prune out ones we don't have files for
         items=[item for item in items if os.path.exists(item.filename)]
         for item in items:
