@@ -16,12 +16,14 @@ import os
 import time
 import copy
 import cStringIO
+import getpass
 
 # wx. modules
 import wx
 import wx.html
 import wx.lib.mixins.listctrl
 import wx.lib.intctrl
+
 # my modules
 import common
 import helpids
@@ -417,7 +419,7 @@ class ConfigDialog(wx.Dialog):
     def OnBitFlingSettings(self, _):
         dlg=BitFlingSettingsDialog(self, self.mw.config)
         if dlg.ShowModal()==wx.ID_OK:
-            dlg.SaveSettings(self.mw.config)
+            dlg.SaveSettings()
         dlg.Destroy()
 
     def OnClose(self, evt):
@@ -686,7 +688,7 @@ class BitFlingSettingsDialog(wx.Dialog):
             (wx.StaticText(self, -1, "Username"), 0, wx.ALIGN_CENTER_VERTICAL),
             (wx.TextCtrl(self, self.ID_USERNAME), 1, wx.EXPAND),
             (wx.StaticText(self, -1, "Password"), 0, wx.ALIGN_CENTER_VERTICAL),
-            (wx.TextCtrl(self, self.ID_PASSWORD), 1, wx.EXPAND),
+            (wx.TextCtrl(self, self.ID_PASSWORD, style=wx.TE_PASSWORD), 1, wx.EXPAND),
             (wx.StaticText(self, -1, "Host"), 0, wx.ALIGN_CENTER_VERTICAL),
             (wx.TextCtrl(self, self.ID_HOST), 1, wx.EXPAND),
             (wx.StaticText(self, -1, "Port"), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -707,14 +709,40 @@ class BitFlingSettingsDialog(wx.Dialog):
         vbs.Fit(self)
         set_size(wx.GetApp().config, "BitFlingConfigDialog", self, -20, 0.5)
 
+        # event handlers
+        wx.EVT_BUTTON(self, self.ID_TEST, self.OnTest)
+
+        # fill in data
+        self.FindWindowById(self.ID_USERNAME).SetValue(config.Read("bitfling/username", getpass.getuser()))
+        self.FindWindowById(self.ID_PASSWORD).SetValue(self.passwordsentinel)
+        self.FindWindowById(self.ID_HOST).SetValue(config.Read("bitfling/host", ""))
+        self.FindWindowById(self.ID_PORT).SetValue(config.ReadInt("bitfling/port", 12652))
+
     def ShowModal(self):
         res=wx.Dialog.ShowModal(self)
         save_size(wx.GetApp().config, "BitFlingConfigDialog", self.GetRect())
         return res
 
-    def SaveSettings(self, config):
+    def GetSettings(self):
+        username=self.FindWindowById(self.ID_USERNAME).GetValue()
+        pwd=self.FindWindowById(self.ID_PASSWORD).GetValue()
+        if pwd==self.passwordsentinel:
+            pwd=bitflingscan.decode(self.config.Read("bitfling/password", self.passwordsentinel))
+        host=self.FindWindowById(self.ID_HOST).GetValue()
+        port=self.FindWindowById(self.ID_PORT).GetValue()
+        return username, pwd, host, port
+
+    def SaveSettings(self):
         "Copy settings from dialog fields into config object"
-        pass
+        username,pwd,host,port=self.GetSettings()
+        self.config.Write("bitfling/username", username)
+        self.config.Write("bitfling/password", bitflingscan.flinger.encode(pwd))
+        self.config.Write("bitfling/host", host)
+        self.config.WriteInt("bitfling/port", port)
+
+    def OnTest(self,_):
+        res=bitflingscan.flinger.connect(*self.GetSettings())
+        print "OnTest got back "+`res`
 
 ###
 ### File viewer

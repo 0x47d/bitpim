@@ -30,5 +30,18 @@ class flinger:
         # try and connect by getting version info
         self.client=bitfling.client("https://%s:%s@%s:%d" % (username, password, host, port))
         return self.client.getversion()
-            
-        
+
+# ensure there is a singleton
+flinger=flinger()
+
+# obfuscate pwd
+_magic=[ord(x) for x in "IamAhaPp12&s]"]
+
+# the oldies are the best
+def encode(str):
+    res=""
+    for i in range(len(str)):
+        res+=chr(ord(str[i])^_magic[i%len(_magic)])
+    return res
+
+decode=encode
