@@ -71,7 +71,6 @@ class BPTime:
         return s
 
     def date_str(self):
-        s=''
         if self.__date is None:
             s=''
         else:
