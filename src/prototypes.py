@@ -501,7 +501,7 @@ class SAMSTRING(BaseProtogenClass):
             # the string was not quoted and it was supposed to be.
             self._value=chr(buf.getnextbyte())
             if self._value == ',':
-                self._value = ' '
+                self._value = ''
             else:
                 inquotes=False
                 if self._quotechar is not None:
