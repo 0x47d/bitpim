@@ -105,7 +105,7 @@ class Phone(com_samsung.Phone):
             self.log("Failed to talk to phone")
             return results
 
-        self.pmode_on()
+        self.setmode(self.MODEPHONEBOOK)
 
         # use a hash of ESN and other stuff (being paranoid)
 
@@ -124,7 +124,7 @@ class Phone(com_samsung.Phone):
         results['groups']=groups
         if not results.has_key('ringtone-index'):
             results['ringtone-index']=self.get_builtin_ringtone_index()
-        self.pmode_off()
+        self.setmode(self.MODEMODEM)
         self.log("Fundamentals retrieved")
         return results
 
@@ -138,7 +138,7 @@ class Phone(com_samsung.Phone):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
 
-        self.pmode_on()
+        self.setmode(self.MODEPHONEBOOK)
         c=len(self.__phone_entries_range)
         k=0
         pb_book={}
@@ -154,7 +154,7 @@ class Phone(com_samsung.Phone):
             else:
                 if show_progress:
                     self.progress(j, c, 'Blank entry: %d' % j)
-        self.pmode_off()
+        self.setmode(self.MODEMODEM)
 
         return pb_book
 
@@ -255,7 +255,7 @@ class Phone(com_samsung.Phone):
             self._update_speeddial(pb_book[k])
 
         # check for deleted entries and delete them
-        self.pmode_on()
+        self.setmode(self.MODEPHONEBOOK)
         self.log("Processing deleted entries")
 
         for k1 in current_pb:
@@ -313,7 +313,7 @@ class Phone(com_samsung.Phone):
         # update existing and new entries
         data["serialupdates"]=serials_update
         self.log("Done")
-        self.pmode_off()
+        self.setmode(self.MODEMODEM)
         return data
 
     # validate a phonebook entry, return True if good, False otherwise
