@@ -1,6 +1,8 @@
 # $Id$
 # Version information
 
+"""Information about BitPim version number"""
+
 name="BitPim"
 version="0.6"
 release=0  # when rereleases of the same version happen, this gets incremented

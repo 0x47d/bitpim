@@ -7,6 +7,8 @@
 ###
 ### $Id$
 
+"""Communicate with the LG VX4400 cell phone"""
+
 import common
 import commport
 import copy
