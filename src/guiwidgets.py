@@ -32,6 +32,12 @@ class PhoneDataTable(wxPyGridTableBase):
     intnames=( 'group', 'msgringtone', 'ringtone', 'serial1', 'serial2' )
     
     boolnames=( 'secret', )
+
+    blankentry={ 'name': "", 'group': 0, 'type1': 0, 'type2': 0, 'type3': 0, 'type4': 0, 'type5': 0,
+                 'number1': "", 'number2': "", 'number3': "", 'number4': "", 'number5': "",
+                 'email1': "", 'email2': "", 'email3': "", 'memo': "", 'msgringtone': 0,
+                 'ringtone': 0, 'secret': False, 'serial1': 0, 'serial2': 0, 'url': "",
+                 '?offset00f': 0, '?offset028': 0, '?offset111': 0, '?offset20c': 0 }
     
     def __init__(self, mainwindow):
         wxPyGridTableBase.__init__(self)
@@ -42,7 +48,7 @@ class PhoneDataTable(wxPyGridTableBase):
         self.roworder=[] # rows
         self._data={}
         self.needswrite=False
-
+        self.sequence=0xffff # for new entries we add
 
     def OnIdle(self, _):
         if self.needswrite:
@@ -80,16 +86,30 @@ class PhoneDataTable(wxPyGridTableBase):
     def OnDelete(self, rows):
         # we do them in reverse order so that we don't have to worry about row numbers
         # changing under us
-        print "deleting", rows
+        print "delete - rows chosen=",rows
         rows.sort()
         rows.reverse()
         for row in rows:
             del self._data[self.roworder[row]]
             del self.roworder[row]
+            self.numrows-=1
             msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, row, 1)
             self.GetView().ProcessTableMessage(msg)
         if len(rows):
             self.needswrite=True
+
+    def OnAdd(self, currow):
+        self.sequence+=1
+        self._data[self.sequence]=self.blankentry.copy()
+        if currow+1==self.numrows:
+            msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_APPENDED, 1)
+            self.roworder.append(self.sequence)
+        else:
+            msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_INSERTED, currow+1, 1)
+            self.roworder[currow+1:currow+1]=[self.sequence]
+        self.numrows+=1
+        self.GetView().ProcessTableMessage(msg)
+        self.needswrite=True
 
     def getcolumn(self,name):
         if len(self.labels)==0:
@@ -183,7 +203,7 @@ class PhoneDataTable(wxPyGridTableBase):
                 return self.numbertypetab[ self._data[self.roworder[row]][self.labels[col]] ]
             return self._data[self.roworder[row]][self.labels[col]]
         except:
-            print "bad request", row, col
+            print "bad request", row, self.labels[col]
             return ""
 
     def GetTypeName(self, row, col):
@@ -237,9 +257,14 @@ class PhoneGrid(wxGrid):
         if self.CanEnableCellControl():
             self.EnableCellEditControl()
 
-    def OnDelete(self, evt):
+    def OnDelete(self, _=None):
+        print "delete - selected cells=", self.GetSelectedCells()
         rows=self.GetSelectedRows()
         self.table.OnDelete(rows)
+
+    def OnAdd(self, _=None):
+        print "add, cursor at row", self.GetGridCursorRow()
+        self.table.OnAdd(self.GetGridCursorRow())
 
     def clear(self):
         self.table.clear()
