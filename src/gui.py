@@ -1082,13 +1082,15 @@ class MainWindow(wx.Frame):
                    id(self.wallpaperwidget): guihelper.ART_ADD_WALLPAPER,
                    id(self.phonewidget): guihelper.ART_ADD_CONTACT,
                    id(self.memowidget): guihelper.ART_ADD_MEMO,
+                   id(self.todowidget): guihelper.ART_ADD_TODO
                    }
         mapbmpdelete={id(self.ringerwidget): guihelper.ART_DEL_RINGER,
                       id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
                       id(self.phonewidget): guihelper.ART_DEL_CONTACT,
                       id(self.memowidget): guihelper.ART_DEL_MEMO,
+                      id(self.todowidget): guihelper.ART_DEL_TODO
                       }
-        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
+        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooladd.SetNormalBitmap(bmpadd)
         bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooldelete.SetNormalBitmap(bmpdel)

@@ -282,6 +282,8 @@ _ourart={
     "ART_DEL_RINGER": "delete_ringer",
     "ART_ADD_MEMO": "add_memo",
     "ART_DEL_MEMO": "delete_memo",
+    "ART_ADD_TODO": "add_todo",
+    "ART_DEL_TODO": "delete_todo",
     }
 
 # populate namespace
