@@ -865,7 +865,8 @@ class SMS_Inbox_List(SMS_Generic_List):
                 e=sms.SMSEntry()
                 e.folder=e.Folder_Inbox
                 e.datetime=s[self.__datetime_index]
-                e._from, e.subject, e.text=self.__extract_body(s[self.__body_index])
+                e._from, e.subject, txt=self.__extract_body(s[self.__body_index])
+                e.text=unicode(txt, errors='ignore')
                 e.callback=s[self.__callback_index]
                 self._data[e.id]=e
 
@@ -909,7 +910,8 @@ class SMS_Saved_List(SMS_Generic_List):
                 e.folder=e.Folder_Saved
                 e.datetime=s[self.__datetime_index]
                 e._from=s[self.__from_index]
-                e.subject, e.text=self.__extract_body(s[self.__body_index])
+                e.subject, txt=self.__extract_body(s[self.__body_index])
+                e.text=unicode(txt, errors='ignore')
                 self._data[e.id]=e
     def __extract_body(self, s):
         # extract different components from the main text body
@@ -947,7 +949,7 @@ class SMS_Sent_List(SMS_Generic_List):
                 e.datetime=s[self.__datetime_index]
                 e._to=s[self.__to_index]
                 e._from=s[self.__from_index]
-                e.text=s[self.__text_index]
+                e.text=unicode(s[self.__text_index], errors='ignore')
                 self._data[e.id]=e
 
 #-------------------------------------------------------------------------------

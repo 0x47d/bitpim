@@ -105,7 +105,6 @@ class SMSEntry(object):
     def __get_text(self):
         return self.__data.get('text', '')
     def __set_text(self, v):
-        v=unicode(v, errors='ignore')
         self.__set_or_del('text', v, [''])
         self.__check_and_create_msg_id()
     text=property(fget=__get_text, fset=__set_text)
