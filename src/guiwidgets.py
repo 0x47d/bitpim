@@ -18,6 +18,7 @@ import time
 import copy
 import cStringIO
 import getpass
+import sha
 
 # wx. modules
 import wx
@@ -334,6 +335,7 @@ class ConfigDialog(wx.Dialog):
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
+            bitflingscan.flinger.certverifier=self.VerifyBitFlingCert
             gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, -1, "Enabled")
             gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
@@ -423,6 +425,18 @@ class ConfigDialog(wx.Dialog):
         if dlg.ShowModal()==wx.ID_OK:
             dlg.SaveSettings()
         dlg.Destroy()
+
+    def VerifyBitFlingCert(self, addr, cert):
+        print "verifybitflingcert", cert, dir(cert)
+        print "addr", addr
+        print "subject", cert.get_subject()
+        print "pubkey", cert.get_pubkey()
+        print "not before", cert.get_not_before()
+        print "not after", cert.get_not_after()
+        print "as text", cert.as_text()
+        print "fingerprint", sha.new(cert.as_der()).hexdigest()
+        # print "as der", cert.as_der()
+        raise ValueError("cert refused")
 
     def OnClose(self, evt):
         self.saveSize()
@@ -756,6 +770,7 @@ class BitFlingSettingsDialog(wx.Dialog):
             dlg.Destroy()
         except:
             res="Failed: %s: %s" % sys.exc_info()[:2]
+            # print common.formatexception()
             dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()

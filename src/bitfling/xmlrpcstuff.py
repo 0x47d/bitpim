@@ -401,9 +401,11 @@ class Server(threading.Thread):
 
 class SSLConnection(httplib.HTTPConnection):
 
-    def __init__(self, sslctx, host, port=None, strict=None):
+    def __init__(self, sslctx, host, port=None, strict=None, certverifier=None):
         httplib.HTTPConnection.__init__(self, host, port, strict)
         self.sslc_sslctx=sslctx
+        self.certverifier=certverifier
+        self.addrforverifier=(host, port)
 
     def connect(self):
         if __debug__ and TRACE: print "Connecting to %s:%s" % (self.host, self.port)
@@ -413,6 +415,8 @@ class SSLConnection(httplib.HTTPConnection):
         self.sock.setup_ssl()
         self.sock.set_connect_state()
         self.sock.connect_ssl()
+        if self.certverifier is not None:
+            self.certverifier(self.addrforverifier, self.sock.get_peer_cert())
 
     def close(self):
         if __debug__ and TRACE: print "close() ignored"
@@ -424,7 +428,7 @@ class SSLConnection(httplib.HTTPConnection):
 
 class SSLTransport(xmlrpclib.Transport):
 
-    def __init__(self, uri, sslctx):
+    def __init__(self, uri, sslctx, certverifier):
         # xmlrpclib.Transport.__init__(self)
         self.sslt_sslctx=sslctx
         self.sslt_uri=uri
@@ -433,11 +437,12 @@ class SSLTransport(xmlrpclib.Transport):
         self.sslt_user_passwd, hpart=urllib.splituser(host)
         self.sslt_host, self.sslt_port = urllib.splitport(hpart)
         self.connection=None
+        self.certverifier=certverifier
 
     def getconnection(self):
         if self.connection is not None:
             return self.connection
-        self.connection=SSLConnection(self.sslt_sslctx, self.sslt_host, self.sslt_port)
+        self.connection=SSLConnection(self.sslt_sslctx, self.sslt_host, self.sslt_port, certverifier=self.certverifier)
         return self.connection
 
     def request(self, host, handler, request_body, verbose=0, retries=1):
@@ -508,9 +513,9 @@ class SSLTransport(xmlrpclib.Transport):
 
 class ServerProxy(xmlrpclib.ServerProxy):
 
-    def __init__(self, uri):
+    def __init__(self, uri, certverifier=None):
         sslcontext=M2Crypto.SSL.Context("sslv23")
-        xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext))
+        xmlrpclib.ServerProxy.__init__(self, uri, SSLTransport(uri, sslcontext, certverifier))
         
         
 if __name__=='__main__':

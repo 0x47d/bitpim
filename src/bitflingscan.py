@@ -21,14 +21,15 @@ def IsBitFlingEnabled():
 
 class flinger:
 
-    def __init__(self):
+    def __init__(self, certverifier=None):
         self.username=self.password=self.url=None
+        self.certverifier=certverifier
 
     def connect(self, username, password, host, port):
         "Connects and returns version info of remote end, or an exception"
         if bitfling is None: return None
         # try and connect by getting version info
-        self.client=bitfling.client("https://%s:%s@%s:%d" % (username, password, host, port))
+        self.client=bitfling.client("https://%s:%s@%s:%d" % (username, password, host, port), self.certverifier)
         return self.client.getversion()
 
 # ensure there is a singleton
