@@ -1,13 +1,26 @@
 # $Id$
 # Generates the file used for listing property names
 
+errors=[]
+f=open(r"c:\projects\fixedwab\wabcode.h", "r")
+for line in f:
+    line=line.split()
+    if len(line)<3:
+        continue
+    if line[0]=='#define' and line[1].startswith('MAPI_'):
+        l=line[1]
+        errors.append(line[1])
+f.close()
+errors.sort()
+
+
 props=[]
 f=open(r"c:\projects\fixedwab\wabtags.h", "r")
 for line in f:
     line=line.split()
     if len(line)<3:
         continue
-    if line[0]=='#define' and line[1][:3]=='PR_':
+    if line[0]=='#define' and line[1].startswith('PR_'):
         l=line[1]
         if l.startswith('PROP_ID_SECURE'):
             continue
@@ -21,13 +34,9 @@ for i in props:
     print >>f, "PR(%s)," %(i,)
 f.close()
 
-import sys
-if len(sys.argv)>1:
-    if sys.argv[1]!='spew':
-        print "Unknown argument", sys.argv[1]
-        sys.exit(1)
+def printlist(thelist):
     pos=0
-    for p in props:
+    for p in thelist:
         if pos==0:
             print " ",
             pos=2
@@ -37,3 +46,13 @@ if len(sys.argv)>1:
         print p+",",
         pos+=len(p)+2
     print
+    
+
+import sys
+if len(sys.argv)>1:
+    if sys.argv[1]!='spew':
+        print "Unknown argument", sys.argv[1]
+        sys.exit(1)
+    printlist(props)
+    print
+    printlist(errors)
