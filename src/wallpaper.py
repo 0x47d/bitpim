@@ -260,8 +260,15 @@ class WallpaperView(guiwidgets.FileViewNew):
            img.GetWidth()<self.usewidth*60/100 or \
            img.GetHeight()<self.useheight*60/100:
             obj=ScaleImageIntoBitmap(obj, self.usewidth, self.useheight, "FFFFFF") # white background ::TODO:: something more intelligent
-            
-        if not obj.SaveFile(target, self.convertwxbitmaptype):
+
+        # ensure in wxImage, not wxBitmap
+        try:
+            theimg=wx.ImageFromBitmap(obj)
+        except TypeError:
+            theimg=obj
+        # ensure highest quality if saving as jpeg
+        theimg.SetOptionInt("quality", 100)
+        if not theimg.SaveFile(target, self.convertwxbitmaptype):
             os.remove(target)
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
