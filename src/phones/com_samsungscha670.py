@@ -51,9 +51,10 @@ class Phone(com_samsung.Phone):
     __pb_pager_num=13
     __pb_fax_num=15
     __pb_alias=17
-    __pb_email=21
-    __pb_image_assign=22		# 3 or 5 depending on if picture ID assigned
     __pb_blanks=(19, 20)
+    __pb_email=21
+    __pb_image_assign=22		# 3, 4 or 5 depending on if picture ID assigned
+    __pb_image_id=23			# when above is 4, has caller-id wallpaper id
     __pb_contact_image=24		# Path to "Picture ID" image
     __pb_date_time_stamp=25
     __pb_numbers= ({'home': __pb_home_num},
@@ -69,16 +70,26 @@ class Phone(com_samsung.Phone):
     __wp_photo_dir="digital_cam"
     __wp_header_bytes=96	# Extra bytes in front of jpg
     __wp_ts_offset=47 		# Timestamp in yyyymmddHHMMSS format starts here
-    
+
+    # The extra "User" entries are a temporary fix to allow round trip integrity of user
+    # assigned ringtones for caller ID. Need to read /nvm/nvm/brew_melody to get true names
+    # of ringtones.   
     builtinringtones=( 'Inactive',
                        'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
                        'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
-                       'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10')
+                       'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10', 	
+		       'User 00', 'User 01', 'User 02', 'User 03', 'User 04', 'User 05',
+		       'User 06', 'User 07', 'User 08', 'User 09', 'User 10', 'User 11',
+		       'User 12', 'User 13', 'User 14', 'User 15', 'User 16', 'User 17',
+		       'User 18', 'User 19', 'User 20', 'User 21', 'User 22', 'User 23',
+		       'User 24', 'User 25', 'User 26', 'User 27', 'User 28', 'User 29',
+		       'User 30', 'User 31', 'User 32', 'User 33', 'User 34', 'User 35',
+		       'User 36', 'User 37', 'User 38', 'User 39')
     # 'type name', 'type index name', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'brew/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'brew/shared', 19, 20)
+    __ringtone_info=('ringtone', 'ringtone-index', 'brew/ringer', 19, 40)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'brew/shared', 19, 30)
 # Added this for future use. Not sure about numeric values
-#    __camerapix_info=('camera', 'camerapix-index', 'digital_cam', 20, 50)
+#    __camerapix_info=('camera', 'camerapix-index', 'digital_cam', 20, 200)
         
     def __init__(self, logtarget, commport):
 
@@ -195,6 +206,19 @@ class Phone(com_samsung.Phone):
         # private
         # memos
         # wallpapers
+	if atoi(entry[self.__pb_image_assign]) == 3:
+	    try:
+	    	res['wallpapers']=[ { 'wallpaper': split(entry[self.__pb_contact_image], "/")[1],
+                             'use': 'call', 'flag': '3' } ]
+	    except:
+	    	pass
+	if atoi(entry[self.__pb_image_assign]) == 4:
+	    res['wallpapers']=[ { 'wallpaper': 'brew_image',
+                             'use': 'call' } ]
+	if atoi(entry[self.__pb_image_assign]) == 5:
+	    res['wallpapers']=[ { 'wallpaper': 'none',
+                             'use': 'call' } ]
+	    
         # ringtones
         try:
             res['ringtones']=[ { 'ringtone': self.builtinringtones[atoi(entry[self.__pb_ringtone])],
@@ -566,12 +590,26 @@ class Phone(com_samsung.Phone):
             email=pb_entry['emails'][0]['email']
         except:
             pass
-
         e[self.__pb_email]='"'+email+'"'
-# A650 apparently doesn't assign picture IDs so this is different 
-        e[self.__pb_image_assign]='5'
-# AT#PBOKW will produce ERROR on A670 if it does not get at least "" string here
-	e[self.__pb_contact_image]='""'		# Please do not change this!
+
+	###### wallpaper: phonebook entry "caller id" image
+	try:
+            imgName = pb_entry['wallpapers'][0]['wallpaper']
+	except:
+	    e[self.__pb_image_assign]='5'
+	print imgName
+	# temporary placeholder: will eventually get  actual image names from /nvm/nvm/brew_image file
+	if (imgName == "brew_image") or (imgName == "none"):
+	    e[self.__pb_image_assign]='5'			# this will zap the assigned brew_image
+	    e[self.__pb_image_id]='0'				# caller-id on the phone
+	    e[self.__pb_contact_image]='""'			# but no other choice now
+	else:
+	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + pb_entry['wallpapers'][0]['wallpaper'] + '"'
+	    e[self.__pb_image_assign]='3'
+	    e[self.__pb_image_id]='0'
+	print e[self.__pb_contact_image]
+	####### 
+	
         for k in self.__pb_blanks:
             e[k]=''
 
@@ -587,7 +625,6 @@ class Phone(com_samsung.Phone):
             k=self.__pb_atpbokw_field_count-2
             if e[0:k]==ee[0:k]:
                 return True
-
         return self.save_phone_entry('0,'+join(e,','))
 
     def getringtones(self, result):
