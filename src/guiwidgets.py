@@ -59,6 +59,7 @@ class PhoneDataTable(wxPyGridTableBase):
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
+        print "phonebook keys", self._data.keys()
         # need to add group
         return dict
 
@@ -161,7 +162,7 @@ class PhoneDataTable(wxPyGridTableBase):
         pb=dict['phonebook']
         k=pb.keys()
         k.sort()
-        self._data.update(pb)
+        self._data=pb.copy()
         self.roworder=k
         oldrows=self.numrows
         self.numrows=len(k)
