@@ -12,6 +12,7 @@
 import common
 import commport
 import copy
+import time
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -58,7 +59,6 @@ class Phone:
         self.mode=self.MODENONE
         self.seq=0
         self.retries=2  # how many retries when we get no response
-        self.sendpbcommand=common.exceptionwrap(self.sendpbcommand)
 
     def close(self):
         self.comm.close()
@@ -133,7 +133,6 @@ class Phone:
         return pbook
 
     def savephonebook(self, data):
-        print "savephonebookcalled"
         # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
         # We then delete any entries that aren't in data
@@ -352,7 +351,6 @@ class Phone:
             data+=makestring( entry['description'], 39)
 
             # sanity check
-            print len(data)
             assert (len(data)-2)%60==0
 
             # update exceptions if needbe
@@ -700,9 +698,7 @@ class Phone:
 
         for func in ( '_setmode%sto%s' % (strmode, strdesiredmode),
                         '_setmode%s' % (strdesiredmode,)):
-            print "setmode: looking for", func
             if hasattr(self,func):
-                print "setmode: running "+func
                 res=getattr(self, func)()
                 if res: # mode changed!
                     self.mode=desiredmode
@@ -720,21 +716,21 @@ class Phone:
     def _setmodebrew(self):
         try:
             # might already be?
-            self.sendbrewcommand(0x0c, "")
+            self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
         except commport.CommTimeout:
             pass
         try:
             # try again at 38400
             self.comm.setbaudrate(38400)
-            self.sendbrewcommand(0x0c, "")
+            self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
         except commport.CommTimeout:
             pass
         self._setmodelgdmgo() # brute force into data mode
         try:
             # should work in lgdmgo mode
-            self.sendbrewcommand(0x0c, "")
+            self._sendbrewcommand(0x0c, "", wantto=True)
             return 1
         except commport.CommTimeout:
             return 0
@@ -758,19 +754,19 @@ class Phone:
 
     def _setmodephonebook(self):
         try:
-            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
         except commport.CommTimeout:
             pass
         try:
             self.comm.setbaudrate(38400)
-            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
         except commport.CommTimeout:
             pass
         self._setmodelgdmgo()
         try:
-            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00")
+            self._sendpbcommand(0x15, "\x00\x00\x00\x00\x00\x00\x00", wantto=True)
             return 1
         except commport.CommTimeout:
             pass
@@ -794,13 +790,13 @@ class Phone:
             return
 
     def readsomeuntil(self, char):
+        time.sleep(3)
         data=self.comm.readsome()
-        if data[-1]!=char:
-            print "no match on second read for terminator"
-            assert False
-        fp=data.find(char)
-        assert fp>=0
-        data=data[fp+1:]
+        l=len(data)
+        try:
+            data=data+self.comm.readsome()
+        except commport.CommTimeout:
+            pass
         return data
 
     def sendpbcommand(self, cmd, data):
@@ -840,7 +836,6 @@ class Phone:
             # ::TODO:: we should check crc
             return d
         except commport.CommTimeout, e:
-            print `e`
             if wantto:
                 raise e
             self.raisecommsexception("using the phonebook")
@@ -859,7 +854,7 @@ class Phone:
             # resend command
             self.log("Brew command timed out with partial data.  Retrying")
             self.comm.reset()
-            res=self._sendbrewcommand(cmd,data)
+            res=self._sendbrewcommand(cmd,data,usereadsome=True)
             x=res.find('\x7f')
             if x<0:
                 raise e
@@ -868,12 +863,15 @@ class Phone:
                 raise e
             return res
 
-    def _sendbrewcommand(self, cmd, data, wantto=False):
+    def _sendbrewcommand(self, cmd, data, usereadsome=False, wantto=False):
         d="\x59"+chr(cmd)+data
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         try:
-            d=self.unescape(self.comm.readuntil(self.terminator))
+            if usereadsome:
+                d=self.unescape(self.comm.readuntil(self.terminator))
+            else:
+                d=self.unescape(self.comm.readuntil(self.terminator))
             self.comm.success=True
             # ::TODO:: we should check crc
             if d[2]!="\x00":
