@@ -513,18 +513,27 @@ class ImportDialog(wx.Dialog):
 
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        hsplit=wx.SplitterWindow(self,-1)
+        splitterstyle=wx.SP_3DBORDER|wx.SP_LIVE_UPDATE
+        self.splitterstyle=splitterstyle
+
+        hsplit=wx.SplitterWindow(self,-1, style=splitterstyle)
+        hsplit.SetMinimumPaneSize(20)
 
         self.resultpreview=PhoneEntryDetailsView(hsplit, -1, "styles.xy", "pblayout.xy")
 
-        vsplit=wx.SplitterWindow(hsplit, -1)
+        vsplit=wx.SplitterWindow(hsplit, -1, style=splitterstyle)
+        vsplit.SetMinimumPaneSize(20)
 
         self.grid=wx.grid.Grid(vsplit, -1)
 
-        hhsplit=wx.SplitterWindow(vsplit, -1)
+        hhsplit=wx.SplitterWindow(vsplit, -1, style=splitterstyle)
+        hhsplit.SetMinimumPaneSize(20)
 
         self.origpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
         self.importpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
+
+        self.origpreview.ShowEntry( { 'names': [ {'name': 'origpreview'} ] } )
+        self.importpreview.ShowEntry( { 'names': [ {'name': 'importpreview'} ] } )
 
         hhsplit.SplitVertically(self.origpreview, self.importpreview, 0)
         vsplit.SplitHorizontally(self.grid, hhsplit, -200)
@@ -534,6 +543,7 @@ class ImportDialog(wx.Dialog):
         self.vsplit=vsplit
         self.hhsplit=hhsplit
         self.vsplitpos=-200
+        self.hhsplitpos=0
 
         vbs.Add(hsplit, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
@@ -546,8 +556,22 @@ class ImportDialog(wx.Dialog):
         wx.EVT_CHECKBOX(self, self.details.GetId(), self.OnDetailChanged)
 
     def OnDetailChanged(self, _):
+        "Show or hide the exiting/imported data previews"
+        # We destroy and recreate the bottom splitter with the two previews in
+        # them.  If that isn't done then the window doesn't draw properly amongst
+        # other issues
         if self.details.GetValue():
-            self.vsplit.SplitHorizontally(self.grid, self.hhsplit, -self.vsplitpos)
+            hhsplit=wx.SplitterWindow(self.vsplit, -1, style=self.splitterstyle)
+            hhsplit.SetMinimumPaneSize(20)
+            self.origpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
+            self.importpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
+            hhsplit.SplitVertically(self.origpreview, self.importpreview, self.hhsplitpos)
+            self.hhsplit=hhsplit
+            self.vsplit.SplitHorizontally(self.grid, self.hhsplit, self.vsplitpos)
         else:
             self.vsplitpos=self.vsplit.GetSashPosition()
+            self.hhsplitpos=self.hhsplit.GetSashPosition()
             self.vsplit.Unsplit()
+            self.hhsplit.Destroy()
+                        
+
