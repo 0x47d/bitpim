@@ -544,15 +544,18 @@ class Phone:
         desc="Reading "+file
         d=chr(len(file)+1)+file+"\x00"
         res=self.sendbrewcommand(0x04, "\x00"+d)
-        size=readlsb(res[5:7])
+        size=readlsb(res[5:9])
         numblocks=size/0x100
         if size%0x100:
             numblocks+=1
         data=res[0xb:-3]
+        count=1
         for i in range(1,numblocks):
             if i%5==0:
                 self.progress(i,numblocks,desc)
-            res=self.sendbrewcommand(0x04, chr(i))
+            res=self.sendbrewcommand(0x04, chr(count))
+            count+=1
+            if count=0x100: count=1
             res=res[0x7:-3]
             data=data+res
         self.progress(numblocks,numblocks,desc)
