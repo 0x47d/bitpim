@@ -151,11 +151,10 @@ import pywintypes
 ##    YomiFirstName
 ##YomiLastName
 
-def getcontacts(folder):
+def getcontacts(folder, keys=None):
     """Returns a list of dicts"""
 
     res=[]
-    keys=None
     for oc in range(folder.Items.Count):
         contact=folder.Items.Item(oc+1)
         if contact.Class == outlook_com.constants.olContact:
@@ -224,6 +223,12 @@ def getmapinamespace():
     if _mapinamespaceobject is None:
         _mapinamespaceobject=getoutlookapp().GetNamespace("MAPI")
     return _mapinamespaceobject
+
+def releaseoutlook():
+    global _mapinamespaceobject
+    global _outlookappobject
+    _mapinamespaceobject=None
+    _outlookappobject=None
 
 
 if __name__=='__main__':
