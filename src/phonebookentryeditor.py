@@ -8,9 +8,11 @@
 ### $Id$
 
 import wx
+
 import fixedscrolledpanel
 import pubsub
 import bphtml
+import database
 
 """The dialog for editing a phonebook entry"""
 
@@ -986,7 +988,7 @@ class Editor(wx.Dialog):
         ("Ringtones", "ringtones", RingtoneEditor),
         ]
 
-    def __init__(self, parent, data, title="Edit PhoneBook entry", keytoopenon=None, dataindex=None):
+    def __init__(self, parent, data, title="Edit PhoneBook entry", keytoopenon=None, dataindex=None, factory=database.dictdataobjectfactory):
         """Constructor for phonebookentryeditor dialog
 
         @param parent: parent window
@@ -997,7 +999,8 @@ class Editor(wx.Dialog):
         """
         
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.data=data.copy()
+        # make a copy of the data we are going to work on
+        self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
         sz=tb.GetToolBitmapSize()
@@ -1026,7 +1029,7 @@ class Editor(wx.Dialog):
             if key is None: # DJP
                 # the fields are in data, not in data[key]
                 widget.Populate([self.data])
-            elif self.data.has_key(key):    #DJP
+            elif self.data.has_key(key):
                 widget.Populate(self.data[key])
                 if key==keytoopenon and dataindex is not None:
                     widget.SetFocusOnValue(dataindex)
@@ -1046,16 +1049,16 @@ class Editor(wx.Dialog):
         for i in range(len(self.tabsfactory)):
             widget=self.nb.GetPage(i)
             data=widget.Get()
-            key=self.tabsfactory[i][1]  # DJP
+            key=self.tabsfactory[i][1]
             if len(data):
-                if key is None: # DJP
+                if key is None:
                     res.update(data[0])
                 else:
                     res[key]=data
             else:
                 # remove the key
                 try:
-                    if key is not None: # DJP
+                    if key is not None:
                         del res[key]
                 except KeyError:
                     # which may not have existed ...
