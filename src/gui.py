@@ -208,6 +208,8 @@ class WorkerThreadFramework(threading.Thread):
 ###  Splash screen
 ###
 
+thesplashscreen=None  # set to non-none if there is one
+
 class MySplashScreen(wxSplashScreen):
     def __init__(self, app, config):
         self.app=app
@@ -221,6 +223,8 @@ class MySplashScreen(wxSplashScreen):
             wx.EVT_CLOSE(self, self.OnClose)
             self.Show()
             app.Yield(True)
+            global thesplashscreen
+            thesplashscreen=self
             return
         # timeout is <=0 so don't show splash screen
         self.goforit()
@@ -229,7 +233,6 @@ class MySplashScreen(wxSplashScreen):
         self.app.makemainwindow()
         
     def OnClose(self, evt):
-        self.Show(False)
         self.goforit()
         evt.Skip()
 
@@ -413,6 +416,12 @@ class MainWindow(wxFrame):
         ### if necessary (especially needed on Mac and Linux)
         if min(self.GetSize())<250:
             self.SetSize( (640, 480) )
+
+        ### remove splash screen if there is one
+        global thesplashscreen
+        if thesplashscreen is not None:
+            wxSafeYield()
+            thesplashscreen.Show(False)
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
