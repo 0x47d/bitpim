@@ -12,6 +12,7 @@
 """Generate opinions on the attached com devices"""
 
 import comscan
+import sys
 
 def diagnose(portlist):
     """Returns data suitable for use in com port settings dialog
@@ -155,7 +156,7 @@ def autoguessports():
     for vid,pid in usbdb:
         np=[]
         for p in ports:
-            if p['hardwareinstance']:
+            if p.has_key('hardwareinstance'):
                 v=p['hardwareinstance'].lower()
                 str="vid_%04x&pid_%04x" % (vid,pid)
                 if v.find(str)>=0:
@@ -167,6 +168,12 @@ def autoguessports():
     # at the end, we now have res containing a list of ports we
     # recommend, and ports containing a list of remaining available
     # ports
+
+    if sys.platform!='win32' and len(res)==0:
+        # not windows, so we just add anything that has 'usb' in it
+        for p in ports:
+            if p['name'].lower().find('usb')>0:
+                res.append(p)
 
     # return ['com17', 'com1']+map(lambda x: x['name'], res)+['com12', 'com2']
     return map(lambda x: (x['name'], x), res)
