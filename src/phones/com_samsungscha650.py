@@ -329,8 +329,7 @@ class Phone(com_samsung.Phone):
     def __validate_entry(self, pb_entry, pb_groups):
         try:
             # validate name & alias
-            name=pb_entry['names'][0]['full']
-            replace(name, '"', '')
+            name=replace(pb_entry['names'][0]['full'], '"', '')
             if len(name)>self.__pb_max_name_len:
                 name=name[:self.__pb_max_name_len]
             if pb_entry['names'][0]['full']!=name:
