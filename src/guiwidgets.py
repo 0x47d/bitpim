@@ -1085,7 +1085,9 @@ class FileView(wx.Panel):
         if len(self.aggdisp.GetSelection()):
             menu=self.itemmenu
             item=self.GetSelectedItems()[0]
-            menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
+            # we always launch on mac
+            if not guihelper.IsMac():
+                menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
         else:
             menu=self.bgmenu
         if menu is None:
@@ -1094,6 +1096,10 @@ class FileView(wx.Panel):
 
     def OnLaunch(self, _):
         item=self.GetSelectedItems()[0]
+        if guihelper.IsMac():
+            import findertools
+            findertools.launch(item.filename)
+            return
         cmd=guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename)
         if cmd is None:
             wx.Bell()
