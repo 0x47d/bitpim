@@ -35,7 +35,7 @@ PACKET sanyomediaheader:
     2 UINT {'constant': 0xfa} +fa
     1 UINT {'default': 0x09} +faset
     2 UINT command
-    2 UINT {'default': 0xffff} +pointer 
+    2 UINT {'default': 0xffff} +pad
 
 PACKET sanyochangedir:
     * sanyomediaheader {'command': 0x71} +header
@@ -104,10 +104,42 @@ PACKET sanyomediaresponse:
     * sanyomediaheader header
     * UNKNOWN UNKNOWN
     
-PACKET sanyomediafilelength:
-    * sanyomediaheader {'command': 0x05, 'subcommand': 0xffc1} +header
-    2 UINT {'constant': 0} +word
-    1 UINT {'constant': 150} +len
-    1 UNKNOWN +pad
-    2 UINT filelength
-    168 UNKNOWN +pad
+PACKET sanyosendfilename:
+    * sanyomediaheader {'command': 0xffa1, 'pad': 0, 'faset': 0x05} +header
+    1 UINT {'constant': 0x96} +payloadsize
+    150 STRING {'default': ""} +filename
+    21 UNKNOWN +pad
+
+PACKET sanyosendfilesize:
+    * sanyomediaheader {'command': 0xffc1, 'pad': 0, 'faset': 0x05} +header
+    1 UINT {'constant': 0x96} +payloadsize
+    1 UNKNOWN +pad1
+    2 UINT filesize
+    168 UNKNOWN +pad2 
+
+PACKET sanyosendfilefragment:
+    * sanyomediaheader {'pad': 0, 'faset': 0x05} +header
+    1 UINT {'constant': 0x96} +payloadsize
+    150 DATA data
+    21 UNKNOWN +pad
+
+PACKET sanyosendfileterminator:
+    * sanyomediaheader {'command': 0xffe1, 'pad': 0, 'faset': 0x05} +header
+    1 UINT {'constant': 0x96} +payloadsize
+    171 UNKNOWN +pad
+
+PACKET sanyosendfileresponse:
+    * sanyomediaheader +header
+    1 UINT payloadsize
+    171 UNKNOWN pad
+
+PACKET sanyomediathingyrequest:
+    2 UINT {'constant': 0xfa} +fa
+    1 UINT faset
+    2 UINT {'default': 0x0} +value
+    
+PACKET sanyomediathingyresponse:
+    2 UINT fa
+    1 UINT faset
+    2 UINT value
+    
