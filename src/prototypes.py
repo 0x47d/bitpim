@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -150,12 +150,14 @@ class UINTlsb(BaseProtogenClass):
         An integer value can be specified in the constructor, or as the value keyword arg.
 
         @keyword constant:  (Optional) A constant value.  All reads must have this value
+        @keyword constantexception: (Optional) Type of exception raised when data doesn't match constant.
         @keyword sizeinbytes: (Mandatory for writing, else Optional) How big we are in bytes
         @keyword default:  (Optional) Our default value
         @keyword value: (Optional) The value
         """
         super(UINTlsb, self).__init__(*args, **kwargs)
         self._constant=None
+        self._constantexception=ValueError
         self._sizeinbytes=None
         self._value=None
         self._default=None
@@ -167,7 +169,7 @@ class UINTlsb(BaseProtogenClass):
     def _update(self, args, kwargs):
         super(UINTlsb,self)._update(args, kwargs)
         
-        self._consumekw(kwargs, ("constant", "sizeinbytes", "default", "value"))
+        self._consumekw(kwargs, ("constant", "constantexception", "sizeinbytes", "default", "value"))
         self._complainaboutunusedargs(UINTlsb,kwargs)
 
         # Set our value if one was specified
@@ -185,7 +187,7 @@ class UINTlsb(BaseProtogenClass):
             self._value=self._constant
 
         if self._constant is not None and self._constant!=self._value:
-            raise ValueException("This field is a constant of %d.  You tried setting it to %d" % (self._constant, self._value))
+            raise self._constantexception("This field is a constant of %d.  You tried setting it to %d" % (self._constant, self._value))
 
 
     def readfrombuffer(self, buf):
@@ -201,7 +203,7 @@ class UINTlsb(BaseProtogenClass):
         self._value=res
         self._bufferendoffset=buf.getcurrentoffset()
         if self._constant is not None and self._value!=self._constant:
-            raise ValueException("The value read should be a constant of %d, but was %d instead" % (self._constant, self._value))
+            raise self._constantexception("The value read should be a constant of %d, but was %d instead" % (self._constant, self._value))
          
     def writetobuffer(self, buf):
         if self._sizeinbytes is None:
