@@ -139,7 +139,9 @@ def fmt_BMP(ifi):
     else:
         res.append("Unknown compression "+`ifi.compression`)
     if ifi.ncolours:
-        res.append("%d colours (%d important)" % (ifi.ncolours, ifi.nimportantcolours))
+        res.append("%d colours" % (ifi.ncolours,))
+        if ifi.nimportantcolours:
+            res[-1]=res[-1]+(" (%d important)" % (ifi.nimportantcolours,))
     return "\n".join(res)
     
 def idimg_PNG(f):
