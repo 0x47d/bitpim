@@ -18,6 +18,7 @@ import os
 from wxPython.wx import *
 from wxPython.lib.dialogs import wxScrolledMessageDialog
 from wxPython.lib import colourdb
+from wxPython.help import *
 
 # my modules
 import guiwidgets
@@ -325,6 +326,11 @@ class MainApp(wxApp):
         self.helpcontroller=wxHtmlHelpController()
         self.helpcontroller.AddBook(gethelpfilename()+".htb")
         self.helpcontroller.UseConfig(self.config, "help")
+
+        # now context help
+        # (currently borken)
+        # self.helpprovider=wxHelpControllerHelpProvider(self.helpcontroller)
+        # wxHelpProvider_Set(provider)
 
     def makemainwindow(self):
         if self.made:
@@ -1325,7 +1331,18 @@ def gethelpfilename():
     """Returns what name we use for the helpfile
 
     Without trailing extension as wxBestHelpController figures that out"""
-    return os.path.join(resourcedirectory, "bitpim")
+
+    # we look in a help subdirectory first which is
+    # present in the developer tree
+    j=os.path.join
+    paths=( j(resourcedirectory, "..", "help"),
+            resourcedirectory )
+
+    for p in paths:
+        if os.path.isdir(p):
+            return j(p, "bitpim")
+
+    assert False
 
 # Where to find bitmaps etc
 resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
