@@ -83,6 +83,7 @@ serials:
 # Standard imports
 import os
 import cStringIO
+import webbrowser
 
 # GUI
 import wx
@@ -100,11 +101,27 @@ import guihelper
 ###
 
 class HTMLWindow(wx.html.HtmlWindow):
+    """BitPim customised HTML Window
 
+       - You can press Ctrl-Alt-S to get a source view
+       - Clicking on a link opens a window in your browser
+       - Shift-clicking on a link copies it to the clipboard
+    """
     def __init__(self, parent, id):
         wx.html.HtmlWindow.__init__(self, parent, id)
         wx.EVT_KEY_UP(self, self.OnKeyUp)
         self.thetext=""
+
+    def OnLinkClicked(self, event):
+        # see ClickableHtmlWindow in wxPython source for inspiration
+        # :::TODO::: redirect bitpim images and audio to correct
+        # player
+        if event.GetEvent().ShiftDown():
+            wx.TheClipboard.Open()
+            wx.TheClipboard.SetData(event.GetHref())
+            wx.TheClipboard.Close()
+        else:
+            webbrowser.open(event.GetHref())
 
     def SetPage(self, text):
         self.thetext=text
@@ -114,7 +131,7 @@ class HTMLWindow(wx.html.HtmlWindow):
         keycode=evt.GetKeyCode()        
         if keycode==ord('S') and evt.ControlDown() and evt.AltDown():
             print "got ctrl alt s"
-            vs=ViewSourceFrame(self, self.thetext)
+            vs=ViewSourceFrame(None, self.thetext)
             vs.Show(True)
             evt.Skip()
 
