@@ -17,6 +17,7 @@ import os
 import cStringIO
 import zipfile
 import re
+import glob
 
 # wxPython modules
 from wxPython.wx import *
@@ -1779,6 +1780,10 @@ def gethelpfilename():
             return j(p, "bitpim")
 
     assert False
+
+def getresourcefiles(wildcard):
+    "Returns a list of filenames matching the wildcard in the resource directory"
+    return glob.glob(os.path.join(resourcedirectory, wildcard))
 
 # Where to find bitmaps etc
 resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
