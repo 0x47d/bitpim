@@ -1,10 +1,10 @@
 #
-# Test data for usb_ids.py
+# Improved data for USB ids
 #
 
 # phones
 1004  LG Electroncs
-	6000  VX4400/4500/4600/6000 Phone
+	6000  VX Series Phone (Direct USB connection)
 		01  Modem Interface
 		02  Diagnostics Interface
 0474  Sanyo
