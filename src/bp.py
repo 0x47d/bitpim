@@ -55,4 +55,7 @@ if __name__ == '__main__':
         bitfling.bitfling.run(sys.argv)
     else:
         import gui
+        #if True:
+        #    profile("bitpim.prof", "gui.run(sys.argv)")
+        #else:
         gui.run(sys.argv)
