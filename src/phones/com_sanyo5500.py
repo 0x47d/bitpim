@@ -52,7 +52,7 @@ class Phone(com_sanyo.Phone):
         return res
  
 #
-# Almost identical to com_sanyo.py version.
+# Almost identical to com_sanyo.py version.  Will be merged eventually
 #
     def getsanyobuffer(self, startcommand, buffersize, comment):
         # Read buffer parts and concatenate them together
@@ -61,12 +61,11 @@ class Phone(com_sanyo.Phone):
         bufp=0
         command=startcommand
         req=self.protocolclass.bufferpartrequest()
-        req.header.command=command
         if command==0xd7:
             req.header.packettype=0x0c
-            
         for offset in range(0, buffersize, 1024):
-#            self.progress(data.tell(), buffersize, desc)
+            self.progress(data.tell(), buffersize, desc)
+            req.header.command=command
             res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse);
             data.write(res.data)
             command+=1
@@ -81,6 +80,30 @@ class Phone(com_sanyo.Phone):
 
         return res
 
+#
+# Almost identical to com_sanyo.py version.  Will be merged eventually
+#
+    def sendsanyobuffer(self, buffer, startcommand, comment):
+        self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
+        desc="Writing "+comment
+        numblocks=len(buffer)/1024
+        offset=0
+        command=startcommand
+        req=self.protocolclass.bufferpartupdaterequest()
+        if command==0xd7:
+            req.header.packettype=0x0c
+        for offset in range(0, len(buffer), 1024):
+            self.progress(offset/1024, numblocks, desc)
+            req.header.command=command
+            block=buffer[offset:]
+            l=min(len(block), 1024)
+            block=block[:l]
+            req.data=block
+            command+=1
+            self.sendpbcommand(req, self.protocolclass.bufferpartresponse, writemode=True)
+        
+    
+
     
 class Profile(com_sanyo.Profile):
 
@@ -90,7 +113,7 @@ class Profile(com_sanyo.Profile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
 #        ('calendar', 'read', None),   # all calendar reading
-#        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
 #        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
     )
 
