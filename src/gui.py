@@ -1479,9 +1479,9 @@ class WorkerThread(WorkerThreadFramework):
     def getphoneinfo(self):
         if __debug__: self.checkthread()
         self.setupcomm()
-        if hasattr(self.commphone, 'get_phone_info'):
+        if hasattr(self.commphone, 'getphoneinfo'):
             phone_info=phoneinfo.PhoneInfo()
-            getattr(self.commphone, 'get_phone_info')(phone_info)
+            getattr(self.commphone, 'getphoneinfo')(phone_info)
             return phone_info
 
     # various file operations for the benefit of the filesystem viewer

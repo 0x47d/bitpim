@@ -583,7 +583,7 @@ class Phone(com_samsung.Phone):
     def getsms(self, result):
         return self._getsms(result)
 
-    get_phone_info=com_samsung.Phone._getphoneinfo
+    getphoneinfo=com_samsung.Phone._getphoneinfo
 
     getmedia=None
 

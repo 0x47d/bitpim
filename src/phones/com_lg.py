@@ -128,28 +128,6 @@ class LGPhonebook:
         res.readfrombuffer(buffer)
         return res
 
-    # This function isn't actually used
-    def getphoneinfo(self, results):
-        "Extracts manufacturer and version information in modem mode"
-        self.setmode(self.MODEMODEM)
-        d={}
-        self.progress(0,4, "Switching to modem mode")
-        self.progress(1,4, "Reading manufacturer")
-        self.comm.write("AT+GMI\r\n")  # manuf
-        d['Manufacturer']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Manufacturer is "+d['Manufacturer'])
-        self.progress(2,4, "Reading model")
-        self.comm.write("AT+GMM\r\n")  # model
-        d['Model']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Model is "+d['Model'])
-        self.progress(3,4, "Software version")
-        self.comm.write("AT+GMR\r\n")  # software revision
-        d['Software']=cleanupstring(self.comm.readsome())[2][6:]
-        self.log("Software is "+d['Software'])
-        self.progress(4,4, "Done reading information")
-        results['info']=d
-        return results
-
 def cleanupstring(str):
     str=str.replace("\r", "\n")
     str=str.replace("\n\n", "\n")

@@ -566,13 +566,13 @@ class Phone(com_samsung.Phone):
 
         return self.save_phone_entry('0,'+','.join(e))
 
+    getphoneinfo=com_samsung.Phone._getphoneinfo
+
     getringtones=None
 
     getwallpapers=None
 
     getmedia=None
-
-
 
 class Profile(com_samsung.Profile):
 
