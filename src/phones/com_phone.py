@@ -200,6 +200,7 @@ class Profile:
     imageorigins.update(common.getkv(stockimageorigins, "images"))
     imageorigins.update(common.getkv(stockimageorigins, "mms"))
     imageorigins.update(common.getkv(stockimageorigins, "camera"))
+    imageorigins["<developerneedstoupdate>"]={'meta-help': "The developer needs to update this phone profile"}
 
     def GetImageOrigins(self):
         # Note: only return origins that you can write back to the phone
