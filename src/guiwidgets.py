@@ -21,6 +21,8 @@ import cStringIO
 import wx
 import wx.html
 import wx.lib.mixins.listctrl
+from wxPython.wx import wxGetDisplaySize
+from wxPython.wx import wxRect
 
 # my modules
 import common
@@ -299,6 +301,7 @@ class ConfigDialog(wx.Dialog):
         wx.Dialog.__init__(self, frame, id, title,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.mw=mainwindow
+
         gs=wx.FlexGridSizer(2, 3,  5 ,10)
         gs.AddGrowableCol(1)
 
@@ -337,7 +340,15 @@ class ConfigDialog(wx.Dialog):
         self.SetAutoLayout(True)
         bs.Fit(self)
 
+        # Retrieve saved settings... Use 40% of screen if not specified
+        confDlgRect=retrieve_size(self.mw.config, "ConfigDialog", 40)
+        self.SetDimensions(confDlgRect.x, confDlgRect.y, confDlgRect.width, confDlgRect.height)
+
+    def OnCancel(self, _):
+        self.saveSize()
+
     def OnOK(self, _):
+        self.saveSize()
         # validate directory
         dir=self.diskbox.GetValue()
         try:
@@ -362,19 +373,22 @@ class ConfigDialog(wx.Dialog):
             self.diskbox.SetValue(v)
 
     def OnComBrowse(self, _):
+        self.saveSize()
         self.mw.wt.clearcomm()
         # remember its size
-        w=self.mw.config.ReadInt("combrowsewidth", 640)
-        h=self.mw.config.ReadInt("combrowseheight", 480)
+        # w=self.mw.config.ReadInt("combrowsewidth", 640)
+        # h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
         dlg=CommPortDialog(self, __import__(self.phonemodels[self.phonebox.GetValue()]), defaultport=self.commbox.GetValue(), sashposition=p)
-        dlg.SetSize(wx.Size(w,h))
-        dlg.Centre()
+        # dlg.SetSize(wx.Size(w,h))
+        # dlg.Centre()
         res=dlg.ShowModal()
         v=dlg.GetPort()
-        sz=dlg.GetSize()
-        self.mw.config.WriteInt("combrowsewidth", sz.GetWidth())
-        self.mw.config.WriteInt("combrowseheight", sz.GetHeight())
+        
+        # sz=dlg.GetSize()
+        # self.mw.config.WriteInt("combrowsewidth", sz.GetWidth())
+        # self.mw.config.WriteInt("combrowseheight", sz.GetHeight())
+
         self.mw.config.WriteInt("combrowsesash", dlg.sashposition)
         dlg.Destroy()
         if res==wx.ID_OK:
@@ -478,6 +492,9 @@ class ConfigDialog(wx.Dialog):
             self.updatevariables()
         return ec
 
+    def saveSize(self):
+        confDlgRect=save_size(self.mw.config, "ConfigDialog", self.GetRect())
+
 ###
 ### The select a comm port dialog box
 ###
@@ -534,6 +551,10 @@ class CommPortDialog(wx.Dialog):
         wx.EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBox)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
+
+        # Retrieve saved settings... Use 40% of screen if not specified
+        self.dlgRect=retrieve_size(self.parent.mw.config, "CommDialog", 40)
+        self.SetDimensions(self.dlgRect.x, self.dlgRect.y, self.dlgRect.width, self.dlgRect.height)
 
     def OnSashChange(self, _=None):
         self.sashposition=self.FindWindowById(self.ID_SASH).GetSashPosition()
@@ -596,9 +617,11 @@ class CommPortDialog(wx.Dialog):
         dlg.Destroy()
 
     def OnCancel(self, _):
+        self.saveSize()
         self.EndModal(wx.ID_CANCEL)
 
     def OnOk(self, _):
+        self.saveSize()
         self.EndModal(wx.ID_OK)
 
     def OnHelp(self, _):
@@ -606,6 +629,9 @@ class CommPortDialog(wx.Dialog):
 
     def GetPort(self):
         return self.port
+
+    def saveSize(self):
+        save_size(self.parent.mw.config, "CommDialog", self.GetRect())
 
 ###
 ### File viewer
@@ -928,7 +954,6 @@ class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
                                         style=wx.OK|wx.ICON_ERROR)
                 dlg.ShowModal()
                 dlg.Destroy()
-                
 
     def OnDropFiles(self, _, dummy, filenames):
         # There is a bug in that the most recently created tab
@@ -1308,3 +1333,57 @@ class AnotherDialog(wx.Dialog):
         # ::TODO:: rest of these
         # fallthru
         return wx.ART_INFORMATION
+
+def retrieve_size(confobj, confname, screenpct):
+    # sanity check for supplied percentage
+    if screenpct <= 1:
+        screenpct *= 100
+    if screenpct > 100:
+        screenpct = 100
+    if screenpct == 0:
+        screenpct = 75
+
+    # Get screen size, scale according to percentage supplied
+    screenSize = wxGetDisplaySize()
+    newWidth = screenSize.x * screenpct / 100
+    newHeight = screenSize.y * screenpct / 100
+
+    # Retrieve values (if any) from config database for this config object
+    rs_width  = confobj.ReadInt(confname + "/width", newWidth)
+    rs_height = confobj.ReadInt(confname + "/height", newHeight)
+    rs_x = confobj.ReadInt(confname + "/x", 0)
+    rs_y = confobj.ReadInt(confname + "/y", 50)
+
+    # Check for small window
+    if rs_height < 25:
+        rs_height = newHeight
+    if rs_width < 25:
+        rs_width = newWidth
+
+    # Make sure window is no larger than about screen size
+    # (offset of 50 for menubar on the Mac (others?))
+    if rs_height > (screenSize.y - 50):
+        rs_height = screenSize.y - 50
+    if rs_width > screenSize.x:
+        rs_width = screenSize.x
+
+    # Off the screen?  Just pull it back a little bit so it's visible....
+    if rs_x > screenSize.x:
+        rs_x = screenSize.x - 50
+    if rs_y > screenSize.y:
+        rs_y = screenSize.y - 50
+    
+    newRect = wxRect(rs_x, rs_y, rs_width, rs_height)
+    return newRect
+
+def save_size(confobj, confname, myRect):
+    x = myRect.x
+    y = myRect.y
+    width = myRect.width
+    height = myRect.height
+
+    confobj.WriteInt(confname + "/x", x)
+    confobj.WriteInt(confname + "/y", y)
+    confobj.WriteInt(confname + "/width", width)
+    confobj.WriteInt(confname + "/height", height)
+    confobj.Flush()

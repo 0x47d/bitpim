@@ -20,6 +20,7 @@ import wx.html
 
 # my modules
 import guihelper
+import guiwidgets
 import fixedwxpTag
 
 ###
@@ -324,6 +325,11 @@ class HtmlEasyPrinting:
             return
         frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
         frame.Initialize()
+        
+        # Retrieve saved settings... Use 75% of screen if not specified
+        self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", 75)
+        frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
+
         # frame.SetPosition(self.parent.GetPosition())
         # frame.SetSize(self.parent.GetSize())
         frame.Show(True)

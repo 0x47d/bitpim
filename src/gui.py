@@ -541,6 +541,10 @@ class MainWindow(wx.Frame):
         else:
             self.nb.SetSelection(sel)
 
+        # Retrieve saved settings... Use 80% of screen if not specified
+        self.mwRect=guiwidgets.retrieve_size(self.config, "MainWin", 80)
+        self.SetDimensions(self.mwRect.x, self.mwRect.y, self.mwRect.width, self.mwRect.height)
+
         ### Lets go visible
         self.Show()
 
@@ -553,14 +557,12 @@ class MainWindow(wx.Frame):
         # Populate all widgets from disk
         wx.CallAfter(self.OnPopulateEverythingFromDisk)
 
-
-
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
         global thesplashscreen
         if thesplashscreen is not None:
             try:
-		# on Linux this is often already deleted and generates an exception
+        # on Linux this is often already deleted and generates an exception
                 thesplashscreen.Show(False)
             except:
                 pass
@@ -572,6 +574,7 @@ class MainWindow(wx.Frame):
 
     # It has been requested that we shutdown
     def OnClose(self, event):
+        self.saveSize()
         if not self.wt:
             # worker thread doesn't exist yet
             self.Destroy()
@@ -586,7 +589,7 @@ class MainWindow(wx.Frame):
         assert isinstance(exception, SystemExit)
         # assume it worked
         self.Destroy()
-	wx.GetApp().ExitMainLoop()
+        wx.GetApp().ExitMainLoop()
 
     # about and help
 
@@ -970,6 +973,10 @@ class MainWindow(wx.Frame):
         assert isinstance(request, Request)
         assert isinstance(cbresult, Callback)
         self.wt.q.put( (request, cbresult) )
+
+    def saveSize(self):
+        guiwidgets.save_size(self.config, "MainWin", self.GetRect())
+
 
 ###
 ### Container for midi files
