@@ -721,7 +721,9 @@ class BitFlingService(XMLRPCService):
 
     def exp_devicereadsome(self, handle, context):
         return Binary(self.gethandle(context, handle).readsome())
-    
+
+    def exp_devicewritethenreaduntil(self, handle, data, char, numfailures, context):
+        return self.gethandle(context, handle).writethenreaduntil(data.data, False, char, False, False, numfailures)
 
 def run(args):
     theApp=wx.PySimpleApp()
