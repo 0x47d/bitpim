@@ -76,8 +76,8 @@ class flinger:
         return self.client.deviceopen(port, baud, timeout, hardwareflow, softwareflow)
 
     def deviceclose(self, handle):
-        self._configure()
         try:
+            self._configure()
             # we don't care about close's failing
             self.client.deviceclose(handle)
         except:
