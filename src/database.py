@@ -15,6 +15,11 @@ import copy
 
 import sqlite
 
+if __debug__:
+    TRACE=True
+else:
+    TRACE=False
+
 # pysqlite 2 is currently broken for manifest typing (it likes to
 # convert strings of digits into integers and screw them up).  We use
 # these as a workaround
@@ -130,9 +135,10 @@ class Database:
 
     def sql(self, statement, params=()):
         "Execute statement and return a generator of the results"
-        print "SQL:",statement
-        if len(params):
-            print "Params:", params
+        if TRACE:
+            print "SQL:",statement
+            if len(params):
+                print "Params:", params
         self.cursor.execute(statement,params)
         return self.cursor
 
@@ -141,7 +147,8 @@ class Database:
         # get another cursor
         cursor=self.connection.cursor()
         for p in params:
-            print "SQLM:",statement,p
+            if TRACE:
+                print "SQLM:",statement,p
             cursor.execute(statement, p)
             for res in cursor:
                 yield res
@@ -166,13 +173,41 @@ class Database:
                    phonebook and similar formatted records.
         """
 
-        # work on a copy of dict
-        dict=copy.deepcopy(dict)
+        # work on a shallow copy of dict
+        dict=dict.copy()
         
         # make sure the table exists first
         if not self.doestableexist(tablename):
             # create table and include meta-fields
             self.sql("create table %s (__rowid__ integer primary key, __timestamp__ TIMESTAMP, __deleted__ integer, __uid__ varchar)" % (idquote(tablename),))
+
+        # get the latest values for each guid ...
+        current=self.getmajordictvalues(tablename)
+        # compare what we have, and update/mark deleted as appropriate ...
+        deleted=[k for k in current if k not in dict]
+        new=[k for k in dict if k not in current]
+        modified=[k for k in dict if k in current] # only potentially modified ...
+
+        # deal with modified first
+        dl=[]
+        for i,k in enumerate(modified):
+            if dict[k]==current[k]:
+                # unmodified!
+                del dict[k]
+                dl.append(i)
+        dl.reverse()
+        for i in dl:
+            del modified[i]
+
+        # add deleted entries back into dict
+        for d in deleted:
+            assert d not in dict
+            dict[d]=current[d]
+            dict[d]["__deleted__"]=1
+            
+        # now we only have new, changed and deleted entries left in dict
+        dict=copy.deepcopy(dict) # now a deep copy since we modify values
+
         # examine the keys in dict
         dk=[]
         for k in dict.keys():
@@ -180,7 +215,7 @@ class Database:
                 if kk not in dk:
                     dk.append(kk)
         # verify that they don't start with __
-        assert len([k for k in dk if k.startswith("__")])==0
+        assert len([k for k in dk if k.startswith("__") and not k=="__deleted__"])==0
         # get database keys
         dbkeys=[name for _, name, _ in self.getcolumns(tablename)]
         # are any missing?
@@ -246,31 +281,7 @@ class Database:
                 cmd.extend([")", "select * from", idquote("backup_"+tablename)])
                 self.sql(" ".join(cmd))
 
-        # get the latest values for each guid ...
-        current=self.getmajordictvalues(tablename)
-        # compare what we have, and update/mark deleted as appropriate ...
-        deleted=[k for k in current if k not in dict]
-        new=[k for k in dict if k not in current]
-        modified=[k for k in dict if k in current] # only potentially modified ...
 
-        # deal with modified first
-        dl=[]
-        for i,k in enumerate(modified):
-            if dict[k]==current[k]:
-                # unmodified!
-                del dict[k]
-                dl.append(i)
-        dl.reverse()
-        for i in dl:
-            del modified[i]
-
-        # add deleted entries back into dict
-        for d in deleted:
-            assert d not in dict
-            dict[d]=current[d]
-            dict[d]["__deleted__"]=1
-            
-        # now we only have new, changed and deleted entries left in dict
         
         # write out indirect values
         dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
@@ -390,7 +401,6 @@ class Database:
                     found=self.sql("select last_insert_rowid()").next()[0]
                 res+=`found`+","
             indirects[r]=res
-            print  "indirects[",r,"]=",res
                         
 
     def getmajordictvalues(self, tablename):
@@ -406,6 +416,7 @@ class Database:
                 deleted=colnum
             elif name=='__uid__':
                 uid=colnum
+        # get all relevant rows
         for row in self.sqlmany("select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),), [(u,) for u in uids]):
             if row[deleted]:
                 continue
@@ -417,8 +428,17 @@ class Database:
                     record[name]=_stripsentinel(row[colnum])
                     continue
                 assert type=="indirect"
-                record[name]=self.getindirect(row[colnum], desc)
+                # record[name]=self.getindirect(row[colnum], desc)
+                record[name]=row[colnum]
             res[row[uid]]=record
+        # now get the indirects
+        for colnum,name,type in desc[tablename]:
+            if type!="indirect":
+                continue
+            for r in res:
+                v=res[r].get(name,None)
+                if v is not None:
+                    res[r][name]=self.getindirect(v, desc)
         return res
 
     def getindirect(self, what, schemas=None):
@@ -471,36 +491,110 @@ def extractbpserials(dict):
 
 if __name__=='__main__':
     import common
+    import sys
+    import time
+    
+    # use the phonebook out of the examples directory
+    execfile("examples/phonebook-index.idx")
 
-    try:
+    phonebookmaster=phonebook
+
+    def testfunc():
+        global phonebook
+
         db=Database(".", "testdb")
-        
-        # use the phonebook out of the examples directory
-        execfile("examples/phonebook-index.idx")
 
-        # write it out
-        db.savemajordict("phonebook", extractbpserials(phonebook))
+        # note that iterations increases the size of the
+        # database/journal and will make each one take longer and
+        # longer as the db/journal gets bigger
+        if len(sys.argv)>=2:
+            iterations=int(sys.argv[1])
+        else:
+            iterations=1
+        if iterations >1:
+            TRACE=False
+        b4=time.time()
+        
 
-        # check what we get back is identical
-        v=db.getmajordictvalues("phonebook")
-        assert v==extractbpserials(phonebook)
+        for i in xrange(iterations):
+            phonebook=phonebookmaster.copy()
+            
+            # write it out
+            db.savemajordict("phonebook", extractbpserials(phonebook))
 
-        # do a deletion
-        del phonebook[17] # james bond @ microsoft
-        db.savemajordict("phonebook", extractbpserials(phonebook))
-        # and verify
-        v=db.getmajordictvalues("phonebook")
-        assert v==extractbpserials(phonebook)
+            # check what we get back is identical
+            v=db.getmajordictvalues("phonebook")
+            assert v==extractbpserials(phonebook)
+
+            # do a deletion
+            del phonebook[17] # james bond @ microsoft
+            db.savemajordict("phonebook", extractbpserials(phonebook))
+            # and verify
+            v=db.getmajordictvalues("phonebook")
+            assert v==extractbpserials(phonebook)
+
+            # modify a value
+            phonebook[15]['addresses'][0]['city']="Bananarama"
+            db.savemajordict("phonebook", extractbpserials(phonebook))
+            # and verify
+            v=db.getmajordictvalues("phonebook")
+            assert v==extractbpserials(phonebook)
+
+        after=time.time()
+
+        print "time per iteration is",(after-b4)/iterations,"seconds"
+        print "total time was",after-b4,"seconds for",iterations,"iterations"
+
+        if iterations>1:
+            print "testing repeated reads"
+            b4=time.time()
+            for i in xrange(iterations*10):
+                db.getmajordictvalues("phonebook")
+            after=time.time()
+            print "\ttime per iteration is",(after-b4)/(iterations*10),"seconds"
+            print "\ttotal time was",after-b4,"seconds for",iterations*10,"iterations"
+            print
+            print "testing repeated writes"
+            x=extractbpserials(phonebook)
+            k=x.keys()
+            b4=time.time()
+            for i in xrange(iterations*10):
+                # we remove 1/3rd of the entries on each iteration
+                xcopy=x.copy()
+                for l in range(i,i+len(k)/3):
+                    del xcopy[k[l%len(x)]]
+                db.savemajordict("phonebook",xcopy)
+            after=time.time()
+            print "\ttime per iteration is",(after-b4)/(iterations*10),"seconds"
+            print "\ttotal time was",after-b4,"seconds for",iterations*10,"iterations"
+
+        db.cursor.execute("COMMIT")
+
+    sys.excepthook=common.formatexceptioneh
+
+    if len(sys.argv)==3:
+        # also run under hotspot then
+        def profile(filename, command):
+            import hotshot, hotshot.stats, os
+            file=os.path.abspath(filename)
+            profile=hotshot.Profile(file)
+            profile.run(command)
+            profile.close()
+            del profile
+            howmany=100
+            stats=hotshot.stats.load(file)
+            stats.strip_dirs()
+            stats.sort_stats('time', 'calls')
+            stats.print_stats(100)
+            stats.sort_stats('cum', 'calls')
+            stats.print_stats(100)
+            stats.sort_stats('calls', 'time')
+            stats.print_stats(100)
+            sys.exit(0)
+
+        profile("dbprof", "testfunc()")
+
+    else:
+        testfunc()
         
-        # modify a value
-        phonebook[15]['addresses'][0]['city']="Bananarama"
-        db.savemajordict("phonebook", extractbpserials(phonebook))
-        # and verify
-        v=db.getmajordictvalues("phonebook")
-        assert v==extractbpserials(phonebook)
-        
-        
-    except:
-        print common.formatexception()
-        
-    db.cursor.execute("COMMIT")
+
