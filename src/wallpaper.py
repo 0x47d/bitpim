@@ -177,6 +177,7 @@ class WallpaperView(guiwidgets.FileView):
             image.Destroy()
             count+=1
         self.Thaw()
+        self.MakeTheDamnThingRedraw()
 
     def OnPaste(self, _=None):
         do=wx.BitmapDataObject()

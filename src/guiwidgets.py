@@ -574,6 +574,13 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
         EVT_KEY_DOWN(self, self.OnKeyDown)
         
+    def MakeTheDamnThingRedraw(self):
+        "Force the screen to actually redraw since the control likes to avoid doing so"
+        # we jiggle size
+        w,h=self.GetSize()
+        self.SetSize((w-1,h))
+        self.SetSize((w,h))
+
 
     def GetSelectedItemNames(self):
         "Returns the list of names of selected items"

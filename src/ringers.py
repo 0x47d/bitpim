@@ -132,6 +132,7 @@ class RingerView(guiwidgets.FileView):
             self.SetStringItem(count, 3, entry.get("origin", ""))
             count+=1
         self.Thaw()
+        self.MakeTheDamnThingRedraw()
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.ringerpath
