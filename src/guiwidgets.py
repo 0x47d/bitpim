@@ -544,7 +544,7 @@ class ConfigDialog(wxDialog):
         # remember its size
         w=self.mw.config.ReadInt("combrowsewidth", 640)
         h=self.mw.config.ReadInt("combrowseheight", 480)
-        p=self.mw.config.ReadInt("combrowsesash", 0)
+        p=self.mw.config.ReadInt("combrowsesash", 200)
         dlg=CommPortDialog(self, defaultport=self.commbox.GetValue(), sashposition=p)
         dlg.SetSize(wxSize(w,h))
         dlg.Centre()
