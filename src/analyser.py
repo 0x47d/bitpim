@@ -115,6 +115,7 @@ class Analyser(wx.Frame):
         curtime, curdesc, curclass, curdata=self.packets[index]
         self.errorinfo=""
         self.hex.SetData("")
+        self.hex.highlightrange(-1,-1)
         if len(curdata):
             self.hex.SetData(curdata)
             # self.hex.ShowPosition(self.hex.XYToPosition(0,0))
@@ -209,7 +210,7 @@ class Analyser(wx.Frame):
         if exception is not None:
             x=StringIO.StringIO()
             print >>x,exception.__str__(),
-            self.errorinfo+=WriteText(x.getvalue()+" : ")
+            self.errorinfo+=x.getvalue()+" : "
             print >>sys.stderr, common.formatexception()
         self.errorinfo+=desc+"\n"
 
