@@ -118,13 +118,17 @@ def prettyprintdict(dictionary, indent=0):
      for k in keys:
           v=dictionary[k]
           if isinstance(v, dict):
-               res+="%s%s:\n%s,\n" % (istr*indent, `k`, prettyprintdict(v, indent+1))
+               res+="%s%s:\n%s\n" % (istr*indent, `k`, prettyprintdict(v, indent+1))
           else:
                res+="%s%s: %s,\n" % (istr*indent, `k`, `v`)
 
      # closing brace
      indent-=1
-     res+="%s}\n" % (istr*indent,)
+     if indent>0:
+          comma=","
+     else:
+          comma=""
+     res+="%s}%s\n" % (istr*indent,comma)
 
      return res
 
