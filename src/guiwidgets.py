@@ -451,6 +451,9 @@ class SendPhoneDialog(GetPhoneDialog):
         # we want user to explicitly write stuff they changed
         for i in self.cb:
             i.SetValue(False)
+        # We do support merge for wallpaper and ringtone
+        self.rb[3][0].Enable(True)
+        self.rb[4][0].Enable(True)
         
 
 ###
@@ -922,12 +925,12 @@ class WallpaperView(FileView):
             bitmap=wxEmptyBitmap(self.usewidth, self.useheight)
             mdc=wxMemoryDC()
             mdc.SelectObject(bitmap)
-            # scale the source.  we use int arithmetic with 1000 being 1.000
-            sfactorw=self.usewidth*1000/img.GetWidth()
-            sfactorh=self.useheight*1000/img.GetHeight()
+            # scale the source.  we use int arithmetic with 10000 being 1.000
+            sfactorw=self.usewidth*10000/img.GetWidth()
+            sfactorh=self.useheight*10000/img.GetHeight()
             sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=img.GetWidth()*sfactor/1000
-            newheight=img.GetHeight()*sfactor/1000
+            newwidth=img.GetWidth()*sfactor/10000
+            newheight=img.GetHeight()*sfactor/10000
             self.mainwindow.OnLog("Resizing %s from %dx%d to %dx%d" % (target, img.GetWidth(),
                                                             img.GetHeight(), newwidth,
                                                             newheight))
@@ -1010,7 +1013,7 @@ class MyStatusBar(wxStatusBar):
         EVT_IDLE(self, self.OnIdle)
         self.gauge=wxGauge(self, 1000, 1)
         self.SetFieldsCount(4)
-        self.SetStatusWidths( [300, -5, 180, -20] )
+        self.SetStatusWidths( [200, -5, 180, -20] )
         self.Reposition()
 
     def OnSize(self,_):

@@ -233,33 +233,66 @@ class Phone:
         self.setmode(self.MODEBREW)
         return result
 
-    def getwallpapers(self, result):
-        # we have to retreive both the wallpapers and the index file
-        wallpapers={}
-        self.setmode(self.MODEBREW)
-        try:
-            entries=self.getfilesystem("brew/shared")
-        except BrewNoSuchDirectoryException:
-            entries={}
-        for file in entries:
-            f=entries[file]
-            if f['type']=='file':
-                wallpapers[brewbasename(file)]=self.getfilecontents(file)
-        result['wallpaper']=wallpapers
+    
+    def writeindex(self, indexfile, index, maxentries=30):
+        keys=index.keys()
+        keys.sort()
+        writing=min(len(keys), maxentries)
+        if len(keys)>maxentries:
+            self.log("Warning:  You have too many entries (%d) for index %s.  Only writing out first %d." % (len(keys), indexfile, writing))
+        newdata=makelsb(writing,2)
+        for i in keys[:writing]:
+            newdata+=makelsb(i,2)
+            newdata+=makestring(index[i], 40)
+        for dummy in range(writing, maxentries):
+            newdata+="\xff\xff"
+            newdata+=makestring("", 40)
+        self.log("Writing %d index entries" % (writing,))
+        self.writefile(indexfile, newdata)
 
+    def getindex(self, indexfile):
+        # Read an index file
         index={}
-        data=self.getfilecontents("dloadindex/brewImageIndex.map")
-        for i in range(0,readlsb(data[:2])):
+        data=self.getfilecontents(indexfile)
+        for i in range(0,(len(data)-2)/42):
             offset=2+42*i
             num=readlsb(data[offset:offset+2])
             name=readstring(data[offset+2:offset+42])
+            if num==0xffff or len(name)==0:
+                continue
             index[num]=name
+        self.log("There are %d index entries" % (len(index.keys()),))
+        return index
+        
+    def getprettystuff(self, result, directory, datakey, indexfile, indexkey):
+        """Get wallpaper/ringtone etc"""
+        # we have to be careful because files from other stuff could be
+        # in the directory.  Consequently we ONLY consult the index.  However
+        # the index may be corrupt so we cope with it having entries for
+        # files that don't exist
+        index=self.getindex(indexfile)
+        result[indexkey]=index
 
-        result['wallpaper-index']=index
+        stuff={}
+        for i in index:
+            try:
+                file=self.getfilecontents(directory+"/"+index[i])
+                stuff[index[i]]=file
+            except:
+                pass # don't care if not found
+        result[datakey]=stuff
+
         return result
 
-    def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey):
-        self.setmode(self.MODEBREW)
+    def getwallpapers(self, result):
+        return self.getprettystuff(result, "brew/shared", "wallpaper", "dloadindex/brewImageIndex.map",
+                                   "wallpaper-index")
+
+    def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey, merge):
+        f=data[stuffkey].keys()
+        f.sort()
+        self.log("Saving %s.  Merge=%d.  Files supplied %s" % (stuffkey, merge, ", ".join(f)))
+        # make the parent directory if needed
         dirs=directory.split('/')
         for i in range(0,len(dirs)):
             try:
@@ -267,102 +300,103 @@ class Phone:
             except:
                 pass
 
-        # clean out any existing entries that we aren't overwriting
-        files=data[stuffkey]
+        # get existing index
+        index=self.getindex(indexfile)
+
+        # Now the only files we care about are those named in the index and in data[stuffkey]
+        # The operations below are specially ordered so that we don't reuse index keys
+        # from existing entries (even those we are about to delete).  This seems like
+        # the right thing to do.
+
+        # Get list of existing files
         entries=self.getfilesystem(directory)
-        for file in entries:
-            f=entries[file]
-            if f['type']=='file' and brewbasename(f['name']) not in files:
-                self.rmfile(file)
+
+        # if we aren't merging, delete all files in index we aren't going to overwrite
+        # we do this first to make space for new entrants
+        if not merge:
+            for i in index:
+                if self._fileisin(entries, index[i]) and index[i] not in data[stuffkey]:
+                    fullname=directory+"/"+index[i]
+                    self.rmfile(fullname)
+                    del entries[fullname]
 
         # Write out the files
+        files=data[stuffkey]
         keys=files.keys()
         keys.sort()
         for file in keys:
-            self.writefile(directory+"/"+file, files[file])
+            fullname=directory+"/"+file
+            self.writefile(fullname, files[file])
+            entries[fullname]={'name': fullname}
+                    
+        # Build up the index
+        for i in files:
+            # entries in the existing index take priority
+            if self._getindexof(index, i)<0:
+                # Look in new index
+                num=self._getindexof(data[stuffindexkey], i)
+                if num<0 or num in index: # if already in index, allocate new one
+                    num=self._firstfree(index, data[stuffindexkey])
+                assert not index.has_key(num)
+                index[num]=i
 
-        # Check all the indexes actually point at files
-        index=data[stuffindexkey]
-        keys=index.keys()
-        for i in keys:
-            if index[i] not in data[stuffkey]:
-                self.log("removing index "+`i`+" that points to non-existent file "+index[i])
-                del index[i]
-
-        # Delete any duplicates
+        # Delete any duplicate index entries, keeping lowest numbered one
         seen=[]
-        for i in index.keys():
+        keys=index.keys()
+        keys.sort()
+        for i in keys:
             if index[i] in seen:
                 del index[i]
             else:
                 seen.append( index[i] )
 
-        # Generate the index entries
-        for f in files:
-            num=-1
-            for key in index.keys():
-                if index[key]==f:
-                    num=key
-                    break
-            if num==-1:
-                num=self._firstfree(index)
-                index[num]=f
+        # Verify all index entries are present
+        for i in index.keys():
+            if not self._fileisin(entries, index[i]):
+                del index[i]
 
-        # Now write out index
-        keys=index.keys()
-        keys.sort() # ... in sorted order
-        if len(keys)>30: keys=keys[:30] # maximum of 30 entries
-        newdata=makelsb(len(keys),2)
-        for i in keys:
-            newdata+=makelsb(i,2)
-            newdata+=makestring(index[i], 40)
-        for dummy in range(len(keys), (1262-2)/42):
-            newdata+="\xff\xff"
-            newdata+=makestring("", 40)
-        self.writefile(indexfile, newdata)
+        # Write out index
+        self.writeindex(indexfile, index)
+
+        data[stuffindexkey]=index
         return data
 
 
-    def savewallpapers(self, data):
+    def savewallpapers(self, data, merge):
         return self.saveprettystuff(data, "brew/shared", "dloadindex/brewImageIndex.map",
-                                    'wallpaper', 'wallpaper-index')
+                                    'wallpaper', 'wallpaper-index', merge)
         
-    def saveringtones(self,data):
+    def saveringtones(self,data, merge):
         return self.saveprettystuff(data, "user/sound/ringer", "dloadindex/brewRingerIndex.map",
-                                    'ringtone', 'ringtone-index')
+                                    'ringtone', 'ringtone-index', merge)
 
 
-    def _firstfree(self, index):
+    def _fileisin(self, entries, file):
+        # see's if file is in entries (entries has full pathname, file is just filename)
+        for i in entries:
+            if brewbasename(entries[i]['name'])==file:
+                return True
+        return False
+
+    def _getindexof(self, index, file):
+        # gets index number of file from index
+        for i in index:
+            if index[i]==file:
+                return i
+        return -1
+
+    def _firstfree(self, index1, index2):
+        # finds first free index number taking into account both indexes
+        l=index1.keys()
+        l.extend(index2.keys())
         for i in range(0,255):
-            if i not in index:
+            if i not in l:
                 return i
         return -1
 
     def getringtones(self, result):
-        # we have to retreive both the midis and the index file
-        ringers={}
-        self.setmode(self.MODEBREW)
-        try:
-            entries=self.getfilesystem("user/sound/ringer")
-        except BrewNoSuchDirectoryException:
-            entries={}
-            
-        for file in entries:
-            f=entries[file]
-            if f['type']=='file':
-                ringers[brewbasename(file)]=self.getfilecontents(file)
-        result['ringtone']=ringers
-
-        index={}
-        data=self.getfilecontents("dloadindex/brewRingerIndex.map")
-        for i in range(0,readlsb(data[:2])):
-            offset=2+42*i
-            num=readlsb(data[offset:offset+2])
-            name=readstring(data[offset+2:offset+42])
-            index[num]=name
-
-        result['ringtone-index']=index
-        return result
+        return self.getprettystuff(result, "user/sound/ringer", "ringtone", "dloadindex/brewRingerIndex.map",
+                                   "ringtone-index")
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
@@ -385,7 +419,7 @@ class Phone:
     def getfilesystem(self, dir="", recurse=0):
         results={}
 
-        self.log("Getting dir '"+dir+"'")
+        self.log("Listing dir '"+dir+"'")
         self.setmode(self.MODEBREW)
 
         
@@ -485,7 +519,7 @@ class Phone:
 
 
     def raisecommsexception(self, str):
-        raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".  Check that the port on the phone is set correctly (Menu -> 8 -> 6 -> 2: It is normally set to RS-232 COM port).  Also check that you have selected the correct communications port on your computer and the cable is still firmly plugged in (currently using "+self.comm.port+")")
+        raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nCheck that the port on the phone is set correctly\n(Menu -> 8 -> 6 -> 2: It is normally set to RS-232 COM port).\nAlso check that you have selected the correct communications port on your computer\nand the cable is still firmly plugged in (currently using "+self.comm.port+")")
         
 
     def setmode(self, desiredmode):

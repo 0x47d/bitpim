@@ -477,8 +477,8 @@ class MainWindow(wxFrame):
             self.wallpaperwidget.populatefs(results)
             self.wallpaperwidget.populate(results)
         # ringtone
-        if results['sync'].has_key('wallpaper'):
-            v=results['sync'].has_key('wallpaper')
+        if results['sync'].has_key('ringtone'):
+            v=results['sync'].has_key('ringtone')
             if v=='MERGE': raise Exception("Not implemented")
             self.ringerwidget.populatefs(results)
             self.ringerwidget.populate(results)
@@ -495,29 +495,30 @@ class MainWindow(wxFrame):
         data={}
         todo=[]
         funcscb=[]
-        # merge is unlikely to ever be implemented ...
         ### Calendar
         # pass
         ### Wallpaper
         v=dlg.GetWallpaperSetting()
         if v!=dlg.NOTREQUESTED:
-            if v==dlg.OVERWRITE: 
-                self.wallpaperwidget.getdata(data)
-                todo.append( (self.wt.writewallpaper, "Wallpaper") )
-                # writing will modify data (especially index) so
-                # we repopulate on return
-                funcscb.append( self.wallpaperwidget.populatefs )
-                funcscb.append( self.wallpaperwidget.populate )
+            merge=True
+            if v==dlg.OVERWRITE: merge=False
+            self.wallpaperwidget.getdata(data)
+            todo.append( (self.wt.writewallpaper, "Wallpaper", merge) )
+            # writing will modify data (especially index) so
+            # we repopulate on return
+            funcscb.append( self.wallpaperwidget.populatefs )
+            funcscb.append( self.wallpaperwidget.populate )
         ### Ringtone
         v=dlg.GetRingtoneSetting()
         if v!=dlg.NOTREQUESTED:
-            if v==dlg.OVERWRITE: 
-                self.ringerwidget.getdata(data)
-                todo.append( (self.wt.writeringtone, "Ringtone") )
-                # writing will modify data (especially index) so
-                # we repopulate on return
-                funcscb.append( self.ringerwidget.populatefs )
-                funcscb.append( self.ringerwidget.populate )
+            merge=True
+            if v==dlg.OVERWRITE: merge=False
+            self.ringerwidget.getdata(data)
+            todo.append( (self.wt.writeringtone, "Ringtone", merge) )
+            # writing will modify data (especially index) so
+            # we repopulate on return
+            funcscb.append( self.ringerwidget.populatefs )
+            funcscb.append( self.ringerwidget.populate )
 
         ### Phonebook
         v=dlg.GetPhoneBookSetting()
@@ -761,21 +762,26 @@ class WorkerThread(WorkerThreadFramework):
 
     def senddata(self, dict, todo):
         count=0
-        for func,desc in todo:
+        for xx in todo:
+            func=xx[0]
+            desc=xx[1]
+            args=[dict]
+            if len(xx)>2:
+                args.extend(xx[2:])
             self.progressmajor(count,len(todo),desc)
-            func(dict)
+            apply(func, args)
             count+=1
         return dict
 
-    def writewallpaper(self, data):
+    def writewallpaper(self, data, merge):
         if __debug__: self.checkthread()
         self.setupcomm()
-        return self.commphone.savewallpapers(data)
+        return self.commphone.savewallpapers(data, merge)
 
-    def writeringtone(self, data):
+    def writeringtone(self, data, merge):
         if __debug__: self.checkthread()
         self.setupcomm()
-        return self.commphone.saveringtones(data)
+        return self.commphone.saveringtones(data, merge)
 
     def writephonebook(self, data):
         if __debug__: self.checkthread()
@@ -830,15 +836,17 @@ class FileSystemView(wxTreeCtrl):
         EVT_TREE_ITEM_ACTIVATED(self,idd, self.OnItemActivated)
 
         self.filemenu=wxMenu()
-        self.filemenu.Append(ID_FV_SAVE, "Save")
+        self.filemenu.Append(ID_FV_SAVE, "Save ...")
         self.filemenu.Append(ID_FV_HEXVIEW, "Hexdump")
         self.filemenu.AppendSeparator()
         self.filemenu.Append(ID_FV_DELETE, "Delete")
-        self.filemenu.Append(ID_FV_OVERWRITE, "Overwrite")
+        self.filemenu.Append(ID_FV_OVERWRITE, "Overwrite ...")
 
         self.dirmenu=wxMenu()
-        self.dirmenu.Append(ID_FV_NEWSUBDIR, "Make subdirectory")
-        self.dirmenu.Append(ID_FV_NEWFILE, "New File")
+        self.dirmenu.Append(ID_FV_NEWSUBDIR, "Make subdirectory ...")
+        self.dirmenu.Append(ID_FV_NEWFILE, "New File ...")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(ID_FV_REFRESH, "Refresh")
         self.dirmenu.AppendSeparator()
         self.dirmenu.Append(ID_FV_DELETE, "Delete")
 
@@ -849,6 +857,7 @@ class FileSystemView(wxTreeCtrl):
         EVT_MENU(self.dirmenu, ID_FV_NEWSUBDIR, self.OnNewSubdir)
         EVT_MENU(self.dirmenu, ID_FV_NEWFILE, self.OnNewFile)
         EVT_MENU(self.dirmenu, ID_FV_DELETE, self.OnDirDelete)
+        EVT_MENU(self.dirmenu, ID_FV_REFRESH, self.OnDirRefresh)
         EVT_RIGHT_DOWN(self, self.OnRightDown)
         EVT_RIGHT_UP(self, self.OnRightUp)
 
@@ -1049,6 +1058,10 @@ class FileSystemView(wxTreeCtrl):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         self.OnDirListing(parentdir)
+
+    def OnDirRefresh(self, _):
+        path=self.itemtopath(self.GetSelection())
+        self.OnDirListing(path)
 
     def itemtopath(self, item):
         if item==self.root: return ""
