@@ -35,15 +35,11 @@ class SanyoPhonebook:
     # plus a fudge factor of 5 days for no reason I can find
     _sanyoepochtounix=315532800+450000
 
-    getwallpapers=None
-    getringtones=None
-
     pbterminator="\x7e"
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
 
-    def __init__(self, logtarget, commport):
-        com_phone.Phone.__init__(self, logtarget, commport)
-	com_brew.BrewProtocol.__init__(self)
+    def __init__(self):
+        pass
     
     def _setmodelgdmgo(self):
         # see if we can turn on dm mode
@@ -933,3 +929,21 @@ class Profile:
 
         data['phonephonebook']=results
         return data
+
+
+class Phone(com_phone.Phone,com_brew.BrewProtocol,SanyoPhonebook):
+    "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
+    desc="Sanyo"
+    
+    def __init__(self, logtarget, commport):
+        "Call all the contructors and sets initial modes"
+        com_phone.Phone.__init__(self, logtarget, commport)
+        com_brew.BrewProtocol.__init__(self)
+        SanyoPhonebook.__init__(self)
+        self.log("Attempting to contact phone")
+        self.mode=self.MODENONE
+
+    getwallpapers=None
+    getringtones=None
+
+
