@@ -70,6 +70,11 @@ PACKET pbgroups:
         1 UINT icon
         23 STRING name
 
+PACKET indexentry:
+    2 UINT {'default': 0xffff} +index
+    40 STRING {'default': ""} +name
+
+
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     # A bit of a silly design again.  Entries with an index of 0xffff are
@@ -77,9 +82,7 @@ PACKET indexfile:
     # number of valid entries to be mismatched.
     P UINT {'constant': 30} maxitems
     2 UINT numactiveitems
-    * LIST {'length': self.maxitems} +items:
-        2 UINT {'default': 0xffff} +index
-        40 STRING {'default': ""} +name
+    * LIST {'length': self.maxitems, 'elementclass': indexentry, 'createdefault': True} +items
 
 ###
 ### The calendar
