@@ -2009,8 +2009,11 @@ class ExceptionDialog(MyFixedScrolledMessageDialog):
             s.write(common.formatexception(exception.gui_exc_info))
         else:
             s.write("Exception with no extra info.\n%s\n" % (exception.str(),))
-
+        self._text=s.getvalue()
         MyFixedScrolledMessageDialog.__init__(self, frame, s.getvalue(), title, helpids.ID_EXCEPTION_DIALOG)
+
+    def getexceptiontext(self):
+        return self._text
 
 ###
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
