@@ -13,6 +13,7 @@ from wxPython.grid import *
 from wxPython.wx import *
 from wxPython.lib.timectrl import *
 from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
+from wxPython.lib.intctrl import *
 
 # my modules
 import common
@@ -1127,22 +1128,41 @@ class DayViewDialog(wxDialog):
     ID_LISTBOX=6
     ID_START=7
     ID_END=8
+    ID_REPEAT=9
+    ID_REVERT=10
+    ID_SAVE=11
     
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
-        wxDialog.__init__(self, parent, id, title, style=wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+        wxDialog.__init__(self, parent, id, title, style=wxDEFAULT_DIALOG_STYLE)
 
+        # overall container
         vbs=wxBoxSizer(wxVERTICAL)
         
         prev=wxButton(self, self.ID_PREV, "<", style=wxBU_EXACTFIT)
         next=wxButton(self, self.ID_NEXT, ">", style=wxBU_EXACTFIT)
         self.title=wxStaticText(self, -1, "Date here", style=wxALIGN_CENTRE|wxST_NO_AUTORESIZE)
 
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        hbs.Add(prev, 0, wxEXPAND)
-        hbs.Add(self.title, 1, wxEXPAND)
-        hbs.Add(next, 0, wxEXPAND)
-        vbs.Add(hbs, 0, wxEXPAND)
+        # top row container 
+        hbs1=wxBoxSizer(wxHORIZONTAL)
+        hbs1.Add(prev, 0, wxEXPAND)
+        hbs1.Add(self.title, 1, wxEXPAND)
+        hbs1.Add(next, 0, wxEXPAND)
+        vbs.Add(hbs1, 0, wxEXPAND)
+
+        # list box and two buttons below
+        self.listbox=wxListBox(self, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
+        add=wxButton(self, self.ID_ADD, "New")
+        hbs2=wxBoxSizer(wxHORIZONTAL)
+        close=wxButton(self, self.ID_CLOSE, "Close")
+        hbs2.Add(add, 1, wxALIGN_CENTER|wxLEFT|wxRIGHT, border=5)
+        hbs2.Add(close, 1, wxALIGN_CENTER|wxRIGHT, border=5)
+        
+        # sizer for listbox
+        lbs=wxBoxSizer(wxVERTICAL)
+        lbs.Add(self.listbox, 1, wxEXPAND|wxBOTTOM, border=5)
+        lbs.Add(hbs2, 0, wxEXPAND)
+
 
         self.fieldnames=('description', 'start', 'end', 'repeat',
         'alarm', 'ringtone', '?d')
@@ -1158,36 +1178,51 @@ class DayViewDialog(wxDialog):
             t=wxStaticText(self, -1, desc, style=wxALIGN_LEFT)
             gs.Add(t)
             if field=='start':
-                c=MyTimeControl(self,self.ID_START)
+                c=DVTimeControl(self,self.ID_START)
             elif field=='end':
-                c=MyTimeControl(self,self.ID_END)
-            else:
+                c=DVTimeControl(self,self.ID_END)
+            elif field=='repeat':
+                c=DVRepeatControl(self, self.ID_REPEAT)
+            elif field=='description':
                 c=wxTextCtrl(self, len(self.fields)+10, "dummy")
+            else:
+                c=DVIntControl(self, -1)
             gs.Add(c,0,wxEXPAND)
             self.fields[field]=c
-                 
-        self.listbox=wxListBox(self, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
-        add=wxButton(self, self.ID_ADD, "New")
+
+        # buttons below fields
         delete=wxButton(self, self.ID_DELETE, "Delete")
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        hbs.Add(delete, 0)
-        hbs.Add(add, 0)
+        revert=wxButton(self, self.ID_REVERT, "Revert")
+        save=wxButton(self, self.ID_SAVE, "Save")
 
-        lbs=wxBoxSizer(wxVERTICAL)
-        lbs.Add(self.listbox, 1, wxEXPAND)
-        lbs.Add(hbs, 0, wxEXPAND)
+        hbs4=wxBoxSizer(wxHORIZONTAL)
+        hbs4.Add(delete, 1, wxALIGN_CENTRE|wxLEFT, border=10)
+        hbs4.Add(revert, 1, wxALIGN_CENTRE|wxLEFT|wxRIGHT, border=10)
+        hbs4.Add(save, 1, wxALIGN_CENTRE|wxRIGHT, border=10)
 
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        hbs.Add(lbs, 1, wxEXPAND)
-        hbs.Add(gs, 2, wxEXPAND)
+        # fields and buttons together
+        vbs2=wxBoxSizer(wxVERTICAL)
+        vbs2.Add(gs, 1, wxEXPAND|wxBOTTOM, border=5)
+        vbs2.Add(hbs4, 0, wxEXPAND|wxALIGN_CENTRE)
 
-        vbs.Add(hbs, 1, wxEXPAND)
+        # container for everything below title row
+        hbs3=wxBoxSizer(wxHORIZONTAL)
+        hbs3.Add(lbs, 1, wxEXPAND|wxALL, 5)
+        hbs3.Add(vbs2, 2, wxEXPAND|wxALL, 5)
+
+        vbs.Add(hbs3, 1, wxEXPAND)
 
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
         self.entries={}
         self.entrymap=[]
+
+        self.add=add
+        self.close=close
+        self.delete=delete
+        self.revert=revert
+        self.save=save
 
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
@@ -1215,15 +1250,15 @@ class DayViewDialog(wxDialog):
         # add listbox entries
         for e in self.entrymap:
             if 0: # ampm/miltime config here ::TODO::
-                str="%2d:%02d" % (e[0][3], e[0][4])
+                str="%2d:%02d" % (e[0][0], e[0][1])
             else:
-                hr=e[0][3]
+                hr=e[0][0]
                 ap="am"
                 if hr>=12:
                     ap="pm"
                     hr-=12
                 if hr==0: hr=12
-                str="%2d:%02d %s" % (hr, e[0][4], ap)
+                str="%2d:%02d %s" % (hr, e[0][1], ap)
             str+=" "+e[2]
             print "adding",str
             self.listbox.Append(str)
@@ -1238,10 +1273,11 @@ class DayViewDialog(wxDialog):
                 self.fields[i].SetValue("")
             return
         for i in self.fieldnames:
+            print i, entry[i]
             self.fields[i].SetValue(entry[i])
 
 
-class MyTimeControl(wxPanel):
+class DVTimeControl(wxPanel):
     # A time control customised to work in the dayview editor
     def __init__(self,parent,id):
         wxPanel.__init__(self, parent, -1)
@@ -1262,7 +1298,35 @@ class MyTimeControl(wxPanel):
             return
         self.tc.SetWxDateTime(wxDateTimeFromHMS(v[3], v[4]))
     
+class DVRepeatControl(wxChoice):
+    # shows the repeat values
+    vals=[None, "daily", "monfri", "weekly", "monthly", "yearly"]
+    desc=["None", "Daily", "Mon - Fri", "Weekly", "Monthly", "Yearly" ]
+
+    def __init__(self, parent, id):
+        wxChoice.__init__(self, parent, id, choices=self.desc)
+
+    def SetValue(self, v):
+        if isinstance(v,str) and len(v)==0:  # blank string
+            v=None
+        assert v in self.vals
+        self.SetSelection(self.vals.index(v))
+
+class DVIntControl(wxIntCtrl):
+    # shows integer values
+    def __init__(self, parent, id):
+        wxIntCtrl.__init__(self, parent, id, limited=True)
+
+    def SetValue(self, v):
+        if isinstance(v, str):
+            assert len(v)==0  # blank string
+            v=0
+        if v is None:
+            v=-1
+        assert isinstance(v, int)
+        wxIntCtrl.SetValue(self,v)
         
+
         
 
         
