@@ -1,8 +1,8 @@
 """
-wxScrolledPanel with corrected behaviour.
+wx.ScrolledPanel with corrected behaviour.
 
 This file has been modified from the original and remains under the same
-license as the original.  (The original is in the wxPython distribution
+license as the original.  (The original is in the wx distribution
 as lib/scrolledpanel.py.  The following changes were made:
 
  - Doesn't automatically scroll back to the top when SetupScrolling()
@@ -11,47 +11,49 @@ as lib/scrolledpanel.py.  The following changes were made:
    window, and a second method to scroll to make it visible
  - MakeChildVisible (second method from above) now works correctly
    if the child is not a direct child of the panel
+ - Changed to use 'import wx.' import style
 """
 ###
 ###  $Id$
 
 #----------------------------------------------------------------------------
-# Name:         wxScrolledPanel.py
+# Name:         wx.ScrolledPanel.py
 # Author:       Will Sadkin
 # Created:      03/21/2003
 # Copyright:    (c) 2003 by Will Sadkin
 # RCS-ID:       Id: scrolledpanel.py,v 1.1.2.5 2003/09/24 00:22:50 RD Exp 
-# License:      wxWindows license
+# License:      wx.Windows license
 #----------------------------------------------------------------------------
 #
 
-from wxPython.wx import *
+import wx
 
 
-class wxScrolledPanel( wxScrolledWindow ):
+class wxScrolledPanel( wx.ScrolledWindow ):
     """
-wxScrolledPanel fills a "hole" in the implementation of wxScrolledWindow,
+wxScrolledPanel fills a "hole" in the implementation of wx.ScrolledWindow,
 providing automatic scrollbar and scrolling behavior and the tab traversal
-management that wxScrolledWindow lacks.  This code was based on the original
+management that wx.ScrolledWindow lacks.  This code was based on the original
 demo code showing how to do this, but is now available for general use
 as a proper class (and the demo is now converted to just use it.)
 """
     def __init__(self, parent, id=-1,
-                 pos = wxDefaultPosition, size = wxDefaultSize,
-                 style = wxTAB_TRAVERSAL, name = "scrolledpanel"):
+                 pos = wx.DefaultPosition, size = wx.DefaultSize,
+                 style = wx.TAB_TRAVERSAL, name = "scrolledpanel"):
 
-        wxScrolledWindow.__init__(self, parent, -1,
+        # RB: id parameter wasn't being passed
+        wx.ScrolledWindow.__init__(self, parent, id,
                                   pos=pos, size=size,
                                   style=style, name=name)
 
-        EVT_CHILD_FOCUS(self, self.OnChildFocus)
+        wx.EVT_CHILD_FOCUS(self, self.OnChildFocus)
 
 
     def SetupScrolling(self, scroll_x=True, scroll_y=True, rate_x=20, rate_y=20):
         """
         This function sets up the event handling necessary to handle
         scrolling properly. It should be called within the __init__
-        function of any class that is derived from wxScrolledPanel,
+        function of any class that is derived from wx.ScrolledPanel,
         once the controls on the panel have been constructed and
         thus the size of the scrolling area can be determined.
 
@@ -75,7 +77,7 @@ as a proper class (and the demo is now converted to just use it.)
 
         self.SetScrollRate(rate_x, rate_y)
         # RB: line commented out
-        ##wxCallAfter(self.Scroll, 0, 0) # scroll back to top after initial events
+        ##wx.CallAfter(self.Scroll, 0, 0) # scroll back to top after initial events
 
 
     def OnChildFocus(self, evt):
