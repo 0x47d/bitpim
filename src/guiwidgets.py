@@ -1,6 +1,15 @@
-# Part of bitpim
+#!/usr/bin/env python
 
-# $Id$
+### BITPIM
+###
+### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+###
+### This software is under the Artistic license.
+### http://www.opensource.org/licenses/artistic-license.php
+###
+### $Id$
+
+"""Most of the graphical user interface elements making up BitPim"""
 
 # standard modules
 import os
@@ -23,6 +32,7 @@ import gui
 import calendarcontrol
 import helpids
 import comscan
+import comdiagnose
 
 ####
 #### A widget for displaying the phone information
@@ -509,9 +519,18 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(v)
 
     def OnComBrowse(self, _):
-        dlg=CommPortDialog(self, defaultport=self.commbox.GetValue())
+        # remember its size
+        w=self.mw.config.ReadInt("combrowsewidth", 640)
+        h=self.mw.config.ReadInt("combrowseheight", 480)
+        p=self.mw.config.ReadInt("combrowsesash", 0)
+        dlg=CommPortDialog(self, defaultport=self.commbox.GetValue(), sashposition=p)
+        dlg.SetSize(wxSize(w,h))
         res=dlg.ShowModal()
         v=dlg.GetPort()
+        sz=dlg.GetSize()
+        self.mw.config.WriteInt("combrowsewidth", sz.GetWidth())
+        self.mw.config.WriteInt("combrowseheight", sz.GetHeight())
+        self.mw.config.WriteInt("combrowsesash", dlg.sashposition)
         dlg.Destroy()
         if res==wxID_OK:
             self.commbox.SetValue(v)
@@ -589,20 +608,21 @@ class CommPortDialog(wxDialog):
     ID_LISTBOX=1
     ID_TEXTBOX=2
     ID_REFRESH=3
+    ID_SASH=4
     
-    def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto"):
+    def __init__(self, parent, id=-1, title="Choose a comm port", defaultport="auto", sashposition=0):
         wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
         self.parent=parent
         self.port=defaultport
+        self.sashposition=sashposition
         
-        p=parent # set here in case we want a different parent
+        p=self # parent widget
 
-        # the listbox and textbox
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        self.lb=wxListBox(p, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
-        self.tb=wxHtmlWindow(p, self.ID_TEXTBOX) # default style is auto scrollbar
-        hbs.Add(self.lb, 0, wxEXPAND|wxALL, 10)
-        hbs.Add(self.tb, 1, wxEXPAND|wxALL, 10)
+        # the listbox and textbox in a splitter
+        splitter=wxSplitterWindow(p, self.ID_SASH, style=wxSP_3D|wxSP_LIVE_UPDATE)
+        self.lb=wxListBox(splitter, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
+        self.tb=wxHtmlWindow(splitter, self.ID_TEXTBOX, size=wxSize(400,400)) # default style is auto scrollbar
+        splitter.SplitHorizontally(self.lb, self.tb, sashposition)
 
         # the buttons
         buttsizer=wxGridSizer(1, 4)
@@ -613,14 +633,69 @@ class CommPortDialog(wxDialog):
 
         # vertical join of the two
         vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add(hbs, 1, wxEXPAND)
-        vbs.Add(vbs, 0, wxCENTER)
+        vbs.Add(splitter, 1, wxEXPAND)
+        vbs.Add(buttsizer, 0, wxCENTER)
 
         # hook into self
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
+        p.SetSizer(vbs)
+        p.SetAutoLayout(True)
+        vbs.Fit(p)
+
+        # update dialog
+        self.OnRefresh()
+
+        # hook in all the widgets
+        EVT_BUTTON(self, wxID_CANCEL, self.OnCancel)
+        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
+        EVT_BUTTON(self, self.ID_REFRESH, self.OnRefresh)
+        EVT_BUTTON(self, wxID_OK, self.OnOk)
+        EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBox)
+        EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
+        EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
+
+    def OnSashChange(self, _=None):
+        self.sashposition=self.FindWindowById(self.ID_SASH).GetSashPosition()
+
+    def OnRefresh(self, _=None):
+        self.tb.SetPage("<p><b>Refreshing</b> ...")
+        self.lb.Clear()
+        self.Update()
+        ports=comscan.comscan()
+        self.portinfo=comdiagnose.diagnose(ports)
+        self.lb.Clear()
+        sel=-1
+        for name, actual, description in self.portinfo:
+            if sel<0 and self.GetPort()==actual:
+                sel=self.lb.GetCount()
+            self.lb.Append(name)
+        if sel<0:
+            sel=0
+        if self.lb.GetCount():
+            self.lb.SetSelection(sel)
+            self.OnListBox()
+        else:
+            self.FindWindowById(wxID_OK).Enable(False)
+            self.tb.SetPage("<html><body>You do not have any com/serial ports on your system</body></html>")
+
+    def OnListBox(self, _=None):
+        # enable/disable ok button
+        p=self.portinfo[self.lb.GetSelection()]
+        if p[1] is None:
+            self.FindWindowById(wxID_OK).Enable(False)
+        else:
+            self.port=p[1]
+            self.FindWindowById(wxID_OK).Enable(True)
+        self.tb.SetPage(p[2])
         
+
+    def OnCancel(self, _):
+        self.EndModal(wxID_CANCEL)
+
+    def OnOk(self, _):
+        self.EndModal(wxID_OK)
+
+    def OnHelp(self, _):
+        wxGetApp().displayhelpid(helpids.ID_COMMSETTINGS_DIALOG)        
 
     def GetPort(self):
         return self.port
