@@ -54,7 +54,7 @@ def formatsimplename(name):
     l=name.get("last", "")
     if len(f) or len(m) or len(l):
         return " ".join([p for p in (f,m,l) if len(p)])
-    return name['nickname']
+    return name.get('nickname', "")
 
 def getfullname(name):
     """Gets the full name, joining the first/middle/last if necessary"""
