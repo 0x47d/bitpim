@@ -23,6 +23,7 @@ import M2Crypto
 # wx stuff
 import wx
 import wx.html
+import wx.lib.newevent
 
 # My stuff
 import native.usb
@@ -33,6 +34,10 @@ ID_CONFIG=wx.NewId()
 ID_LOG=wx.NewId()
 ID_RESCAN=wx.NewId()
 ID_EXIT=wx.NewId()
+
+
+XmlServerEvent, EVT_XMLSERVER = wx.lib.newevent.NewEvent()
+
 
 if guihelper.IsMSWindows(): parentclass=wx.TaskBarIcon
 else: parentclass=wx.Frame
@@ -272,6 +277,8 @@ class MainWindow(wx.Frame):
         wx.EVT_BUTTON(self, self.hide.GetId(), self.OnHideButton)
         wx.EVT_BUTTON(self, self.exit.GetId(), self.OnExitButton)
 
+        EVT_XMLSERVER(self, self.OnXmlServerEvent)
+
         self.xmlrpcserver=None
         wx.CallAfter(self.StartIfICan)
         
@@ -280,9 +287,13 @@ class MainWindow(wx.Frame):
             self.Show(False)
             evt.Veto()
             return
-        # ? do close processing here (eg flushing config?)
         self.taskwin.GoAway()
         evt.Skip()
+
+    def OnXmlServerEvent(self, evt):
+        # do event processing here
+        # evt is instance of XmlServerEvent
+        pass
 
     def OnExitButton(self, _):
         self.Close(True)
@@ -329,7 +340,7 @@ class MainWindow(wx.Frame):
         ctx.load_cert(certfile)
         self.xmlrpcserver=XMLRPCService(self, host, port, ctx)
         self.xmlrpcserver.setDaemon(True)
-        server.start()
+        self.xmlrpcserver.start()
         
 class CertificateDialog(wx.Dialog):
     """A dialog for generating a self-signed certificate"""
@@ -356,7 +367,7 @@ def GenerateSelfSignedCert(fileout, subject, email="", org="", orgunit="", l="",
                        fileout, "-out", fileout, "-subj", "/countryName=%s/emailAddress=%s/L=%s/O=%s/OU=%s/CN=%s"
                        % (country, email, l, org, orgunit, subject))
     return ret
-        # -nodes means keyfile is not password protected
+        # -nodes means keyfile is not password protected (obviously)
         # openssl req -config bitfling.cfg -new -x509 -newkey rsa:1024 -nodes -days 365 -keyout file.pem -out file.pem \
         #    -subj "/countryName=US/L=Texas/O=org/OU=orgunit/CN=Who Me?"  # can have zero length strings
 
@@ -366,6 +377,10 @@ class XMLRPCService(xmlrpcstuff.Server):
     def __init__(self, mainwin, host, port, ctx):
         self.mainwin=mainwin
         xmlrpcstuff.Server.__init__(self, host, port, ctx)
+
+    def OnNewAccept(self, clientaddr):
+        # wx.PostEvent(self.mainwin, XmlServerEvent(kw=arg, kw=arg ...) )
+        return True
 
     def OnNewConnection(self, clientaddr, _):
         return True

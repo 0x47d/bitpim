@@ -127,12 +127,18 @@ class MySSLConnection(M2Crypto.SSL.Connection):
 class Server(threading.Thread):
 
     class Message:
-        CMD_NEW_CONNECTION_REQUEST=0
-        CMD_NEW_CONNECTION_RESPONSE=1
-        CMD_CONNECTION_CLOSE=5
-        CMD_LOG=2
-        CMD_XMLRPC_REQUEST=3
-        CMD_XMLRPC_RESPONSE=4
+        """A message between a connection thread and the server object, or vice versa"""
+        # These are in the order things happen.  Logging happens all the time, and we
+        # cycle XMLRPC requests and responses for the lifetime of a connection
+        CMD_LOG=0                            # data is log message
+        CMD_NEW_ACCEPT_REQUEST=1
+        CMD_NEW_ACCEPT_RESPONSE=2
+        CMD_NEW_CONNECTION_REQUEST=3
+        CMD_NEW_CONNECTION_RESPONSE=4
+        CMD_XMLRPC_REQUEST=5
+        CMD_XMLRPC_RESPONSE=6
+        CMD_CONNECTION_CLOSE=7
+
         
         def __init__(self, cmd, respondqueue=None, clientaddr=None, peercert=None, data=None):
             self.cmd=cmd
@@ -150,6 +156,12 @@ class Server(threading.Thread):
     class ConnectionThread(threading.Thread):
 
         def __init__(self, server, listen, queue, name):
+            """Constructor
+            
+            @param server: reference to server object
+            @param listen: SSLConnection object that is in listening state
+            @param queue:  the queue object to send messages to
+            @param name: name of this thread"""
             threading.Thread.__init__(self)
             self.setDaemon(True)
             self.setName(name)
@@ -170,7 +182,22 @@ class Server(threading.Thread):
             while not self.server.wantshutdown:
                 if __debug__ and TRACE: print self.getName()+": About to call accept"
                 try:
-                    conn, peeraddr = self.listen.accept()
+                    sock, peeraddr = self.listen.socket.accept()
+                    msg=Server.Message(Server.Message.CMD_NEW_ACCEPT_REQUEST, self.responsequeue, peeraddr)
+                    self.requestqueue.put(msg)
+                    resp=self.responsequeue.get()
+                    assert resp.cmd==resp.CMD_NEW_ACCEPT_RESPONSE
+                    ok=resp.data
+                    if not ok:
+                        self.log("Connection from "+`peeraddr`+" not accepted")
+                        sock.close()
+                        continue
+                    ssl = Connection(self.ctx, sock)
+                    ssl.addr = peeraddr
+                    ssl.setup_ssl()
+                    ssl.set_accept_state()
+                    ssl.accept_ssl()
+                    conn=ssl
                 except:
                     self.log("Exception in accept: %s:%s" % sys.exc_info()[:2])
                     continue
@@ -182,10 +209,10 @@ class Server(threading.Thread):
                 assert resp.cmd==resp.CMD_NEW_CONNECTION_RESPONSE
                 ok=resp.data
                 if not ok:
-                    self.log("Connection rejected")
+                    self.log("Connection from "+`peeraddr`+" rejected")
                     conn.close()
                     continue
-                self.log("Connection accepted")
+                self.log("Connection from "+`peeraddr`+" accepted")
                 if __debug__ and TRACE: print self.getName()+": Setting timeout to "+`self.server.connectionidlebreak`
                 conn.set_socket_read_timeout(M2Crypto.SSL.timeout(self.server.connectionidlebreak))
                 self.reqhandlerclass(conn, peeraddr, self)
@@ -257,6 +284,9 @@ class Server(threading.Thread):
         run=run22
 
     def processmessage(self, msg):
+        if not isinstance(msg, Server.Message):
+            self.OnUserMessage(msg)
+            return
         if __debug__ and TRACE:
             if msg.cmd!=msg.CMD_LOG:
                 print "Processing message "+`msg`
@@ -264,6 +294,9 @@ class Server(threading.Thread):
         if msg.cmd==msg.CMD_LOG:
             self.OnLog(msg.data)
             return
+        elif msg.cmd==msg.CMD_NEW_ACCEPT_REQUEST:
+            ok=self.OnNewAccept(msg.clientaddr)
+            resp=Server.Message(Server.Message.CMD_NEW_ACCEPT_RESPONSE, data=ok)
         elif msg.cmd==msg.CMD_NEW_CONNECTION_REQUEST:
             ok=self.OnNewConnection(msg.clientaddr, msg.peercert)
             resp=Server.Message(Server.Message.CMD_NEW_CONNECTION_RESPONSE, data=ok)
@@ -282,15 +315,23 @@ class Server(threading.Thread):
         """Process a log message"""
         print str
 
+    def OnNewAccept(self, clientaddr):
+        """Decide if we accept a new new connection"""
+        return True
+
     def OnNewConnection(self, clientaddr, clientcert):
-        """Decide if a new connection is allowed"""
+        """Decide if a new connection is allowed once SSL is established"""
         return True
 
     def OnConnectionClose(self, clientaddr, clientcert):
+        """Called when a connection closes"""
         if __debug__ and TRACE: print "Closed connection from "+`clientaddr`
-            
+
+    def OnUserMessage(self, msg):
+        """Called when a message arrives in the workqueue"""
 
     def OnXmlRpcRequest(self, xmldata, username, password, clientaddr, clientcert):
+        """Called when an XML-RPC requests arrives, but before the XML is parsed"""
         params, method = xmlrpclib.loads(xmldata)
         # call method
         try:
@@ -309,6 +350,7 @@ class Server(threading.Thread):
         return response            
 
     def OnMethodDispatch(self, method, params, username, password, clientaddr, clientcert):
+        """Called once the XML-RPC request is parsed"""
         if __debug__ and TRACE: print "%s %s (user=%s, password=%s, client=%s)" % (method, `tuple(params)`, username, password, `clientaddr`)
         return True
 
