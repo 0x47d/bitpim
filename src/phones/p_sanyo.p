@@ -49,7 +49,7 @@ PACKET phonenumberresponse:
     1 UINT {'constant': 0x26} command1
     1 UINT {'constant': 0xb2} command2
     2 UNKNOWN pad1
-    10 STRING {'terminator': None}  myphonenumber
+    10 STRING {'raiseonunterminatedread': False}  myphonenumber
     119 UNKNOWN pad2
 
 PACKET {'readwrite': 0x0d} sanyoheader:
@@ -70,16 +70,17 @@ PACKET ownerinforequest:
     502 UNKNOWN +pad
 
 PACKET ownerentry:
-    16 STRING ownername
+    16 STRING {'raiseonunterminatedread': False} ownername
     2 UINT birthyear
     1 UINT birthmonth
     1 UINT birthday
     1 UINT bloodtype "0: ?, 1: A, 2: B, 3: O, 4: AB"
-    110 STRING address
-    48 STRING homeemail
-    48 STRING workemail
-    48 STRING homephone
-    48 STRING workphone
+    96 STRING {'raiseonunterminatedread': False} address
+    14 UNKNWON +pad
+    48 STRING {'raiseonunterminatedread': False} homeemail
+    48 STRING {'raiseonunterminatedread': False} workemail
+    48 STRING {'raiseonunterminatedread': False} homephone
+    48 STRING {'raiseonunterminatedread': False} workphone
     
 PACKET ownerinforesponse:
     * sanyoheader header
@@ -95,13 +96,13 @@ PACKET eventrequest:
 PACKET evententry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
-    14 STRING eventname
-    7 UNKNOWN pad1
+    14 STRING {'raiseonunterminatedread': False} eventname
+    7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT startdate "# seconds since Jan 1, 1980 approximately"
     4 UINT stopdate
-    14 STRING location
-    7 UNKNOWN pad2
+    14 STRING {'raiseonunterminatedread': False} location
+    7 UNKNOWN +pad2
     1 UINT location_len
     1 UINT alarm_type "0: Beep, 1: Voice, 2: Silent"
     1 UINT dunno1
@@ -118,15 +119,32 @@ PACKET eventresponse:
     436 UNKNOWN pad
 
 PACKET callalarmrequest:
-    * UNKNOWN unknown
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x24} +header
+    1 UINT slot
+    501 UNKNOWN +pad
 
 PACKET callalarmentry:
-    * UNKNWON unknown
-    
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
+    1 UINT dunno1 "Related to Snooze?"
+    49 STRING {'raiseonunterminatedread': False} phonenum
+    1 UINT phonenum_len
+    4 UINT date "# seconds since Jan 1, 1980 approximately"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT datedup "Copy of the date.  Always the same???"
+    16 STRING {'raiseonunterminatedread': False} name
+    1 UNKNOWN +pad1
+    1 UINT name_len
+    1 UINT phonenumbertype "1: Home, 2: Work, ..." 
+    2 UINT phonenumberslot
+    1 UINT dunno2 "Sort order by date?"
+
 PACKET callalarmresponse:
     * sanyoheader header
     * callalarmentry entry
-    * UNKNOWN pad
+    417 UNKNOWN pad
 
 PACKET todorequest:
     * UNKNOWN unknown
@@ -158,9 +176,9 @@ PACKET foldernameentry:
     1 UINT autofile "If 1, autofile messages with keyword"
     1 UINT notify
     1 UINT icon
-    13 STRING name "Name of the folder"
-    3 UNKNOWN pad
-    14 STRING keyword
+    13 STRING {'raiseonunterminatedread': False} name "Name of the folder"
+    3 UNKNOWN +pad
+    14 STRING {'raiseonunterminatedread': False} keyword
 
 PACKET foldernameresponse:
     * sanyoheader header
@@ -191,7 +209,7 @@ PACKET phonebookslotrequest:
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
-    16 STRING {'terminator': None} name
+    16 STRING {'raiseonunterminatedread': False} name
     * LIST {'length': 7} numbers:
         1 UINT number_len
         49 STRING number
