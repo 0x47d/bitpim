@@ -208,15 +208,26 @@ class Phone(com_samsung_packet.Phone):
         keys.sort()
         keys=keys[:self.protocolclass.NUMPHONEBOOKENTRIES]
 
-        progressmax=len(data['phonebook'])
+        progressmax=self.protocolclass.NUMPHONEBOOKENTRIES
 
+        slotsused={}
         for i in range(len(keys)):
             slot=keys[i]
+            slotsused[slot]=1
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=self.makeentry(pb[slot],data)
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
             self.progress(i,progressmax,"Writing "+req.entry.name)
             self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
+        i=len(keys)
+        for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
+            if not slotsused.has_key(slot):
+                i+=1
+                req=self.protocolclass.phonebooksloterase()
+                req.slot=slot
+                self.progress(i,progressmax,"Clearing slot "+`slot`)
+                self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
+                
         self.progress(progressmax+1,progressmax+1, "Phone book write completed")
         return data
         
@@ -283,6 +294,6 @@ class Profile(com_samsung_packet.Profile):
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('calendar', 'read', None),   # all calendar reading
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         )
 
