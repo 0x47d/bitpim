@@ -13,26 +13,12 @@ import os
 import threading
 import copy
 import time
-import sqlite
+import apsw as sqlite
 
 if __debug__:
     TRACE=True
 else:
     TRACE=False
-
-# pysqlite 2 is currently broken for manifest typing (it likes to
-# convert strings of digits into integers and screw them up).  We use
-# these as a workaround
-
-def _addsentinel(val):
-    if isinstance(val, (str, unicode)) and val.isdigit(): # this checks all chars
-        return "#@$%>"+val
-    return val
-
-def _stripsentinel(val):
-    if isinstance(val, (str, unicode)) and val.startswith("#@$%>"):
-        return val[5:]
-    return val
 
 def ExclusiveWrapper(method):
     """Wrap a method so that it has an exclusive lock on the database
@@ -75,7 +61,7 @@ def idquote(s):
 class Database:
 
     def __init__(self, directory, filename):
-        self.connection=sqlite.connect(os.path.join(directory, filename))
+        self.connection=sqlite.Connection(os.path.join(directory, filename))
         self.cursor=self.connection.cursor()
         self.exlock=threading.RLock()
         self._schemacache={}
@@ -207,10 +193,10 @@ class Database:
                     # can't have it both ways
                     raise ValueError("key %s for table %s has some values as list as some as not. eg LIST: %s, NOTLIST: %s" % (m,tablename,`islist`,`isnotlist`))
                 if isnotlist is not None:
-                    creates.append( (m, "value") )
+                    creates.append( (m, "valueBLOB") )
                     continue
                 if islist is not None:
-                    creates.append( (m, "indirect") )
+                    creates.append( (m, "indirectBLOB") )
                     continue
             if len(creates):
                 self._altertable(tablename, creates, createindex=1)
@@ -219,7 +205,7 @@ class Database:
         dbtkeys=self.getcolumns(tablename)
         # for every indirect, we have to replace the value with a pointer
         for _,n,t in dbtkeys:
-            if t=="indirect":
+            if t=="indirectBLOB":
                 indirects={}
                 for r in dict.keys():
                     record=dict[r]
@@ -242,7 +228,7 @@ class Database:
             cmd.extend([")", "values", "(?,"])
             cmd.append(",".join(["?" for r in rk]))
             cmd.append(")")
-            self.sql(" ".join(cmd), [timestamp]+[_addsentinel(record[r]) for r in rk])
+            self.sql(" ".join(cmd), [timestamp]+[record[r] for r in rk])
         
     def updateindirecttable(self, tablename, indirects):
         # this is mostly similar to savemajordict, except we only deal
@@ -268,7 +254,7 @@ class Database:
         # are any missing?
         missing=[k for k in datakeys if k not in dbkeys]
         if len(missing):
-            self._altertable(tablename, [(m,"value") for m in missing], createindex=2)
+            self._altertable(tablename, [(m,"valueBLOB") for m in missing], createindex=2)
         # for each row we now work out the indirect information
         for r in indirects:
             res=tablename+","
@@ -284,7 +270,7 @@ class Database:
                         if cmd[-1]!="where":
                             cmd.append("and")
                         cmd.extend([idquote(d), "= ?"])
-                        params.append(_addsentinel(v))
+                        params.append(v)
                 assert cmd[-1]!="where" # there must be at least one non-none column!
                 if len(coals)==1:
                     cmd.extend(["and",coals[0],"isnull"])
@@ -304,7 +290,7 @@ class Database:
                         if cmd[-1]!="(":
                             cmd.append(",")
                         cmd.append(k)
-                        params.append(_addsentinel(record[k]))
+                        params.append(record[k])
                     cmd.extend([")", "values", "("])
                     cmd.append(",".join(["?" for p in params]))
                     cmd.append(")")
@@ -333,12 +319,12 @@ class Database:
                 continue
             record={}
             for colnum,name,type in schema:
-                if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
+                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
                     continue
                 if type=="value":
-                    record[name]=_stripsentinel(row[colnum])
+                    record[name]=row[colnum]
                     continue
-                assert type=="indirect"
+                assert type=="indirectBLOB"
                 record[name]=row[colnum]
                 if name not in indirects:
                     indirects.append(name)
@@ -364,12 +350,12 @@ class Database:
         for row in self.sqlmany("select * from %s where __rowid__=?" % (idquote(tablename),), [(int(r),) for r in rows.split(',') if len(r)]):
             record={}
             for colnum,name,type in schema:
-                if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
+                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
                     continue
-                if type=="value":
-                    record[name]=_stripsentinel(row[colnum])
+                if type=="valueBLOB":
+                    record[name]=row[colnum]
                     continue
-                assert type=="indirect"
+                assert type=="indirectBLOB"
                 assert False, "indirect in indirect not handled"
             assert len(record)
             res.append(record)
@@ -521,6 +507,8 @@ if __name__=='__main__':
         global phonebook, TRACE, db
 
         db=Database(".", "testdb")
+
+        db.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
 
         # note that iterations increases the size of the
         # database/journal and will make each one take longer and
