@@ -84,6 +84,7 @@ class BitFlingWorkerThread(threading.Thread):
         self.setDaemon(True)
         self.q=Queue.Queue()
         self.resultqueues={}
+        self.eventloops={}
 
     def run(self):
         while True:
@@ -99,6 +100,11 @@ class BitFlingWorkerThread(threading.Thread):
         print "call in thread", thread.get_ident()
         qres=self.getresultqueue()
         self.q.put( (qres, func, args, kwargs) )
+        # do we need event loop?
+        loopfunc=self.eventloops.get(thread.get_ident(), None)
+        if loopfunc is not None:
+            while qres.empty():
+                loopfunc()
         res, exc = qres.get()
         if exc is not None:
             ex=exc[1]
@@ -116,6 +122,10 @@ class BitFlingWorkerThread(threading.Thread):
         q=Queue.Queue()
         self.resultqueues[thread.get_ident()]=q
         return q
+
+    def setthreadeventloop(self, eventfunc):
+        """Sets the eventloopfunction used for this thread"""
+        self.eventloops[thread.get_ident()]=eventfunc
 
 class CallWrapper:
     """Provides proxy method wrappers so that all method calls can be redirected to worker thread
@@ -138,6 +148,8 @@ class CallWrapper:
         CallWrapper.object=object
 
     def __getattr__(self, name):
+        if hasattr(self.worker, name):
+            return getattr(self.worker, name)
         v=getattr(self.object, name)
         if callable(v):
             return self.MethodIndirect(v)

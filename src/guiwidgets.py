@@ -442,16 +442,23 @@ class ConfigDialog(wx.Dialog):
 
 
     def SetupBitFlingCertVerification(self):
+        "Setup all the voodoo needed for certificate verification to happen, not matter which thread wants it"
         EVT_BITFLINGCERTIFICATEVERIFICATION(self, self._wrapVerifyBitFlingCert)
         bitflingscan.flinger.SetCertVerifier(self.dispatchVerifyBitFlingCert)
+        bitflingscan.flinger.setthreadeventloop(wx.SafeYield)
 
     def dispatchVerifyBitFlingCert(self, addr, cert):
+        """Handle a certificate verification from any thread
+
+        The request is handed to the main gui thread, and then we wait for the
+        results"""
         q=self.bitflingresponsequeues.get(thread.get_ident(), None)
         if q is None:
             q=Queue.Queue()
             self.bitflingresponsequeues[thread.get_ident()]=q
-        print "Posting BitFlingCertificateVerificationEvent"
+        print thread.get_ident(), "Posting BitFlingCertificateVerificationEvent"
         wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, cert=cert, q=q))
+        print thread.get_ident(), "After posting BitFlingCertificateVerificationEvent, waiting for response"
         res, exc = q.get()
         print "Got response", res, exc
         if exc is not None:
@@ -461,6 +468,10 @@ class ConfigDialog(wx.Dialog):
         return res
         
     def _wrapVerifyBitFlingCert(self, evt):
+        """Receive the event in the main gui thread for cert verification
+
+        We unpack the parameters, call the verification method and pass back
+        the results and/or exception"""
         print "_wrapVerifyBitFlingCert"
         addr, cert, q = evt.addr, evt.cert, evt.q
         try:
@@ -486,10 +497,11 @@ class ConfigDialog(wx.Dialog):
         if dlg.ShowModal()==wx.ID_YES:
             txt=base64.encodestring(zlib.compress(cert.as_text(), 9))
             wx.GetApp().config.Write("bitfling/certificates/%s" % (addr[0],), "%s$%s" % (fingerprint, txt))
+            wx.GetApp().config.Flush()
             dlg.Destroy()
-            return
+            return True
         dlg.Destroy()
-        raise Exception("Certificate is not accepted")
+        return False
 
     def OnClose(self, evt):
         self.saveSize()
