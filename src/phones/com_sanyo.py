@@ -15,9 +15,6 @@ import time
 import cStringIO
 import sha
 
-import os
-import tempfile
-
 import wx
 
 # BitPim modules
@@ -26,9 +23,7 @@ import com_phone
 import p_sanyo
 import prototypes
 import common
-import cStringIO
-import time
-import sys
+import conversions
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -68,60 +63,6 @@ class SanyoPhonebook:
         except com_phone.modeignoreerrortypes:
             pass
         return 0
-        
-    def convertto8bitpng(self, pngdata):
-        "Convert a PNG file to 8bit color map"
-        size=len(pngdata)
-        if size<16384:
-            return pngdata
-
-        p=sys.path[0]
-        if os.path.isfile(p):
-            p=os.path.dirname(p)
-        helpersdirectory=os.path.abspath(os.path.join(p, 'helpers'))
-        self.log("Helper Directory: "+helpersdirectory)
-        if sys.platform=='win32':
-            osext=".exe"
-        if sys.platform=='darwin':
-            osext=".mbin"
-        if sys.platform=='linux2':
-            osext=".lbin"
-        
-        pngtopnmbin=os.path.join(helpersdirectory,'pngtopnm')+osext
-        ppmquantbin=os.path.join(helpersdirectory,'ppmquant')+osext
-        pnmtopngbin=os.path.join(helpersdirectory,'pnmtopng')+osext
-        self.log("pngtopnm: "+pngtopnmbin)
-        self.log("ppmquant: "+ppmquantbin)
-        self.log("pnmtopng: "+pnmtopngbin)
-
-        # Binary search to find largest # of colors with a file size still
-        # less than 16384
-
-        ncolormax=257
-        ncolormin=1
-        ncolortry=256
-        ncolor=ncolortry
-
-        while size>=16384 or ncolormax-ncolor>1:
-            ncolor=ncolortry
-            pnm=common.gettempfilename("pnm")
-            f=os.popen(pngtopnmbin + '>'+pnm,'w')
-            f.write(pngdata)
-            f.close()
-            f = os.popen(ppmquantbin+' '+`ncolortry`+' '+pnm+ '|'+pnmtopngbin,'r')
-            pngquantdata=f.read()
-            f.close
-            os.remove(pnm)
-            size=len(pngquantdata)
-            self.log(`ncolor`+' '+`size`)
-            if size>=16384:
-                ncolormax=ncolor
-                ncolortry=(ncolor+ncolormin)/2
-            else:
-                ncolormin=ncolor
-                ncolortry=(ncolor+ncolormax)/2
-            
-        return pngquantdata
         
     def getmediaindices(self, results):
         """Get all the media indices
@@ -850,7 +791,7 @@ class SanyoPhonebook:
             # dirname=stripext(efile)
 
             if mediatype=='images':
-                content = self.convertto8bitpng(content)
+                content = conversions.convertto8bitpng(content,16383)
             if not self.writesanyofile(efile, content):
                 errors=True
 
