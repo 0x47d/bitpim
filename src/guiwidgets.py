@@ -32,6 +32,7 @@ import calendarcontrol
 import helpids
 import comscan
 import comdiagnose
+import brewcompressedimage
 
 ####
 #### A widget for displaying the phone information
@@ -1065,9 +1066,20 @@ class WallpaperView(FileView):
         self._data['wallpaper']={}
         self._data['wallpaper-index']={}
         self.maxlen=19
-        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico"
+        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
         self.usewidth=120
         self.useheight=98
+
+    def isBCI(self, filename):
+        """Returns True if the file is a Brew Compressed Image"""
+        # is it a bci file?
+        f=open(filename, "rb")
+        four=f.read(4)
+        f.close()
+        if four=="BCI\x00":
+            return True
+        return False
+        
 
     def getdata(self,dict):
         dict.update(self._data)
@@ -1095,7 +1107,10 @@ class WallpaperView(FileView):
             # ImageList barfs big time when adding bmps that came from
             # gifs
             file=os.path.join(self.mainwindow.wallpaperpath, i)
-            image=wxImage(file)
+            if self.isBCI(file):
+                image=brewcompressedimage.getimage(file)
+            else:
+                image=wxImage(file)
             
             width=min(image.GetWidth(), self.usewidth)
             height=min(image.GetHeight(), self.useheight)
@@ -1109,7 +1124,6 @@ class WallpaperView(FileView):
                 mdc.SelectObject(wxNullBitmap)
                 bitmap=b
             else:
-                # bitmap=wxBitmapFromImage(img)
                 bitmap=img.ConvertToBitmap()
             pos=-1
             try: pos=il.Add(bitmap)
@@ -1130,6 +1144,17 @@ class WallpaperView(FileView):
 
     def OnAddFile(self, file):
         self.thedir=self.mainwindow.wallpaperpath
+        # special handling for BCI files
+        if self.isBCI(file):
+            target=os.path.join(self.thedir, os.path.basename(file))
+            src=open(file, "rb")
+            dest=open(target, "wb")
+            dest.write(src.read())
+            dest.close()
+            src.close()
+            self.OnRefresh()
+            return
+        # Everything else is converted to BMP
         target=self.getshortenedbasename(file, 'bmp')
         if target==None: return # user didn't want to
         img=wxImage(file)
@@ -1164,6 +1189,7 @@ class WallpaperView(FileView):
             mdc.Clear()
             mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, True)
             obj=bitmap
+            
         if not obj.SaveFile(target, wxBITMAP_TYPE_BMP):
             os.remove(target)
             dlg=wxMessageDialog(self, "Failed to convert the image in '"+file+"'",
