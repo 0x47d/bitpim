@@ -456,10 +456,12 @@ class BPFSImageFile(wx.FSFile):
         self.location=location
 
         # special fast path if we aren't resizing or converting image
-        if img is None and width<0 and height<0 and \
-               (name.endswith(".bmp") or name.endswith(".jpg") or name.endswith(".png")):
-            wx.FSFile.__init__(self, wx.InputStream(open(name, "rb")), location, "image/"+name[-3:], "", wx.DateTime_Now())
-            return
+        if img is None and width<0 and height<0:
+            mime=guihelper.getwxmimetype(name)
+            # wxPython 2.5.3 has a new bug and fails to read bmp files returned as a stream
+            if mime not in (None, "image/x-bmp"):
+                wx.FSFile.__init__(self, wx.InputStream(open(name, "rb")), location, mime, "", wx.DateTime_Now())
+                return
             
         if img is None:
             img=wx.Image(name)
