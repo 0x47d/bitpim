@@ -31,7 +31,7 @@ serials - list of dicts of serials.
 repeat - None, or RepeatEntry object
 id - string id of this object.  Created the same way as bpserials IDs for phonebook entries.
 notes - string notes
-category - string category
+category - [ { 'category': string category }, ... ]
 ringtone - string ringtone assignment
 wallpaper - string wallpaper assignment.
 
@@ -263,12 +263,6 @@ class CalendarEntry(object):
         # setting default values
         self.__data['start']={ 'date': (year, month, day) }
         self.__data['end']={ 'date': (year, month, day) }
-        self.__data['description']=''
-        self.__data['location']=''
-        self.__data['priority']=None
-        self.__data['alarm']=-1
-        self.__data['allday']=False
-        self.__data['repeat']=None
         self.__data['serials']=[]
         self.__create_id()
 
@@ -305,32 +299,38 @@ class CalendarEntry(object):
             # not a repeat entry, do nothing
             return
         self.repeat.add_suppressed(y, m, d)
+
+    def __set_or_del(self, key, v):
+        if v is None:
+            if self.__data.has_key(key):
+                del self.__data[key]
+        else:
+            self.__data[key]=v
         
     def __get_description(self):
         return self.__data.get('description', '')
     def __set_description(self, desc):
-        self.__data['description']=desc
+        self.__set_or_del('description', desc)
     description=property(fget=__get_description, fset=__set_description)
 
     def __get_location(self):
         return self.__data.get('location', '')
     def __set_location(self, location):
-        self.__data['location']=location
+        self.__set_or_del('location', location)
+        if self.location=='':
+            del self.__data['location']
     location=property(fget=__get_location, fset=__set_location)
 
     def __get_priority(self):
         return self.__data.get('priority', None)
     def __set_priority(self, priority):
-        if priority is None or priority==0:
-            self.__data['priority']=None
-        else:
-            self.__data['priority']=priority
+        self.__set_or_del('priority', priority)
     priority=property(fget=__get_priority, fset=__set_priority)
 
     def __get_alarm(self):
         return self.__data.get('alarm', -1)
     def __set_alarm(self, alarm):
-        self.__data['alarm']=alarm
+        self.__set_or_del('alarm', alarm)
     alarm=property(fget=__get_alarm, fset=__set_alarm)
 
     def __get_allday(self):
@@ -378,7 +378,7 @@ class CalendarEntry(object):
     def __get_repeat(self):
         return self.__data.get('repeat', None)
     def __set_repeat(self, repeat):
-        self.__data['repeat']=repeat
+        self.__set_or_del('repeat', repeat)
     repeat=property(fget=__get_repeat, fset=__set_repeat)
 
     def __get_id(self):
@@ -399,25 +399,27 @@ class CalendarEntry(object):
     def __get_notes(self):
         return self.__data.get('notes', '')
     def __set_notes(self, s):
-        self.__data['notes']=s
+        self.__set_or_del('notes', s)
     notes=property(fget=__get_notes, fset=__set_notes)
 
     def __get_category(self):
-        return self.__data.get('category', '')
+        return self.__data.get('categories', [])
     def __set_category(self, s):
-        self.__data['category']=s
+        self.__set_or_del('categories', s)
+        if self.category==[]:
+            del self.__data['categories']
     category=property(fget=__get_category, fset=__set_category)
 
     def __get_ringtone(self):
         return self.__data.get('ringtone', '')
     def __set_ringtone(self, rt):
-        self.__data['ringtone']=rt
+        self.__set_or_del('ringtone', rt)
     ringtone=property(fget=__get_ringtone, fset=__set_ringtone)
 
     def __get_wallpaper(self):
         return self.__data.get('wallpaper', '')
     def __set_wallpaper(self, wp):
-        self.__data['wallpaper']=wp
+        self.__set_or_del('wallpaper', wp)
     wallpaper=property(fget=__get_wallpaper, fset=__set_wallpaper)
 
     # we use two random numbers to generate the serials.  _persistrandom

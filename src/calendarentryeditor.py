@@ -21,6 +21,7 @@ import wx.lib.scrolledpanel as scrolled
 import bpcalendar
 import helpids
 import phonebookentryeditor as pb_editor
+import pubsub
 
 class RepeatEditor(pb_editor.DirtyUIBase):
     __repeat_type= {
@@ -202,7 +203,6 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         gs.AddGrowableCol(1)
         for n in self.__fields:
             desc=n[self.__label_index]
-            field=n[self.__dict_key_index]
             t=wx.StaticText(self, -1, desc, style=wx.ALIGN_LEFT)
             gs.Add(t)
             if desc=='Priority:':
@@ -236,7 +236,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         # check for valid date/time entries
         for w in (self.__w['start'], self.__w['end']):
             if not w.IsValid():
-                n[self.__w_index].SetFocus()
+                w.SetFocus()
                 wx.Bell()
                 return False
         # whine if end is before start
@@ -286,7 +286,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             w.SetSelection(0)
         else:
             w.SetSelection(p)
-    def __get_priority(self, w, entry):
+    def __get_priority(self, w, _):
         s=w.GetSelection()
         if s:
             return s
@@ -299,7 +299,111 @@ class GeneralEditor(pb_editor.DirtyUIBase):
     def __set_end_datetime(self, w, entry):
         w.SetAllday(entry.allday, entry.end)
 
-        
+#------------------------------------------------------------------------------
+class CategoryEditor(pb_editor.DirtyUIBase):
+
+    # we have to have an entry with a special string for the unnamed string
+
+    unnamed="Select:"
+
+    def __init__(self, parent, pos):
+        pb_editor.DirtyUIBase.__init__(self, parent)
+        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
+
+        self.categories=[]
+        self.category=wx.ListBox(self, -1, choices=self.categories)
+        pubsub.subscribe(self.OnUpdateCategories, pubsub.ALL_CATEGORIES)
+        pubsub.publish(pubsub.REQUEST_CATEGORIES)
+        # a boxsizer for the master category list
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(wx.StaticText(self, -1, 'Master Category'), 0,
+                wx.TOP|wx.LEFT, 5)
+        vbs.Add(self.category, 1, wx.EXPAND|wx.ALL, 5)
+        hs.Add(vbs, 1, wx.EXPAND|wx.ALL, 5)
+        # a boxsizer for the buttons
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        self.but=wx.Button(self, wx.NewId(), "Manage Categories:")
+        add_btn=wx.Button(self, -1, 'Add ->')
+        del_btn=wx.Button(self, -1, '<- Remove')
+        vbs.Add(self.but, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        vbs.Add(add_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        vbs.Add(del_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hs.Add(vbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        wx.EVT_BUTTON(self, add_btn.GetId(), self.OnAddCategory)
+        wx.EVT_BUTTON(self, del_btn.GetId(), self.OnDelCategory)
+        # box sizer for the selected category
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(wx.StaticText(self, -1, 'Selected Category:'), 0,
+                wx.TOP|wx.LEFT, 5)
+        self.__my_category=wx.ListBox(self, -1)
+        vbs.Add(self.__my_category, 1, wx.EXPAND|wx.ALL, 5)
+        hs.Add(vbs, 1, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, self.but.GetId(), self.OnManageCategories)
+
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+    def OnManageCategories(self, _):
+        dlg=pb_editor.CategoryManager(self)
+        dlg.ShowModal()
+
+    def OnUpdateCategories(self, msg):
+        cats=msg.data[:]
+        if self.categories!=cats:
+            self.categories=cats
+            sel=self.category.GetStringSelection()
+            self.category.Clear()
+            for i in cats:
+                self.category.Append(i)
+            try:
+                if len(sel):
+                    self.category.SetStringSelection(sel)
+            except:
+                pass
+
+    def Get(self):
+        self.ignore_dirty=self.dirty=False
+        r=[]
+        count=self.__my_category.GetCount()
+        if count==0:
+            return r
+        for i in range(count):
+            r.append({ 'category': self.__my_category.GetString(i) })
+        return r
+
+    def Set(self, data):
+        self.ignore_dirty=True
+        self.__my_category.Clear()
+        if data is None or len(data)==0:
+            # none or empty list, do nothing
+            return
+        for n in data:
+            v=n.get('category', None)
+            if v is not None:
+                self.__my_category.Append(v)
+        self.ignore_dirty=self.dirty=False
+
+    def OnAddCategory(self, evt):
+        v=self.category.GetStringSelection()
+        if not len(v):
+            # no selection made, do nothing
+            return
+        self.ignore_dirty=True
+        self.__my_category.Append(v)
+        self.__my_category.SetStringSelection(v)
+        self.ignore_dirty=False
+        self.OnDirtyUI(evt)
+
+    def OnDelCategory(self, evt):
+        v=self.__my_category.GetSelection()
+        if v==wx.NOT_FOUND:
+            # no selection, do nothing
+            return
+        self.ignore_dirty=True
+        self.__my_category.Delete(v)
+        self.ignore_dirty=False
+        self.OnDirtyUI(evt)
+
 #------------------------------------------------------------------------------
 class Editor(wx.Dialog):
 
@@ -336,7 +440,7 @@ class Editor(wx.Dialog):
         ("General", None, GeneralEditor),
         ("Repeat", 'repeat', RepeatEditor),
         ("Notes", "notes", pb_editor.MemoEditor),
-        ("Categories", "categories", pb_editor.CategoryEditor),
+        ("Categories", "categories", CategoryEditor),
         ("Wallpapers", "wallpapers", pb_editor.WallpaperEditor),
         ("Ringtones", "ringtones", pb_editor.RingtoneEditor),
         ]
@@ -502,10 +606,10 @@ class Editor(wx.Dialog):
             # get data from the repeat tab
             newentry.repeat=self.__widgets[self.__repeat_page].Get()
         # and other tabs as well
-        newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', '')
-        newentry.category=self.__widgets[self.__categories_page].Get().get('category', '')
-        newentry.wallpaper=self.__widgets[self.__wallpapers_page].Get().get('wallpaper', '')
-        newentry.ringtone=self.__widgets[self.__ringtones_page].Get().get('ringtone', '')
+        newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', None)
+        newentry.category=self.__widgets[self.__categories_page].Get()
+        newentry.wallpaper=self.__widgets[self.__wallpapers_page].Get().get('wallpaper', None)
+        newentry.ringtone=self.__widgets[self.__ringtones_page].Get().get('ringtone', None)
         # got the data
         print newentry.get()
         # update calendar widget
@@ -586,12 +690,6 @@ class Editor(wx.Dialog):
         self.setdate(d.year, d.month, d.day)
         self.cw.setday(d.year, d.month, d.day)
     
-    def OnAllday(self, evt):
-        v=evt.IsChecked()
-        self.fields['start'].SetAllday(v)
-        self.fields['end'].SetAllday(v)
-        self.setdirty(True)
-
     def setdate(self, year, month, day):
         """Sets the date we are editing entries for
 
@@ -676,7 +774,7 @@ class Editor(wx.Dialog):
             self.__widgets[i].Enable(True)
         self.__widgets[self.__repeat_page].Set(entry.repeat)
         self.__widgets[self.__notes_page].Set({ 'memo': entry.notes })
-        self.__widgets[self.__categories_page].Set({'category': entry.category})
+        self.__widgets[self.__categories_page].Set(entry.category)
         self.__widgets[self.__wallpapers_page].Set( \
             { 'wallpaper': entry.wallpaper, 'type': 'calendar' })
         self.__widgets[self.__ringtones_page].Set( \
