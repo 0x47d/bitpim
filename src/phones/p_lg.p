@@ -84,10 +84,9 @@ PACKET pbnextentryrequest:
 PACKET pbnextentryresponse:
     * pbheader header
     4 UINT serial
-    2 UNKNOWN dunno
-    4 UINT lastchangedate "just a guess"
-    2 UNKNOWN dunno2
-    3 STRING {'terminator': None} namestart "First 3 characters of name"
+    2 UINT datalen
+    * DATA {'sizeinbytes': self.datalen} data
+    * UNKNOWN randomgunk
     
 PACKET pbdeleteentryrequest:
     * pbheader {'command': 0x05, 'flag': 0x01} +header
