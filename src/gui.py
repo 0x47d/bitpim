@@ -559,6 +559,9 @@ class MainWindow(wx.Frame):
         # wx.EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
 
         ### notebook tabs
+        if self.config.ReadInt("console", 0):
+            import developer
+            self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self} ), "Console")
         self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
