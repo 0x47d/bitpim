@@ -33,7 +33,9 @@ class flinger:
         if bitfling is None: return None
         # try and connect by getting version info
         self.client=bitfling.client("https://%s:%s@%s:%d" % (username, password, host, port), self.certverifier)
-        return self.client.getversion()
+        res=self.client.getversion()
+        print "flinger.connect returning",res
+        return res
 
     def SetCertVerifier(self, certverifier):
         self.certverifier=certverifier
@@ -88,16 +90,18 @@ class BitFlingWorkerThread(threading.Thread):
 
     def run(self):
         while True:
-            print "execute in thread", thread.get_ident()
             q,func,args,kwargs=self.q.get()
+            print thread.get_ident(),"about to execute", func
             try:
                 res=func(*args, **kwargs)
+                print thread.get_ident(), "result of", func, "is", res
                 q.put( (res, None) )
             except:
+                print thread.get_ident(), "exception for", func, "is", sys.exc_info()
                 q.put( (None, sys.exc_info()) )
 
     def callfunc(self, func, args, kwargs):
-        print "call in thread", thread.get_ident()
+        print thread.get_ident(), "callfunc dispatcher for", func
         qres=self.getresultqueue()
         self.q.put( (qres, func, args, kwargs) )
         # do we need event loop?
@@ -105,7 +109,9 @@ class BitFlingWorkerThread(threading.Thread):
         if loopfunc is not None:
             while qres.empty():
                 loopfunc()
+        print thread.get_ident(), "callfunc about to read results back for", func
         res, exc = qres.get()
+        print thread.get_ident(), "callfunc results for", func, "are", (res,exc)
         if exc is not None:
             ex=exc[1]
             ex.traceback=exc[2]

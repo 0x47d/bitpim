@@ -416,7 +416,9 @@ class SSLConnection(httplib.HTTPConnection):
         self.sock.set_connect_state()
         self.sock.connect_ssl()
         if self.certverifier is not None:
+            print "calling certverifier"
             res=self.certverifier(self.addrforverifier, self.sock.get_peer_cert())
+            print "cert verifier returned",res
             if not res:
                 self.realclose()
                 raise Exception("Certificate not accepted")

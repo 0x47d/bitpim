@@ -435,7 +435,7 @@ class ConfigDialog(wx.Dialog):
             self.commbox.SetValue(v)
 
     def OnBitFlingSettings(self, _):
-        dlg=BitFlingSettingsDialog(self, self.mw.config)
+        dlg=BitFlingSettingsDialog(None, self.mw.config)
         if dlg.ShowModal()==wx.ID_OK:
             dlg.SaveSettings()
         dlg.Destroy()
@@ -460,7 +460,7 @@ class ConfigDialog(wx.Dialog):
         wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, cert=cert, q=q))
         print thread.get_ident(), "After posting BitFlingCertificateVerificationEvent, waiting for response"
         res, exc = q.get()
-        print "Got response", res, exc
+        print thread.get_ident(), "Got response", res, exc
         if exc is not None:
             ex=exc[1]
             ex.traceback=exc[2]
@@ -470,17 +470,13 @@ class ConfigDialog(wx.Dialog):
     def _wrapVerifyBitFlingCert(self, evt):
         """Receive the event in the main gui thread for cert verification
 
-        We unpack the parameters, call the verification method and pass back
-        the results and/or exception"""
+        We unpack the parameters, call the verification method"""
         print "_wrapVerifyBitFlingCert"
+        
         addr, cert, q = evt.addr, evt.cert, evt.q
-        try:
-            res=self.VerifyBitFlingCert(addr, cert)
-            q.put( (res, None) )
-        except:
-            q.put( (None, sys.exc_info()) )
+        self.VerifyBitFlingCert(addr, cert, q)
 
-    def VerifyBitFlingCert(self, addr, cert):
+    def VerifyBitFlingCert(self, addr, cert, q):
         print "VerifyBitFlingCert for", addr
         # get fingerprint
         fingerprint=sha.new(cert.as_der()).hexdigest()
@@ -489,19 +485,12 @@ class ConfigDialog(wx.Dialog):
         if len(existing):
             fp=existing.split("$", 1)[0]
             if fp==fingerprint:
-                print "already in config"
+                q.put( (True, None) )
                 return
         # throw up the dialog
         print "asking user"
-        dlg=AcceptCertificateDialog(self, wx.GetApp().config, addr, cert, fingerprint)
-        if dlg.ShowModal()==wx.ID_YES:
-            txt=base64.encodestring(zlib.compress(cert.as_text(), 9))
-            wx.GetApp().config.Write("bitfling/certificates/%s" % (addr[0],), "%s$%s" % (fingerprint, txt))
-            wx.GetApp().config.Flush()
-            dlg.Destroy()
-            return True
-        dlg.Destroy()
-        return False
+        dlg=AcceptCertificateDialog(None, wx.GetApp().config, addr, cert, fingerprint, q)
+        dlg.ShowModal()
 
     def OnClose(self, evt):
         self.saveSize()
@@ -760,10 +749,14 @@ class CommPortDialog(wx.Dialog):
 
 class AcceptCertificateDialog(wx.Dialog):
 
-    def __init__(self, parent, config, addr, cert, fingerprint):
+    def __init__(self, parent, config, addr, cert, fingerprint, q):
+        parent=self.FindAGoodParent(parent)
         wx.Dialog.__init__(self, parent, -1, "Accept certificate?", style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.config=config
-
+        self.q=q
+        self.cert=cert
+        self.addr=addr
+        self.fingerprint=fingerprint
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Host:"), 0, wx.ALL, 5)
         hbs.Add(wx.StaticText(self, -1, addr[0]), 0, wx.ALL, 5)
@@ -789,16 +782,45 @@ class AcceptCertificateDialog(wx.Dialog):
         wx.EVT_BUTTON(self, wx.ID_NO, self.OnNo)
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnNo)
 
+
+
     def OnYes(self, _):
         self.savesize()
-        self.EndModal(wx.ID_YES)
+        txt=base64.encodestring(zlib.compress(self.cert.as_text(), 9))
+        wx.GetApp().config.Write("bitfling/certificates/%s" % (self.addr[0],), "%s$%s" % (self.fingerprint, txt))
+        wx.GetApp().config.Flush()
+        if self.IsModal():
+            self.EndModal(wx.ID_YES)
+        else:
+            self.Show(False)
+        wx.CallAfter(self.Destroy)
+        print "returning true from AcceptCertificateDialog"
+        self.q.put( (True, None) )
 
     def OnNo(self, _):
         self.savesize()
-        self.EndModal(wx.ID_NO)
+        if self.IsModal():
+            self.EndModal(wx.ID_NO)
+        else:
+            self.Show(False)
+        wx.CallAfter(self.Destroy)
+        print "returning false from AcceptCertificateDialog"
+        self.q.put( (False, None) )
 
     def savesize(self):
         save_size(self.config, "AcceptCertificateDialog", self.GetRect())
+
+    def FindAGoodParent(self, suggestion):
+        win=wx.Window_FindFocus()
+        while True:
+            try:
+                if win.IsModal():
+                    print "FindAGoodParent is",win
+                    return win
+            except AttributeError:
+                parent=win.GetParent()
+                if parent is None: return suggestion
+                win=parent
         
 ###
 ###  BitFling settings dialog
@@ -874,12 +896,14 @@ class BitFlingSettingsDialog(wx.Dialog):
         self.config.Write("bitfling/host", host)
         self.config.WriteInt("bitfling/port", port)
 
-    def _OnTest(self, _):
-        wx.CallAfter(self._ontest)
+    def OnTest(self, _):
+        wx.CallAfter(self._OnTest)
 
-    def OnTest(self, _=None):
+    def _OnTest(self, _=None):
         try:
+            print "about to call connect"
             res=bitflingscan.flinger.connect(*self.GetSettings())
+            print "result of connect is",res
             dlg=wx.MessageDialog(self, "Succeeded. It is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
