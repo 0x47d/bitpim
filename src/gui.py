@@ -353,6 +353,16 @@ def run(*args):
 ### Main Window (frame) class
 ###
 
+class MenuCallback:
+    "A wrapper to help with callbacks that ignores arguments when invoked"
+    def __init__(self, func, *args, **kwargs):
+        self.func=func
+        self.args=args
+        self.kwargs=kwargs
+        
+    def __call__(self, *args):
+        return self.func(*self.args, **self.kwargs)
+        
 class MainWindow(wx.Frame):
     def __init__(self, parent, id, title, config):
         wx.Frame.__init__(self, parent, id, title,
@@ -396,7 +406,15 @@ class MainWindow(wx.Frame):
         # menu.Append(guihelper.ID_FILESAVE, "&Save", "Save your work")
         menu.Append(guihelper.ID_FILEPRINT, "&Print...", "Print phonebook")
         # menu.AppendSeparator()
-        menu.Append(guihelper.ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
+        # imports
+        impmenu=wx.Menu()
+        for desc, help, func in importexport.GetPhonebookImports():
+            x=wx.NewId()
+            impmenu.Append(x, desc, help)
+            wx.EVT_MENU(self, x, MenuCallback(func, self) )
+
+        menu.AppendMenu(guihelper.ID_FILEIMPORT, "Import", impmenu)
+
         if not guihelper.IsMac():
             menu.AppendSeparator()
             menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
@@ -449,8 +467,6 @@ class MainWindow(wx.Frame):
             menu.Append(guihelper.ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
 
-        
-
         ### toolbar
         # self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.NO_BORDER|wx.TB_FLAT)
         self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.TB_TEXT)
@@ -482,7 +498,6 @@ class MainWindow(wx.Frame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
-        wx.EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
         wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
         wx.EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
@@ -696,16 +711,6 @@ class MainWindow(wx.Frame):
         assert False, "filesytem view page is missing!"
         
 
-    def OnFileImport(self,_):
-        dlg=wx.FileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
-                         style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        path=None
-        if dlg.ShowModal()==wx.ID_OK:
-            path=dlg.GetPath()
-        dlg.Destroy()
-        if path is None:
-            return
-        importexport.OnImportCSVPhoneBook(self, self.phonewidget, path)
 
     def OnFilePrint(self,_):
         self.phonewidget.OnPrintDialog(self, self.config)
