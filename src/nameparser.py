@@ -104,7 +104,7 @@ def getparts(name):
     # do we have any of the parts?
     for i in ("first", "middle", "last"):
         if name.has_key(i):
-            return (name.get("first", ""), name.get("middle", ""), name.get("last"))
+            return (name.get("first", ""), name.get("middle", ""), name.get("last", ""))
 
     # check we have full.  if not return nickname
     if not name.has_key("full"):
