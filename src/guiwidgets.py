@@ -1528,7 +1528,10 @@ class MyStatusBar(wx.StatusBar):
     def __adjust_and_set_field(self, string, pane):
         dc=wx.ClientDC(self)
         (w,h)=dc.GetTextExtent(string)
-        self.__pane_width[pane]=w
+        if guihelper.IsMac():
+            self.__pane_width[pane]=w+8
+        else:
+            self.__pane_width[pane]=w
         self.SetStatusWidths(self.__pane_width)
         self.SetStatusText(string, pane)
     def GetHelpPane(self):
