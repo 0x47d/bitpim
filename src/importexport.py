@@ -352,7 +352,7 @@ class ImportCSVDialog(wx.Dialog):
                         u={'url': url}
                         if type is not None:
                             u['type']=type
-                        urls.append(url)
+                        urls.append(u)
                         del rec[key]
             if len(urls):
                 entry["urls"]=urls
