@@ -520,7 +520,7 @@ class MainWindow(wxFrame):
 
 
         # Populate all widgets from disk
-        self.OnPopulateEverythingFromDisk()
+        wxCallAfter(self.OnPopulateEverythingFromDisk)
 
         # show the last page we were on
         pg=self.config.Read("viewnotebookpage", "")
