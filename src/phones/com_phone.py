@@ -139,9 +139,9 @@ class Phone:
                 pass
         return False       
 
-    getmemo=None
-    gettodo=None
-    getsms=None
+    getmemo=NotImplemented
+    gettodo=NotImplemented
+    getsms=NotImplemented
 
 class Profile:
 
