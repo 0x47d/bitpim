@@ -1018,6 +1018,12 @@ class ImagePreviewDialog(wx.Dialog):
         
         self.SetSizer(vbsouter)
         vbsouter.Fit(self)
+        guiwidgets.set_size("wallpaperpreview", self, 80, 1.0)
+
+    def ShowModal(self):
+        res=wx.Dialog.ShowModal(self)
+        guiwidgets.save_size("wallpaperpreview", self.GetRect())
+        return res
 
     def SetZoom(self, evt):
         self.cropselect.SetZoom(self.SCALES[evt.GetPosition()][0])
