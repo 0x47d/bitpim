@@ -689,6 +689,13 @@ class Calendar(calendarcontrol.Calendar):
         else:
             self.dialog.setdate(year, month, day)
             self.dialog.Show(True)
+
+    def OnTodayButton(self, evt):
+        """ Called when the user goes to today cell"""
+        super(Calendar, self).OnTodayButton(evt)
+        if self.dialog.IsShown():
+            # editor dialog is up, update it
+            self.OnEdit(*self.selecteddate)
             
     def populate(self, dict):
         """Updates the internal data with the contents of C{dict['calendar']}"""
