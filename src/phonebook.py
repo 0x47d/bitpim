@@ -105,6 +105,7 @@ import pubsub
 import nameparser
 import bphtml
 import guiwidgets
+import phonenumber
 
 ###
 ### Phonebook entry display (Derived from HTML)
@@ -163,10 +164,12 @@ def formataddress(address):
             l.append(address[i])
     return "; ".join(l)
 
-def formatnumber(number):
+def formattypenumber(number):
     t=number['type']
     t=t[0].upper()+t[1:]
-    return "%s (%s)" % (number['number'], t)
+    return "%s (%s)" % (phonenumber.format(number['number']), t)
+
+formatnumber=lambda number: phonenumber.format(number['number'])
 
 # this is specified here as a list so that we can get the
 # keys in the order below for the settings UI (alpha sorting
@@ -186,16 +189,16 @@ _getdatalist=[
     'Category5', ("categories", 4,  None, "category", False),
     'Categories', ("categories", None, None, formatcategories, True),
 
-    "Phone", ("numbers", 0, None, formatnumber, False),
-    "Phone2", ("numbers", 1, None, formatnumber, False),
-    "Phone3", ("numbers", 2, None, formatnumber, False),
-    "Phone4", ("numbers", 3, None, formatnumber, False),
-    "Phone5", ("numbers", 4, None, formatnumber, False),
-    "Phone6", ("numbers", 5, None, formatnumber, False),
-    "Phone7", ("numbers", 6, None, formatnumber, False),
-    "Phone8", ("numbers", 7, None, formatnumber, False),
-    "Phone9", ("numbers", 8, None, formatnumber, False),
-    "Phone10", ("numbers", 9, None, formatnumber, False),
+    "Phone", ("numbers", 0, None, formattypenumber, False),
+    "Phone2", ("numbers", 1, None, formattypenumber, False),
+    "Phone3", ("numbers", 2, None, formattypenumber, False),
+    "Phone4", ("numbers", 3, None, formattypenumber, False),
+    "Phone5", ("numbers", 4, None, formattypenumber, False),
+    "Phone6", ("numbers", 5, None, formattypenumber, False),
+    "Phone7", ("numbers", 6, None, formattypenumber, False),
+    "Phone8", ("numbers", 7, None, formattypenumber, False),
+    "Phone9", ("numbers", 8, None, formattypenumber, False),
+    "Phone10", ("numbers", 9, None, formattypenumber, False),
     
     # phone numbers are inserted here
 
@@ -248,7 +251,7 @@ ll=[]
 for pretty, actual in ("Home", "home"), ("Office", "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"), ("Data", "data"):
     for suf,n in ("", 0), ("2", 1), ("3", 2):
         ll.append(pretty+suf)
-        ll.append(("numbers", n, ("type", actual), 'number', True))
+        ll.append(("numbers", n, ("type", actual), formatnumber, True))
 _getdatalist[40:40]=ll
 
 _getdatatable={}
@@ -1006,7 +1009,6 @@ class PhoneWidget(wx.Panel):
         """Returns the most popular categories
 
         @param howmany:  How many to return, including the reserved ones
-        @ptype howmany:  int
         @param entries:  A dict of the entries
         @param reserved: A list of reserved entries (ie must be present, no matter
                          how popular)
