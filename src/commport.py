@@ -24,6 +24,7 @@ class CommConnection:
         self.logtarget=logtarget
         self.clearcounters()
         self.success=False
+        self.shouldloop=False
         self.ports=None
         self.autolistfunc=autolistfunc
         self.configparameters=configparameters
@@ -83,10 +84,12 @@ class CommConnection:
     def NextAutoPort(self):
         # do we need to refresh list?
         if (self.ports is None and self.autolistfunc is not None) or \
-           ( len(self.ports)==0 and self.success ):
+           ( len(self.ports)==0 and (self.success or self.shouldloop)):
             self._refreshautoports()
+            self.shouldloop=False
         # have we run out?
         if len(self.ports)==0:
+            self.ports=None # so user can retry
             raise common.AutoPortsFailure(self.portstried)
         # try first in list
         self.log("Trying next auto port")
