@@ -334,6 +334,7 @@ class WallpaperView(guiwidgets.FileView):
             self.OnAddImage(img,file,refresh=False)
         self.OnRefresh()
 
+    OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
 
     def OnAddImage(self, img, file, refresh=True):
         target=self.getshortenedbasename(file, self.convertextension)
