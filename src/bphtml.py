@@ -43,11 +43,12 @@ class HTMLWindow(wx.html.HtmlWindow):
         self.SetFontScale(relsize)
 
     def SetFontScale(self, scale):
-        # default sizes on windows
-        basefonts=[7,8,10,12,16,22,30]
-        # defaults on linux
         if guihelper.IsGtk():
-            basefonts=[10,13,17,20,23,27,30]
+            basefonts=[10,13,17,20,23,27,30] # Linux
+        elif guihelper.IsMac():
+            basefonts=[10,12,16,22,30]       # MacOS
+        else:
+            basefonts=[7,8,10,12,16,22,30]   # Windows/other
         self.SetFonts("", "", [int(sz*scale) for sz in basefonts])
         # the html widget clears itself if you set the scale
         if len(self.thetext):
