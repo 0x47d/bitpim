@@ -46,21 +46,24 @@ PACKET pbentry:
     4  UINT serial2     "Same as serial1"
     1  UINT entrynumber
     17 STRING {'raiseonunterminatedread': False} name
-    2  UNKNOWN dunno
+    1  BOOL secret
+    1  UNKNOWN dunno
     * LIST {'length': 5} numbers:
         33 STRING {'raiseonunterminatedread': False} number
         1  UINT indexvalue
-    2  UNKNOWN dunno2  "Need to determine secret, ringtone, voice tag in 2 dunnos"
+    1  UINT ringtone	"ringtone index for a call"
+    1  BOOL voicetag
     49 STRING {'raiseonunterminatedread': False} email
 
 PACKET scheduleevent:
-    1 UINT dunno4
+    1 UINT state	"02 for an new entry, 01 for a modified entry, 00 for blank entry"
     1 UINT pos "position within file, used as an event id"
-    1 UINT dunno5
+    1 UINT alarm	"00 => created, 80 => modified/never been used, B0 => alarm"
     4 UINT date
-    1 UINT dunno6
+    1 UINT repeat	"01 => used, 02 => daily"
     32 STRING {'raiseonunterminatedread': False} description
  
 
+# Maximum of 50 entries, first one is the wake-up alarm
 PACKET schedulefile:
     * LIST {'elementclass': scheduleevent} +events
