@@ -15,7 +15,7 @@ import com_brew
 import com_phone
 import common
 import commport
-from string import split,strip,atoi,join
+from string import split,strip,atoi,join,replace
 import time
 import re
 from DSV import DSV
@@ -47,6 +47,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     __cal_write_name=5
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    __cal_max_name_len=32
     
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
@@ -319,12 +320,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         l=len(self.__cal_entries_range)
         if cal_len > l:
             self.log("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
-            return dict
+
         self.setmode(self.MODEPHONEBOOK)
         self.log("Saving calendar entries")
         cal_cnt=0
         for k in cal:
-
+            if cal_cnt >= l:
+                # sent max events, stop
+                break
             # Save this entry to phone
             # self.log('Item %d' %k)
             self._set_unused_calendar_fields(cal[k])
@@ -361,13 +364,16 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 e[self.__cal_alarm_type]='0'
                 c['alarm']=self.__cal_alarm_values['0']
 
-            # Name
-            e[self.__cal_write_name]='"'+self.samsungescape(c['description'])+'"'
+            # Name, check for bad char & proper length
+            name=replace(c['description'], '"', '')
+            if len(name)>self.__cal_max_name_len:
+                name=name[:self.__cal_max_name_len]
+            e[self.__cal_write_name]='"'+name+'"'
 
             # and save it
-            self.progress(cal_cnt+1, l, "Updating "+c['description'])
+            self.progress(cal_cnt+1, l, "Updating "+name)
             if not self.save_calendar_entry(join(e, ",")):
-                self.log("Failed to save item: "+c['description'])
+                self.log("Failed to save item: "+name)
             else:
                 cal_cnt += 1
 
