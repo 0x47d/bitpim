@@ -29,46 +29,31 @@ class FeatureNotAvailable(Exception):
 # generic comms exception and then various specialisations
 class CommsException(Exception):
      """Generic commmunications exception"""
-     def __init__(self, device, message):
+     def __init__(self, message, device="<>"):
         Exception.__init__(self, "%s: %s" % (device, message))
         self.device=device
         self.message=message
 
 class CommsNeedConfiguring(CommsException):
      """The communication settings need to be configured"""
-     def __init__(self, device, message):
-        CommsException.__init__(self, device, message)
-        self.device=device
-        self.message=message
+     pass
 
 class CommsDeviceNeedsAttention(CommsException):
      """The communication port or device attached to it needs some
      manual intervention"""
-     def __init__(self, device, message):
-          CommsException.__init__(self, device, message)
-          self.device=device
-          self.message=message
+     pass
 
 class CommsDataCorruption(CommsException):
      """There was some form of data corruption"""
-     def __init__(self, device, message):
-          CommsException.__init__(self, device, message)
-          self.device=device
-          self.message=message
+     pass
 
 class CommsTimeout(CommsException):
     """Timeout while reading or writing the commport"""
-    def __init__(self, device, message):
-        CommsException.__init__(self, device, message)
-        self.device=device
-        self.message=message
+    pass
 
 class CommsOpenFailure(CommsException):
     """Failed to open the communications port/device"""
-    def __init__(self, device, message):
-        CommsException.__init__(self, device, message)
-        self.device=device
-        self.message=message
+    pass
 
 class AutoPortsFailure(CommsException):
      """Failed to auto detect a useful port"""
@@ -79,7 +64,7 @@ class AutoPortsFailure(CommsException):
                self.message+="I tried "+", ".join(portstried)
           else:
                self.message+="I couldn't detect any candidate ports"
-          CommsException.__init__(self, self.device, self.message)
+          CommsException.__init__(self, self.message, self.device)
 
 def datatohexstring(data):
     """Returns a pretty printed hexdump of the data
@@ -263,3 +248,18 @@ def gettempfilename(extension):
     except:
         # Predictable python 2.2 method
         return tempfile.mktemp("."+extension)
+
+def getfullname(name):
+     """Returns the object corresponding to name.
+     Imports will be done as necessary to resolve
+     every part of the name"""
+     mods=name.split('.')
+     dict={}
+     for i in range(len(mods)):
+          # import everything
+          try:
+               exec "import %s" % (".".join(mods[:i])) in dict, dict
+          except:
+               pass
+     # ok, we should have the name now
+     return eval(name, dict, dict)
