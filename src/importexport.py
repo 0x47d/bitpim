@@ -1640,6 +1640,7 @@ def OnFileImportOutlookCalendar(parent):
         calendar_r={ 'calendar': dlg.get() }
         parent.calendarwidget.populate(calendar_r)
         parent.calendarwidget.populatefs(calendar_r)
+    dlg.Destroy()
     native.outlook.releaseoutlook()
 
 ###
