@@ -201,14 +201,13 @@ class CommConnection:
             self.logdata("Reading remaining data", res)
         return res
 
-    def readuntil(self, char, log=True, logsuccess=True):
+    def readuntil(self, char, log=True, logsuccess=True, numfailures=0):
         # Keeps reading until it hits char
         self.readrequests+=1
         if False: # don't log this anymore
             self.logdata("Begin reading until 0x%02x" % (ord(char),), None)
 
-        # set to non-zero for retries on timeouts
-        numfailures=0
+        # set numfailures to non-zero for retries on timeouts
         res=''
         while len(res)==0 or res[-1]!=char:
             b=self.ser.inWaiting()
