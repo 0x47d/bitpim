@@ -498,13 +498,6 @@ class ConfigDialog(wxDialog):
         gs.Add( self.commbox, 0, wxEXPAND)
         gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
 
-        gs.Add( wxStaticText(self, -1, "Retry on timeout"), 0, wxCENTER )
-        self.retry=wxCheckBox(self, self.ID_RETRY, "")
-        gs.Add( self.retry, 0, wxCENTER)
-
-        # NB: no 3 column control
-                
-
         bs=wxBoxSizer(wxVERTICAL)
         bs.Add(gs, 0, wxEXPAND|wxALL, 10)
         bs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 7)
@@ -556,7 +549,6 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(self.mw.config.Read("path", ""))
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
-        self.retry.SetValue( self.mw.config.ReadInt('commretryontimeout', True))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -575,7 +567,6 @@ class ConfigDialog(wxDialog):
         if self.commbox.GetValue()==self.setme:
             comm="auto"
             self.commbox.SetValue(comm)
-        self.retry.SetValue( self.mw.config.ReadInt('commretryontimeout', True))
 
     def updatevariables(self):
         path=self.diskbox.GetValue()
@@ -591,9 +582,7 @@ class ConfigDialog(wxDialog):
             self.mw.wt.clearcomm()
         # comm parameters (retry, timeouts, flow control etc)
         commparm={}
-        commparm['retryontimeout']=self.retry.GetValue()
-        self.mw.config.WriteInt('commretryontimeout', self.retry.GetValue())
-        # the others we don't have in config dialog
+        commparm['retryontimeout']=self.mw.config.ReadInt("commretryontimeout", False)
         commparm['timeout']=self.mw.config.ReadInt('commtimeout', 3)
         commparm['hardwareflow']=self.mw.config.ReadInt('commhardwareflow', False)
         commparm['softwareflow']=self.mw.config.ReadInt('commsoftwareflow', False)
