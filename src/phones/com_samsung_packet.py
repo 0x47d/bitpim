@@ -48,7 +48,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
     __cal_max_name_len=32
-    __switch_mode_cmd='\x44\x58\xf4\x7e'
     
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
@@ -150,7 +149,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         response=self.comm.sendatcommand("#PMODE=0")
         return True
         
-    def sendpbcommand(self, request, responseclass):
+    def sendpbcommand(self, request, responseclass, ignoreerror=False):
         """Similar to the sendpbcommand in com_sanyo and com_lg, except that
         a list of responses is returned, one per line of information returned
         from the phone"""
@@ -162,7 +161,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.logdata("Samsung phonebook request", data, request)
 
         try:
-            response_lines=self.comm.sendatcommand(data)
+            response_lines=self.comm.sendatcommand(data, ignoreerror=ignoreerror)
         except commport.ATError:
             self.comm.success=False
             self.mode=self.MODENONE
@@ -332,12 +331,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         now = time.localtime(time.time())
         return "%04d%02d%02dT%02d%02d%02d" % now[0:6]
-
-    def phonize(self, str):
-        """Convert the phone number into something the phone understands
-        All digits, P, T, * and # are kept, everything else is removed"""
-
-        return re.sub("[^0-9PT#*]", "", str)
 
     def get_calendar_entry(self, entry_index):
         try:
@@ -557,9 +550,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         return dict
 
-class Profile(com_phone.Profile):
+def phonize(str):
+    """Convert the phone number into something the phone understands
+    All digits, P, T, * and # are kept, everything else is removed"""
 
-    serialsname='samsung'
+    return re.sub("[^0-9PT#*]", "", str)
+
+
+class Profile(com_phone.Profile):
 
     usbids=( ( 0x04e8, 0x6601, 1),  # Samsung internal USB interface
         )
@@ -612,7 +610,7 @@ class Profile(com_phone.Profile):
         for name in groups:
             key,value=self._getgroup(name, newgroups)
             if key is None:
-                for key in range(self.protocol.NUMGROUPS):
+                for key in range(self.protocolclass.NUMGROUPS):
                     if key not in newgroups:
                         newgroups[key]={'name': name, 'icon': 1}
                         break
@@ -620,4 +618,110 @@ class Profile(com_phone.Profile):
         # yay, done
         if data['groups']!=newgroups:
             data['groups']=newgroups
+
+    def convertphonebooktophone(self, helper, data):
+        """Converts the data to what will be used by the phone
+
+        @param data: contains the dict returned by getfundamentals
+                     as well as where the results go"""
+
+        self.normalisegroups(helper, data)
+        results={}
+
+        # find which entries are already known to this phone
+        pb=data['phonebook']
+        # decorate list with (slot, pbkey) tuples
+        slots=[ (helper.getserial(pb[pbentry].get("serials", []), self.serialsname, data['uniqueserial'], "slot", None), pbentry)
+                for pbentry in pb]
+        slots.sort() # numeric order
+        
+        speeds={}
+
+        slotsused={}
+
+        tempslot=0 # Temporarily just pick slots and speed dial in order
+        for pbentry in data['phonebook']:
+            tempslot+=1
+
+            if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
+                break
+            e={} # entry out
+
+            entry=data['phonebook'][pbentry]
+
+            secret=helper.getflag(entry.get('flags', []), 'secret', False)
+            if secret:
+                secret=1
+            else:
+                secret=0
+            
+            # serials
+            slot=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', 0)
+            e['slot']=slot
+            e['slot']=tempslot
+            e['uslot']=tempslot
+
+            # name
+            e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
+
+            cat=helper.makeone(helper.getcategory(entry.get('cagetgories',[]),0,1,12), None)
+            if cat is None:
+                e['group']=self.protocolclass.NUMGROUPS # Unassigned group
+            else:
+                key,value=self._getgroup(cat, data['groups'])
+                if key is not None:
+                    e['group']=key
+                else:
+                    # Sorry no space for this category
+                    e['group']=self.protocolclass.NUMGROUPS # Unassigned
+
+            # email addresses
+            e['email']=helper.makeone(helper.getemails(entry.get('emails', []), 0,1,32), "")
+            # url
+            e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,32), "")
+                                         
+            # phone numbers
+            # there must be at least one phone number
+            minnumbers=1
+            numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
+            e['numbertypes']=[]
+            e['numbers']=[]
+            e['secrets']=[]
+            unusednumbers=[] # Hold duplicate types here
+            typesused={}
+            defaultnum=0
+            for num in numbers:
+                typename=num['type']
+                if typesused.has_key(typename):
+                    unusednumbers.append(num)
+                    continue
+                typesused[typename]=1
+                for typenum,tnsearch in enumerate(self.numbertypetab):
+                    if typename==tnsearch:
+                        if defaultnum==0:
+                            defaultnum=typenum+1
+                        number=phonize(num['number'])
+                        if len(number)>self.protocolclass.MAXNUMBERLEN:
+                            # :: TODO:: number is too long and we have to either truncate it or ignore it?
+                            number=number[:self.protocolclass.MAXNUMBERLEN]
+                        e['numbers'].append(number)
+                        if(num.has_key('speeddial')):
+                            # Only one number per name can be a speed dial
+                            # Should make speed dial be the first that
+                            # we come accross
+                            e['speeddial']=defaultnum
+                        e['numbertypes'].append(typenum)
+                        e['secrets'].append(secret)
+
+
+                        break
+
+                # Later deal with phone numbers that didn't get put in
+                # because phone doesn't have that type or there were duplicate
+                # types.  (Take from Sanyo code).
+
+                e['ringtone'] = 0
+                e['wallpaper'] = 0
+
+                results[pbentry]=e
 
