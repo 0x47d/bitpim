@@ -335,6 +335,7 @@ class Display(wx.ScrolledWindow):
             self.items.append(items)
             self.boundingboxes.append( [None]*len(items) )
             self.selected.append( [False]*len(items) )
+        self._w+=1 # cause a relayout to happen
         self.Refresh(False)
 
 
