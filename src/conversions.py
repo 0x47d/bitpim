@@ -19,8 +19,10 @@ import common
 
 def convertto8bitpng(pngdata, maxsize):
     "Convert a PNG file to 8bit color map"
+
+    # Return files small enough, or not PNG as is
     size=len(pngdata)
-    if size<=maxsize:
+    if size<=maxsize or pngdata[1:4]=='PNG':
         return pngdata
 
     p=sys.path[0]
