@@ -715,7 +715,7 @@ class PhoneWidget(wx.Panel):
         data=self._data[key]
         # can we get it to open on the correct field?
         datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
-        dlg=phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex)
+        dlg=phonebookentryeditor.Editor(self, data, factory=phonebookobjectfactory, keytoopenon=datakey, dataindex=dataindex)
         if dlg.ShowModal()==wx.ID_OK:
             data=dlg.GetData()
             self._data[key]=data
