@@ -55,37 +55,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.mode=self.MODENONE
 	#self.is_online()
 
-    def _setmodephonebook(self):
-        # Do just AT commands.  Reboot if necessary
-        # 
-        for baud in (0, 115200, 19200, 230400):
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-
-            print "Baud=",baud
-            try:
-                response=self.comm.sendatcommand("+GMM")
-            except:
-                self.mode=self.MODENONE
-                return False
-                #raise
-            
-            try:
-                s=self.comm.readline()
-                self.log(s)
-                break
-            except modignoreerrortypes:
-                self.log("No response to AT+GMM")
-                self.mode=self.MODENONE
-                return False
-
+    def _setmodemodemtophonebook(self):
         response=self.comm.sendatcommand("#PMODE=1")
-        print "Now in Phonebook mode"
+        return True
+
+    def _setmodephonebook(self):
+        self.setmode(self.MODEMODEM)
+        self.setmode(self.MODEPHONEBOOK)
+        return True
+        
+    def _setmodephonebooktomodem(self):
+        response=self.comm.sendatcommand("#PMODE=0")
         return True
         
     def _get_at_response(self):
-
         s=self.comm.read(1, False)
 	if not len(s):
 	    return ''
@@ -265,12 +248,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         return result
         
     def getcalendar(self, result):
-        if not self.is_online():
-            self.log("Failed to talk to phone")
-            return result
-
         self.log("Getting calendar entries")
-        self.pmode_on()
+        self.setmode(self.MODEPHONEBOOK)
         res={}
         l=len(self.__cal_entries_range)
         cal_cnt=0
@@ -316,7 +295,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             res[cal_cnt]=entry
             cal_cnt += 1
         result['calendar']=res
-        self.pmode_off()
+        self.setmode(self.MODEMODEM)
         return result
 
     def _set_unused_calendar_fields(self, entry):
@@ -327,6 +306,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             entry['ringtone']=0
 
     def savecalendar(self, dict, merge):
+        
         self.reportinit('Save Calendar', dict)
         if not self.is_online():
             self.log("Failed to talk to phone")
@@ -338,7 +318,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         if cal_len > l:
             self.report("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
             return dict
-        self.pmode_on()
+        self.setmode(self.MODEPHONEBOOK)
         self.log("Saving calendar entries")
         cal_cnt=0
         for k in cal:
@@ -394,7 +374,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         for k in range(cal_cnt, l):
             self.progress(k, l, "Deleting entry %d" % k)
             self.save_calendar_entry(`k`)
-        self.pmode_off()
+
         return dict
 
 class Profile(com_phone.Profile):
