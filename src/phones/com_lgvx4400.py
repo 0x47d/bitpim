@@ -322,7 +322,7 @@ class Phone:
             data+=makelsb(entry['?d'],3)
             # alarm - first byte is mins, next is hours.  100 indicates not set
             assert len(data)-pos==0x10
-            if entry['alarm'] is None:
+            if entry['alarm'] is None or entry['alarm']<0:
                 hour=100
                 min=100
             else:
