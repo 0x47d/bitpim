@@ -62,6 +62,41 @@ AT#PCMIT?
 OK
 
 ==========================================================================
+SCH-A605	 Marcelo <marcelozi@pop.com.br>
+
+Gentlemen,
+I verified codes AT as below: 
+at+gmi     
++GMI: SAMSUNG ELECTRONICS CO.,LTD.                                 
+ 
+OK
+at+gmr
++GMR: S/W VER: A605         SCH-A605 
+ 
+OK
+at+gmm
++GMM: SCH-A605/165
+ 
+OK
+at#pmode=1
+at#pcbit?
+#PCBIT: 1005,1,0,5,5,250,250,79,1,12,32,12,32,0
+ 
+OK
+at#pbokr=?
+#PBOKR: (1-251),(0-4),12,32,32,0
+ 
+
+at#pcmit?
+#PCMIT: 1004,1,0,0,0,0,0,0,4,12,1,128,80,0,12,1,0,0,0,0,12,0,0,0,0,0
+ 
+OK
+ 
+at#pbokr=25
+#PBOKR: 25,25,1,50,"Paula",2,0,2155586,0,,,81535896,0,,,,,,,,,"",20040625T1
+95530
+ 
+==========================================================================
 SCH-A610 Verizon
 
 Photos in /digital_cam
