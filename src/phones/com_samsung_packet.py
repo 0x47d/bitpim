@@ -285,12 +285,17 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         res['numbers']=[]
         secret=0
 
+        speeddialtype=entry.speeddial
         numberindex=0
         for type in self.numbertypetab:
             if len(entry.numbers[numberindex].number):
-                res['numbers'].append({'number': entry.numbers[numberindex].number, 'type': type })
+                numhash={'number': entry.numbers[numberindex].number, 'type': type }
                 if entry.numbers[numberindex].secret==1:
                     secret=1
+                if speeddialtype==numberindex:
+                    numhash['speeddial']=entry.uslot
+                res['numbers'].append(numhash)
+                
             numberindex+=1
             
         # Field after each number is secret flag.  Setting secret on
@@ -305,6 +310,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             tone=self.serialsname+"Index_"+`entry.wallpaper`
             res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
             
+        res['speeddial']
+
         # We don't have a place to put these
         # print entry.name, entry.birthday
         # print entry.name, entry.timestamp
@@ -564,13 +571,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         return dict
 
-def phonize(str):
-    """Convert the phone number into something the phone understands
-    All digits, P, T, * and # are kept, everything else is removed"""
-
-    return re.sub("[^0-9PT#*]", "", str)
-
-
 class Profile(com_phone.Profile):
 
     usbids=( ( 0x04e8, 0x6601, 1),  # Samsung internal USB interface
@@ -648,14 +648,14 @@ class Profile(com_phone.Profile):
         slots=[ (helper.getserial(pb[pbentry].get("serials", []), self.serialsname, data['uniqueserial'], "slot", None), pbentry)
                 for pbentry in pb]
         slots.sort() # numeric order
+        # make two lists - one contains known slots, one doesn't
+        newones=[(pbentry,slot) for slot,pbentry in slots if slot is None]
+        existing=[(pbentry,slot) for slot,pbentry in slots if slot is not None]
         
-        speeds={}
-
-        slotsused={}
+        uslotsused={}
 
         tempslot=0 # Temporarily just pick slots and speed dial in order
-        for pbentry in data['phonebook']:
-            tempslot+=1
+        for pbentry,slot in existing+newones:
 
             if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
                 break
@@ -669,12 +669,6 @@ class Profile(com_phone.Profile):
             else:
                 secret=0
             
-            # serials
-            slot=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', 0)
-            e['slot']=slot
-            e['slot']=tempslot
-            e['uslot']=tempslot
-
             # name
             e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
 
@@ -703,7 +697,7 @@ class Profile(com_phone.Profile):
             e['secrets']=[]
             unusednumbers=[] # Hold duplicate types here
             typesused={}
-            defaultnum=0
+            defaulttypenum=0
             for num in numbers:
                 typename=num['type']
                 if typesused.has_key(typename):
@@ -712,9 +706,9 @@ class Profile(com_phone.Profile):
                 typesused[typename]=1
                 for typenum,tnsearch in enumerate(self.numbertypetab):
                     if typename==tnsearch:
-                        if defaultnum==0:
-                            defaultnum=typenum+1
-                        number=phonize(num['number'])
+                        if defaulttypenum==0:
+                            defaulttypenum=typenum
+                        number=self.phonize(num['number'])
                         if len(number)>self.protocolclass.MAXNUMBERLEN:
                             # :: TODO:: number is too long and we have to either truncate it or ignore it?
                             number=number[:self.protocolclass.MAXNUMBERLEN]
@@ -723,19 +717,66 @@ class Profile(com_phone.Profile):
                             # Only one number per name can be a speed dial
                             # Should make speed dial be the first that
                             # we come accross
-                            e['speeddial']=defaultnum
+                            e['speeddial']=typenum
+                            tryuslot = num['speeddial']
                         e['numbertypes'].append(typenum)
                         e['secrets'].append(secret)
 
-
                         break
 
-                # Later deal with phone numbers that didn't get put in
-                # because phone doesn't have that type or there were duplicate
-                # types.  (Take from Sanyo code).
+            # Should print to log when a requested speed dial slot is
+            # not available
+            if e.has_key('speeddial'):
+                if tryuslot>=1 and tryuslot<=self.protocolclass.NUMPHONEBOOKENTRIES and not uslotsused.has_key(tryuslot):
+                    uslotsused[tryuslot]=1
+                    e['uslot']=tryuslot
+                    print slot, tryuslot
+            else:
+                e['speeddial']=defaulttypenum
+                
+            # Later deal with phone numbers that didn't get put in
+            # because phone doesn't have that type or there were duplicate
+            # types.  (Take from Sanyo code).
 
-                e['ringtone'] = 0
-                e['wallpaper'] = 0
+            e['ringtone'] = 0
+            e['wallpaper'] = 0
 
-                results[pbentry]=e
+            # find the right slot
+            if slot is None or slot<1 or slot>self.protocolclass.NUMPHONEBOOKENTRIES or slot in results:
+                for i in range(100000):
+                    if i not in results:
+                        slot=i
+                        break
+
+            e['slot']=slot
+
+            results[slot]=e
+            slot=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', 0)
+
+            results[slot]=e
+
+        # Fill in uslot for entries that don't have it.
+        
+        tryuslot=1
+        for slot in results.keys():
+            e=results[slot]
+            if not e.has_key('uslot'):
+                while tryuslot<self.protocolclass.NUMPHONEBOOKENTRIES and uslotsused.has_key(tryuslot):
+                    tryuslot+=1
+                uslotsused[tryuslot]=1
+                e['uslot'] = tryuslot
+                print e['slot'], tryuslot
+                results[slot] = e
+
+        data['phonebook']=results
+        return data
+
+    def phonize(self,str):
+        """Convert the phone number into something the phone understands
+        All digits, P, T, * and # are kept, everything else is removed"""
+
+        return re.sub("[^0-9PT#*]", "", str)[:self.protocolclass.MAXNUMBERLEN]
+
+
+    
 
