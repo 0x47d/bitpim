@@ -59,23 +59,23 @@ class Phone(com_phone.Phone):
     def is_online(self):
         try:
 	    self.comm.sendatcommand("E0V1")
-	    return False
-        except ATError:
 	    return True
+        except ATError:
+	    return False
 
     def pmode_on(self):
         try:
 	    self.comm.sendatcommand("#PMODE=1")
-	    return False
-        except ATError:
 	    return True
+        except ATError:
+	    return False
 
     def pmode_off(self):
         try:
 	    self.comm.sendatcommand("#PMODE=0")
-	    return False
+	    return Truth
         except ATError:
-	    return True
+	    return False
 
     def get_esn(self):
         try:
@@ -112,12 +112,14 @@ class Phone(com_phone.Phone):
     def del_phone_entry(self, entry_index):
         try:
             s=self.comm.sendatcommand("#PBOKW=%d" % entry_index)
+            return Truth
         except ATError:
             return False
 
     def save_phone_entry(self, entry_str):
         try:
             s=self.comm.sendatcommand("#PBOKW="+entry_str)
+            return Truth
         except ATError:
             return False
 
