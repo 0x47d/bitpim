@@ -152,16 +152,13 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         lo=len(oldrows)
         ln=len(self.rowkeys)
         if ln>lo:
-            print "append", ln,lo,ln-lo
             msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, ln-lo)
         elif lo>ln:
-            print "delete", ln,lo,lo-ln
-            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, lo-ln)
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, lo-ln)
         else:
-            print "no change"
             msg=None
         if msg is not None:
-            print self.GetView().ProcessTableMessage(msg)
+            self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().AutoSizeColumns()
 
