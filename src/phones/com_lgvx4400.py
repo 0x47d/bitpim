@@ -203,7 +203,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # We then delete any entries that aren't in data
         # We then write out our records, usng overwrite or append
         # commands as necessary
-        newphonebook={}
+        serialupdates=[]
         existingpbook={} # keep track of the phonebook that is on the phone
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
@@ -276,7 +276,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=self.protocolclass.pbupdateentryrequest()
             req.entry=entry
             res=self.sendpbcommand(req, self.protocolclass.pbupdateentryresponse)
-            newphonebook[counter-1]=self.extractphonebookentry(entry, data)
+            serialupdates.append( ( ii["bitpimserial"],
+                                    {'sourcetype': self.serialsname, 'serial1': res.serial1, 'serial2': res.serial1,
+                                     'sourceuniqueid': data['uniqueserial']})
+                                  )
             assert ii['serial1']==res.serial1 # serial should stay the same
 
         # Finally write out new entries
@@ -294,11 +297,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=self.protocolclass.pbappendentryrequest()
             req.entry=entry
             res=self.sendpbcommand(req, self.protocolclass.pbappendentryresponse)
-            entry.serial1=res.newserial
-            entry.serial2=res.newserial
-            newphonebook[counter-1]=self.extractphonebookentry(entry, data)
+            serialupdates.append( ( ii["bitpimserial"],
+                                     {'sourcetype': self.serialsname, 'serial1': res.newserial, 'serial2': res.newserial,
+                                     'sourceuniqueid': data['uniqueserial']})
+                                  )
 
-        data['phonebook']=newphonebook
+        data["serialupdates"]=serialupdates
+
 
 
     def _findserial(self, serial, dict):
@@ -743,8 +748,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             if k=='emails' or k=='numbers' or k=='numbertypes':
                 l=getattr(e,k)
                 for item in entry[k]:
-                    if k=='numbers':
-                        item=self.phonize(item)
                     l.append(item)
             elif k=='ringtone':
                 e.ringtone=self._findmediainindex(dict['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
@@ -758,12 +761,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         return e
 
-            
-    def phonize(self, str):
-        """Convert the phone number into something the phone understands
 
-        All digits, P, T, * and # are kept, everything else is removed"""
-        return re.sub("[^0-9PT#*]", "", str)
+def phonize(str):
+    """Convert the phone number into something the phone understands
+    
+    All digits, P, T, * and # are kept, everything else is removed"""
+    return re.sub("[^0-9PT#*]", "", str)
 
     
 
@@ -893,6 +896,11 @@ class Profile:
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for num in numbers:
+                    number=phonize(num['number'])
+                    if len(number)==0:
+                        # no actual digits in the number
+                        continue
+                    e['numbers'].append(number)
                     type=num['type']
                     for i,t in zip(range(100),numbertypetab):
                         if type==t:
@@ -905,7 +913,9 @@ class Profile:
                         if t=='none': # conveniently last entry
                             e['numbertypes'].append(i)
                             break
-                    e['numbers'].append(num['number'])
+                if len(e['numbers'])==0:
+                    raise helper.ConversionFailed("The phone numbers didn't have any digits for this entry")
+
                 e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=self.filllist(e['numbers'], 5, "")
 
@@ -914,6 +924,10 @@ class Profile:
 
                 e['serial1']=serial1
                 e['serial2']=serial2
+                for ss in entry["serials"]:
+                    if ss["sourcetype"]=="bitpim":
+                        e['bitpimserial']=ss
+                assert e['bitpimserial']
                 
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
                 e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
