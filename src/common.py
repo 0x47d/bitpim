@@ -501,3 +501,40 @@ def getext(name):
     if name.rfind('.')>=0:
         return name[name.rfind('.')+1:]
     return ''
+
+#-------------------------------------------------------------------------------
+# number <-> string conversion routines
+
+def LSBUint16(v):
+    if len(v)<2:
+        return None
+    return ord(v[0])+(ord(v[1])<<8)
+
+def LSBUint32(v):
+    if len(v)<4:
+        return None
+    return ord(v[0])+(ord(v[1])<<8)+(ord(v[2])<<16)+(ord(v[3])<<24)
+    
+def MSBUint16(v):
+    if len(v)<2:
+        return None
+    return ord(v[1])+(ord(v[0])<<8)
+
+def MSBUint32(v):
+    if len(v)<4:
+        return None
+    return ord(v[3])+(ord(v[2])<<8)+(ord(v[1])<<16)+(ord(v[0])<<24)
+
+def LSBstr16(v):
+    return chr(v&0xff)+chr((v>>8)&0xff)
+
+def LSBstr32(v):
+    return chr(v&0xff)+chr((v>>8)&0xff)+chr((v>>16)&0xff)+chr((v>>24)&0xff)
+
+def MSBstr16(v):
+    return chr((v>>8)&0xff)+chr(v&0xff)
+
+def MSBstr32(v):
+    return chr((v>>24)&0xff)+chr((v>>16)&0xff)+chr((v>>8)&0xff)+chr(v&0xff)
+
+            

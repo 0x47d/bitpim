@@ -572,8 +572,13 @@ class ConvertMP3toQCP(ConvertDialog):
         self.OnStop()
         self.startpos=self.slider.GetValue()
         duration=self.endframe-self.startpos
-        conversions.converttowav(self.wavfile, self.workingwavfile,
-                                    start=self.startpos)
+##        conversions.converttowav(self.wavfile, self.workingwavfile,
+##                                    start=self.startpos)
+	conversions.trimwav1(self.wavfile, self.workingwavfile,
+			    start=self.startpos)
+##        open(self.workingwavfile, 'wb').write(
+##            conversions.trimwav2(open(self.wavfile, 'rb').read(),
+##                                start=self.startpos))
         self.sound=wx.Sound(self.workingwavfile)
         assert self.sound.IsOk()
         res=self.sound.Play(wx.SOUND_ASYNC)

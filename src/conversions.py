@@ -210,3 +210,63 @@ def converttowav(mp3filename, wavfilename, samplerate=None,
 def convertwavtoqcp(wavfile):
     pvconv=gethelperbinary('pvconv')
     run(pvconv, shortfilename(wavfile))
+
+def trimwav1(wavfilename, wavoutfilename, start, duration=None):
+    try:
+        f=open(wavfilename, 'rb')
+        # read in the headers
+        headers=f.read(20)
+        subchunk1size=common.LSBUint32(headers[16:20])
+        headers+=f.read(subchunk1size)
+        subchunk2id=f.read(4)
+        subchunk2size=common.LSBUint32(f.read(4))
+        # check for a PCM file format
+        if headers[:4]!='RIFF' or headers[8:12]!='WAVE' or \
+        headers[12:16]!='fmt ' or common.LSBUint16(headers[20:22])!=1:
+            # not a PCM file
+            raise TypeError
+        subchunk2start=20+subchunk1size
+        subchunk2datastart=subchunk2start+8
+        samplerate=common.LSBUint32(headers[24:28])
+        blockalign=common.LSBUint16(headers[32:34])
+        # compute new start & duration
+        new_start=int(start*samplerate*blockalign)
+        if duration is not None:
+            new_size=int((duration-start)*samplerate*blockalign)
+        else:
+            new_size=subchunk2size-new_start
+        # go get it
+        f.seek(new_start, 1)
+        open(wavoutfilename, 'wb').write('RIFF'+\
+                                         common.LSBstr32(4+8+subchunk1size+8+new_size)+\
+                                         headers[8:]+'data'+\
+                                         common.LSBstr32(new_size)+\
+                                         f.read(new_size))
+        f.close()
+    except:
+        f.close()
+        raise
+
+def trimwav2(wavedatain, start, duration=None):
+    # check for a PCM file format
+    if wavedatain[:4]!='RIFF' or wavedatain[8:12]!='WAVE' or \
+       wavedatain[12:16]!='fmt ' or common.LSBUint16(wavedatain[20:22])!=1:
+        raise ValueError, 'not a PCM file'
+    subchunk1size=common.LSBUint32(wavedatain[16:20])
+    subchunk2start=20+subchunk1size
+    subchunk2size=common.LSBUint32(wavedatain[subchunk2start+4:subchunk2start+8])
+    subchunk2datastart=subchunk2start+8
+    samplerate=common.LSBUint32(wavedatain[24:28])
+    blockalign=common.LSBUint16(wavedatain[32:34])
+    # compute new start & duration
+    new_start=int(start*samplerate*blockalign)
+    newsubchunk2datastart=subchunk2datastart+new_start
+    if duration is not None:
+        new_size=int((duration-start)*samplerate*blockalign)
+    else:
+        new_size=subchunk2size-new_start
+    # return new data
+    return 'RIFF'+common.LSBstr32(4+8+subchunk1size+8+new_size)+\
+           wavedatain[8:subchunk2start]+\
+           'data'+common.LSBstr32(new_size)+\
+           wavedatain[newsubchunk2datastart:newsubchunk2datastart+new_size]
