@@ -24,6 +24,7 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
 _NUMCALLHISTORY=20
+NUMPHONENUMBERS=7
  %}
 
 PACKET sanyoerror:
@@ -369,7 +370,7 @@ PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
-    * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
+    * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
     49 STRING {'default': ""} +email
     1 UINT +url_len
