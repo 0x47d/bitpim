@@ -48,7 +48,7 @@ PACKET pbentry:
     P  UINT {'constant': 3} numberofemails
     P  UINT {'constant': 5} numberofphonenumbers
     4  UINT serial1
-    2  UINT {'constant': 0x0222} +entrysize
+    2  UINT entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name

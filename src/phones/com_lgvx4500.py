@@ -66,6 +66,11 @@ class Phone(com_lgvx4400.Phone):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
         self.mode=self.MODENONE
 
+    def makeentry(self, counter, entry, dict):
+        e=com_lgvx4400.Phone.makeentry(self, counter, entry, dict)
+        e.entrysize=0x202
+        return e
+
 
 class Profile(com_lgvx4400.Profile):
 
