@@ -716,6 +716,9 @@ class Profile(com_samsung.Profile):
     WALLPAPER_CONVERT_FORMAT="bmp"
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
+    RINGTONE_LIMITS= {
+        'MAXSIZE': 30000
+    }
 
     def __init__(self):
         com_samsung.Profile.__init__(self)
@@ -735,12 +738,16 @@ class Profile(com_samsung.Profile):
         return data
 
     def QueryAudio(self, origin, currentextension, afi):
+        for k,n in self.RINGTONE_LIMITS.items():
+            setattr(afi, k, n)
         # we don't modify any of these
-        if afi.format in (None, "MIDI", "PMD"):
+        if afi.format in ("MIDI", "PMD"):
             return currentextension, afi
         elif afi.format=='QCP':
             return ('pmd', afi)
-        return ('pmd', fileinfo.AudioFileInfo(afi, **{'format': 'QCP'}))
+        d=self.RINGTONE_LIMITS.copy()
+        d['format']='QCP'
+        return ('pmd', fileinfo.AudioFileInfo(afi, **d))
 
 class FileEntries:
     def __init__(self, phone, info):
