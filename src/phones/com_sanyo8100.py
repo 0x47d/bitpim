@@ -97,7 +97,7 @@ class Profile(com_sanyo.Profile):
     protocolclass=p_sanyo8100
     serialsname='scp8100'
 
-    WALLPAPER_WIDTH=120
+    WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=144
     OVERSIZE_PERCENTAGE=100
 
