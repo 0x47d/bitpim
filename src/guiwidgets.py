@@ -576,6 +576,13 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         EVT_KEY_DOWN(self, self.OnKeyDown)
         
 
+    def GetSelectedItemNames(self):
+        names=[]
+        for i in range(0,self.GetItemCount()):
+            if self.GetItemState(i, wxLIST_MASK_STATE)&wxLIST_STATE_SELECTED:
+                names.append(self.GetItemText(i))
+        return names
+
     def OnRightDown(self,event):
         item,flags=self.HitTest(wxPoint(event.GetX(), event.GetY()))
         if flags&wxLIST_HITTEST_ONITEM:
@@ -645,13 +652,17 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         raise Exception("not implemented")
 
     def OnRefresh(self, _=None):
+        self.Freeze()
         result={}
         self.getfromfs(result)
         self.populate(result)
+        self.Thaw()
 
     def OnDelete(self,_):
-        name=self.GetItemText(self.selecteditem)
-        os.remove(os.path.join(self.thedir, name))
+        names=self.GetSelectedItemNames()
+        for name in names:
+            os.remove(os.path.join(self.thedir, name))
+        self.RemoveFromIndex(names)
         self.OnRefresh()
 
     def versionupgrade(self, dict, version):
