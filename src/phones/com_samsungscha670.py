@@ -70,6 +70,7 @@ class Phone(com_samsung.Phone):
     __wp_photo_dir="digital_cam"
     __wp_header_bytes=96	# Extra bytes in front of jpg
     __wp_ts_offset=47 		# Timestamp in yyyymmddHHMMSS format starts here
+    __rt_index_file="nvm/nvm/brew_melody"
 
     # The extra "User" entries are a temporary fix to allow round trip integrity of user
     # assigned ringtones for caller ID. Need to read /nvm/nvm/brew_melody to get true names
@@ -85,11 +86,10 @@ class Phone(com_samsung.Phone):
 		       'User 24', 'User 25', 'User 26', 'User 27', 'User 28', 'User 29',
 		       'User 30', 'User 31', 'User 32', 'User 33', 'User 34', 'User 35',
 		       'User 36', 'User 37', 'User 38', 'User 39')
-    # 'type name', 'type index name', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'brew/ringer', 19, 40)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'brew/shared', 19, 30)
-# Added this for future use. Not sure about numeric values
-#    __camerapix_info=('camera', 'camerapix-index', 'digital_cam', 20, 200)
+    # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 40)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 30)
+    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 20, 200)
         
     def __init__(self, logtarget, commport):
 
@@ -144,6 +144,12 @@ class Phone(com_samsung.Phone):
         for k, n in enumerate(self.builtinringtones):
             r[k]={ 'name': n, 'origin': 'builtin' }
         return r
+
+    def get_user_ringtone_index(self):
+	# See test_rt_list() in class FileEntries definition below for
+	# prototype of how this would work
+        r={}
+	return r
 
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -208,8 +214,8 @@ class Phone(com_samsung.Phone):
         # wallpapers
 	if atoi(entry[self.__pb_image_assign]) == 3:
 	    try:
-	    	res['wallpapers']=[ { 'wallpaper': split(entry[self.__pb_contact_image], "/")[1],
-                             'use': 'call', 'flag': '3' } ]
+	    	res['wallpapers']=[ { 'wallpaper': split(entry[self.__pb_contact_image], "/")[1] + ".jpg",
+                             'use': 'call' } ]
 	    except:
 	    	pass
 	if atoi(entry[self.__pb_image_assign]) == 4:
@@ -598,13 +604,14 @@ class Phone(com_samsung.Phone):
 	except:
 	    e[self.__pb_image_assign]='5'
 	print imgName
-	# temporary placeholder: will eventually get  actual image names from /nvm/nvm/brew_image file
+	# temporary placeholder:
+	# will eventually get  actual image names from /nvm/nvm/brew_image file
 	if (imgName == "brew_image") or (imgName == "none"):
-	    e[self.__pb_image_assign]='5'			# this will zap the assigned brew_image
-	    e[self.__pb_image_id]='0'				# caller-id on the phone
-	    e[self.__pb_contact_image]='""'			# but no other choice now
+	    e[self.__pb_image_assign]='5'		# this will zap the assigned
+	    e[self.__pb_image_id]='0'			# brew_image caller-id on the
+	    e[self.__pb_contact_image]='""'		# phone but no other choice now
 	else:
-	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + pb_entry['wallpapers'][0]['wallpaper'] + '"'
+	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + split(pb_entry['wallpapers'][0]['wallpaper'],".")[0] + '"'
 	    e[self.__pb_image_assign]='3'
 	    e[self.__pb_image_id]='0'
 	print e[self.__pb_contact_image]
@@ -648,9 +655,11 @@ class Phone(com_samsung.Phone):
         self.reportinit('Get Wallpapers', result)
         m=FileEntries(self, self.__wallpaper_info)
         result['rebootphone']=1
-        r=m.get_media(result)
+        r1= m.get_media(result)
+        m=FileEntries(self, self.__camerapix_info)
+        r2=m.get_media(r1)
         self.report('\r\nBITPIM is now resetting your phone.')
-        return r
+        return r2
 
     def savewallpapers(self, result, merge):
         self.reportinit('Save Wallpapers', result)
@@ -693,16 +702,58 @@ class Profile(com_samsung.Profile):
     def convertphonebooktophone(self, helper, data):
         return data
 
+#######################################################################
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
-        self.__file_type, self.__index_type, self.__path, self.__max_file_len, self.__max_file_count=info
+        self.__file_type, self.__index_type, self.__origin, self.__path, self.__max_file_len, self.__max_file_count=info
+
+    ####### Just a test to see if I can read this file correctly
+    ####### Doesn't really belong here
+    ####### Needed place where self.__phone.getfilecontents would work
+    def test_rt_list(self):
+	rtlist = self.__phone.getfilecontents("nvm/nvm/brew_melody")
+	offset=0
+        while offset < (40 * 77):
+	    rtid = ord(rtlist[offset+1])
+	    rtlen = ord(rtlist[offset+74])
+	    rtpath = rtlist[offset+23:offset+23+rtlen]
+	    if rtlen > 0:
+		print rtid, "'"+rtpath+"'"	    
+	    offset+=77
+
+    ####### Another file read test
+    def test_img_list(self):
+	imglist = self.__phone.getfilecontents("nvm/nvm/brew_image")
+	offset=0
+        while offset < (30 * 76):
+	    imgid = ord(imglist[offset+1])
+	    imglen = ord(imglist[offset+73])
+	    imgpath = imglist[offset+22:offset+22+imglen]
+	    if imglen > 0:
+		print imgid, "'"+imgpath+"'"	    
+	    offset+=76
+	maptoname = self.__phone.getfilecontents("nvm/nvm/dial_tbl")
+	offset=0
+        while offset < (500 * 95):
+	    imgflag = ord(maptoname[offset+54])
+	    if imgflag == 4:
+	    	imgid = ord(maptoname[offset+52])
+	    	name = maptoname[offset+22:offset+22+22]
+		print "'"+name+"'", imgid	    
+	    offset+=95
+
+    #############
     def get_media(self, result):
+#	self.test_rt_list()
+#	self.test_img_list()
         self.__phone.log('Getting media for type '+self.__file_type)
         media={}
         idx={}
         if result.has_key(self.__index_type):
             idx=result[self.__index_type]
+        if result.has_key(self.__file_type):
+            media=result[self.__file_type]
         file_cnt, idx_k=0, len(idx)
         path_len=len(self.__path)+1
         try:
@@ -710,9 +761,16 @@ class FileEntries:
             for k in file_list:
                 try:
                     index=k[path_len:]
-                    # print k, index
-                    media[index]=self.__phone.getfilecontents(k)
-                    idx[idx_k]={ 'name': index, 'origin': self.__file_type }
+		    contents = self.__phone.getfilecontents(k)
+		    if self.__origin == "camera":
+			# dtstamp not currently used; how can we retain this useful info?
+			dtstamp = contents[47:61]
+			index = index + ".jpg"
+			# how do we reference __wp_header_bytes and __wp_ts_offset here?
+                    	media[index]=contents[96:]
+ 		    else:
+                    	media[index]=contents
+                    idx[idx_k]={ 'name': index, 'origin': self.__origin }
                     idx_k+=1
                     file_cnt += 1
                 except:
@@ -727,6 +785,8 @@ class FileEntries:
                                 (self.__max_file_count, self.__file_type,
                                  file_cnt, self.__file_type))
         return result
+
+    ##############
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
@@ -754,8 +814,12 @@ class FileEntries:
             # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
             for k1 in media:
+		if media[k1].has_key('origin'):
+		    print media[k1]['origin']
+                if media[k1].has_key('origin') and media[k1]['origin']!=self.__origin:
+                    continue
                 # self.__phone.log('k1: %s, name: %s' % (str(k1), str(idx[k1]['name'])))
-                if media[k1]['name']==name:
+                if media[k1]['name']==name and media[k1]['origin']==self.__origin:
                     found=True
                     break
             if not found:
@@ -769,6 +833,8 @@ class FileEntries:
         # writing new/existing files
         for k in media:
             try:
+                if media[k].has_key('origin') and media[k]['origin'] != self.__origin:
+                    continue
                 name=self.__path+'/'+media[k]['name']
                 if name in dir_l:
                     self.__phone.log('File '+name+' exists')
@@ -776,6 +842,7 @@ class FileEntries:
                     self.__phone.log('Writing file '+name)
                     self.__phone.report('Adding file '+media[k]['name'])
                     self.__phone.writefile(name, media[k]['data'])
+                    media[k]['origin']=self.__origin
             except:
                 self.__phone.log('Failed to write file: '+name)
                 self.__phone.report('Failed to write file: '+media[k]['name'])
