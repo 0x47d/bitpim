@@ -107,6 +107,10 @@ def datatohexstring(data):
         res.write(lhex+"    "+lchar+"\n")
     return res.getvalue()
 
+def hexify(data):
+     "Turns binary data into a hex string (like the output of MD5/SHA hexdigest)"
+     return "".join(["%02x" % (ord(x),) for x in data])
+
 def prettyprintdict(dictionary, indent=0):
      """Returns a pretty printed version of the dictionary
 
