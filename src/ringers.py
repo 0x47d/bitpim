@@ -8,11 +8,14 @@
 ###
 ### $Id$
 
+import os
+import time
 import wx
+
+
 import bpaudio
 import guiwidgets
 import guihelper
-import os
 import pubsub
 import aggregatedisplay
 import wallpaper
@@ -98,7 +101,7 @@ class RingerView(guiwidgets.FileView):
         dc=wx.MemoryDC()
         dc.SelectObject(wx.EmptyBitmap(100,100)) # unused bitmap needed to keep wxMac happy
         h=dc.GetTextExtent("I")[1]
-        itemsize=self.thumbnail.GetWidth()+140, max(self.thumbnail.GetHeight(), h*4+DisplayItem.PADDING)+DisplayItem.PADDING*2
+        itemsize=self.thumbnail.GetWidth()+160, max(self.thumbnail.GetHeight(), h*4+DisplayItem.PADDING)+DisplayItem.PADDING*2
         
         # get all the items
         items=[DisplayItem(self, key, self.mainwindow.ringerpath) for key in self._data['ringtone-index']]
@@ -198,16 +201,27 @@ class RingerView(guiwidgets.FileView):
             
     def OnAddFiles(self, filenames):
         for file in filenames:
-            if file is None: return  # failed dragdrop
+            if file is None: continue  # failed dragdrop?
             # do we want to convert file?
             afi=fileinfo.identify_audiofile(file)
-
-            
+            if afi.size<=0: continue # zero length file or other issues
+            newext,convertinfo=self.mainwindow.phoneprofile.QueryAudio(None, common.getext(file), afi)
+            if convertinfo is not afi:
+                wx.EndBusyCursor()
+                try:
+                    filedata=self.ConvertFormat(file, convertinfo)
+                finally:
+                    # ensure they match up
+                    wx.BeginBusyCursor()
+            else:
+                filedata=open(file, "rb").read()
             self.thedir=self.mainwindow.ringerpath
-            target=self.getshortenedbasename(file)
-            open(target, "wb").write(open(file, "rb").read())
-            self.AddToIndex(os.path.basename(target).lower())
+            target=self.getshortenedbasename(file, newext)
+            open(target, "wb").write(filedata)
+            self.AddToIndex(os.path.basename(target))
         self.OnRefresh()
+
+    OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
 
     def AddToIndex(self, file):
         for i in self._data['ringtone-index']:
@@ -220,6 +234,14 @@ class RingerView(guiwidgets.FileView):
         self._data['ringtone-index'][idx]={'name': file}
         self.modified=True
 
+    def ConvertFormat(self, file, convertinfo):
+        dlg=ConvertDialog(self, file, convertinfo)
+        if dlg.ShowModal()==wx.ID_OK:
+            res=dlg.newfiledata
+        else:
+            assert False, "can't handle cancel yet"
+        dlg.Destroy()
+        return res
 
     def updateindex(self, index):
         if index!=self._data['ringtone-index']:
@@ -266,3 +288,202 @@ class RingerView(guiwidgets.FileView):
                 d[i]={'name': input[i]}
             dict['ringtone-index']=d
         return dict
+
+class ConvertDialog(wx.Dialog):
+
+    ID_CONVERT=wx.NewId()
+    ID_DELETE_BEFORE=wx.NewId()
+    ID_DELETE_AFTER=wx.NewId()
+    ID_PLAY=wx.NewId()
+    ID_STOP=wx.NewId()
+    ID_TIMER=wx.NewId()
+
+    def __init__(self, parent, file, convertinfo):
+        wx.Dialog.__init__(self, parent, title="Convert Audio File")
+        self.file=file
+        self.convertinfo=convertinfo
+        self.mp3file=common.gettempfilename("mp3")
+        self.workingmp3file=common.gettempfilename("mp3")
+        self.wavfile=common.gettempfilename("wav")
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        # convert bit
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Convert"), wx.VERTICAL)
+        bs.Add(wx.StaticText(self, -1, "Input File: "+file), 0, wx.ALL, 5)
+        gs=wx.FlexGridSizer(2, 4, 5, 5)
+        gs.Add(wx.StaticText(self, -1, "New Type"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.type=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["MP3"])
+        gs.Add(self.type, 0, wx.ALL|wx.EXPAND, 5)
+        gs.Add(wx.StaticText(self, -1, "Sample Rate (Hz)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.samplerate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["16000", "22050", "24000", "32000", "44100", "48000"])
+        gs.Add(self.samplerate, 0, wx.ALL|wx.EXPAND, 5)
+        gs.Add(wx.StaticText(self, -1, "Channels (Mono/Stereo)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.channels=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["1", "2"])
+        gs.Add(self.channels, 0, wx.ALL|wx.EXPAND, 5)
+        gs.Add(wx.StaticText(self, -1, "Bitrate (kbits per second)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.bitrate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=["8", "16", "24", "32", "40", "48", "56", "64", "80", "96", "112",
+                                                                                     "128", "144", "160", "192", "224", "256", "320"])
+        gs.Add(self.bitrate, 0, wx.ALL|wx.EXPAND, 5)
+        gs.AddGrowableCol(1, 1)
+        gs.AddGrowableCol(3, 1)
+        bs.Add(gs, 0, wx.EXPAND)
+
+        bs.Add(wx.Button(self, self.ID_CONVERT, "Convert"), 0, wx.ALIGN_RIGHT|wx.ALL, 5)
+
+        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+
+        # crop bit
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Crop"), wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Position"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.positionlabel=wx.StaticText(self, -1, "0                 ")
+        hbs.Add(self.positionlabel, 0, wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, "Duration"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.durationlabel=wx.StaticText(self, -1, "0                 ")
+        hbs.Add(self.durationlabel, 0, wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, "File length"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.lengthlabel=wx.StaticText(self, -1, "0                   ")
+        hbs.Add(self.lengthlabel, 0, wx.ALL, 5)
+        bs.Add(hbs, 0, wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.slider=wx.Slider(self, -1, 0, 0, 1)
+        hbs.Add(self.slider, 1, wx.EXPAND|wx.ALL, 5)
+        bs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.Button(self, self.ID_DELETE_BEFORE, "Del Before"), 0, wx.ALL, 5)
+        hbs.Add(wx.Button(self, self.ID_DELETE_AFTER,  "Del After"), 0, wx.ALL, 5)
+        hbs.Add(wx.Button(self, self.ID_STOP, "Stop"), 0, wx.ALL, 5)
+        hbs.Add(wx.Button(self, self.ID_PLAY, "Play"), 0, wx.ALL, 5)
+        bs.Add(hbs, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+
+        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+        # Fill out fields
+        if convertinfo.format!="MP3": raise common.ConversionNotSupported("Can only convert to MP3")
+        self.type.SetStringSelection(convertinfo.format)
+        self.channels.SetStringSelection(`convertinfo.channels`)
+        self.bitrate.SetStringSelection(`convertinfo.bitrate`)
+        self.samplerate.SetStringSelection(`convertinfo.samplerate`)
+
+        # Events
+        wx.EVT_BUTTON(self, self.ID_CONVERT, self.OnConvert)
+        wx.EVT_BUTTON(self, self.ID_PLAY, self.OnPlay)
+        wx.EVT_BUTTON(self, self.ID_STOP, self.OnStop)
+        wx.EVT_BUTTON(self, self.ID_DELETE_BEFORE, self.OnDeleteBefore)
+        wx.EVT_BUTTON(self, self.ID_DELETE_AFTER, self.OnDeleteAfter)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_TIMER(self, self.ID_TIMER, self.OnTimer)
+
+        wx.EVT_SCROLL_ENDSCROLL(self, self.OnUserSlider)
+        wx.EVT_SCROLL_THUMBTRACK(self, self.OnUserSlider)
+        wx.EVT_SCROLL_THUMBRELEASE(self, self.OnUserSlider)
+
+        # timers and sounds
+        self.sound=None
+        self.timer=wx.Timer(self, self.ID_TIMER)
+
+    def OnConvert(self, _):
+        try:
+            wx.BeginBusyCursor()
+            open(self.mp3file, "wb").write(conversions.converttomp3(self.file, int(self.bitrate.GetStringSelection()), int(self.samplerate.GetStringSelection()), int(self.channels.GetStringSelection())))
+            self.afi=fileinfo.getmp3fileinfo(self.mp3file)
+            self.beginframe=0
+            self.endframe=len(self.afi.frames)
+            self.UpdateCrop()
+        finally:
+            wx.EndBusyCursor()
+
+
+    def UpdateCrop(self):
+        frames=self.afi.frames
+        duration=sum([frames[frame].duration for frame in range(self.beginframe, self.endframe)])
+        self.durationlabel.SetLabel("%.1f secs" % (duration,))
+        length=sum([frames[frame].nextoffset-frames[frame].offset for frame in range(self.beginframe, self.endframe)])
+        self.lengthlabel.SetLabel(`length`)
+        self.positionlabel.SetLabel(`0`)
+        self.slider.SetRange(self.beginframe, self.endframe)
+        self.slider.SetValue(self.beginframe)
+                                    
+    def UpdatePosition(self, curval=None):
+        if curval is None: curval=self.slider.GetValue()
+        frames=self.afi.frames
+        duration=sum([frames[frame].duration for frame in range(self.beginframe, curval)])
+        self.positionlabel.SetLabel("%.1f secs" % (duration,))
+
+    def OnPlay(self,_):
+        self.OnStop()
+        frames=self.afi.frames
+        self.startpos=self.slider.GetValue()
+        offset=frames[self.startpos].offset
+        length=frames[self.endframe-1].nextoffset-offset
+        duration=sum([frames[frame].duration for frame in range(self.startpos, self.endframe)])
+        f=open(self.mp3file, "rb", 0)
+        f.seek(offset)
+        open(self.workingmp3file, "wb").write(f.read(length))
+        f.close()
+        conversions.convertmp3towav(self.workingmp3file, self.wavfile)
+        self.sound=wx.Sound(self.wavfile)
+        assert self.sound.IsOk()
+        res=self.sound.Play(wx.SOUND_ASYNC)
+        assert res
+        self.starttime=time.time()
+        self.endtime=self.starttime+duration
+        self.timer.Start(100, wx.TIMER_CONTINUOUS)
+        
+    def OnTimer(self,_):
+        now=time.time()
+        if now>self.endtime:
+            self.timer.Stop()
+            assert wx.Sound.IsPlaying()==False
+            self.slider.SetValue(self.endframe)
+            self.UpdatePosition(self.endframe)
+            return
+        # work out where the slider should go
+        newval=self.startpos+(now-self.starttime)/self.afi.frames[self.startpos].duration
+        self.slider.SetValue(newval)
+        self.UpdatePosition(newval)            
+
+
+    def OnStop(self, _=None):
+        self.timer.Stop()
+        if self.sound is not None:
+            self.sound.Stop()
+            self.sound=None
+        
+    def OnUserSlider(self, _):
+        self.OnStop()
+        wx.CallAfter(self.UpdatePosition)
+
+    def OnDeleteBefore(self, _):
+        self.OnStop()
+        self.beginframe=self.slider.GetValue()
+        self.UpdateCrop()
+
+    def OnDeleteAfter(self, _):
+        self.OnStop()
+        self.endframe=self.slider.GetValue()
+        self.UpdateCrop()
+        
+    def OnOk(self, evt):
+        self.OnStop()
+        # make new data
+        frames=self.afi.frames
+        offset=frames[self.beginframe].offset
+        length=frames[self.endframe-1].nextoffset-offset
+
+        f=open(self.mp3file, "rb", 0)
+        f.seek(offset)
+        self.newfiledata=f.read(length)
+        f.close()
+
+        # now remove files
+        for file in self.mp3file, self.workingmp3file, self.wavfile:
+            if os.path.exists(file):
+                os.remove(file)
+
+        # use normal handler to quit dialog
+        evt.Skip()
