@@ -1858,12 +1858,17 @@ class MyStatusBar(wxStatusBar):
         self.Reposition()
 
     def OnSize(self,_):
-        self.Reposition()
         self.sizechanged=True
 
     def OnIdle(self,_):
         if self.sizechanged:
-            self.Reposition()
+            try:
+                self.Reposition()
+            except:
+                # this works around a bug in wxPython (on Windows only)
+                # where we get a bogus exception.  See SF bug
+                # 873155 
+                pass
 
     def Reposition(self):
         rect=self.GetFieldRect(2)
