@@ -13,6 +13,7 @@
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
+import cStringIO
 import calendar
 import time
 
@@ -274,8 +275,6 @@ class CalendarLabel(wxWindow):
                -self.cells[row].GetPositionTuple()[1]
 
             
-            print x,y,w,h
-
             dc.DestroyClippingRegion()
             dc.SetClippingRegion(x,y,w,h)
             dc.SetPen(wxThePenList.FindOrCreatePen("BLACK", 3, wxSOLID))
@@ -306,7 +305,7 @@ class Calendar(wxPanel):
     def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE)
         sizer=RowColSizer()
-        self.upbutt=wxButton(self, self.ID_UP, "^")
+        self.upbutt=wxBitmapButton(self, self.ID_UP, getupbitmapBitmap())
         sizer.Add(self.upbutt, flag=wxEXPAND, row=0,col=0, colspan=8)
         self.year=wxButton(self, -1, "2003")
         sizer.Add(self.year, flag=wxEXPAND, row=1, col=0)
@@ -322,7 +321,7 @@ class Calendar(wxPanel):
         self.rows=[]
         for i in range(0, rows):
             self.rows.append( self.makerow(sizer, i+2) )
-        self.downbutt=wxButton(self, self.ID_DOWN, "V")
+        self.downbutt=wxBitmapButton(self, self.ID_DOWN, getdownbitmapBitmap())
         sizer.Add(self.downbutt, flag=wxEXPAND, row=2+rows, col=0, colspan=8)
         self.label=CalendarLabel(self, map(lambda x: x[0], self.rows))
         sizer.Add(self.label, flag=wxEXPAND, row=2, col=0, rowspan=self.numrows)
@@ -448,6 +447,44 @@ def normalizedate(year, month, day):
             day=day-num
     return year, month, day
             
+# Up and down bitmap icons
+
+def getupbitmapData():
+    return \
+'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00\x10\x08\x06\
+\x00\x00\x00w\x00}Y\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\
+\x00}IDATx\x9c\xbd\xd5K\x0e\xc0 \x08\x04P\xe0\x04\xdc\xff\x94\xdc\xa0\xdd6\
+\xad\xca\xf0)n\\\xa83/1FVU\xca\x0e3\xbbT\x95\xd3\x01D$\x95\xf2\xe7<\nx\x97V\
+\x10a\xc0\xae,\x8b\x08\x01\xbc\x92\x0c\x02\x06\xa0\xe1Q\x04\x04\x88\x86F\xf6\
+\xbb\x80\xec\xdd\xa2\xe7\x8e\x80\xea\x13C\xceo\x01\xd5r4g\t\xe8*G\xf2>\x80\
+\xeer/W\x90M\x7f"\xe4\xb48\x81\x90\xc9\xf2\x15\x82+\xdfq\xc7\xb8\x01;]o#\xdc\
+D \x03\x00\x00\x00\x00IEND\xaeB`\x82' 
+
+def getupbitmapBitmap():
+    return wxBitmapFromImage(getupbitmapImage())
+
+def getupbitmapImage():
+    stream = cStringIO.StringIO(getupbitmapData())
+    return wxImageFromStream(stream)
+
+def getdownbitmapData():
+    return \
+'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00\x10\x08\x06\
+\x00\x00\x00w\x00}Y\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\
+\x00\x80IDATx\x9c\xc5\xd3\xd1\r\x80 \x0c\x04\xd0B\x1c\xe0\xf6\x9f\xb2\x1b\
+\xe8\x97\t\x91R\xda\x02\x95/!r\xf7bj\x01@\x7f\xae\xeb}`\xe6;\xbb\x1c@\xa9\
+\xed&\xbb\x9c\x88\xa8J\x87Y\xe5\x1d \x03\xf1\xcd\xef\x00\'\x11R\xae\x088\x81\
+\x18\xe5\r\x01;\x11Z\x8e\n\xd8\x81\x98\xdd\x9f\x02V\x10\x96{&@\x04a}\xdf\x0c\
+\xf0\x84z\xb0.\x80%\xdc\xfb\xa5\xdc\x00\xad$2+!\x80T\x16\x1d\xd40\xa0-]\xf9U\
+\x1f\xf8\xca\t\xael-\x16\x86\x00\x00\x00\x00IEND\xaeB`\x82' 
+
+def getdownbitmapBitmap():
+    return wxBitmapFromImage(getdownbitmapImage())
+
+def getdownbitmapImage():
+    stream = cStringIO.StringIO(getdownbitmapData())
+    return wxImageFromStream(stream)
+
 
  
 
