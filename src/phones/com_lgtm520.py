@@ -5,7 +5,7 @@
 ### Copyright (C) 2003 Alan Gonzalez <agonzalez@yahoo.com>
 ###
 ### This software is under the Artistic license.
-### http://www.opensource.org/licenses/artistic-license.php
+### Please see the accompanying LICENSE file
 ###
 ### $Id$
 
