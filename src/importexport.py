@@ -373,7 +373,7 @@ class ImportDialog(wx.Dialog):
         if not self.needsupdate:
             return
         self.needsupdate=False
-        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.BeginBusyCursor()
         try:  # we need to ensure end busy
             
             wx.Yield() # so the cursor can be displayed
