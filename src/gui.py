@@ -774,8 +774,8 @@ class MainWindow(wxFrame):
         if self.HandleException(exception): return
         data.update(results)
         # call each widget to update fundamentals
-        for widget in self.calendar, self.wallpaper, self.ringerwidget, self.phonewidget:
-            widget.updatefundamentals(data)
+        # for widget in self.calendarwidget, self.wallpaperwidget, self.ringerwidget, self.phonewidget:
+        #    widget.updatefundamentals(data)
         # call convertors
         for f in convertors:
             f(data)
