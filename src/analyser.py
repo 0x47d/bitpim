@@ -20,6 +20,7 @@ import StringIO
 import common
 import prototypes
 
+import p_lg
 import p_lgvx4400
 import p_brew
 import p_lgtm520
@@ -165,7 +166,7 @@ class Analyser(wx.Frame):
                 if desc is None:
                     desc=""
                 else:
-                    desc=" - "+desc
+                    desc="      - "+desc
                 iscontainer=False
                 try:
                     iscontainer=field.iscontainer()
@@ -186,6 +187,8 @@ class Analyser(wx.Frame):
                         s+="%d 0x%x" % (v,v)
                     else:
                         s+=`v`
+                    if len(desc):
+                        s+=desc
                 node=self.tree.AppendItem(parent, s)
                 try:
                     self.tree.SetPyData(node, field.packetspan())
