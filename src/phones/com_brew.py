@@ -141,7 +141,7 @@ class BrewProtocol:
         self.log("Listing dir '"+dir+"'")
         
         # self.log("file listing 0x0b command")
-        for i in range(10000):
+        for i in xrange(10000):
             try:
                 req=p_brew.listfilerequest()
                 req.entrynumber=i
@@ -251,6 +251,56 @@ class BrewProtocol:
             self.raisecommsexception("Brew file read is incorrect size", common.CommsDataCorruption)
         return data
 
+    class DirCache:
+        """This is a class that lets you do various filesystem manipulations and
+        it remembers the data.  Typical usage would be if you make changes to
+        files (adding, removing, rewriting) and then have to keep checking if
+        files exist, add sizes etc.  This class saves the hassle of rereading
+        the directory every single time.  Note that it will only see changes
+        you make via this class.  If you go directly to the Brew class then
+        those won't be seen.
+        """
+        def __init__(self, target):
+            "@param target: where operations should be done after recording them here"
+            self.__target=target
+            self.__cache={}
+
+        def rmfile(self, filename):
+            res=self.__target.rmfile(filename)
+            node=self._getdirectory(brewdirname(filename))
+            if node is None: # we didn't have it
+                return
+            del node[brewbasename(filename)]
+            return res
+
+        def stat(self, filename):
+            node=self._getdirectory(brewdirname(filename), ensure=True)
+            return node.get(brewbasename(filename), None)
+
+        def writefile(self, filename, contents):
+            res=self.__target.writefile(filename, contents)
+            node=self._getdirectory(brewdirname(filename))
+            if node is None:
+                return
+            # we can't put the right date in since we have no idea
+            # what the timezone (or the time for that matter) on the
+            # phone is
+            stat=node.get(brewbasename(filename), {'name': filename, 'type': 'file', 'date': (0, "")})
+            stat['size']=len(contents)
+            node[brewbasename(filename)]=stat
+            return res
+
+        def _getdirectory(self, dirname, ensure=False):
+            if not ensure:
+                return self.__cache.get(dirname, None)
+            node=self.__cache.get(dirname, None)
+            if node is not None: return node
+            node={}
+            fs=self.__target.getfilesystem(dirname)
+            for filename in fs.keys():
+                node[brewbasename(filename)]=fs[filename]
+            self.__cache[dirname]=node
+            return node
 
     def _setmodebrew(self):
         req=p_brew.memoryconfigrequest()
@@ -473,6 +523,13 @@ def brewbasename(str):
     if str.rfind("/")>0:
         return str[str.rfind("/")+1:]
     return str
+
+def brewdirname(str):
+    "returns dirname of str"
+    if str.rfind("/")>0:
+        return str[:str.rfind("/")]
+    return str
+
 
 class SPURIOUSZERO(prototypes.BaseProtogenClass):
     """This is a special class used to consume the spurious zero in some p_brew.listfileresponse
