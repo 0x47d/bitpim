@@ -163,24 +163,22 @@ class GetPhoneDialog(wx.Dialog):
     def __init__(self, frame, title, id=-1):
         wx.Dialog.__init__(self, frame, id, title,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
-        gs=wx.FlexGridSizer(2+len(self.sources), 2+len(self.types),5 ,10)
+        gs=wx.FlexGridSizer(2+len(self.sources), 1+len(self.types),5 ,10)
         gs.AddGrowableCol(1)
         gs.AddMany( [
-            (wx.StaticText(self, -1, self.actions[0][0]), 0, wx.EXPAND),
-            (wx.StaticText(self, -1, "Source"), 0, wx.EXPAND)])
+            (wx.StaticText(self, -1, "Source"), 0, wx.EXPAND),])
 
         for pretty,_ in self.types:
-            gs.Add(wx.StaticText(self, -1, pretty), 0, wx.EXPAND)
+            gs.Add(wx.StaticText(self, -1, pretty), 0, wx.ALIGN_CENTRE)
 
 
         self.cb=[]
         self.rb=[]
 
         for desc, source in self.sources:
-            self.cb.append(wx.CheckBox(self, wx.NewId(), ""))
+            self.cb.append(wx.CheckBox(self, wx.NewId(), desc))
             wx.EVT_CHECKBOX(self, self.cb[-1].GetId(), self.DoOkStatus)
             gs.Add(self.cb[-1], 0, wx.EXPAND)
-            gs.Add(wx.StaticText(self,-1,desc), 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL) # align needed for gtk
             first=True
             for tdesc,tval in self.types:
                 if first:
