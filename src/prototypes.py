@@ -247,7 +247,8 @@ class STRING(BaseProtogenClass):
         @keyword terminator: (Default=0) The string terminator (or None).  If set there will
              always be a terminator when writing.  The terminator is not returned when getting
              the value.
-        @keyword pad: (Default=0) The padding byte if fixed length when writing
+        @keyword pad: (Default=0) The padding byte if fixed length when writing, or stripped off
+                       when reading
         @keyword sizeinbytes: (Optional) Set if fixed length.
              If not set, then the terminator will be used to find the end of strings on reading.
              If not set and the terminator is None, then reads will be entire rest of buffer.
@@ -318,11 +319,16 @@ class STRING(BaseProtogenClass):
             # fixed size
             self._value=buf.getnextbytes(self._sizeinbytes)
             if self._terminator is not None:
+                # using a terminator
                 pos=self._value.find(chr(self._terminator))
                 if pos>=0:
                     self._value=self._value[:pos]
                 elif self._raiseonunterminatedread:
                     raise NotTerminatedException()
+            elif self._pad is not None:
+                # else remove any padding
+                while len(self._value) and self._value[-1]==chr(self._pad):
+                    self._value=self._value[:-1]
         else:
             if self._terminator is None:
                 # read in entire rest of packet
