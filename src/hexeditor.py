@@ -18,12 +18,13 @@ class HexEditor(wx.ScrolledWindow):
 
     def __init__(self, id=-1, style=wx.WANTS_CHARS|wx.HSCROLL|wx.VSCROLL):
         wx.ScrolledWindow.__init__(self, id, style)
-        self.data="this is a test of this code to see how well it draws stuff"*19
+        self.data="this is a test of this \x03\xf7code to see \thow well it draws stuff"*7
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
         self.sethighlight(wx.NamedColour("BLACK"), wx.NamedColour("YELLOW"))
         self.setnormal(wx.NamedColour("BLACK"), wx.NamedColour("WHITE"))
         self.setfont(wx.TheFontList.FindOrCreateFont(10, wx.MODERN, wx.NORMAL, wx.NORMAL))
+        wx.EVT_SCROLLWIN(self, self.OnScrollWin)
         wx.EVT_PAINT(self, self.OnPaint)
 
     def sethighlight(self, foreground, background):
@@ -45,21 +46,32 @@ class HexEditor(wx.ScrolledWindow):
         if lines==0 or len(self.data)%16:
             lines+=1
         self.datalines=lines
+        lines+=1 # status line
         # fixed width
-        width=8+2+3*16+1+2+16
-        self.SetScrollbars(self.charwidth, self.charheight, width, lines)
+        self.widthinchars=8+2+3*16+1+2+16
+        self.SetScrollbars(self.charwidth, self.charheight, self.widthinchars, lines)
+
+    def _setnormal(self,dc):
+        dc.SetTextForeground(self.normal[0])
+        dc.SetTextBackground(self.normal[1])
+
+    def _setstatus(self,dc):
+        dc.SetTextForeground(self.normal[1])
+        dc.SetTextBackground(self.normal[0])
+        dc.SetBrush(wx.BLACK_BRUSH)
+        
 
     def OnDraw(self, dc):
         x,y,width,height=self.GetUpdateRegion().GetBox()
         xd,yd=self.GetViewStart()
-        x+=xd*self.charwidth
         y+=yd*self.charheight
+        st=0  # 0=normal, 1=highlight, 2=cursor
         dc.BeginDrawing()
-        for line in range(y/self.charheight, min(self.datalines,(y+height)/self.charheight+2)):
+        dc.SetFont(self.font)
+        for line in range(y/self.charheight, min(self.datalines,(y+height)/self.charheight+1)):
             # address
-            dc.SetTextForeground(self.normal[0])
-            dc.SetTextBackground(self.normal[1])
-            dc.SetFont(self.font)
+            self._setnormal(dc)
+            st=0
             dc.DrawText("%08X" % (line*16), 0, line*self.charheight)
             # bytes
             for i in range(16):
@@ -70,7 +82,11 @@ class HexEditor(wx.ScrolledWindow):
                 if not (ord(c)>=32 and string.printable.find(c)>=0):
                     c='.'
                 dc.DrawText(c, (10+(3*16)+1+i)*self.charwidth, line*self.charheight)
-                    
+                
+        self._setstatus(dc)
+        w,h=self.GetClientSizeTuple()
+        dc.DrawRectangle(0,h-self.charheight+yd*self.charheight,self.widthinchars*self.charwidth,self.charheight)
+        dc.DrawText("A test of stuff "+`yd`, 0, h-self.charheight+yd*self.charheight)
                 
         dc.EndDrawing()
 
@@ -78,6 +94,14 @@ class HexEditor(wx.ScrolledWindow):
         dc=wx.PaintDC(self)
         self.PrepareDC(dc)
         self.OnDraw(dc)
+
+    def OnScrollWin(self, event):
+        #
+        # w,h=self.GetClientSizeTuple()
+        # mousewheel scrolls by three lines
+        # self.RefreshRect((0,h-4*self.charheight,w,4*self.charheight))
+        self.Refresh()
+        event.Skip() # default event handlers now do scrolling etc
 
 if __name__=='__main__':
     class MainWindow(wx.Frame):
