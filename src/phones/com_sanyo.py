@@ -86,6 +86,31 @@ class SanyoPhonebook:
     #        pass
         return 0
         
+    def getmediaindices(self, results):
+        """Get all the media indices
+
+        @param results: places results in this dict
+        """
+        # Do all media types in one function to avoid having to scan through
+        # directories more than once
+        ringermedia={}
+        imagemedia={}
+
+        c=1
+        for name in self.builtinimages:
+            if name:
+                imagemedia[c]={'name': name, 'origin': 'builtin' }
+                print c,name
+            c+=1
+        results['wallpaper-index']=imagemedia
+        for name in self.builtinringtones:
+            if name:
+                imagemedia[c]={'name': name, 'origin': 'builtin' }
+                print c,name
+            c+=1
+        results['ringtone-index']=ringermedia
+        return
+        
     def getmediaindex(self, builtins, maps, results, key):
         """Gets the media (wallpaper/ringtone) index
 
@@ -275,10 +300,10 @@ class SanyoPhonebook:
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
 
-        self.getwallpaperindices(results)
-        self.getringtoneindices(results)
+        #self.getwallpaperindices(results)
+        #self.getringtoneindices(results)
+        self.getmediaindices(results)
         self.log("Fundamentals retrieved")
-        1
         return results
 
     def sanyosort(self, a, b):
