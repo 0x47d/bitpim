@@ -19,6 +19,13 @@ import sys
 import traceback
 import tempfile
 
+class FeatureNotAvailable(Exception):
+     """The device doesn't support the feature"""
+     def __init__(self, device, message="The device doesn't support the feature"):
+          Exception.__init__(self, "%s: %s" % (device, message))
+          self.device=device
+          self.message=message
+
 # generic comms exception and then various specialisations
 class CommsException(Exception):
      """Generic commmunications exception"""
