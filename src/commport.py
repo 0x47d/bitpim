@@ -190,21 +190,28 @@ class CommConnection:
 
     def sendatcommand(self, atcommand):
         print "sendatcommand: "+atcommand
+        
+        # Flush leftover characters
+        b=self.ser.inWaiting()
+        if b:
+            self.read(b,0)
+
         fullline="AT"+atcommand
-        self.write(atcommand+"\r\n")
+        self.write(fullline+"\r\n")
+        # Cache response
+        self.readatresponse()
+
         nextline=self.peekline()
         if nextline==fullline:
-            self.readline()  # Ignore echoed lines
-            return
+            self.readline()  # Skip echoed lines
+        nextline=self.peekline()
         if nextline=="OK":
             return "OK"
         if nextline=="ERROR":
             return "ERROR"
-        return
+        return ""
 
     def peekline(self):
-        print "Peekline:"
-        self.readahead=self.readsome()
         return self.getcleanline(peek=True)
 
     def getcleanline(self, peek=False):
@@ -215,23 +222,41 @@ class CommConnection:
         while sbuf[i]!='\n' and sbuf[i]!='\r':
             i+=1
         firstline=sbuf[0:i]
-        if peek:
+        if not peek:
             i+=1
             while i<len(sbuf):
                 if sbuf[i]!='\n' and sbuf[i]!='\r':
                     break
                 i+=1
             self.readahead=self.readahead[i:]
-        print "Getcleanline returning "+firstline
         return firstline
         
+    def readatresponse(self, log=True):
+        """Read until OK, ERROR or a timeout"""
+        self.readrequests+=1
+        res=""
+        while True:
+            b=self.ser.inWaiting()
+            if b:
+                res=res+self.read(b,0)
+                if res.find("OK\r")>=0 or res.find("ERROR\r")>=0:
+                    break
+                continue
+            r=self.read(1,0)
+            if len(r):
+                res=res+r
+                continue
+            break
+        if len(res)==0:
+            raise CommTimeout()
+        self.readbytes+=len(res)
+        if log:
+            self.logdata("Reading remaining data", res)
+        self.readahead=res
+        return
+
     def readline(self):
-        print "In readline"
-        if(self.readahead):
-            return getcleanline(peek=False)
-        self.readahead=self.readsome()
-        print "readline: "+self.readahead
-        return getcleanline(peek=False)
+        return self.getcleanline(peek=False)
         
     def _isbrokendriver(self, e):
         if pywintypes is None or not isinstance(e, pywintypes.error) or e[0]!=121:
