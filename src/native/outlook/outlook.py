@@ -15,7 +15,7 @@
 
 import win32com.client
 
-from pywintypes import com_error
+import pywintypes
 
 # This is the complete list of field names available
 ##    Account
@@ -194,12 +194,32 @@ def _getcontacts(folder, keys):
     return records
 
 def getcontacts(folder):
-    """Returns a list of lists (same as output of DSV) with the first row
-    being a header and the rest being each entry from Outlook contacts"""
-    
-    keys=["EntryID", "Account", "WebPage", "OutlookInternalVersion", "OutlookVersion"]
+    """Returns a list of dicts"""
 
-    return _getcontacts(folder, keys)
+    res=[]
+    keys=None
+    for oc in range(folder.Items.Count):
+        contact=folder.Items.Item(oc+1)
+        if contact.Class == win32com.client.constants.olContact:
+            record={}
+            if keys is None:
+                keys=[]
+                for key in contact._prop_map_get_:
+                    # work out if it is a property or a method (last field is None for properties)
+                    if contact._prop_map_get_[key][-1] is None:
+                        keys.append(key)
+            for key in keys:
+                v=getattr(contact, key)
+                if v not in (None, "", "\x00\x00"):
+                    if isinstance(v, pywintypes.TimeType): # convert from com time
+                        try:
+                            v=int(v)
+                        except ValueError:
+                            # illegal time value
+                            continue
+                    record[key]=v
+            res.append(record)
+    return res
 
 def getfolderfromid(id, default=False):
     """Returns a folder object from the supplied id
@@ -209,7 +229,7 @@ def getfolderfromid(id, default=False):
     onMAPI = getmapinamespace()
     try:
         folder=onMAPI.GetFolderFromID(id)
-    except com_error,e:
+    except pywintypes.com_error,e:
         folder=None
         
     # ::TODO:: should be supplied default type (contacts, calendar etc)
@@ -257,5 +277,59 @@ if __name__=='__main__':
 
     res=onMAPI.PickFolder()
     print res
-    # print _getkeys(res)
-    print getcontacts(res)
+
+    contacts=getcontacts(res)
+    keys={}
+    for item in contacts:
+        for k in item.keys():
+            keys[k]=1
+    keys=keys.keys()
+    keys.sort()
+
+    import wx
+    import wx.grid
+
+    app=wx.PySimpleApp()
+    import wx.lib.colourdb
+    wx.lib.colourdb.updateColourDB()
+
+    
+    f=wx.Frame(None, -1, "Outlookinfo")
+    g=wx.grid.Grid(f, -1)
+    g.CreateGrid(len(contacts)+1,len(keys))
+    g.SetColLabelSize(0)
+    g.SetRowLabelSize(0)
+    g.SetMargins(1,0)
+    g.BeginBatch()
+    attr=wx.grid.GridCellAttr()
+    attr.SetBackgroundColour(wx.GREEN)
+    attr.SetFont(wx.Font(10,wx.SWISS, wx.NORMAL, wx.BOLD))
+    attr.SetReadOnly(True)
+    for k in range(len(keys)):
+        g.SetCellValue(0, k, keys[k])
+    g.SetRowAttr(0,attr)
+    # row attributes
+    oddattr=wx.grid.GridCellAttr()
+    oddattr.SetBackgroundColour("OLDLACE")
+    oddattr.SetReadOnly(True)
+    evenattr=wx.grid.GridCellAttr()
+    evenattr.SetBackgroundColour("ALICE BLUE")
+    evenattr.SetReadOnly(True)
+    for row in range(len(contacts)):
+        item=contacts[row]
+        for col in range(len(keys)):
+            key=keys[col]
+            v=item.get(key, "")
+            try:
+                v=str(v)
+            except UnicodeEncodeError:
+                v=v.encode("ascii", 'xmlcharrefreplace')
+            g.SetCellValue(row+1, col, v)
+        g.SetRowAttr(row+1, (evenattr,oddattr)[row%2])
+
+    g.AutoSizeColumns()
+    g.AutoSizeRows()
+    g.EndBatch()
+
+    f.Show(True)
+    app.MainLoop()

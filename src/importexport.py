@@ -386,19 +386,18 @@ class ImportDialog(wx.Dialog):
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
-                s=str(self.data[row][col])
+                v=self.data[row][col]
+                try:
+                    s=str(v)
+                except UnicodeEncodeError:
+                    s=v.encode("ascii", 'xmlcharrefreplace')
                 if len(s):
                     self.preview.SetCellValue(row+1, col, s)
-            if row%2:
-                self.preview.SetRowAttr(row+1, oddattr)
-            else:
-                self.preview.SetRowAttr(row+1, evenattr)
+            self.preview.SetRowAttr(row+1, (evenattr,oddattr)[row%2])
         self.preview.AutoSizeColumns()
         self.preview.AutoSizeRows()
         self.preview.EndBatch()
 
-
-      
 class ImportCSVDialog(ImportDialog):
 
     def __init__(self, filename, parent, id, title):
@@ -646,8 +645,30 @@ class ImportOutlookDialog(ImportDialog):
         # reread here
 
     def ReReadData(self):
-        self.columns=["One", "Two", "Three", "Four", "Five"]
-        self.data=self.outlook.getcontacts(self.folder)
+        print "b4"
+        items=self.outlook.getcontacts(self.folder)
+        print "after"
+        # work out what keys are actually present
+        keys={}
+        for item in items:
+            for k in item.keys():
+                keys[k]=1
+        keys=keys.keys()
+        keys.sort()
+        self.columns=keys
+
+        # build up data
+        self.data=[]
+        for item in items:
+            row=[]
+            for k in keys:
+                if k=='Email1EntryID':
+                    print "email1id",`item.get(k, None)`
+                v=item.get(k, "")
+                if not isinstance(v, (str,unicode)):
+                    v=`v`
+                row.append(v)
+            self.data.append(row)
 
 def OnFileImportCSV(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
