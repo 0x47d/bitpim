@@ -1476,13 +1476,13 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
     """
 
     # Get screen size, scale according to percentage supplied
-    screenSize = wx.GetDisplaySize()
+    screenSize = wx.GetClientDisplayRect()
     if (aspect >= 1):
-        newWidth = screenSize.x * abs(screenpct) / 100
-        newHeight = screenSize.y * abs(screenpct) / aspect / 100
+        newWidth = screenSize.width * abs(screenpct) / 100
+        newHeight = screenSize.height * abs(screenpct) / aspect / 100
     else:
-        newWidth = screenSize.x * abs(screenpct) * aspect / 100
-        newHeight = screenSize.y * abs(screenpct) / 100
+        newWidth = screenSize.width * abs(screenpct) * aspect / 100
+        newHeight = screenSize.height * abs(screenpct) / 100
 
     if screenpct<=0:
         rs_width,rs_height=window.GetSizeTuple()
@@ -1505,26 +1505,25 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
         rs_width = newWidth
 
     # Make sure window is no larger than about screen size
-    # (offset of 50 for menubar on the Mac (others?))
     #
     # determine ratio of original oversized window so we keep the ratio if we resize...
     rs_aspect = rs_width/rs_height
     if rs_aspect >= 1:
-        if rs_width > screenSize.x:
-            rs_width = screenSize.x
-        if rs_height > (screenSize.y - 50):
-            rs_height = (screenSize.y / rs_aspect) - 50
+        if rs_width > screenSize.width:
+            rs_width = screenSize.width
+        if rs_height > (screenSize.height):
+            rs_height = (screenSize.height / rs_aspect) - screenSize.y 
     else:
-        if rs_width > screenSize.x:
-            rs_width = screenSize.x * rs_aspect
-        if rs_height > screenSize.y - 50:
-            rs_height = screenSize.y - 50
+        if rs_width > screenSize.width:
+            rs_width = screenSize.width * rs_aspect
+        if rs_height > screenSize.height - screenSize.y:
+            rs_height = screenSize.height - screenSize.y
 
     # Off the screen?  Just pull it back a little bit so it's visible....
-    if rs_x!=unconfigured and rs_x > screenSize.x:
-        rs_x = screenSize.x - 50
-    if rs_y!=unconfigured and rs_y > screenSize.y:
-        rs_y = screenSize.y - 50
+    if rs_x!=unconfigured and rs_x > screenSize.width:
+        rs_x = screenSize.width - 50
+    if rs_y!=unconfigured and rs_y > screenSize.height:
+        rs_y = screenSize.height - 50
 
     if screenpct<=0 and (rs_width,rs_height)==window.GetSizeTuple():
         # set position only, and no need to resize
@@ -1535,7 +1534,6 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
             window.SetSize(wx.Size(rs_width, rs_height))
         else:
             window.SetDimensions(rs_x, rs_y, rs_width, rs_height)
-
 
 def save_size(confobj, confname, myRect):
     x = myRect.x
