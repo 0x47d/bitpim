@@ -140,10 +140,9 @@ class CalendarDataObject(database.basedataobject):
                                   'suppressed': ['date'],
                                   'categories': ['category'] })
     def __init__(self, data=None):
-        if data is None:
+        if data is None or not isinstance(data, CalendarEntry):
             # empty data, do nothing
             return
-        assert isinstance(data, CalendarEntry), 'data must be a CaledarEntry object'
         self.update(data.get_db_dict())
 
 calendarobjectfactory=database.dataobjectfactory(CalendarDataObject)
@@ -321,6 +320,8 @@ class RepeatEntry(object):
     def add_suppressed(self, y, m, d):
         self.__suppressed.append(bptime.BPTime((y, m, d)))
         print 'suppressed: ', self.__suppressed
+    def get_suppressed_list(self):
+        return [x.date_str() for x in self.__suppressed]
     suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
 
 #-------------------------------------------------------------------------------
@@ -419,13 +420,13 @@ class CalendarEntry(object):
     def __get_description(self):
         return self.__data.get('description', '')
     def __set_description(self, desc):
-        self.__set_or_del('description', desc, (''))
+        self.__set_or_del('description', desc, ('',))
     description=property(fget=__get_description, fset=__set_description)
 
     def __get_location(self):
         return self.__data.get('location', '')
     def __set_location(self, location):
-        self.__set_or_del('location', location, (''))
+        self.__set_or_del('location', location, ('',))
     location=property(fget=__get_location, fset=__set_location)
 
     def __get_priority(self):
@@ -488,13 +489,13 @@ class CalendarEntry(object):
     def __get_notes(self):
         return self.__data.get('notes', '')
     def __set_notes(self, s):
-        self.__set_or_del('notes', s, (''))
+        self.__set_or_del('notes', s, ('',))
     notes=property(fget=__get_notes, fset=__set_notes)
 
     def __get_categories(self):
         return self.__data.get('categories', [])
     def __set_categories(self, s):
-        self.__set_or_del('categories', s,([]))
+        self.__set_or_del('categories', s,([],))
         if s==[] and self.__data.has_key('categories'):
             del self.__data['categories']
     categories=property(fget=__get_categories, fset=__set_categories)
@@ -502,13 +503,13 @@ class CalendarEntry(object):
     def __get_ringtone(self):
         return self.__data.get('ringtone', '')
     def __set_ringtone(self, rt):
-        self.__set_or_del('ringtone', rt, (''))
+        self.__set_or_del('ringtone', rt, ('',))
     ringtone=property(fget=__get_ringtone, fset=__set_ringtone)
 
     def __get_wallpaper(self):
-        return self.__data.get('wallpaper', '')
+        return self.__data.get('wallpaper', '',)
     def __set_wallpaper(self, wp):
-        self.__set_or_del('wallpaper', wp, (''))
+        self.__set_or_del('wallpaper', wp, ('',))
     wallpaper=property(fget=__get_wallpaper, fset=__set_wallpaper)
 
     # we use two random numbers to generate the serials.  _persistrandom

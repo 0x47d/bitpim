@@ -70,6 +70,15 @@ class BPTime:
             s+='T%02d%02d'%(self.__time.hour, self.__time.minute)
         return s
 
+    def date_str(self):
+        s=''
+        if self.__date is None:
+            s=''
+        else:
+            s='%04d-%02d-%02d'%(self.__date.year, self.__date.month,
+                                self.__date.day)
+        return s
+
     def get(self):
         if self.__date is None:
             t=(0, 0, 0)
