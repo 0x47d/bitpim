@@ -507,23 +507,11 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_HELPTOUR, self.OnHelpTour)
         EVT_CLOSE(self, self.OnClose)
 
-        ### Lets go visible
-        self.Show()
-
         ### Double check our size is meaningful, and make bigger
         ### if necessary (especially needed on Mac and Linux)
         if min(self.GetSize())<250:
             self.SetSize( (640, 480) )
 
-        ### remove splash screen if there is one
-        global thesplashscreen
-        if thesplashscreen is not None:
-            wxSafeYield()
-            try:
-		# on Linux this is often already deleted and generates an exception
-                thesplashscreen.Show(False)
-            except:
-                pass
 
         # Show tour on first use
         if self.config.ReadInt("firstrun", True):
@@ -595,6 +583,20 @@ class MainWindow(wxFrame):
             self.OnNotebookPageChanged()
         else:
             self.nb.SetSelection(sel)
+
+        ### Lets go visible
+        self.Show()
+
+        ### remove splash screen if there is one
+        global thesplashscreen
+        if thesplashscreen is not None:
+            wxSafeYield()
+            try:
+		# on Linux this is often already deleted and generates an exception
+                thesplashscreen.Show(False)
+            except:
+                pass
+            thesplashscreen=None
 
 
     def OnExit(self,_=None):
