@@ -703,11 +703,11 @@ class Profile(com_phone.Profile):
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
     MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="bmp"
     
     MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     
     # which usb ids correspond to us
     usbids_straight=( ( 0x1004, 0x6000, 2), )# VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface

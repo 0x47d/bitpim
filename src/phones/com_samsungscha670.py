@@ -711,10 +711,10 @@ class Profile(com_samsung.Profile):
     WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=128
     MAX_WALLPAPER_BASENAME_LENGTH=17
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="bmp"
     MAX_RINGTONE_BASENAME_LENGTH=17
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
 
     def __init__(self):
         com_samsung.Profile.__init__(self)
