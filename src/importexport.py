@@ -51,6 +51,8 @@ def GetPhonebookImports():
         pass
     # Qtopia Desktop - always possible
     res.append( ("Qtopia Desktop...", "Import Qtopia Desktop contacts for the phonebook", OnFileImportQtopiaDesktopContacts) )
+    # eGroupware - always possible
+    res.append( ("eGroupware...", "Import eGroupware contacts for the phonebook", OnFileImporteGroupwareContacts) )
     
     return res
     
@@ -1363,6 +1365,26 @@ class ImportQtopiaDesktopDialog(ImportDialog):
         self.origdata=self.data
         self.origcolumns=self.columns
 
+class ImporteGroupwareDialog(ImportDialog):
+    
+    def __init__(self, parent, id, title, module):
+        self.headerrowiseditable=False
+        self.module=module
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing eGroupware Contacts..</body></html>' % (bg.Red(), bg.Green(), bg.Blue()), \
+                (600,30)
+
+    def getcontrols(self, vbs):
+        # need url, username, password and domain fields
+        pass
+
+    def ReReadData(self):
+        # could pass in category limits ...
+        pass
 
 
 
@@ -1428,6 +1450,16 @@ def OnFileImportOutlookContacts(parent):
 def OnFileImportEvolutionContacts(parent):
     import native.evolution
     dlg=ImportEvolutionDialog(parent, -1, "Import Evolution Contacts", native.evolution)
+    data=None
+    if dlg.ShowModal()==wx.ID_OK:
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
+    if data is not None:
+        parent.phonewidget.importdata(data, merge=True)
+
+def OnFileImporteGroupwareContacts(parent):
+    import native.egroupware
+    dlg=ImporteGroupwareDialog(parent, -1, "Import eGroupware Contacts", native.egroupware)
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
