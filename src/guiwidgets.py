@@ -1004,12 +1004,8 @@ class FileView(wx.Panel):
         if self.item_selection_brush is None:
             self.item_selection_brush=wx.TheBrushList.FindOrCreateBrush("MEDIUMPURPLE2", wx.SOLID)
             self.item_selection_pen=wx.ThePenList.FindOrCreatePen("MEDIUMPURPLE2", 1, wx.SOLID)
-            if guihelper.IsMac():
-                f1=wx.TheFontList.FindOrCreateFont(10, wx.SWISS, wx.NORMAL, wx.BOLD)
-                f2=wx.TheFontList.FindOrCreateFont(10, wx.SWISS, wx.NORMAL, wx.NORMAL)
-            else:
-                f1=wx.TheFontList.FindOrCreateFont(8, wx.SWISS, wx.NORMAL, wx.BOLD)
-                f2=wx.TheFontList.FindOrCreateFont(8, wx.SWISS, wx.NORMAL, wx.NORMAL)
+            f1=wx.TheFontList.FindOrCreateFont(10, wx.SWISS, wx.NORMAL, wx.BOLD)
+            f2=wx.TheFontList.FindOrCreateFont(10, wx.SWISS, wx.NORMAL, wx.NORMAL)
             self.item_line_font=[f1, f2, f2, f2]
             dc=wx.MemoryDC()
             dc.SelectObject(wx.EmptyBitmap(100,100))
