@@ -13,6 +13,7 @@ import com_brew
 import com_phone
 import p_lg
 import prototypes
+import common
 
 class LGPhonebook:
 
