@@ -147,11 +147,23 @@ class WallpaperView(guiwidgets.FileView):
                     self.modified=True
                 continue
             
-            width=min(image.GetWidth(), self.usewidth)
-            height=min(image.GetHeight(), self.useheight)
-            img=image.GetSubImage(wx.Rect(0,0,width,height))
+            width=image.GetWidth()
+            height=image.GetHeight()
+            img=image
             if width!=self.usewidth or height!=self.useheight:
-                bitmap=ScaleImageIntoBitmap(img, self.usewidth, self.useheight, bgcolor=None)
+                if guihelper.IsMSWindows():
+                    bg=None # transparent
+                elif guihelper.IsGtk():
+                    # we can't use transparent as the list control gets very confused on Linux
+                    # it also returns background as grey and foreground as black even though
+                    # the window is drawn with a white background.  So we give up and hard code
+                    # white
+                    bg="ffffff"
+                elif guihelper.IsMac():
+                    # use background colour
+                    bg=self.GetBackgroundColour()
+                    bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
+                bitmap=ScaleImageIntoBitmap(img, self.usewidth, self.useheight, bgcolor=bg)
             else:
                 bitmap=img.ConvertToBitmap()
             pos=-1
