@@ -554,8 +554,9 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
         menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Checking for any BitPim Update")
+        if version.vendor=='official':
+            menu.AppendSeparator()
+            menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Checking for any BitPim Update")
         if guihelper.IsMac():
             wx.App_SetMacAboutMenuItemId(guihelper.ID_HELPABOUT)
             menu.Append(guihelper.ID_HELPABOUT, "&About BitPim", "Display program information")

@@ -93,7 +93,14 @@ class BitPimUpdate(object):
     latest_version=property(fget=__get_latest_version)
 
     def __get_node_value(self, node, name):
-        return node.getElementsByTagName(name)[0].firstChild.data
+        try:
+            return node.getElementsByTagName(name)[0].firstChild.data
+        except IndexError:
+            # the tag does not exist
+            return None
+        except:
+            if __debug__: raise
+            return None
 
     __default_url='http://www.bitpim.org/updates.xml'
     def get_update_info(self, url=__default_url):
@@ -210,8 +217,7 @@ def check_update(update_url=None, current_version=None,
             platform='mac'
         else:
             raise ValueError, 'Invalid platform'
-    if not len(flavor) and hasattr(version, 'flavor'):
-        flavor=version.flavor
+##    flavor=version.vendor
     # retrieve and parse update info
     print 'Checking update for BitPim ', current_version, ' running on ', \
           platform, '-', flavor
