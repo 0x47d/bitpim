@@ -12,7 +12,6 @@
 import common
 import commport
 import copy
-import time
 
 class BrewCommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -286,7 +285,8 @@ class Phone:
                 entry['alarm']=None # no alarm set
             else:
                 entry['alarm']=hour*60+min
-            entry['changeserial']=readlsb(data[pos+0x12:pos+0x14])
+            entry['changeserial']=readlsb(data[pos+0x12:pos+0x13])
+            entry['snoozedelay']=readlsb(data[pos+0x13:pos+0x14])
             entry['ringtone']=ord(data[pos+0x14])
             entry['description']=readstring(data[pos+0x15:pos+0x3d])
             res[pos]=entry
@@ -350,7 +350,9 @@ class Phone:
             data+=makelsb(hour,1)
             # changeserial
             assert len(data)-pos==0x12
-            data+=makelsb(entry['changeserial'], 2)
+            data+=makelsb(entry['changeserial'], 1)
+            # snoozedelay
+            data+=makelsb(entry['snoozedelay'], 1)
             # ringtone
             assert len(data)-pos==0x14
             data+=makelsb(entry['ringtone'], 1)
