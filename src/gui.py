@@ -825,6 +825,7 @@ class MainWindow(wx.Frame):
         else:
             dlg=phoneinfo.PhoneInfoDialog(self, phone_info)
         dlg.ShowModal()
+        dlg.Destroy()
 
     def SetVersionsStatus(self):
         current_v=version.version
