@@ -6,6 +6,9 @@
 #include "pywab.h"
 
 char *errorstring=NULL;
+ULONG errorcode=0;
+
+static HMODULE themodule;
 
 static void errorme(HRESULT hr, const char *format, ...)
 {
@@ -16,7 +19,7 @@ static void errorme(HRESULT hr, const char *format, ...)
   va_end(arglist);
 
   LPSTR sysmsg=NULL;
-
+  errorcode=hr;
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 		FORMAT_MESSAGE_FROM_SYSTEM | 
 		FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -89,6 +92,7 @@ wabmodule* Initialize(bool enableprofiles, const char *filename)
 	errorme(0, "Failed to load WAB library %s", loadeddllname);
 	return NULL;
       }
+    themodule=hModule;
   }
 
   // get the entry point 
