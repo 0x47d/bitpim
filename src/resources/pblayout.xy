@@ -2,6 +2,8 @@
 <head></head>
 <body bgcolor="#cdefab">
 
+<py-open>if len(entry):</py-open>
+
 <table ${styles['table']}>
 
 <!-- Picture Ringtone Name Category row -->
@@ -106,6 +108,8 @@ alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
 </p>
 <py-close/>
 </table><br>
+<py-close/>
+
 <py-close/>
 
 </body>
