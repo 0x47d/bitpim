@@ -504,7 +504,16 @@ class MainWindow(wxFrame):
         todo=[]
         funcscb=[]
         ### Calendar
-        # pass
+        v=dlg.GetCalendarSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=True
+            if v==dlg.OVERWRITE: merge=False
+            self.calendarwidget.getdata(data)
+            todo.append( (self.wt.writecalendar, "Calendar", merge) )
+            # writing will modify data (especially index) so
+            # we repopulate on return
+            funcscb.append( self.calendarwidget.populatefs )
+            funcscb.append( self.calendarwidget.populate )        
         ### Wallpaper
         v=dlg.GetWallpaperSetting()
         if v!=dlg.NOTREQUESTED:
@@ -551,10 +560,12 @@ class MainWindow(wxFrame):
         self.phonewidget.getfromfs(results)
         self.wallpaperwidget.getfromfs(results)
         self.ringerwidget.getfromfs(results)
+        self.calendarwidget.getfromfs(results)
         # update controls
         self.phonewidget.populate(results)
         self.wallpaperwidget.populate(results)
         self.ringerwidget.populate(results)
+        self.calendarwidget.populate(results)
 
         
     # deal with configuring the phone (commport)
