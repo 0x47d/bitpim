@@ -7,18 +7,25 @@
 ###
 ### $Id$
 
-"""Talk to the Sanyo SCP-7300 (RL2000) cell phone"""
+"""Talk to the Sanyo SCP-7300 (RL2000) cell phone
+
+Reports are that the 7300 can be written to with the 5500 bitpim code, so
+this module simply inhereits the 550 code.  The inheritance will likely
+be reversed as media features are added.  The 5500 has camera still and video
+features, while the 7300 does not have a camera.
+"""
 
 # my modules
 import common
 import p_sanyo7300
+import p_com_5500
 import com_brew
 import com_phone
 import com_sanyo
 import prototypes
 
 
-class Phone(com_sanyo.Phone):
+class Phone(com_sanyo5500.Phone):
     "Talk to the Sanyo SCP-7300 cell phone"
 
     desc="SCP-7300"
@@ -38,21 +45,13 @@ class Phone(com_sanyo.Phone):
     calendar_defaultringtone=0
 
     def __init__(self, logtarget, commport):
-        com_sanyo.Phone.__init__(self, logtarget, commport)
+        com_sanyo5500.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-    def savecalendar(self, dict, merge):
-        req=self.protocolclass.beginendupdaterequest()
-        req.beginend=1 # Start update
-        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
-
-        self.writewait()
-        result = com_sanyo.Phone.savecalendar(self, dict, merge)
-
-class Profile(com_sanyo.Profile):
+class Profile(com_sanyo5500.Profile):
 
     protocolclass=p_sanyo7300
     serialsname='scp7300'
 
     def __init__(self):
-        com_sanyo.Profile.__init__(self)
+        com_sanyo5500.Profile.__init__(self)
