@@ -662,10 +662,13 @@ class MainWindow(wxFrame):
         # phonebook
         if results['sync'].has_key('phonebook'):
             v=results['sync'].has_key('phonebook')
-            if v=='MERGE': raise Exception("Not implemented")
-            self.phonewidget.clear()
-            self.phonewidget.populatefs(results)
-            self.phonewidget.populate(results)
+
+            if v=='MERGE': 
+                merge=True
+            else:
+                merge=False
+            self.phonewidget.importdata(results['phonebook'], merge)
+                
         # wallpaper
         if results['sync'].has_key('wallpaper'):
             v=results['sync'].has_key('wallpaper')

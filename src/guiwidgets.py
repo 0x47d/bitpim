@@ -130,7 +130,7 @@ class GetPhoneDialog(wxDialog):
         gs.AddMany( [
             (wxStaticText(self, -1, "Get"), 0, wxEXPAND),
             (wxStaticText(self, -1, "Type"), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Add"), 0, wxEXPAND),
+            (wxStaticText(self, -1, "Merge"), 0, wxEXPAND),
             (wxStaticText(self, -1, "Replace"), 0, wxEXPAND)
             ])
         self.cb=[]
@@ -158,6 +158,10 @@ class GetPhoneDialog(wxDialog):
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
+
+        # merge is supported for phonebook
+        self.rb[0][0].Enable(True)
+        self.rb[0][0].SetValue(True) # and set to true by default
 
         EVT_BUTTON(self, wxID_HELP, self.OnHelp)
 
@@ -191,6 +195,8 @@ class SendPhoneDialog(GetPhoneDialog):
         for i in self.cb:
             i.SetValue(False)
         # We do support merge for wallpaper and ringtone
+        # but not phonebook
+        self.rb[0][0].Enable(False)
         self.rb[2][0].Enable(True)
         self.rb[3][0].Enable(True)
         
