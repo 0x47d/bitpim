@@ -3,3 +3,5 @@ build
 dist
 bitpim-out.iss
 i386
+apidoc
+check.out
