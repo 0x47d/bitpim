@@ -557,7 +557,7 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
     def writetobuffer(self, buf):
         raise NotImplementedError()
 
-    def packetsize(self, buf):
+    def packetsize(self):
          raise NotImplementedError()
 
     def getvalue(self):
