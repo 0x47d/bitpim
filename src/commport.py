@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This software is under the Artistic license.
 ### Please see the accompanying LICENSE file
@@ -283,6 +283,9 @@ class _usbdevicewrapper:
 
     def read(self, numchars=1):
         return self.dev.read(numchars, self.timeout)
+
+    def flushInput(self):
+        self.dev.resetep()
     
     def write(self, data):
         self.dev.write(data, self.timeout)
