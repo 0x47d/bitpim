@@ -372,8 +372,30 @@ class ImportDialog(wx.Dialog):
             count+=1
         return res
 
+    def GetExtractCategoriesFunction(self):
+        res=""
+        for col,name in enumerate(self.columns):
+            if name=="Categories":
+                res+="_getpreviewformatted(row[%d], %s).split(';') + " % (col, `name`)
+            elif name=="Category":
+                res+="_getpreviewformatted(row[%d], %s) + " % (col, `name`)
+        res+="[]"
+        fn=compile(res, "_GetExtractCategoriesFunction_", 'eval')
+        return lambda row: eval(fn, globals(), {'row': row})
+
+
     def OnCategories(self, _):
-        pass
+        # find all categories in current data
+        catfn=self.GetExtractCategoriesFunction()
+        cats=[]
+        for row in self.data:
+            for c in catfn(row):
+                if c not in cats:
+                    cats.append(c)
+        cats.sort()
+        if len(cats) and cats[0]=="":
+            cats=cats[1:]
+        
     
     def UpdateData(self):
         "Actually update the preview data"
