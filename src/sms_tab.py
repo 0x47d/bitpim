@@ -161,9 +161,11 @@ class FolderPage(wx.Panel):
             self.__item_info.Clear()
             self.__item_text.Set(None)
             return
+        entry=self.__data.get(k, None)
+        if entry is None:
+            return
         # there're data, first enable the widgets
         self.__item_info.Enable(True)
-        entry=self.__data[k]
         # set the general detail
         self.__item_info.Set(entry)
         self.__item_text.Set({'memo': entry.text})
