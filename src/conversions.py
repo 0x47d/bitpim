@@ -19,7 +19,7 @@ import common
 
 helperdir=sys.path[0]
 if os.path.isfile(helperdir):
-    helperdir=os.path.dirnamer(helperdir)
+    helperdir=os.path.dirname(helperdir)
 helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
 
 osext={'win32': '.exe',
@@ -183,7 +183,11 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     wavfile=common.gettempfilename("wav")
     mp3file=common.gettempfilename("mp3")
     try:
+        try: os.remove(shortfilename(wavfile))
+        except OSError: pass
         run(ffmpeg, "-i", shortfilename(inputfilename), shortfilename(wavfile))
+        try: os.remove(shortfilename(mp3file))
+        except OSError: pass
         run(ffmpeg, "-i", wavfile, "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
         return open(mp3file, "rb").read()
     finally:
@@ -194,4 +198,7 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
 
 def convertmp3towav(mp3filename, wavfilename):
     ffmpeg=gethelperbinary("ffmpeg")
+    # ffmpeg queries about overwrite - grrr
+    try: os.remove(shortfilename(wavfilename))
+    except OSError: pass
     run(ffmpeg, "-i", shortfilename(mp3filename), shortfilename(wavfilename))
