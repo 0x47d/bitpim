@@ -15,13 +15,12 @@ important first, with each item in the list being a dict.
 
 names:
 
-   - title
+   - title      ??Job title or salutation??
    - first
    - middle
    - last
    - full       You should specify the fullname or the 4 above
-   - nickname   ??what to do with this - probably should make it a second
-                names entry??
+   - nickname   
 
 categories:
 
@@ -30,15 +29,28 @@ categories:
 emails:
 
   - email       Email address
+  - type        (optional) 'home' or 'business'
 
 urls:
 
   - url         URL
+  - type        (optional) 'home' or 'business'
 
 ringtones:
 
   - ringtone    Name of a ringtone
   - use         'call', 'message'
+
+addresses:
+
+  - type        'home' or 'business'
+  - company     (only for type of 'business')
+  - street      Street part of address
+  - street2     Second line of street address
+  - city
+  - state
+  - postalcode
+  - country     Can also be the region
 
 wallpapers:
 
@@ -56,7 +68,8 @@ memos:
 numbers:
 
   - number     Phone number as ascii string
-  - type       'home', 'office', 'cell', 'fax', 'pager', 'none'  (can be followed with a digit >=2)
+  - type       'home', 'office', 'cell', 'fax', 'pager', 'none'  (if you have home2 etc, list
+               them without the digits.  The second 'home' is implicitly home2 etc)
 
 serials:
 
