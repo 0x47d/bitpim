@@ -10,15 +10,51 @@
 "Displays a number of sections each with a number of items"
 
 import wx
-
+import sys
 import guihelper
 
 class Display(wx.ScrolledWindow):
     "This is the view"
 
+    class HitTestResult:
+        "Where a particular point corresponds to"
+        IN_BACKGROUND=0
+        IN_SECTION=1
+        IN_ITEM=2
+
+        def __init__(self, **kwds):
+            self.__dict__.update({
+                'location': self.IN_BACKGROUND,
+                'sectionnum': None,
+                'section': None,
+                'sectionx': None,
+                'sectiony': None,
+                'itemnum': None,
+                'item': None,
+                'itemx': None,
+                'itemy': None,
+                })
+            self.__dict__.update(kwds)
+
+        def __str__(self):
+            res="<HitTestResult "
+            if self.location==self.IN_BACKGROUND:
+                res+="IN_BACKGROUND>"
+            elif self.location==self.IN_SECTION:
+                res+="IN_SECTION, sectionnum=%d, section=%s, sectionx=%d, sectiony=%d>" % \
+                      (self.sectionnum, self.section, self.sectionx, self.sectiony)
+            elif self.location==self.IN_ITEM:
+                res+="IN_ITEM, sectionnum=%d, section=%s, itemnum=%d, item=%s, itemx=%d, itemy=%d>" % \
+                      (self.sectionnum, self.section, self.itemnum, self.item, self.itemx, self.itemy)
+            else:
+                assert False, "bad location"
+                res+="ERROR>"
+            return res
+
+
     # See the long note in OnPaint before touching this code
 
-    VSCROLLPIXELS=1 # how many pixels we scroll by
+    VSCROLLPIXELS=3 # how many pixels we scroll by
 
     ITEMPADDING=5   # how many pixels we pad items by
     
@@ -36,6 +72,8 @@ class Display(wx.ScrolledWindow):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        wx.EVT_LEFT_DOWN(self, self.OnLeftDown)
+        wx.EVT_RIGHT_DOWN(self, self.OnRightDown)
         if watermark is not None:
             wx.EVT_SCROLLWIN(self, self.OnScroll)
         self.bgbrush=wx.TheBrushList.FindOrCreateBrush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.SOLID)
@@ -90,7 +128,7 @@ class Display(wx.ScrolledWindow):
         # - wx sometimes misbehaves if the window height isn't set to an exact multiple of the
         #   VSCROLLPIXELS
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
-            self._bufbmp=wx.EmptyBitmap(self._w, self.maxheight)
+            self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
         dc=wx.BufferedPaintDC(self, self._bufbmp)
         # we redraw everything that is in the visible area of the screen
         origin=self.GetViewStart()[1]*self.VSCROLLPIXELS
@@ -99,6 +137,8 @@ class Display(wx.ScrolledWindow):
 
         # clear background
         dc.SetBackground(self.bgbrush)
+        # only clear area you can see
+        dc.SetClippingRegion(0, firstvisible, self._w+1, lastvisible-firstvisible+1)
         dc.Clear()
         # draw watermark
         if self.watermark:
@@ -130,13 +170,129 @@ class Display(wx.ScrolledWindow):
                 item=self.items[i][num]
                 dc.SetDeviceOrigin(3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth), posy)
                 dc.ResetBoundingBox()
-                item.Draw(dc, self.itemsize[i][0]+extrawidth, self.itemsize[i][1], False)
-                #print "bb",dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY()
+                item.Draw(dc, self.itemsize[i][0]+extrawidth, self.itemsize[i][1], self.selected[i][num])
+                self.boundingboxes[i][num]=(dc.MinX(), dc.MinY(), dc.MaxX(), dc.MaxY())
                 num+=1
             cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
                     
         # must do this or the world ends ...
         dc.SetDeviceOrigin(0,0)
+
+    def OnLeftDown(self, evt):
+        actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        res=self.HitTest(actualx, actualy)
+        if res.item is None:
+            if len(self.GetSelection()):
+                self.ClearSelection()
+            return
+        # if neither control or shift is down then clear selection and add this item
+        if not evt.ControlDown() and not evt.ShiftDown():
+            self.SetSelectedByNumber(res.sectionnum, res.itemnum, False)
+            return
+        # if control and shift are down then treat as just shift
+        if evt.ShiftDown():
+            self.SetSelectedByNumber(res.sectionnum, res.itemnum, True)
+            return
+        assert evt.ControlDown()
+        # we toggle the item
+        self.selected[res.sectionnum][res.itemnum]=not self.selected[res.sectionnum][res.itemnum]
+        self.Refresh(False)
+
+    def OnRightDown(self, evt):
+        actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        res=self.HitTest(actualx, actualy)
+        if res.item is None:
+            self.ClearSelection()
+        else:
+            # if only one other item is selected then we cancel that and select this one
+            self.SetSelectedByNumber(res.sectionnum, res.itemnum, len(self.GetSelection())!=1)
+
+    def IsSelectedByNum(self, sectionnum, itemnum):
+        "Returns if the itemnum from sectionnum is selected"
+        return self.selected[sectionnum][itemnum]
+
+    def IsSelectedByObject(self, itemobj):
+        "Returns if the itemobject is selected"
+        for s,section in enumerate(self.sections):
+            for i,item in enumerate(self.items[s]):
+                if item is itemobj:
+                    return self.IsSelectedByNum(s,i)
+        raise ValueError("no such item "+itemobj)
+
+    def GetSelection(self):
+        """Returns the selected items
+
+        The return value is a list.  Each item in the list is a tuple of
+        (sectionnumber, sectionobject, itemnumber, itemobject)"""
+        res=[]
+        for s,section in enumerate(self.sections):
+            for i,item in enumerate(self.items[s]):
+                if self.selected[s][i]:
+                    res.append( (s,section,i,item) )
+        return res
+
+    def ClearSelection(self):
+        self.selected=[ [False]*len(items) for items in self.items]
+        self.Refresh(False)
+
+    def SetSelectedByNumber(self, sectionnum, itemnum, add=False):
+        if not add:
+            self.ClearSelection()
+        self.selected[sectionnum][itemnum]=True
+        self.Refresh(False)
+
+    def SetSelectedByObject(self, itemobj, add=False):
+        if not add:
+            self.ClearSelection()
+        for s,section in enumerate(self.sections):
+            for i,item in enumerate(self.items[s]):
+                if item is itemobj:
+                    self.selected[s][i]=True
+                    self.Refresh()
+                    return
+        raise ValueError("no such item "+itemobj)
+        
+                    
+    def HitTest(self, pointx, pointy):
+        # work out which item this corresponds to
+        cury=0
+        for i, section in enumerate(self.sections):
+            if cury<=pointy<=cury+self.sectionheights[i]:
+                # in the section
+                return self.HitTestResult(location=self.HitTestResult.IN_SECTION,
+                                          sectionnum=i, section=section,
+                                          sectionx=pointx, sectiony=pointy-cury)
+            if cury>pointy:
+                return self.HitTestResult()
+            cury+=self.sectionheights[i]
+            extrawidth=(self._w-6)-(self.itemsize[i][0]+self.ITEMPADDING)*self.itemsperrow[i]
+            extrawidth/=self.itemsperrow[i]
+            if extrawidth<0: extrawidth=0
+            # now find items in this section
+            num=0
+            while num<len(self.items[i]):
+                x=(num%self.itemsperrow[i])
+                y=(num/self.itemsperrow[i])
+                posy=cury+y*(self.itemsize[i][1]+self.ITEMPADDING)
+                # skip the entire row if it isn't in range
+                if x==0 and not posy<=pointy<=posy+self.itemsize[i][1]:
+                    num+=self.itemsperrow[i]
+                    continue
+                item=self.items[i][num]
+                startx=3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth)
+                startx+=self.boundingboxes[i][num][0]
+                endx=startx+self.boundingboxes[i][num][2]-self.boundingboxes[i][num][0]
+                starty=posy+self.boundingboxes[i][num][1]
+                endy=starty+self.boundingboxes[i][num][3]-self.boundingboxes[i][num][1]
+                if startx<=pointx<=endx and starty<=pointy<=endy:
+                    return self.HitTestResult(location=self.HitTestResult.IN_ITEM,
+                                              sectionnum=i, section=section,
+                                              itemnum=num, item=item,
+                                              itemx=pointx-startx+self.boundingboxes[i][num][0],
+                                              itemy=pointy-starty+self.boundingboxes[i][num][1])
+                num+=1
+            cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
+        return self.HitTestResult()
 
     def ReLayout(self):
         "Called if the window size has changed"
@@ -167,15 +323,21 @@ class Display(wx.ScrolledWindow):
         self.items=[]
         self.itemsize=[]
         self.sectionheights=[]
+        self.selected=[]
+        self.boundingboxes=[]
         for i,section in enumerate(self.sections):
             self.sectionheights.append(section.GetHeight())
             self.itemsize.append(self.datasource.GetItemSize(i,section))
             items=self.datasource.GetItemsFromSection(i,section)            
             self.items.append(items)
+            self.boundingboxes.append( [None]*len(items) )
+            self.selected.append( [False]*len(items) )
         # we have to relayout immediately otherwise there could a be paint call
         # between this function and relayout and the variables would be in an
         # inconsistent state
         self._ReLayout()
+
+
             
 def _isvisible(start, end, firstvisible, lastvisible):
     return start <= firstvisible <= end <= lastvisible or \
@@ -263,104 +425,138 @@ class DataSource(object):
         raise NotImplementedError()
 
 if __name__=="__main__":
-    app=wx.PySimpleApp()
-
-    import sys
-    import common
-    sys.excepthook=common.formatexceptioneh
-    import wx.html
-    import os
-    import brewcompressedimage
-    import wallpaper
 
 
-    # find bitpim wallpaper directory
-    config=wx.Config("bitpim", style=wx.CONFIG_USE_LOCAL_FILE)
 
-    p=config.Read("path", "resources")
-    pn=os.path.join(p, "wallpaper")
-    if os.path.isdir(pn):
-        p=pn
+    def demo():
+        import wx
+        app=wx.PySimpleApp()
 
-    imagespath=p
-    images=[name for name in os.listdir(imagespath) if name[-4:] in (".bci", ".bmp", ".jpg", ".png")]
-    images.sort()
-    #images=images[:9]
+        import sys
+        import common
+        sys.excepthook=common.formatexceptioneh
+        import wx.html
+        import os
+        import brewcompressedimage
+        import wallpaper
 
-    print imagespath
-    print images
 
-    class WallpaperManager:
+        # find bitpim wallpaper directory
+        config=wx.Config("bitpim", style=wx.CONFIG_USE_LOCAL_FILE)
 
-        def GetImageStatInformation(self,name):
-            return wallpaper.statinfo(os.path.join(imagespath, name))    
+        p=config.Read("path", "resources")
+        pn=os.path.join(p, "wallpaper")
+        if os.path.isdir(pn):
+            p=pn
 
-        def GetImageConstructionInformation(self,file):
-            file=os.path.join(imagespath, file)
+        imagespath=p
+        images=[name for name in os.listdir(imagespath) if name[-4:] in (".bci", ".bmp", ".jpg", ".png")]
+        images.sort()
+        #images=images[:9]
 
-            if file.endswith(".mp4") or not os.path.isfile(file):
-                return guihelper.getresourcefile('wallpaper.png'), wx.Image
-            if self.isBCI(file):
-                return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-            return file, wx.Image
+        print imagespath
+        print images
 
-        def isBCI(self, filename):
-            # is it a bci file?
-            return open(filename, "rb").read(4)=="BCI\x00"
+        class WallpaperManager:
 
+            def GetImageStatInformation(self,name):
+                return wallpaper.statinfo(os.path.join(imagespath, name))    
+
+            def GetImageConstructionInformation(self,file):
+                file=os.path.join(imagespath, file)
+
+                if file.endswith(".mp4") or not os.path.isfile(file):
+                    return guihelper.getresourcefile('wallpaper.png'), wx.Image
+                if self.isBCI(file):
+                    return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+                return file, wx.Image
+
+            def isBCI(self, filename):
+                # is it a bci file?
+                return open(filename, "rb").read(4)=="BCI\x00"
+
+
+        wx.FileSystem_AddHandler(wallpaper.BPFSHandler(WallpaperManager()))
+
+        class TestItem(Item):
+
+            def __init__(self, ds, secnum, itemnum, label):
+                super(TestItem,self).__init__()
+                self.label=label
+                self.ds=ds
+                self.secnum=secnum
+                self.itemnum=itemnum
+
+            def Draw(self, dc, width, height, selected):
+                # uncomment to see exactly what size is given
+                #dc.DrawRectangle(0,0,width,height)
+
+                us=dc.GetUserScale()
+                dc.SetClippingRegion(0,0,width,height)
+                hdc=wx.html.HtmlDCRenderer()
+                hdc.SetDC(dc, 1)
+                hdc.SetSize(99999, 9999) # width is deliberately wide so that no wrapping happens
+                hdc.SetHtmlText(self.genhtml(selected), '.', True)
+                hdc.Render(0,0)
+                del hdc
+                # restore scale hdc messes
+                dc.SetUserScale(*us)
+                dc.DestroyClippingRegion()
+
+            def genhtml(self, selected):
+                if selected:
+                    selected='bgcolor="blue"'
+                else:
+                    selected=""
+                return """<table %s><tr><td valign=top><p><img src="bpuserimage:%s;width=%d;height=%d;valign=top"><td valign=top><b>%s</b><br>BMP format<br>123x925<br>Camera</tr></table>""" \
+                       % (selected, images[self.itemnum], self.ds.IMGSIZES[self.secnum][0], self.ds.IMGSIZES[self.secnum][1], self.label, )
+
+        class TestDS(DataSource):
+
+            SECTIONS=("Camera", "Wallpaper", "Oranges", "Lemons")
+            ITEMSIZES=( (240,240), (160,70), (48,48), (160,70) )
+            IMGSIZES=[ (w-110,h-20) for w,h in ITEMSIZES]
+            IMGSIZES[2]=(16,16)
+
+            def GetSections(self):
+                return [SectionHeader(x) for x in self.SECTIONS]
+
+            def GetItemsFromSection(self, sectionnumber, sectionheader):
+                return [TestItem(self, sectionnumber, i, "%s-#%d" % (sectionheader.label,i)) for i in range(len(images))]
+
+            def GetItemSize(self, sectionnumber, sectionheader):
+                return self.ITEMSIZES[sectionnumber]
+
+        f=wx.Frame(None, title="Aggregate Display Test")
+        ds=TestDS()
+        d=Display(f,ds, "wallpaper-watermark")
+        f.Show()
+
+        app.MainLoop()
     
-    wx.FileSystem_AddHandler(wallpaper.BPFSHandler(WallpaperManager()))
     
-    class TestItem(Item):
+    if True:
+        def profile(filename, command):
+            import hotshot, hotshot.stats, os
+            file=os.path.abspath(filename)
+            profile=hotshot.Profile(file)
+            profile.run(command)
+            profile.close()
+            del profile
+            howmany=100
+            stats=hotshot.stats.load(file)
+            stats.strip_dirs()
+            stats.sort_stats('time', 'calls')
+            stats.print_stats(20)
+            stats.sort_stats('cum', 'calls')
+            stats.print_stats(20)
+            stats.sort_stats('calls', 'time')
+            stats.print_stats(20)
+            sys.exit(0)
 
-        def __init__(self, ds, secnum, itemnum, label):
-            super(TestItem,self).__init__()
-            self.label=label
-            self.ds=ds
-            self.secnum=secnum
-            self.itemnum=itemnum
+        profile("aggdisplay.prof", "demo()")
 
-        def Draw(self, dc, width, height, selected):
-            # uncomment to see exactly what size is given
-            #dc.DrawRectangle(0,0,width,height)
-
-            us=dc.GetUserScale()
-            dc.SetClippingRegion(0,0,width,height)
-            hdc=wx.html.HtmlDCRenderer()
-            hdc.SetDC(dc, 1)
-            hdc.SetSize(99999, 9999) # width is deliberately wide so that no wrapping happens
-            hdc.SetHtmlText(self.genhtml(), '.', True)
-            hdc.Render(0,0)
-            del hdc
-            # restore scale hdc messes
-            dc.SetUserScale(*us)
-            dc.DestroyClippingRegion()
-
-        def genhtml(self):
-            return """<table><tr><td valign=top><p><img src="bpuserimage:%s;width=%d;height=%d;valign=top"><td valign=top><b>%s</b><br>BMP format<br>123x925<br>Camera</tr></table>""" \
-                   % (images[self.itemnum], self.ds.IMGSIZES[self.secnum][0], self.ds.IMGSIZES[self.secnum][1], self.label, )
-
-    class TestDS(DataSource):
-
-        SECTIONS=("Camera", "Wallpaper", "Oranges", "Lemons")
-        ITEMSIZES=( (240,240), (160,70), (48,48), (160,70) )
-        IMGSIZES=[ (w-110,h-20) for w,h in ITEMSIZES]
-        IMGSIZES[2]=(16,16)
-
-        def GetSections(self):
-            return [SectionHeader(x) for x in self.SECTIONS]
-
-        def GetItemsFromSection(self, sectionnumber, sectionheader):
-            return [TestItem(self, sectionnumber, i, "%s-#%d" % (sectionheader.label,i)) for i in range(len(images))]
-
-        def GetItemSize(self, sectionnumber, sectionheader):
-            return self.ITEMSIZES[sectionnumber]
-
-    f=wx.Frame(None, title="Aggregate Display Test")
-    ds=TestDS()
-    d=Display(f,ds, "wallpaper-watermark")
-    f.Show()
-
-    app.MainLoop()
-    
+    else:
+        demo()
+        
     
