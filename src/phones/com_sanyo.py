@@ -85,6 +85,49 @@ class SanyoPhonebook:
             pass
         return 0
         
+    def getmediaindex(self, builtins, maps, results, key):
+        """Gets the media (wallpaper/ringtone) index
+
+        @param builtins: the builtin list on the phone
+        @param results: places results in this dict
+        @param maps: the list of index files and locations
+        @param key: key to place results in
+        """
+
+        self.log("Reading "+key)
+        media={}
+
+        # builtins
+        c=1
+        for name in builtins:
+            if name:
+                media[c]={'name': name, 'origin': 'builtin' }
+                print c,name
+            c+=1
+
+        # the maps
+        type=''
+        for offset,indexfile,location,type,maxentries in maps:
+            if type=="camera": break
+            index=self.getindex(indexfile)
+            for i in index:
+                media[i+offset]={'name': index[i], 'origin': type}
+
+        # camera must be last
+        if type=="camera":
+            index=self.getcameraindex()
+            for i in index:
+                media[i+offset]=index[i]
+
+        results[key]=media
+        return media
+
+    def getwallpaperindices(self, results):
+        return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
+
+    def getringtoneindices(self, results):
+        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+
     def getsanyobuffer(self, startcommand, buffersize, comment):
         # Read buffer parts and concatenate them together
         desc="Reading "+comment
@@ -199,7 +242,11 @@ class SanyoPhonebook:
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
+
+        self.getwallpaperindices(results)
+        self.getringtoneindices(results)
         self.log("Fundamentals retrieved")
+        1
         return results
 
     def sanyosort(self, x, y):
@@ -255,10 +302,19 @@ class SanyoPhonebook:
 
                 # ringtones
                 if ringpic.ringtones[i].ringtone>0:
-                    entry['ringtones']=[{'ringtone': self.serialsname+"Index_"+`ringpic.ringtones[i].ringtone`, 'use': 'call'}]
+                    try:
+                        tone=result['ringtone-index'][ringpic.ringtones[i].ringtone]['name']
+                    except:
+                        tone=self.serialsname+"Index_"+`ringpic.ringtones[i].ringtone`
+                    entry['ringtones']=[{'ringtone': tone, 'use': 'call'}]
+
                 # wallpapers
                 if ringpic.wallpapers[i].wallpaper>0:
-                    entry['wallpapers']=[{'wallpaper': self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`, 'use': 'call'}]
+                    try:
+                        paper=result['wallpaper-index'][ringpic.wallpapers[i].wallpaper]['name']
+                    except:
+                        paper=self.serialsname+"Index_"+`ringpic.wallpapers[i].wallpaper`
+                    entry['wallpapers']=[{'wallpaper': paper, 'use': 'call'}]
                     
                 pbook[count]=entry 
                 self.progress(count, numentries, res.entry.name)
@@ -294,10 +350,13 @@ class SanyoPhonebook:
             numberindex+=1
         return res
 
-    def _findmediaindex(self, name, pbentryname, type):
+    def _findmediaindex(self, index, name, pbentryname, type):
         if name is None:
             return 0
-        # Later require name to be of form "scp4900Index_NN".
+        for i in index:
+            if index[i]['name']==name:
+                return i
+        # Not found in index, assume Vision download
         pos=name.find('_')
         if(pos>=0):
             i=int(name[pos+1:])
@@ -456,8 +515,8 @@ class SanyoPhonebook:
                 urlmap[ii['url']]=slot
                 sortstuff.numurl+=1
             # Add ringtone and wallpaper
-            ringpic.wallpapers[slot].wallpaper=self._findmediaindex(ii['wallpaper'],ii['name'],'wallpaper')
-            ringpic.ringtones[slot].ringtone=self._findmediaindex(ii['ringtone'],ii['name'],'ringtone')
+            ringpic.ringtones[slot].ringtone=self._findmediaindex(data['ringtone-index'], ii['ringtone'],ii['name'],'ringtone')
+            ringpic.wallpapers[slot].wallpaper=self._findmediaindex(data['wallpaper-index'], ii['wallpaper'],ii['name'],'wallpaper')
 
             newphonebook[slot]=entry
 
@@ -991,6 +1050,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,SanyoPhonebook):
     "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
     desc="Sanyo"
     
+    imagelocations=()
+    
+    ringtonelocations=()
+
+    builtinimages=()
+
+    builtinringtons=()
+
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
