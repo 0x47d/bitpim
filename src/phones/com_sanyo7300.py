@@ -18,7 +18,7 @@ features, while the 7300 does not have a camera.
 # my modules
 import common
 import p_sanyo7300
-import p_com_5500
+import com_sanyo5500
 import com_brew
 import com_phone
 import com_sanyo
