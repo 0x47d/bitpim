@@ -650,7 +650,7 @@ class ImageCropSelect(wx.ScrolledWindow):
         self.bg=wx.Brush(parent.GetBackgroundColour())
         self._bufbmp=None
 
-        self.anchors=0.1 * image.GetWidth(), 0.1 * image.GetHeight(), 0.9 * image.GetWidth(), 0.9 * image.GetHeight()
+        self.anchors=None
         
         wx.EVT_ERASE_BACKGROUND(self, lambda evt: None)
         wx.EVT_PAINT(self, self.OnPaint)
@@ -715,10 +715,10 @@ class ImageCropSelect(wx.ScrolledWindow):
             self.SetCursor(self.cursors[3])
             return
         xx,yy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        deltax=xx-self.origevtpos[0]
+        deltay=yy-self.origevtpos[1]
+
         if self.clickpoint==self.INSIDE:
-            # calculate a new delta
-            deltax=xx-self.origevtpos[0]
-            deltay=yy-self.origevtpos[1]
             newanchors=self.origanchors[0]+deltax, self.origanchors[1]+deltay, \
                         self.origanchors[2]+deltax, self.origanchors[3]+deltay
             iw=self.dimensions[0]
@@ -736,6 +736,43 @@ class ImageCropSelect(wx.ScrolledWindow):
             self.Refresh(False)
             self.updatepreview()
             return
+        # work out how to do this with left top and then expand code
+        if self.clickpoint==self.HANDLE_LT:
+            aa=0,1,-1,-1
+        elif self.clickpoint==self.HANDLE_RT:
+            aa=2,1,+1,-1
+        elif self.clickpoint==self.HANDLE_RB:
+            aa=2,3,+1,+1
+        elif self.clickpoint==self.LB:
+            aa=0,3,-1,+1
+        else:
+            assert False, "can't get here"
+            
+        na=[self.origanchors[0],self.origanchors[1],self.origanchors[2],self.origanchors[3]]
+        na[aa[0]]=na[aa[0]]+deltax
+        na[aa[1]]=na[aa[1]]+deltay
+        neww=na[2]-na[0]
+        newh=na[3]-na[1]
+        ar=float(neww)/newh
+        if ar<self.aspectratio:
+            na[aa[0]]=na[aa[0]]+(self.aspectratio*newh-neww)*aa[2]
+        elif ar>self.aspectratio:
+            na[aa[1]]=na[aa[1]]+(neww/self.aspectratio-newh)*aa[3]
+            
+        # ignore if image would be smaller than 10 pixels in any direction
+        if neww<10 or newh<10:
+            return
+        # if any point is off screen, we need to fix things up
+        if na[0]<0 or na[1]<0 or na[2]>self.dimensions[0] or na[3]>self.dimensions[1]:
+            print "offscreen fixup not written yet"
+            return
+
+        # work out aspect ratio
+        self.anchors=na
+        self.Refresh(False)
+        self.updatepreview()
+        return
+            
         
     def OnLeftDown(self, evt):
         ht=self._hittest(evt)
@@ -743,10 +780,9 @@ class ImageCropSelect(wx.ScrolledWindow):
             self.SetCursor(self.cursors[3])
             return
         self.clickpoint=ht
-        if ht==self.INSIDE:
-            xx,yy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
-            self.origevtpos=xx,yy
-            self.origanchors=self.anchors
+        xx,yy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        self.origevtpos=xx,yy
+        self.origanchors=self.anchors
         
     def OnLeftUp(self, evt):
         self.clickpoint=None
@@ -767,6 +803,10 @@ class ImageCropSelect(wx.ScrolledWindow):
         # ensure a minimum size
         neww=max(neww, 50)
         newh=max(newh, 50)
+
+        # update anchors if never set
+        if self.anchors==None:
+            self.anchors=0.1 * neww, 0.1 * newh, 0.9 * neww, 0.9 * newh
 
         self.dimensions=neww,newh
 
@@ -898,6 +938,12 @@ class ImagePreviewDialog(wx.Dialog):
         w,h=self.targets[v]['dimensions']
         self.imagepreview.SetSize( (w,h) )
         self.cropselect.setresultsize( (w, h) )
+        sz=self.GetSizer()
+        if sz is not None:
+            # sizer doesn't autmatically size when we change preview size
+            # so this forces that, as well as the repaint due to screen corruption
+            sz.Layout()
+            self.Refresh(True)
         
 
 
