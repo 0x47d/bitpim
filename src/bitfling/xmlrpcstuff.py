@@ -30,7 +30,7 @@
 # stuff, but the actual request handling still seems single threaded.
 
 
-TRACE=True
+TRACE=False
 
 
 # standard modules
@@ -78,10 +78,8 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 cred=cred.split(None, 1)
                 if len(cred)!=2 or cred[0].lower()!="basic":
                     raise AuthenticationBad("Unknown authentication scheme "+`cred[0]`)
-                cred=base64.decodestring(cred[1]).split(":", 1)
-                username=cred[0]
-                password=base64.decodestring(cred[1])
-                print "parsed auth to %s %s from %s" % (username, password, self.headers["Authorization"])
+                username,password=base64.decodestring(cred[1]).split(":", 1)
+                print "parsed auth to %s %s from %s" % (`username`, `password`, self.headers["Authorization"])
             response=self.server.processxmlrpcrequest(data, self.client_address, username, password)
         except AuthenticationBad:
             self.close_connection=True
@@ -118,7 +116,7 @@ class MySSLConnection(M2Crypto.SSL.Connection):
     # add in our special sauce
     def flush(self):
         res=M2Crypto.m2.bio_flush(self.sockbio)
-        print "flush res is",res,"  bio pending bytes is",M2Crypto.m2.bio_ctrl_pending(self.sockbio)
+        # print "flush res is",res,"  bio pending bytes is",M2Crypto.m2.bio_ctrl_pending(self.sockbio)
 
     def makefile(self, mode="rb", bufsize="ignored"):
         if __debug__ and TRACE: print "%d: makefile %s" % (id(self), mode)
@@ -251,7 +249,7 @@ class Server(threading.Thread):
 
         def processxmlrpcrequest(self, data, client_addr, username, password):
             msg=Server.Message(Server.Message.CMD_XMLRPC_REQUEST, self.responsequeue, client_addr, data=(data, username, password))
-            self.log("%s:%s req %80s" % (username, password, `data`))
+            self.log("%s:%s req %s" % (username, password, `data`))
             self.requestqueue.put(msg)
             resp=self.responsequeue.get()
             assert resp.cmd==resp.CMD_XMLRPC_RESPONSE
@@ -468,7 +466,7 @@ class SSLTransport(xmlrpclib.Transport):
 
         h.sock.flush()
         # body hasn't been sent, so we can retry without having problems
-        print "state is",h.sock.get_state()
+        # print "state is",h.sock.get_state()
 
         if request_body:
             h.send(request_body)
