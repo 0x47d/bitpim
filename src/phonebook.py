@@ -90,6 +90,7 @@ class PhoneWidget(wxTextCtrl):
         EVT_IDLE(self, self.OnIdle)
 
     def OnIdle(self, _):
+        "We save out changed data"
         if self.IsModified():
             try:
                 self._data=eval(self.GetValue())
@@ -191,4 +192,110 @@ class PhoneWidget(wxTextCtrl):
             d['groups']=dict['groups']
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, self.CURRENTFILEVERSION)
         return dict
+    
+    def converttophone(self, data):
+        self.mainwindow.phoneprofile.convertphonebooktophone(self, data)
+
+
+    class ConversionFailed(Exception):
+        pass
+
+    def _getentries(self, list, min, max, name):
+        candidates=[]
+        for i in list:
+            # ::TODO:: possibly ensure that a key appears in each i
+            candidates.append(i)
+        if len(candidates)<min:
+            # ::TODO:: log this
+            raise ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
+        if len(candidates)>max:
+            # ::TODO:: mention this to user
+            candidates=candidates[:max]
+        return candidates
+
+    def _getfield(self,list,name):
+        res=[]
+        for i in list:
+            res.append(i[name])
+        return res
+
+    def _truncatefields(self, list, truncateat):
+        if truncateat is None:
+            return list
+        res=[]
+        for i in list:
+            if len(i)>truncateat:
+                # ::TODO:: log truncation
+                res.append(i[:truncateat])
+            else:
+                res.append(i)
+        return res
+
+    def _findfirst(self, candidates, required, key, default):
+        """Find first match in candidates that meets required and return value of key
+
+        @param candidates: list of dictionaries to search through
+        @param required: a dict of what key/value pairs must exist in an entry
+        @param key: for a matching entry, which key's value to return
+        @param default: what value to return if there is no match
+        """
+        for dict in candidates:
+            ok=True
+            for k in required:
+                if dict[k]!=required[k]:
+                   ok=False
+                   break # really want break 2
+            if not ok:
+                continue
+            return dict[key]
+        return default
+
+    def getfullname(self, names, min, max, truncateat=None):
+        "Return at least min and at most max fullnames from the names list"
+        # ::TODO:: possibly deal with some names having the fields, and some having full
+        return self._truncatefields(self._getfield(self._getentries(names, min, max, "names"), "full"), truncateat)
+
+    def getcategory(self, categories, min, max, truncateat=None):
+        "Return at least min and at most max categories from the categories list"
+        return self._truncatefields(self._getfield(self._getentries(categories, min, max, "categories"), "category"), truncateat)
+
+    def getemails(self, emails, min, max, truncateat=None):
+        "Return at least min and at most max emails from the emails list"
+        return self._truncatefields(self._getfield(self._getentries(emails, min, max, "emails"), "email"), truncateat)
+
+    def geturls(self, urls, min, max, truncateat=None):
+        "Return at least min and at most max urls from the urls list"
+        return self._truncatefields(self._getfield(self._getentries(urls, min, max, "urls"), "url"), truncateat)
+        
+
+    def getmemos(self, memos, min, max, truncateat=None):
+        "Return at least min and at most max memos from the memos list"
+        return self._truncatefields(self._getfield(self._getentries(memos, min, max, "memos"), "memo"), truncateat)
+
+    def getnumbers(self, numbers, min, max):
+        "Return at least min and at most max numbers from the numbers list"
+        return self._getentries(numbers, min, max, "numbers")
+
+    def getserial(self, serials, sourcetype, id, key, default):
+        "Gets a serial if it exists"
+        return self._findfirst(serials, {'sourcetype': sourcetype, 'sourceuniqueid': id}, key, default)
+        
+    def getringtone(self, ringtones, use, default):
+        "Gets a ringtone of type use"
+        return self._findfirst(ringtones, {'use': use}, 'ringtone', default)
+
+    def getwallpaper(self, wallpapers, use, default):
+        "Gets a wallpaper of type use"
+        return self._findfirst(wallpapers, {'use': use}, 'wallpaper', default)
+
+    def getflag(self, flags, name, default):
+        "Gets value of flag named name"
+        for i in flags:
+            if i.has_key(name):
+                return i[name]
+        return default
+
+    
+    
+
     

@@ -592,7 +592,10 @@ class codegen:
                 print >>out, indent(2)+"return self.__field_%s.getvalue()\n" % (f[1],)
                 # set
                 print >>out, indent()+"def __setfield_%s(self, value):" % (f[1],)
-                self.makefield(out, 2, f, "value,", isreading=False)
+                print >>out, indent(2)+"if isinstance(value,%s):" % (f[3],)
+                print >>out, indent(3)+"self.__field_%s=value" % (f[1],)
+                print >>out, indent(2)+"else:"
+                self.makefield(out, 3, f, "value,", isreading=False)
                 print >>out, ""
                 # del
                 print >>out, indent()+"def __delfield_%s(self): del self.__field_%s\n" % (f[1], f[1])

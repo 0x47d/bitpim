@@ -32,6 +32,10 @@ import prototypes
 ##                        2: {'name': 'Friends', 'icon': 2}, 3: {'name': 'Colleagues', 'icon': 3},
 ##                        4: {'name': 'Business', 'icon': 4}, 5: {'name': 'School', 'icon': 5}, }
 
+
+numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
+                    'pager', 'fax', 'fax2', 'none' )
+
         
 class PhoneBookCommandException(Exception):
     def __init__(self, errnum):
@@ -61,10 +65,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         Currently this is:
 
-        - 'uniqueserial'     a unique serial number representing the phone
-        - 'groups'           the phonebook groups
-        - 'wallpaper-index'  map index numbers to names
-        - 'ringtone-index'   map index numbers to ringtone names
+          - 'uniqueserial'     a unique serial number representing the phone
+          - 'groups'           the phonebook groups
+          - 'wallpaper-index'  map index numbers to names
+          - 'ringtone-index'   map index numbers to ringtone names
         """
 
         # use a hash of ESN and other stuff (being paranoid)
@@ -148,7 +152,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=p_lgvx4400.pbreadentryrequest()
             res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
-            entry=self.extractphonebookentry(res, result)
+            entry=self.extractphonebookentry(res.entry, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
@@ -165,7 +169,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # We then delete any entries that aren't in data
         # We then write out our records, usng overwrite or append
         # commands as necessary
-        existingpbook={}
+        newphonebook={}
+        existingpbook={} # keep track of the phonebook that is on the phone
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
@@ -225,7 +230,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # Now rewrite out existing entries
         keys=existingpbook.keys()
         existingserials=[]
-        keys.sort()
+        keys.sort()  # do in same order as existingpbook
         for i in keys:
             progresscur+=1
             ii=pbook[self._findserial(existingpbook[i]['serial1'], pbook)]
@@ -234,10 +239,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             entry=self.makeentry(counter, ii, data)
             counter+=1
             existingserials.append(existingpbook[i]['serial1'])
-            res=self.sendpbcommand(0x04, "\x01"+entry)  # overwrite
-            assert ii['serial1']==readlsb(res[0x04:0x08]) # serial should stay the same
-            # ii['serial1']=readlsb(res[0x04:0x08])
-            # ii['serial2']=ii['serial1']
+            req=p_lgvx4400.pbupdateentryrequest()
+            req.entry=entry
+            res=self.newsendpbcommand(res, p_lgvx4400.pbupdateentryresponse)
+            newphonebook[counter-1]=self.extractphonebookentry(entry, data)
+            assert ii['serial1']==res.serial1 # serial should stay the same
 
         # Finally write out new entries
         keys=pbook.keys()
@@ -251,12 +257,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             counter+=1
             self.log("Appending entry "+ii['name'])
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            res=self.sendpbcommand(0x03, "\x01"+entry)  # append
-            ii['serial1']=readlsb(res[0x04:0x08])
-            ii['serial2']=ii['serial1']
-            if ii['serial1']==0:
-                self.log("Failed to add "+ii['name']+" - make sure the entry has at least one phone number")
-           
+            req=p_lgvx4400.pbappendentryrequest()
+            req.entry=entry
+            res=self.newsendpbcommand(req, p_lgvx4400.pbappendentryresponse)
+            entry.serial1=res.newserial
+            entry.serial2=res.newserial
+            newphonebook[counter-1]=self.extractphonebookentry(entry, data)
+
+        data['phonebook']=newphonebook
 
 
     def _findserial(self, serial, dict):
@@ -702,12 +710,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             self.raisecommsexception("using the phonebook")
             return None # keep pychecker happy
         
-    numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
-                    'pager', 'fax', 'fax2', 'none' )
     
-    def extractphonebookentry(self, record, fundamentals):
+    
+    def extractphonebookentry(self, entry, fundamentals):
         """Return a phonebook entry in BitPim format"""
-        entry=record.entry
         res={}
         # serials
         res['serials']=[ {'sourcetype': 'lgvx4400', 'serial1': entry.serial1, 'serial2': entry.serial2,
@@ -724,7 +730,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # urls
         res['urls']=[ {'url': entry.url} ]
         # ringtones
-        res['ringtones']=[ {'ringtone': entry.ringtone, 'use': 'call'}, {'ringtone': entry.msgringtone, 'use': 'message' } ] # ::TODO:: turn these into strings
+        res['ringtones']=[ {'ringtone': entry.ringtone, 'use': 'call'},
+                           {'ringtone': entry.msgringtone, 'use': 'message' } ] # ::TODO:: turn these into strings
         # private
         res['flags']=[ {'secret': entry.secret } ]
         # memos
@@ -737,136 +744,33 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             num=entry.numbers[i].number
             type=entry.numbertypes[i].numbertype
             if len(num):
-                res['numbers'].append({'number': num, 'type': self.numbertypetab[type]})
+                res['numbers'].append({'number': num, 'type': numbertypetab[type]})
         return res
                     
-    def makeentry(self, num, entry, dict):
-        # ::TODO:: we need to update fields in entry/dict
-        # eg when removing non-numerics from phone numbers
-        # or chang ringtone names into ringtone numbers
-        res=""
-        # skip first four bytes - they are part of command
-        res+="aaaa"  # added to help assertions
+    def makeentry(self, counter, entry, dict):
+        # dict is unused at moment, will be used later to convert string ringtone/wallpaper to numbers
+        e=p_lgvx4400.pbentry()
+        e.entrynumber=counter
         
-        # bytes 4-7 serial1
-        assert len(res)==4
-        res+=makelsb(entry.get('serial1', 0), 4)
+        for k in entry:
+            # special treatment for lists
+            if k=='emails' or k=='numbers' or k=='numbertypes':
+                l=getattr(e,k)
+                for item in entry[k]:
+                    if k=='numbers':
+                        item=self.phonize(item)
+                    l.append(item)
+                continue
+            # everything else we just set
+            setattr(e,k,entry[k])
 
-        # bytes 8-9  length - always 0202
-        assert len(res)==8
-        res+=makelsb(0x0202, 2)
+        return e
 
-        # bytes a-d serial2
-        assert len(res)==0x0a
-        res+=makelsb(entry.get('serial2', 0), 4)
-
-        # byte e is entry number
-        # we ignore what user supplied
-        assert len(res)==0xe
-        res+=makelsb(num,1) 
-
-        # byte f is unknown - always 0
-        assert len(res)==0xf
-        res+=makelsb(0, 1)
-
-        # Bytes 10-26 null padded name
-        assert len(res)==0x10
-        res+=makestring(entry.get('name', "<unnamed>"), 23)
-
-        # Byte 27 group
-        assert len(res)==0x27
-        res+=makelsb(entry.get('group', 0), 1)
-        
-        # byte 28 some sort of number - always 0
-        assert len(res)==0x28
-        res+=makelsb(0, 1)
-
-        # bytes 29-59 null padded email1
-        assert len(res)==0x29
-        res+=makestring(entry.get('email1', ""), 49)
-
-        # bytes 5a-8a null padded email2
-        assert len(res)==0x5a
-        res+=makestring(entry.get('email2', ""), 49)
-
-        # bytes 8b-bb null padded email3
-        assert len(res)==0x8b
-        res+=makestring(entry.get('email3', ""), 49)
-
-        # bytes bc-ec null padded url
-        assert len(res)==0xbc
-        res+=makestring(entry.get('url', ""), 49)
-
-        # byte ed is ringtone
-        assert len(res)==0xed
-        res+=makelsb(entry.get('ringtone', 0), 1)
-
-        # byte ee is message ringtone
-        assert len(res)==0xee
-        res+=makelsb(entry.get('msgringtone', 0) , 1)
-
-        # byte ef is secret
-        assert len(res)==0xef
-        if entry.get('secret',0):
-            res+="\x01"
-        else: res+="\x00"
-        
-        # bytes f0-110 null padded memo
-        assert len(res)==0xf0
-        res+=makestring(entry.get('memo', ""), 33)
-
-        # byte 111 - always zero or one entry is 0x0d
-        assert len(res)==0x111
-        res+=makelsb(0,1)
-        
-        # bytes 112-116 are phone number types
-        assert len(res)==0x112
-        for n in range(1,6):
-            res+=makelsb( entry.get('type'+`n`, 0), 1)
-
-        # bytes 117-147 number 1
-        assert len(res)==0x117
-        number=self.phonize(entry.get('number1', ""))
-        entry['number1']=number
-        res+=makestring(number, 49)
-
-        # bytes 148-178 number 2
-        assert len(res)==0x148
-        number=self.phonize(entry.get('number2', ""))
-        entry['number2']=number
-        res+=makestring(number, 49)
-
-        # bytes 179-1a9 number 3
-        assert len(res)==0x179
-        number=self.phonize(entry.get('number3', ""))
-        entry['number3']=number
-        res+=makestring(number, 49)
-        
-        # bytes 1aa-1da number 4
-        assert len(res)==0x1aa
-        number=self.phonize(entry.get('number4', ""))
-        entry['number4']=number
-        res+=makestring(number, 49)
-
-        # bytes 1db-20b number 5
-        assert len(res)==0x1db
-        number=self.phonize(entry.get('number5', ""))
-        entry['number5']=number
-        res+=makestring(number, 49)
-
-        # bytes 20c-210 five zeros
-        assert len(res)==0x20c
-        res+=makelsb(0, 5)
-
-        # done
-        assert len(res)==0x211
-
-        return res[4:]  # chop off cosmetic first bit
-
+            
     def phonize(self, str):
         """Convert the phone number into something the phone understands
 
-        All non-digits are removed"""
+        All digits, P, T, * and # are kept, everything else is removed"""
         return re.sub("[^0-9PT#*]", "", str)
 
     
@@ -979,3 +883,74 @@ def brewencodedate(year, month, day, hour, minute):
 # 0x05   delete entry
 # 0x04   write entry  (advances to next entry)
 # 0x03   append entry  (advances to next entry)
+
+class Profile:
+
+    def makeone(self, list, default):
+        "Returns one item long list"
+        if len(list)==0:
+            return default
+        assert len(list)==1
+        return list[0]
+
+    def filllist(self, list, numitems, blank):
+        "makes list numitems long appending blank to get there"
+        l=list[:]
+        for dummy in range(len(l),numitems):
+            l.append(blank)
+        return l
+
+    def convertphonebooktophone(self, helper, data):
+        "Converts the data to what will be used by the phone"
+        results={}
+
+        for pbentry in data['phonebook']:
+            e={} # entry out
+            entry=data['phonebook'][pbentry] # entry in
+            try:
+                e['name']=helper.getfullname(entry['names'],1,1,22)[0]
+
+                e['group']=self.makeone(helper.getcategory(entry['categories'],0,1), 0)
+
+                e['emails']=self.filllist(helper.getemails(entry['emails'],0,3,48), 3, "")
+
+                e['url']=self.makeone(helper.geturls(entry['urls'], 0,1,48), "")
+
+                e['memo']=self.makeone(helper.getmemos(entry['memos'], 0, 1, 32), "")
+
+                numbers=helper.getnumbers(entry['numbers'],1,5)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                for num in numbers:
+                    type=num['type']
+                    for i,t in zip(range(100),numbertypetab):
+                        if type==t:
+                            e['numbertypes'].append(i)
+                            break
+                        if t=='none': # conveniently last entry
+                            e['numbertypes'].append(i)
+                            break
+                    e['numbers'].append(num['number'])
+                e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
+                e['numbers']=self.filllist(e['numbers'], 5, "")
+
+                serial1=helper.getserial(entry['serials'], 'lgvx4400', data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry['serials'], 'lgvx4400', data['uniqueserial'], 'serial2', serial1)
+
+                e['serial1']=serial1
+                e['serial2']=serial2
+                
+                e['ringtone']=helper.getringtone(entry['ringtones'], 'call', 0)
+                e['msgringtone']=helper.getringtone(entry['ringtones'], 'message', 0)
+
+                e['wallpaper']=helper.getwallpaper(entry['wallpapers'], 'call', 0)
+
+                e['secret']=helper.getflag(entry['flags'], 'secret', False)
+
+                results[pbentry]=e
+                
+            except helper.ConversionFailed:
+                continue
+
+        data['phonebook']=results
+        return data

@@ -112,6 +112,6 @@ class Phone:
             try:
                 self.comm.readsome()
                 return 1
-            except com_phone.modeignoreerrortypes:
+            except modeignoreerrortypes:
                 pass
         return 0        

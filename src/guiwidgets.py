@@ -494,7 +494,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     # File we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
     
-    def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL):
+    def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_AUTOARRANGE ):
         wxListCtrl.__init__(self, parent, id, style=style)
         wxListCtrlAutoWidthMixin.__init__(self)
         self.droptarget=MyFileDropTarget(self)
@@ -796,7 +796,6 @@ class RingerView(FileView):
 
         # 1 to 2 etc
 
-        
 ###
 ###  Bitmaps
 ###
@@ -807,7 +806,7 @@ class WallpaperView(FileView):
     ID_IGNOREFILE=3
     
     def __init__(self, mainwindow, parent, id=-1):
-        FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL)
+        FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL|wxLC_AUTOARRANGE )
         if gui.HasFullyFunctionalListView():
             self.InsertColumn(2, "Size")
             self.InsertColumn(3, "Index")

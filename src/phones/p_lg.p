@@ -97,6 +97,7 @@ PACKET pbdeleteentryresponse:
 
 PACKET pbupdateentryresponse:
     * pbheader header
+    4 UINT serial1
     * UNKNOWN dunno
 
 # PACKET pbappendentryrequest is specific to each model phone

@@ -458,18 +458,7 @@ class MainWindow(wxFrame):
         menu.Append(ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
 
-        ### notebook
-        self.nb=wxNotebook(self,-1)
-
-        ### notebook tabs
-        self.phonewidget=phonebook.PhoneWidget(self, self.nb)
-        self.nb.AddPage(self.phonewidget, "PhoneBook")
-        self.wallpaperwidget=guiwidgets.WallpaperView(self, self.nb)
-        self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
-        self.ringerwidget=guiwidgets.RingerView(self, self.nb)
-        self.nb.AddPage(self.ringerwidget, "Ringers")
-        self.calendarwidget=guiwidgets.Calendar(self, self.nb)
-        self.nb.AddPage(self.calendarwidget, "Calendar")
+        
 
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
@@ -496,9 +485,6 @@ class MainWindow(wxFrame):
         # You have to make this call for the toolbar to draw itself properly
         self.tb.Realize()
 
-        ### logwindow (last notebook tab)
-        self.lw=guiwidgets.LogWindow(self.nb)
-        self.nb.AddPage(self.lw, "Log")
 
         ### persistent dialogs
         self.dlggetphone=guiwidgets.GetPhoneDialog(self, "Get Data from Phone")
@@ -519,7 +505,6 @@ class MainWindow(wxFrame):
         EVT_MENU(self, ID_HELPHELP, self.OnHelpHelp)
         EVT_MENU(self, ID_HELPCONTENTS, self.OnHelpContents)
         EVT_MENU(self, ID_HELPTOUR, self.OnHelpTour)
-        EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
         EVT_CLOSE(self, self.OnClose)
 
         ### Lets go visible
@@ -552,6 +537,30 @@ class MainWindow(wxFrame):
             if self.configdlg.ShowModal()!=wxID_OK:
                 self.OnExit()
         self.configdlg.updatevariables()
+        
+        import com_lgvx4400
+        self.phoneprofile=com_lgvx4400.Profile()  # make this a property possibly
+
+        # draw everything now that we have a profile
+        
+        ### notebook
+        self.nb=wxNotebook(self,-1, style=wxNO_FULL_REPAINT_ON_RESIZE)
+        # EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
+
+        ### notebook tabs
+        self.phonewidget=phonebook.PhoneWidget(self, self.nb)
+        self.nb.AddPage(self.phonewidget, "PhoneBook")
+        self.wallpaperwidget=guiwidgets.WallpaperView(self, self.nb)
+        self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
+        self.ringerwidget=guiwidgets.RingerView(self, self.nb)
+        self.nb.AddPage(self.ringerwidget, "Ringers")
+        self.calendarwidget=guiwidgets.Calendar(self, self.nb)
+        self.nb.AddPage(self.calendarwidget, "Calendar")
+
+
+        ### logwindow (last notebook tab)
+        self.lw=guiwidgets.LogWindow(self.nb)
+        self.nb.AddPage(self.lw, "Log")
 
         # Final widgets that depend on config
         lv=self.config.ReadInt("viewlogdata", 0)
@@ -564,6 +573,10 @@ class MainWindow(wxFrame):
             menuBar.Check(ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
             wxYield()
+
+        # now register for notebook changes
+        EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
+
 
         # Populate all widgets from disk
         self.OnPopulateEverythingFromDisk()
@@ -584,7 +597,6 @@ class MainWindow(wxFrame):
         else:
             self.nb.SetSelection(sel)
 
-        EVT_CLOSE(self, self.OnClose)
 
     def OnExit(self,_=None):
         self.Close()
@@ -761,16 +773,16 @@ class MainWindow(wxFrame):
             if v==dlg.OVERWRITE: 
                 self.phonewidget.getdata(data)
                 todo.append( (self.wt.writephonebook, "Phonebook") )
-            convertors.append(self.ringerwidget.convertophone)
+            convertors.append(self.phonewidget.converttophone)
             # writing will modify data (especially index) so
             # we repopulate on return
             funcscb.append( self.phonewidget.populatefs )
             funcscb.append( self.phonewidget.populate )
 
         self.MakeCall(Request(self.wt.getfundamentals),
-                      Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors))
+                      Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
 
-    def OnDataSendPhoneGotFundamentals(self,data,todo,convertors, exception, results):
+    def OnDataSendPhoneGotFundamentals(self,data,todo,convertors, funcscb, exception, results):
         if self.HandleException(exception): return
         data.update(results)
         # call each widget to update fundamentals
@@ -779,6 +791,11 @@ class MainWindow(wxFrame):
         # call convertors
         for f in convertors:
             f(data)
+        import pprint
+        import StringIO
+        si=StringIO.StringIO()
+        pprint.pprint(data['phonebook'],si )
+        self.OnLog(si.getvalue())
         # Now scribble to phone
         self.MakeCall(Request(self.wt.senddata, data, todo),
                       Callback(self.OnDataSendPhoneResults, funcscb))
