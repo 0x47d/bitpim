@@ -14,6 +14,9 @@
 # standard modules
 import string
 import cStringIO
+import StringIO
+import sys
+import traceback
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):
@@ -161,3 +164,52 @@ def writeversionindexfile(filename, dict, currentversion):
           f.write("result['%s']=%s\n" % (key, prettyprintdict(dict[key])))
      f.write("FILEVERSION=%d\n" % (currentversion,))
      f.close()
+
+def formatexception(excinfo=None, lastframes=6):
+     """Pretty print exception, including local variable information.
+
+     See Python Cookbook, recipe 14.4.
+
+     @excinfo: tuple of information returned from sys.exc_info when
+               the exception occurred.  If you don't supply this then
+               information about the current exception being handled
+               is used
+               """
+     if excinfo is None:
+          excinfo=sys.exc_info()
+
+     s=StringIO.StringIO()
+     traceback.print_exception(*excinfo, **{'file': s})
+     tb=excinfo[2]
+
+     while True:
+          if not tb.tb_next:
+               break
+          tb=tb.tb_next
+     stack=[]
+     f=tb.tb_frame
+     while f:
+          stack.append(f)
+          f=f.f_back
+     stack.reverse()
+     if len(stack)>lastframes:
+          stack=stack[-lastframes:]
+     print >>s, "\nVariables by last %d frames, innermost last" % (lastframes,)
+     for frame in stack:
+          print >>s, ""
+          print >>s, "Frame %s in %s at line %s" % (frame.f_code.co_name,
+                                                    frame.f_code.co_filename,
+                                                    frame.f_lineno)
+          for key,value in frame.f_locals.items():
+               # filter out modules
+               if type(value)==type(sys):
+                    continue
+               print >>s,"%15s = " % (key,),
+               try:
+                    print >>s,`value`[:60]
+               except:
+                    print >>s,"(Exception occurred printing value)"
+     return s.getvalue()
+                    
+          
+     
