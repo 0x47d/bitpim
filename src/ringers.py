@@ -1,6 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2004 Steven Palm <n9yty@n9yty.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -70,27 +71,29 @@ class RingerView(guiwidgets.FileView):
                     del wp[k]
                     self.modified=True
             
-    def OnAddFile(self, file):
-        print "OnAddFile",file
-        self.thedir=self.mainwindow.ringerpath
-        if os.path.splitext(file)[1]=='.mid':
-            target=self.getshortenedbasename(file, 'mid')
-            if target==None: return # user didn't want to
-            f=open(file, "rb")
-            contents=f.read()
-            f.close()
-            f=open(target, "wb")
-            f.write(contents)
-            f.close()
-        else:
-            # ::TODO:: warn if not on Windows
-            target=self.getshortenedbasename(file, 'qcp')
-            if target==None: return # user didn't want to
-            qcpdata=bpaudio.converttoqcp(file)
-            f=open(target, "wb")
-            f.write(qcpdata)
-            f.close()
-        self.AddToIndex(os.path.basename(target))
+    def OnAddFiles(self, filenames):
+        print "OnAddFiles:",filenames
+        for file in filenames:
+            self.thedir=self.mainwindow.ringerpath
+            self.thedir=self.mainwindow.ringerpath
+            if os.path.splitext(file)[1]=='.mid':
+                target=self.getshortenedbasename(file, 'mid')
+                if target==None: return # user didn't want to
+                f=open(file, "rb")
+                contents=f.read()
+                f.close()
+                f=open(target, "wb")
+                f.write(contents)
+                f.close()
+            else:
+                # ::TODO:: warn if not on Windows
+                target=self.getshortenedbasename(file, 'qcp')
+                if target==None: return # user didn't want to
+                qcpdata=bpaudio.converttoqcp(file)
+                f=open(target, "wb")
+                f.write(qcpdata)
+                f.close()
+            self.AddToIndex(os.path.basename(target).lower())
         self.OnRefresh()
 
     def AddToIndex(self, file):
@@ -103,7 +106,6 @@ class RingerView(guiwidgets.FileView):
             idx+=1
         self._data['ringtone-index'][idx]={'name': file}
         self.modified=True
-
 
     def GetItemImage(self, item):
         image=wx.Image(guihelper.getresourcefile('ringer.png'))
@@ -191,7 +193,7 @@ class RingerView(guiwidgets.FileView):
             else:
                 newentry['length']="1 second :-)"
                 newentry['description']="Midi file"
-            newentry['origin']=''
+            newentry['origin']=entry['origin']
             newitems.append(newentry)
         self.SetItems(newitems)
 
