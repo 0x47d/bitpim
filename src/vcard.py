@@ -62,7 +62,12 @@ class VFile:
 
         colon=line.find(':')
         if colon<1:
-            raise VFileException("Invalid property: "+line)
+            # some evolution vcards don't even have colons
+            # raise VFileException("Invalid property: "+line)
+            if __debug__:
+                print "Fixing up bad line",line
+            colon=len(line)
+            line+=":"
 
         b4=line[:colon]
         line=line[colon+1:]
