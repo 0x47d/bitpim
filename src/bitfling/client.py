@@ -12,6 +12,16 @@
 # Currently this file does nothing except some imports.  That
 # is to help test the installer generators etc
 
+import sys
+
+if sys.platform=="win32":
+    try:
+        import win32api
+        win32api.FreeLibrary(win32api.LoadLibrary("libssl32.dll"))
+        win32api.FreeLibrary(win32api.LoadLibrary("libeay32.dll"))
+    except:
+        raise ImportError("OpenSSL needs to be installed for this module to work")
+
 import xmlrpcstuff
 
 class client:
