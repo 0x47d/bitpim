@@ -519,7 +519,7 @@ class Phone:
         self.sendbrewcommand(0x05, d)
         # do remaining blocks
         numblocks=len(contents)/0x100
-        count=0
+        count=1
         for offset in range(0x100, len(contents), 0x100):
             d=count  # block number
             count+=1
