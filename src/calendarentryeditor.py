@@ -495,8 +495,8 @@ class Editor(wx.Dialog):
         # overall container
         vbs=wx.BoxSizer(wx.VERTICAL)
         
-        self.__prev_btn=wx.Button(self, self.ID_PREV, "<", style=wx.BU_EXACTFIT)
-        self.__next_btn=wx.Button(self, self.ID_NEXT, ">", style=wx.BU_EXACTFIT)
+        self.__prev_btn=wx.BitmapButton(self, self.ID_PREV, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Previous Day")
+        self.__next_btn=wx.BitmapButton(self, self.ID_NEXT, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Day")
         self.title=wx.StaticText(self, -1, "Date here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
 
         # top row container 
