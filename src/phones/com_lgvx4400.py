@@ -47,6 +47,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     serialsname='lgvx4400'
     
     def __init__(self, logtarget, commport):
+        "Calls all the constructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
 	com_brew.BrewProtocol.__init__(self)
         com_lg.LGPhonebook.__init__(self)
@@ -62,6 +63,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
           - 'groups'           the phonebook groups
           - 'wallpaper-index'  map index numbers to names
           - 'ringtone-index'   map index numbers to ringtone names
+
+        This method is called before we read the phonebook data or before we
+        write phonebook data.
         """
 
         # use a hash of ESN and other stuff (being paranoid)
@@ -69,15 +73,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
         # now read groups
-     ##   self.log("Reading group information")
-##        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-##        g=self.protocolclass.pbgroups()
-##        g.readfrombuffer(buf)
-##        self.logdata("Groups read", buf.getdata(), g)
-##        groups={}
-##        for i in range(g.numgroups):
-##            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
-##        results['groups']=groups
+        self.log("Reading group information")
+        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
+        g=self.protocolclass.pbgroups()
+        g.readfrombuffer(buf)
+        self.logdata("Groups read", buf.getdata(), g)
+        groups={}
+        for i in range(g.numgroups):
+            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
+        results['groups']=groups
         # wallpaper index
         self.log("Reading wallpaper indices")
         results['wallpaper-index']=self.getindex(self.wallpaperindexfilename)
@@ -88,6 +92,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return results
         
     def getphonebook(self,result):
+        """Reads the phonebook data.  The L{getfundamentals} informatation will
+        already be in result."""
         pbook={}
         # Bug in the phone.  if you repeatedly read the phone book it starts
         # returning a random number as the number of entries.  We get around
@@ -113,6 +119,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
+        cats=[]
+        for i in result['groups']:
+            if result['groups'][i]['name']!='No Group':
+                cats.append(result['groups'][i]['name'])
+        result['groups']=cats
+        print "returning keys",result.keys()
         return pbook
 
     def savephonebook(self, data):
@@ -517,7 +529,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                                    "ringtone-index")
 
     def extractphonebookentry(self, entry, fundamentals):
-        """Return a phonebook entry in BitPim format"""
+        """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
         res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.serial1, 'serial2': entry.serial2,
@@ -525,7 +537,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # only one name
         res['names']=[ {'full': entry.name} ]
         # only one category
-        res['categories']=[ {'category': entry.group} ] # ::TODO:: turn this into string
+        cat=fundamentals['groups'].get(entry.group, {'name': "No Group"})['name']
+        if cat!="No Group":
+            res['categories']=[ {'category': cat} ]
         # emails
         res['emails']=[]
         for i in entry.emails:
@@ -632,7 +646,7 @@ class Profile:
             try:
                 e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
 
-                e['group']=self.makeone(helper.getcategory(entry.get('categories', []),0,1), 0)
+                e['group']=self.makeone(helper.getcategory(entry.get('categories', []),0,1), None)
 
                 e['emails']=self.filllist(helper.getemails(entry.get('emails', []) ,0,3,48), 3, "")
 
