@@ -355,7 +355,7 @@ class ConfigDialog(wx.Dialog):
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
             gs.Add( wx.StaticText( self, -1, "BitFling"), 0, wx.ALIGN_CENTER_VERTICAL)
-            self.bitflingenabled=wx.CheckBox(self, -1, "Enabled")
+            self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
             gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
             gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), 0, wx.EXPAND)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
