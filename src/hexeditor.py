@@ -18,7 +18,7 @@ class HexEditor(wx.ScrolledWindow):
 
     def __init__(self, id=-1, style=wx.WANTS_CHARS|wx.HSCROLL|wx.VSCROLL):
         wx.ScrolledWindow.__init__(self, id, style)
-        self.data="this is a test of this \x03\xf7code to see \thow well it draws stuff"*7
+        self.data="this is a test of this \x03\xf7code to see \thow well it draws stuff"*70
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
         self.sethighlight(wx.NamedColour("BLACK"), wx.NamedColour("YELLOW"))
@@ -26,6 +26,20 @@ class HexEditor(wx.ScrolledWindow):
         self.setfont(wx.TheFontList.FindOrCreateFont(10, wx.MODERN, wx.NORMAL, wx.NORMAL))
         wx.EVT_SCROLLWIN(self, self.OnScrollWin)
         wx.EVT_PAINT(self, self.OnPaint)
+        wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        self.OnSize(None)
+        self.buffer=None
+
+    def OnEraseBackground(self, _):
+        pass
+
+    def OnSize(self, _):
+        self.width,self.height=self.GetClientSizeTuple()
+        # uncomment these lines to prevent going wider than is needed
+        # if self.width>self.widthinchars*self.charwidth:
+        #    self.SetClientSize( (self.widthinchars*self.charwidth, self.height) )
+        self.needsupdate=True
 
     def sethighlight(self, foreground, background):
         self.highlight=foreground,background
@@ -62,13 +76,11 @@ class HexEditor(wx.ScrolledWindow):
         
 
     def OnDraw(self, dc):
-        x,y,width,height=self.GetUpdateRegion().GetBox()
         xd,yd=self.GetViewStart()
-        y+=yd*self.charheight
         st=0  # 0=normal, 1=highlight, 2=cursor
         dc.BeginDrawing()
         dc.SetFont(self.font)
-        for line in range(y/self.charheight, min(self.datalines,(y+height)/self.charheight+1)):
+        for line in range(yd, min(self.datalines, yd+self.height/self.charheight+1)):
             # address
             self._setnormal(dc)
             st=0
@@ -81,7 +93,7 @@ class HexEditor(wx.ScrolledWindow):
                 dc.DrawText("%02X" % (ord(c),), (10+(3*i)+(i>=8))*self.charwidth, line*self.charheight)
                 if not (ord(c)>=32 and string.printable.find(c)>=0):
                     c='.'
-                dc.DrawText(c, (10+(3*16)+1+i)*self.charwidth, line*self.charheight)
+                dc.DrawText(c, (10+(3*16)+2+i)*self.charwidth, line*self.charheight)
                 
         self._setstatus(dc)
         w,h=self.GetClientSizeTuple()
@@ -90,17 +102,35 @@ class HexEditor(wx.ScrolledWindow):
                 
         dc.EndDrawing()
 
+    def updatebuffer(self):
+        if self.buffer is None or \
+           self.buffer.GetWidth()!=self.width or \
+           self.buffer.GetHeight()!=self.height:
+            if self.buffer is not None:
+                del self.buffer
+            self.buffer=wx.EmptyBitmap(self.width, self.height)
+
+        mdc=wx.MemoryDC()
+        mdc.SelectObject(self.buffer)
+        mdc.SetBackground(wx.TheBrushList.FindOrCreateBrush(self.GetBackgroundColour(), wx.SOLID))
+        mdc.Clear()
+        self.PrepareDC(mdc)
+        self.OnDraw(mdc)
+        mdc.SelectObject(wx.NullBitmap)
+        del mdc
+
     def OnPaint(self, event):
+        if self.needsupdate:
+            self.needsupdate=False
+            self.updatebuffer()
         dc=wx.PaintDC(self)
-        self.PrepareDC(dc)
-        self.OnDraw(dc)
+        dc.BeginDrawing()
+        dc.DrawBitmap(self.buffer, 0, 0, False)
+        dc.EndDrawing()
 
     def OnScrollWin(self, event):
-        #
-        # w,h=self.GetClientSizeTuple()
-        # mousewheel scrolls by three lines
-        # self.RefreshRect((0,h-4*self.charheight,w,4*self.charheight))
-        self.Refresh()
+        self.needsupdate=True
+        self.Refresh() # clear whole widget
         event.Skip() # default event handlers now do scrolling etc
 
 if __name__=='__main__':
@@ -112,5 +142,18 @@ if __name__=='__main__':
             self.Show(True)
     app=wx.PySimpleApp()
     frame=MainWindow(None, -1, "HexEditor Test")
-    app.MainLoop()
+    if True:
+        import hotshot
+        f=hotshot.Profile("hexeprof",1)
+        f.runcall(app.MainLoop)
+        f.close()
+        import hotshot.stats
+        stats=hotshot.stats.load("hexeprof")
+        stats.strip_dirs()
+        # stats.sort_stats("cumulative")
+        stats.sort_stats("time", "calls")
+        stats.print_stats(30)
+        
+    else:
+        app.MainLoop()
 
