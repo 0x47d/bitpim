@@ -495,8 +495,7 @@ class MainWindow(wxFrame):
             if v=='MERGE': raise Exception("Not implemented")
             self.calendarwidget.populatefs(results)
             self.calendarwidget.populate(results)
-        # ::TODO::
-        # information
+
             
     ###
     ### Main bit for sending data to the phone
@@ -594,7 +593,6 @@ class MainWindow(wxFrame):
         if IsGtk():
             enablefv=False # crummy platform
             
-        
         self.GetToolBar().EnableTool(ID_FV_ICONS, enablefv)
         self.GetToolBar().EnableTool(ID_FV_LIST, enablefv)
         self.GetMenuBar().Enable(ID_FV_ICONS, enablefv)
@@ -748,7 +746,7 @@ class WorkerThread(WorkerThreadFramework):
             if self.dispatchto.commportsetting is None or \
                len(self.dispatchto.commportsetting)==0:
                 raise common.CommsNeedConfiguring("LGVX4400", "Comm port not configured")
-            # ::todo:: should have failsafe code here that releases comport if
+            # ::TODO:: should have failsafe code here that releases comport if
             # phone module fails to load
             comport=commport.CommConnection(self, self.dispatchto.commportsetting)
             import com_lgvx4400
@@ -762,7 +760,6 @@ class WorkerThread(WorkerThreadFramework):
         willcall=[]
         sync={}
         for i in (
-            (req.GetInformationSetting, self.commphone.getphoneinfo, "Version Information", "information"),
             (req.GetPhoneBookSetting, self.commphone.getphonebook, "Phone Book", "phonebook"),
             (req.GetCalendarSetting, self.commphone.getcalendar, "Calendar", "calendar",),
             (req.GetWallpaperSetting, self.commphone.getwallpapers, "Wallpaper", "wallpaper"),

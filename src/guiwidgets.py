@@ -381,7 +381,7 @@ class LogWindow(wxPanel):
 ###
 
 class GetPhoneDialog(wxDialog):
-    strings= ('Version Information', 'PhoneBook', 'Calendar', 'Wallpaper', 'Ringtone')
+    strings= ('PhoneBook', 'Calendar', 'Wallpaper', 'Ringtone')
     NOTREQUESTED=0
     MERGE=1
     OVERWRITE=2
@@ -401,7 +401,6 @@ class GetPhoneDialog(wxDialog):
         self.rb=[]
         for i in self.strings:
             self.cb.append(wxCheckBox(self,-1, ""))
-            if len(self.cb)>1: self.cb[-1].SetValue(True) # info not requested by default
             gs.Add(self.cb[-1], 0, wxEXPAND)
             gs.Add(wxStaticText(self,-1,i), 0, wxEXPAND|wxALIGN_CENTER_VERTICAL) # align needed for gtk
             self.rb.append( [wxRadioButton(self, -1, "", style=wxRB_GROUP),
@@ -429,36 +428,28 @@ class GetPhoneDialog(wxDialog):
         if self.rb[index][0].GetValue(): return self. MERGE
         return self.OVERWRITE
 
-    def GetInformationSetting(self):
+    def GetPhoneBookSetting(self):
         return self._setting(0)
 
-    def GetPhoneBookSetting(self):
+    def GetCalendarSetting(self):
         return self._setting(1)
 
-    def GetCalendarSetting(self):
+    def GetWallpaperSetting(self):
         return self._setting(2)
 
-    def GetWallpaperSetting(self):
-        return self._setting(3)
-
     def GetRingtoneSetting(self):
-        return self._setting(4)
+        return self._setting(3)
 
 class SendPhoneDialog(GetPhoneDialog):
     def __init__(self, frame, title, id=-1):
         GetPhoneDialog.__init__(self, frame, title, id)
-        # disable the information line
-        self.cb[0].SetValue(False)
-        self.cb[0].Enable(False)
-        self.rb[0][0].Enable(False)
-        self.rb[0][1].Enable(False)
         # turn all checkboxes off by default for writing
         # we want user to explicitly write stuff they changed
         for i in self.cb:
             i.SetValue(False)
         # We do support merge for wallpaper and ringtone
+        self.rb[2][0].Enable(True)
         self.rb[3][0].Enable(True)
-        self.rb[4][0].Enable(True)
         
 
 ###
