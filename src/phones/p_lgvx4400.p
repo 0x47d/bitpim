@@ -61,7 +61,7 @@ PACKET pbentry:
         1 UINT numbertype
     * LIST {'length': self.numberofphonenumbers} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
-    * UNKNOWN unknown20c
+    * UNKNOWN +unknown20c
 
 PACKET pbgroups:
     P UINT {'constant': 10} numgroups
