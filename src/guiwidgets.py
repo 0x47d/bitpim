@@ -391,6 +391,10 @@ class SendPhoneDialog(GetPhoneDialog):
         self.cb[0].Enable(False)
         self.rb[0][0].Enable(False)
         self.rb[0][1].Enable(False)
+        # turn all checkboxes off by default for writing
+        # we want user to explicitly write stuff they changed
+        for i in self.cb:
+            i.SetValue(False)
         
 
 ###
