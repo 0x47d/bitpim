@@ -48,6 +48,7 @@ import paramiko_bp as paramiko # we use a slightly modified version that knows h
 
 # my modules
 if TRACE: import guihelper # to format exceptions
+import common
 
 class ServerChannel(paramiko.Channel):
 
@@ -388,10 +389,15 @@ class Server(threading.Thread):
         except:
             self.OnLog("Exception processing method "+`method`)
             self.OnLogException(sys.exc_info())
-            # report exception back to server
-            response = xmlrpclib.dumps(
-                xmlrpclib.Fault(1, "%s:%s" % sys.exc_info()[:2])
-                )
+            # report exception back to server, with class name first
+            # and then `object`.  The client end may be able to
+            # re-raise it
+            obj=sys.exc_info()[1]
+            try:
+                klass="%s.%s" % (obj.__module__, obj.__name__)
+            except:
+                klass="%s.%s" % (obj.__class__.__module__, obj.__class__.__name__)
+            response = xmlrpclib.dumps(xmlrpclib.Fault(17, "%s:%s" % (klass, obj)))
 
         return response            
 
@@ -491,7 +497,14 @@ class ServerProxy:
         p.feed(response)
         p.close()
         # if the response was a Fault, then it is raised by u.close()
-        response=u.close()
+        try:
+            response=u.close()
+        except xmlrpclib.Fault,e:
+            if e.faultCode!=17:
+                raise e
+            klass,str=e.faultString.split(':', 1)
+            raise common.getfullname(klass)(str)
+            
         if len(response)==1:
             response=response[0]
         return response
@@ -516,7 +529,7 @@ if __name__=='__main__':
     if sys.argv[1]=="server":
         cert=paramiko.DSSKey()
         cert.read_private_key_file(os.path.expanduser("~/.bitfling.key"))
-        server=Server('', 4433, cert)
+        server=Server('', 12652, cert)
         server.setDaemon(True)
         server.start()
 
