@@ -90,7 +90,7 @@ PACKET phonebookentry:
     97 STRING {'default': ""} +email
     1 UINT +url_len
     97 STRING {'default': ""} +url
-    1 BOOL {'default': 1} +dunno
+    1 UINT {'default': 1} +defaultnum
     1 BOOL +secret
 
 PACKET phonebookslotresponse:
@@ -255,3 +255,13 @@ PACKET pbsortbuffer:
         2 UINT {'default': 0xffff} pbslot
     * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
     162 UNKNOWN +pad
+
+PACKET wallpaperbuffer:
+    "Addition buffer of wallpaper assignment info"
+    # 1500 byte buffer
+    P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
+    P UINT {'constant': 0x69} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 2048} bufsize
+    P STRING {'default': "wallpaper assignment info"} +comment
+    * LIST {'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo} +wallpapers
+    548 UNKNOWN +pad
