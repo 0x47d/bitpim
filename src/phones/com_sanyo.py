@@ -815,7 +815,9 @@ class SanyoPhonebook:
     # 0x6d on sendfileterminator
     # 0x65 not in sync mode on sendfilename
     # 0x6a on sendfilefragment when buffer full, for ringers  6 max?
+    # 0x6b ??
     # 0x6c on sendfilefragment when full of pictures         11 max?
+    # 0x6d
     # 0x69 on sendfilefragment.  Invalid file type.  PNG works, jpg, bmp don't
     # 0x68 on sendfilefragment.  Bad picture size
     def writesanyofile(self, name, contents):
@@ -841,7 +843,7 @@ class SanyoPhonebook:
             else:
                 raise SanyoCommandException(res.errorcode)
             # Wait about 5 minutes before giving up
-            waitcount=300
+            waitcount=120
             while waitcount>0:
                 time.sleep(1.0)
                 res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, returnerror=True)
@@ -858,7 +860,7 @@ class SanyoPhonebook:
         req=self.protocolclass.sanyosendfilefragment()
         packetsize=req.payloadsize
 
-        time.sleep(1.0)
+#        time.sleep(1.0)
         offset=0
         count=0
         numblocks=len(contents)/packetsize+1
@@ -869,11 +871,17 @@ class SanyoPhonebook:
             req.header.command=offset
             req.data=contents[offset:min(offset+packetsize,len(contents))]
             # self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, numsendretry=2)
-            self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True)
+            self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
+            if 'errorcode' in res.getfields():
+                self.log(name+" not written due to error code "+`res.errorcode`)
+                return
                 
         req=self.protocolclass.sanyosendfileterminator()
-        res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True)
+        res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
         # The returned value in res.header.faset may mean something
+        if 'errorcode' in res.getfields():
+            self.log(name+" not written due to error code "+`res.errorcode`)
+            return
         
         end=time.time()
         if end-start>3:
