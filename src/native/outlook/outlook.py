@@ -9,6 +9,11 @@
 
 "Be at one with Outlook"
 
+# Reject if not on Windows
+import sys
+if sys.platform!="win32":
+   raise ImportError()
+
 # See this recipe on ASPN for how this code started
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/173216
 # Chris Somerlot also gave some insights
