@@ -38,6 +38,28 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     ringerindexfilename="dloadindex/brewRingerIndex.map"
     protocolclass=p_lgvx4400
     serialsname='lgvx4400'
+
+    imagelocations=(
+        # offset, index file, files location, type, maximumentries
+        ( 10, "dloadindex/brewImageIndex.map", "brew/shared", "images", 30),
+        )
+
+    ringtonelocations=(
+        # offset, index file, files location, type, maximumentries
+        ( 50, "dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
+        )
+
+    builtinimages=('Balloons', 'Soccer', 'Basketball', 'Bird',
+                   'Sunflower', 'Puppy', 'Mountain House', 'Beach')
+
+    builtinringtones=( 'Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5',
+                       'Ring 6', 'Voices of Spring', 'Twinkle Twinkle',
+                       'The Toreadors', 'Badinerie', 'The Spring', 'Liberty Bell',
+                       'Trumpet Concerto', 'Eine Kleine', 'Silken Ladder', 'Nocturne',
+                       'Csikos Post', 'Turkish March', 'Mozart Aria', 'La Traviata',
+                       'Rag Time', 'Radetzky March', 'Can-Can', 'Sabre Dance', 'Magic Flute',
+                       'Carmen' )
+
     
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
@@ -81,24 +103,41 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.log("Fundamentals retrieved")
         return results
 
+    def getmediaindex(self, builtins, maps, results, key):
+        """Gets the media (wallpaper/ringtone) index
 
-    def getwallpaperindices(self, results):
-        # wallpaper index
-        self.log("Reading wallpaper indices")
-        
-        newres={}
+        @param builtins: the builtin liston the phone
+        @param results: places results in this dict
+        @param maps: the list of index files and locations
+        @param key: key to place results in
+g        """
+        media={}
+
+        # builtins
         c=1
-        for name in 'Balloons', 'Soccer', 'Basketball', 'Bird', 'Sunflower', 'Puppy', 'Mountain House', 'Beach':
-            newres[c]={'name': name, 'type': 'builtin'}
+        for name in builtins:
+            media[c]={'name': name, 'origin': 'builtin' }
             c+=1
 
-        # add 10 to each result
-        res=self.getindex(self.wallpaperindexfilename)
+        # the maps
+        for offset,indexfile,location,type,maxentries in maps:
+            if type=="camera": break
+            index=self.getindex(indexfile)
+            for i in index:
+                media[i+offset]={'name': index[i], 'origin': type}
 
-        for i in res.keys():
-            newres[i+10]={'name': res[i], 'type': 'image'}
-        results['wallpaper-index']=newres
-        return results
+        # camera must be last
+        if type=="camera":
+            # (we don't do verify on the camera since we assume it is always correct)
+            index=self.getcameraindex()
+            for i in index:
+                media[i+self.cameraoffset]=index[i]
+
+        results[key]=media
+        return media
+
+    def getwallpaperindices(self, results):
+        return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
 
     def getringtoneindices(self, results):
         # ringtone index
@@ -451,9 +490,33 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         return result
 
+    def getmedia(self, maps, result, key):
+        media={}
+        # the maps
+        for offset,indexfile,location,type,maxentries in maps:
+            if type=="camera": break
+            index=self.getindex(indexfile)
+            for i in index:
+                try:
+                    media[index[i]]=self.getfilecontents(location+"/"+index[i])
+                except com_brew.BrewNoSuchFileException:
+                    self.log("It was in the index, but not on the filesystem")
+                    
+        if type=="camera":
+            # now for the camera stuff
+            index=self.getcameraindex()
+            for i in index:
+                try:
+                    media[index[i]['name']]=self.getfilecontents("cam/pic%02d.jpg" % (i,))
+                except com_brew.BrewNoSuchFileException:
+                    self.log("It was in the index, but not on the filesystem")
+                    
+        result[key]=media
+        return result
+
     def getwallpapers(self, result):
-        return self.getprettystuff(result, "brew/shared", "wallpaper", self.wallpaperindexfilename,
-                                   "wallpaper-index")
+        return self.getmedia(self.imagelocations, result, 'wallpapers')
+
 
     def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey, merge):
         f=data[stuffkey].keys()
@@ -645,13 +708,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return re.sub("[^0-9PT#*]", "", str)
 
     
-    tonetab=( 'Default', 'Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5',
-              'Ring 6', 'Voices of Spring', 'Twinkle Twinkle',
-              'The Toreadors', 'Badinerie', 'The Spring',
-              'Liberty Bell', 'Trumpet Concerto', 'Eine Kleine',
-              'Silken Ladder', 'Nocturne', 'Csikos Post', 'Turkish March',
-              'Mozart Aria', 'La Traviata', 'Rag Time', 'Radetzky March',
-              'Can-Can', 'Sabre Dance', 'Magic Flute', 'Carmen' )
 
 class Profile:
     serialsname='lgvx4400'
