@@ -1221,7 +1221,7 @@ class Phone:
         """Convert the phone number into something the phone understands
 
         All non-digits are removed"""
-        return re.sub("[^0-9]", "", str)
+        return re.sub("[^0-9PT#*]", "", str)
 
     
     tonetab=( 'Default', 'Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5',
