@@ -763,12 +763,12 @@ class Calendar(calendarcontrol.Calendar):
         # read data from the database
         cal_dict=self.mainwindow.database.getmajordictvalues('calendar',
                                                       calendarobjectfactory)
-        if __debug__:
-            print 'Calendar.getfromfs: dicts returned from Database:'
+        #if __debug__:
+        #    print 'Calendar.getfromfs: dicts returned from Database:'
         r={}
         for k,e in cal_dict.items():
-            if __debug__:
-                print e
+            #if __debug__:
+            #    print e
             ce=CalendarEntry()
             ce.set_db_dict(e)
             r[ce.id]=ce
