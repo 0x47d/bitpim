@@ -79,6 +79,33 @@ class Phone(com_samsung_packet.Phone):
         (100, "", "digital_cam/jpeg", "camera", 100)
         )
         
+    def pblinerepair(self, line):
+        "Extend incomplete lines"
+        # VGA1000 Firmware WG09 doesn't return a full line unless birthday
+        # is set.  Add extra commas so packet decoding works
+        nfields=26                      # Can we get this from packet def?
+        ncommas=self.countcommas(line)
+        if ncommas<0:                   # Un terminated quote
+            line+='"'
+            ncommas = -ncommas
+        if nfields-ncommas>1:
+            line=line+","*(nfields-ncommas-1)
+        return line
+
+    def countcommas(self, line):
+        inquote=False
+        ncommas=0
+        for c in line:
+            if c == '"':
+                inquote = not inquote
+            elif not inquote and c == ',':
+                ncommas+=1
+
+        if inquote:
+            ncommas = -ncommas
+        
+        return ncommas
+        
     def getwallpapers(self, result):
         self.getwallpaperindices(result)
         return self.getmedia(self.imagelocations, result, 'wallpapers')
