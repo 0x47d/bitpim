@@ -869,7 +869,7 @@ class WallpaperView(FileView):
             # gifs
             file=os.path.join(self.mainwindow.wallpaperpath, i)
             if self.isBCI(file):
-                image=brewcompressedimage.getimage(file)
+                image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
             else:
                 image=wxImage(file)
 
