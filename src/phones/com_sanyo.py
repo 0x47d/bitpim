@@ -1056,7 +1056,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,SanyoPhonebook):
 
     builtinimages=()
 
-    builtinringtons=()
+    builtinringtones=()
 
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
