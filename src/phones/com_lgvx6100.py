@@ -45,15 +45,15 @@ class Phone(com_lgvx4400.Phone):
     # more VX6100 indices
     imagelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 50, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 30) ,
-        ( 100, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 20),
-        ( 220, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
-        ( 130, None, None, "camera", 20) # nb camera must be last
+        ( 50, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 60) ,
+        ( 110, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 60),
+        ( 170, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
+        ( 200, None, None, "camera", 20) # nb camera must be last
         )
 
     ringtonelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
+        ( 50, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 60),
         ( 150, "download/dloadindex/mmsRingerIndex.map", "mms/sound", "mms", 20),
         ( 180, "download/dloadindex/mmsDrmRingerIndex.map", "mms/sound/drm", "drm", 20)
         )
@@ -102,11 +102,11 @@ class Profile(com_lgvx4400.Profile):
     WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=148
     MAX_WALLPAPER_BASENAME_LENGTH=36
-    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
     WALLPAPER_CONVERT_FORMAT="jpg"
    
     MAX_RINGTONE_BASENAME_LENGTH=32
-    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
  
     def __init__(self):
         com_lgvx4400.Profile.__init__(self)
