@@ -940,7 +940,7 @@ class Calendar(calendarcontrol.Calendar):
             else:
                 s=[]
                 for n in rp.suppressed:
-                    s.append(n.get())
+                    s.append(n.get()[:3])
                 d['exceptions']=s
                 if rp.repeat_type==rp.daily:
                     self.__convert_daily_events(e, d)
