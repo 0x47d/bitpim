@@ -115,6 +115,8 @@ class ImportCSVDialog(wx.Dialog):
         f.close()
         # ::TODO:: do something about alien line endings (eg windows file on linux). DSV only splits on newline
         self.qualifier=DSV.guessTextQualifier(self.rawdata)
+        if self.qualifier is None or len(self.qualifier)==0:
+            self.qualifier='"'
         self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
         self.delimiter= DSV.guessDelimiter(self.data)
         if self.delimiter is None:
