@@ -22,6 +22,7 @@ import bpcalendar
 import helpids
 import phonebookentryeditor as pb_editor
 import pubsub
+import guihelper
 
 class RepeatEditor(pb_editor.DirtyUIBase):
     __repeat_type= {
@@ -472,7 +473,7 @@ class Editor(wx.Dialog):
     def __init__(self, parent):
 
         wx.Dialog.__init__(self, parent, -1, 'Calendar Entry Editor',
-                           wx.DefaultPosition, wx.Size(760, 580),
+                           wx.DefaultPosition,
                            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         # the parent is the BPCalenda widget, save it
         self.cw=parent  # also the BPCalendar object
@@ -553,7 +554,10 @@ class Editor(wx.Dialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
-        self.SetSize((560, 380))
+        if guihelper.IsMac():
+            self.SetSize( (700, 450) )
+        else:
+            self.SetSize((560, 380))
         # delete is disabled until an item is selected
         self.__delete_btn.Enable(False)
 
