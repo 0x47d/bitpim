@@ -81,6 +81,7 @@ ID_FV_ADD=1
 ID_FV_BACKUP=1
 ID_FV_BACKUP_TREE=1
 ID_FV_RESTORE=1
+ID_FV_PASTE=1
 
 # keep map around
 idmap={}
@@ -250,15 +251,18 @@ class MySplashScreen(wxSplashScreen):
         x=23 
         y=40
         # Product name
-        str=version.name
-        dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
-        dc.SetFont( self._gimmethedamnsizeirequested(25, wxROMAN, wxNORMAL, wxNORMAL) )
-        w,h=dc.GetTextExtent(str)
-        dc.DrawText(str, x, y)
-        y+=h+0
+        if False:
+            str=version.name
+            dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
+            dc.SetFont( self._gimmethedamnsizeirequested(25, wxROMAN, wxNORMAL, wxNORMAL) )
+            w,h=dc.GetTextExtent(str)
+            dc.DrawText(str, x, y)
+            y+=h+0
         # Version number
+        x=58
+        y=127
         str=version.versionstring
-        dc.SetTextForeground( wxNamedColour("ORANGE4") )
+        dc.SetTextForeground( wxNamedColour("MEDIUMBLUE") )
         dc.SetFont( self._gimmethedamnsizeirequested(15, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x+10, y)
@@ -415,10 +419,10 @@ class MainWindow(wxFrame):
         # menu.Append(ID_FILENEW,  "&New", "Start from new")
         # menu.Append(ID_FILEOPEN, "&Open", "Open a file")
         # menu.Append(ID_FILESAVE, "&Save", "Save your work")
-        menu.AppendSeparator()
-        menu.Append(ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
-        menu.Append(ID_FILEPRINT, "&Print", "Print")        
-        menu.AppendSeparator()
+        #menu.AppendSeparator()
+        #menu.Append(ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
+        #menu.Append(ID_FILEPRINT, "&Print", "Print")        
+        #menu.AppendSeparator()
         menu.Append(ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
         menu=wxMenu()
