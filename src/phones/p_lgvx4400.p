@@ -65,8 +65,7 @@ PACKET pbentry:
 
 PACKET pbgroups:
     "Phonebook groups"
-    P UINT {'constant': 10} numgroups
-    * LIST {'length': self.numgroups} groups:
+    * LIST +groups:
         1 UINT icon
         23 STRING name
 
