@@ -576,10 +576,17 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         
 
     def GetSelectedItemNames(self):
+        "Returns the list of names of selected items"
         names=[]
-        for i in range(0,self.GetItemCount()):
-            if self.GetItemState(i, wxLIST_MASK_STATE)&wxLIST_STATE_SELECTED:
-                names.append(self.GetItemText(i))
+        i=-1
+        while True:
+            nexti=self.GetNextItem(i, state=wxLIST_STATE_SELECTED)
+            if nexti<0:
+                break
+            i=nexti
+            names.append(self.GetItemText(i))
+            
+        assert len(names)==self.GetSelectedItemCount()
         return names
 
     def OnRightDown(self,event):
