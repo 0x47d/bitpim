@@ -294,8 +294,10 @@ class Database:
         self.cursor=self.connection.cursor()
         # we always do an integrity check first
         icheck=[]
+        print "database integrity check"
         for row in self.cursor.execute("pragma integrity_check"):
             icheck.extend(row)
+        print "database integrity check complete"
         icheck="\n".join(icheck)
         if icheck!="ok":
             raise IntegrityCheckFailed(icheck)
