@@ -519,6 +519,7 @@ class ConfigDialog(wxDialog):
             self.diskbox.SetValue(v)
 
     def OnComBrowse(self, _):
+        self.mw.wt.clearcomm()
         # remember its size
         w=self.mw.config.ReadInt("combrowsewidth", 640)
         h=self.mw.config.ReadInt("combrowseheight", 480)
@@ -573,8 +574,7 @@ class ConfigDialog(wxDialog):
         self.mw.config.Write("path", path)
         self.mw.commportsetting=self.commbox.GetValue()
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
-        if self.mw.wt is not None:
-            self.mw.wt.commphone=None # cause it to be recreated
+        self.mw.wt.clearcomm()
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to
