@@ -346,6 +346,9 @@ class MainWindow(wx.Frame):
         wx.Frame.__init__(self, parent, id, title,
                          style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
 
+        # does bitfling work?  -- commented out for moment
+        # import bitfling.client
+
         wx.GetApp().htmlprinter.SetParentFrame(self)
 
         sys.excepthook=Callback(self.excepthook)
