@@ -629,7 +629,7 @@ class SanyoPhonebook:
                 repeat=0
 
             phonenum=re.sub("\-","",descloc)
-            now=time.mktime(time.localtime(time.time()))-timedif
+            now=time.mktime(time.localtime(time.time()))-zonedif
             if(phonenum.isdigit()):  # This is a phone number, use call alarm
                 self.log("Write calendar call alarm slot "+`callslot`+ " - "+descloc)
                 e=self.protocolclass.callalarmentry()
@@ -639,7 +639,7 @@ class SanyoPhonebook:
                 
 
                 timearray=entry['start']+[0,0,0,0]
-                starttimelocal=time.mktime(timearray)-timedif
+                starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
                 else:
@@ -674,7 +674,7 @@ class SanyoPhonebook:
                 e.location_len=len(e.location)
 
                 timearray=entry['start']+[0,0,0,0]
-                starttimelocal=time.mktime(timearray)-timedif
+                starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
                 else:
@@ -682,7 +682,7 @@ class SanyoPhonebook:
                 e.start=starttimelocal-self._sanyoepochtounix
 
                 timearray=entry.get('end', entry['start'])+[0,0,0,0]
-                e.end=time.mktime(timearray)-self._sanyoepochtounix-timedif
+                e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
 
                 alarmdiff=entry.get('alarm',0)
                 e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
