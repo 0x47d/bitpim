@@ -1397,8 +1397,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     def sizetwiddle(self):
         dlg=self.GetView().GetParent().GetParent()
         w,h=dlg.GetSize()
-        dlg.SetSize( (w-10, h-10) )
-        dlg.SetSize( (w, h) )
+        dlg.SetSize( (w-1, h-1) )
 
 def _htmlfixup(txt):
     if txt is None: return ""

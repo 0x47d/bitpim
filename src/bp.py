@@ -28,14 +28,15 @@ if __debug__:
         profile.run(command)
         profile.close()
         del profile
+	howmany=100
         stats=hotshot.stats.load(file)
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
-        stats.print_stats(25)
+        stats.print_stats(100)
         stats.sort_stats('cum', 'calls')
-        stats.print_stats(25)
+        stats.print_stats(100)
         stats.sort_stats('calls', 'time')
-        stats.print_stats(25)
+        stats.print_stats(100)
         sys.exit(0)
         
 

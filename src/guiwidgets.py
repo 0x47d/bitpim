@@ -90,7 +90,6 @@ class LogWindow(wx.Panel):
             self.outstandingtext.seek(0)
             self.outstandingtext.truncate()
             self.tb.AppendText(newt)
-            self.tb.ScrollLines(-1)
 
     def log(self, str, nl=True):
         now=time.time()
