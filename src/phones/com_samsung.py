@@ -179,7 +179,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     def splitandunescape(self, line):
         """Split fields and unescape double quote and right brace"""
         # Should unescaping be done on fields that are not surrounded by
-        # double quotes?  DSV sprips these quotes, so we have to do it to
+        # double quotes?  DSV strips these quotes, so we have to do it to
         # all fields.
         col=line.find(": ")
         print line[col+2:]
@@ -199,6 +199,43 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         #s=s.replace("}","}]")
         #s=s.replace('"','}\002')
         return s
+        
+    def defrell(self, s, acol, ncol):
+        """Fixes up phonebook responses with the alias field.  The alias field
+        does not have quotes around it, but can still contain commas"""
+        # Example with A670  self.defrell(s, 17, 26)
+        if acol<0 or acol>=ncol: # Invalid alias column, do nothing
+            return s
+        e=s.split(",")
+        i=0
+
+        while i<len(e):
+            # Recombine when ,'s in quotes
+            if len(e[i]) and e[i][0]=='"' and e[i][-1]!='"':
+                while i+1<len(e) and (len(e[i+1])==0 or e[i+1][-1]!='"'):
+                    e[i] += ","+e[i+1]
+                    del e[i+1]
+                else:
+                    if i+1<len(e):
+                        e[i] += ","+e[i+1]
+                        del e[i+1]
+            i+=1
+
+        if len(e)<=ncol: # Return original string if no excess commas
+            return s
+        
+        for k in range(len(e)-ncol):
+            e[acol]+=","+e[acol+1]
+            del e[acol+1]
+
+        e[acol]='"'+e[acol]+'"' # quote the string
+    
+        res=e[0]
+        for item in e[1:]:  # Rejoin the columns
+            res+=","+item
+
+        return res
+        
         
     def csvsplit(self, line):
         """Parse a Samsung comma separated list."""
