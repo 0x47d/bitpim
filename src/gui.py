@@ -307,12 +307,20 @@ class MainApp(wx.App):
         # wx.HelpProvider_Set(provider)
 
     def displayhelpid(self, id):
-        if self.helpcontroller is None:
-            self._setuphelp()
-        if id is None:
-            self.helpcontroller.DisplayContents()
+        if guihelper.IsMSWindows():
+            import win32help
+            fname=guihelper.gethelpfilename()+".chm"
+            if id is None:
+                win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOC)
+            else:
+                win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
         else:
-            self.helpcontroller.Display(id)
+            if self.helpcontroller is None:
+                self._setuphelp()
+            if id is None:
+                self.helpcontroller.DisplayContents()
+            else:
+                self.helpcontroller.Display(id)
 
     def makemainwindow(self):
         if self.made:
