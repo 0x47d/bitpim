@@ -1,6 +1,11 @@
-# Part of bitpim
-
-# $Id$
+### BITPIM
+###
+### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
+###
+### This software is under the Artistic license.
+### http://www.opensource.org/licenses/artistic-license.php
+###
+### $Id$
 
 import common
 import commport
@@ -86,7 +91,10 @@ class Phone:
         res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
         ### Response 0x11
         # Byte 0x12 is number of entries
-        numentries=ord(res[0x12])
+        try:
+            numentries=ord(res[0x12])
+        except:
+            numentries=0
         self.log("There are %d entries" % (numentries,))
         for i in range(0, numentries):
             ### Read current entry
@@ -117,8 +125,11 @@ class Phone:
         res=self.sendpbcommand(0x11, "\x01\x00\x00\x00\x00\x00\x00")
         ### Response 0x11
         # Byte 0x12 is number of entries
-        numexistingentries=ord(res[0x12])
-        progressmax=numexistingentries+max(len(data['phonebook'].keys()),numexistingentries)
+        try:
+            numexistingentries=ord(res[0x12])
+        except:
+            numexistingentries=0
+        progressmax=numexistingentries*2+len(data['phonebook'].keys())
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
         for i in range(0, numexistingentries):
@@ -133,33 +144,42 @@ class Phone:
             self.sendpbcommand(0x12, "\x01\x00\x00\x00\x00\x00\x00")
             progresscur+=1
         # we have now looped around back to begining
+        
+        # The phone ignores if you try to write an entry that has the same
+        # serial as a later entry.  This makes things fun if you then delete
+        # that later entry since the update won't be picked up at all.  There
+        # are two solutions to this problem.  One is to delete all entries first
+        # so that there is no possibility of duplication, and the second is
+        # to do some sort of advanced diff function to minimize the amount of
+        # writes happening.  I pick option one (delete all first)
+        
+        for i in range(0, numexistingentries):
+            progresscur+=1
+            ii=existingpbook[i]
+            self.log("Deleting entry "+`i`+" - "+ii['name'])
+            cmddata="\x01"+makelsb(ii['serial1'],4)+ \
+                  "\0x00\x00" + \
+                  makelsb(ii['serial2'],4) + \
+                  makelsb(ii['number'],2)
+            self.sendpbcommand(0x05, cmddata)
+            self.progress(progresscur, progressmax, "Preparing "+`i`)
+
+        # should now be back at begining
         pbook=data['phonebook']
         entries=pbook.keys()
-        entries.sort()
+        entries.sort() # need roworder data
         numentries=len(pbook.keys())
-        for i in range(0, max(numentries,numexistingentries)):
+        for i in range(0, numentries):
             progresscur+=1
-            if i>=numentries:
-                ii=existingpbook[i]
-                # no idea what the \x06 is about
-                data="\x01"+makelsb(ii['serial1'],4)+ \
-                      "\0x00\x00" + \
-                      makelsb(ii['serial2'],4) + \
-                      makelsb(ii['number'],2)
-                self.log("Deleting entry "+`i`+" - "+ii['name'])
-                self.sendpbcommand(0x05, data)
-                self.progress(progresscur, progressmax, "removing "+`i`)
-                continue
-            entry=self.makeentry(i, pbook[entries[i]], data)
-            if i>=numexistingentries:
-                cmd=0x03 # append
-                self.log("Appending entry "+`i`+" - "+pbook[entries[i]]['name'])
-            else:
-                cmd=0x04 # overwrite
-                self.log("Overwriting entry "+`i`+" - "+existingpbook[i]['name']+" - with "+pbook[entries[i]]['name'])
-            self.progress(progresscur, progressmax, "Writing "+pbook[entries[i]]['name'])
-            self.sendpbcommand(cmd, "\x01"+entry)
-
+            ii=pbook[entries[i]]
+            entry=self.makeentry(i, ii, data)
+            cmd=0x03 # append
+            self.log("Appending entry "+`i`+" - "+ii['name'])
+            self.progress(progresscur, progressmax, "Writing "+ii['name'])
+            res=self.sendpbcommand(cmd, "\x01"+entry)
+            ii['serial1']=readlsb(res[0x04:0x08])
+            ii['serial2']=ii['serial1']
+            
     def getcalendar(self,result):
         self.setmode(self.MODEBREW)
         return result
@@ -536,7 +556,7 @@ class Phone:
         d=self.escape(d+self.crcs(d))+self.terminator
         self.comm.write(d)
         try:
-            d=self.unescape(self.comm.readuntil(self.terminator))
+            d=self.unescape(self.comm.readuntil(self.terminator))[:-3] # strip crc
             # ::TODO:: we should check crc
             if d[2]!="\x00":
                 err=ord(d[2])
