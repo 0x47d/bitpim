@@ -171,6 +171,25 @@ class Profile:
             return True
         return False
 
+    def QueryAudio(self, origin, currentextension, audiofileinfo):
+        """Query for MP3 file support
+
+        Raise an exception if you cannot support the ringtone or any conversion of
+        it.
+
+        @param audiofileinfo: A L{fileinfo.AudioFileInfo} object specifying file's audio properties
+        @param currentextension: The extension currently used by the file
+        
+        @return:  ("file extension", audiofile object).  The file extension
+                  (excluding the leading dot) to make the file use.  The audiofile
+                  object can be what was passed in unaltered meaning the file is
+                  fine as is, or make a new one to specify how the file should
+                  be converted.  Note there is a MAXSIZE attribute if you need
+                  to limit file size.
+        """
+        # default implementation leaves file unaltered
+        return (currentextension, audiofileinfo)
+
 
 class NoFilesystem:
 
