@@ -703,6 +703,8 @@ class WorkerThread(WorkerThreadFramework):
             if self.dispatchto.commportsetting is None or \
                len(self.dispatchto.commportsetting)==0:
                 raise common.CommsNeedConfiguring("LGVX4400", "Comm port not configured")
+            # ::todo:: should have failsafe code here that releases comport if
+            # phone module fails to load
             comport=commport.CommConnection(self, self.dispatchto.commportsetting)
             import com_lgvx4400
             self.commphone=com_lgvx4400.Phone(self, comport)
