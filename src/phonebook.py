@@ -1635,6 +1635,21 @@ class ImportDialog(wx.Dialog):
         self.table.OnDataUpdated()
 
     def DoMerge(self):
+        if len(self.existingdata)*len(self.importdata)>200:
+            progdlg=wx.ProgressDialog("Merging entries", "BitPim is merging the new information into the existing information",
+                                      len(self.existingdata), parent=self, style=wx.PD_APP_MODAL|wx.PD_CAN_ABORT|wx.PD_REMAINING_TIME)
+        else:
+            progdlg=None
+        try:
+            self._DoMerge(progdlg)
+        finally:
+            if progdlg:
+                progdlg.Destroy()
+            del progdlg
+
+    DoMerge=guihelper.BusyWrapper(DoMerge)
+
+    def _DoMerge(self, progdlg):
         """Merges all the importdata with existing data
 
         This can take quite a while!
@@ -1655,7 +1670,12 @@ class ImportDialog(wx.Dialog):
 
         em=EntryMatcher(self.existingdata, self.importdata)
         usedimportkeys=[]
-        for existingid in self.existingdata.keys():
+        for progress,existingid in enumerate(self.existingdata.keys()):
+            if progdlg:
+                if not progdlg.Update(progress):
+                    # user cancelled
+                    wx.CallAfter(self.EndModal, wx.ID_CANCEL)
+                    return
             # does it match any imported  entry
             merged=False
             for confidence, importid in em.bestmatches(existingid, limit=1):
@@ -1718,8 +1738,6 @@ class ImportDialog(wx.Dialog):
         self.rowdata=row
         self.resultdata=results
         self.table.OnDataUpdated()
-
-    DoMerge=guihelper.BusyWrapper(DoMerge)
 
     def MergeEntries(self, originalentry, importentry):
         "Take an original and a merge entry and join them together return a dict of the result"
