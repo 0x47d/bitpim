@@ -409,7 +409,7 @@ class ConfigDialog(wx.Dialog):
         bs.Fit(self)
 
         # Retrieve saved settings... (we only care about position)
-        set_size(self.mw.config, "ConfigDialog", self, screenpct=-1,  aspect=3.5)
+        set_size("ConfigDialog", self, screenpct=-1,  aspect=3.5)
 
         wx.EVT_CLOSE(self, self.OnClose)
 
@@ -645,7 +645,7 @@ class ConfigDialog(wx.Dialog):
         return ec
 
     def saveSize(self):
-        confDlgRect=save_size(self.mw.config, "ConfigDialog", self.GetRect())
+        save_size("ConfigDialog", self.GetRect())
 
 ###
 ### The select a comm port dialog box
@@ -705,7 +705,7 @@ class CommPortDialog(wx.Dialog):
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
 
         # Retrieve saved settings... Use 40% of screen if not specified
-        set_size(self.parent.mw.config, "CommDialog", self, screenpct=60)
+        set_size("CommDialog", self, screenpct=60)
         wx.EVT_CLOSE(self, self.OnClose)
 
     def OnSashChange(self, _=None):
@@ -790,7 +790,7 @@ class CommPortDialog(wx.Dialog):
         return self.port
 
     def saveSize(self):
-        save_size(self.parent.mw.config, "CommDialog", self.GetRect())
+        save_size("CommDialog", self.GetRect())
 
 ###
 ###  Accept certificate dialog
@@ -899,7 +899,7 @@ class BitFlingSettingsDialog(wx.Dialog):
         vbs.Add(gs, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         self.SetSizer(vbs)
         vbs.Fit(self)
-        set_size(wx.GetApp().config, "BitFlingConfigDialog", self, -20, 0.5)
+        set_size("BitFlingConfigDialog", self, -20, 0.5)
 
         # event handlers
         wx.EVT_BUTTON(self, self.ID_TEST, self.OnTest)
@@ -913,7 +913,7 @@ class BitFlingSettingsDialog(wx.Dialog):
 
     def ShowModal(self):
         res=wx.Dialog.ShowModal(self)
-        save_size(wx.GetApp().config, "BitFlingConfigDialog", self.GetRect())
+        save_size("BitFlingConfigDialog", self.GetRect())
         return res
 
     def GetSettings(self):
@@ -1407,10 +1407,9 @@ class AnotherDialog(wx.Dialog):
         # fallthru
         return wx.ART_INFORMATION
 
-def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
+def set_size(confname, window, screenpct=50, aspect=1.0):
     """Sets remembered/calculated dimensions/position for window
 
-    @param confobj: the wx.Config object
     @param confname: subkey to store/get this windows's settings from
     @param window:  the window object itself
     @param screenpct: percentage of the screen the window should occupy.
@@ -1420,6 +1419,8 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
              how much wider than tall the window is, and if less
              than one then the other way round
     """
+
+    confobj=wx.GetApp().config
 
     # frig confname
     confname="windows/"+confname
@@ -1484,7 +1485,14 @@ def set_size(confobj, confname, window, screenpct=50, aspect=1.0):
         else:
             window.SetDimensions(rs_x, rs_y, rs_width, rs_height)
 
-def save_size(confobj, confname, myRect):
+def save_size(confname, myRect):
+    """Saves size to config.  L{set_size}
+
+    @param confname: Same string as in set_size
+    @param myRect:  Window size you want remembered, typically window.GetRect()
+    """
+    confobj=wx.GetApp().config
+    
     confname="windows/"+confname
 
     x = myRect.x

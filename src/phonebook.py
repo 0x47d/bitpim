@@ -870,7 +870,7 @@ class PhoneWidget(wx.Panel):
         result=None
         if dlg.ShowModal()==wx.ID_OK:
             result=dlg.resultdata
-        guiwidgets.save_size(dlg.config, "PhoneImportMergeDialog", dlg.GetRect())
+        guiwidgets.save_size("PhoneImportMergeDialog", dlg.GetRect())
         dlg.Destroy()
         if result is not None:
             d={}
@@ -1537,7 +1537,7 @@ class ImportDialog(wx.Dialog):
         self.SetAutoLayout(True)
 
         self.config = parent.mainwindow.config
-        guiwidgets.set_size(self.config, "PhoneImportMergeDialog", self, screenpct=95,  aspect=1.10)
+        guiwidgets.set_size("PhoneImportMergeDialog", self, screenpct=95,  aspect=1.10)
 
         self.MakeMenus()
 
@@ -1958,7 +1958,7 @@ class ImportedEntryMatchDialog(wx.Dialog):
 
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
-        guiwidgets.set_size(wx.GetApp().config, "PhonebookImportEntryMatcher", self, screenpct=75, aspect=0.58)
+        guiwidgets.set_size("PhonebookImportEntryMatcher", self, screenpct=75, aspect=0.58)
 
         wx.EVT_MENU(self, wx.ID_OK, self.SaveSize)
         wx.EVT_MENU(self, wx.ID_CANCEL, self.SaveSize)
@@ -1967,7 +1967,7 @@ class ImportedEntryMatchDialog(wx.Dialog):
     def SaveSize(self, evt=None):
         if evt is not None:
             evt.Skip()
-        guiwidgets.save_size(wx.GetApp().config, "PhonebookImportEntryMatcher", self.GetRect())
+        guiwidgets.save_size("PhonebookImportEntryMatcher", self.GetRect())
 
     def OnRBClicked(self, _):
         self.nameslb.Enable(self.matchexisting.GetValue())

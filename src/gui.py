@@ -597,7 +597,7 @@ class MainWindow(wx.Frame):
             self.nb.SetSelection(sel)
 
         # Retrieve saved settings... Use 80% of screen if not specified
-        guiwidgets.set_size(self.config, "MainWin", self, screenpct=90)
+        guiwidgets.set_size("MainWin", self, screenpct=90)
 
         ### Lets go visible
         self.Show()
@@ -1040,7 +1040,7 @@ class MainWindow(wx.Frame):
         self.wt.q.put( (request, cbresult) )
 
     def saveSize(self):
-        guiwidgets.save_size(self.config, "MainWin", self.GetRect())
+        guiwidgets.save_size("MainWin", self.GetRect())
 
 
 ###
