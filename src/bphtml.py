@@ -408,22 +408,39 @@ class HtmlEasyPrinting:
         guiwidgets.save_size("PrintPreview", self.frame.GetRect())
         event.Skip()
 
+# scaling factor for the various font sizes
 _scales=[0.7, 0.9, 1, 1.1, 1.2, 1.4, 1.6]
 
-def getbestsize(dc, html, basepath="", font="", size=10):
-    if html is None or html=="":
-        return wx.Size(10,10)
 
-    bmp=wx.EmptyBitmap(1,1)
-    mdc=wx.MemoryDC()
-    mdc.SelectObject(bmp)
-    hdc=wx.html.HtmlDCRenderer()
-    hdc.SetFonts(font, "", [int(x*size) for x in _scales])
-    hdc.SetDC(mdc, 1)
-    hdc.SetSize(99999, 99999)
-    hdc.SetHtmlText(html, basepath)
-    hdc.Render(0, 0, 0, False)
-    return wx.Size(mdc.MaxX(), mdc.MaxY())
+# this is just used to get a namespace
+class Renderer:
+
+    _lastsize=None
+    _lastfont=None
+    _mdc=None
+    _bmp=None
+    _hdc=None
+
+    def getbestsize(html, basepath, font, size):
+        if Renderer._bmp is None:
+            Renderer._bmp=wx.EmptyBitmap(1,1)
+            Renderer._mdc=wx.MemoryDC()
+            Renderer._mdc.SelectObject(Renderer._bmp)
+            Renderer._hdc=wx.html.HtmlDCRenderer()
+            Renderer._hdc.SetDC(Renderer._mdc, 1)
+            Renderer._hdc.SetSize(99999,99999)
+        Renderer._mdc.ResetBoundingBox()
+        if Renderer._lastsize!=size or Renderer._lastfont!=font:
+            Renderer._hdc.SetFonts(font, "", [int(x*size) for x in _scales])
+        Renderer._hdc.SetHtmlText(html, basepath)
+        Renderer._hdc.Render(0,0,0,False)
+        return (Renderer._mdc.MaxX(), Renderer._mdc.MaxY())
+
+    getbestsize=staticmethod(getbestsize)
+        
+
+def getbestsize(dc, html, basepath="", font="", size=10):
+    return Renderer.getbestsize(html, basepath, font, size)
 
 def drawhtml(dc, rect, html, basepath="", font="", size=10):
     """Draw html into supplied dc and rect"""
