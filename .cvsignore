@@ -2,6 +2,7 @@
 *.pyo
 apidoc
 bitpim-out.iss
+bitpim.prof
 build
 check.out
 core.*
