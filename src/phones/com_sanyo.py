@@ -166,7 +166,7 @@ class SanyoPhonebook:
             command+=1
             self.sendpbcommand(req, p_sanyo.bufferpartresponse, writemode=True)
         
-    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False):
+    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=0):
         if writemode:
             numretry=2
         else:
@@ -181,29 +181,37 @@ class SanyoPhonebook:
         self.logdata("Sanyo phonebook request", data, request)
         data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
         firsttwo=data[:2]
-        try:
-            self.comm.write(data, log=False) # we logged above
-###            time.sleep(1.0)
-	    data=self.comm.readuntil(self.pbterminator, logsuccess=False, numfailures=numretry)
-###            time.sleep(1.0)
-        except com_phone.modeignoreerrortypes:
-            self.mode=self.MODENONE
-            self.raisecommsdnaexception("manipulating the phonebook")
+        isendretry=numsendretry
+        while isendretry>=0:
+            try:
+                self.comm.write(data, log=False) # we logged above
+                rdata=self.comm.readuntil(self.pbterminator, logsuccess=False, numfailures=numretry)
+                break
+            except com_phone.modeignoreerrortypes:
+                if isendretry>0:
+                    self.log("Resending request packet...")
+                    time.sleep(0.3)
+                else:
+                    self.comm.success=False
+                    self.mode=self.MODENONE
+                    self.raisecommsdnaexception("manipulating the phonebook")
+                isendretry-=1
+
         self.comm.success=True
 
-        origdata=data
+        origdata=rdata
         # sometimes there is junk at the begining, eg if the user
         # turned off the phone and back on again.  So if there is more
         # than one 7e in the escaped data we should start after the
         # second to last one
-        d=data.rfind(self.pbterminator,0,-1)
+        d=rdata.rfind(self.pbterminator,0,-1)
         if d>=0:
             self.log("Multiple Sanyo packets in data - taking last one starting at "+`d+1`)
             self.logdata("Original Sanyo data", origdata, None)
-            data=data[d+1:]
+            rdata=rdata[d+1:]
 
         # turn it back to normal
-        data=com_brew.unescape(data)
+        data=com_brew.unescape(rdata)
 
         # sometimes there is other crap at the begining
         d=data.find(firsttwo)
