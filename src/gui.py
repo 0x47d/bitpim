@@ -533,23 +533,11 @@ class MainWindow(wx.Frame):
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
-        #
-        # N9YTY: TEMPORARY WORKAROUND!
-        #
-        # On the Mac, calling the dialog at this point is unresponsive.
-        # So we just set defaults and let things go on... The user will
-        # have to be smart enough to open the settings dialog themselves
-        # for now. Maybe set a global variable that settings aren't there
-        # and fire a timer event after the main window has opened??
-        if guihelper.IsMac():
-            if self.configdlg.needconfig():
-               self.configdlg.setdefaults()
-        else:
-            if self.configdlg.needconfig():
-                self.CloseSplashScreen()
-                if self.configdlg.ShowModal()!=wx.ID_OK:
-                    self.OnExit()
-                    return
+        if self.configdlg.needconfig():
+            self.CloseSplashScreen()
+            if self.configdlg.ShowModal()!=wx.ID_OK:
+                self.OnExit()
+                return
         self.configdlg.updatevariables()
         
         ### notebook
