@@ -545,24 +545,19 @@ class SAMSTRING(BaseProtogenClass):
         self._bufferendoffset=buf.getcurrentoffset()
 
     def writetobuffer(self, buf):
-        # Just copied from STRING, not working in SAMSTRING
+        # Need to raise exception if string exceeds maxsizeinbytes
         if self._value is None:
             raise ValueNotSetException()
                 
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._pascal:
-            l=len(self._value)
-            if self._terminator is not None:
-                l+=1
-            buf.appendbyte(l)
+
+        if self._quotechar is not None:
+            buf.appendbyte(self._quotechar)
         buf.appendbytes(self._value)
-        l=len(self._value)
+        if self._quotechar is not None:
+            buf.appendbyte(self._quotechar)
         if self._terminator is not None:
             buf.appendbyte(self._terminator)
-            l+=1
-        if self._sizeinbytes is not None:
-            if l<self._sizeinbytes:
-                buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
 
         self._bufferendoffset=buf.getcurrentoffset()
 
