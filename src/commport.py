@@ -17,22 +17,79 @@ class CommTimeout(Exception):
         self.partial=partial
 
 class CommConnection:
-    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0, softwareflow=0):
+    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0, softwareflow=0, autolistfunc=None):
+        self.ser=None
+        self.port=port
         self.logtarget=logtarget
         self.clearcounters()
-        self.port=port
-        self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
+        self.success=False
+        self.ports=None
+        self.autolistfunc=autolistfunc
+        self.params=(baud,timeout,hardwareflow,softwareflow)
+        assert port!="auto" or (port=="auto" and autolistfunc is not None)
+        if autolistfunc is not None:
+            self._isauto=True
+        else:
+            self._isauto=False
+        if port=="auto":
+            self.log("Auto detected port requested")
+            self.NextAutoPort()
+        else:
+            self._openport(self.port, *self.params)
+
+    def IsAuto(self):
+        return self._isauto
+
+    def close(self):
+        if self.ser is not None:
+            try:
+                # sometimes this gives invalid handles and similar issues
+                self.ser.close()
+            except:
+                pass
+            self.ser=None
+
+    def _openport(self, port, baud, timeout, hardwareflow, softwareflow):
+        self.log("Opening port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
                  (port, baud, float(timeout), hardwareflow, softwareflow) )
         # we try twice since some platforms fail the first time
         for dummy in range(2):
             try:
                 self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
-                self.log("Connection to comm port suceeded")
+                self.log("Open of comm port suceeded")
+                self.port=port
                 return
             except serial.serialutil.SerialException,e:
                 ex=common.CommsOpenFailure(port, e.__str__())
                 time.sleep(2)
+        self.log("Open of comm port failed")
         raise ex
+
+    def _refreshautoports(self):
+        # ensure we close current port first
+        self.close()
+        self.ports=self.autolistfunc()
+        assert self.ports is not None
+        self.success=False
+        self.portstried=self.ports
+
+    def NextAutoPort(self):
+        # do we need to refresh list?
+        if (self.ports is None and self.autolistfunc is not None) or \
+           ( len(self.ports)==0 and self.success ):
+            self._refreshautoports()
+        # have we run out?
+        if len(self.ports)==0:
+            raise common.AutoPortsFailure(self.portstried)
+        # try first in list
+        self.log("Trying next auto port")
+        self.port=self.ports[0]
+        self.ports=self.ports[1:]
+        try:
+            self._openport(self.port, *self.params)
+        except common.CommsOpenFailure:
+            self.NextAutoPort()
+            
 
     def clearcounters(self):
         self.readbytes=0
@@ -49,9 +106,19 @@ class CommConnection:
             self.logtarget.logdata(self.port+": "+str, data)
 
     def setbaudrate(self, rate):
-        self.log("Changing rate to "+`rate`)
-        self.ser.setBaudrate(rate)
-        time.sleep(.5)
+        """Change to the specified baud rate
+
+        @rtype: Boolean
+        @returns: True on success, False on failure
+        """
+        try:
+            self.ser.setBaudrate(rate)
+            self.log("Changed port speed to "+`rate`)
+            time.sleep(.5)
+            return True
+        except Exception,e:
+            self.log("Port speed "+`rate`+" not supported")
+            return False
 
     def write(self, data, log=1):
         self.writerequests+=1
