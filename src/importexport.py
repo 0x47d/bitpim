@@ -108,7 +108,7 @@ class ImportCSVDialog(wx.Dialog):
         vbs=wx.BoxSizer(wx.VERTICAL)
         bg=self.GetBackgroundColour()
         w=wx.html.HtmlWindow(self, -1, size=wx.Size(600,100), style=wx.html.HW_SCROLLBAR_NEVER)
-        w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets fo columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(),filename))
+        w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets of columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(),filename))
         vbs.Add(w, 0, wx.EXPAND|wx.ALL,5)
         f=open(filename, "rt")
         self.rawdata=f.read()
@@ -508,9 +508,12 @@ class ImportCSVDialog(wx.Dialog):
             f.close()
       
 
-def OnImportCSVPhoneBook(parent, path):
+def OnImportCSVPhoneBook(parent, phonebook, path):
     dlg=ImportCSVDialog(path, parent, -1, "Import CSV file")
+    data=None
     if dlg.ShowModal()==wx.ID_OK:
-        print "dialog ok"
-        print common.prettyprintdict(dlg.GetFormattedData())
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
+    if data is not None:
+        phonebook.importdata(data)
         
