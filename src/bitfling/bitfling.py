@@ -24,6 +24,7 @@ import M2Crypto
 import wx
 import wx.html
 import wx.lib.newevent
+import wx.lib.maskededit
 
 # My stuff
 import native.usb
@@ -183,6 +184,8 @@ class ConfigPanel(wx.Panel):
         hbs.Add(butdelete, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
+        wx.EVT_BUTTON(self, butadd.GetId(), self.OnAddAuth)
+
         # and the authorization listview
         self.authlist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT)
         self.authlist.InsertColumn(0, "User")
@@ -212,11 +215,60 @@ class ConfigPanel(wx.Panel):
 
         vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
         
+        self.setupauthorization()
         
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
-        
 
+    def setupauthorization(self):
+        dict={}
+        for i in range(1000):
+            if self.mw.config.HasEntry("user-"+`i`):
+                dict[i]=self.mw.config.Read("user-"+`i`).split(":")
+        self.mw.authinfo=dict
+
+    def OnAddAuth(self,_):
+        dlg=AuthItemDialog(self, "Add Entry")
+        if dlg.ShowModal()==wx.ID_OK:
+            pass
+        dlg.Destroy()
+
+
+class AuthItemDialog(wx.Dialog):
+
+    def __init__(self, parent, title, username="New User", password=None, expires=0, addresses=[]):
+        wx.Dialog.__init__(self, parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+
+        p=self
+        gs=wx.FlexGridSizer(4, 2, 5, 5)
+        gs.AddGrowableCol(1)
+        gs.AddGrowableRow(3)
+
+        gs.Add(wx.StaticText(p, -1, "Username/Email"))
+        self.username=wx.TextCtrl(self, -1, username)
+        gs.Add(self.username,0, wx.EXPAND)
+        gs.Add(wx.StaticText(p, -1, "Password"))
+        self.password=wx.TextCtrl(self, -1, "", style=wx.TE_PASSWORD)
+        gs.Add(self.password, 0, wx.EXPAND)
+        gs.Add(wx.StaticText(p, -1, "Expires"))
+        self.expires=wx.lib.maskededit.MaskedTextCtrl(p, -1, "", autoformat="EUDATETIMEYYYYMMDD.HHMM")
+        gs.Add(self.expires)
+        gs.Add(wx.StaticText(p, -1, "Allowed Addresses"))
+        self.addresses=wx.TextCtrl(self, -1, "\n".join(addresses), style=wx.TE_MULTILINE)
+        gs.Add(self.addresses, 1, wx.EXPAND)
+
+
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(gs,1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+
+    def GetValue(self):
+        return [self.username.GetValue(), password, time, addresses]
 
 class MainWindow(wx.Frame):
 
