@@ -42,6 +42,53 @@ class Phone(com_sanyo.Phone):
         com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
+    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendtry=3):
+        if writemode:
+            numretry=2
+        else:
+            numretry=0
+            
+        if callsetmode:
+            self.setmode(self.MODEPHONEBOOK)
+        buffer=prototypes.buffer()
+        request.writetobuffer(buffer)
+        while numsendtry>0:
+            data=buffer.getvalue()
+            self.logdata("Sanyo phonebook request", data, request)
+            data=com_brew.escape(data+com_brew.crcs(data))+self.pbterminator
+            firsttwo=data[:2]
+            try:
+                self.comm.write(data, log=False) # we logged above
+                data=self.comm.readuntil(self.pbterminator, logsuccess=False, numfailures=numretry)
+                self.comm.success=True
+                break
+            except com_phone.modeignoreerrortypes:
+                self.log("Retrying...")
+                self.comm.success=False
+                #   self.mode=self.MODENONE
+                #   self.raisecommsdnaexception("manipulating the phonebook")
+            numsendtry-=1
+        if not self.comm.success:
+            self.mode=self.MODENONE
+            self.raisecommsdnaexception("manipulating the phonebook")
+            
+        data=com_brew.unescape(data)
+        # get rid of leading junk
+        d=data.find(firsttwo)
+        if d>0:
+            data=data[d:]
+        # take off crc and terminator ::TODO:: check the crc
+        data=data[:-3]
+        
+        # log it
+        self.logdata("sanyo phonebook response", data, responseclass)
+
+        # parse data
+        buffer=prototypes.buffer(data)
+        res=responseclass()
+        res.readfrombuffer(buffer)
+        return res
+
     def getphonebook(self, result):
         req=self.protocolclass.study()
         req.header.packettype=0x0f
@@ -49,15 +96,15 @@ class Phone(com_sanyo.Phone):
 
         for command in range(0x3c,0x40):
             req.header.command=command
-            self.sendpbcommand(req, self.protocolclass.studyresponse, writemode=True)
+            self.sendpbcommand(req, self.protocolclass.studyresponse)
         
         for command in range(0x41,0x42):
             req.header.command=command
-            self.sendpbcommand(req, self.protocolclass.studyresponse, writemode=True)
+            self.sendpbcommand(req, self.protocolclass.studyresponse)
         
         for command in range(0x46, 0x4c):
             req.header.command=command
-            self.sendpbcommand(req, self.protocolclass.studyresponse, writemode=True)
+            self.sendpbcommand(req, self.protocolclass.studyresponse)
 
         time.sleep(1)  # Wait a little bit to make sure phone is ready
 
@@ -65,7 +112,8 @@ class Phone(com_sanyo.Phone):
         req.header.packettype=0x0c
         for slot in range(300):
             req.slot=slot
-            self.sendpbcommand(req, self.protocolclass.studyresponse, writemode=True)
+            self.log("Reading slot "+`slot`)
+            self.sendpbcommand(req, self.protocolclass.studyresponse)
         
 
 class Profile(com_sanyo.Profile):
