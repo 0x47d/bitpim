@@ -62,57 +62,6 @@ def ExclusiveWrapper(method):
     return _transactionwrapper
 
 
-_whitespace="\t \r\n"
-_alnum="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_"
-
-def sqltokens(sql):
-    "A generator that returns the tokens of an sql statement"
-    pos=0
-
-    while pos<len(sql):
-        # skip leading whitespace
-        c=sql[pos]
-        pos+=1
-        if c in _whitespace:
-            continue
-        if c in _alnum:
-            # find end of alnum
-            res=c
-            while pos<len(sql):
-                c=sql[pos]
-                if c not in _alnum:
-                    break
-                res+=c
-                pos+=1
-            yield res
-            continue
-        if c!="'":
-            yield c
-            continue
-        # find end of quote delimited string, taking into account embedded quotes
-        res=None
-        while pos<len(sql):
-            c=sql[pos]
-            if c=="'":
-                # is it followed by another ' ?
-                if pos+1<len(sql) and sql[pos+1]=="'":
-                    if res is None:
-                        res=""
-                    res+="'"
-                    pos+=2
-                    continue
-                pos+=1
-                yield res
-                res=None
-                break
-            if res is None:
-                res=""
-            res+=c
-            pos+=1
-        if res is not None:
-            yield res
-
-
 def sqlquote(s):
     "returns an sqlite quoted string (the return value will begin and end with single quotes)"
     return "'"+s.replace("'", "''")+"'"
@@ -129,6 +78,7 @@ class Database:
         self.connection=sqlite.connect(os.path.join(directory, filename))
         self.cursor=self.connection.cursor()
         self.exlock=threading.RLock()
+        self._schemacache={}
 
     def sql(self, statement, params=()):
         "Execute statement and return a generator of the results"
@@ -148,14 +98,23 @@ class Database:
         return res
             
     def doestableexist(self, tablename):
+        if tablename in self._schemacache:
+            return True
         return bool(self.sql("select count(*) from sqlite_master where type='table' and name=%s" % (sqlquote(tablename),)).next()[0])
 
-    def getcolumns(self, tablename):
-        l=[x for x in self.sql("pragma table_info("+idquote(tablename)+")")]
-        for colnum,name,type, _, default, primarykey in l:
-            if primarykey:
-                type+=" primary key"
-            yield colnum,name,type
+    def getcolumns(self, tablename, onlynames=False):
+        res=self._schemacache.get(tablename,None)
+        if res is None:
+            res=[]
+            for colnum,name,type, _, default, primarykey in self.sql("pragma table_info("+idquote(tablename)+")"):
+                if primarykey:
+                    type+=" primary key"
+                res.append([colnum,name,type])
+            self._schemacache[tablename]=res
+        if onlynames:
+            return [name for colnum,name,type in res]
+        return res
+
 
     def savemajordict(self, tablename, dict):
         """This is the entrypoint for saving a first level dictionary
@@ -200,18 +159,20 @@ class Database:
             dict[d]["__deleted__"]=1
             
         # now we only have new, changed and deleted entries left in dict
-        dict=copy.deepcopy(dict) # now a deep copy since we modify values
 
         # examine the keys in dict
         dk=[]
         for k in dict.keys():
+            # make a copy since we modify values, but it doesn't matter about deleted since we own those
+            if k not in deleted:
+                dict[k]=dict[k].copy()
             for kk in dict[k]:
                 if kk not in dk:
                     dk.append(kk)
         # verify that they don't start with __
         assert len([k for k in dk if k.startswith("__") and not k=="__deleted__"])==0
         # get database keys
-        dbkeys=[name for _, name, _ in self.getcolumns(tablename)]
+        dbkeys=self.getcolumns(tablename, onlynames=True)
         # are any missing?
         missing=[k for k in dk if k not in dbkeys]
         if len(missing):
@@ -251,9 +212,9 @@ class Database:
                 self._altertable(tablename, creates, createindex=1)
 
         # write out indirect values
-        dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
+        dbtkeys=self.getcolumns(tablename)
         # for every indirect, we have to replace the value with a pointer
-        for n,t in dbtkeys:
+        for _,n,t in dbtkeys:
             if t=="indirect":
                 indirects={}
                 for r in dict.keys():
@@ -299,7 +260,7 @@ class Database:
                         assert not k.startswith("__")
                         datakeys.append(k)
         # get the keys from the table
-        dbkeys=[name for _, name, _ in self.getcolumns(tablename)]
+        dbkeys=self.getcolumns(tablename, onlynames=True)
         # are any missing?
         missing=[k for k in datakeys if k not in dbkeys]
         if len(missing):
@@ -355,63 +316,57 @@ class Database:
 
         res={}
         uids=[u[0] for u in self.sql("select distinct __uid__ from %s" % (idquote(tablename),))]
-        desc={}
-        desc[tablename]=[d for d in self.getcolumns(tablename)]
-        for colnum,name,type in desc[tablename]:
+        schema=self.getcolumns(tablename)
+        for colnum,name,type in schema:
             if name=='__deleted__':
                 deleted=colnum
             elif name=='__uid__':
                 uid=colnum
         # get all relevant rows
+        indirects=[]
         for row in self.sqlmany("select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),), [(u,) for u in uids]):
             if row[deleted]:
                 continue
             record={}
-            for colnum,name,type in desc[tablename]:
+            for colnum,name,type in schema:
                 if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
                     continue
                 if type=="value":
                     record[name]=_stripsentinel(row[colnum])
                     continue
                 assert type=="indirect"
-                # record[name]=self.getindirect(row[colnum], desc)
                 record[name]=row[colnum]
+                if name not in indirects:
+                    indirects.append(name)
             res[row[uid]]=record
         # now get the indirects
-        for colnum,name,type in desc[tablename]:
-            if type!="indirect":
-                continue
+        for name in indirects:
             for r in res:
                 v=res[r].get(name,None)
                 if v is not None:
-                    res[r][name]=self.getindirect(v, desc)
+                    res[r][name]=self._getindirect(v)
         return res
 
-    def getindirect(self, what, schemas=None):
+    def _getindirect(self, what):
         """Gets a list of values (indirect) as described by what
         @param what: what to get - eg phonebook_serials,1,3,5,
                       (note there is always a trailing comma)
-        @param schemas: a dict holding the schemas for various tables.  It is useful to provide
-                     this if you repeatedly call this function
         """
-        if schemas is None:
-            schemas={}
 
         tablename,rows=what.split(',', 1)
-        if tablename not in schemas:
-            schemas[tablename]=[d for d in self.getcolumns(tablename)]
-
+        schema=self.getcolumns(tablename)
+        
         res=[]
         for row in self.sqlmany("select * from %s where __rowid__=?" % (idquote(tablename),), [(int(r),) for r in rows.split(',') if len(r)]):
             record={}
-            for colnum,name,type in schemas[tablename]:
+            for colnum,name,type in schema:
                 if name.startswith("__") or type not in ("value", "indirect") or row[colnum] is None:
                     continue
                 if type=="value":
                     record[name]=_stripsentinel(row[colnum])
                     continue
                 assert type=="indirect"
-                assert False, "indirect in indirect no handled"
+                assert False, "indirect in indirect not handled"
             assert len(record)
             res.append(record)
         assert len(res)
@@ -427,9 +382,12 @@ class Database:
         @param createindex: what sort of index to create.  0 means none, 1 means on just __uid__ and 2 is on all data columns
         """
         # indexes are automatically dropped when table is dropped so we don't need to
-        dbtkeys=[(name,type) for _, name, type in self.getcolumns(tablename)]
+        dbtkeys=self.getcolumns(tablename)
+        # clean out cache entry since we are about to invalidate it
+        del self._schemacache[tablename]
+
         cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
-        for n,t in dbtkeys:
+        for _,n,t in dbtkeys:
             if cmd[-1]!="(":
                 cmd.append(",")
             cmd.append(idquote(n))
@@ -455,7 +413,7 @@ class Database:
             elif createindex==2:
                 cmd=["create index", idquote("__index__"+tablename), "on", idquote(tablename), "("]
                 cols=[]
-                for n,t in dbtkeys:
+                for _,n,t in dbtkeys:
                     if not n.startswith("__"):
                         cols.append(idquote(n))
                 for n,t in columnstoadd:
@@ -466,12 +424,12 @@ class Database:
             self.sql(" ".join(cmd))
         # put values back in
         cmd=["insert into", idquote(tablename), '(']
-        for n,_ in dbtkeys:
+        for _,n,_ in dbtkeys:
             if cmd[-1]!="(":
                 cmd.append(",")
             cmd.append(idquote(n))
         cmd.extend([")", "select * from", idquote("backup_"+tablename)])
-        self.sql(" ".join(cmd))        
+        self.sql(" ".join(cmd))
 
 def extractbpserials(dict):
     """Changes dict keys to be the bitpim serial for each row"""
