@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>BitPim and databases</title>
+  </head>
+
+  <body>
+    <h1>BitPim and databases</h1>
+
+    <p>BitPim currently stores information as a Python dictionary.
+    This information is saved in multiple files (one per information
+    type) as sourceable Python code.  The data can be easily inspected
+    with a plain text editor.
+
+    <p>Users never need to explicitly load and save data (ie there is
+    no need for them to manage to the transitioning of data between
+    temporary storage - RAM - and persistent storage - disk.)
+
+    <h2>Problems and goals</h2>
+
+    <p>BitPim currently has no undo functionality.  Any edits take
+    effect immediately and there is no ability to reverse mistakes.
+
+    <p>It is currently not possible to do a sync.  Syncing requires
+    being able to examine two snapshots of data and generate a list of
+    changes that were made (eg the name "John Smith" was changed to
+    "John Smythe")
+
+    <p>BitPim doesn't work correctly when run concurrently as the same
+    user.  The user is not prevented from starting a second instance,
+    and multiple instances just continue oblivious to each other.  The
+    old solution of preventing multiple instances at startup is no
+    longer appropriate since users can and do access their machines
+    via different means (eg logging in on the console and logging in
+    remotely).  Some programs such as Mozilla/Firefox force you to
+    have multiple independent profiles, which is very annoying.
+
+    <p>BitPim currently doesn't support multiple information stores.
+    This happens if there are multiple users who login as the same
+    user at the operating system level.  There is <a
+    href="http://bitpim.org/testhelp/howto-multipleusers.htm">some
+    advice</a> in the online doc, which amounts to switching the
+    preferences behind BitPim's back before starting.
+
+    <p>Care also needs to be taken over dealing with version issues.
+    This means BitPim starting up with an older version of the saved
+    data, or the saved data being a newer format than the current
+    version.
+
+    <p>BitPim currently holds all data in memory.  This makes memory
+    consumption equal the amount of data, and can get very large.
+
+    <h2>Solution - SQLite</h2>
+
+    <p>BitPim will be migrating to use the SQLite database.  SQLite is
+    accessed using SQL syntax and is an embedded database - you have
+    it as part of your program and do not contact it over the network.
+    The Python wrapper is pysqlite and everything is available under
+    appropriate licenses and is available on all platforms.
+
+    <p>It has many many other nice properties such as using a single
+    file, being safe for usage in multi-threaded and multi-process
+    environments, is ACID compliant (Atomic, Consistent, Isolated, and
+    Durable), survives power and unexpected program termination, etc.
+    There is no access control or other security issues to deal with.
+    The only requirement is access to the single file (via normal
+    filesystem and process permissions).
+
+    <p>Version 3 of SQLite uses unicode natively for strings, supports
+    BLOBS (binary large objects), and allows unlimited field size.
+
+    <p>SQLite is also different than other databases in that the type
+    of a field is attached to each value in each record, rather than
+    to the column as a whole.  This is very similar to how Python
+    works where the type of a value is attached to the value itself,
+    not to the name it is given.  (Contrast with C/Java where the type
+    is associated with the variable name, not the value).
+
+    <p>Some more reading on SQLite:
+
+      <ul>
+      <li><a href="http://www.sqlite.org">Main web site</a>
+
+      <li><a
+      href="http://www.sqlite.org/php2004/slides-all.html">Internal
+      architecture</a>.  Also includes tips on how to corrupt the
+      database :-)
+
+    </ul>
+
+    <h2>Startup/meta information</h2>
+
+    <p>One table will contain meta information.  Primarily this will
+    be the version of BitPim to which the the database corresponds.
+
+    <p>On startup, BitPim will inspect the version information.  If it
+    is older than the current version of BitPim then a copy of the
+    file will be made.
+
+      <blockquote>For example, if the current version of BitPim is 1.2
+      and the database says it is for 1.1 then a copy will be made as
+      <code>foo-1.1-`date`</code>
+    </blockquote>
+
+    <p>Once BitPim has successfully loaded, the user will be given the
+      option to delete the old file (created copy).
+
+    <h2>main practises</h2>
+
+    <p><ul> 
+
+      <li>Each record is immutable like Python strings.  Make new
+      record to change values.
+
+      <li>Seperate table to point to current values
+
+      <li>That table also has to be versioned ...
+
+      <li>Use guids for entries?
+
+      <li>dict maps onto table
+
+      <li>Need to deal with fields that have lists as value
+
+      <li>auto-alter tables to have necessary fields
+
+      <li>Have a counter for each source.  Code looks like:
+
+        <blockquote><pre>
+serial=0
+while serial!=table.serial():
+     serial=table.serial()
+     ... read and use values ...
+</pre></blockquote>
+
+        <p>This ensures that code uses values correctly if another
+        process is modifying them.
+
+    </ul>
+
+
+
+  </body>
+</html>
