@@ -59,7 +59,7 @@ wallpapers:
 
 flags:
 
-  - secret     Boolean if record is private/secret
+  - secret     Boolean if record is private/secret (if not present - value is false)
 
 memos:
 
