@@ -15,8 +15,8 @@
 """Communicate with a Samsung SCH-A670"""
 
 # lib modules
+import re
 import sha
-from string import split,atoi,strip,join,replace
 
 # my modules
 import common
@@ -24,6 +24,8 @@ import commport
 import com_brew
 import com_samsung
 import com_phone
+import p_samsungscha670
+import prototypes
 import pubsub
 
 
@@ -33,6 +35,7 @@ class Phone(com_samsung.Phone):
 
     desc="SCH-A670"
     serialsname='scha670'
+    protocolclass=p_samsungscha670
 
     __groups_range=xrange(5)
     __phone_entries_range=xrange(1,501)
@@ -89,16 +92,15 @@ class Phone(com_samsung.Phone):
     allringtones={}
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
-    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
-    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 20, 200)
+    __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 17, 40)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 17, 30)
+    __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 17, 40)
         
     def __init__(self, logtarget, commport):
 
         "Calls all the constructors and sets initial modes"
         com_samsung.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
-        self.__ringtone_index=None
 
     def getfundamentals(self, results):
 
@@ -115,10 +117,6 @@ class Phone(com_samsung.Phone):
         write phonebook data.
         """
         
-        if not self.is_online():
-            self.log("Failed to talk to phone")
-            return results
-
         self.setmode(self.MODEPHONEBOOK)
 
         # use a hash of ESN and other stuff (being paranoid)
@@ -137,41 +135,19 @@ class Phone(com_samsung.Phone):
                 groups[i]={ 'name': g_i }
         results['groups']=groups
 
-        # getting ringtone-index
-	self.log('Getting ringtone-index from ringers')
-        rti = self.ATget_builtin_ringtone_index()	#test
-#########################################################
-# The following actually works but puts the phone in the wrong
-# state to proceed. It apparently needs to be rebooted. So for
-# now we continue to use code modeled after A650
-#        rti =  self.get_user_rt_index(rti)		#test
-#	print "allringtones: ", self.allringtones	#test
-#	print "ringtone_index: ", rti			#test
-#	print self.get_wallpaper_index()		#test
-#########################################################
-	self.__ringtone_index=None
-        pubsub.subscribe(self.ringtone_index_response, pubsub.ALL_RINGTONE_INDEX)
-        pubsub.publish(pubsub.REQUEST_RINGTONE_INDEX)
-        # waiting for a response from ringers
-        # should put a timer here in case ringers hang.
-        while self.__ringtone_index is None:
-            pass
-        pubsub.unsubscribe(self.ringtone_index_response)
-        if len(self.__ringtone_index):
-            self.log('ringtone-index retrieved from ringers')
-            results['ringtone-index']=self.__ringtone_index
-        else:
-            self.log('ringtone-index is blank, getting builtin ones')
-            results['ringtone-index']=self.get_builtin_ringtone_index()
+        # getting rintone-index
+        self.setmode(self.MODEBREW)
+        rt_index=RingtoneIndex(self)
+        results['ringtone-index']=rt_index.get()
+        
+        # getting wallpaper-index
+        img_index=ImageIndex(self)
+        results['wallpaper-index']=img_index.get()
+        
         self.setmode(self.MODEMODEM)
         self.log("Fundamentals retrieved")
-        return results
 
-    def ringtone_index_response(self, msg=None):
-        if msg is not None:
-            self.__ringtone_index=msg.data
-        else:
-            self.__ringtone_index={}
+        return results
 
     def get_builtin_ringtone_index(self):	# Joe's version
         r={}
@@ -226,7 +202,7 @@ class Phone(com_samsung.Phone):
         for j in self.__phone_entries_range:
             # print "Getting entry: ", j
             pb_entry=self.get_phone_entry(j)
-            if len(pb_entry):
+            if len(pb_entry)==self.__pb_atpbokw_field_count:
                 pb_book[k]=self._extract_phone_entry(pb_entry, result)
                 k+=1
                 # print pb_book[k], i
@@ -242,9 +218,6 @@ class Phone(com_samsung.Phone):
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
-        if not self.is_online():
-            self.log("Failed to talk to phone")
-            return {}
         pb_book=self._get_phonebook(result)
         result['phonebook']=pb_book
         return pb_book
@@ -258,41 +231,42 @@ class Phone(com_samsung.Phone):
                           'serial1': entry[self.__pb_entry],
                           'serial2': entry[self.__pb_mem_loc] }]
         # only one name
-        res['names']=[ {'full': strip(entry[self.__pb_name], '"') } ]
+        res['names']=[ {'full': entry[self.__pb_name].replace('"', '') } ]
         if len(entry[self.__pb_alias]):
-#               res['names'][0]['nickname']=entry[self.__pb_alias]
-            res['urls']=[ {'url': strip(entry[self.__pb_alias], '"') } ]
+            res['urls']=[ {'url': entry[self.__pb_alias] } ]
 
         # only one category
         g=fundamentals['groups']
-        i=atoi(entry[self.__pb_group])
+        i=int(entry[self.__pb_group])
         res['categories']=[ {'category': g[i]['name'] } ]
 
         # emails
-        s=strip(entry[self.__pb_email], '"')
+        s=entry[self.__pb_email].replace('"', '')
         if len(s):
                res['emails']=[ { 'email': s } ]
 
         # urls
         # private
         # memos
+        
         # wallpapers
-	if atoi(entry[self.__pb_image_assign]) == 3:
-	    try:
-	    	res['wallpapers']=[ { 'wallpaper': split(entry[self.__pb_contact_image], "/")[1] + ".jpg",
-                             'use': 'call' } ]
-	    except:
-	    	pass
-	if atoi(entry[self.__pb_image_assign]) == 4:
-	    res['wallpapers']=[ { 'wallpaper': 'brew_image',
-                             'use': 'call' } ]
-	if atoi(entry[self.__pb_image_assign]) == 5:
-	    res['wallpapers']=[ { 'wallpaper': 'none',
-                             'use': 'call' } ]
-	    
+        if entry[self.__pb_image_assign]=='3':
+            # the image is 'Gallery' with the string 'digital_cam/Imagexxx'
+            res['wallpapers']=[ { 'wallpaper': entry[self.__pb_contact_image].split( "/")[1]+".jpg",
+                                  'use': 'call' } ]
+        elif entry[self.__pb_image_assign]=='4':
+            # the entry is an index into wallpaper-index
+            wp_index=fundamentals.get('wallpaper-index', {})
+            try:
+                res['wallpapers']=[{ 'wallpaper': wp_index[int(entry[self.__pb_image_id])]['name'],
+                                    'use': 'call'} ]
+            except:
+                pass
+            
         # ringtones
         try:
-            res['ringtones']=[ { 'ringtone': self.builtinringtones[atoi(entry[self.__pb_ringtone])],
+            rt_index=fundamentals.get('ringtone-index', {})
+            res['ringtones']=[ { 'ringtone': rt_index[int(entry[self.__pb_ringtone])]['name'],
                              'use': 'call' } ]
         except:
             res['ringtones']=[ { 'ringtone': self.builtinringtones[0],
@@ -300,7 +274,7 @@ class Phone(com_samsung.Phone):
 
 
         # numbers
-        speed_dial=atoi(entry[self.__pb_speed_dial])
+        speed_dial=int(entry[self.__pb_speed_dial])
         res['numbers']=[]
         for k, n in enumerate(self.__pb_numbers):
             for key in n:
@@ -308,7 +282,7 @@ class Phone(com_samsung.Phone):
                     if speed_dial==k:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key,
-                                        'speeddial': atoi(entry[self.__pb_mem_loc])})
+                                        'speeddial': int(entry[self.__pb_mem_loc])})
                     else:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key })	
@@ -317,16 +291,14 @@ class Phone(com_samsung.Phone):
 
     def savephonebook(self, data):
         "Saves out the phonebook"
-        if not self.is_online():
-            self.log("Failed to talk to phone")
-            return data
 
         pb_book=data['phonebook']
         pb_groups=data['groups']
+        ringtone_index=data.get('ringtone-index', {})
         self.log('Validating phonebook entries.')
         del_entries=[]
         for k in pb_book:
-            if not self.__validate_entry(pb_book[k], pb_groups):
+            if not self.__validate_entry(pb_book[k], pb_groups, ringtone_index):
                 self.log('Invalid entry, entry will be not be sent.')
                 del_entries.append(k)
         for k in del_entries:
@@ -340,8 +312,8 @@ class Phone(com_samsung.Phone):
 
         # get existing phonebook from the phone
         self.log("Getting current phonebook from the phone")
-        current_pb=self._get_phonebook(data, True)
-
+        current_pb=self._get_phonebook(data)
+    
         # check and adjust for speeddial changes
         self.log("Processing speeddial data")
         for k in pb_book:
@@ -359,8 +331,8 @@ class Phone(com_samsung.Phone):
                     found=True
                     break
             if found:
-                pb_locs[atoi(current_pb[k1]['serials'][0]['serial1'])]=True
-                pb_mem[atoi(current_pb[k1]['serials'][0]['serial2'])]=True
+                pb_locs[int(current_pb[k1]['serials'][0]['serial1'])]=True
+                pb_mem[int(current_pb[k1]['serials'][0]['serial2'])]=True
             else:
                 self.log("Deleted item: "+current_pb[k1]['names'][0]['full'])
                 # delete the entries from data and the phone
@@ -387,7 +359,7 @@ class Phone(com_samsung.Phone):
                     pb_mem[sd]=True
                 else:
                     while pb_mem[mem_idx]:
-                         mem_idx -= 1
+                        mem_idx -= 1
                     pb_mem[mem_idx]=True
                     mem_index=mem_idx
                     self._set_speeddial(e, mem_idx)
@@ -399,34 +371,31 @@ class Phone(com_samsung.Phone):
                 self.log("New entries: Name: "+e['names'][0]['full']+", s1: "+`loc_idx`+", s2: "+`mem_index`)
                 serials_update.append((self._bitpim_serials(e), s1))
             self.progress(progresscur, progressmax, "Updating "+e['names'][0]['full'])
-            if not self._write_phone_entry(e, pb_groups):
+            if not self._write_phone_entry(e, data):
                 self.log("Failed to save entry: "+e['names'][0]['full'])
             progresscur += 1
 
-        # update existing and new entries
         data["serialupdates"]=serials_update
         self.log("Done")
         self.setmode(self.MODEMODEM)
         return data
 
     # validate a phonebook entry, return True if good, False otherwise
-    def __validate_entry(self, pb_entry, pb_groups):
+    def __validate_entry(self, pb_entry, pb_groups, ringtone_index):
         try:
-            # validate name & alias
-            name=pb_entry['names'][0]['full']
-            replace(name, '"', '')
+            # validate name
+            name=pb_entry['names'][0]['full'].replace('"', '')
             if len(name)>self.__pb_max_name_len:
                 name=name[:self.__pb_max_name_len]
             if pb_entry['names'][0]['full']!=name:
                 pb_entry['names'][0]['full']=name
-            if pb_entry['names'][0].has_key('nickname'):
-                name=pb_entry['names'][0]['nickname']
-                replace(name, '"', '')
-                if len(name)>self.__pb_max_name_len:
-                    name=name[:self.__pb_max_name_len]
-                if pb_entry['names'][0]['nickname']!=name:
-                    pb_entry['names'][0]['nickname']=name
-
+            # validate url/alias
+            url=pb_entry.get('urls', [{}])[0].get('url', None)
+            if url is not None:
+                url=re.sub('[,"]', '', url)
+                if len(url)>self.__pb_max_alias_chars:
+                    url=url[:self.__pb_max_alias_chars]
+                pb_entry['urls']=[ { 'url': url } ]
             # validate numbers
             has_number_or_email=False
             if pb_entry.has_key('numbers'):
@@ -443,15 +412,13 @@ class Phone(com_samsung.Phone):
                         self.log(n['number']+': setting type to home.')
                         n['type']='home'
                     has_number_or_email=True
-
             # validate emails
             if pb_entry.has_key('emails'):
                 if len(pb_entry['emails'])>self.__pb_max_emails:
                     self.log(name+': Each entry can only have %s emails.  The rest will be ignored.'%str(self.__pb_max_emails))
-                email=pb_entry['emails'][0]['email']
-                replace(email, '"', '')
-                if len(email)>self.__pb_max_number_len:
-                    email=email[:self.__pb_max_number_len]
+                email=pb_entry['emails'][0]['email'].replace('"', '')
+                if len(email)>self.__pb_max_email_chars:
+                    email=email[:self.__pb_max_email_chars]
                 if email!=pb_entry['emails'][0]['email']:
                     pb_entry['emails'][0]['email']=email
                 has_number_or_email=True
@@ -459,7 +426,6 @@ class Phone(com_samsung.Phone):
                 self.log(name+': Entry has no numbers or emails')
                 # return False so this entry can be deleted from the dict
                 return False
-
             # validate groups
             found=False
             if pb_entry.has_key('categories') and len(pb_entry['categories']):
@@ -471,20 +437,21 @@ class Phone(com_samsung.Phone):
             if not found:
                 self.log(name+': category set to '+pb_groups[0]['name'])
                 pb_entry['categories']=[{'category': pb_groups[0]['name']}]
-
             # validate ringtones
             found=False
             if pb_entry.has_key('ringtones') and len(pb_entry['ringtones']):
                 pb_rt=pb_entry['ringtones'][0]['ringtone']
-                # can only set to builtin-ringtone
-                for k in self.builtinringtones:
-                    if k==pb_rt:
+                for k, rt in ringtone_index.items():
+                    if pb_rt==rt['name']:
                         found=True
                         break
             if not found:
-                self.log(name+': ringtone set to '+self.builtinringtones[0])
-                pb_entry['ringtones']=[{'ringtone': self.builtinringtones[0],
+                rt=ringtone_index[0]['name']
+                self.log(name+': ringtone set to '+rt)
+                pb_entry['ringtones']=[{'ringtone': rt,
                                         'use': 'call' }]
+            # to to: validate wallpaper
+                
             # everything's cool
             return True
         except:
@@ -509,7 +476,7 @@ class Phone(com_samsung.Phone):
     def _update_speeddial(self, pb_entry):
         try:
             s=self._my_serials(pb_entry)
-            s1=atoi(s['serial2'])
+            s1=int(s['serial2'])
             sd=self._get_speeddial(pb_entry)
             if not sd:
                 # speed dial not set, set it to current mem slot
@@ -583,8 +550,7 @@ class Phone(com_samsung.Phone):
                 return k, n[k][type]
         raise common.IntegrityCheckFailed(self.desc, "Invalid Number Type")
 
-
-    def _write_phone_entry(self, pb_entry, groups):
+    def _write_phone_entry(self, pb_entry, data):
 
         # setting up a list to send to the phone, all fields preset to '0'
         e=['0']*self.__pb_atpbokw_field_count	
@@ -595,46 +561,36 @@ class Phone(com_samsung.Phone):
         e[self.__pb_mem_loc]=serials['serial2']
 
         # groups/categories
-        grp=0
+        groups=data.get('groups', {})
+        e[self.__pb_group]='0'
         try:
             grp_name=pb_entry['categories'][0]['category']
-            for k in range(len(groups)):
-                if groups[k]['name']==grp_name:
-                    grp=k
+            for k, n in groups.items():
+                if n.get('name', None)==grp_name:
+                    e[self.__pb_group]=`k`
                     break
-
         except:
-            # invalid group or no group specified, default to group 0
-            grp, pb_entry['categories']=0, [{'category': groups[0]['name']}]
-        e[self.__pb_group]=`grp`
+            pass
 
         # ringtones
-        e[self.__pb_ringtone]=None
+        ringtone_index=data.get('ringtone-index', {})
+        e[self.__pb_ringtone]='0'
         try:
             rt=pb_entry['ringtones'][0]['ringtone']
-            for k, n in enumerate(self.builtinringtones):
-                if n==rt:
+            for k, n in ringtone_index.items():
+                if rt==n.get('name', None):
                     e[self.__pb_ringtone]=`k`
                     break
         except:
             pass
-        if e[self.__pb_ringtone] is None:
-            e[self.__pb_ringtone]='0'
-            pb_entry['ringtones']=[ { 'ringtone': self.builtinringtones[0],
-                                     'use': 'call' } ]
 
-        # name & alias
+        # name & alias/url
         e[self.__pb_name]='"'+pb_entry['names'][0]['full']+'"'
-#        nick_name=''
 	url=''
         try:
-#            nick_name=pb_entry['names'][0]['nickname']
             url=pb_entry['urls'][0]['url']
         except:
             pass
-
-#        e[self.__pb_alias]=nick_name
-#        if len(nick_name):
         e[self.__pb_alias]=url
         if len(url):
             e[self.__pb_alias+1]='0'
@@ -642,9 +598,7 @@ class Phone(com_samsung.Phone):
             e[self.__pb_alias+1]=''
 
         # numbers & speed dial
-
         # preset to empty
-
         for k in range(len(self.__pb_numbers)):
             for kk in self.__pb_numbers[k]:
                 e[self.__pb_numbers[k][kk]]=''
@@ -675,24 +629,30 @@ class Phone(com_samsung.Phone):
             pass
         e[self.__pb_email]='"'+email+'"'
 
-	###### wallpaper: phonebook entry "caller id" image
+	# wallpaper: phonebook entry "caller id" image
+        # Default: No image assigned
+        e[self.__pb_image_assign]='5'
+        e[self.__pb_image_id]='0'
+        e[self.__pb_contact_image]='""'
 	try:
             imgName = pb_entry['wallpapers'][0]['wallpaper']
+            image_index=data.get('wallpaper-index', {})
+            for k, n in image_index.items():
+                if imgName==n.get('name', None):
+                    if k>self.protocolclass.max_image_entries:
+                        # this is a 'Gallery' entry
+                        e[self.__pb_image_assign]='3'
+                        e[self.__pb_contact_image]='"'+self.__wp_photo_dir+'/'+imgName.split('.')[0]+'"'
+                        e[self.__pb_image_id]='0'
+                    else:
+                        # 'My Image' entry
+                        e[self.__pb_image_assign]='4'
+                        e[self.__pb_image_id]=`k`
+                        e[self.__pb_contact_image]='""'
+                    break
 	except:
-	    e[self.__pb_image_assign]='5'
-	    imgName = "none"
-	# temporary placeholder:
-	# will eventually get  actual image names from /nvm/nvm/brew_image file
-	if (imgName == "brew_image") or (imgName == "none"):
-	    e[self.__pb_image_assign]='5'		# this will zap the assigned
-	    e[self.__pb_image_id]='0'			# brew_image caller-id on the
-	    e[self.__pb_contact_image]='""'		# phone but no other choice now
-	else:
-	    e[self.__pb_contact_image]='"'+ self.__wp_photo_dir + '/' + split(imgName,".")[0] + '"'
-	    e[self.__pb_image_assign]='3'
-	    e[self.__pb_image_id]='0'
-	####### 
-	
+            pass
+
         for k in self.__pb_blanks:
             e[k]=''
 
@@ -700,41 +660,48 @@ class Phone(com_samsung.Phone):
 
         # final check to determine if this entry has changed.
         # if it has not then do nothing an just return
-        ee=self.get_phone_entry(atoi(e[self.__pb_entry]))
-        if len(ee):
+        ee=self.get_phone_entry(int(e[self.__pb_entry]))
+        if len(ee)==self.__pb_atpbokw_field_count:
             # DSV took the " out, need to put them back in for comparison
             ee[self.__pb_name]='"'+ee[self.__pb_name]+'"'
             ee[self.__pb_email]='"'+ee[self.__pb_email]+'"'
-            k=self.__pb_atpbokw_field_count-2
-            if e[0:k]==ee[0:k]:
+            ee[self.__pb_contact_image]='"'+ee[self.__pb_contact_image]+'"'
+            # exclude the timestamp field
+            k=self.__pb_atpbokw_field_count-1
+            if e[:k]==ee[:k]:
                 return True
-        return self.save_phone_entry('0,'+join(e,','))
+        return self.save_phone_entry('0,'+','.join(e))
 
     def getringtones(self, result):
-        result[self.__ringtone_info[1]]=self.get_builtin_ringtone_index()
+        self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__ringtone_info)
-        result['rebootphone']=1 # So we end up back in AT mode
-        r=m.get_media(result)
+        rt_info=RingtoneIndex(self).get_download_info()
+        r=m.get_media(result, rt_info)
+        self.setmode(self.MODEMODEM)
         return r
 
     def saveringtones(self, result, merge):
+        self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__ringtone_info)
         result['rebootphone']=1 # So we end up back in AT mode
         r=m.save_media(result)
+        self.setmode(self.MODEMODEM)
         return r
 
     def getwallpapers(self, result):
+        self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__wallpaper_info)
-        result['rebootphone']=1
-        r1= m.get_media(result)
-        m=FileEntries(self, self.__camerapix_info)
-        r2=m.get_media(r1)
-        return r2
+        img_info=ImageIndex(self).get_download_info()
+        r=m.get_media(result, img_info)
+        self.setmode(self.MODEMODEM)
+        return r
 
     def savewallpapers(self, result, merge):
+        self.setmode(self.MODEBREW)
         m=FileEntries(self, self.__wallpaper_info)
-        result['rebootphone']=1
         r=m.save_media(result)
+        result['rebootphone']=1
+        self.setmode(self.MODEMODEM)
         return r
 
     getmedia=None
@@ -744,11 +711,12 @@ class Profile(com_samsung.Profile):
     serialsname='scha670'
 
     WALLPAPER_WIDTH=128
-    WALLPAPER_HEIGHT=128
-    MAX_WALLPAPER_BASENAME_LENGTH=19
+##    WALLPAPER_HEIGHT=160
+    WALLPAPER_HEIGHT=96
+    MAX_WALLPAPER_BASENAME_LENGTH=17
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
-    WALLPAPER_CONVERT_FORMAT="png"
-    MAX_RINGTONE_BASENAME_LENGTH=19
+    WALLPAPER_CONVERT_FORMAT="bmp"
+    MAX_RINGTONE_BASENAME_LENGTH=17
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
 
     def __init__(self):
@@ -768,15 +736,19 @@ class Profile(com_samsung.Profile):
     def convertphonebooktophone(self, helper, data):
         return data
 
-#######################################################################
 class FileEntries:
     def __init__(self, phone, info):
         self.__phone=phone
         self.__file_type, self.__index_type, self.__origin, self.__path, self.__max_file_len, self.__max_file_count=info
 
-    #############
-    def get_media(self, result):
+    def get_media(self, result, download_info=None):
         self.__phone.log('Getting media for type '+self.__file_type)
+        if download_info is None:
+            return self.__get_media_by_dir(result)
+        else:
+            return self.__get_media_by_index(result, download_info)
+
+    def __get_media_by_dir(self, result):
         media=result.get(self.__file_type, {})
         idx=result.get(self.__index_type, {})
         file_cnt, idx_k=0, len(idx)
@@ -786,17 +758,9 @@ class FileEntries:
             for k in file_list:
                 try:
                     index=k[path_len:]
-		    contents = self.__phone.getfilecontents(k)
-		    if self.__origin == "camera":
-			# dtstamp is saved in the date field of index.idx
-			dtstamp =( atoi(contents[47:51]), atoi(contents[51:53]), atoi(contents[53:55]), atoi(contents[55:57]), atoi(contents[57:59]))
-			index = index + ".jpg"
-			# how do we reference __wp_header_bytes and __wp_ts_offset here?
-                    	media[index]=contents[96:]
-			idx[idx_k]={ 'name': index, 'origin': self.__origin, 'date': dtstamp }
- 		    else:
-                    	media[index]=contents
-                    	idx[idx_k]={ 'name': index, 'origin': self.__origin }
+                    # print k, index
+                    media[index]=self.__phone.getfilecontents(k)
+                    idx[idx_k]={ 'name': index, 'origin': self.__origin }
                     idx_k+=1
                     file_cnt += 1
                 except:
@@ -811,23 +775,36 @@ class FileEntries:
                                  file_cnt, self.__file_type))
         return result
 
-    ##############
+    def __get_media_by_index(self, result, rt_info):
+        media=result.get(self.__file_type, {})
+        media_index=result.get(self.__index_type, {})
+        for k, m in media_index.items():
+            file_key=m.get('name', None)
+            file_name=rt_info.get(file_key, None)
+            if file_key is not None and file_name is not None:
+                try :
+                    contents=self.__phone.getfilecontents(file_name)
+                    if m.get('origin', None)=='camera':
+                        # Camera pix file, need to be touched up
+                        # patch code to make it work right now, need to recode
+                        m['date']=\
+                        ( int(contents[47:51]), int(contents[51:53]),
+                          int(contents[53:55]), int(contents[55:57]),
+                          int(contents[57:59]))
+                        contents=contents[96:]
+                    media[file_key]=contents
+                except:
+                    self.__phone.log('Failed to read file '+file_name)
+        result[self.__file_type]=media
+        return result
+
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
         # check for max num of allowable files
-	media_cnt = len(media)
-	if self.__file_type == "wallpapers":
-	    # Don't count camera pix
-	    for k in media:
-		try:
-		    if media[k]['origin'] == "camera":
-		        media_cnt -= 1
-		except:
-		    pass
-        if media_cnt > self.__max_file_count:
-            self.__phone.log('This phone only supports %d %s.  You have %d %s.  Save %s aborted'% \
-                                (self.__max_file_count, self.__file_type, media_cnt, self.__file_type, self.__file_type))
+        if len(media) > self.__max_file_count:
+            self.__phone.log('This phone only support %d %s.  You have %d %s.  Save Ringtone aborted'% \
+                                (self.__max_file_count, self.__file_type, len(media), self.__file_type))
             return result
         # check for file name length
         for k in media:
@@ -845,6 +822,7 @@ class FileEntries:
         path_len=len(self.__path)+1
         for k in dir_l:
             name=k[path_len:]
+            # self.__phone.log('k: %s, name: %s'%(str(k), str(name)))
             found=False
             for k1 in media:
                 if media[k1]['name']==name:
@@ -870,5 +848,123 @@ class FileEntries:
                     self.__phone.writefile(name, media[k]['data'])
                     media[k]['origin']=self.__origin
             except:
-                self.__phone.log('Failed to write file: '+media[k]['name'])
+                self.__phone.report('Failed to write file: '+media[k]['name'])
         return result
+
+class RingtoneIndex:
+    __builtin_ringtones=( 'Inactive',
+                       'Bell 1', 'Bell 2', 'Bell 3', 'Bell 4', 'Bell 5',
+                       'Melody 1', 'Melody 2', 'Melody 3', 'Melody 4', 'Melody 5',
+                       'Melody 6', 'Melody 7', 'Melody 8', 'Melody 9', 'Melody 10')
+
+    def __init__(self, phone):
+        self.__phone=phone
+
+    def get_builtin_index(self):
+        r={}
+        for k, n in enumerate(self.__builtin_ringtones):
+            r[k]={ 'name': n, 'origin': 'builtin' }
+        return r
+
+    def get_download_index(self):
+        r={}
+        try:
+            rt_idx=self.__phone.protocolclass.ringtones()
+            buf=prototypes.buffer(self.__phone.getfilecontents( \
+                self.__phone.protocolclass.ringtone_index_file_name))
+            rt_idx.readfrombuffer(buf)
+            idx=len(self.__builtin_ringtones)
+            l=len(self.__phone.protocolclass.ringtone_file_path)+1
+            for i in range(self.__phone.protocolclass.max_ringtone_entries):
+                e=rt_idx.entry[i]
+                if e.name_len:
+                    r[idx+i]={ 'name': e.file_name[l:e.file_name_len],
+                               'origin': 'ringtone' }
+        except:
+            pass
+        return r
+
+    def get(self):
+        r=self.get_builtin_index()
+        r.update(self.get_download_index())
+        return r
+
+    def get_download_info(self):
+        r={}
+        try:
+            rt_idx=self.__phone.protocolclass.ringtones()
+            buf=prototypes.buffer(self.__phone.getfilecontents( \
+                self.__phone.protocolclass.ringtone_index_file_name))
+            rt_idx.readfrombuffer(buf)
+            l=len(self.__phone.protocolclass.ringtone_file_path)+1
+            for i in range(self.__phone.protocolclass.max_ringtone_entries):
+                e=rt_idx.entry[i]
+                if e.name_len:
+                    r[e.file_name[l:e.file_name_len]]=e.file_name[:e.file_name_len]
+        except:
+            pass
+        return r
+
+class ImageIndex:
+
+    def __init__(self, phone):
+        self.__phone=phone
+
+    def get_download_index(self):
+        r={}
+        try:
+            # first, read 'My Image' index
+            img_idx=self.__phone.protocolclass.images()
+            buf=prototypes.buffer(self.__phone.getfilecontents( \
+                self.__phone.protocolclass.image_index_file_name))
+            img_idx.readfrombuffer(buf)
+            l=len(self.__phone.protocolclass.image_file_path)+1
+            for i in range(self.__phone.protocolclass.max_image_entries):
+                e=img_idx.entry[i]
+                if e.name_len and e.file_name_len:
+                    r[i]={ 'name': e.file_name[l:e.file_name_len],
+                               'origin': 'wallpapers' }
+            # then read the camera pix image index ('Gallery')
+            # starting index should be max_image_entries+1
+            idx=self.__phone.protocolclass.max_image_entries+1
+            try:
+                dir_l=self.__phone.getfilesystem(\
+                    self.__phone.protocolclass.cam_pix_file_path)
+            except com_brew.BrewNoSuchDirectoryException:
+                dir_l={}
+            l=len(self.__phone.protocolclass.cam_pix_file_path)+1
+            for f in dir_l:
+                r[idx]={ 'name': f[l:]+'.jpg', 'origin': 'camera' }
+                idx += 1
+        except:
+            raise
+        return r
+
+    def get(self):
+        return self.get_download_index()
+
+    def get_download_info(self):
+        r={}
+        try:
+            # first, 'My Image' entries
+            img_idx=self.__phone.protocolclass.images()
+            buf=prototypes.buffer(self.__phone.getfilecontents( \
+                self.__phone.protocolclass.image_index_file_name))
+            img_idx.readfrombuffer(buf)
+            l=len(self.__phone.protocolclass.image_file_path)+1
+            for i in range(self.__phone.protocolclass.max_image_entries):
+                e=img_idx.entry[i]
+                if e.name_len and e.file_name_len:
+                    r[e.file_name[l:e.file_name_len]]=e.file_name[:e.file_name_len]
+            # then 'Gallery' entries
+            try:
+                dir_l=self.__phone.getfilesystem(\
+                    self.__phone.protocolclass.cam_pix_file_path)
+            except com_brew.BrewNoSuchDirectoryException:
+                dir_l={}
+            l=len(self.__phone.protocolclass.cam_pix_file_path)+1
+            for f in dir_l:
+                r[f[l:]+'.jpg']=f
+        except:
+            pass
+        return r

@@ -548,7 +548,8 @@ class Profile(com_samsung.Profile):
     serialsname='scha650'
 
     WALLPAPER_WIDTH=128
-    WALLPAPER_HEIGHT=160
+##    WALLPAPER_HEIGHT=160
+    WALLPAPER_HEIGHT=96
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
@@ -616,11 +617,15 @@ class FileEntries:
 
     def __get_media_by_index(self, result, rt_info):
         media=result.get(self.__file_type, {})
-        for k, file_name in rt_info.items():
-            try:
-                media[k]=self.__phone.getfilecontents(file_name)
-            except:
-                self.__phone.log('Failed to read file '+file_name)
+        media_index=result.get(self.__index_type, {})
+        for k, m in media_index.items():
+            file_key=m.get('name', None)
+            file_name=rt_info.get(file_key, None)
+            if file_key is not None and file_name is not None:
+                try :
+                    media[file_key]=self.__phone.getfilecontents(file_name)
+                except:
+                    self.__phone.log('Failed to read file '+file_name)
         result[self.__file_type]=media
         return result
 
