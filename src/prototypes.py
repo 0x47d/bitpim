@@ -649,9 +649,14 @@ class SAMDATE(SAMSTRING):
 
         s=super(SAMDATE,self).getvalue()
         val=s.split("/") # List of of Month, day, year
-        year=int(val[2])
-        month=int(val[0])
-        day=int(val[1])
+        if len(val)<2:
+            year = 0
+            month = 0
+            day = 0
+        else:
+            year=int(val[2])
+            month=int(val[0])
+            day=int(val[1])
         return (year, month, day)
         
     def _converttostring(self, date):
