@@ -11,8 +11,8 @@ class CalendarCellAttributes:
         self.timefont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
         self.timeforeground=wxNamedColour("ORCHID")
         self.entryfont=wxFont(15, wxSWISS, wxNORMAL, wxNORMAL )
-        self.entryforeground=wxNamedColour("DARK GOLDENROD")
-        self.miltime=False
+        self.entryforeground=wxNamedColour("BLACK")
+        self.miltime=True
 
     def isrightaligned(self):
         return self.labelalign==wxALIGN_RIGHT
@@ -46,7 +46,9 @@ class CalendarCell(wxWindow):
         self.OnSize(None)
 
         self.entries=(
+            (1, 88, "Early morning"),
             (10,15, "Some explanatory text" ),
+            (11,11, "Look at me!"),
             (12,30, "More text here"),
             (15,30, "A very large amount of text that will never fit"),
             (20,30, "Evening drinks"),
@@ -68,52 +70,68 @@ class CalendarCell(wxWindow):
         if self.attr.isrightaligned():
             x=self.width-(w+5)
         dc.DrawText(`self.day`, x, 0)
-        
-        # now calculate how much space is needed for the time fields
-        self.attr.setfortime(dc)
-        boundingspace=10
-        space,_=dc.GetTextExtent(" ")
-        timespace,timeheight=dc.GetTextExtent("88:88")
-        if self.attr.ismiltime():
-            ampm=0
-        else:
-            ampm,_=dc.GetTextExtent(" mm")
 
-        leading=0
+        entrystart=h
+        dc.DestroyClippingRegion()
+        dc.SetClippingRegion( 0, entrystart, self.width, self.height-entrystart)
 
-        self.attr.setforentry(dc)
-        _,entryheight=dc.GetTextExtent(" ")
-        firstrowheight=max(timeheight, entryheight)
-
-        # Now draw each item
-        lastap=""
-        y=h+5
-        for h,m,desc in self.entries:
-            x=0
+        while 1: # this loop scales the contents to fit the space available
+            # now calculate how much space is needed for the time fields
             self.attr.setfortime(dc)
-            # bounding
-            x+=boundingspace # we don't draw anything yet
-            timey=y
-            if timeheight<firstrowheight:
-                timey+=firstrowheight-timeheight
-            text=""
-            if not self.attr.ismiltime():
-                ap="am"
-                if h>=12: ap="pm"
-                h%=12
-                if h==0: h=12
-            if h<12: text+=" "
-            text+="%d:%02d" % (h,m)
-            dc.DrawText(text, x, timey)
-            x+=timespace
-            x+=space
-            if not self.attr.ismiltime():
-                if lastap!=ap:
-                    dc.DrawText(ap, x, timey)
-                    lastap=ap
-                x+=ampm+space
-            print x, leading
-            y+=firstrowheight
+            boundingspace=10
+            space,_=dc.GetTextExtent(" ")
+            timespace,timeheight=dc.GetTextExtent("88:88")
+            if self.attr.ismiltime():
+                ampm=0
+            else:
+                ampm,_=dc.GetTextExtent(" mm")
+
+            leading=0
+
+            self.attr.setforentry(dc)
+            _,entryheight=dc.GetTextExtent(" ")
+            firstrowheight=max(timeheight, entryheight)
+
+            # Now draw each item
+            lastap=""
+            y=entrystart/dc.GetUserScale()[0]+5
+            for h,m,desc in self.entries:
+                x=0
+                self.attr.setfortime(dc)
+                # bounding
+                x+=boundingspace # we don't draw anything yet
+                timey=y
+                if timeheight<firstrowheight:
+                    timey+=firstrowheight-timeheight
+                text=""
+                if not self.attr.ismiltime():
+                    ap="am"
+                    if h>=12: ap="pm"
+                    h%=12
+                    if h==0: h=12
+                if h<10: text+=" "
+                text+="%d:%02d" % (h,m)
+                dc.DrawText(text, x, timey)
+                x+=timespace
+                x+=space
+                if not self.attr.ismiltime():
+                    if lastap!=ap:
+                        dc.DrawText(ap, x, timey)
+                        lastap=ap
+                    x+=ampm+space
+                self.attr.setforentry(dc)
+                ey=y
+                if entryheight<firstrowheight:
+                    ey+=firstrowheight-ey
+                dc.DrawText(desc, x, ey)
+                # that row is dealt with!
+                y+=firstrowheight
+            if y>self.height/dc.GetUserScale()[1]:
+                dc.Clear()
+                factorx,factory=dc.GetUserScale()
+                dc.SetUserScale(0.9*factorx, 0.9*factory)
+            else:
+                break
 
         
 
