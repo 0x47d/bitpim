@@ -307,19 +307,19 @@ PACKET phonebookslotrequest:
     500 UNKNOWN +pad
 
 PACKET phonenumber:
-    1 UINT +number_len
-    49 STRING +number
+    1 UINT {'default': 0} +number_len
+    49 STRING {'default': ""} +number
 
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False} name
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
-    1 UINT email_len
-    49 STRING email
-    1 UINT url_len
-    49 STRING url
-    1 BOOL secret
+    1 UINT +email_len
+    49 STRING {'default': ""} +email
+    1 UINT +url_len
+    49 STRING {'default': ""} +url
+    1 BOOL +secret
     1 UINT name_len
      
 PACKET phonebookslotresponse:
@@ -329,7 +329,7 @@ PACKET phonebookslotresponse:
 
 PACKET phonebookslotupdaterequest:
     * sanyoheader {'packettype': 0x0c, 'readwrite': 0x0e,
-                   'command': 0x28} header
+                   'command': 0x28} +header
     * phonebookentry entry
     30 UNKNOWN +pad
 
@@ -358,9 +358,9 @@ PACKET t9response:
     * UNKNOWN unknown
 
 PACKET calleridentry:
-    2 UINT {'default': 0xffff} pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
-    1 UINT actualnumberlen "Length of the actual phone number"
-    10 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False} numberfragment
+    2 UINT {'default': 0xffff} +pbslotandtype "Low 12 bits, slotnum, top 4 bits, type"
+    1 UINT {'default': 0} +actualnumberlen "Length of the actual phone number"
+    10 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': ""} +numberfragment
 
 PACKET calleridbuffer:
     "Index so that phone can show a name instead of number"
@@ -368,7 +368,7 @@ PACKET calleridbuffer:
     # payload from commands 0X 50 0F through 0X 5D 0F
     P UINT {'constant': 500} maxentries
     2 UINT numentries "Number phone numbers"
-    * LIST {'length': self.maxentries, 'elementclass':calleridentry} +items
+    * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     498 UNKNOWN +pad
 
 PACKET ringerpicbuffer:
@@ -390,8 +390,9 @@ PACKET pbsortbuffer:
     P UINT {'constant': 300} numpbslots "Number of phone book slots"
     P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
     P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
+    P UINT {'constant': 30} longphonenumberlen "Definition of a long phone number"
     * LIST {'length': self.numpbslots, 'createdefault': True} +usedflags:
-        1 UINT used "1 of slot in use"
+        1 UINT used "1 if slot in use"
     2 UINT slotsused
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
     2 UINT numemail "Num of slots with email"
@@ -400,17 +401,17 @@ PACKET pbsortbuffer:
         1 UINT firsttype "First phone number type in each slot"
     * LIST {'length': self.numpbslots} +sortorder:
         2 UINT {'default': 0xffff} pbslot
-    300 STRING {'terminator': None} +pbfirstletters
+    300 STRING {'terminator': None} pbfirstletters
     * LIST {'length': self.numpbslots} +sortorder2: "Is this the same"
-        2 UINT {'default': 0xffff} +pbslot
-    * LIST {'length': self.numspeeddials} speeddialindex:
-        2 UINT {'default': 0xffff} +pbslotandtype
-    * LIST {'length': self.numlongnumbers} longnumbersindex:
-        2 UINT {'default': 0xffff} +pbslotandtype
+        2 UINT {'default': 0xffff} pbslot
+    * LIST {'length': self.numspeeddials} +speeddialindex:
+        2 UINT {'default': 0xffff} pbslotandtype
+    * LIST {'length': self.numlongnumbers} +longnumbersindex:
+        2 UINT {'default': 0xffff} pbslotandtype
     * LIST {'length': self.numpbslots} +emails: "Sorted list of slots with Email"
-        2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} +emailfirstletters "First letters in sort order"
+        2 UINT {'default': 0xffff} pbslot
+    300 STRING {'terminator': None} emailfirstletters "First letters in sort order"
     * LIST {'length': self.numpbslots} +urls: "Sorted list of slots with a URL"
-        2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} +urlfirstletters "First letters in sort order"
+        2 UINT {'default': 0xffff} pbslot
+    300 STRING {'terminator': None} urlfirstletters "First letters in sort order"
     66 UNKNOWN +pad
