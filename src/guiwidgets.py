@@ -684,7 +684,7 @@ class WallpaperView(FileView):
         self.maxlen=19
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico"
         self.usewidth=120
-        self.useheight=100
+        self.useheight=98
 
     def getdata(self,dict):
         dict.update(self._data)
