@@ -116,45 +116,29 @@ class Phone(com_samsung.Phone):
 
         return results
 
-    def _get_phone_num_count(self):
-
-        try:
-            s=self.comm.sendatcommand("#PCBIT?")
-            if len(s)==0:
-                return 0
-            c=atoi(split(split(s[0], ": ")[1], ",")[7])-30
-            if c>len(self.__phone_entries_range):
-                # count out whack
-                c=0
-            return c
-            
-        except commport.ATError:
-            return 0
-
     def _get_phonebook(self, result, show_progress=True):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
 
         self.pmode_on()
-        c=self._get_phone_num_count()
-        k,j=0,1
-        i=[0]
+        c=len(self.__phone_entries_range)
+        k=0
         pb_book={}
-        while i[0]<c:
+        for j in self.__phone_entries_range:
             # print "Getting entry: ", j
             pb_entry=self.get_phone_entry(j);
             if len(pb_entry):
-                pb_book[k]=self._extract_phone_entry(pb_entry, result, i)
+                pb_book[k]=self._extract_phone_entry(pb_entry, result)
+                k+=1
                 # print pb_book[k], i
                 if show_progress:
-                    self.progress(i[0], c, 'Reading '+pb_entry[self.__pb_name])
-                k+=1
-            j+=1
+                    self.progress(j, c, 'Reading '+pb_entry[self.__pb_name])
+            else:
+                if show_progress:
+                    self.progress(j, c, 'Blank entry: %d' % j)
         self.pmode_off()
 
         return pb_book
-
-        
 
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -167,7 +151,7 @@ class Phone(com_samsung.Phone):
         result['phonebook']=pb_book
         return pb_book
 
-    def _extract_phone_entry(self, entry, fundamentals, pb_count):
+    def _extract_phone_entry(self, entry, fundamentals):
 
         res={}
 
@@ -181,7 +165,6 @@ class Phone(com_samsung.Phone):
         res['names']=[ {'full': strip(entry[self.__pb_name], '"') } ]
         if len(entry[self.__pb_alias]):
                res['names'][0]['nickname']=entry[self.__pb_alias]
-               pb_count[0] += 1
 
         # only one category
         g=fundamentals['groups']
@@ -192,7 +175,6 @@ class Phone(com_samsung.Phone):
         s=strip(entry[self.__pb_email], '"')
         if len(s):
                res['emails']=[ { 'email': s } ]
-               pb_count[0] += 1
 
         # urls
         # private
@@ -218,7 +200,6 @@ class Phone(com_samsung.Phone):
                     else:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key })
-                    pb_count[0] += 1
         return res
 
     def savephonebook(self, data):
