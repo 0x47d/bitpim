@@ -207,7 +207,7 @@ class ImportDialog(wx.Dialog):
                     continue
                 c=self.columns[n]
                 if c in self.filternumbercolumns or c in self.filteremailcolumns or c in \
-                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes"]:
+                   ["Category", "Notes", "Business Web Page", "Home Web Page", "Web Page", "Notes", "Phone"]:
                     # these are multivalued
                     if not rec.has_key(c):
                         rec[c]=[]
@@ -254,8 +254,15 @@ class ImportDialog(wx.Dialog):
                     for val in rec[field]:
                         numbers.append({'type': self.numbermap[field], 'number': val})
                     del rec[field]
+            # phones (dict form of numbers)
+            if rec.has_key("Phone"):
+                mapping={"business": "office", "business fax": "fax", "home fax": "fax"}
+                for val in rec["Phone"]:
+                    numbers.append({"type": mapping.get(val["type"], val["type"]), "number": val["number"]})
+                del rec["Phone"]
             if len(numbers):
                 entry["numbers"]=numbers
+                    
             # names
             name={}
             for field in self.filternamecolumns:
@@ -279,9 +286,12 @@ class ImportDialog(wx.Dialog):
                               ):
                 if rec.has_key(key):
                     for url in rec[key]:
-                        u={'url': url}
-                        if type is not None:
-                            u['type']=type
+                        if isinstance(url, dict):
+                            u=url
+                        else:
+                            u={'url': url}
+                            if type is not None:
+                                u['type']=type
                         urls.append(u)
                     del rec[key]
             if len(urls):
@@ -426,6 +436,10 @@ def _getpreviewformatted(value, column):
     if isinstance(value, dict):
         if column=="Email Address":
             value="%s (%s)" %(value["email"], value["type"])
+        elif column=="Web Page":
+            value="%s (%s)" %(value["url"], value["type"])
+        elif column=="Phone":
+            value="%s (%s)" %(value["number"], value["type"])
         else:
             print "don't know how to convert dict",value,"for preview column",column
     try:
@@ -877,8 +891,11 @@ class ImportVCardDialog(ImportDialog):
         "last name": "Last Name",
         "first name": "First Name",
         "middle name": "Middle Name",
+        "nickname": "Nickname",
         "categories": "Categories",
         "email": "Email Address",
+        "url": "Web Page",
+        "phone": "Phone",
         }
     def __init__(self, filename, parent, id, title):
         self.headerrowiseditable=False
