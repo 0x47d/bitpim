@@ -800,7 +800,7 @@ class MainWindow(wxFrame):
     def HandleException(self, exception):
         """returns true if this function handled the exception
         and the caller should not do any further processing"""
-        if exception is None: return 0
+        if exception is None: return False
         assert isinstance(exception, Exception)
         text=None
         title=None
@@ -815,14 +815,15 @@ class MainWindow(wxFrame):
             style=wxOK|wxICON_INFORMATION
             
         if text is not None:
+            # ::todo:: wire help into this somehow
             dlg=wxMessageDialog(self,text, title, style=style)
             dlg.ShowModal()
             dlg.Destroy()
-            return 1
+            return True
         e=ExceptionDialog(self, exception)
         e.ShowModal()
         e.Destroy()
-        return 1
+        return True
         
     # plumbing for the multi-threading
 
