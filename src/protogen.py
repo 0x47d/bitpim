@@ -483,6 +483,10 @@ class codegen:
         print >>out, indent(2)+"if self._ismostderived(%s):" % (classname,)
         print >>out, indent(3)+"self._update(args,dict)"
         print >>out, "\n"
+        # getfields
+        print >>out, indent()+"def getfields(self):"
+        print >>out, indent(2)+"return self.__fields"
+        print >>out, "\n"
         # update function
         print >>out, indent()+"def _update(self, args, kwargs):"
         print >>out, indent(2)+"super(%s,self)._update(args,kwargs)"%(namestuff[1],)
