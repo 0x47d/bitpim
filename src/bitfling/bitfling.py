@@ -39,6 +39,7 @@ import wx.lib.mixins.listctrl
 import native.usb
 import guihelper
 import xmlrpcstuff
+import version
 
 ID_CONFIG=wx.NewId()
 ID_LOG=wx.NewId()
@@ -502,7 +503,7 @@ class MainWindow(wx.Frame):
                 # check password
                 if not self._verify_password(password, pwd):
                     self.Log("Wrong password supplied for user %s from %s" % (`username`, peeraddr[0]))
-                continue
+                    continue
             # remember expiry value (largest value)
             ret_expiry=max(ret_expiry, expires)
             ret_allowed=True
@@ -513,6 +514,20 @@ class MainWindow(wx.Frame):
         # recurse so that correct log messages about expiry get generated
         self.icacache[v]=ret_allowed, ret_expiry
         return self.IsConnectionAllowed(peeraddr, username, password)
+
+    def _verify_password(self, password, pwd):
+        """Returns True if password matches pwd
+        @param password: password supplied by user
+        @param pwd:  password as we store it (salt $ hash)"""
+        salt,hash=pwd.split("$", 1)
+        # turn salt back into binary
+        x=""
+        for i in range(0, len(salt), 2):
+            x+=chr(int(salt[i:i+2], 16))
+        salt=x
+        val=sha.new(salt+password)
+        print password, pwd, val.hexdigest(), val.hexdigest()==hash
+        return val.hexdigest()==hash
             
     def _does_address_match(self, peeraddr, addresses):
         """Returns if the peeraddr matches any of the supplied addresses"""
@@ -621,7 +636,7 @@ class MainWindow(wx.Frame):
         self.Log("Starting on port "+`port`)
         ctx=M2Crypto.SSL.Context("sslv23")
         ctx.load_cert(certfile)
-        self.xmlrpcserver=XMLRPCService(self, host, port, ctx)
+        self.xmlrpcserver=BitFlingService(self, host, port, ctx)
         self.xmlrpcserver.setDaemon(True)
         self.xmlrpcserver.start()
         
@@ -681,22 +696,28 @@ class XMLRPCService(xmlrpcstuff.Server):
         # we don't care about clientcert
         self.verifyok(username, password, clientaddr) # are they legitimately using the username, password and address?
 
-        # all methods 
-        method=method.split(".")
-        if len(method)>1:
-            assert False, "write this code"
-
         method="exp_"+method
         if not hasattr(self, method):
-            raise Exception("No such method")
-        return getattr(self, method)(*params)
+            raise Fault(3, "No such method")
 
-    def exp_comscan(self):
+        context={ 'username': username, 'password': password, 'clientaddr': clientaddr, 'clientcert': clientcert }
+        
+        return getattr(self, method)(*params, **{'context': context})
+
+
+class BitFlingService(XMLRPCService):
+
+    def __init__(self, mainwin, host, port, ctx):
+        XMLRPCService.__init__(self, mainwin, host, port, ctx)
+    
+    def exp_comscan(self, context):
         return self.mainwin.comscan_info
 
-    def exp_usbscan(self):
+    def exp_usbscan(self, context):
         return self.mainwin.usbscan_info
 
+    def exp_getversion(self, context):
+        return version.description
 
 if __name__ == '__main__':
     theApp=wx.PySimpleApp()
