@@ -3,16 +3,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-static HMODULE hModule;
-static LPWABOPEN openfn;
-static LPADRBOOK lpaddrbook;
-static LPWABOBJECT lpwabobject;
-static LPABCONT lpcontainer;
-static LPMAPITABLE lptable;
+#include "pywab.h"
 
 char *errorstring=NULL;
 
-static void errorme(HRESULT hr, IMAPIProp *glefrom, const char *format, ...)
+static void errorme(HRESULT hr, const char *format, ...)
 {
   va_list arglist;
   va_start(arglist, format);
@@ -38,43 +33,135 @@ static void errorme(HRESULT hr, IMAPIProp *glefrom, const char *format, ...)
   snprintf(errorstring, 16384, "%s: HResult: %lu  System message %s", tmp, hr, sysmsg?sysmsg:"<NULL>");
   free(tmp);
   LocalFree(sysmsg);
-  if (glefrom)
+}
+
+wabmodule::~wabmodule()
+{
+  if(refcount->Release())
     {
-      LPMAPIERROR me=NULL;
-      hr=glefrom->GetLastError(hr, 0, &me);
-      if (!HR_FAILED(hr) && me)
-	printf("AddrBook: %s.%s\n", me->lpszComponent, me->lpszError);
+      addrbook->Release();
+      wabobject->Release();  
+      FreeLibrary(hModule);
+      delete refcount;
+      refcount=0;
     }
 }
 
-
-bool Initialize(void)
+wabmodule::wabmodule(const wabmodule &rhs) :
+  hModule(rhs.hModule), openfn(rhs.openfn), addrbook(rhs.addrbook),
+  wabobject(rhs.wabobject), refcount(rhs.refcount)
 {
-  HKEY keyresult;
-  BYTE keyValue[MAX_PATH+1];
-  DWORD dataout=MAX_PATH;
+  refcount->AddRef();
+}
 
-  RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\WAB\\DLLPath", 0, KEY_ALL_ACCESS, &keyresult);
-  RegQueryValueEx(keyresult, "", 0, 0, keyValue, &dataout);
-  RegCloseKey(keyresult);
+wabmodule* Initialize(bool enableprofiles, const char *filename)
+{
+  HMODULE hModule=0;
+  LPWABOPEN openfn=0;
+  LPADRBOOK lpaddrbook=0;
+  LPWABOBJECT lpwabobject=0;
 
-  hModule=LoadLibrary((char*)keyValue);
+  TCHAR  szWABDllPath[MAX_PATH];
+  const TCHAR* loadeddllname=NULL;
+  {
+    DWORD  dwType = 0;
+    ULONG  cbData = sizeof(szWABDllPath);
+    HKEY hKey = NULL;
+    
+    *szWABDllPath = '\0';
+    
+    // First we look under the default WAB DLL path location in the
+    // Registry. 
+    // WAB_DLL_PATH_KEY is defined in wabapi.h
+    //
+    if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, WAB_DLL_PATH_KEY, 0, KEY_READ, &hKey))
+      RegQueryValueEx( hKey, "", NULL, &dwType, (LPBYTE) szWABDllPath, &cbData);
+    
+    if(hKey) RegCloseKey(hKey);
+    
+    // if the Registry came up blank, we do a loadlibrary on the wab32.dll
+    // WAB_DLL_NAME is defined in wabapi.h
+    //
+    loadeddllname=(lstrlen(szWABDllPath)) ? szWABDllPath : WAB_DLL_NAME;
+    hModule = LoadLibrary(loadeddllname);
+    if(!hModule)
+      {
+	errorme(0, "Failed to load WAB library %s", loadeddllname);
+	return NULL;
+      }
+  }
 
-  if (!hModule)
+  // get the entry point 
+  //
+  openfn = (LPWABOPEN) GetProcAddress(hModule, "WABOpen");
+  if(!openfn)
     {
-      errorme(GetLastError(), NULL, "Failed to load library %s", keyValue);
+      errorme(0, "Failed to find function WABOpen in dll %s", loadeddllname);
+      FreeLibrary(hModule);
+    }
+	
+  // open the file
+  {
+    WAB_PARAM wp={0};
+    wp.cbSize=sizeof(WAB_PARAM);
+    if (!filename) filename="";
+    wp.szFileName=(TCHAR*)filename;
+    if(enableprofiles)
+      wp.ulFlags=WAB_ENABLE_PROFILES;
+
+    HRESULT hr=openfn(&lpaddrbook, &lpwabobject, &wp, 0);
+    if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to open address book %s", strlen(filename)?filename:"<default>");
+      FreeLibrary(hModule);
       return false;
     }
+  }
 
-  openfn=(LPWABOPEN) GetProcAddress(hModule, "WABOpen");
+  // it worked - return results
+  return new wabmodule(hModule, openfn, lpaddrbook, lpwabobject);
+}
 
-  if (!openfn)
+entryid* wabmodule::getpab()
+{
+  ULONG cbpabeid;
+  LPENTRYID pabeid;
+  HRESULT hr=addrbook->GetPAB(&cbpabeid, &pabeid);
+  if (HR_FAILED(hr))
     {
-      errorme(0, NULL, "Couldn't find WABOpen function in %s", keyValue);
-      return false;
+      errorme(hr, "Failed to get Personal Address Book entryid");
+      return NULL;
     }
+  entryid* eid=new entryid(pabeid, cbpabeid);
+  wabobject->FreeBuffer(pabeid);
+  return eid;
+}
 
-  return true;
+wabobject* wabmodule::openobject(const entryid& eid)
+{
+  ULONG objtype;
+  LPUNKNOWN iface;
+
+  HRESULT hr=addrbook->OpenEntry(eid.getlen(), eid.getdata(), NULL, MAPI_BEST_ACCESS, &objtype, &iface);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to openentry");
+      return NULL;
+    }
+  
+  return new class wabobject(*this, objtype, iface); // quite why 'class' has to be there, i don't know
+}
+
+wabobject::~wabobject()
+{
+  iface->Release();
+}
+
+wabobject::wabobject(const wabmodule& mod, ULONG t, LPUNKNOWN i)
+  : iface(i), type(t), module(mod)
+{
+  
+
 }
 
 // see mapitypes.h for these names and ranges
@@ -118,7 +205,7 @@ const char *property_name(unsigned id)
 
   // main categories
   if (id>=0x0001 && id<=0x0bff)
-    snprintf(propbuffy, buflen, "MAPI_defined evelope property %04x", id);
+    snprintf(propbuffy, buflen, "MAPI_defined envelope property %04x", id);
   else if (id>=0x0c00 && id<=0x0dff)
     snprintf(propbuffy, buflen, "MAPI_defined per-recipient property %04x", id);
   else if (id>=0x0e00 && id<=0x0fff)
@@ -258,45 +345,8 @@ static bool has_property_value(const SRow &row, ULONG propdetails, long value)
     }
 }
 
-bool Load(const char *filename)
-{
-  WAB_PARAM wp={0};
-  wp.cbSize=sizeof(WAB_PARAM);
-  if (!filename) filename="";
-  wp.szFileName=(CHAR*)filename;
-  wp.ulFlags=WAB_ENABLE_PROFILES;
-
-  printf("filename is '%s'\n", filename);
-  HRESULT hr=openfn(&lpaddrbook, &lpwabobject, &wp, 0);
-  if (HR_FAILED(hr))
-    {
-      errorme(hr, NULL, "Failed to open address book %s", strlen(filename)?filename:"<default>");
-      return false;
-    }
-
 #if 0
-  ULONG cbentryid;
-  LPENTRYID entryid;
-  hr=lpaddrbook->GetPAB(&cbentryid, &entryid);
-  if (HR_FAILED(hr))
-    return false;
-#endif
 
-  ULONG objtype;
-
-  // hr=lpaddrbook->OpenEntry(cbentryid, entryid, NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
-  hr=lpaddrbook->OpenEntry(0, NULL, NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
-  if (HR_FAILED(hr))
-    return false;
-
-  //  lpwabobject->FreeBuffer(entryid);
-
-  hr=lpcontainer->GetContentsTable(WAB_LOCAL_CONTAINERS|WAB_PROFILE_CONTENTS, &lptable);
-  if (HR_FAILED(hr))
-    return false;
-
-  return true;
-}
 
 bool TopLevel(void)
 {
@@ -304,7 +354,7 @@ bool TopLevel(void)
   HRESULT hr=lpaddrbook->GetSearchPath(0, &lprowset);
   if (HR_FAILED(hr))
     {
-      errorme(hr, lpaddrbook, "TopLevel:GetSearchPath failed");
+      errorme(hr, "TopLevel:GetSearchPath failed");
       return false;
     }
   
@@ -314,12 +364,11 @@ bool TopLevel(void)
 
 
   return true;
-#if 0
   LPMAPITABLE table=NULL;
   HRESULT hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
   if (HR_FAILED(hr))
     {
-      errorme(hr, lpcontainer, "TopLevel:GetHierarchyTable1 failed");
+      errorme(hr, "TopLevel:GetHierarchyTable1 failed");
       return false;
     }
 
@@ -329,7 +378,7 @@ bool TopLevel(void)
     hr=table->QueryRows(1,0,&lprowset);
     if (HR_FAILED(hr))
       {
-	errorme(hr, NULL, "TopLevel:QueryRows2 failed");
+	errorme(hr, "TopLevel:QueryRows2 failed");
 	return false;
       }
     if (lprowset->cRows==0)
@@ -345,7 +394,6 @@ bool TopLevel(void)
 
   
   return true;
-#endif
 }
 
 #define DO_PROPSIWANT
@@ -355,7 +403,7 @@ bool TopLevel(void)
 bool List(void)
 {
   HRESULT hr;
-#if 0
+
   HRESULT hr=lptable->SeekRow(BOOKMARK_BEGINNING, 0, NULL);
   if (HR_FAILED(hr))
     return false;
@@ -363,7 +411,6 @@ bool List(void)
   hr=lptable->SetColumns((SPropTagArray*)&propsiwant, 0);
   if (HR_FAILED(hr))
     return false;
-#endif
 
   LPSRowSet lprowset;
   do {
@@ -379,8 +426,9 @@ bool List(void)
 
   return true;
 }
+#endif
 
-
+/*
 int main(int argc, char **argv)
 {
   printf("Initialize=%d\n", Initialize());
@@ -404,4 +452,21 @@ int main(int argc, char **argv)
     printf("Error: %s\n", errorstring);
 
   return 0;
+}
+*/
+
+entryid::entryid(void *d, size_t l)
+  : data(0), len(l)
+{
+  if(len)
+    {
+      data=malloc(l);
+      memcpy(data, d, l);
+    }
+}
+
+entryid::~entryid()
+{
+  if(data)
+    free(data);
 }
