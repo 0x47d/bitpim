@@ -783,6 +783,7 @@ class MainWindow(wx.Frame):
             # writing will modify serials so we need to update
             funcscb.append(self.phonewidget.updateserials)
 
+        todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
 
@@ -1102,6 +1103,12 @@ class WorkerThread(WorkerThreadFramework):
         self.setupcomm()
         return self.commphone.savephonebook(data)
 
+    def rebootcheck(self, results):
+        if __debug__: self.checkthread()
+        if results.has_key('rebootphone'):
+            self.phonerebootrequest()
+            self.clearcomm()
+            
     def writecalendar(self, data, merge):
         if __debug__: self.checkthread()
         self.setupcomm()
