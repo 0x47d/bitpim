@@ -551,15 +551,15 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_EDITSELECTALL, "Select All\tCtrl+A", "Select All")
         menu.Append(guihelper.ID_EDITADDENTRY, "New...\tCtrl+N", "Add an item")
         menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete\tDel", "Delete currently selected entry")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_EDITPHONEINFO,
+                    "&Phone Info", "Display Phone Information")
         if guihelper.IsMac():
             wx.App_SetMacPreferencesMenuItemId(guihelper.ID_EDITSETTINGS)
             menu.Append(guihelper.ID_EDITSETTINGS, "&Preferences...", "Edit Settings")
         else:
             menu.AppendSeparator()
             menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_EDITPHONEINFO,
-                    "&Phone Info", "Display Phone Information")
         menuBar.Append(menu, "&Edit");
 
         menu=wx.Menu()
@@ -1479,9 +1479,9 @@ class WorkerThread(WorkerThreadFramework):
     def getphoneinfo(self):
         if __debug__: self.checkthread()
         self.setupcomm()
-        if hasattr(self.commphone, 'getphoneinfo'):
+        if hasattr(self.commphone, 'get_phone_info'):
             phone_info=phoneinfo.PhoneInfo()
-            getattr(self.commphone, 'getphoneinfo')(phone_info)
+            getattr(self.commphone, 'get_phone_info')(phone_info)
             return phone_info
 
     # various file operations for the benefit of the filesystem viewer
