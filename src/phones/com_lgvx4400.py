@@ -637,7 +637,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
                 data=entry.get("data", None)
                 if data is None:
                     if entry['name'] not in dirlisting:
-                        self.log("Logic error.  I have no data for "+entry['name']+" and it isn't already in the filesystem")
+                        self.log("Index error.  I have no data for "+entry['name']+" and it isn't already in the filesystem")
                     continue
                 if entry['name'] in dirlisting and len(data)==dirlisting[entry['name']]['size']:
                     self.log("Skipping writing %s/%s as there is already a file of the same length" % (location,entry['name']))
@@ -783,7 +783,10 @@ class Profile:
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
-
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_CONVERT_FORMAT="bmp"
+    
     # which usb ids correspond to us
     usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB interface
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial

@@ -69,6 +69,9 @@ class Profile(com_lgvx4400.Profile):
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
-
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_CONVERT_FORMAT="bmp"
+    
     def __init__(self):
         com_lgvx4400.Profile.__init__(self)

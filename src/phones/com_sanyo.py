@@ -781,7 +781,10 @@ class Profile:
 
     WALLPAPER_WIDTH=100
     WALLPAPER_HEIGHT=100
-
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_CONVERT_FORMAT="bmp"
+    
     # which usb ids correspond to us
     usbids=( ( 0x0474, 0x0701, 1),  # VID=Sanyo, PID=4900 internal USB interface
         )
