@@ -9,6 +9,7 @@
 ID_BITFLING="bitfling.htm"
 ID_COMMSETTINGS_DIALOG="ref-commsettingsdialog.htm"
 ID_DEVICE_NEEDS_ATTENTION="errors-deviceneedsattention.htm"
+ID_DLG_PBMERGEENTRIES="dialog-mergingphonebookentries.htm"
 ID_EDITING_CALENDAR_EVENTS="editingcalendarevents.htm"
 ID_EXCEPTION_DIALOG="errors-exception.htm"
 ID_FAILED_TO_AUTODETECT_PORT="errors-failedtoautodetectport.htm"
