@@ -682,7 +682,7 @@ class FileEntries:
                             print 'FileEntries.save_media: optimizing png'
                         # copy from Sanyo code
                         self.__phone.writefile(name,
-                        conversions.convertto8bitpng(media[k]['data']))
+                        conversions.convertto8bitpng_joe(media[k]['data']))
                     else:
                         self.__phone.writefile(name, media[k]['data'])
                     media[k]['origin']=self.__origin
