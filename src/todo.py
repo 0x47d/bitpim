@@ -34,15 +34,15 @@ completion() - set the task as completed and set appropriate values
 To implement Todo read/write for a phone module:
  Add 2 entries into Profile._supportedsyncs:
         ...
-        ('todo', 'read', None),     # all memo reading
-        ('todo', 'write', 'OVERWRITE')  # all memo writing
+        ('todo', 'read', None),     # all todo reading
+        ('todo', 'write', 'OVERWRITE')  # all todo writing
 
 implement the following 2 methods in your Phone class:
-    def getmemo(self, result):
+    def gettodo(self, result):
         ...
         return result
 
-    def savememo(self, result, merge):
+    def savetodo(self, result, merge):
         ...
         return result
 
