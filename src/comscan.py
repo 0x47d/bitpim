@@ -431,7 +431,12 @@ def _comscanmac():
     for name in glob.glob("/dev/cu.*"):
        res={}
        res['name']=name
-       res['description']="Serial Port"+" ("+name+")"
+       if name.upper().rfind("MODEM") >= 0:
+           res['description']="Modem"+" ("+name+")"
+           res['class']="modem"
+       else:
+           res['description']="Serial"+" ("+name+")"
+           res['class']="serial"
        try:
           f=open(name, "rw")
           f.close()
