@@ -1129,9 +1129,10 @@ class DayViewDialog(wxDialog):
     ID_START=7
     ID_END=8
     ID_REPEAT=9
-    ID_REVERT=10
+    # 10 is used by something else
     ID_SAVE=11
     ID_HELP=12
+    ID_REVERT=13
     
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
@@ -1226,18 +1227,14 @@ class DayViewDialog(wxDialog):
         self.entries={}
         self.entrymap=[]
 
-        self.add=add
-        # self.close=close
-        self.delete=delete
-        self.revert=revert
-        self.save=save
-
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
 
+        self.seteditmode(False)
 
     def OnListBoxItem(self, _):
         self.updatefields(self.entrymap[self.listbox.GetSelection()])
+        self.seteditmode(True)
 
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
@@ -1284,6 +1281,28 @@ class DayViewDialog(wxDialog):
             print i, entry[i]
             self.fields[i].SetValue(entry[i])
 
+    def seteditmode(self, val):
+        # if val is true then we are editing an entry
+
+        # previous and next buttons
+        self.FindWindowById(self.ID_PREV).Enable(not val)
+        self.FindWindowById(self.ID_NEXT).Enable(not val)
+
+        # listbox
+        self.FindWindowById(self.ID_LISTBOX).Enable(not val)
+
+        # main buttons
+        self.FindWindowById(self.ID_ADD).Enable(not val)
+        self.FindWindowById(self.ID_DELETE).Enable(val)
+        self.FindWindowById(self.ID_REVERT).Enable(val)
+        self.FindWindowById(self.ID_SAVE).Enable(val)
+
+        # fields
+        for i in self.fields:
+            self.fields[i].Enable(val)
+
+        # bottom buttons
+        self.FindWindowById(self.ID_CLOSE).Enable(not val)
 
 class DVTimeControl(wxPanel):
     # A time control customised to work in the dayview editor
