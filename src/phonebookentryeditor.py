@@ -282,7 +282,6 @@ class CategoryManager(wx.Dialog):
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
-        print "categories updated to",cats
         if self.curlist is None:
             self.curlist=cats
 
@@ -302,13 +301,11 @@ class CategoryManager(wx.Dialog):
                 lb.Append(i)
         
     def OnOk(self, _):
-        print "onok called"
         pubsub.publish(pubsub.SET_CATEGORIES, self.curlist)
         self.Show(False)
         self.Destroy()
 
     def OnCancel(self, _):
-        print "oncancel called"
         self.Show(False)
         self.Destroy()
         
@@ -376,7 +373,6 @@ class CategoryEditor(wx.Panel):
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
-        print "categories updating to",cats
         cats=[self.unnamed]+cats
         if self.categories!=cats:
             self.categories=cats
@@ -848,7 +844,6 @@ class Editor(wx.Dialog):
         vs=wx.BoxSizer(wx.VERTICAL)
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
         sz=tb.GetToolBitmapSize()
-        print sz
         tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
         tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
         tb.AddSeparator()
@@ -889,6 +884,13 @@ class Editor(wx.Dialog):
             data=widget.Get()
             if len(data):
                 res[self.tabsfactory[i][1]]=data
+            else:
+                # remove the key
+                try:
+                    del res[self.tabsfactory[i][1]]
+                except KeyError:
+                    # which may not have existed ...
+                    pass
         return res
             
     def MoveUp(self, _):
