@@ -395,7 +395,9 @@ class ImportDialog(wx.Dialog):
                     k=k[len("UniqueSerial-"):]
                     serial[k]=v
             if len(serial):
-                entry["serials"]=[serial]
+                assert serial.has_key("sourcetype")
+                if len(serial)>1: # ie more than just sourcetype
+                    entry["serials"]=[serial]
 
             # stash it away
             res[count]=entry
@@ -1122,13 +1124,19 @@ class ImportVCardDialog(ImportDialog):
                 defaults.append("")
             else:
                 defaults.append(None)
+        # deal with serial/UniqueId
+        if len([c for c in columns if c.startswith("UniqueSerial-")]):
+            columns.append("UniqueSerial-sourcetype")
+            extra=["vcard"]
+        else:
+            extra=[]
         # do some data munging
         newdata=[]
         for row in data:
             line=[]
             for i,k in enumerate(keys):
                 line.append(row.get(k, defaults[i]))
-            newdata.append(line)
+            newdata.append(line+extra)
 
         # return our hard work
         return columns, newdata
