@@ -139,13 +139,9 @@ class Phone:
                 pass
         return False       
 
-    def getmemo(self, result):
-        return {}
-
-    def gettodo(self, result):
-        return {}
-    def getsms(self, result):
-        return {}
+    getmemo=None
+    gettodo=None
+    getsms=None
 
 class Profile:
 
