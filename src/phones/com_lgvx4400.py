@@ -274,7 +274,9 @@ class Phone:
             if f['type']=='file' and brewbasename(f['name']) not in files:
                 self.rmfile(file)
         # Write out the files
-        for file in files:
+        keys=files.keys()
+        keys.sort()
+        for file in keys:
             self.writefile(directory+"/"+file, files[file])
         # Check all the indexes actually point at files
         index=data[stuffindexkey]
