@@ -122,6 +122,11 @@ class Analyser(wxFrame):
             self.hex.AppendText(common.datatohexstring(curdata))
             self.hex.SetInsertionPoint(0)
             self.hex.ShowPosition(self.hex.XYToPosition(0,0))
+        else:
+            self.hex.AppendText(curdesc)
+            self.hex.SetInsertionPoint(0)
+            self.hex.ShowPosition(self.hex.XYToPosition(0,0))
+
         self.tree.DeleteAllItems()
         if len(curclass):
             b=prototypes.buffer(curdata)
@@ -234,8 +239,8 @@ class Analyser(wxFrame):
             return ""
         return do.GetText()
 
-    patevent=re.compile(r"^(\d\d:\d\d:\d\d\.\d\d\d)(.*)")
-    patdataevent=re.compile(r"^(\d\d:\d\d:\d\d\.\d\d\d)(.*)Data - \d+ bytes.*")
+    patevent=re.compile(r"^(\d?\d:\d\d:\d\d\.\d\d\d)(.*)")
+    patdataevent=re.compile(r"^(\d?\d:\d\d:\d\d\.\d\d\d)(.*)Data - \d+ bytes.*")
     patdatarow=re.compile(r"^([0-9A-Fa-f]{8})(.*)")
     patclass=re.compile(r"^<#!\s+(.*)\s+!#>")
 
@@ -274,7 +279,7 @@ class Analyser(wxFrame):
                     assert pos==len(curdata)
                     for i in range(9, min(len(line), 9+16*3), 3): # at most 16 bytes
                         s=line[i:i+2]
-                        if s=="  ":
+                        if len(s)!=2 or s=="  ":
                             # last line with trailing spaces
                             continue
                         b=int(s,16)
