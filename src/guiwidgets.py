@@ -812,15 +812,15 @@ class AcceptCertificateDialog(wx.Dialog):
 
     def FindAGoodParent(self, suggestion):
         win=wx.Window_FindFocus()
-        while True:
+        while win is not None:
             try:
                 if win.IsModal():
                     print "FindAGoodParent is",win
                     return win
             except AttributeError:
                 parent=win.GetParent()
-                if parent is None: return suggestion
                 win=parent
+        return suggestion
         
 ###
 ###  BitFling settings dialog
