@@ -233,8 +233,8 @@ class BrewProtocol:
         firsttwo=data[:2]
         try:
             self.comm.write(data, log=False) # we logged above
-	    data=self.comm.readuntil(self.terminator, logsuccess=False)
-        except:
+	    data=self.comm.readuntil(self.brewterminator, logsuccess=False)
+        except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
             self.raisecommsexception("manipulating the filesystem")
         self.comm.success=True
