@@ -358,7 +358,8 @@ class VCard:
         munge={ "BBS": "DATA", "MODEM": "DATA", "ISDN": "DATA", "CAR": "CELL", "PCS": "CELL" }
         types=[munge.get(t, t) for t in types]
 
-        # types now reduced to home, work, msg, pref, voice, fax, cell, video, pager, data
+        # reduce types to home, work, msg, pref, voice, fax, cell, video, pager, data
+        types=[t for t in types if t in ("HOME", "WORK", "MSG", "PREF", "VOICE", "FAX", "CELL", "VIDEO", "PAGER", "DATA")]
 
         # if type is in this list and voice not explicitly mentioned then it is not a voice type
         antivoice=["FAX", "PAGER", "DATA"]
@@ -382,7 +383,7 @@ class VCard:
         if "WORK" in types: iswork=True
         if "HOME" in types: ishome=True
 
-        if len(types)==0: ishome=True # special case when nothing else is specified
+        if len(types)==0 or types==["PREF"]: iswork=True # special case when nothing else is specified
 
         if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
         if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
