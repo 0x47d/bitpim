@@ -1056,6 +1056,8 @@ class RingerView(FileView):
 
 class WallpaperView(FileView):
     CURRENTFILEVERSION=1
+    ID_DELETEFILE=2
+    ID_IGNOREFILE=3
     
     def __init__(self, mainwindow, parent, id=-1):
         FileView.__init__(self, mainwindow, parent, id, style=wxLC_ICON|wxLC_SINGLE_SEL)
@@ -1080,7 +1082,6 @@ class WallpaperView(FileView):
             return True
         return False
         
-
     def getdata(self,dict):
         dict.update(self._data)
         return dict
@@ -1096,14 +1097,6 @@ class WallpaperView(FileView):
         keys=dict['wallpaper'].keys()
         keys.sort()
         for i in keys:
-            item={}
-            item['name']=i
-            item['data']=dict['wallpaper'][i]
-            item['index']=-1
-            for ii in dict['wallpaper-index']:
-                if dict['wallpaper-index'][ii]==i:
-                    item['index']=ii
-                    break
             # ImageList barfs big time when adding bmps that came from
             # gifs
             file=os.path.join(self.mainwindow.wallpaperpath, i)
@@ -1111,6 +1104,17 @@ class WallpaperView(FileView):
                 image=brewcompressedimage.getimage(file)
             else:
                 image=wxImage(file)
+
+            if not image.Ok():
+                dlg=AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
+                                  ( ("Delete", self.ID_DELETEFILE), ("Ignore", self.ID_IGNOREFILE), ("Help", wxID_HELP)),
+                                  lambda _: wxGetApp().displayhelpid(helpids.ID_INVALID_FILE_MESSAGE))
+                x=dlg.ShowModal()
+                dlg.Destroy()
+                print "result is",x
+                if x==self.ID_DELETEFILE:
+                    os.remove(file)
+                continue
             
             width=min(image.GetWidth(), self.usewidth)
             height=min(image.GetHeight(), self.useheight)
@@ -1133,6 +1137,14 @@ class WallpaperView(FileView):
                                 "Imagelist got upset", style=wxOK|wxICON_ERROR)
                 dlg.ShowModal()
                 il.Add(wxNullBitmap)
+            item={}
+            item['name']=i
+            item['data']=dict['wallpaper'][i]
+            item['index']=-1
+            for ii in dict['wallpaper-index']:
+                if dict['wallpaper-index'][ii]==i:
+                    item['index']=ii
+                    break
             self.InsertImageStringItem(count, item['name'], count)
             if gui.HasFullyFunctionalListView():
                 self.SetStringItem(count, 0, item['name'])
@@ -2273,6 +2285,64 @@ class AlertDialogWithHelp(wxDialog):
         vbs.Fit(self)
 
         EVT_BUTTON(self, wxID_HELP, helpfn)
+
+    def icontoart(self, id):
+        if id&wxICON_EXCLAMATION:
+            return wxART_WARNING
+        if id&wxICON_INFORMATION:
+            return wxART_INFORMATION
+        # ::TODO:: rest of these
+        # fallthru
+        return wxART_INFORMATION
+
+###
+### Yet another dialog with user selectable buttons
+###
+
+class AnotherDialog(wxDialog):
+    """A dialog box with user supplied buttons"""
+    def __init__(self, parent, message, caption, buttons, helpfn=None,
+                 style=wxDEFAULT_DIALOG_STYLE, icon=wxICON_EXCLAMATION):
+        """Constructor
+
+        @param message:  Text displayed in body of dialog
+        @param caption:  Title of dialog
+        @param buttons:  A list of tuples.  Each tuple is a string and an integer id.
+                         The result of calling ShowModal() is the id
+        @param helpfn:  The function called if the user presses the help button (wxID_HELP)
+        """
+        wxDialog.__init__(self, parent, -1, caption, style=style)
+
+        p=self # parent widget
+
+        # horiz sizer for bitmap and text
+        hbs=wxBoxSizer(wxHORIZONTAL)
+        hbs.Add(wxStaticBitmap(p, -1, wxArtProvider_GetBitmap(self.icontoart(icon), wxART_MESSAGE_BOX)), 0, wxCENTER|wxALL, 10)
+        hbs.Add(wxStaticText(p, -1, message), 1, wxCENTER|wxALL, 10)
+
+        # the buttons
+        buttsizer=wxBoxSizer(wxHORIZONTAL)
+        for label,id in buttons:
+            print label, id
+            buttsizer.Add( wxButton(self, id, label), 0, wxALL|wxALIGN_CENTER, 5)
+            if id!=wxID_HELP:
+                EVT_BUTTON(self, id, self.OnButton)
+            else:
+                EVT_BUTTON(self, wxID_HELP, helpfn)
+                
+        # Both vertical
+        vbs=wxBoxSizer(wxVERTICAL)
+        vbs.Add(hbs, 1, wxEXPAND|wxALL, 10)
+        vbs.Add(buttsizer, 0, wxCENTER|wxALL, 10)
+
+        # wire it in
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnButton(self, event):
+        print event.GetId()
+        self.EndModal(event.GetId())
 
     def icontoart(self, id):
         if id&wxICON_EXCLAMATION:
