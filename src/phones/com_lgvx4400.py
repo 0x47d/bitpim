@@ -266,14 +266,14 @@ class Phone:
                 self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
             except:
                 pass
-        # clean out any existing entries
+        # clean out any existing entries that we aren't overwriting
+        files=data[stuffkey]
         entries=self.getfilesystem(directory)
         for file in entries:
             f=entries[file]
-            if f['type']=='file':
+            if f['type']=='file' and brewbasename(f['name']) not in files:
                 self.rmfile(file)
         # Write out the files
-        files=data[stuffkey]
         for file in files:
             self.writefile(directory+"/"+file, files[file])
         # Check all the indexes actually point at files
