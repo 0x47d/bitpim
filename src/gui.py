@@ -800,9 +800,13 @@ class MainWindow(wxFrame):
         self.ringerwidget.getfromfs(results)
         self.calendarwidget.getfromfs(results)
         # update controls
+        wxSafeYield()
         self.phonewidget.populate(results)
+        wxSafeYield()
         self.wallpaperwidget.populate(results)
+        wxSafeYield()
         self.ringerwidget.populate(results)
+        wxSafeYield()
         self.calendarwidget.populate(results)
 
         
