@@ -499,8 +499,6 @@ class Phone:
 
     def writefile(self, name, contents):
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
-        if len(contents)>65534:
-            raise Exception(name+" is too large at "+`len(contents)`+" bytes - limit is 64kb")
         self.setmode(self.MODEBREW)
         desc="Writing "+name
         d="\x00" # probably block number
@@ -509,8 +507,7 @@ class Phone:
         else:
             d+="\x01"
         d+="\x01" # dunno
-        d+=makelsb(len(contents), 2) # size
-        d+="\x00\x00" # dunno
+        d+=makelsb(len(contents), 4) # size
         d+="\xff\x00" # dunno
         d+="\x01\x00" # dunno
         d+=chr(len(name)+1)  # length of name pls null
@@ -522,10 +519,13 @@ class Phone:
         self.sendbrewcommand(0x05, d)
         # do remaining blocks
         numblocks=len(contents)/0x100
+        count=0
         for offset in range(0x100, len(contents), 0x100):
-            d=offset/0x100  # block number
+            d=count  # block number
+            count+=1
+            if count==0x100: count=1
             if d%5==0:
-                self.progress(d,numblocks,desc)
+                self.progress(offset>>8,numblocks,desc)
             d=chr(d)
             if offset+0x100<len(contents):
                    d+="\x01"  # there is more
@@ -555,7 +555,7 @@ class Phone:
                 self.progress(i,numblocks,desc)
             res=self.sendbrewcommand(0x04, chr(count))
             count+=1
-            if count=0x100: count=1
+            if count==0x100: count=1
             res=res[0x7:-3]
             data=data+res
         self.progress(numblocks,numblocks,desc)
