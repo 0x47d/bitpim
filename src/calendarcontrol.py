@@ -140,7 +140,7 @@ class CalendarCellAttributes:
         ps=int(font.GetPointSize()*fontscale)
         if ps<2:
             ps=2
-        f=wx.TheFontList.FindOrCreateFont(ps, font.GetFamily(), font.GetStyle(), font.GetWeight())
+        f=wx.TheFontList.FindOrCreateFont(int(ps), font.GetFamily(), font.GetStyle(), font.GetWeight())
         dc.SetFont(f)
         if ps==2:
             return False

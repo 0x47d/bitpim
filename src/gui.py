@@ -233,7 +233,7 @@ class MySplashScreen(wx.SplashScreen):
         # on Linux we have to ask for bigger than we want
         if guihelper.IsGtk():
             ps=ps*1.6
-        font=wx.TheFontList.FindOrCreateFont(ps, family, style, weight)
+        font=wx.TheFontList.FindOrCreateFont(int(ps), family, style, weight)
         return font
 
     def goforit(self):
