@@ -53,10 +53,10 @@ class DeveloperPanel(wx.Panel):
         self.locals['cursor']=self.locals['connection'].cursor()
 
 
-    def sql(self, cmd):
+    def sql(self, *cmd):
         "Executes sql statement"
         cursor=self.locals['cursor']
-        cursor.execute(cmd)
+        cursor.execute(*cmd)
         for res in cursor:
             print res
 
