@@ -43,6 +43,7 @@ import bphtml
 import bitflingscan
 import database
 import memo
+import update
 
 ###
 ### Used to check our threading
@@ -553,6 +554,8 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
         menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Checking for any BitPim Update")
         if guihelper.IsMac():
             wx.App_SetMacAboutMenuItemId(guihelper.ID_HELPABOUT)
             menu.Append(guihelper.ID_HELPABOUT, "&About BitPim", "Display program information")
@@ -605,6 +608,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
         wx.EVT_MENU(self, guihelper.ID_HELPSUPPORT, self.OnHelpSupport)
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
+        wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -753,6 +757,9 @@ class MainWindow(wx.Frame):
 
     def OnHelpTour(self, _=None):
         wx.GetApp().displayhelpid(helpids.ID_TOUR)
+
+    def OnCheckUpdate(self, _):
+        update.check_update(config=self.config)
 
     def OnViewColumns(self, _):
         dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
