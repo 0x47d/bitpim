@@ -95,6 +95,7 @@ class CalendarCell(wxWindow):
             # Now draw each item
             lastap=""
             y=entrystart/dc.GetUserScale()[0]+5
+            y=int(y)
             for h,m,desc in self.entries:
                 x=0
                 self.attr.setfortime(dc)
@@ -129,6 +130,8 @@ class CalendarCell(wxWindow):
             if y>self.height/dc.GetUserScale()[1]:
                 dc.Clear()
                 factorx,factory=dc.GetUserScale()
+                if factorx<.1:
+                    break
                 dc.SetUserScale(0.9*factorx, 0.9*factory)
             else:
                 break
