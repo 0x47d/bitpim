@@ -25,6 +25,8 @@ class WallpaperEditor(wx.Panel):
 
     ID_LIST=wx.NewId()
 
+    _bordersize=5 # border inside HTML widget
+    
     def __init__(self, parent, _):
         wx.Panel.__init__(self, parent, -1)
 
@@ -33,6 +35,7 @@ class WallpaperEditor(wx.Panel):
         vs=wx.BoxSizer(wx.VERTICAL)
 
         self.preview=phonebook.HTMLWindow(self, -1)
+        self.preview.SetBorders(self._bordersize)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -45,10 +48,36 @@ class WallpaperEditor(wx.Panel):
         self.SetSizer(hs)
         hs.Fit(self)
 
+        pubsub.subscribe(pubsub.ALL_WALLPAPERS, self, "OnWallpaperUpdates")
+        wx.CallAfter(pubsub.publish, pubsub.REQUEST_WALLPAPERS) # make the call once we are onscreen
+
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
+        self._updaterequested=False # see OnSize for why this exists
+        wx.EVT_SIZE(self.preview, self.OnPreviewResize)
 
-    def OnLBClicked(self, _):
+    def OnPreviewResize(self, event):
+        "Need to regenerate the image at the new size"
+        if not self._updaterequested:
+            # if opaque resizing is on then we get hundreds of OnSize events, but the
+            # callafter stuff is not run until the user lets go of the mouse button.
+            # we ensure that at most one callafter is outstanding using the _updaterequested variable
+            wx.CallAfter(self.OnLBClicked)
+            self._updaterequested=True
+        event.Skip()
+        
+    def OnWallpaperUpdates(self, msg):
+        "Receives pubsub message with wallpaper list"
+        papers=msg.data[:]
+        cur=self.Get()
+        self.wallpaper.Clear()
+        self.wallpaper.Append(self.unnamed)
+        for p in papers:
+            self.wallpaper.Append(p)
+        self.Set(cur)
+
+    def OnLBClicked(self, _=None):
+        self._updaterequested=False
         v=self.Get().get('wallpaper', None)
         self.SetPreview(v)
 
@@ -56,7 +85,10 @@ class WallpaperEditor(wx.Panel):
         if name is None:
             self.preview.SetPage('')
         else:
-            self.preview.SetPage('<img src="bpuserimage:%s;width=64;height=64">' % (name,))        
+            w,h=self.preview.GetSizeTuple()
+            w-=2*self._bordersize+1
+            h-=2*self._bordersize+1
+            self.preview.SetPage('<img src="bpuserimage:%s;width=%d;height=%d">' % (name,w,h))        
 
     def Set(self, data):
         wp=data.get("wallpaper", self.unnamed)
