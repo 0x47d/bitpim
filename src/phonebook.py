@@ -516,6 +516,7 @@ class PhoneWidget(wx.Panel):
         self.categorymanager=CategoryManager
         self.SetBackgroundColour("ORANGE")
         split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+        split.SetMinimumPaneSize(20)
         self.mainwindow=mainwindow
         self._data={}
         self.categories=[]
