@@ -479,6 +479,7 @@ class MainWindow(wx.Frame):
             menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
+        menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
         if guihelper.IsMac():
             wx.App_SetMacAboutMenuItemId(guihelper.ID_HELPABOUT)
             menu.Append(guihelper.ID_HELPABOUT, "&About BitPim", "Display program information")
@@ -527,6 +528,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
+        wx.EVT_MENU(self, guihelper.ID_HELPSUPPORT, self.OnHelpSupport)
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         wx.EVT_CLOSE(self, self.OnClose)
 
@@ -669,6 +671,9 @@ class MainWindow(wx.Frame):
 
     def OnHelpContents(self, _):
         wx.GetApp().displayhelpid(None)
+
+    def OnHelpSupport(self, _):
+        wx.GetApp().displayhelpid(helpids.ID_HELPSUPPORT)
 
     def OnHelpTour(self, _=None):
         wx.GetApp().displayhelpid(helpids.ID_TOUR)
