@@ -840,7 +840,6 @@ class SanyoPhonebook:
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
             if(res.entry.flag):
                 self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
-                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`)
                 entry={}
                 entry['pos']=i
                 entry['changeserial']=res.entry.serial
@@ -869,7 +868,6 @@ class SanyoPhonebook:
             res=self.sendpbcommand(req, self.protocolclass.callalarmresponse)
             if(res.entry.flag):
                 self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum)
-                self.log("Extra number: "+`res.entry.dunno1`)
                 entry={}
                 entry['pos']=i+self.protocolclass._NUMEVENTSLOTS # Make unique
                 entry['changeserial']=res.entry.serial
