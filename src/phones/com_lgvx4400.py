@@ -66,6 +66,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         - 'wallpaper-index'  map index numbers to names
         - 'ringtone-index'   map index numbers to ringtone names
         """
+
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
@@ -88,7 +89,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.logdata("Wallpaper indices read", buf.getdata(), g)
         papers={}
         for i in range(g.maxitems):
-            print g.items[i].index, g.items[i].name
             if g.items[i].index!=0xffff:
                 papers[g.items[i].index]=g.items[i].name
         results['wallpaper-index']=papers
@@ -148,7 +148,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             req=p_lgvx4400.pbreadentryrequest()
             res=self.newsendpbcommand(req, p_lgvx4400.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
-            entry=self.extractphonebookentry(res)
+            entry=self.extractphonebookentry(res, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
@@ -705,12 +705,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
     numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
     
-    def extractphonebookentry(self, record):
+    def extractphonebookentry(self, record, fundamentals):
         """Return a phonebook entry in BitPim format"""
         entry=record.entry
         res={}
         # serials
-        res['serials']=[ {'sourcetype': 'lgvx4400', 'serial1': entry.serial1, 'serial2': entry.serial2 } ] # ::TODO:: sourceuniqueid
+        res['serials']=[ {'sourcetype': 'lgvx4400', 'serial1': entry.serial1, 'serial2': entry.serial2,
+                          'sourceuniqueid': fundamentals['uniqueserial']} ] 
         # only one name
         res['names']=[ {'full': entry.name} ]
         # only one category
