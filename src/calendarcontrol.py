@@ -39,12 +39,12 @@ class CalendarCellAttributes:
         # Set some defaults
         self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(230,255,255), wxSOLID)
         #self.cellbackground=wxBrush(wxColour(197,255,255), wxSOLID)
-        self.labelfont=wxFont(20, wxSWISS, wxNORMAL, wxNORMAL )
+        self.labelfont=wxFont(14, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
         self.timefont=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
         self.timeforeground=wxNamedColour("ORCHID")
-        self.entryfont=wxFont(15, wxSWISS, wxNORMAL, wxNORMAL )
+        self.entryfont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
         self.miltime=False
         self.initdone=True
@@ -375,6 +375,8 @@ class Calendar(wxPanel):
     attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
     attrselectedcell=CalendarCellAttributes()
     attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxCROSS_HATCH)
+    attrselectedcell.labelfont=wxFont(17, wxSWISS, wxNORMAL, wxBOLD )
+    attrselectedcell.labelforeground=wxNamedColour("BLACK")
     
     def __init__(self, parent, rows=5, id=-1):
         wxPanel.__init__(self, parent, id, style=wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS)
@@ -456,6 +458,11 @@ class Calendar(wxPanel):
                 self.updaterow(row, y,m,d)
         self.label.changenotify()
         self.setselection(*self.selecteddate)
+        self.ensureallpainted()
+
+    def ensureallpainted(self):
+        # doesn't return until cells have been painted
+        self.Update()
 
     def OnScrollDown(self, _=None):
         # user has pressed scroll down button
@@ -498,6 +505,7 @@ class Calendar(wxPanel):
           y,m,d=normalizedate(year, month, d)
           for row in range(0,self.numrows):
              self.updaterow(row, *normalizedate(y, m, d+7*row))
+          self.ensureallpainted()
 
     def setselection(self, year, month, day):
        self.selecteddate=(year,month,day)
