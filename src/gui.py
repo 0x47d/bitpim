@@ -376,7 +376,7 @@ class MenuCallback:
 class MainWindow(wx.Frame):
     def __init__(self, parent, id, title, config):
         wx.Frame.__init__(self, parent, id, title,
-                         style=wx.DEFAULT_FRAME_STYLE)
+                         style=wx.DEFAULT_FRAME_STYLE|wx.NO_FULL_REPAINT_ON_RESIZE)
 
         # does bitfling work?  -- commented out for moment
         # import bitfling.client
@@ -555,7 +555,7 @@ class MainWindow(wx.Frame):
         self.configdlg.updatevariables()
         
         ### notebook
-        self.nb=wx.Notebook(self,-1)
+        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
         # wx.EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
 
         ### notebook tabs
@@ -730,12 +730,15 @@ class MainWindow(wx.Frame):
     ### Main bit for getting stuff from phone
     ###
     def OnDataGetPhone(self,_):
+        todo=[]
         dlg=self.dlggetphone
         print self.phoneprofile
         dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wx.ID_OK:
             return
-        self.MakeCall(Request(self.wt.getdata, dlg),
+        todo.append((self.DisplayMessages, "Display Messages"))
+        todo.append((self.wt.rebootcheck, "Phone Reboot"))
+        self.MakeCall(Request(self.wt.getdata, dlg, todo),
                       Callback(self.OnDataGetPhoneResults))
 
     def OnDataGetPhoneResults(self, exception, results):
@@ -781,7 +784,6 @@ class MainWindow(wx.Frame):
             if v=='MERGE': raise Exception("Not implemented")
             self.calendarwidget.populatefs(results)
             self.calendarwidget.populate(results)
-
             
     ###
     ### Main bit for sending data to the phone
@@ -838,10 +840,27 @@ class MainWindow(wx.Frame):
             # writing will modify serials so we need to update
             funcscb.append(self.phonewidget.updateserials)
 
+        todo.append((self.DisplayMessages, "Display Messages"))
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
 
+    def DisplayMessages(self, result):
+        if not result.has_key('messages'):
+            print 'no messages'
+            return
+        m=result['messages']
+        s=''
+        for k in m:
+            if len(k['text']):
+                s=s+'\r\n\r\n'+'Results from: '+k['name']+k['text']
+        if not len(s):
+            # empty string, nothing to display
+            return
+        dlg=wx.MessageDialog(self, s, "Results", style=wx.OK|wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
+        
     def OnDataSendPhoneGotFundamentals(self,data,todo,convertors, funcscb, exception, results):
         if self.HandleException(exception): return
         data.update(results)
@@ -1129,7 +1148,7 @@ class WorkerThread(WorkerThreadFramework):
         self.commphone.getfundamentals(results)
         return results
 
-    def getdata(self, req):
+    def getdata(self, req, todo):
         if __debug__: self.checkthread()
         self.setupcomm()
         results=self.getfundamentals()
@@ -1155,7 +1174,14 @@ class WorkerThread(WorkerThreadFramework):
             count+=1
             i[1](results)
 
-        self.rebootcheck(results)
+        for xx in todo:
+            func=xx[0]
+            desc=xx[1]
+            args=[results]
+            if len(xx)>2:
+                args.extend(xx[2:])
+            apply(func, args)
+
         return results
 
     def senddata(self, dict, todo):
