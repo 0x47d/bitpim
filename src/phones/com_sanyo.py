@@ -918,7 +918,7 @@ class SanyoPhonebook:
         for i in range(0, self.protocolclass._NUMEVENTSLOTS):
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
-            if(res.entry.flag):
+            if res.entry.flag and entry.start:
                 self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
                 entry=bpcalendar.CalendarEntry()
                 #entry.pos=i
@@ -950,7 +950,7 @@ class SanyoPhonebook:
         for i in range(0, self.protocolclass._NUMCALLALARMSLOTS):
             req.slot=i
             res=self.sendpbcommand(req, self.protocolclass.callalarmresponse)
-            if(res.entry.flag):
+            if res.entry.flag and entry.start:
                 self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum+", alarm ID "+`res.entry.ringtone`)
                 entry=bpcalendar.CalendarEntry()
                 #entry.pos=i+self.protocolclass._NUMEVENTSLOTS # Make unique
@@ -1092,13 +1092,10 @@ class SanyoPhonebook:
 
                 timearray=list(entry.start)+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
-                if self.serialsname=='mm7400':
-                    e.flag=0xf0
+                if(starttimelocal<now and repeat==0):
+                    e.flag=2 # In the past
                 else:
-                    if(starttimelocal<now and repeat==0):
-                        e.flag=2 # In the past
-                    else:
-                        e.flag=1 # In the future
+                    e.flag=1 # In the future
                 e.start=starttimelocal-self._sanyoepochtounix
 
                 #timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
