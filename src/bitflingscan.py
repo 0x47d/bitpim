@@ -39,9 +39,16 @@ _magic=[ord(x) for x in "IamAhaPp12&s]"]
 
 # the oldies are the best
 def encode(str):
-    res=""
+    res=[]
     for i in range(len(str)):
-        res+=chr(ord(str[i])^_magic[i%len(_magic)])
-    return res
+        res.append(ord(str[i])^_magic[i%len(_magic)])
+    return "".join(["%02x" % (x,) for x in res])
 
-decode=encode
+def decode(str):
+    res=[]
+    for i in range(0, len(str), 2):
+        res.append(int(str[i:i+2], 16))
+    x=""
+    for i in range(len(res)):
+        x+=chr(res[i]^_magic[i%len(_magic)])
+    return x
