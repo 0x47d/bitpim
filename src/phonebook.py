@@ -1648,6 +1648,8 @@ class PhonebookPrintDialog(wx.Dialog):
         self.preview.SetPage(self.html)
 
     def GetCurrentHTML(self):
+        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.Yield() # so the cursor can be displayed
         # Setup a nice environment pointing at this module
         vars={'phonebook': __import__(__name__) }
         # which data do we want?
@@ -1685,7 +1687,9 @@ class PhonebookPrintDialog(wx.Dialog):
                 f=open("debug.html", "wt")
                 f.write(html)
                 f.close()
+            wx.EndBusyCursor()
             raise
+        wx.EndBusyCursor()
         return html
 
     def OnPrintPreview(self, _):
