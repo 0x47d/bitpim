@@ -17,18 +17,39 @@ from prototypes import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NUMSLOTS=300
 _NUMGROUPS=7
 _ALLGROUP=0
+_MAXPHONENUMBERLEN=32
+_MAXNAMELEN=16
+_MAXEMAILLEN=48
+_MAXMEMOLEN=48
 %}
 
-PACKET pbslotsrequest:
+# Audiovox commands
+
+# 0x80  write group
+# 0x81  read group
+# 0x82  write phonebookentry
+# 0x83  read phonebookentry
+# 0x84  write slots
+# 0x85  read slots
+
+PACKET readpbslotsrequest:
     "Get a list of which slots are used"
     1 UINT {'constant': 0x85} +cmd
 
-PACKET pbslotsresponse:
+PACKET readpbslotsresponse:
     1 UINT {'constant': 0x85} cmd
     #  each byte is a bitmask of which fields are set although we defer to the actual entries to find that out
     * DATA present  "a non-zero value indicates a slot is present"
+
+PACKET writepbslotsrequest:
+    1 UINT {'constant': 0x84} +cmd
+    * DATA present  "a non-zero value indicates a slot is present"
+
+PACKET writepbslotsresponse:
+    1 UINT {'constant': 0x84} cmd
 
 PACKET readpbentryrequest:
     1 UINT {'constant': 0x83} +cmd
@@ -37,6 +58,18 @@ PACKET readpbentryrequest:
 PACKET readpbentryresponse:
     1 UINT {'constant': 0x83} +cmd
     2 UINT slotnumber
+    * pbentry entry
+
+PACKET writepbentryrequest:
+    1 UINT {'constant': 0x84} +cmd
+    2 UINT slotnumber
+    * pbentry entry
+
+PACKET writepbentryresponse:
+    1 UINT {'constant': 0x84} cmd
+    2 UINT slotnumber
+
+PACKET pbentry:
     1 UINT secret "non-zero if entry is secret/locked"
     1 UINT group   
     2 UINT previous "index number for previous entry"
@@ -67,6 +100,10 @@ PACKET readgroupentryresponse:
     2 UINT dunno "first member?"
     17 STRING name  # always terminated
     2 UINT nummembers "how many members of the group"
+
+PACKET writegroupentryrequest:
+    1 UINT {'constant': 0x82} +cmd
+    1 UINT number
     
 PACKET dunnorequest:
     1 UINT {'constant': 0x26} +cmd
