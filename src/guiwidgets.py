@@ -1034,6 +1034,33 @@ class Calendar(calendarcontrol.Calendar):
         self.populatefs(d)
         self.populate(d)
 
+    def DeleteEntry(self, entry):
+        """Deletes an entry from the calendar data.
+
+        The entries on disk are updated by this function.
+
+        @type  entry: a dict containing all the fields.
+        @param entry: an entry.  It must contain a C{pos} field
+                      corresponding to an existing entry
+        """
+        del self._data[entry['pos']]
+        d={}
+        d=self.getdata(d)
+        self.populatefs(d)
+        self.populate(d)
+
+    def ChangeEntry(self, oldentry, newentry):
+        """Changes an entry in the calendar data.
+
+        The entries on disk are updated by this function.
+        """
+        assert oldentry['pos']==newentry['pos']
+        self._data[newentry['pos']]=newentry
+        d={}
+        d=self.getdata(d)
+        self.populatefs(d)
+        self.populate(d)
+
     def getentrydata(self, year, month, day):
         """return the entry objects for corresponding date
 
@@ -1191,6 +1218,8 @@ class Calendar(calendarcontrol.Calendar):
 
 
 class DayViewDialog(wxDialog):
+    """Used to edit the entries on one particular day"""
+    
     ID_PREV=1
     ID_NEXT=2
     ID_ADD=3
@@ -1305,9 +1334,16 @@ class DayViewDialog(wxDialog):
         EVT_BUTTON(self, self.ID_REVERT, self.OnRevertButton)
         EVT_BUTTON(self, self.ID_CLOSE, self.OnCloseButton)
         EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
+        EVT_BUTTON(self, self.ID_DELETE, self.OnDeleteButton)
 
         # this is allegedly called automatically but didn't work for me
         EVT_CLOSE(self, self.OnCloseWindow)
+
+        # Tracking of the entries in the listbox.  Each entry is a dict. Entries are just the
+        # entries in a random order.  entrymap maps from the order in the listbox to a
+        # specific entry
+        self.entries=[]
+        self.entrymap=[]
 
         # Dirty tracking.  We restrict what the user can do while editting an
         # entry to only be able to edit that entry.  'dirty' gets fired when
@@ -1318,11 +1354,6 @@ class DayViewDialog(wxDialog):
         self.ignoredirty=False 
         self.setdirty(False)
 
-        # Tracking of the entries in the listbox.  Each entry is a dict. Entries are just the
-        # entries in a random order.  entrymap maps from the order in the listbox to a
-        # specific entry
-        self.entries=[]
-        self.entrymap=[]
 
     def OnListBoxItem(self, _=None):
         self.updatefields(self.getentry(self.listbox.GetSelection()))
@@ -1344,8 +1375,11 @@ class DayViewDialog(wxDialog):
             else:
                 v=control.GetValue()
             newentry[f]=v
+        self.cw.ChangeEntry(entry, newentry)
+        self.setdirty(False)
+        self.refreshentries()
+        self.updatelistbox(newentry['pos'])
 
-        print "replacing",entry, "\nwith", newentry
 
     def OnNewButton(self, _=None):
         entry=self.cw.newentryfactory(*self.date)
@@ -1358,6 +1392,20 @@ class DayViewDialog(wxDialog):
         # can't actually do as it is disabled)
         self.OnListBoxItem()
 
+    def OnDeleteButton(self, _=None):
+        enum=self.listbox.GetSelection()
+        if enum+1<len(self.entrymap):
+            # try and find entry after current one
+            newpos=self.getentry(enum+1)['pos']
+        elif enum-1>=0:
+            # entry before as we are deleting last entry
+            newpos=self.getentry(enum-1)['pos']
+        else:
+            newpos=None
+        self.cw.DeleteEntry(self.getentry(enum))
+        self.refreshentries()
+        self.updatelistbox(newpos)
+        
     def OnCloseWindow(self, event):
         # only allow closing to happen if the close button is
         # enabled
@@ -1417,22 +1465,22 @@ class DayViewDialog(wxDialog):
                 if hr==0: hr=12
                 str="%2d:%02d %s" % (hr, e['start'][4], ap)
             str+=" "+e['description']
-            print "adding",str
             self.listbox.Append(str)
 
         # Select an item if requested
         if selectitem>=0:
             self.listbox.SetSelection(selectitem)
             self.OnListBoxItem() # update fields
-
-        # temporary debug output
-        print `self.entrymap`
-        print `self.entries`
-        
-
+        else:
+            # disable fields since nothing is selected
+            self.updatefields(None)
+            
+        # disable delete if there are no entries!
+        if len(self.entries)==0:
+            self.FindWindowById(self.ID_DELETE).Enable(False)
+            
     def updatefields(self, entry):
         self.ignoredirty=True
-        print entry
         active=True
         if entry is None:
             for i in self.fields:
@@ -1440,7 +1488,6 @@ class DayViewDialog(wxDialog):
             active=False
         else:
             for i in self.fieldnames:
-                print i, entry[i]
                 self.fields[i].SetValue(entry[i])
 
         # manipulate field widgets
@@ -1451,9 +1498,18 @@ class DayViewDialog(wxDialog):
 
     # called from various widget update callbacks
     def OnMakeDirty(self, _=None):
+        """A public function you can call that will set the dirty flag"""
         self.setdirty(True)
 
     def setdirty(self, val):
+        """Set the dirty flag
+
+        @type  val: Bool
+        @param val: True to mark edit fields as different from entry (ie
+                    editing has taken place)
+                    False to make them as the same as the entry (ie no
+                    editing or the edits have been discarded)
+        """
         if self.ignoredirty:
             return
         self.dirty=val
@@ -1481,7 +1537,7 @@ class DayViewDialog(wxDialog):
 
             # enable delete, close, left, right, new
             self.FindWindowById(self.ID_CLOSE).Enable(True)
-            self.FindWindowById(self.ID_DELETE).Enable(True)
+            self.FindWindowById(self.ID_DELETE).Enable(len(self.entries)>0) # only enable if there are entries
             self.FindWindowById(self.ID_PREV).Enable(True)
             self.FindWindowById(self.ID_NEXT).Enable(True)
             self.FindWindowById(self.ID_ADD).Enable(True)
