@@ -92,7 +92,8 @@ static struct { ULONG id; const char* name; }  propnames[]={
   PR(PR_CONTAINER_HIERARCHY),
   PR(PR_CONTAINER_CONTENTS),
   PR(PR_INSTANCE_KEY),
-  
+  PR(PR_AB_PROVIDER_ID),
+  PR(PR_CONTAINER_CLASS),
 #define DO_PRSTUFF
 #include "_genprops.h"
 #undef DO_PRSTUFF
@@ -263,8 +264,9 @@ bool Load(const char *filename)
   wp.cbSize=sizeof(WAB_PARAM);
   if (!filename) filename="";
   wp.szFileName=(CHAR*)filename;
-  wp.ulFlags=WAB_ENABLE_PROPERTIES;
+  wp.ulFlags=WAB_ENABLE_PROFILES;
 
+  printf("filename is '%s'\n", filename);
   HRESULT hr=openfn(&lpaddrbook, &lpwabobject, &wp, 0);
   if (HR_FAILED(hr))
     {
@@ -272,11 +274,13 @@ bool Load(const char *filename)
       return false;
     }
 
+#if 0
   ULONG cbentryid;
   LPENTRYID entryid;
   hr=lpaddrbook->GetPAB(&cbentryid, &entryid);
   if (HR_FAILED(hr))
     return false;
+#endif
 
   ULONG objtype;
 
@@ -285,11 +289,9 @@ bool Load(const char *filename)
   if (HR_FAILED(hr))
     return false;
 
-  lpwabobject->FreeBuffer(entryid);
+  //  lpwabobject->FreeBuffer(entryid);
 
-  return true;
-
-  hr=lpcontainer->GetContentsTable(0, &lptable);
+  hr=lpcontainer->GetContentsTable(WAB_LOCAL_CONTAINERS|WAB_PROFILE_CONTENTS, &lptable);
   if (HR_FAILED(hr))
     return false;
 
@@ -298,6 +300,21 @@ bool Load(const char *filename)
 
 bool TopLevel(void)
 {
+  LPSRowSet lprowset=NULL;
+  HRESULT hr=lpaddrbook->GetSearchPath(0, &lprowset);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, lpaddrbook, "TopLevel:GetSearchPath failed");
+      return false;
+    }
+  
+
+  for (unsigned i=0;i<lprowset->cRows;i++)
+    print_row(lprowset->aRow[i]);
+
+
+  return true;
+#if 0
   LPMAPITABLE table=NULL;
   HRESULT hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
   if (HR_FAILED(hr))
@@ -306,40 +323,7 @@ bool TopLevel(void)
       return false;
     }
 
-  LPSRowSet lprowset;
-  do {
-    hr=table->QueryRows(1,0,&lprowset);
-    if (HR_FAILED(hr))
-      {
-	errorme(hr, NULL, "TopLevel:QueryRows failed");
-	return false;
-      }
-    if (lprowset->cRows==0)
-      {
-	lprowset=NULL;
-	break; //end of table
-      }
-
-    if (has_property_value(lprowset->aRow[0], PR_CONTAINER_FLAGS, 5))
-      break;
-
-  } while(true);
-
-  SPropValue *prop=get_property(lprowset->aRow[0], PR_ENTRYID);
-  ULONG objtype;
-  hr=lpaddrbook->OpenEntry(prop->Value.bin.cb, (ENTRYID*)(prop->Value.bin.lpb), NULL, MAPI_BEST_ACCESS, &objtype, (LPUNKNOWN*)&lpcontainer);
-  if (HR_FAILED(hr))
-    {
-      errorme(hr, lpaddrbook, "TopLevel:Openentry failed with len %d", prop->Value.bin.cb);
-      return false;
-    }
-
-  hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
-  if (HR_FAILED(hr))
-    {
-      errorme(hr, lpcontainer, "TopLevel:GetHierarchyTable2 failed");
-      return false;
-    }
+  LPSRowSet lprowset=NULL;
 
   do {
     hr=table->QueryRows(1,0,&lprowset);
@@ -361,7 +345,7 @@ bool TopLevel(void)
 
   
   return true;
-
+#endif
 }
 
 #define DO_PROPSIWANT
@@ -370,6 +354,8 @@ bool TopLevel(void)
 
 bool List(void)
 {
+  HRESULT hr;
+#if 0
   HRESULT hr=lptable->SeekRow(BOOKMARK_BEGINNING, 0, NULL);
   if (HR_FAILED(hr))
     return false;
@@ -377,6 +363,7 @@ bool List(void)
   hr=lptable->SetColumns((SPropTagArray*)&propsiwant, 0);
   if (HR_FAILED(hr))
     return false;
+#endif
 
   LPSRowSet lprowset;
   do {
@@ -411,7 +398,6 @@ int main(int argc, char **argv)
   if (!res)
     printf("Error: %s\n", errorstring);
 
-  return 0;
   res=List();
   printf("List()=%d\n", res);
   if (!res)
