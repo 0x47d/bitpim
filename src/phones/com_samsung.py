@@ -15,7 +15,7 @@ import com_brew
 import com_phone
 import common
 import commport
-from string import split,strip,atoi,join,replace
+from string import split,strip,atoi,join
 import time
 import re
 from DSV import DSV
@@ -365,7 +365,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 c['alarm']=self.__cal_alarm_values['0']
 
             # Name, check for bad char & proper length
-            name=replace(c['description'], '"', '')
+            name=c['description'].replace('"', '')
             if len(name)>self.__cal_max_name_len:
                 name=name[:self.__cal_max_name_len]
             e[self.__cal_write_name]='"'+name+'"'

@@ -14,7 +14,7 @@
 
 import re
 import sha
-from string import split,atoi,strip,join,replace
+from string import split,atoi,strip,join
 
 
 
@@ -330,7 +330,7 @@ class Phone(com_samsung.Phone):
     def __validate_entry(self, pb_entry, pb_groups):
         try:
             # validate name & alias
-            name=replace(pb_entry['names'][0]['full'], '"', '')
+            name=pb_entry['names'][0]['full'].replace('"', '')
             if len(name)>self.__pb_max_name_len:
                 name=name[:self.__pb_max_name_len]
             if pb_entry['names'][0]['full']!=name:
@@ -361,7 +361,7 @@ class Phone(com_samsung.Phone):
             if pb_entry.has_key('emails'):
                 if len(pb_entry['emails'])>self.__pb_max_emails:
                     self.log(name+': Each entry can only have %s emails.  The rest will be ignored.'%str(self.__pb_max_emails))
-                email=replace(pb_entry['emails'][0]['email'], '"', '')
+                email=pb_entry['emails'][0]['email'].replace('"', '')
                 if len(email)>self.__pb_max_number_len:
                     email=email[:self.__pb_max_number_len]
                 if email!=pb_entry['emails'][0]['email']:
