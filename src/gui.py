@@ -380,8 +380,7 @@ class MainWindow(wxFrame):
 
     def OnViewLogData(self, _):
         # toggle state of the log data
-        print "onviewlogdata"
-        logdatatitle="LogData"
+        logdatatitle="Protocol Log"
         if self.lwdata is None:
             self.lwdata=guiwidgets.LogWindow(self.nb)
             self.nb.AddPage(self.lwdata, logdatatitle)
