@@ -47,17 +47,64 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
     __cal_max_name_len=32
+    __switch_mode_cmd='\x44\x58\xf4\x7e'
     
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
         com_brew.BrewProtocol.__init__(self)
         self.mode=self.MODENONE
-	#self.is_online()
+
+    def _setmodephonebooktobrew(self):
+        self.setmode(self.MODEMODEM)
+        self.setmode(self.MODEBREW)
+        return True
+
+    def _setmodemodemtobrew(self):
+        self.log('Switching from modem to BREW')
+        try:
+            self.comm.sendatcommand('$QCDMG')
+            return True
+        except commport.ATError:
+	    return False
+
+    def _setmodebrewtomodem(self):
+        self.log('Switching from BREW to modem')
+        try:
+            self.comm.write(self.__switch_mode_cmd, False)
+            self.comm.readsome(numchars=5, log=False)
+            return True
+        except:
+            pass
+        # give it a 2nd try
+        try:
+            self.comm.write(self.__switch_mode_cmd, False)
+            self.comm.readsome(numchars=5, log=False)
+            return True
+        except:
+            return False
 
     def _setmodemodemtophonebook(self):
+        self.log('Switching from modem to phonebook')
         response=self.comm.sendatcommand("#PMODE=1")
         return True
+
+    def _setmodemodem(self):
+        self.log('Switching to modem')
+        try:
+            self.comm.sendatcommand('E0V1')
+            return True
+        except:
+            pass
+        # could be in BREW mode, try switch over
+        self.log('trying to switch from BREW mode')
+        if not self._setmodebrewtomodem():
+            return False
+        try:
+            self.comm.sendatcommand('E0V1')
+            return True
+        except:
+            return False
 
     def _setmodephonebook(self):
         self.setmode(self.MODEMODEM)
@@ -65,6 +112,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         return True
         
     def _setmodephonebooktomodem(self):
+        self.log('Switching from phonebook to modem')
         response=self.comm.sendatcommand("#PMODE=0")
         return True
         

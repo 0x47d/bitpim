@@ -304,10 +304,12 @@ class CommConnection:
         self.readbytes+=len(res)
         return res
 
-    def readsome(self, log=True):
+    def readsome(self, log=True, numchars=None):
         self.readrequests+=1
         res=""
         while True:
+            if numchars is not None and len(res)>= numchars:
+                break
             b=self.ser.inWaiting()
             if b:
                 res=res+self.read(b,0)
