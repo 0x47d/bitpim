@@ -205,7 +205,7 @@ def getfoldername(folder):
     return " / ".join(n)
 
 def getfolderid(folder):
-    return folder.EntryID
+    return str(folder.EntryID) # de-unicodify it
 
 def pickfolder():
     return getmapinamespace().PickFolder()
