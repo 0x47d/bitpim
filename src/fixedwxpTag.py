@@ -101,6 +101,8 @@ import wx.html
 
 import types
 
+import common
+
 #----------------------------------------------------------------------
 
 WXPTAG   = 'WXP'
@@ -207,6 +209,7 @@ class wxpTagHandler(wx.html.HtmlWinTagHandler):
                 value = eval(value, self.ctx.classMod.__dict__)
             except:
                 value = saveVal
+         # do things the hard way
 
         # convert to wxColour
         elif value[0] == '#':
@@ -254,17 +257,7 @@ def _getidvalue(defaultmodule, name):
         return getattr(defaultmodule, name)
     except AttributeError:
         pass
-    # do things the hard way
-    mods=name.split('.')
-    dict={}
-    for i in range(len(mods)):
-        # import everything
-        try:
-            exec "import %s" % (".".join(mods[:i])) in dict, dict
-        except:
-            pass
-    # ok, we should have the name now
-    return eval(name, dict, dict)
+    return common.getfullname(name)
     
 #----------------------------------------------------------------------
 # Function to parse a param string (of the form 'item=value item2="value etc"'
