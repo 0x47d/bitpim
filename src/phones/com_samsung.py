@@ -26,6 +26,7 @@ import common
 import commport
 import memo
 import p_brew
+import phoneinfo
 import sms
 import todo
 
@@ -172,6 +173,36 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 	except commport.ATError:
             pass
         return ''
+
+    def __send_and_get(self, at_command):
+        try:
+            s=self.comm.sendatcommand(str(at_command))
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return None
+        
+    def get_model(self):
+        return ','.join(self.__send_and_get('+GMM'))
+    def get_manufacturer(self):
+        return ','.join(self.__send_and_get('+GMI'))
+    def get_phone_number(self):
+        return self.__send_and_get('+MIN?')[0]
+    def get_firmware_version(self):
+        return ','.join(self.__send_and_get('+GMR'))
+    def get_battery_level(self):
+        s=self.__send_and_get('+CBC?')
+        if s is not None and len(s)==2:
+            return s[1]+'%'
+    def get_signal_quality(self):
+        s=self.__send_and_get('+CSQ?')
+        if s is not None and len(s)==2:
+            return str(100*int(s[0])/31)+'%'
+    def get_analog_digital(self):
+        d={ '0': 'Analog', '1': 'Digital' }
+        s=self.__send_and_get('+CAD?')
+        return d.get(s[0], '<Unknown>')
 
     def get_groups(self, groups_range):
 
@@ -614,6 +645,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         canned_msg.write()
         self.setmode(self.MODEMODEM)
         return result
+    def _getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        self.setmode(self.MODEPHONEBOOK)
+        for e in phoneinfo.PhoneInfo.standard_keys:
+            f=getattr(self, 'get_'+e[0])
+            setattr(phone_info, e[0], f())
+        phone_info.append('Analog/Digital:', self.get_analog_digital())
+        self.setmode(self.MODEMODEM)
 
 #------------------------------------------------------------------------------
 class Profile(com_phone.Profile):

@@ -47,6 +47,7 @@ import memo
 import update
 import todo
 import sms_tab
+import phoneinfo
 
 ###
 ### Used to check our threading
@@ -556,6 +557,9 @@ class MainWindow(wx.Frame):
         else:
             menu.AppendSeparator()
             menu.Append(guihelper.ID_EDITSETTINGS, "&Settings", "Edit settings")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_EDITPHONEINFO,
+                    "&Phone Info", "Display Phone Information")
         menuBar.Append(menu, "&Edit");
 
         menu=wx.Menu()
@@ -633,6 +637,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPSUPPORT, self.OnHelpSupport)
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
+        wx.EVT_MENU(self, guihelper.ID_EDITPHONEINFO, self.OnPhoneInfo)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -807,6 +812,19 @@ class MainWindow(wx.Frame):
         phone=self.config.Read('phonetype', 'None')
         port=self.config.Read('lgvx4400port', 'None')
         self.GetStatusBar().set_phone_model(phone+'/'+port)
+
+    def OnPhoneInfo(self, _):
+        self.MakeCall(Request(self.wt.getphoneinfo),
+                      Callback(self.OnDisplayPhoneInfo))
+    def OnDisplayPhoneInfo(self, exception, phone_info):
+        if self.HandleException(exception): return
+        if phone_info is None:
+            # data not available
+            dlg=wx.MessageDialog(self, "Phone Info not available",
+                             "Phone Info Error", style=wx.OK)
+        else:
+            dlg=phoneinfo.PhoneInfoDialog(self, phone_info)
+        dlg.ShowModal()
 
     def SetVersionsStatus(self):
         current_v=version.version
@@ -1456,6 +1474,14 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savesms(data, merge)
+
+    def getphoneinfo(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        if hasattr(self.commphone, 'getphoneinfo'):
+            phone_info=phoneinfo.PhoneInfo()
+            getattr(self.commphone, 'getphoneinfo')(phone_info)
+            return phone_info
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

@@ -757,6 +757,8 @@ class Phone(com_samsung.Phone):
     def getsms(self, result):
         return self._getsms(result)
 
+    getphoneinfo=com_samsung.Phone._getphoneinfo
+
     getmedia=None
 
 class Profile(com_samsung.Profile):
@@ -956,16 +958,16 @@ class FileEntries:
     def __mms_file_name(self):
         now = time.localtime(time.time())
         return '%02d%02d%02d%02d%02d%02d'%((now[0]%2000,)+now[1:6])
-    def __to_mms_jpg(self, img_name, img_data_len):
+    def __to_mms_JPEG(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 0, img_data_len))
-    def __to_mms_bmp(self, img_name, img_data_len):
+    def __to_mms_BMP(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 1, img_data_len))
-    def __to_mms_png(self, img_name, img_data_len):
+    def __to_mms_PNG(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 2, img_data_len))
-    def __to_mms_gif(self, img_name, img_data_len):
+    def __to_mms_GIF(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 3, img_data_len))
        
@@ -1017,19 +1019,21 @@ class FileEntries:
                 break
             if self.__origin=='images':
                 file_info=fileinfo.identify_imagestring(n['data'])
-                if file_info is None:
-                    # image format we don't know about, skip for now
-                    continue
-                if file_info.format=='JPEG':
-                    # jpeg file/picture ID files
-                    mms_file_name, file_hdr=self.__to_mms_jpg(n['name'], len(n['data']))
+                if file_info.format in ('JPEG', 'GIF', 'BMP'):
+                    # jpeg/gif/bmp file/picture ID files
+                    (mms_file_name, file_hdr)=\
+                                    getattr(self, '__to_mms_'+file_info.format)(
+                                        n['name'], len(n['data']))
                     file_name=self.__path+'/'+mms_file_name
                     file_contents=file_hdr+n['data']
-                else:
+                elif file_info.format=='PNG':
                     # wallpaper files
                     file_name='brew/shared/'+n['name']
                     # try to optimize png image files
                     file_contents=conversions.convertto8bitpng_joe(n['data'])
+                else:
+                    # unknown file type, skip it
+                    continue
             else:
                 file_name=self.__path+'/'+n['name']
                 file_contents=n['data']
