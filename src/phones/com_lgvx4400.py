@@ -811,7 +811,7 @@ class Phone:
         # byte f is unknown
         res['?offset00f']=readlsb(packet[0xf:0x10])
 
-        # Bytes 10-26 null terminated name
+        # Bytes 10-26 null padded name
         res['name']=readstring(packet[0x10:0x27])
 
         # Byte 27 group
@@ -821,16 +821,16 @@ class Phone:
         # byte 28 some sort of number
         res['?offset028']=readlsb(packet[0x28:0x29])
 
-        # bytes 29-59 null terminated email1
+        # bytes 29-59 null padded email1
         res['email1']=readstring(packet[0x29:0x60])
 
-        # bytes 5a-8a null terminated email2
+        # bytes 5a-8a null padded email2
         res['email2']=readstring(packet[0x5a:0x8b])
 
-        # bytes 8b-bb null terminated email3
+        # bytes 8b-bb null padded email3
         res['email3']=readstring(packet[0x8b:0xbc])
 
-        # bytes bc-ec null terminated url
+        # bytes bc-ec null padded url
         res['url']=readstring(packet[0xbc:0xed])
 
         # byte ed is ringtone
@@ -845,7 +845,7 @@ class Phone:
         b=ord(packet[0xef])
         res['secret']=b
 
-        # bytes f0-110 null terminated memo
+        # bytes f0-110 null padded memo
         res['memo']=readstring(packet[0xf0:0x111])
 
         # byte 111
@@ -904,7 +904,7 @@ class Phone:
         assert len(res)==0xf
         res+=makelsb(0, 1)
 
-        # Bytes 10-26 null terminated name
+        # Bytes 10-26 null padded name
         assert len(res)==0x10
         res+=makestring(entry.get('name', "<unnamed>"), 23)
 
@@ -916,19 +916,19 @@ class Phone:
         assert len(res)==0x28
         res+=makelsb(0, 1)
 
-        # bytes 29-59 null terminated email1
+        # bytes 29-59 null padded email1
         assert len(res)==0x29
         res+=makestring(entry.get('email1', ""), 49)
 
-        # bytes 5a-8a null terminated email2
+        # bytes 5a-8a null padded email2
         assert len(res)==0x5a
         res+=makestring(entry.get('email2', ""), 49)
 
-        # bytes 8b-bb null terminated email3
+        # bytes 8b-bb null padded email3
         assert len(res)==0x8b
         res+=makestring(entry.get('email3', ""), 49)
 
-        # bytes bc-ec null terminated url
+        # bytes bc-ec null padded url
         assert len(res)==0xbc
         res+=makestring(entry.get('url', ""), 49)
 
@@ -946,7 +946,7 @@ class Phone:
             res+="\x01"
         else: res+="\x00"
         
-        # bytes f0-110 null terminated memo
+        # bytes f0-110 null padded memo
         assert len(res)==0xf0
         res+=makestring(entry.get('memo', ""), 33)
 
@@ -1024,13 +1024,12 @@ def makelsb(num, numbytes):
     return res
 
 def readstring(data):
-    # reads null terminated string
+    # reads null padded string
     res=""
     for i in data:
         if i=='\x00':
             return res
         res=res+i
-    raise Exception(" NOT NULL TERMINATED!!!! "+common.datatohexstring(data))
     return res
 
 def makestring(str, length):
