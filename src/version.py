@@ -16,14 +16,14 @@ version="0.7.15"
 release=0  # when rereleases of the same version happen, this gets incremented
 testver=0  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
-contact="The BitPim home page is at http://bitpim.sf.net.  You can post any " \
+contact="The BitPim home page is at http://www.bitpim.org.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
 
 def isdevelopmentversion(): return int(version.split(".")[1])%2
 
 if isdevelopmentversion():
     # Different strings in development versions
-    extrainfo="This is a development of BitPim which provides a work in progress.  You can find stable releases at http://bitpim.sf.net"
+    extrainfo="This is a development of BitPim which provides a work in progress.  You can find stable releases at http://www.bitpim.org"
     contact="For questions or feedback, please use the bitpim developer mailing list.  Details " \
              "are at the BitPim web site."
 
@@ -53,11 +53,11 @@ del x
 dqverstr=".".join([`x` for x in dqver])
 
 author="Roger Binns"
-author_email="rogerb@users.sourceforge.net"
-url="http://bitpim.sourceforge.net"
+author_email="rogerb@rogerbinns.com"
+url="http://www.bitpim.org"
 
 description="BitPim "+versionstring
-copyright="(C) 2003-2004 Roger Binns <rogerb@users.sf.net> and others - see http://bitpim.sf.net"
+copyright="(C) 2003-2004 Roger Binns <rogerb@users.sf.net> and others - see http://www.bitpim.org"
 
 if __name__=='__main__':
     import sys
