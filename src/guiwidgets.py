@@ -1313,7 +1313,7 @@ class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
     used to edit the content of one particular day."""
 
-    CURRENTFILEVERSION=1
+    CURRENTFILEVERSION=2
     
     def __init__(self, mainwindow, parent, id=-1):
         """constructor
@@ -1467,10 +1467,17 @@ class Calendar(calendarcontrol.Calendar):
         res['changeserial']=1
         res['snoozedelay']=0
         res['alarm']=None
-        res['?d']=0
+        res['daybitmap']=0
         res['ringtone']=0
         res['pos']=self.allocnextpos()
         return res
+
+    def getdaybitmap(self, start, repeat):
+        if repeat!="weekly":
+            return 0
+        dayofweek=calendar.weekday(*(start[:3]))
+        dayofweek=(dayofweek+1)%7 # normalize to sunday == 0
+        return [2048,1024,512,256,128,64,32][dayofweek]
 
     def allocnextpos(self):
         """Allocates a unique id for a new entry
@@ -1520,6 +1527,7 @@ class Calendar(calendarcontrol.Calendar):
                 self.entries[(y,m,d)].append(entry)
                 continue
             if entry['repeat']=='weekly':
+                # we could pay attention to daybitmap here ...
                 entry['dayofweek']=(calendar.weekday(y,m,d)+1)%7
             self.repeating.append(entry)
 
@@ -1575,9 +1583,18 @@ class Calendar(calendarcontrol.Calendar):
 
         # version 0 to 1 upgrade
         if version==0:
-            version=1  # the are the same
+            version=1  # they are the same
 
-        # 1 to 2 etc
+        # 1 to 2 
+        if version==1:
+            # ?d field renamed daybitmap
+            version=2
+            for k in dict['result']['calendar']:
+                entry=dict['result']['calendar'][k]
+                entry['daybitmap']=self.getdaybitmap(entry['start'], entry['repeat'])
+                del entry['?d']
+
+        # 2 to 3 etc
 
 
 class DayViewDialog(wxDialog):
@@ -1635,10 +1652,10 @@ class DayViewDialog(wxDialog):
         lbs.Add(hbs2, 0, wxEXPAND)
 
         self.fieldnames=('description', 'start', 'end', 'repeat',
-        'alarm', 'ringtone', '?d', 'changeserial', 'snoozedelay')
+        'alarm', 'ringtone', 'changeserial', 'snoozedelay')
         
         self.fielddesc=( 'Description', 'Start', 'End', 'Repeat',
-        'Alarm', 'Ringtone', '?Internal', 'changeserial', 'Snooze Delay' )
+        'Alarm', 'Ringtone', 'changeserial', 'Snooze Delay' )
 
         # right hand bit with all fields
         gs=wxFlexGridSizer(-1,2,5,5)
@@ -1838,6 +1855,9 @@ class DayViewDialog(wxDialog):
                 v=None
  
             newentry[f]=v
+
+        # update the daybitmap field
+        newentry['daybitmap']=self.cw.getdaybitmap(newentry['start'], newentry['repeat'])
 
         # update calendar widget
         if res==self.ANSWER_ORIGINAL:

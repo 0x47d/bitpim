@@ -287,7 +287,7 @@ class Phone:
             entry['end']=brewdecodedate(readlsb(data[pos+8:pos+0xc]))
             repeat=ord(data[pos+0xc])
             entry['repeat']=self._calrepeatvalues[repeat]
-            entry['?d']=readlsb(data[pos+0xd:pos+0x10])
+            entry['daybitmap']=readlsb(data[pos+0xd:pos+0x10])
             min=ord(data[pos+0x10])
             hour=ord(data[pos+0x11])
             if min==100 or hour==100:
@@ -343,9 +343,9 @@ class Phone:
                     break
             assert repeat is not None
             data+=makelsb(repeat, 1)
-            # ?d
+            # daybitmap
             assert len(data)-pos==0xd
-            data+=makelsb(entry['?d'],3)
+            data+=makelsb(entry['daybitmap'],3)
             # alarm - first byte is mins, next is hours.  100 indicates not set
             assert len(data)-pos==0x10
             if entry['alarm'] is None or entry['alarm']<0:
