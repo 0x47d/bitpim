@@ -22,6 +22,7 @@ import com_brew
 import com_phone
 import p_sanyo
 import prototypes
+import common
 import cStringIO
 import time
 
@@ -1006,10 +1007,10 @@ class Profile:
                 
                 e['slotdup']=e['slot']
 
-                e['email']=self.makeone(helper.getemails(entry.get('emails', []),0,1,48), "")
+                e['email']=self.makeone(helper.getemails(entry.get('emails', []),0,1,self.protocolclass._MAXEMAILLEN), "")
                 e['email_len']=len(e['email'])
 
-                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
+                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,self.protocolclass._MAXEMAILLEN), "")
                 e['url_len']=len(e['url'])
 # Could put memo in email or url
 
@@ -1028,9 +1029,9 @@ class Profile:
                     for typenum,tnsearch in zip(range(100),numbertypetab):
                         if typename==tnsearch:
                             number=phonize(num['number'])
-                            if len(number)>48: # get this number from somewhere sensible
+                            if len(number)>self.protocolclass._MAXNUMBERLEN: # get this number from somewhere sensible
                                 # :: TODO:: number is too long and we have to either truncate it or ignore it?
-                                number=number[:48]
+                                number=number[:self.protocolclass._MAXNUMBERLEN]
                             e['numbers'].append(number)
                             if(num.has_key('speeddial')):
                                 e['speeddials'].append(num['speeddial'])
@@ -1051,9 +1052,9 @@ class Profile:
                     else:
                         break
                     number=phonize(num['number'])
-                    if len(number)>48: # get this number from somewhere sensible
+                    if len(number)>self.protocolclass._MAXNUMBERLEN: # get this number from somewhere sensible
                         # :: TODO:: number is too long and we have to either truncate it or ignore it?
-                        number=number[:48]
+                        number=number[:self.protocolclass._MAXNUMBERLEN]
                     e['numbers'].append(number)
                     e['numbertypes'].append(trytype)
                     if(num.has_key('speeddial')):
