@@ -88,7 +88,6 @@ class Display(wx.ScrolledWindow):
 
     def OnSize(self, evt):
         self.Refresh(False)
-        evt.Skip()
 
     def OnEraseBackground(self, _):
         pass
@@ -360,6 +359,9 @@ class SectionHeader(object):
         self.fontcolour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNTEXT)
         self.font2colour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNSHADOW)
         dc=wx.MemoryDC()
+        # mac needs a bitmap selected in order to return textextent!
+        if guihelper.IsMac():
+            dc.SelectObject(wx.EmptyBitmap(100,100))
         w,h,d,l=dc.GetFullTextExtent("I", font=self.font)
         self.height=h+3
         self.descent=d
