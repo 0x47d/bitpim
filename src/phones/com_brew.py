@@ -47,6 +47,10 @@ class BrewNameTooLongException(BrewCommandException):
     def __init__(self, errnum=0x0d):
         BrewCommandException.__init__(self, errnum, "Name is too long")
 
+class BrewDirectoryExistsException(BrewCommandException):
+    def __init__(self, errnum=0x07):
+        BrewCommandException.__init__(self, errnum, "Directory already exists")
+
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
@@ -114,6 +118,23 @@ class BrewProtocol:
 	req.filename=name
         self.sendbrewcommand(req, p_brew.rmfileresponse)
 
+    def rmdirs(self, path):
+        self.progress(0,1, "Listing child files and directories")
+        all=self.getfilesystem(path, 100)
+        keys=all.keys()
+        keys.sort()
+        keys.reverse()
+        count=0
+        for k in keys:
+            self.progressminor(count, len(keys), "Deleting "+k)
+            count+=1
+            if all[k]['type']=='directory':
+                self.rmdir(k)
+            else:
+                self.rmfile(k)
+        self.rmdir(path)
+
+
     def getfilesystem(self, dir="", recurse=0):
         results={}
 
@@ -139,7 +160,6 @@ class BrewProtocol:
                         # invalid date - see SF bug #833517
                         results[res.filename]['date']=(0, "")
                     
-
             except BrewNoMoreEntriesException:
                 break
 
@@ -339,6 +359,8 @@ class BrewProtocol:
                     raise BrewFileLockedException()
                 if err==0x0d:
                     raise BrewNameTooLongException()
+                if err==0x07:
+                    raise BrewDirectoryExistsException()
                 raise BrewCommandException(err)
         # parse data
         buffer=prototypes.buffer(data)
