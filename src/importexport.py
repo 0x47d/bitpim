@@ -1652,9 +1652,8 @@ def GetPhonebookExports():
     res=[]
     # Vcards - always possible
     res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
-    if __debug__: # not in production builds
-        # eGroupware - always possible
-        res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
+    # eGroupware - always possible
+    res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
     
     return res
 
@@ -1711,8 +1710,8 @@ class BaseExportDialog(wx.Dialog):
         if self.rows_all.GetValue():
             rowkeys=data.keys()
         else:
-            rowkeys=self.phonebook.GetSelectedRowKeys()
-        for i,k in enumerate(rowkeys):
+            rowkeys=self._phonebook_module.GetSelectedRowKeys()
+        for i,k in enumerate(rowkeys[:]): # we use a dup of rowkeys since it can be altered while exporting
             # ::TODO:: look at fields setting
             if includecount:
                 yield data[k],i,len(rowkeys)
@@ -1917,6 +1916,12 @@ class ExporteGroupwareDialog(BaseExportDialog):
         if self.sp is None:
             return
 
+        # get the list of categories
+        cats=dict( [(v['name'], v['id']) for v in self.sp.getcategories()] )
+
+        doesntexistaction=None
+
+        # write out each one
         setmax=-1
         for record,pos,max in self.GetPhoneBookItems(includecount=True):
             if max!=setmax:
@@ -1924,13 +1929,48 @@ class ExporteGroupwareDialog(BaseExportDialog):
                 self.progress.SetRange(max)
             self.progress.SetValue(pos)
             self.progress_text.SetLabel(nameparser.formatsimplename(record.get("names", [{}])[0]))
-            newid=self.sp.writecontact(self.FormatRecord(record))
-            # ::TODO:: update serial
-            print "newid is",newid
+            wx.SafeYield()
+            rec=self.FormatRecord(record, cats)
+            if rec['id']!=0:
+                # we have an id, but the record could have been deleted on the eg server, so
+                # we check
+                if not self.sp.doescontactexist(rec['id']):
+                    if doesntexistaction is None:
+                        dlg=eGroupwareEntryGoneDlg(self, rec['fn'])
+                        dlg.ShowModal()
+                        action=dlg.GetAction()
+                        if dlg.ForAll():
+                            doesntexistaction=action
+                    else: action=doesntexistaction
+                    if action==self._ACTION_RECREATE:
+                        rec['id']=0
+                    elif action==self._ACTION_IGNORE:
+                        continue
+                    elif action==self._ACTION_DELETE:
+                        found=False
+                        for serial in record["serials"]:
+                            if serial["sourcetype"]=="bitpim":
+                                phonebook.thephonewidget.DeleteBySerial(serial)
+                                found=True
+                                break
+                        assert found
+                        continue 
 
+            newid=self.sp.writecontact(rec)
+            found=False
+            for serial in record["serials"]:
+                if serial["sourcetype"]=="bitpim":
+                    phonebook.thephonewidget.UpdateSerial(serial, {"sourcetype": "egroupware", "id": newid})
+                    found=True
+                    break
+            assert found
+            
+            
         self.EndModal(wx.ID_OK)
 
-    def FormatRecord(self, record):
+
+
+    def FormatRecord(self, record, categories):
         "Convert record into egroupware fields"
 
         # note that mappings must be carefully chosen to ensure that importing from egroupware
@@ -1959,19 +1999,22 @@ class ExporteGroupwareDialog(BaseExportDialog):
                     break
         # email
         if "emails" in record:
+            # this means we ignore emails without a type, but that can't be avoided with
+            # how egroupware works
             for t,k in ("business", "email"), ("home", "email_home"):
                 for i in record["emails"]:
-                    if t=="business" and i.get("type",None)==t:
+                    if i.get("type",None)==t:
                         res[k]=i.get("email")
                         res[k+"_type"]="INTERNET"
                         break
-                    if i.get("type",None)!="business":
-                        res[k]=i.get("email")
-                        res[k+"_type"]="INTERNET"
-                        break
+
         # categories
 
-        # ::TODO::
+        cats=[categories.get(cat['category'],None)  for cat in record.get("categories", [])]
+        # filter out nones
+        cats=[c for c in cats if c is not None]
+        record['cat_id']=cats
+            
 
         # phone numbers
         # t,k is bitpim type, egroupware type
@@ -2004,9 +2047,37 @@ class ExporteGroupwareDialog(BaseExportDialog):
 
         # that should be everything
         return res
-            
-            
-        
+
+    _ACTION_RECREATE=1
+    _ACTION_IGNORE=2
+    _ACTION_DELETE=3
+    
+class eGroupwareEntryGoneDlg(wx.Dialog):
+
+    choices=( ("Re-create entry on server", ExporteGroupwareDialog._ACTION_RECREATE),
+              ("Delete the entry in BitPim", ExporteGroupwareDialog._ACTION_DELETE),
+              ("Ignore this entry for now", ExporteGroupwareDialog._ACTION_IGNORE)
+              )
+
+    def __init__(self, parent, details):
+        wx.Dialog.__init__(self, parent, -1, title="Entry deleted on server")
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(wx.StaticText(self, -1, "The entry for \"%s\" has\nbeen deleted on the server." % (details,) ), 0, wx.EXPAND|wx.ALL, 5)
+        self.rb=wx.RadioBox(self, -1, "Action to take", choices=[t for t,a in self.choices])
+        vbs.Add(self.rb, 0, wx.EXPAND|wx.ALL, 5)
+        self.always=wx.CheckBox(self, -1, "Always take this action")
+        vbs.Add(self.always, 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+    def GetAction(self):
+        return self.choices[self.rb.GetSelection()][1]
+
+    def ForAll(self):
+            return self.always.GetValue()
 
 def OnFileExportVCards(parent):
     dlg=ExportVCardDialog(parent, "Export phonebook to vCards")
