@@ -270,6 +270,8 @@ _ourart={
     "ART_DEL_WALLPAPER": "delete_picture",
     "ART_ARROW_UP": "arrow_up",
     "ART_ARROW_DOWN": "arrow_down",
+    "ART_ARROW_LEFT": "arrow_left",
+    "ART_ARROW_RIGHT": "arrow_right",
     "ART_ADD_FIELD": "add_field",
     "ART_DEL_FIELD": "delete_field",
     "ART_ADD_CONTACT": "add_contact",
@@ -277,6 +279,8 @@ _ourart={
     "ART_ADD_WALLPAPER": "add_picture",
     "ART_ADD_RINGER": "add_ringer",
     "ART_DEL_RINGER": "delete_ringer",
+    "ART_ADD_MEMO": "add_memo",
+    "ART_DEL_MEMO": "delete_memo",
     }
 
 # populate namespace
