@@ -98,12 +98,55 @@ PACKET callalarmupdaterequest:
 # p_sanyo.p
 
 
-PACKET sanyomediaheader:
-    1 UINT {'constant': 0xfa} +commandmode
-    1 UINT {'constant': 0x0} +null
-    1 UINT command
-    2 UINT subcommand  "Sub command or byte pointer"
+# Eventually move to p_sanyo.p because this header is
+# used by many phones.
+# faset values:
+#   0x02  Phonebook protocol read
+#   0x03  Phonebook protocol write
+#   0x05  Sanyo4900 media upload
+#   0x10  
+PACKET sanyofaheader:
+    2 UINT {'constant': 0x00fa} +fa
+    1 UINT faset
 
+PACKET sanyomediaheader:
+    2 UINT {'constant': 0xfa} +fa
+    1 UINT {'default': 0x09} +faset
+    2 UINT command
+    2 UINT {'default': 0xffff} +pointer 
+
+PACKET sanyochangedir:
+    * sanyomediaheader {'command': 0x71} +header
+    170 UNKNOWN +pad
+    2 UINT dirindex
+    
+PACKET sanyonumpicsrequest:
+    * sanyomediaheader {'command': 0x72} +header
+    172 UNKNOWN +pad
+
+PACKET sanyonumpicsresponse:
+    * sanyomediaheader header
+    165 UNKNOWN +pad1
+    1 UINT count
+    6 UNKNOWN +pad2
+    
+PACKET sanyomediafilenamerequest:
+    * sanyomediaheader {'command': 0x73} +header
+    161 UNKNOWN +pad1
+    1 UINT index
+    10 UNKNOWN +pad2
+
+PACKET sanyomediafilenameresponse:
+    * sanyomediaheader header
+    1 UINT pad1
+    154 STRING filename
+    1 UINT num1
+    1 UNKNOWN pad2
+    1 UINT num2
+    1 UNKNOWN pad3
+    1 UINT num3
+    10 UNKNOWN pad4
+    
 PACKET sanyomediafilegragment:
     * sanyomediaheader +header
     2 UINT {'constant': 0} +word
@@ -111,12 +154,6 @@ PACKET sanyomediafilegragment:
     150 DATA data
     21 UNKNOWN +pad
     
-PACKET sanyomediafilename:
-    * sanyomediaheader {'command': 0x05, 'subcommand': 0xffa1} +header
-    2 UINT {'constant': 0} +word
-    1 UINT {'constant': 150} +len
-    171 STRING filename
-
 PACKET sanyomediaresponse:
     * sanyomediaheader header
     * UNKNOWN UNKNOWN
