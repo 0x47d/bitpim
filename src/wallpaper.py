@@ -94,6 +94,9 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_WALLPAPERS)
         pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
+        self.__raw_image=self.__shift_down=False
+        wx.EVT_KEY_DOWN(self.aggdisp, self.__OnKey)
+        wx.EVT_KEY_UP(self.aggdisp, self.__OnKey)
 
     def OnPhoneModelChanged(self, msg):
         phonemodule=msg.data
@@ -128,6 +131,14 @@ class WallpaperView(guiwidgets.FileView):
             self.modified=False
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes
+
+    def __OnKey(self, evt):
+        self.__shift_down=evt.ShiftDown()
+        evt.Skip()
+
+    def OnAdd(self, evt=None):
+        self.__raw_image=self.__shift_down
+        super(WallpaperView, self).OnAdd(evt)
 
     def OrganizeChange(self, evt):
         self.mainwindow.config.Write('imageorganizedby',
@@ -332,14 +343,20 @@ class WallpaperView(guiwidgets.FileView):
 
     def OnAddFiles(self, filenames):
         for file in filenames:
-            # :::TODO:: do i need to handle bci specially here?
-            img=wx.Image(file)
-            if not img.Ok():
-                dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
-                                    "Image not understood", style=wx.OK|wx.ICON_ERROR)
-                dlg.ShowModal()
-                continue
-            self.OnAddImage(img,file,refresh=False)
+            if self.__raw_image:
+                targetfilename=self.getshortenedbasename(file)
+                open(targetfilename, 'wb').write(open(file, 'rb').read())
+                self.AddToIndex(os.path.basename(targetfilename),
+                                'images')
+            else:
+                # :::TODO:: do i need to handle bci specially here?
+                img=wx.Image(file)
+                if not img.Ok():
+                    dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
+                                        "Image not understood", style=wx.OK|wx.ICON_ERROR)
+                    dlg.ShowModal()
+                    continue
+                self.OnAddImage(img,file,refresh=False)
         self.OnRefresh()
 
 
