@@ -1,0 +1,97 @@
+<html>
+<body>
+<!-- Picture Ringtone Name Category row -->
+<table ${styles['table']}>
+<tr>
+
+<td width="56" ${styles['wallpaperpanel']} >
+<py-open>for wallpaper in entry.get("wallpapers", []):</py-open>
+<img src="bpuserimage://${wallpaper['wallpaper']};width=48;height=48"
+alt="${wallpaper['use']}: ${wallpaper['wallpaper']}"><br>
+<py-close/>
+</td>
+
+<td width="20" ${styles['ringtonepanel']}>
+<py-open>for ringtone in entry.get("ringtones", []):</py-open>
+<img src="bpimage://ringtone;width=16;height=16"
+alt="${ringtone['use']}: ${ringtone['ringtone']}"><br>
+<py-close/>
+</td>
+
+<td ${styles['namepanel']}>
+<py-open>for name in entry.get("names",[]):</py-open>
+<font ${styles["name"]}<b>${formatname(name)}</b></font><br>
+<py-close/>
+</td>
+
+<td width="75" ${styles['categoryflagspanel']}>
+<py-open>for cat in entry.get("categories",[]):</py-open>
+<font ${styles["category"]}${cat['category']}</font><br>
+<py-close/>
+<br>
+<py-open>if has_flag(entry,"secret"):</py-open>
+<img src="bpimage://secret;width=16;height=16" alt="secret"><font size="-2">Secret</font><br>
+<py-close/>
+</td>
+</tr>
+</table><table ${styles['table']}>
+<!-- Numbers row -->
+<td ${styles['numberspanel']}>
+
+<!-- Individual numbers also as a table -->
+<table ${styles['table']}>
+<py-open>for rownum,number in zip(range(len(entry.get("numbers",[]))),entry.get("numbers",[])):</py-open>
+<tr ${styles['numberrow'][rownum%2]}>
+<td align="right" valign="center"><b>${titlecase(number['type'])}</b></td>
+<td valign="center" width="100%"><code>${number['number']}</code></td>
+</tr>
+<py-close/>
+</table>
+</td>
+</tr>
+</table>
+<table ${styles['table']}>
+<tr>
+<!-- URLs as a list -->
+<td ${styles['urlpanel']}>
+<py-open>for url in entry.get("urls", []):</py-open>
+<font ${styles['url']}><a href="${url["url"]}">${url["url"]}</a></font> ${urltype(url)}<br>
+<py-close/>
+</td>
+
+</tr>
+
+</table><table ${styles['table']}>
+<!-- Addresses as a list, addrwidth wide -->
+<py-line>addrwidth=2</py-line>
+<py-line>addrnum=-1</py-line>
+<py-open>for addrnum,address in zip(range(len(entry.get("addresses",[]))),entry.get("addresses",[])):</py-open>
+<py-open>if addrnum%addrwidth==0:</py-open>
+<tr>
+<py-close/>
+<td width="${int(100/addrwidth)}%" ${styles["address"][addrnum%addrwidth]}>
+<font ${styles['addresstext']}>${formataddress(address)}</font>
+</td>
+<py-open>if addrnum%addrwidth==addrwidth-1:</py-open>
+</tr>
+<py-close/>
+<py-close/>
+<!-- need any blank cells? -->
+<py-open>while addrnum>=0 and addrnum%addrwidth!=addrwidth-1:</py-open>
+<py-line>addrnum+=1</py-line>
+<td width="${int(100/addrwidth)}%" ${styles["address"][addrnum%addrwidth]}>&nbsp;</td>
+<py-close/>
+</table>
+<!-- Memos -->
+<table ${styles['table']}>
+<td ${styles["memopanel"]} width="100%">
+<py-line>first=True</py-line>
+<py-open>for memo in entry.get("memos", []):</py-open>
+<py-open>if not first:</py-open><hr><py-clause>else:</py-clause><py-line>first=False</py-line><py-close/>
+<p>${htmlify(memo["memo"])}
+</p>
+<py-close/>
+</table>
+
+</body>
+</html>
