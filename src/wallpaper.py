@@ -656,6 +656,7 @@ class ImageCropSelect(wx.ScrolledWindow):
         wx.ScrolledWindow.__init__(self, parent, id=id, size=size, pos=pos, style=style|wx.FULL_REPAINT_ON_RESIZE)
         self.previewwindow=previewwindow
         self.bg=wx.Brush(wx.WHITE)
+        self.parentbg=wx.Brush(parent.GetBackgroundColour())
         self._bufbmp=None
 
         self.anchors=None
@@ -664,6 +665,7 @@ class ImageCropSelect(wx.ScrolledWindow):
         wx.EVT_PAINT(self, self.OnPaint)
 
         self.image=image
+        self.origimage=image
         self.setresultsize(resultsize)
 
         # cursors for outside, inside, on selection, pressing bad mouse button
@@ -683,6 +685,9 @@ class ImageCropSelect(wx.ScrolledWindow):
         if self._bufbmp is None or self._bufbmp.GetWidth()<sz[0] or self._bufbmp.GetHeight()<sz[1]:
             self._bufbmp=wx.EmptyBitmap((sz[0]+64)&~8, (sz[1]+64)&~8)
         dc=wx.BufferedPaintDC(self, self._bufbmp)
+        if sz2[0]<sz[0] or sz2[1]<sz[1]:
+            dc.SetBackground(self.parentbg)
+            dc.Clear()
         dc.DrawBitmap(self.thebmp, 0, 0, False)
         # draw bounding box next
         l,t,r,b=self.anchors
@@ -751,7 +756,7 @@ class ImageCropSelect(wx.ScrolledWindow):
             aa=2,1,+1,-1
         elif self.clickpoint==self.HANDLE_RB:
             aa=2,3,+1,+1
-        elif self.clickpoint==self.LB:
+        elif self.clickpoint==self.HANDLE_LB:
             aa=0,3,-1,+1
         else:
             assert False, "can't get here"
@@ -771,6 +776,26 @@ class ImageCropSelect(wx.ScrolledWindow):
         if neww<10 or newh<10:
             return
         # if any point is off screen, we need to fix things up
+        if na[0]<0:
+            xdiff=-na[0]
+            ydiff=xdiff/self.aspectratio
+            na[0]=0
+            na[1]+=ydiff
+        if na[1]<0:
+            ydiff=-na[1]
+            xdiff=ydiff*self.aspectratio
+            na[1]=0
+            na[0]-=xdiff
+        if na[2]>self.dimensions[0]:
+            xdiff=na[2]-self.dimensions[0]
+            ydiff=xdiff/self.aspectratio
+            na[2]=na[2]-xdiff
+            na[3]=na[3]-ydiff
+        if na[3]>self.dimensions[1]:
+            ydiff=na[3]-self.dimensions[1]
+            xdiff=ydiff*self.aspectratio
+            na[2]=na[2]-xdiff
+            na[3]=na[3]-ydiff
         if na[0]<0 or na[1]<0 or na[2]>self.dimensions[0] or na[3]>self.dimensions[1]:
             print "offscreen fixup not written yet"
             return
@@ -799,6 +824,12 @@ class ImageCropSelect(wx.ScrolledWindow):
     def setlbcolour(self, colour):
         self.bg=wx.Brush(colour)
         self.remakebitmap()
+
+    def SetZoom(self, factor):
+        curzoom=float(self.image.GetWidth())/self.origimage.GetWidth()
+        self.anchors=[a*factor/curzoom for a in self.anchors]
+        self.image=self.origimage.Scale(self.origimage.GetWidth()*factor, self.origimage.GetHeight()*factor)
+        self.setresultsize(self.resultsize)
 
     def setresultsize(self, (w,h)):
         self.resultsize=w,h
@@ -849,6 +880,7 @@ class ImageCropSelect(wx.ScrolledWindow):
         dc.Clear()
         dc.DrawBitmap(self.image.ConvertToBitmap(), w/2-self.image.GetWidth()/2, h/2-self.image.GetHeight()/2, True)
         dc.SelectObject(wx.NullBitmap)
+        self.imageofthebmp=None
         self.SetVirtualSize( (w, h) )
         self.SetScrollRate(1,1)
 
@@ -863,6 +895,16 @@ class ImageCropSelect(wx.ScrolledWindow):
             self.previewwindow.SetUpdated(self.GetPreview)
 
     def GetPreview(self):
+        # Mac is eye wateringly slow doing wx.Bitmap to wx.Image conversions so
+        # we use up extra memory keeping a copy of self.thebmp as an image
+        if guihelper.IsMac():
+            if self.imageofthebmp is None:
+                self.imageofthebmp=self.thebmp.ConvertToImage()
+            l,t,r,b=self.anchors
+            sub=self.imageofthebmp.GetSubImage( (l,t,(r-l),(b-t)) )
+            sub.Rescale(*self.resultsize)
+            return sub.ConvertToBitmap()
+        # non-Mac
         l,t,r,b=self.anchors
         sub=self.thebmp.GetSubBitmap( (l,t,(r-l),(b-t)) )
         sub=sub.ConvertToImage()
@@ -892,6 +934,12 @@ class ImagePreview(wx.PyWindow):
 
 class ImagePreviewDialog(wx.Dialog):
 
+    SCALES=[ (0.25, "1/4"),
+             (0.5,  "1/2"),
+             (1, "1"),
+             (2, "2"),
+             (4, "4")]
+
     def __init__(self, parent, image, filename, phoneprofile):
         wx.Dialog.__init__(self, parent, -1, "Image Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
         self.phoneprofile=phoneprofile
@@ -902,18 +950,29 @@ class ImagePreviewDialog(wx.Dialog):
 
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         self.cropselect=ImageCropSelect(self, image)
-        hbs.Add(self.cropselect, 1, wx.ALL|wx.EXPAND, 5)
 
         vbs=wx.BoxSizer(wx.VERTICAL)
         self.colourselect=wx.lib.colourselect.ColourSelect(self, wx.NewId(), "Background ...", (255,255,255))
         vbs.Add(self.colourselect, 0, wx.ALL|wx.EXPAND, 5)
         wx.lib.colourselect.EVT_COLOURSELECT(self, self.colourselect.GetId(), self.OnBackgroundColour)
         vbs.Add(wx.StaticText(self, -1, "Origin"), 0, wx.ALL, 5)
-        self.originbox=wx.ListBox(self)
+        self.originbox=wx.ListBox(self, size=(-1, 100))
         vbs.Add(self.originbox, 0, wx.ALL|wx.EXPAND, 5)
         vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
-        self.targetbox=wx.ListBox(self)
-        vbs.Add(self.targetbox, 0, wx.ALL|wx.ALL, 5)
+        self.targetbox=wx.ListBox(self, size=(-1,100))
+        vbs.Add(self.targetbox, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticText(self, -1, "Scale"), 0, wx.ALL, 5)
+
+        for one,(s,_) in enumerate(self.SCALES):
+            if s==1: break
+        # Mac gets ticks completely wrong so we turn then off, even calling SetTickFreq
+        tickstyle=[wx.SL_AUTOTICKS,0][bool(guihelper.IsMac())]
+        self.slider=wx.Slider(self, -1, one, 0, len(self.SCALES)-1, style=wx.HORIZONTAL|tickstyle)
+        wx.EVT_SCROLL(self, self.SetZoom)
+        vbs.Add(self.slider, 0, wx.ALL|wx.EXPAND, 5)
+        self.zoomlabel=wx.StaticText(self, -1, self.SCALES[one][1])
+        vbs.Add(self.zoomlabel, 0, wx.ALL|wx.ALIGN_CENTRE_HORIZONTAL, 5)
+        
         vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
         self.imagepreview=ImagePreview(self)
         self.cropselect.SetPreviewWindow(self.imagepreview)
@@ -921,6 +980,7 @@ class ImagePreviewDialog(wx.Dialog):
 
 
         hbs.Add(vbs, 0, wx.ALL, 5)
+        hbs.Add(self.cropselect, 1, wx.ALL|wx.EXPAND, 5)
 
         vbsouter.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
         
@@ -939,6 +999,11 @@ class ImagePreviewDialog(wx.Dialog):
         
         self.SetSizer(vbsouter)
         vbsouter.Fit(self)
+
+    def SetZoom(self, evt):
+        self.cropselect.SetZoom(self.SCALES[evt.GetPosition()][0])
+        self.zoomlabel.SetLabel(self.SCALES[evt.GetPosition()][1])
+        return
 
     def OnBackgroundColour(self, evt):
         self.cropselect.setlbcolour(evt.GetValue())
@@ -996,12 +1061,14 @@ if __name__=='__main__':
     class FakeProfile:
 
         def GetImageOrigins(self):
-            return {"images": None, "mms": None, "camera": None}
+            return {"images": {'description': 'General images'},
+                    "mms": {'description': 'Multimedia Messages'},
+                    "camera": {'description': 'Camera images'}}
 
         def GetTargetsForImageOrigin(self, origin):
-            return {"wallpaper": {'dimensions': (100,200)},
-                    "photoid": {'dimensions': (100, 150)},
-                    "outsidelcd": {'dimensions': (90,80)}}
+            return {"wallpaper": {'dimensions': (100,200), 'description': 'Display as wallpaper'},
+                    "photoid": {'dimensions': (100, 150), 'description': 'Display as photo id'},
+                    "outsidelcd": {'dimensions': (90,80), 'description': 'Display on outside screen'}}
 
     def run():
         app=wx.PySimpleApp()
