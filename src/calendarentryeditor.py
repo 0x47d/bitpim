@@ -1,3 +1,12 @@
+### BITPIM
+###
+### Copyright (C) 2003-2004 Joe Pham <djpham@netzero.com>
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
+###
+### $Id$
+
 import calendar
 import copy
 import datetime
@@ -51,6 +60,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         vbs.Add(hbs, 0, wx.LEFT|wx.TOP, 10)
         vbs.Add(self.__dl_every_wday, 0, wx.LEFT, 10)
         self.__option_bs.Add(vbs, 0, wx.LEFT, 5)
+        self.__daily_option_bs=vbs
         # weekly options widgets
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Weekly Options:'), wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -69,6 +79,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             hbs.Add(self.__wl_dow[i], 0, wx.LEFT|wx.TOP, 5)
         vbs.Add(hbs, 0, wx.LEFT, 5)
         self.__option_bs.Add(vbs, 0, wx.LEFT, 5)
+        self.__weekly_option_bs=vbs
         self.__main_bs.Add(self.__option_bs, 0, wx.LEFT, 5)
         # all done
         self.SetSizer(self.__main_bs)
@@ -175,7 +186,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         pb_editor.DirtyUIBase.__init__(self, parent)
         # structure to hold all the widgets of this panel
         self.__fields=[
-            ['description', 'Description:', DVTextControl, None, None, None],
+            ['description', 'Summary:', DVTextControl, None, None, None],
             ['location', 'Location:', DVTextControl, None, None, None],
             ['allday', 'All-Day:', wx.CheckBox, None, None, None],
             ['start', 'From:', DVDateTimeControl, None, self.__set_start_datetime, None],
@@ -196,8 +207,8 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             gs.Add(t)
             if desc=='Priority:':
                 c=wx.ComboBox(self, -1, "", (-1, -1), (-1, -1),
-                              ['<None>', '1', '2', '3', '4', '5',
-                               '6', '7' ,'8', '9', '10'], wx.CB_DROPDOWN)
+                              ['<None>', '1 - Highest', '2', '3', '4', '5 - Normal',
+                               '6', '7' ,'8', '9', '10 - Lowest'], wx.CB_DROPDOWN)
             else:
                 c=n[self.__class_index](self, -1)
             gs.Add(c, 0, wx.EXPAND, 0)
@@ -331,8 +342,8 @@ class Editor(wx.Dialog):
         ]
     def __init__(self, parent):
 
-        wx.Dialog.__init__(self, parent, -1, title='Calendar Entry Editor',
-                           size=(760, 580),
+        wx.Dialog.__init__(self, parent, -1, 'Calendar Entry Editor',
+                           wx.DefaultPosition, wx.Size(760, 580),
                            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         # the parent is the BPCalenda widget, save it
         self.cw=parent  # also the BPCalendar object
@@ -379,7 +390,10 @@ class Editor(wx.Dialog):
         self.__nb=wx.Notebook(self, -1)
         self.__widgets=[]
         for i, (name, key, klass) in enumerate(self.__items):
-            self.__widgets.append(klass(self.__nb, parent))
+            if name in ('Ringtones', 'Wallpapers'):
+                self.__widgets.append(klass(self.__nb, parent, False))
+            else:
+                self.__widgets.append(klass(self.__nb, parent))
             self.__nb.AddPage(self.__widgets[i], name)
             
         # buttons below fields
@@ -409,6 +423,7 @@ class Editor(wx.Dialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
+        self.SetSize((560, 380))
         # delete is disabled until an item is selected
         self.__delete_btn.Enable(False)
 
@@ -521,6 +536,7 @@ class Editor(wx.Dialog):
 
     def OnCancel(self, evt):
         # just exit
+        self.setdirty(False)
         evt.Skip()
     
     def OnRevertButton(self, evt):

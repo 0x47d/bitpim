@@ -44,7 +44,7 @@ class RingtoneEditor(DirtyUIBase):
 
     _bordersize=3
 
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, has_type=True):
         DirtyUIBase.__init__(self, parent)
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Ringtone"), wx.HORIZONTAL)
 
@@ -52,10 +52,13 @@ class RingtoneEditor(DirtyUIBase):
 
         self.preview=bphtml.HTMLWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
+        vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
         self.type.SetSelection(0)
-        vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        # Hide the 'type' combo box if not requested
+        if not has_type:
+            vs.Hide(1)
 
         hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
 
@@ -164,7 +167,7 @@ class WallpaperEditor(DirtyUIBase):
 
     _bordersize=3 # border inside HTML widget
     
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, has_type=True):
         DirtyUIBase.__init__(self, parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Wallpaper"), wx.HORIZONTAL)
@@ -177,6 +180,9 @@ class WallpaperEditor(DirtyUIBase):
         self.type.SetSelection(0)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(self.type, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        # Hide the 'type' combo box if not requested
+        if not has_type:
+            vs.Hide(1)
 
         hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
 
@@ -477,8 +483,8 @@ class MemoEditor(DirtyUIBase):
 
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.VERTICAL)
 
-        self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE, size=(-1, 150))
-        vs.Add(self.memo, 0, wx.EXPAND|wx.ALL, 5)
+        self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
+        vs.Add(self.memo, 1, wx.EXPAND|wx.ALL, 5)
         wx.EVT_TEXT(self, self.memo.GetId(), self.OnDirtyUI)
         self.SetSizer(vs)
         vs.Fit(self)
