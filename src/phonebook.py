@@ -1179,21 +1179,23 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         assert False, "Can't get here"
         return ""
 
-    def GetValueWithNamedColumn(self, row, column):
-        try:
-            row=self.main.rowdata[self.rowkeys[row]]
-        except:
-            print "bad row", row
-            return "<error>"
-        
-        if column=='Confidence':
+    def GetValueWithNamedColumn(self, row, columnname):
+        row=self.main.rowdata[self.rowkeys[row]]
+        if columnname=='Confidence':
             return row[0]
 
         for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
             if row[i] is not None:
-                return getdata(column, ptr[row[i]], "")
+                return getdata(columnname, ptr[row[i]], "")
         assert False, "Can't get here"
         return ""
+
+    def ShouldColumnBeShown(self, columnname, row):
+        confidence, importedkey, existingkey,  resultkey=self.GetRowData(row)
+        if columnname=="Confidence": return True
+        return (resultkey is not None and getdata(columnname, self.main.resultdata[resultkey], None) is not None) \
+               or (existingkey is not None and getdata(columnname, self.main.existingdata[existingkey], None) is not None) \
+               or (importedkey is not None and getdata(columnname, self.main.importdata[importedkey], None) is not None)
 
     def GetHtmlCellValue(self, row, col, colour=None):
         try:
@@ -1305,6 +1307,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
     def OnDataUpdated(self):
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         wx.Yield() # so the cursor can be displayed
+
         # update row keys
         newkeys=self.main.rowdata.keys()
         oldrows=self.rowkeys
@@ -1318,7 +1321,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         for row in range(len(self.rowkeys)):
             can=[] # cols available now
             for col in colsavail:
-                if len(self.GetValueWithNamedColumn(row, col)):
+                if self.ShouldColumnBeShown(col, row):
                     colsused.append(col)
                 else:
                     can.append(col)
@@ -1333,6 +1336,12 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             sortcolumn=self.columns[self.main.sortedColumn]
         except IndexError:
             sortcolumn=0
+
+        # update view
+        try:
+            currentviewcolumn=colsused.index(currentviewcolumn)
+        except ValueError:
+            currentviewcolumn=0
 
         # update columns
         self.columns=colsused
@@ -1351,12 +1360,20 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         else:
             sortcolumn=self.columns.index(sortcolumn)
 
-        items=[(self.GetValue(row,sortcolumn), row) for row in range(len(self.rowkeys))]
+        # we sort on lower case value, but note that not all columns are strings
+        items=[]
+        for row in range(len(self.rowkeys)):
+            v=self.GetValue(row,sortcolumn)
+            try:
+                items.append((v.lower(), row))
+            except:
+                items.append((v, row))
+            
         items.sort()
         if self.main.sortedColumnDescending:
             items.reverse()
         self.rowkeys=[self.rowkeys[n] for _,n in items]
-        
+
         # update rows
         lo=len(oldrows)
         ln=len(self.rowkeys)
@@ -1370,10 +1387,11 @@ class ImportDataTable(wx.grid.PyGridTableBase):
             self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
+        self.GetView().ClearSelection()
         self.GetView().AutoSize()
-        wx.EndBusyCursor()
         wx.CallAfter(self.GetView().Fit)
         wx.CallAfter(self.sizetwiddle)
+        wx.EndBusyCursor()
 
     def sizetwiddle(self):
         dlg=self.GetView().GetParent().GetParent()
