@@ -68,8 +68,8 @@ class Profile(com_sanyo.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'write', 'OVERWRITE'),
-        ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'write', 'MERGE'),
+        ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
     )
