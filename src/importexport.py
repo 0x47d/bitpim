@@ -171,81 +171,6 @@ class ImportDialog(wx.Dialog):
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
 
-    def OnHeaderToggle(self, _):
-        self.columns=None
-        self.DataNeedsUpdate()
-
-    def OnDelimiterChanged(self, _):
-        "Called when the user has changed the delimiter"
-        text=self.wdelimiter.GetValue()
-        if hasattr(self, "lastwdelimitervalue") and self.lastwdelimitervalue==text:
-            print "on delim changed ignored"
-            return
-
-        if len(text)!=1:
-            if text in self.delimiternames.values():
-                for k in self.delimiternames:
-                    if self.delimiternames[k]==text:
-                        text=k
-            else:
-                if len(text)==0:
-                    text="Comma"
-                else:
-                    text=text[-1]
-                    if text in self.delimiternames:
-                        text=self.delimiternames[text]
-                self.wdelimiter.SetValue(text)
-        self.delimiter=text
-        self.columns=None
-        self.DataNeedsUpdate()
-        # these calls cause another OnDelimiterChanged callback to happen, so we have to stop the loop
-        self.lastwdelimitervalue=self.wdelimiter.GetValue()
-        wx.CallAfter(self.wdelimiter.SetInsertionPointEnd)
-        wx.CallAfter(self.wdelimiter.SetMark, 0,len(self.wdelimiter.GetValue()))
-
-    def OnQualifierChanged(self,_):
-        "Called when the user has changed the qualifier"
-        # Very similar to the above function
-        text=self.wqualifier.GetValue()
-        if hasattr(self, "lastwqualifiervalue") and self.lastwqualifiervalue==text:
-            return
-        if len(text)!=1:
-            if text=='(None)':
-                text=None
-            else:
-                if len(text)==0:
-                    self.wqualifier.SetValue('(None)')
-                    text=None
-                else:
-                    text=text[-1]
-                    self.wqualifier.SetValue(text)
-        self.qualifier=text
-        self.columns=None
-        self.DataNeedsUpdate()
-        self.lastwqualifiervalue=self.wqualifier.GetValue()
-        wx.CallAfter(self.wqualifier.SetInsertionPointEnd)
-        wx.CallAfter(self.wqualifier.SetMark, 0,len(self.wqualifier.GetValue()))
-        
-    def OnColumnsNameChanged(self,_):
-        if self.wcolumnsname.GetValue()=="Custom":
-            self.wsave.Enable(True)
-            return
-        self.wsave.Enable(False)
-        str=self.wcolumnsname.GetValue()
-        for file in guihelper.getresourcefiles("*.pdc"):
-            f=open(file, "rt")
-            desc=f.readline().strip()
-            if desc==str:
-                self.columns=map(string.strip, f.readlines())
-                for i in range(len(self.columns)):
-                    if self.columns[i] not in self.possiblecolumns:
-                        print self.columns[i],"is not a valid column name!"
-                        self.columns[i]="<ignore>"
-                self.DataNeedsUpdate()
-                f.close()
-                return
-            f.close()
-        print "didn't find pdc for",str
 
     def OnOk(self,_):
         "Ok button was pressed"
@@ -388,9 +313,7 @@ class ImportDialog(wx.Dialog):
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         wx.Yield() # so the cursor can be displayed
         # reread the data
-        self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
-        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
-        self.FigureOutColumns()
+        self.ReReadData()
         # now filter the data if needed
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             newdata=[]
@@ -468,40 +391,6 @@ class ImportDialog(wx.Dialog):
         self.preview.AutoSizeRows()
         self.preview.EndBatch()
 
-    def FigureOutColumns(self):
-        "Initialize the columns variable, using header row if there is one"
-        numcols=max(map(lambda x: len(x), self.data))
-        # normalize number of columns
-        for row in self.data:
-            while len(row)<numcols:
-                row.append('')
-        guesscols=False
-        if not hasattr(self, "columns") or self.columns is None:
-            self.columns=["<ignore>"]*numcols
-            guesscols=True
-        while len(self.columns)<numcols:
-            self.columns.append("<ignore>")
-        self.columns=self.columns[:numcols]
-        if not self.wfirstisheader.GetValue():
-            return
-        headers=self.data[0]
-        self.data=self.data[1:]
-        if not guesscols:
-            return
-        mungedcolumns=[]
-        for c in self.possiblecolumns:
-            mungedcolumns.append("".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", c.lower())))
-        # look for header in possible columns
-        for col,header in zip(range(numcols), headers):
-            if header in self.possiblecolumns:
-                self.columns[col]=header
-                continue
-            h="".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", header.lower()))
-            
-            if h in mungedcolumns:
-                self.columns[col]=self.possiblecolumns[mungedcolumns.index(h)]
-                continue
-            # here is where we would do some mapping
 
       
 class ImportCSVDialog(ImportDialog):
@@ -593,10 +482,152 @@ class ImportCSVDialog(ImportDialog):
             self.predefinedcolumns.append(f.readline().strip())
             f.close()
 
+    def OnHeaderToggle(self, _):
+        self.columns=None
+        self.DataNeedsUpdate()
+
+    def OnDelimiterChanged(self, _):
+        "Called when the user has changed the delimiter"
+        text=self.wdelimiter.GetValue()
+        if hasattr(self, "lastwdelimitervalue") and self.lastwdelimitervalue==text:
+            print "on delim changed ignored"
+            return
+
+        if len(text)!=1:
+            if text in self.delimiternames.values():
+                for k in self.delimiternames:
+                    if self.delimiternames[k]==text:
+                        text=k
+            else:
+                if len(text)==0:
+                    text="Comma"
+                else:
+                    text=text[-1]
+                    if text in self.delimiternames:
+                        text=self.delimiternames[text]
+                self.wdelimiter.SetValue(text)
+        self.delimiter=text
+        self.columns=None
+        self.DataNeedsUpdate()
+        # these calls cause another OnDelimiterChanged callback to happen, so we have to stop the loop
+        self.lastwdelimitervalue=self.wdelimiter.GetValue()
+        wx.CallAfter(self.wdelimiter.SetInsertionPointEnd)
+        wx.CallAfter(self.wdelimiter.SetMark, 0,len(self.wdelimiter.GetValue()))
+
+    def OnQualifierChanged(self,_):
+        "Called when the user has changed the qualifier"
+        # Very similar to the above function
+        text=self.wqualifier.GetValue()
+        if hasattr(self, "lastwqualifiervalue") and self.lastwqualifiervalue==text:
+            return
+        if len(text)!=1:
+            if text=='(None)':
+                text=None
+            else:
+                if len(text)==0:
+                    self.wqualifier.SetValue('(None)')
+                    text=None
+                else:
+                    text=text[-1]
+                    self.wqualifier.SetValue(text)
+        self.qualifier=text
+        self.columns=None
+        self.DataNeedsUpdate()
+        self.lastwqualifiervalue=self.wqualifier.GetValue()
+        wx.CallAfter(self.wqualifier.SetInsertionPointEnd)
+        wx.CallAfter(self.wqualifier.SetMark, 0,len(self.wqualifier.GetValue()))
+        
+    def OnColumnsNameChanged(self,_):
+        if self.wcolumnsname.GetValue()=="Custom":
+            self.wsave.Enable(True)
+            return
+        self.wsave.Enable(False)
+        str=self.wcolumnsname.GetValue()
+        for file in guihelper.getresourcefiles("*.pdc"):
+            f=open(file, "rt")
+            desc=f.readline().strip()
+            if desc==str:
+                self.columns=map(string.strip, f.readlines())
+                for i in range(len(self.columns)):
+                    if self.columns[i] not in self.possiblecolumns:
+                        print self.columns[i],"is not a valid column name!"
+                        self.columns[i]="<ignore>"
+                self.DataNeedsUpdate()
+                f.close()
+                return
+            f.close()
+        print "didn't find pdc for",str
+
+    def ReReadData(self):
+        self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
+        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
+        self.FigureOutColumns()
+
+    def FigureOutColumns(self):
+        "Initialize the columns variable, using header row if there is one"
+        numcols=max(map(lambda x: len(x), self.data))
+        # normalize number of columns
+        for row in self.data:
+            while len(row)<numcols:
+                row.append('')
+        guesscols=False
+        if not hasattr(self, "columns") or self.columns is None:
+            self.columns=["<ignore>"]*numcols
+            guesscols=True
+        while len(self.columns)<numcols:
+            self.columns.append("<ignore>")
+        self.columns=self.columns[:numcols]
+        if not self.wfirstisheader.GetValue():
+            return
+        headers=self.data[0]
+        self.data=self.data[1:]
+        if not guesscols:
+            return
+        mungedcolumns=[]
+        for c in self.possiblecolumns:
+            mungedcolumns.append("".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", c.lower())))
+        # look for header in possible columns
+        for col,header in zip(range(numcols), headers):
+            if header in self.possiblecolumns:
+                self.columns[col]=header
+                continue
+            h="".join(filter(lambda x: x in "abcdefghijklmnopqrstuvwxyz0123456789", header.lower()))
+            
+            if h in mungedcolumns:
+                self.columns[col]=self.possiblecolumns[mungedcolumns.index(h)]
+                continue
+            # here is where we would do some mapping
+
+class ImportOutlookDialog(ImportDialog):
+
+    def __init__(self, parent, id, title, outlook):
+        self.outlook=outlook
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing Outlook Contacts.  Select the folder to import, and do any filtering necessary.</body></html>' % (bg.Red(), bg.Green(), bg.Blue()), \
+                (600,30)
+
+    def getcontrols(self, vbs):
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        # label
+        hbs.Add(wx.StaticText(self, -1, "Folder"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        # where the folder name goes
+        self.folder=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        hbs.Add(self.folder, 1, wx.EXPAND|wx.ALL, 2)
+        # browse button
+        self.folderbrowse=wx.Button(self, wx.NewId(), "Browse ...")
+        hbs.Add(self.folderbrowse, 0, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        # sort out folder
+        of=wx.GetApp().config.Read("outlookcontacts", "")
+
 
 
 def OnFileImportCSV(parent):
-    print "fileimportcsv"
     dlg=wx.FileDialog(parent, "Import CSV file",
                       wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
                       style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
@@ -617,3 +648,10 @@ def OnFileImportCSV(parent):
         
 def OnFileImportOutlookContacts(parent):
     import native.outlook
+    dlg=ImportOutlookDialog(parent, -1, "Import Outlook Contacts", native.outlook)
+    data=None
+    if dlg.ShowModal()==wx.ID_OK:
+        data=dlg.GetFormattedData()
+    dlg.Destroy()
+    if data is not None:
+        parent.phonewidget.importdata(data, merge=True)
