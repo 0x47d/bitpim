@@ -42,10 +42,10 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         com_sanyomedia.SanyoMedia.__init__(self)
         self.mode=self.MODENONE
 
-    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=2):
+    def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=2, returnerror=False):
          
         # writemode seems not to be needed for this phone
-        res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=False, numsendretry=numsendretry)
+        res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=False, numsendretry=numsendretry, returnerror=returnerror)
         return res
  
 
@@ -58,6 +58,21 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         result = com_sanyo.Phone.savecalendar(self, dict, merge)
     
 class Profile(com_sanyo.Profile):
+
+    WALLPAPER_WIDTH=132
+    WALLPAPER_HEIGHT=176
+    OVERSIZE_PERCENTAGE=100
+    
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+    )
 
     def __init__(self):
         com_sanyo.Profile.__init__(self)
