@@ -51,6 +51,9 @@ evolutionbasedir=os.path.join(userdir, evolutionpath)
 
 
 def getcontacts(folder):
+    """Returns the contacts as a list of string vcards
+
+    Note that the Windows EOL convention is used"""
     dir=os.path.expanduser(folder)
     p=os.path.join(dir, "addressbook.db")
     if not os.path.isfile(p):
@@ -61,7 +64,12 @@ def getcontacts(folder):
     res=[]
     db=bsddb.hashopen(p, 'r')
     for key in db.keys():
-        res.append(db[key])
+        if key.startswith("PAS-DB-VERSION"): # no need for this field
+            continue
+        data=db[key]
+        while data[-1]=="\x00": # often has actual null on the end
+            data=data[:-1]  
+        res.append(data)
     db.close()
     return res
 
@@ -231,8 +239,9 @@ if __name__=="__main__":
 
     app=wx.PySimpleApp()
     
-    print pickfolder()
+    folder=pickfolder()
+    print folder
 
-
+    print "\n".join(getcontacts(folder))
                      
             
