@@ -73,8 +73,8 @@ class Phone(com_lgvx4400.Phone):
 
 
 class Profile(com_lgvx4400.Profile):
-
-    serialsname='lgvx4500'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
