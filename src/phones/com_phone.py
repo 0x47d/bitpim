@@ -16,6 +16,7 @@ import copy
 import re
 import time
 
+
 # when trying to setmode, we ignore various exception types
 # since the types are platform specific (eg on windows we get pywintypes.error)
 # so we have to construct the list here of which ones we ignore
@@ -41,6 +42,7 @@ class Phone:
     def __init__(self, logtarget, commport):
         self.logtarget=logtarget
         self.comm=commport
+        self.mode=self.MODENONE
 
     def close(self):
         self.comm.close()
@@ -125,3 +127,71 @@ class Phone:
             except modeignoreerrortypes:
                 pass
         return False       
+
+class Profile:
+
+    WALLPAPER_WIDTH=100
+    WALLPAPER_HEIGHT=100
+    MAX_WALLPAPER_BASENAME_LENGTH=64
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_CONVERT_FORMAT="bmp"
+
+    # which usb ids correspond to us
+    usbids=( 
+        )
+    # which device classes we are.
+    deviceclasses=("modem", "serial")
+
+    _supportedsyncs=(
+        )
+
+    def SyncQuery(self, source, action, type):
+        if (source, action, type) in self._supportedsyncs or \
+           (source, action, None) in self._supportedsyncs:
+            return True
+        return False
+
+
+class NoFilesystem:
+
+    def __raisefna(self, desc):
+        raise common.FeatureNotAvailable(self.desc+" on "+self.comm.port, desc+" is not available with this model phone")
+
+    def getfirmwareinformation(self):
+        self.__raisefna("getfirmwareinformation")
+
+    def offlinerequest(self, reset=False):
+        self.__raisefna("offlinerequest")
+
+    def mkdir(self, name):
+        self.__raisefna("filesystem (mkdir)")
+        
+    def mkdirs(self, name):
+        self.__raisefna("filesystem (mkdirs)")
+
+    def rmdir(self, name):
+        self.__raisefna("filesystem (rmdir)")
+
+    def rmfile(self, name):
+        self.__raisefna("filesystem (rmfile)")
+
+    def getfilesystem(self, dir="", recurse=0):
+        self.__raisefna("filesystem (getfilesystem)")
+
+    def writefile(self, name, contents):
+        self.__raisefna("filesystem (writefile)")
+
+    def getfilecontents(self, name):
+        self.__raisefna("filesystem (getfilecontents)")
+
+    
+        
+
+        
+
+        
+
+        
+
+        
+    
