@@ -89,6 +89,29 @@ for idmapname in locals().keys():
 ### Various functions not attached to classes
 ###
 
+
+# These are the mime-types as used internally in wxWidgets
+_wxmimemapping={
+    'bmp': 'image/x-bmp',
+    'ico': 'image/x-ico',
+    'cur': 'image/x-cur',
+    'ani': 'image/x-ani',
+    'gif': 'image/gif',
+    'iff': 'image/iff',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'pcx': 'image/pcx',
+    'png': 'image/png',
+    'pnm': 'image/pnm',
+    'xpm': 'image/xpm',
+    }
+
+def getwxmimetype(filename):
+    "Returns wx's mime type for the extension of filename, or None"
+    return _wxmimemapping.get(getextension(filename.lower()), None)
+
+
+
 # Filename functions.  These work on brew names which use forward slash /
 # as the directory delimiter.  The builtin Python functions can't be used
 # as they are platform specific (eg they use \ on Windows)
