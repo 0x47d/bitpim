@@ -11,6 +11,35 @@
 
 # This design is with apologies to Alan Cooper
 
+"""To use this control, you should subclass Calendar.  You need to
+implement the following methods:
+
+OnGetEntries(self, year, month, day):
+
+    Return a list of entries for the specified y,m,d.  The format is
+    ( (hour,min,desc), (hour,min,desc)... )  Hour should be in 24 hour
+    format.
+
+    Note that Calendar does not cache any results so you will be
+    asked for the same dates as the user scrolls around.
+
+The following methods you may want to call at some point:
+
+RefreshEntry(year, month, day):
+
+    Causes that date's entries to be refreshed.  Note that your OnGetEntries
+    will only be called if the date is currently visible.
+
+RefreshAllEntries():
+
+    Call this if you have completely changed all your data.  OnGetEntries
+    will be called for each visible day.
+    
+"""
+       
+
+
+
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
 from wxPython.calendar import *
@@ -106,16 +135,7 @@ class CalendarCell(wxWindow):
         self.month=3
         self.buffer=None
         self.needsupdate=True
-
-        # Some fake entries for testing
-        self.entries=(
-            (1, 88, "Early morning"),
-            (10,15, "Some explanatory text" ),
-            (11,11, "Look at me!"),
-            (12,30, "More text here"),
-            (15,30, "A very large amount of text that will never fit"),
-            (20,30, "Evening drinks"),
-            )
+        self.entries=()
 
         EVT_PAINT(self, self.OnPaint)
         EVT_SIZE(self, self.OnSize)
@@ -134,6 +154,11 @@ class CalendarCell(wxWindow):
 
     def setattr(self, attr):
         self.attr=attr
+        self.needsupdate=True
+        self.Refresh(False)
+
+    def setentries(self, entries):
+        self.entries=entries
         self.needsupdate=True
         self.Refresh(False)
 
@@ -176,6 +201,9 @@ class CalendarCell(wxWindow):
             x=self.width-(w+5)
         dc.DrawText(`self.day`, x, 0)
 
+        if len(self.entries)==0:
+            return
+        
         entrystart=h # +5
         dc.DestroyClippingRegion()
         dc.SetClippingRegion( 0, entrystart, self.width, self.height-entrystart)
@@ -414,6 +442,11 @@ class Calendar(wxPanel):
         EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         # grab key down from all children
         map(lambda child: EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
+        # and mousewheel
+        map(lambda child: EVT_MOUSEWHEEL(child, self.OnMouseWheel), self.GetChildren())
+        # grab left down from all cells
+        for r in self.rows:
+            map(lambda cell: EVT_LEFT_DOWN(cell, self.OnLeftDown), r)
 
         self.selectedcell=(-1,-1)
         self.selecteddate=(-1,-1,-1)
@@ -441,6 +474,14 @@ class Calendar(wxPanel):
            self.setday(*normalizedate( self.selecteddate[0], self.selecteddate[1]+1, self.selecteddate[2]) )
         else:
            event.Skip()  # control can have it
+
+    def OnMouseWheel(self, event):
+        lines=event.GetWheelRotation()/event.GetWheelDelta()
+        self.scrollby(-7*lines)
+
+    def OnLeftDown(self, event):
+        cell=event.GetEventObject()
+        self.setselection(cell.year, cell.month, cell.day)
 
     def OnYearButton(self, event):
         self.popupcalendar.Popup( * (self.selecteddate + (event,)) )
@@ -508,6 +549,26 @@ class Calendar(wxPanel):
           self.label.changenotify()
           self.ensureallpainted()
 
+    def isvisible(self, year, month, day):
+       y,m,d=self.rows[0][0].year, self.rows[0][0].month, self.rows[0][0].day
+       if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
+           return False
+       y,m,d=self.rows[-1][-1].year, self.rows[-1][-1].month, self.rows[-1][-1].day
+       if year>y or (year>=y and month>m) or (year>=y and month>=m and day>d):
+           return False
+       return True
+
+    def RefreshEntry(self, year, month, day):
+       if self.isvisible(year,month,day):
+           # ::TODO:: find correct cell and only update that
+           self.RefreshAllEntries()
+   
+    def RefreshAllEntries(self):
+       for row in self.rows:
+           for cell in row:
+               cell.setentries(self.OnGetEntries(cell.year, cell.month, cell.day))
+
+   
     def setselection(self, year, month, day):
        self.selecteddate=(year,month,day)
        d=calendar.weekday(year, month, day)
@@ -535,7 +596,8 @@ class Calendar(wxPanel):
           self.rows[row][column].setattr(self.attrevenmonth)
        if y!=-1 and row==0 and column==0:
           self.year.SetLabel(`y`)
-        # ::TODO:: get events for this day if y,m,d !=-1
+       if y!=-1:
+           self.rows[row][column].setentries(self.OnGetEntries(y,m,d))
 
     def updaterow(self, row, y, m, d):
         daysinmonth=monthrange(y, m)
@@ -550,6 +612,18 @@ class Calendar(wxPanel):
                 daysinmonth=monthrange(y, m)
             else:
                 d+=1
+
+    def OnGetEntries(self, year, month, day):
+        return (
+            (1, 88, "Early morning"),
+            (10,15, "Some explanatory text" ),
+            (10,30, "It is %04d-%02d-%02d" % (year,month,day)),
+            (11,11, "Look at me!"),
+            (12,30, "More text here"),
+            (15,30, "A very large amount of text that will never fit"),
+            (20,30, "Evening drinks"),
+            )
+
 
 
 class PopupCalendar(wxDialog):
