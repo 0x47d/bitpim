@@ -136,16 +136,29 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         req=self.protocolclass.pbinforequest()
         res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numentries=res.numentries
-        self.log("There are %d entries" % (numentries,))
+        if numentries<0 or numentries>1000:
+            self.log("The phone is lying about how many entries are in the phonebook so we are doing it the hard way")
+            numentries=0
+            firstserial=None
+            loop=xrange(0,1000)
+            hardway=True
+        else:
+            self.log("There are %d entries" % (numentries,))
+            loop=xrange(0, numentries)
+            hardway=False
         # reset cursor
         self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
         problemsdetected=False
         dupecheck={}
-        for i in xrange(0, numentries):
+        for i in loop:
+            if hardway:
+                numentries+=1
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             entry=self.extractphonebookentry(res.entry, speeds, result)
+            if hardway and firstserial is None:
+                firstserial=res.entry.serial1
             pbook[i]=entry
             if res.entry.serial1 in dupecheck:
                 self.log("Entry %s has same serial as entry %s.  This will cause problems." % (`entry`, dupecheck[res.entry.serial1]))
@@ -155,7 +168,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
-            self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
+            res=self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
+            if hardway:
+                # look to see if we have looped
+                if res.serial==firstserial or res.serial==0:
+                    break
 
         self.progress(numentries, numentries, "Phone book read completed")
 
@@ -191,6 +208,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def savephonebook(self, data):
         "Saves out the phonebook"
         self.savegroups(data)
+ 
+        progressmax=len(data['phonebook'].keys())
+        # if we are going to write out speeddials, we have to re-read the entire
+        # phonebook again
+        if data.get('speeddials',None) is not None:
+            progressmax+=len(data['phonebook'].keys())
 
         # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
@@ -206,31 +229,44 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         req=self.protocolclass.pbinforequest()
         res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numexistingentries=res.numentries
-        progressmax=numexistingentries+len(data['phonebook'].keys())
-        # if we are going to write out speeddials, we have to re-read the entire
-        # phonebook again
-        if data.get('speeddials',None) is not None:
-            progressmax+=len(data['phonebook'].keys())
-
+        if numexistingentries<0 or numexistingentries>1000:
+            self.log("The phone is lying about how many entries are in the phonebook so we are doing it the hard way")
+            numexistingentries=0
+            firstserial=None
+            loop=xrange(0,1000)
+            hardway=True
+        else:
+            self.log("There are %d existing entries" % (numexistingentries,))
+            progressmax+=numexistingentries
+            loop=xrange(0, numexistingentries)
+            hardway=False
         progresscur=0
-        self.log("There are %d existing entries" % (numexistingentries,))
         # reset cursor
         self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
-        for i in range(0, numexistingentries):
+        for i in loop:
             ### Read current entry
+            if hardway:
+                numexistingentries+=1
+                progressmax+=1
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             
             entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1,
                     'serial2': res.entry.serial2, 'name': res.entry.name}
             assert entry['serial1']==entry['serial2'] # always the same
-            self.log("Reading entry "+`i`+" - "+entry['name'])            
+            self.log("Reading entry "+`i`+" - "+entry['name'])
+            if hardway and firstserial is None:
+                firstserial=res.entry.serial1
             existingpbook[i]=entry 
             self.progress(progresscur, progressmax, "existing "+entry['name'])
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
-            self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
+            res=self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
             progresscur+=1
+            if hardway:
+                # look to see if we have looped
+                if res.serial==firstserial or res.serial==0:
+                    break
         # we have now looped around back to begining
 
         # Find entries that have been deleted
@@ -779,7 +815,7 @@ class Profile(com_phone.Profile):
                         e['group']=0
 
                 # email addresses
-                emails=helper.getemails(entry.get('emails', []) ,0,3,48)
+                emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass._NUMEMAILS,48)
                 e['emails']=helper.filllist(emails, self.protocolclass._NUMEMAILS, "")
 
                 # url
