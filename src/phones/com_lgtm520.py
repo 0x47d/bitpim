@@ -134,4 +134,5 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         return time.localtime(val)[:5]
 
 class Profile:
-    pass
+    WALLPAPER_WIDTH=100
+    WALLPAPER_HEIGHT=100

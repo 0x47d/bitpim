@@ -774,6 +774,9 @@ class SanyoPhonebook:
 class Profile:
     serialsname='sanyo'
 
+    WALLPAPER_WIDTH=100
+    WALLPAPER_HEIGHT=100
+
     def __init__(self):
         pass
     
