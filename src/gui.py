@@ -789,6 +789,7 @@ class MainWindow(wxFrame):
 
     def OnDataSendPhoneResults(self, funcscb, exception, results):
         if self.HandleException(exception): return
+        print results.keys()
         return
         # ::TODO:: process results of sending phone data
         for f in funcscb:
