@@ -9,20 +9,25 @@
 ### $Id$
 
 """Communicate with a Samsung SCH-Axx phone using AT commands"""
+# standard modules
+import copy
 import datetime
+import re
+import time
 
+# site-packages
+from DSV import DSV
+
+# BitPim modules
 import bpcalendar
-import p_brew
 import com_brew
 import com_phone
 import common
 import commport
-import copy
 import memo
-import time
+import p_brew
+import sms
 import todo
-import re
-from DSV import DSV
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
@@ -266,6 +271,31 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             return True
         except:
             return False
+
+    def get_sms_inbox(self, entry_index):
+        try:
+            s=self.comm.sendatcommand('#psrmr=%d'%entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
+    def get_sms_saved(self, entry_index):
+        try:
+            s=self.comm.sendatcommand('#psfmr=%d'%entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
+    def get_sms_sent(self, entry_index):        
+        try:
+            s=self.comm.sendatcommand('#pssmr=%d'%entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
 
     def extract_timedate(self, td):
         # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
@@ -805,3 +835,137 @@ class TodoList(object):
         for i in xrange(cnt, self.__td_max_entries):
             self.__phone.progress(i, self.__td_max_entries, 'Deleting entry: '+str(i))
             self.__phone.save_todo_entry(`i`)
+
+#-------------------------------------------------------------------------------
+class SMS_Generic_List(object):
+    def __init__(self, phone):
+        self._phone=phone
+        self._data={}
+    def get(self):
+        return self._data.copy()
+    def read(self):
+        raise NotImplementedError
+
+#-------------------------------------------------------------------------------
+class SMS_Inbox_List(SMS_Generic_List):
+    __max_entries=100
+    __valid_range=xrange(__max_entries)
+    __datetime_index=3
+    __body_index=4
+    __callback_index=5
+    __field_num=6
+    def __init__(self, phone):
+        super(SMS_Inbox_List, self).__init__(phone)
+    def read(self):
+        for i in self.__valid_range:
+            self._phone.progress(i, self.__max_entries,
+                                 'Reading SMS Inbox Entry '+str(i))
+            s=self._phone.get_sms_inbox(i)
+            if len(s)==self.__field_num:
+                e=sms.SMSEntry()
+                e.folder=e.Folder_Inbox
+                e.datetime=s[self.__datetime_index]
+                e._from, e.subject, e.text=self.__extract_body(s[self.__body_index])
+                e.callback=s[self.__callback_index]
+                self._data[e.id]=e
+
+    def __extract_body(self, s):
+        # extract different components from the main text body
+        _from=None
+        l=s.split(' ')
+        ss=l[0]
+        if ss.find('@') != -1:
+            # this the 'from' email address
+            _from=ss
+            l=l[1:]
+            ss=l[0]
+        _subj=[]
+        if ss[0]=='(':
+            while True:
+                _subj.append(ss)
+                l=l[1:]
+                if ss[-1]==')':
+                    break
+                ss=l[0]
+        return (_from, ' '.join(_subj), ' '.join(l))
+
+#-------------------------------------------------------------------------------
+class SMS_Saved_List(SMS_Generic_List):
+    __max_entries=20
+    __valid_range=xrange(__max_entries)
+    __field_num=5
+    __datetime_index=1
+    __from_index=2
+    __body_index=4
+    def __init__(self, phone):
+        super(SMS_Saved_List, self).__init__(phone)
+    def read(self):
+        for i in self.__valid_range:
+            self._phone.progress(i, self.__max_entries,
+                                 'Reading SMS Saved Entry '+str(i))
+            s=self._phone.get_sms_saved(i)
+            if len(s)==self.__field_num:
+                e=sms.SMSEntry()
+                e.folder=e.Folder_Saved
+                e.datetime=s[self.__datetime_index]
+                e._from=s[self.__from_index]
+                e.subject, e.text=self.__extract_body(s[self.__body_index])
+                self._data[e.id]=e
+    def __extract_body(self, s):
+        # extract different components from the main text body
+        l=s.split(' ')
+        ss=l[0]
+        _subj=[]
+        if ss[0]=='(':
+            while True:
+                _subj.append(ss)
+                l=l[1:]
+                if ss[-1]==')':
+                    break
+                ss=l[0]
+        return (' '.join(_subj), ' '.join(l))
+                
+#-------------------------------------------------------------------------------
+class SMS_Sent_List(SMS_Generic_List):
+    __max_entries=100
+    __valid_range=xrange(__max_entries)
+    __field_num=5
+    __datetime_index=1
+    __to_index=2
+    __from_index=3
+    __text_index=4
+    def __init__(self, phone):
+        super(SMS_Sent_List, self).__init__(phone)
+    def read(self):
+        for i in self.__valid_range:
+            self._phone.progress(i, self.__max_entries,
+                                 'Reading SMS Sent Entry '+str(i))
+            s=self._phone.get_sms_sent(i)
+            if len(s)==self.__field_num:
+                e=sms.SMSEntry()
+                e.folder=e.Folder_Sent
+                e.datetime=s[self.__datetime_index]
+                e._to=s[self.__to_index]
+                e._from=s[self.__from_index]
+                e.text=s[self.__text_index]
+                self._data[e.id]=e
+
+#-------------------------------------------------------------------------------
+class SMSList(object):
+    def __init__(self, phone):
+        self.__phone=phone
+        self.__inbox=SMS_Inbox_List(phone)
+        self.__saved=SMS_Saved_List(phone)
+        self.__sent=SMS_Sent_List(phone)
+        self.__data={}
+    def get(self):
+        return self.__data.copy()
+    def read(self):
+        self.__inbox.read()
+        self.__data.update(self.__inbox.get())
+        self.__saved.read()
+        self.__data.update(self.__saved.get())
+        self.__sent.read()
+        self.__data.update(self.__sent.get())
+
+#-------------------------------------------------------------------------------

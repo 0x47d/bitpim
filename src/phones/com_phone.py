@@ -144,6 +144,8 @@ class Phone:
 
     def gettodo(self, result):
         return {}
+    def getsms(self, result):
+        return {}
 
 class Profile:
 

@@ -46,6 +46,7 @@ import database
 import memo
 import update
 import todo
+import sms_tab
 
 ###
 ### Used to check our threading
@@ -673,6 +674,8 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.memowidget, "Memo")
         self.todowidget=todo.TodoWidget(self, self.nb)
         self.nb.AddPage(self.todowidget, 'Todo')
+        self.smswidget=sms_tab.SMSWidget(self, self.nb)
+        self.nb.AddPage(self.smswidget, 'SMS')
 
         ### logwindow (last notebook tab)
         self.lw=guiwidgets.LogWindow(self.nb)
@@ -930,6 +933,14 @@ class MainWindow(wx.Frame):
             if v=='MERGE': raise NotImplementedError
             self.todowidget.populatefs(results)
             self.todowidget.populate(results)
+        # SMS
+        if results['sync'].has_key('sms'):
+            v=results['sync']['sms']
+            if v=='MERGE':
+                self.smswidget.merge(results)
+            else:
+                self.smswidget.populatefs(results)
+                self.smswidget.populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -1003,6 +1014,8 @@ class MainWindow(wx.Frame):
             self.todowidget.getdata(data)
             todo.append((self.wt.writetodo, "Todo", merge))
 
+        ### SMS, nothing to send, yet!
+
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
@@ -1040,6 +1053,7 @@ class MainWindow(wx.Frame):
             self.calendarwidget.getfromfs(results)
             self.memowidget.getfromfs(results)
             self.todowidget.getfromfs(results)
+            self.smswidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -1053,6 +1067,8 @@ class MainWindow(wx.Frame):
             self.memowidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.todowidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.smswidget.populate(results)
             # close the splash screen if it is still up
             self.CloseSplashScreen()
         finally:
@@ -1352,7 +1368,8 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetWallpaperSetting, self.commphone.getwallpapers, "Wallpaper", "wallpaper"),
             (req.GetRingtoneSetting, self.commphone.getringtones, "Ringtones", "ringtone"),
             (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo"),
-            (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo")):
+            (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo"),
+            (req.GetSMSSetting, self.commphone.getsms, "SMS", "sms")):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
