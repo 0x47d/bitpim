@@ -16,6 +16,8 @@ It invokes BitPim in gui or commandline mode as appropriate
 @Note: Only gui mode is supported at the moment
 """
 
+import sys
+
 # only gui mode support at the moment
 
 if __debug__:
