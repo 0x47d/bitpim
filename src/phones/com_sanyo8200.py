@@ -42,6 +42,7 @@ class Phone(com_sanyonewer.Phone):
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
+        self.numbertypetab=numbertypetab
 
 class Profile(com_sanyonewer.Profile):
 
@@ -59,3 +60,4 @@ class Profile(com_sanyonewer.Profile):
 
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
+        self.numbertypetab=numbertypetab
