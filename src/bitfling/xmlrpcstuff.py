@@ -404,6 +404,26 @@ class Server(threading.Thread):
             return params[0]+params[1]
         raise Exception("Unknown method "+method)
 
+# Copied from xmlrpclib.  This version is slightly modified to be derived from
+# object.  The reason is that if you print a _Method object, then the __str__
+# method is called, which tries to do it over XML-RPC!  Deriving from object
+# causes that and many other methods to be already present so it isn't a
+# problem.
+
+class _Method(object):
+    # some magic to bind an XML-RPC method to an RPC server.
+    # supports "nested" methods (e.g. examples.getStateName)
+    def __init__(self, send, name):
+        self.__send = send
+        self.__name = name
+    def __getattr__(self, name):
+        return _Method(self.__send, "%s.%s" % (self.__name, name))
+    def __call__(self, *args):
+        return self.__send(self.__name, args)
+
+class CertificateNotAcceptedException(Exception):
+    pass
+
 class ServerProxy:
     def __init__(self, username, password, host, port, certverifier=None):
         self.__username=username
@@ -412,6 +432,12 @@ class ServerProxy:
         self.__port=port
         self.__channel=None
         self.__certverifier=certverifier
+
+    def __str__(self):
+        return "<XML-RPC over SSH proxy for %s @ %s:%d>" % (self.__username, self.__host, self.__port)
+
+    def __repr__(self):
+        return "<XML-RPC over SSH proxy for %s @ %s:%d>" % (self.__username, self.__host, self.__port)
 
     def __makeconnection(self):
         self.__channel=None
@@ -426,9 +452,9 @@ class ServerProxy:
             raise Exception("No SSH on the other end: %s/%d" % (self.__host, self.__port) )
         keytype, hostkey=t.get_remote_server_key()
         if self.__certverifier is not None:
-            res=self.__certverifier(self.__host, keytype, hostkey)
+            res=self.__certverifier( (self.__host, self.__port), keytype, hostkey)
             if not res:
-                raise Exception("Certificate not accepted")
+                raise CertificateNotAcceptedException("Certificate not accepted for  %s @ %s:%d" % (self.__username, self.__host, self.__port))
         event=threading.Event()
         t.auth_password(self.__username, self.__password, event)
         event.wait(20)
@@ -437,9 +463,13 @@ class ServerProxy:
     def __ensure_channel(self):
         if self.__channel is None:
             self.__makeconnection()
+        if self.__channel is None:
+            raise Exception("Unable to properly connect")
 
     def __getattr__(self, name):
-        return xmlrpclib._Method(self.__send, name)
+        if name.startswith("__"):
+            raise Exception("Bad method "+`name`)
+        return _Method(self.__send, name)
 
     def __recvall(self, channel, amount):
         result=""
