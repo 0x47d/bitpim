@@ -66,7 +66,8 @@ class Phone(com_lg.LGDirectoryMedia,com_lgvx4400.Phone):
         self.mode=self.MODENONE
 
 
-class Profile(com_lgvx4400.Profile):
+parentprofile=com_lgvx4400.Profile
+class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
@@ -78,6 +79,23 @@ class Profile(com_lgvx4400.Profile):
 
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
-    
+
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 120, 'height': 131, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 120, 'height': 131, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 120, 'height': 160, 'format': "BMP"}))
+
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+
     def __init__(self):
-        com_lgvx4400.Profile.__init__(self)
+        parentprofile.__init__(self)

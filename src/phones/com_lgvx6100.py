@@ -95,11 +95,12 @@ class Phone(com_lgvx4400.Phone):
                 index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
 
-class Profile(com_lgvx4400.Profile):
+parentprofile=com_lgvx4400.Profile
+class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
-    WALLPAPER_WIDTH=132
+    WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=148
     MAX_WALLPAPER_BASENAME_LENGTH=36
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
@@ -107,6 +108,27 @@ class Profile(com_lgvx4400.Profile):
    
     MAX_RINGTONE_BASENAME_LENGTH=32
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
+
+    # nb we don't allow save to camera so it isn't listed here
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "mms"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "drm"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 128, 'height': 148, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 128, 'height': 148, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 128, 'height': 160, 'format': "JPEG"}))
+    # can the outside lcd display images?
+    #imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
+    #                                  {'width': 96, 'height': 64, 'format': "JPEG"}))
+    
  
     def __init__(self):
-        com_lgvx4400.Profile.__init__(self)
+        parentprofile.__init__(self)

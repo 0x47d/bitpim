@@ -60,7 +60,8 @@ class Phone(com_lg.LGNewIndexedMedia,com_lgvx4400.Phone):
         com_lg.LGNewIndexedMedia.__init__(self)
         self.mode=self.MODENONE
 
-class Profile(com_lgvx4400.Profile):
+parentprofile=com_lgvx4400.Profile
+class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
@@ -72,9 +73,30 @@ class Profile(com_lgvx4400.Profile):
    
     MAX_RINGTONE_BASENAME_LENGTH=32
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+
+    # the 7000 doesn't have seperate origins - they are all dumped in "images"
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
+                                      {'width': 96, 'height': 80, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 176, 'height': 220, 'format': "JPEG"}))
+
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+
  
     def __init__(self):
-        com_lgvx4400.Profile.__init__(self)
+        parentprofile.__init__(self)
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

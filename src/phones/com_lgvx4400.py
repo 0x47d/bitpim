@@ -697,7 +697,8 @@ def phonize(str):
     All digits, P, T, * and # are kept, everything else is removed"""
     return re.sub("[^0-9PT#*]", "", str)
 
-class Profile(com_phone.Profile):
+parentprofile=com_phone.Profile
+class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
@@ -721,8 +722,26 @@ class Profile(com_phone.Profile):
     # which device classes we are.  not we are not modem!
     deviceclasses=("serial",)
 
+    # nb we don't allow save to camera so it isn't listed here
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 120, 'height': 98, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 120, 'height': 98, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 120, 'height': 133, 'format': "BMP"}))
+
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+    
     def __init__(self):
-        com_phone.Profile.__init__(self)
+        parentprofile.__init__(self)
 
 
     def _getgroup(self, name, groups):
