@@ -22,7 +22,7 @@ from DSV import DSV
 
 # My modules
 import gui
-
+import common
 
 class PreviewGrid(wx.grid.Grid):
 
@@ -47,7 +47,7 @@ class ImportCSVDialog(wx.Dialog):
         }
 
     possiblecolumns=["<ignore>", "First Name", "Last Name", "Middle Name",
-                     "Name", "Nickname", "Email address", "Home Street",
+                     "Name", "Nickname", "Email Address", "Web Page", "Home Street",
                      "Home City", "Home Postal Code", "Home State",
                      "Home Country/Region",  "Home Phone", "Home Fax", "Mobile Phone", "Home Web Page",
                      "Business Street", "Business City", "Business Postal Code",
@@ -62,13 +62,32 @@ class ImportCSVDialog(wx.Dialog):
     filternumbercolumns=["Home Phone", "Home Fax", "Mobile Phone", "Business Phone",
                          "Business Fax", "Pager"]
 
-    filteraddresscolumns=["Home Street", "Home City", "Home Postal Code", "Home State",
-                          "Home Country/Region", "Business Street", "Business City",
-                          "Business Postal Code", "Business State", "Business Country/Region"]
+    filterhomeaddresscolumns=["Home Street", "Home City", "Home Postal Code", "Home State",
+                          "Home Country/Region"]
 
-    filteremailcolumns=["Email address"]
+    filterbusinessaddresscolumns=["Business Street", "Business City",
+                                  "Business Postal Code", "Business State", "Business Country/Region"]
+
+    filteraddresscolumns=filterhomeaddresscolumns+filterbusinessaddresscolumns
+
+    filteremailcolumns=["Email Address"]
                           
-    
+    # used in mapping column names above into bitpim phonebook fields
+    addressmap={
+        'Street': 'street',
+        'City':   'city',
+        'Postal Code': 'postalcode',
+        'State':      'state',
+        'Country/Region': 'country',
+        }
+
+    namemap={
+        'First Name': 'first',
+        'Last Name': 'last',
+        'Middle Name': 'middle',
+        'Name': 'full',
+        'Nickname': 'nickname'
+        }
 
     def __init__(self, filename, parent, id, title, style=wx.CAPTION|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
@@ -142,6 +161,7 @@ class ImportCSVDialog(wx.Dialog):
         wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
         wx.EVT_TEXT(self, self.wqualifier.GetId(), self.OnQualifierChanged)
         wx.EVT_TEXT(self, self.wcolumnsname.GetId(), self.OnColumnsNameChanged)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         self.DataNeedsUpdate()
 
     def DataNeedsUpdate(self, _=None):
@@ -220,12 +240,86 @@ class ImportCSVDialog(wx.Dialog):
             desc=f.readline().strip()
             if desc==str:
                 self.columns=map(string.strip, f.readlines())
+                for i in range(len(self.columns)):
+                    if self.columns[i] not in self.possiblecolumns:
+                        print self.columns[i],"is not a valid column name!"
+                        self.columns[i]="<ignore>"
                 self.DataNeedsUpdate()
                 f.close()
                 return
             f.close()
         print "didn't find pdc for",str
+
+    def OnOk(self,_):
+        "Ok button was pressed"
+        # ::TODO:: deal with save button
+        self.EndModal(wx.ID_OK)
         
+    def GetFormattedData(self):
+        "Returns the data in BitPim phonebook format"
+        res={}
+        count=0
+        for record in self.data:
+            # make a dict of the record
+            rec={}
+            for n in range(len(self.columns)):
+                if self.columns[n]=="<ignore>":
+                    continue
+                if len(record[n])==0:
+                    continue
+                c=self.columns[n]
+                if c in self.filternumbercolumns or c in self.filteremailcolumns or c in ["Category"]:
+                    # these are multivalued
+                    if not rec.has_key(c):
+                        rec[c]=[]
+                    rec[c].append(record[n])
+                else:
+                    rec[c]=record[n]
+            # entry is what we are building.  fields are removed from rec as we process them
+            entry={}
+            # emails
+            if rec.has_key('Email Address'):
+                print rec['Email Address']
+                emails=[]
+                for e in rec['Email Address']:
+                    emails.append({'email': e})
+                del rec['Email Address']
+                entry['emails']=emails
+            # addresses
+            for prefix,fields in \
+                    ( ("Home", self.filterhomeaddresscolumns),
+                      ("Business", self.filterbusinessaddresscolumns)
+                      ):
+                addr={}
+                if prefix=="Business" and rec.has_key("Company"):
+                    addr['type']=prefix.lower()
+                    addr['company']=rec["Company"]
+                    del rec["Company"]
+                for k in fields:
+                    if k in rec:
+                        # it has a field for this type
+                        shortk=k[len(prefix)+1:]
+                        addr['type']=prefix.lower()
+                        addr[self.addressmap[shortk]]=rec[k]
+                        del rec[k]
+                if len(addr):
+                    if not entry.has_key("addresses"):
+                        entry["addresses"]=[]
+                    entry["addresses"].append(addr)
+            # names
+            name={}
+            for field in self.filternamecolumns:
+                if field in rec:
+                    name[self.namemap[field]]=rec[field]
+                    del rec[field]
+            if len(name):
+                entry["names"]=[name]
+            # stash it away
+            res[count]=entry
+            if len(rec):
+                print "CRUD still to do:", rec
+            count+=1
+        return res
     
     def UpdateData(self):
         "Actually update the preview data"
@@ -371,4 +465,7 @@ class ImportCSVDialog(wx.Dialog):
 
 def OnImportCSVPhoneBook(parent, path):
     dlg=ImportCSVDialog(path, parent, -1, "Import CSV file")
-    dlg.ShowModal()
+    if dlg.ShowModal()==wx.ID_OK:
+        print "dialog ok"
+        print common.prettyprintdict(dlg.GetFormattedData())
+        
