@@ -221,6 +221,35 @@ class Phone(com_samsung_packet.Phone):
 
     def savephonebook(self, data):
         "Saves out the phonebook"
+
+        #
+        # Read the existing phonebook so that we cache birthdays
+        #
+        uslots={}
+        names={}
+        birthdays={}
+        slotstoclear={} # All slots to clear must be overwritten or cleared
+        req=self.protocolclass.phonebookslotrequest()
+        print " "
+        print "Existing Entries"
+        print " "
+        for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
+            req.slot=slot
+            try:
+                res=self.sendpbcommand(req,self.protocolclass.phonebookslotresponse, fixup=self.pblinerepair)
+                if len(res) > 0:
+                    uslot=res[0].entry.uslot
+                    uslots[uslot]=slot
+                    names[slot]=res[0].entry.name
+                    birthdays=res[0].entry.birthday
+                    slotstoclear[slot]=uslot
+                    print res[0].entry.name,slot,uslot
+            except:
+                pass
+            reqerase=self.protocolclass.phonebooksloterase()
+            reqerase.slot=slot
+            self.sendpbcommand(reqerase, self.protocolclass.phonebookslotupdateresponse)
+                
         self.savegroups(data)
 
         pb=data['phonebook']
@@ -230,23 +259,36 @@ class Phone(com_samsung_packet.Phone):
 
         progressmax=self.protocolclass.NUMPHONEBOOKENTRIES
 
-        slotsused={}
+        print " "
+        print "Writing Entries"
+        print " "
         for i in range(len(keys)):
             slot=keys[i]
-            slotsused[slot]=1
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=self.makeentry(pb[slot],data)
+            #if uslots.has_key(req.entry.uslot) and uslots[req.entry.uslot]!=req.entry.slot:
+            #    reqerase=self.protocolclass.phonebooksloterase()
+            #    reqerase.slot=uslots[req.entry.uslot]
+            #    del uslots[req.entry.uslot]
+            #    del slotstoclear[reqerase.slot]
+            #    i+=1
+            #    self.progress(i,progressmax,"Clearing slot "+`reqerase.slot`)
+            #    print "Clearing", reqerase.slot, req.entry.uslot
+            #    self.sendpbcommand(reqerase, self.protocolclass.phonebookslotupdateresponse)
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
             self.progress(i,progressmax,"Writing "+req.entry.name)
+            #if slotstoclear.has_key(slot):
+            #    del slotstoclear[slot]
+            print req.entry.name, req.entry.slot, req.entry.uslot
             self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
-        i=len(keys)
-        for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
-            if not slotsused.has_key(slot):
-                i+=1
-                req=self.protocolclass.phonebooksloterase()
-                req.slot=slot
-                self.progress(i,progressmax,"Clearing slot "+`slot`)
-                self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
+            
+        #i=len(slotstoclear)
+        #for slot in slotstoclear.keys():
+        #    i+=1
+        #    req=self.protocolclass.phonebooksloterase()
+        #    req.slot=slot
+        #    self.progress(i,progressmax,"Clearing slot "+`slot`)
+        #    self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
                 
         self.progress(progressmax+1,progressmax+1, "Phone book write completed")
         return data
