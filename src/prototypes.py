@@ -608,8 +608,10 @@ class SAMINT(SAMSTRING):
         try:
             ival=int(val)
         except:
-            raise ValueException("The field '%s' is not an integer" % (val))
-
+            try:
+                ival=int(self._default)
+            except:
+                raise ValueException("The field '%s' is not an integer" % (val))
         return ival
 
 class SAMDATE(SAMSTRING):
