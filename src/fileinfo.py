@@ -351,13 +351,13 @@ def idaudio_MP3(f):
         header=f.GetMSBUint32(offset)
     else:
         offset=0
-        idv3present=0
+        idv3present=False
 
     id3v1present=False
 
     frames=[]
     while offset<f.size:
-        if offset==f.size-128 and f.GetBytes(offset,3)==0x544147: # "TAG"
+        if offset==f.size-128 and f.GetBytes(offset,3)=="TAG":
             offset+=128
             id3v1present=True
             continue
@@ -371,6 +371,9 @@ def idaudio_MP3(f):
     # copy some information from the first frame
     f0=frames[0]
     d={'format': 'MP3',
+       'id3v1present': id3v1present,  # badly named ...
+       'idv3present': idv3present,
+       'unrecognisedframes': offset!=f.size,
        'version': f0.version,
        'layer': f0.layer,
        'bitrate': f0.bitrate,
@@ -410,6 +413,12 @@ def fmt_MP3(afi):
         res.append(`afi.bitrate`+" kbps")
     else:
         res.append("VBR (min %d kbps, max %d kbps)" % (afi.vbrmin, afi.vbrmax))
+    if afi.unrecognisedframes:
+        res.append("There are unrecognised frames in this file")
+    if afi.idv3present:
+        res.append("IDV3 tag present at begining of file")
+    if afi.id3v1present:
+        res.append("IDV3.1 tag present at end of file")
     if afi.copyright:
         res.append("Marked as copyrighted")
     if afi.original:
