@@ -367,6 +367,9 @@ class ConfigDialog(wx.Dialog):
             gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), 0, wx.EXPAND)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
+            if self.mw.config.Read("bitfling/password","<unconfigured>") \
+               == "<unconfigured>":
+                self.bitflingenabled.Enable(False)
         else:
             self.bitflingenabled=None
 
@@ -464,6 +467,9 @@ class ConfigDialog(wx.Dialog):
             dlg.SaveSettings()
         dlg.Destroy()
         self.ApplyBitFlingSettings()
+        if self.mw.config.Read("bitfling/password","<unconfigured>") \
+               != "<unconfigured>":
+            self.bitflingenabled.Enable(True)
         
     def SetupBitFlingCertVerification(self):
         "Setup all the voodoo needed for certificate verification to happen, not matter which thread wants it"
