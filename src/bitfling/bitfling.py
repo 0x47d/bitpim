@@ -29,7 +29,7 @@ from xmlrpclib import Fault, Binary
 import wx
 import wx.html
 import wx.lib.newevent
-import wx.lib.maskededit
+import wx.lib.masked.textctrl
 import wx.lib.mixins.listctrl
 
 # others
@@ -58,6 +58,7 @@ XmlServerEvent, EVT_XMLSERVER = wx.lib.newevent.NewEvent()
 
 guithreadid=thread.get_ident()
 
+# in theory this should also work for GTK, but in practise it doesn't
 if guihelper.IsMSWindows(): parentclass=wx.TaskBarIcon
 else: parentclass=wx.Frame
 
@@ -348,7 +349,7 @@ class AuthItemDialog(wx.Dialog):
         if len(password): self.password.SetValue(self._password_sentinel)
         gs.Add(self.password, 0, wx.EXPAND)
         gs.Add(wx.StaticText(p, -1, "Expires"))
-        self.expires=wx.lib.maskededit.MaskedTextCtrl(p, -1, "", autoformat="EUDATETIMEYYYYMMDD.HHMM")
+        self.expires=wx.lib.masked.textctrl.TextCtrl(p, -1, "", autoformat="EUDATETIMEYYYYMMDD.HHMM")
         gs.Add(self.expires)
         gs.Add(wx.StaticText(p, -1, "Allowed Addresses"))
         self.addresses=wx.TextCtrl(self, -1, "\n".join(addresses), style=wx.TE_MULTILINE)
