@@ -238,7 +238,7 @@ class Profile:
                         if type==t:
                             e['numbers'][i].number=numbers[i].number
                             e['numbers'][i].number_len=len(numbers[i].number)
-                        else
+                        else:
                             e['numbers'][i].number=""
                             e['numbers'][i].number_len=0
 
