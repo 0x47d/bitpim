@@ -58,22 +58,39 @@ PACKET {'readwrite': 0x0d} sanyoheader:
     1 UINT packettype
 
 PACKET esnrequest:
-    * UNKNOWN unknown
+    1 UINT {'constant': 0x01} +command
 
 PACKET esnresponse:
-    * UNKNOWN unknown
+    1 UINT {'constant': 0x01} command
+    4 UINT esn
 
 PACKET ownerinforequest:
-    * UNKNOWN unknown
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x3b} +header
+    502 UNKNOWN +pad
 
+PACKET ownerentry:
+    16 STRING ownername
+    2 UINT birthyear
+    1 UINT birthmonth
+    1 UINT birthday
+    1 UINT bloodtype "0: ?, 1: A, 2: B, 3: O, 4: AB"
+    110 STRING address
+    48 STRING homeemail
+    48 STRING workemail
+    48 STRING homephone
+    48 STRING workphone
+    
 PACKET ownerinforesponse:
-    * UNKNOWN unknown
+    * sanyoheader header
+    * ownerentry entry
+    179 UNKNOWN pad
     
 PACKET eventrequest:
     * sanyoheader {'packettype': 0x0c,
 		'command': 0x23} +header
     1 UINT slot
-    501 UNKNOWN pad
+    501 UNKNOWN +pad
 
 PACKET evententry:
     1 UINT slot
@@ -130,10 +147,25 @@ PACKET weeklyholidaybitsresponse:
     * UNKNOWN unknown
 
 PACKET foldernamerequest:
-    * UNKNOWN unknown
+    * sanyoheader {'packettype': 0x0b,
+                   'command': 0xef} +header
+    1 UINT index
+    501 UNKNOWN +pad
+
+PACKET foldernameentry:
+    1 UINT index
+    1 UINT flag "0 if empty, 1 in use"
+    1 UINT autofile "If 1, autofile messages with keyword"
+    1 UINT notify
+    1 UINT icon
+    13 STRING name "Name of the folder"
+    3 UNKNOWN pad
+    14 STRING keyword
 
 PACKET foldernameresponse:
-    * UNKNOWN unknown
+    * sanyoheader header
+    * foldernameentry entry
+    467 UNKNOWN pad
 
 PACKET messagerequest:
     * UNKNOWN unknown
@@ -143,7 +175,7 @@ PACKET messageresponse:
 
 PACKET bufferpartrequest:
     * sanyoheader {'packettype': 0x0f} +header
-    502 UNKNOWN pad
+    502 UNKNOWN +pad
 
 PACKET bufferpartresponse:
     * sanyoheader header
@@ -154,15 +186,15 @@ PACKET phonebookslotrequest:
     * sanyoheader {'packettype': 0x0c,
                    'command': 0x28} +header
     2 UINT slot
-    500 UNKNOWN pad
+    500 UNKNOWN +pad
 
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
-    16 STRING name
-    * LIST {'length': 7} phonenumbers:
-        1 UINT phonenumber_len
-        49 STRING phonenumber
+    16 STRING {'terminator': None} name
+    * LIST {'length': 7} numbers:
+        1 UINT number_len
+        49 STRING number
     1 UINT email_len
     49 STRING email
     1 UINT url_len
@@ -179,7 +211,7 @@ PACKET voicedialrequest:
     * sanyoheader {'packettype': 0x0b,
                    'command': 0xed} +header
     1 UINT slot
-    501 UNKNOWN pad
+    501 UNKNOWN +pad
 
 PACKET voicedialentry:
     1 UINT slot
