@@ -718,7 +718,7 @@ class SanyoPhonebook:
                 if not merge and data is None:
                     # delete the entry
                     continue
-                init[type][index]={'name': name, 'data': data}
+                init[mediatype][index]={'name': name, 'data': data}
         
         print "C",init.keys()    
         # now look through wallpapers and see if anything remaining was assigned a particular
@@ -732,7 +732,7 @@ class SanyoPhonebook:
                 init[o][idx]=wp[w]
                 del wp[w]
         
-        # we now have init[type] with the entries and index number as key (negative indices are
+        # we now have init[mediatype] with the entries and index number as key (negative indices are
         # unallocated).  Proceed to deal with each one, taking in stuff from wp as we have space
                              
         index=init[mediatype]
