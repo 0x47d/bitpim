@@ -512,23 +512,26 @@ class SAMSTRING(BaseProtogenClass):
             # terminator or end of line.  Exception will be thrown after reading if
             # the string was not quoted and it was supposed to be.
             self._value=chr(buf.getnextbyte())
-            inquotes=False
-            if self._quotechar is not None:
-                if self._value[0]==chr(self._quotechar):
-                    inquotes=True
-            while buf.hasmore():
-                self._value+=chr(buf.getnextbyte())
-                if inquotes:
-                    if self._value[-1]==chr(self._quotechar):
-                        inquotes=False
-                else:
-                    if self._value[-1]==chr(self._terminator):
-                        break
-            if self._value[-1]==self._terminator:
-                if self._raiseonunterminatedread:
-                    raise NotTerminatedException()
+            if self._value == ',':
+                self._value = ' '
             else:
-                self._value=self._value[:-1]
+                inquotes=False
+                if self._quotechar is not None:
+                    if self._value[0]==chr(self._quotechar):
+                        inquotes=True
+                while buf.hasmore():
+                    self._value+=chr(buf.getnextbyte())
+                    if inquotes:
+                        if self._value[-1]==chr(self._quotechar):
+                            inquotes=False
+                    else:
+                        if self._value[-1]==chr(self._terminator):
+                            break
+                if self._value[-1]==self._terminator:
+                    if self._raiseonunterminatedread:
+                        raise NotTerminatedException()
+                else:
+                    self._value=self._value[:-1]
 
         if self._quotechar is not None:
             if self._value[0]==chr(self._quotechar) and self._value[-1]==chr(self._quotechar):
@@ -579,6 +582,47 @@ class SAMSTRING(BaseProtogenClass):
         if self._value is None:
             raise ValueNotSetException()
         return self._value
+
+class SAMINT(SAMSTRING):
+    """Integers in CSV lines"""
+    def __init__(self, *args, **kwargs):
+        super(SAMINT,self).__init__(*args, **kwargs)
+
+        self._quotechar=None
+
+        if self._ismostderived(SAMINT):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=str(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(str(args[0]),)
+        else:
+            raise TypeError("expected integer as arg")
+            
+        super(SAMINT,self)._update(args,kwargs)
+        self._complainaboutunusedargs(SAMINT,kwargs)
+        
+    def getvalue(self):
+        """Convert the string into an integer
+
+        @rtype: integer
+        """
+
+        # Will probably want an flag to allow null strings, converting
+        # them to a default value
+        
+        val=super(SAMINT,self).getvalue()
+        try:
+            ival=int(val)
+        except:
+            raise ValueError("The field '%s' is not an integer" % (val))
+
+        return ival
 
 class COUNTEDBUFFEREDSTRING(BaseProtogenClass):
     """A string as used on Audiovox.  There is a one byte header saying how long the string
