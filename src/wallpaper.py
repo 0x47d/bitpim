@@ -465,6 +465,8 @@ class BPFSImageFile(wx.FSFile):
             img=wx.Image(name)
 
         if width>0 and height>0:
+            if bgcolor is None and not guihelper.IsMSWindows():
+                bgcolor="ffffff" # ... don't ask
             b=ScaleImageIntoBitmap(img, width, height, bgcolor)
         else:
             b=img.ConvertToBitmap()
