@@ -241,14 +241,14 @@ class MySplashScreen(wxSplashScreen):
         # Product name
         str=version.name
         dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
-        dc.SetFont( wxFont(25, wxROMAN, wxNORMAL, wxNORMAL) )
+        dc.SetFont( wxTheFontList.FindOrCreateFont(25, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x, y)
         y+=h+0
         # Version number
         str=version.versionstring
         dc.SetTextForeground( wxNamedColour("ORANGE4") )
-        dc.SetFont( wxFont(15, wxROMAN, wxNORMAL, wxNORMAL) )
+        dc.SetFont( wxTheFontList.FindOrCreateFont(15, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x+10, y)
         y+=h+0
@@ -906,6 +906,12 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savephonebook(data)
+
+    def writecalendar(self, data, merge):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.savecalendar(data, merge)
+        
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):
