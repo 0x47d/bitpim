@@ -20,6 +20,7 @@ BOOL=BOOLlsb
 _NUMSLOTS=300
 _NUMGROUPS=7
 _ALLGROUP=0
+_MAXGROUPLEN=16
 _MAXPHONENUMBERLEN=32
 _MAXNAMELEN=16
 _MAXEMAILLEN=48
@@ -102,8 +103,15 @@ PACKET readgroupentryresponse:
     2 UINT nummembers "how many members of the group"
 
 PACKET writegroupentryrequest:
-    1 UINT {'constant': 0x82} +cmd
+    1 UINT {'constant': 0x80} +cmd
     1 UINT number
+    1 UINT anothernumber  "same as number"
+    2 UINT {'constant': 0xffff} +dunno
+    17 STRING name
+    2 UINT {'constant': 0} +nummembers "we always supply zero, the phone works out correct count"
+
+PACKET writegroupentryresponse:
+    1 UINT {'constant': 0x80} cmd
     
 PACKET dunnorequest:
     1 UINT {'constant': 0x26} +cmd

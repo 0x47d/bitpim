@@ -50,6 +50,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         """
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
+        self.setmode(self.MODEBREW)
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
         
@@ -157,7 +158,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         e=self.protocolclass.pbentry()
         # some defaults
         e.secret=0
-        e.group=0xff
         e.previous=0xffff
         e.next=0xffff
         e.ringtone=0xffff
@@ -165,13 +165,27 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         e.wallpaper=0xffff
         for f in fields:
             setattr(e, f, fields[f])
+        if e.group==0:
+            raise Exception("Data error:  The group cannot be zero or the phone crashes")
         return e
 
     def savephonebook(self, data):
+        self.log("Saving group information")
+
+        for gid in range(1, self.protocolclass._NUMGROUPS): # we don't rewrite group zero
+            name=data['groups'].get(gid, {'name': ''})['name']
+            req=self.protocolclass.writegroupentryrequest()
+            req.number=gid
+            req.anothernumber=gid
+            req.name=name
+            self.log("Group #%d %s" % (gid, `name`))
+            self.sendpbcommand(req, self.protocolclass.writegroupentryresponse)
+
+        
         self.log("New phonebook\n"+common.prettyprintdict(data['phonebook']))
 
         # in theory we should offline the phone and wait two seconds first ...
-        
+
         pb=data['phonebook']
         keys=pb.keys()
         keys.sort()
@@ -291,14 +305,66 @@ class Profile(com_phone.Profile):
         ('phonebook', 'write', 'OVERWRITE'), # phonebook overwrite only
         )
 
+    def _getgroup(self, name, groups):
+        for key in groups:
+            if groups[key]['name']==name:
+                return key,groups[key]
+        return None,None
+
+    def normalisegroups(self, helper, data):
+        "Assigns groups based on category data"
+
+        pad=[]
+        keys=data['groups'].keys()
+        keys.sort()
+        for k in keys:
+                if k: # ignore key 0 which is 'All'
+                    name=data['groups'][k]['name']
+                    pad.append(name)
+
+        groups=helper.getmostpopularcategories(self.protocolclass._NUMGROUPS, data['phonebook'], ["All", "Business", "Personal", "Etc."],
+                                               self.protocolclass._MAXGROUPLEN, pad)
+
+        # alpha sort
+        groups.sort()
+
+        # newgroups
+        newgroups={}
+
+        # put in No group
+        newgroups[0]={'name': 'All'}
+
+        # populate
+        for name in groups:
+            # existing entries remain unchanged
+            if name=="All": continue
+            key,value=self._getgroup(name, data['groups'])
+            if key is not None and key!=0:
+                newgroups[key]=value
+                
+        # new entries get whatever numbers are free
+        for name in groups:
+            key,value=self._getgroup(name, newgroups)
+            if key is None:
+                for key in range(1,10000):
+                    if key not in newgroups:
+                        newgroups[key]={'name': name}
+                        break
+        # yay, done
+        data['groups']=newgroups
+
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone
 
         @param data: contains the dict returned by getfundamentals
                  as well as where the results go"""
-        
+        self.normalisegroups(helper, data)
         results={}
         for pbentry in data['phonebook']:
+            if len(results)==self.protocolclass._NUMSLOTS:
+                # ::TODO:: should really sort by ones known to this phone
+                # (ie have serials for it) first
+                break
             try:
                 e={} # entry out
                 entry=data['phonebook'][pbentry]
@@ -321,7 +387,6 @@ class Profile(com_phone.Profile):
                     continue
                         
                 e['name']=helper.getfullname(entry.get('names', [ {'full': ''}]), 1, 1, self.protocolclass._MAXNAMELEN)[0]
-                e['group']=0xff                
                 e['memo']=helper.getmemos(entry.get('memos', [{'memo': ''}]), 1,1, self.protocolclass._MAXMEMOLEN)[0]
 
                 rt=helper.getringtone(entry.get('ringtones', []), 'call', "")
@@ -337,7 +402,14 @@ class Profile(com_phone.Profile):
                     e['wallpaper']=int(wp[5:])
 
                 e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
-                
+
+                # deal with group
+                group=helper.getcategory(entry.get('categories', [{'category': 'Etc.'}]),1,1,self.protocolclass._MAXGROUPLEN)[0]
+                gid,_=self._getgroup(group, data['groups'])
+                if gid is None:
+                    gid,_=self._getgroup("Etc.", data['groups'])
+                e['group']=gid
+
                 for i in range(1000):
                     if i not in results:
                         results[i]=e
