@@ -177,6 +177,28 @@ class Phone(com_samsung_packet.Phone):
                     # Response will have ERROR, even though it works
                     self.sendpbcommand(req, self.protocolclass.unparsedresponse, ignoreerror=True)
         
+    def makeentry(self, entry, data):
+        e=self.protocolclass.pbentry()
+
+        for k in entry:
+            # special treatment for lists
+            if k=='numbertypes' or k=='secrets':
+                continue
+            if k=='numbers':
+                #l=getattr(e,k)
+                for numberindex in range(self.protocolclass.NUMPHONENUMBERS):
+                    enpn=self.protocolclass.phonenumber()
+                    # l.append(enpn)
+                    e.numbers.append(enpn)
+                for i in range(len(entry[k])):
+                    numberindex=entry['numbertypes'][i]
+                    e.numbers[numberindex].number=entry[k][i]
+                    e.numbers[numberindex].secret=entry['secrets'][i]
+                continue
+            # everything else we just set
+            setattr(e, k, entry[k])
+        return e
+
     def savephonebook(self, data):
         "Saves out the phonebook"
         self.savegroups(data)
@@ -184,17 +206,17 @@ class Phone(com_samsung_packet.Phone):
         pb=data['phonebook']
         keys=pb.keys()
         keys.sort()
-        keys=keys[:self.protocolclass.NUMSLOTS]
+        keys=keys[:self.protocolclass.NUMPHONEBOOKENTRIES]
 
         progressmax=len(data['phonebook'])
 
         for i in range(len(keys)):
             slot=keys[i]
-            req=self.protocolclass.writepbentryrequest()
-            req.entry=self.makephonebookentry(pb[slot])
+            req=self.protocolclass.phonebookslotupdaterequest()
+            req.entry=self.makeentry(pb[slot],data)
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
             self.progress(i,progressmax,"Writing "+req.entry.name)
-            self.sendpbcommand(req, self.protocolclass.writepbentryresponse)
+            self.sendpbcommand(req, self.protocolclass.phonebookslotupdateresponse)
         self.progress(progressmax+1,progressmax+1, "Phone book write completed")
         return data
         
@@ -236,7 +258,6 @@ class Phone(com_samsung_packet.Phone):
             else:
                 length+=1
         amstext=contents[offset+location:offset+location+length]       
-
         return amstext    
 
     def getringtones(self, results):
