@@ -373,9 +373,8 @@ class MainWindow(wxFrame):
         # menu.Append(guihelper.ID_FILENEW,  "&New", "Start from new")
         # menu.Append(guihelper.ID_FILEOPEN, "&Open", "Open a file")
         # menu.Append(guihelper.ID_FILESAVE, "&Save", "Save your work")
-        #menu.AppendSeparator()
-        #menu.Append(guihelper.ID_FILEPRINTPREVIEW, "Print P&review", "Print Preview")
-        #menu.Append(guihelper.ID_FILEPRINT, "&Print", "Print")
+        # menu.Append(guihelper.ID_FILEPRINT, "&Print...", "Print phonebook")
+        # menu.AppendSeparator()
         menu.Append(guihelper.ID_FILEIMPORT, "Import CSV...", "Import a CSV file for the phonebook")
         menu.AppendSeparator()
         menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
@@ -448,6 +447,7 @@ class MainWindow(wxFrame):
 
         ### Events we handle
         EVT_MENU(self, guihelper.ID_FILEIMPORT, self.OnFileImport)
+        EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
         EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
         EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
@@ -657,6 +657,9 @@ class MainWindow(wxFrame):
             return
         importexport.OnImportCSVPhoneBook(self, self.phonewidget, path)
 
+    def OnFilePrint(self,_):
+        self.phonewidget.OnPrintDialog(self, self.config)
+
     ### 
     ### Main bit for getting stuff from phone
     ###
@@ -854,6 +857,8 @@ class MainWindow(wxFrame):
 
         # View Columns .. is only in Phonebook
         self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
+        # as is File Print
+        self.GetMenuBar().Enable(guihelper.ID_FILEPRINT, widget is self.phonewidget)
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):

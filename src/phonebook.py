@@ -707,7 +707,7 @@ class PhoneWidget(wx.Panel):
             self.modified=True
         dlg.Destroy()
 
-    def OnDelete(self,_):
+    def GetSelectedRows(self):
         rows=[]
         gcr=self.table.GetGridCursorRow()
         set1=self.table.GetSelectionBlockTopLeft()
@@ -721,6 +721,10 @@ class PhoneWidget(wx.Panel):
         else:
             rows.append(gcr)
 
+        return rows
+
+    def OnDelete(self,_):
+        rows=GetSelectedRows()
         self.table.ClearSelection()
         rowkeys=[]
         for r in rows:
@@ -732,6 +736,11 @@ class PhoneWidget(wx.Panel):
 
     def SetPreview(self, entry):
         self.preview.ShowEntry(entry)
+
+    def OnPrintDialog(self, mainwindow, config):
+        dlg=PhonebookPrintDialog(self, mainwindow, config)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def getdata(self, dict):
         self.EnsureBitPimSerials()
@@ -1568,3 +1577,106 @@ class ColumnSelectorDialog(wx.Dialog):
         self.config.Flush()
         self.phonewidget.SetColumns(cur)
         event.Skip()
+
+class PhonebookPrintDialog(wx.Dialog):
+
+    ID_SELECTED=wx.NewId()
+    ID_ALL=wx.NewId()
+    ID_LAYOUT=wx.NewId()
+    ID_STYLES=wx.NewId()
+    ID_PRINT=wx.NewId()
+    ID_PAGESETUP=wx.NewId()
+    ID_PRINTPREVIEW=wx.NewId()
+    ID_CLOSE=wx.ID_CANCEL
+    ID_HELP=wx.NewId()
+
+    def __init__(self, phonewidget, mainwindow, config):
+        wx.Dialog.__init__(self, mainwindow, id=-1, title="Print PhoneBook", style=wx.CAPTION|
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+
+        self.config=config
+        self.phonewidget=phonewidget
+
+        # sort out available layouts and styles
+        # first line is description
+        self.layoutfiles={}
+        for file in guihelper.getresourcefiles("pbpl-*.xy"):
+            f=open(file, "rt")
+            desc=f.readline().strip()
+            self.layoutfiles[desc]=f.read()
+            f.close()
+        self.stylefiles={}
+        for file in guihelper.getresourcefiles("pbps-*.xy"):
+            f=open(file, "rt")
+            desc=f.readline().strip()
+            self.stylefiles[desc]=f.read()
+            f.close()
+
+        # Layouts
+        vbs=wx.BoxSizer(wx.VERTICAL)  # main vertical sizer
+
+        hbs=wx.BoxSizer(wx.HORIZONTAL) # first row
+
+        numselected=len(phonewidget.GetSelectedRows())
+        numtotal=len(phonewidget._data)
+
+        # selection
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
+        self.selected=wx.RadioButton(self, self.ID_SELECTED, "Selected (%d)" % (numselected,), style=wx.RB_GROUP)
+        self.all=wx.RadioButton(self, self.ID_SELECTED, "All (%d)" % (numtotal,) )
+        bs.Add(self.selected, 0, wx.EXPAND|wx.ALL, 2)
+        bs.Add(self.all, 0, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(bs, 0, wx.EXPAND|wx.ALL, 2)
+
+        # Sort
+        self.sortkeyscb=[]
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Sorting"), wx.VERTICAL)
+        choices=["<None>"]+AvailableColumns
+        for i in range(3):
+            bs.Add(wx.StaticText(self, -1, ("Sort by", "Then")[i!=0]), 0, wx.EXPAND|wx.ALL, 2)
+            self.sortkeyscb.append(wx.ComboBox(self, -1, "<None>", choices=choices, style=wx.CB_READONLY))
+            bs.Add(self.sortkeyscb[-1], 0, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(bs)
+
+        # Layout and style
+        vbs2=wx.BoxSizer(wx.VERTICAL) # they are on top of each other
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Layout"), wx.VERTICAL)
+        k=self.layoutfiles.keys()
+        k.sort()
+        self.layout=wx.ListBox(self, self.ID_LAYOUT, style=wx.LB_SINGLE|wx.LB_NEEDED_SB|wx.LB_HSCROLL, choices=k)
+        bs.Add(self.layout, 1, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(bs, 1, wx.EXPAND|wx.ALL, 2)
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Styles"), wx.VERTICAL)
+        k=self.stylefiles.keys()
+        self.styles=wx.CheckListBox(self, self.ID_STYLES, choices=k)
+        bs.Add(self.styles, 1, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(bs, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(vbs2, 1, wx.EXPAND|wx.ALL, 2)
+
+        # Buttons
+        vbs2=wx.BoxSizer(wx.VERTICAL)
+        vbs2.Add(wx.Button(self, self.ID_PRINT, "Print"), 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(wx.Button(self, self.ID_PAGESETUP, "Page Setup..."), 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(wx.Button(self, self.ID_PRINTPREVIEW, "Print Preview"), 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(wx.Button(self, self.ID_HELP, "Help"), 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(wx.Button(self, self.ID_CLOSE, "Close"), 0, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 2)
+
+        # wrap up top row
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 2)
+
+        # bottom half - preview
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Preview"), wx.VERTICAL)
+        self.preview=HTMLWindow(self, -1)
+        bs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 2)
+
+        # wrap up bottom row
+        vbs.Add(bs, 2, wx.EXPAND|wx.ALL, 2)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+        # self.SetSize( (600, 500) )
+
+    def GetCurrentHTML(self):
+        pass
+
