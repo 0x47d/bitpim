@@ -26,6 +26,7 @@ import guiwidgets
 import common
 import version
 import helpids
+import comdiagnose
 
 ###
 ### Used to check our threading
@@ -219,7 +220,7 @@ class MySplashScreen(wxSplashScreen):
     def __init__(self, app, config):
         self.app=app
         # how long are we going to be up for?
-        time=config.ReadInt("splashscreentime", 4000)
+        time=config.ReadInt("splashscreentime", 3000)
         if time>0:
             bmp=getbitmap("splashscreen")
             self.drawnameandnumber(bmp)
@@ -277,7 +278,7 @@ class MySplashScreen(wxSplashScreen):
 ####            
 wxEVT_CALLBACK=None
 class MainApp(wxApp):
-    def __init__(self, *args):
+    def __init__(self, *_):
         wxApp.__init__(self, redirect=False, useBestVisual=True)
         sys.setcheckinterval(100)
         
@@ -308,7 +309,7 @@ class MainApp(wxApp):
         wxEVT_CALLBACK=wxNewEventType()
 
         # get the splash screen up
-        splash=MySplashScreen(self, self.config)
+        MySplashScreen(self, self.config)
 
         return True
 
@@ -806,6 +807,7 @@ class MainWindow(wxFrame):
         text=None
         title=None
         style=None
+        # Here is where we turn the exception into something user friendly
         if isinstance(exception, common.CommsDeviceNeedsAttention):
             text="%s: %s" % (exception.device, exception.message)
             title="Device needs attention - "+exception.device
@@ -816,6 +818,11 @@ class MainWindow(wxFrame):
             title="Failed to open communications - "+exception.device
             style=wxOK|wxICON_INFORMATION
             help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_OPEN_DEVICE)
+        elif isinstance(exception, common.AutoPortsFailure):
+            text=exception.message
+            title="Failed to automatically detect port"
+            style=wxOK|wxICON_INFORMATION
+            help=lambda _: wxGetApp().displayhelpid(helpids.ID_FAILED_TO_AUTODETECT_PORT)
             
         if text is not None:
             dlg=guiwidgets.AlertDialogWithHelp(self,text, title, help, style=style)
@@ -891,6 +898,7 @@ class WorkerThread(WorkerThreadFramework):
         self.commphone.close()
         self.commphone=None
         
+        
     def setupcomm(self):
         if __debug__: self.checkthread()
         if self.commphone is None:
@@ -898,11 +906,18 @@ class WorkerThread(WorkerThreadFramework):
             if self.dispatchto.commportsetting is None or \
                len(self.dispatchto.commportsetting)==0:
                 raise common.CommsNeedConfiguring("LGVX4400", "Comm port not configured")
-            # ::TODO:: should have failsafe code here that releases comport if
-            # phone module fails to load
-            comport=commport.CommConnection(self, self.dispatchto.commportsetting)
-            import com_lgvx4400
-            self.commphone=com_lgvx4400.Phone(self, comport)
+
+            if self.dispatchto.commportsetting=="auto":
+                autofunc=comdiagnose.autoguessports
+            else:
+                autofunc=None
+            # ::TODO:: allow config of timeout, hardware and software flow control
+            comport=commport.CommConnection(self, self.dispatchto.commportsetting, autolistfunc=autofunc)
+            try:
+                import com_lgvx4400
+                self.commphone=com_lgvx4400.Phone(self, comport)
+            except Exception,_:
+                comport.close()
 
 
     def getdata(self, req):
@@ -1245,7 +1260,7 @@ class FileSystemView(wxTreeCtrl):
     def itemtopath(self, item):
         if item==self.root: return ""
         res=self.GetItemText(item)
-        while 1:
+        while True:
             parent=self.GetItemParent(item)
             if parent==self.root:
                 return res
