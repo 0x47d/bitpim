@@ -22,7 +22,7 @@ import bptime
 import common_calendar
 import vcard
 
-module_debug=True
+module_debug=False
 
 #-------------------------------------------------------------------------------
 class vCalendarFile(object):
