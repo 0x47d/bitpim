@@ -874,7 +874,7 @@ class ImportOutlookDialog(ImportDialog):
         for item in items:
             row=[]
             for k in want:
-                v=item.get(k, "")
+                v=item.get(k, "")  # ::TODO:: possibly use None here to make output smaller?
                 try:
                     v=str(v)
                 except UnicodeEncodeError:
@@ -1049,7 +1049,13 @@ class ImportEvolutionDialog(ImportVCardDialog):
 
         columns,data=self.parsevcards(StringIO.StringIO(vcards))
 
-        # ::TODO:: add evolution folder and source columns
+        columns.append("UniqueSerial-folderid")
+        columns.append("UniqueSerial-sourcetype")
+        moredata=[self.folder, "evolution"]
+
+        for row in data:
+            row.extend(moredata)
+
         self.evocolumns=self.columns=columns
         self.evodata=self.data=data
 
