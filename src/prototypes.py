@@ -80,7 +80,13 @@ class BaseProtogenClass(object):
     """All types are derived from this"""
     def packetsize(self):
         "Returns size in bytes that we occupy"
-        raise NotImplementedError("packetsize()")
+        # This is implemented by writing to a buffer and seeing how big the result is.
+        # The code generator used to make one per class but it was so rarely used (twice)
+        # that this implementation is available instead
+        b=buffer()
+        self.writetobuffer(b)
+        return len(b.getvalue())
+        
     def writetobuffer(self, buf):
         "Scribble ourselves to the buf"
         raise NotImplementedError("writetobuffer()")

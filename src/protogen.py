@@ -520,27 +520,6 @@ class codegen:
 
         print >>out, "\n"
 
-        # Calculate the size of a packet
-        print >>out, indent()+"def packetsize(self):"
-        print >>out, indent(2)+"'Returns the size of this packet in bytes'"
-        print >>out, indent(2)+"sz=0"
-        i=2
-        for f in fields:
-            if f[0]==tokens.FIELD and f[2]!='P':
-                if '+' in f[7]:
-                    print >>out, indent(i)+"try: self.__field_%s" % (f[1],)
-                    print >>out, indent(i)+"except:"
-                    self.makefield(out, i+1, f, isreading=False)
-                print >>out, indent(i)+"sz+=self.__field_"+f[1]+".packetsize()"
-            elif f[0]==tokens.CONDITIONALSTART:
-                print >>out, indent(i)+f[1]
-                i+=1
-            elif f[0]==tokens.CONDITIONALEND:
-                i-=1
-        assert i==2
-        print >>out, indent(2)+"return sz"
-        print >>out, "\n"
-
         # Write to a buffer
         print >>out, indent()+"def writetobuffer(self,buf):"
         print >>out, indent(2)+"'Writes this packet to the supplied buffer'"
