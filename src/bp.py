@@ -23,8 +23,22 @@ if __name__ == '__main__':
     import sys  
     import gui
 
-    if False:
-        import profile
-        profile.run("gui.run(sys.argv)", "bpprof")
-    else:
-        gui.run(sys.argv)
+    if __debug__: # this will be optimised out of optimized builds
+        if False:
+            import hotshot, hotshot.stats, os
+            file=os.path.abspath("bpprof")
+            profile=hotshot.Profile(file)
+            profile.run("gui.run(sys.argv)")
+            profile.close()
+            del profile
+            stats=hotshot.stats.load(file)
+            stats.strip_dirs()
+            stats.sort_stats('time', 'calls')
+            stats.print_stats(25)
+            stats.sort_stats('cum', 'calls')
+            stats.print_stats(25)
+            stats.sort_stats('calls', 'time')
+            stats.print_stats(25)
+            sys.exit(0)
+
+    gui.run(sys.argv)
