@@ -381,8 +381,21 @@ class ImportCSVDialog(wx.Dialog):
                 for cat in rec['Categories'].split(';'):
                     cats.append({'category': cat})
                 del rec['Categories']
-            if  len(cats):
+            if len(cats):
                 entry["categories"]=cats
+
+            # flags
+            flags=[]
+            if rec.has_key("Private"):
+                private=True
+                # lets see how they have done false
+                if rec["Private"].lower() in ("false", "no", 0, "0"):
+                    private=False
+                flags.append({'secret': private})
+                del rec["Private"]
+                
+            if len(flags):
+                entry["flags"]=flags
 
             # stash it away
             res[count]=entry
