@@ -1098,8 +1098,10 @@ class WorkerThread(WorkerThreadFramework):
             # add to zip file
             zi=zipfile.ZipInfo()
             zi.filename=k[strip:]
-            zi.date_time=(0,0,0,0,0,0)
-            # zi.comment=k
+            if files[k]['date'][0]==0:
+                zi.date_time=(0,0,0,0,0,0)
+            else:
+                zi.date_time=time.gmtime(files[k]['date'][0])[:6]
             zi.compress_type=zipfile.ZIP_DEFLATED
             zip.writestr(zi, contents)
         zip.close()
