@@ -281,6 +281,7 @@ class SendPhoneDialog(GetPhoneDialog):
 
 class ConfigDialog(wx.Dialog):
     phonemodels={ 'LG-VX4400': 'com_lgvx4400',
+                  'LG-VX4500': 'com_lgvx4500',
                   'LG-VX6000': 'com_lgvx6000',
                   # 'LG-TM520': 'com_lgtm520',
                   # 'LG-VX10': 'com_lgtm520',
