@@ -1,13 +1,76 @@
-from M2Crypto.m2xmlrpclib import Server, SSL_Transport
+from M2Crypto.m2xmlrpclib import ServerProxy, SSL_Transport
+from M2Crypto import m2urllib,httpslib
+import sys, string, base64
+import xmlrpclib
 
-# have to edit M2Crypto.httpslib.py, line 100, change to this
-#         if (sys.version[:3] == '2.2' and sys.version_info[2] > 1) or sys.version>"2.2":
-# (put existing if in parentheses, add sys.version>"2.2"
+# have to edit M2Crypto.httpslib.py, line 25 and 100, change to this
+#         if sys.version_info>(2,2,1):
 
-server=Server("https://username:password@localhost:1234", SSL_Transport())
+class MyTransport(SSL_Transport):
+
+    def check_cert(self, handle):
+        if  handle._conn.sock is None:
+            print "calling connect"
+            handle._conn.connect()
+            # only need to check here
+            handle._conn.sock.get_peer_cert()
+
+    def request(self, host, handler, request_body, verbose=0):
+        # Handle username and password.
+        user_passwd, host_port = m2urllib.splituser(host)
+        _host, _port = m2urllib.splitport(host_port)
+        if sys.version[0] == '2':
+            h = httpslib.HTTPS(_host, int(_port), ssl_context=self.ssl_ctx)
+        elif sys.version[:3] ==  '1.5':
+            h = httpslib.HTTPS(self.ssl_ctx, _host, int(_port))
+        else:
+            raise RuntimeError, 'unsupported Python version'
+        if verbose:
+            h.set_debuglevel(1)
+
+        # Check cert ::Addition by RogerB
+        self.check_cert(h)
+
+        # What follows is as in xmlrpclib.Transport. (Except the authz bit.)
+        h.putrequest("POST", handler)
+
+        # required by HTTP/1.1
+        h.putheader("Host", _host)
+
+        # required by XML-RPC
+        h.putheader("User-Agent", self.user_agent)
+        h.putheader("Content-Type", "text/xml")
+        h.putheader("Content-Length", str(len(request_body)))
+
+        # Authorisation.
+        if user_passwd is not None:
+            auth=string.strip(base64.encodestring(user_passwd))
+            h.putheader('Authorization', 'Basic %s' % auth)
+
+        h.endheaders()
+
+        if request_body:
+            h.send(request_body)
+
+        errcode, errmsg, headers = h.getreply()
+
+        if errcode != 200:
+            print errcode, errmsg, headers
+            raise xmlrpclib.ProtocolError(
+                host + handler,
+                errcode, errmsg,
+                headers
+                )
+
+        self.verbose = verbose
+        return self.parse_response(h.getfile())
+
+
+server=ServerProxy("https://username:password@localhost:1234", MyTransport())
 
 
 print server.add(1,2)
+
 print type(server.add(1,2))
 print dir(server)
 print server.add("one", "two")
