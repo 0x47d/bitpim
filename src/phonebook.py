@@ -617,7 +617,8 @@ class PhoneWidget(wx.Panel):
                 entry['serials'].append(updserial)
         self.modified=True
                     
-                    
+    def OnSelectAll(self, _):
+        self.table.SelectAll()
 
     def OnCellSelect(self, event):
         event.Skip()
@@ -1133,7 +1134,15 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSize()
-        self.GetView().Fit()
+        wx.CallAfter(self.GetView().Fit)
+        wx.CallAfter(self.sizetwiddle)
+
+    def sizetwiddle(self):
+        dlg=self.GetView().GetParent().GetParent()
+        print dlg
+        w,h=dlg.GetSize()
+        dlg.SetSize( (w-10, h-10) )
+        dlg.SetSize( (w, h) )
 
 def _htmlfixup(txt):
     if txt is None: return ""
@@ -1183,12 +1192,9 @@ class ImportDialog(wx.Dialog):
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
         splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        splitter.SetMinimumPaneSize(20)
+        # splitter.SetMinimumPaneSize(20)
 
-        panel=wx.Panel(splitter, -1)
-
-        self.grid=wx.grid.Grid(panel, wx.NewId())
-        self.grid.EnableGridLines(False)
+        self.grid=wx.grid.Grid(splitter, wx.NewId())
         self.table=ImportDataTable(self)
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
         self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
@@ -1196,10 +1202,11 @@ class ImportDialog(wx.Dialog):
         self.grid.EnableDragRowSize(True)
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
+        self.grid.EnableGridLines(False)
 
         self.resultpreview=PhoneEntryDetailsView(splitter, -1, "styles.xy", "pblayout.xy")
 
-        splitter.SplitVertically(panel, self.resultpreview, -200)
+        splitter.SplitVertically(self.grid, self.resultpreview, -200)
 
         vbs.Add(splitter, 1, wx.EXPAND|wx.ALL,5)
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
