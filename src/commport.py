@@ -19,6 +19,7 @@ class CommTimeout(Exception):
 class CommConnection:
     def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0, softwareflow=0):
         self.logtarget=logtarget
+        self.clearcounters()
         self.port=port
         self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
                  (port, baud, float(timeout), hardwareflow, softwareflow) )
@@ -33,6 +34,11 @@ class CommConnection:
                 time.sleep(2)
         raise ex
 
+    def clearcounters(self):
+        self.readbytes=0
+        self.readrequests=0
+        self.writebytes=0
+        self.writerequests=0
 
     def log(self, str):
         if self.logtarget:
@@ -48,17 +54,22 @@ class CommConnection:
         time.sleep(.5)
 
     def write(self, data, log=1):
+        self.writerequests+=1
         if log:
             self.logdata("Writing", data)
         self.ser.write(data)
+        self.writebytes+=len(data)
 
     def read(self, numchars=1, log=1):
+        self.readrequests+=1
         res=self.ser.read(numchars)
         if log:
             self.logdata("Reading exact data - requested "+`numchars`, res)
+        self.readbytes+=len(res)
         return res
 
     def readsome(self, log=1):
+        self.readrequests+=1
         res=""
         while 1:
             b=self.ser.inWaiting()
@@ -72,13 +83,14 @@ class CommConnection:
             break
         if len(res)==0:
             raise CommTimeout()
-        
+        self.readbytes+=len(res)
         if log:
             self.logdata("Reading remaining data", res)
         return res
 
     def readuntil(self, char, log=1):
         # Keeps reading until it hits char
+        self.readrequests+=1
         if log:
             self.logdata("Begin reading until", char)
 
@@ -95,6 +107,7 @@ class CommConnection:
                         self.log("Timed out waiting for %02x, requested bytes %d  - %d bytes read" % 
                                  (ord(char), b, len(res)))
                         self.logdata("Incomplete read was", res)
+                    self.readbytes+=len(res)
                     raise CommTimeout(partial=res)
                 else:
                     numfailures-=1
@@ -102,6 +115,7 @@ class CommConnection:
                     self.log("Timed out - flushing and trying again")
             res=res+res2
 
+        self.readbytes+=len(res)
         if log:
             self.logdata("Read completed", res)
         return res
