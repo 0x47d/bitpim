@@ -1154,7 +1154,8 @@ class WorkerThread(WorkerThreadFramework):
             self.progressmajor(count, len(willcall), i[2])
             count+=1
             i[1](results)
-        
+
+        self.rebootcheck(results)
         return results
 
     def senddata(self, dict, todo):
