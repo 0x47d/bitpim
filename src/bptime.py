@@ -11,7 +11,7 @@
 
 import datetime
 
-class BPTime:
+class BPTime(object):
     def __init__(self, v=None):
         self.__date=self.__time=None
         # I guess this is how python handles overloading ctors
@@ -25,7 +25,19 @@ class BPTime:
     def __get_date(self):
         return self.__date
     date=property(fget=__get_date)
+    def __get_time(self):
+        return self.__time
+    time=property(fget=__get_time)
 
+    def __sub__(self, rhs):
+        if not isinstance(rhs, BPTime):
+            raise TypeError
+        return datetime.datetime(*self.get())-datetime.datetime(*rhs.get())
+    def __add__(self, rhs):
+        if not isinstance(rhs, datetime.timedelta):
+            raise TypeError
+        dt=datetime.datetime(*self.get())+rhs
+        return BPTime((dt.year, dt.month, dt.day, dt.hour, dt.minute))
     def __eq__(self, rhs):
         if isinstance(rhs, BPTime):
             return self.date==rhs.date

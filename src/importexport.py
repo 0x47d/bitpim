@@ -39,6 +39,8 @@ def GetPhonebookImports():
     res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     # Vcards - always possible
     res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
+    # Vcal - always possible
+    res.append(('vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
     # Outlook
     try:
         import native.outlook
@@ -1643,6 +1645,20 @@ def OnFileImportOutlookCalendar(parent):
     dlg.Destroy()
     native.outlook.releaseoutlook()
 
+def OnFileImportVCal(parent):
+    import vcal_calendar
+    dlg=vcal_calendar.VcalImportCalDialog(parent, -1, 'Import vCalendar')
+    if dlg.ShowModal()==wx.ID_OK:
+        import pubsub
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and save the new data
+        calendar_r={ 'calendar': dlg.get() }
+        parent.calendarwidget.populate(calendar_r)
+        parent.calendarwidget.populatefs(calendar_r)
+    dlg.Destroy()
+        
 ###
 ###   EXPORTS
 ###
