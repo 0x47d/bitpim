@@ -9,8 +9,13 @@
 ###
 ### $Id$
 
-# This design is with apologies to Alan Cooper
+"""A calendar control that shows several weeks in one go
 
+The design is inspired by the Alan Cooper article U{http://www.cooper.com/articles/art_goal_directed_design.htm}
+about goal directed design.  I also have to apologise for it not quite living up to that vision :-)
+
+It is fairly feature complete and supports all sorts of interaction, scrolling and customization
+of appearance"""
 
 from wxPython.wx import *
 from wxPython.lib.rcsizer import RowColSizer
@@ -21,6 +26,7 @@ import time
 
 
 class FontscaleCache(dict):
+    """A cache used internally to remember how much to shrink fonts by"""
     # cache results of what the scale factor is to fit a number of lines in a space is
     def get(self, y, attr, numentries):
         return dict.get(self, (y, id(attr), numentries), 1)
@@ -37,6 +43,10 @@ class FontscaleCache(dict):
 thefontscalecache=FontscaleCache()
 
 class CalendarCellAttributes:
+    """A class represnting appearance attributes for an individual day.
+
+    You should subclass this if you wish to change the appearance from
+    the defaults"""
     def __init__(self):
         # Set some defaults
         self.cellbackground=wxTheBrushList.FindOrCreateBrush(wxColour(230,255,255), wxSOLID)
@@ -57,28 +67,73 @@ class CalendarCellAttributes:
             thefontscalecache.uncache(self)
 
     def isrightaligned(self):
+        """Is the number representing the day right aligned within the cell?
+
+        @rtype: Bool
+        @return:  True is it should be shown right aligned"""
         return self.labelalign==wxALIGN_RIGHT
 
     def ismiltime(self):
+        """Are times shown in military (aka 24 hour) time?
+
+        @rtype: Bool
+        @return: True is militart/24 hour format should be used"""
         return self.miltime
 
     def setforcellbackground(self, dc):
+        """Set the cell background attributes
+
+        Colour
+        @type dc: wxDC"""
         dc.SetBackground(self.cellbackground)
 
     def setforlabel(self, dc, fontscale=1):
+        """Set the attributes for the day label
+
+        Colour, font
+        @type dc: wxDC
+        @param fontscale: You should multiply the font point size
+                          by this number
+        @type fontscale: float
+        """
+        
         dc.SetTextForeground(self.labelforeground)
         return self.setscaledfont(dc, self.labelfont, fontscale)
 
     def setfortime(self,dc, fontscale=1):
+        """Set the attributes for the time of an event text
+ 
+        Colour, font
+        @type dc: wxDC
+        @param fontscale: You should multiply the font point size
+                          by this number
+        @type fontscale: float
+        """
         dc.SetTextForeground(self.timeforeground)
         return self.setscaledfont(dc, self.timefont, fontscale)
 
     def setforentry(self, dc, fontscale=1):
+        """Set the attributes for the label of an event text
+ 
+        Colour, font
+        @type dc: wxDC
+        @param fontscale: You should multiply the font point size
+                          by this number
+        @type fontscale: float
+        """        
         dc.SetTextForeground(self.entryforeground)
         return self.setscaledfont(dc, self.entryfont, fontscale)
                 
     def setscaledfont(self, dc, font, fontscale):
-        "Returns False if the font is already at smallest scale"
+        """Changes the in the device context to the supplied font suitably scaled
+
+        @type dc: wxDC
+        @type font: wxFont
+        @type fontscale: float
+        @return: Returns True if the scaling succeeded, and False if the font was already
+                 too small to scale smaller (the smallest size will still have been
+                 selected into the device context)
+        @rtype: Bool"""
         if fontscale==1:
             dc.SetFont(font)
             return True
@@ -96,7 +151,12 @@ DefaultCalendarCellAttributes=CalendarCellAttributes()
 
                 
 class CalendarCell(wxWindow):
+    """A control that is used for each day in the calendar
 
+    As the user scrolls around the calendar, each cell is updated with new dates rather
+    than creating new CalendarCell objects.  Internally it uses a backing buffer so
+    that redraws are quick and flicker free."""
+    
     fontscalecache=FontscaleCache()
 
     def __init__(self, parent, id, attr=DefaultCalendarCellAttributes, style=wxSIMPLE_BORDER):
@@ -118,6 +178,7 @@ class CalendarCell(wxWindow):
         pass
 
     def setdate(self, year, month, day):
+        """Set the date we are"""
         self.year=year
         self.month=month
         self.day=day
@@ -125,23 +186,37 @@ class CalendarCell(wxWindow):
         self.Refresh(False)
 
     def setattr(self, attr):
+        """Sets what CalendarCellAtrributes we use for appearance
+
+        @type attr: CalendarCellAtrributes"""
         self.attr=attr
         self.needsupdate=True
         self.Refresh(False)
 
     def setentries(self, entries):
+        """Sets the entries we will display
+
+        @type entries: list
+        @param entries: A list of entries.  Format is ( ( hour, minute, description), (hour, minute, decription) ... ).  hour is in 24 hour
+        """
         self.entries=entries
         self.needsupdate=True
         self.Refresh(False)
 
     def getdate(self):
+        """Returns what date we are currently displaying
+
+        @rtype: tuple
+        @return: tuple of (year, month, day)"""
         return (self.year, self.month, self.day)
 
     def OnSize(self, _=None):
+        """Callback for when we are resized"""
         self.width, self.height = self.GetClientSizeTuple()
         self.needsupdate=True
 
     def redraw(self):
+        """Causes a forced redraw into our back buffer"""
         if self.buffer is None or \
            self.buffer.GetWidth()!=self.width or \
            self.buffer.GetHeight()!=self.height:
@@ -158,6 +233,7 @@ class CalendarCell(wxWindow):
         del mdc
 
     def OnPaint(self, _=None):
+        """Callback for when we need to repaint"""
         if self.needsupdate:
             self.needsupdate=False
             self.redraw()
@@ -165,6 +241,10 @@ class CalendarCell(wxWindow):
         dc.DrawBitmap(self.buffer, 0, 0, False)
 
     def draw(self, dc):
+        """Draw ourselves
+
+        @type dc: wxDC"""
+        
         # do the label
         self.attr.setforlabel(dc)
         w,h=dc.GetTextExtent(`self.day`)
@@ -260,8 +340,10 @@ class CalendarCell(wxWindow):
                 break
 
 class CalendarLabel(wxWindow):
-    # This is the label on the left of the day cells that shows
-    # the month (rotated text)
+    """The label window on the left of the day cells that shows the month with rotated text
+
+    It uses double buffering etc for a flicker free experience"""
+    
     def __init__(self, parent, cells, id=-1):
         wxWindow.__init__(self, parent, id)
         self.needsupdate=True
@@ -367,7 +449,9 @@ class CalendarLabel(wxWindow):
 
 
 class Calendar(wxPanel):
-    """To use this control, you should subclass Calendar.  You need to
+    """The main calendar control.
+
+    You should subclass this clas and need to
     implement the following methods:
 
     L{OnGetEntries}
@@ -517,8 +601,10 @@ class Calendar(wxPanel):
        self.setselection(year, month, day)
        
     def showday(self, year, month, day, rowtoshow=-1):
-       # ensures specified day is onscreen
-       # if rowtoshow is >=0 then it will be forced to appear in that row
+       """Ensures specified date is onscreen
+
+       @param rowtoshow:   if is >=0 then it will be forced to appear in that row
+       """
        # check first cell
        y,m,d=self.rows[0][0].year, self.rows[0][0].month, self.rows[0][0].day
        if rowtoshow==-1:
@@ -619,7 +705,7 @@ class Calendar(wxPanel):
                 d+=1
                 
     # The following methods should be implemented in derived class.
-    # Implementations here ar to make it be a nice demo if not subclassed
+    # Implementations here are to make it be a nice demo if not subclassed
     
     def OnGetEntries(self, year, month, day):
         """Return a list of entries for the specified y,m,d.
@@ -651,6 +737,7 @@ class Calendar(wxPanel):
 
 
 class PopupCalendar(wxDialog):
+    """The control that pops up when you click the year button"""
     def __init__(self, parent, calendar, style=wxSIMPLE_BORDER):
         wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP)
         self.calendar=calendar
@@ -678,12 +765,26 @@ class PopupCalendar(wxDialog):
 _monthranges=[0, 31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 def monthrange(year, month):
+    """How many days are in the specified month?
+
+    @rtype: int"""
     if month==2:
         return calendar.monthrange(year, month)[1]
     return _monthranges[month]
 
 def normalizedate(year, month, day):
-    # metric system please .....
+    """Return a valid date (and an excellent case for metric time)
+
+    And example is the 32nd of January is first of Feb, or Jan -2 is
+    December 29th of previous year.  You should call this after doing
+    arithmetic on dates (for example you can just subtract 14 from the
+    current day and then call this to get the correct date for two weeks
+    ago.
+
+    @rtype: tuple
+    @return: (year, month, day)
+    """
+
     while day<1 or month<1 or month>12 or (day>28 and day>monthrange(year, month)):
         if day<1:
             month-=1
@@ -716,6 +817,7 @@ def normalizedate(year, month, day):
 # Up and down bitmap icons
 
 def getupbitmapData():
+    """Returns raw data for the up icon"""
     return \
 '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00\x10\x08\x06\
 \x00\x00\x00w\x00}Y\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\
@@ -727,13 +829,16 @@ def getupbitmapData():
 D \x03\x00\x00\x00\x00IEND\xaeB`\x82' 
 
 def getupbitmapBitmap():
+    """Returns a wxBitmap of the up icon"""
     return wxBitmapFromImage(getupbitmapImage())
 
 def getupbitmapImage():
+    """Returns wxImage of the up icon"""
     stream = cStringIO.StringIO(getupbitmapData())
     return wxImageFromStream(stream)
 
 def getdownbitmapData():
+    """Returns raw data for the down icon"""
     return \
 '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00\x10\x08\x06\
 \x00\x00\x00w\x00}Y\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\
@@ -745,15 +850,18 @@ def getdownbitmapData():
 \x1f\xf8\xca\t\xael-\x16\x86\x00\x00\x00\x00IEND\xaeB`\x82' 
 
 def getdownbitmapBitmap():
+    """Returns a wxBitmap of the down icon"""
     return wxBitmapFromImage(getdownbitmapImage())
 
 def getdownbitmapImage():
+    """Returns wxImage of the down icon"""
     stream = cStringIO.StringIO(getdownbitmapData())
     return wxImageFromStream(stream)
 
 
  
 
+# If run by self, then is a nice demo
 
 if __name__=="__main__":
     class MainWindow(wxFrame):
@@ -766,7 +874,7 @@ if __name__=="__main__":
     
     app=wxPySimpleApp()
     frame=MainWindow(None, -1, "Calendar Test")
-    if 0:
+    if False: # change to True to do profiling
         import profile
         profile.run("app.MainLoop()", "fooprof")
     else:
