@@ -34,6 +34,7 @@
 03ee  Mitsumi
 	0000  CD-R/RW Drive
 	641f  WIF-0402C Bluetooth Adapter
+	6440  WML-C52APR Bluetooth Adapter
 03f0  Hewlett-Packard
 	0004  DeskJet 895c
 	0101  ScanJet 4100c
@@ -92,6 +93,7 @@
 	4402  PhotoSmart 935 Camera (ptp)
 	6202  PhotoSmart 215 Camera
 	6302  PhotoSmart 318/612 Camera
+	6602  PhotoSmart 320 Camera
 	bef4  NEC Picty760
 	efbe  NEC Picty900
 	f0be  NEC Picty920
@@ -120,6 +122,7 @@
 	8370  7 Port Hub
 	8371  PS/2 Keyboard And Mouse
 	8372  FT8U100AX Serial Port
+	F208  Papenmeier Braille-Display
 0404  NCR Corp.
 0405  Synopsys, Inc.
 0406  Fujitsu-ICL Computers
@@ -173,6 +176,7 @@
 	551e  Keyboard
 	551f  Keyboard w/ Sys and Media
 	5521  Keyboard
+	7723  SD Card Reader
 	6481  16-bit Scanner
 0417  Symbios Logic
 0418  AST Research
@@ -284,6 +288,7 @@
 	a0a3  Fusion Digital GamePad
 	b203  360 Modena Pro Wheel
 	b300  Firestorm Dual Power
+	b304  Firestorm Dual Power
 0450  DFI, Inc.
 0451  Texas Instruments, Inc.
 	1428  Hub
@@ -295,6 +300,8 @@
 	6001  AU5 ADSL Modem
 	e001  GraphLink
 0452  Mitsubishi Electronics America, Inc.
+	0050  Diamond Pro 900u CRT Monitor
+	0051  Integrated Hub
 0453  CMD Technology
 0454  Vobis Microcomputer AG
 0455  Telematics International, Inc.
@@ -417,6 +424,7 @@
 	c00c  Optical Wheel Mouse
 	c00e  Optical Mouse
 	c012  Optical Mouse
+	c01b  MX310 Optical Mouse
 	c025  MX500 Optical Mouse
 	c030  iFeel Mouse
 	c032  MouseMan iFeel
@@ -430,11 +438,14 @@
 	c283  WingMan Force 3D
 	c285  WingMan Strike Force 3D
 	c291  WingMan Formula Force
+	c293  WingMan Formula Force GP
 	c295  Momo Force Steering Wheel
 	c2a0  Wingman Force Feedback Mouse
 	c308  Internet Navigator Keyboard
+	c309  Internet Keyboard
 	c401  TrackMan Marble Wheel
 	c402  Marble Mouse (2-button)
+	c404  TrackMan Wheel
 	c408  Marble Mouse (4-button)
 	c501  Cordless Mouse Receiver
 	c503  Cordless Mouse+Keyboard Receiver
@@ -461,6 +472,7 @@
 	0471  Digital Speaker System
 	0601  OVU1020 IR Dongle (Kbd+Mouse)
 	0701  150P1 TFT Display
+	1120  Creative Rhomba MP3 player
 	1801  Diva MP3 player
 0472  Chicony Electronics Co., Ltd
 	0065  PFU-65 Keyboard
@@ -591,23 +603,50 @@
 	3041  PowerShot S10
 	3042  CanoScan FS4000US Film Scanner
 	3043  PowerShot S20
+	3044  EOS D30
 	3045  PowerShot S100
+	3046  IXY Digital
 	3047  Digital IXUS
 	3048  PowerShot G1
 	3049  PowerShot Pro90 IS
 	304b  IXY Digital 300
+	304c  PowerShot S300
+	304d  Digital IXUS 300
 	304e  PowerShot A20
 	304f  PowerShot A10
+	3051  PowerShot S110
+	3052  Digital IXUS V
 	3055  PowerShot G2
 	3056  PowerShot S40
 	3057  PowerShot S30
 	3058  PowerShot A40
+	3059  PowerShot A30
 	305b  ZR45MC Digital Camcorder
+	3060  EOS D60
+	3061  PowerShot A100
 	3062  PowerShot A200
-	3067  MV550i Digital Video Camara
+	3065  PowerShot S200
+	3066  Digital IXUS 330
+	3067  MV550i Digital Video Camera
+	306b  MVX2i Digital Video Camera
 	306c  PowerShot S45
 	306d  PowerShot S45 PtP Mode
+	3069  PowerShot G3
+	3070  PowerShot S230
+	3072  PowerShot SD100
+	3073  PowerShot A70
+	3074  PowerShot A60
 	3075  IXUS 400 Camera
+	3076  PowerShot A300
+	3077  PowerShot S50
+	3078  ZR70MC Digital Camcorder
+	307b  MV630i Difital Video Camera
+	307f  Optura 20
+	3081  Optura 10
+	3083  EOS 10D
+	3084  EOS 300D
+	3085  PowerShot G5
+	309a  PowerShot A80
 04aa  DaeWoo Telecom, Ltd
 04ab  Chromatic Research
 04ac  Micro Audiometrics Corp.
@@ -732,7 +771,8 @@
 	0115  FinePix F401 Zoom (PC-Cam mode)
 	0116  FinePix A203 (Disk mode)
 	0117  FinePix A203 (PC-Cam mode)
-	011a  FinePix S304/3800
+	011a  FinePix S304/3800 (Disk mode)
+	011b  FinePix S304/3800 (PC-Cam mode)
 	011c  FinePix 2650 (Disk mode)
 	0130  Finepix S5000 Camera (PC-Cam mode)
 	0131  Finepix S5000 Camera (Disk mode)
@@ -763,11 +803,12 @@
 	7004  VE-CG40U Digital Still Camera
 	8004  Zaurus SL-5000D/SL-5500 PDA
 	8005  Zaurus A-300
-	8006  Zaurus SL-B500/SL-5600/SL-C700 PDA
+	8006  Zaurus SL-B500/SL-5600 PDA
 	8007  Zaurus C-700 PDA
 	9014  IM-DR80 Portable NetMD Player
 	9031  Zaurus C-750/C-760 PDA
 	9032  Zaurus SL-6000
+	9050  Zaurus C-860 PDA
 04de  MindShare, Inc.
 04df  Interlink Electronics
 04e1  Iiyama North America, Inc.
@@ -858,6 +899,7 @@
 	0121  F5D5050 100Mbps Ethernet
 	0208  USBView II Video Adapter [nt1004]
 	0224  F5U224 USB 2.0 4-Port Hub
+	0234  F5U234 USB 2.0 4-Port Hub
 	0805  Nostromo N50 GamePad
 	1203  F5U120-PC Serial Port
 050e  Neon Technology, Inc.
@@ -1024,6 +1066,7 @@
 	0873  ScanExpress 600 USB
 	1000  BearPaw 4800 TA Pro
 	a800  MDC 800 Camera
+	b500  MDC 3000 Camera
 	d001  WCam 300
 0560  Interface Corp.
 0561  Oasis Design, Inc.
@@ -1118,6 +1161,7 @@
 	2031  RM-203 USB Nest [mode 2]
 	2032  RM-203 USB Nest [mode 3]
 	2033  RM-203 USB Nest [mode 4]
+	2050  PX-205 PSX Bridge
 	3050  QF-305u Gamepad
 	688f  QF-688uv Windstorm Pro Joystick
 	7070  QF-707u Bazooka Joystick
@@ -1191,6 +1235,7 @@
 	0200  USS725 ATA Bridge
 	0202  ATA Bridge
 	081a  ATA Bridge
+	0cda  ATA Bridge for CD-R/RW
 05ac  Apple Computer, Inc.
 	0201  iMac Keyboard [ALPS M2452]
 	0202  Apple Keyboard [ALPS]
@@ -1304,6 +1349,8 @@
 	0101  DA-Port DAC
 05f2  Dexin Corp., Ltd
 05f3  PI Engineering, Inc.
+	0007  Kinesis Advantage PRO MPC/USB Keyboard
+	0081  Kinesis Integrated Hub
 	020b  PS2 Adapter
 	0232  X-Keys Switch Interface, Programming Mode
 	0264  X-Keys Switch Interface, Composite Mode
@@ -1724,6 +1771,7 @@
 077c  Forward Electronics Co., Ltd
 	0005  NEC Keyboard
 077d  Griffin Technology
+	0410  PowerMate
 	0223  IMic Audio In/Out
 077f  Well Excellent & Most Corp.
 0781  SanDisk Corp.
@@ -1803,6 +1851,7 @@
 	0105  Camedia C-700/C-3040/C-4000 Zoom Camera
 	0203  Digital Voice Recorder DW-90
 	0206  Digital Voice Recorder DS-330
+	0207  Digital Voice Recorder & Camera W-10
 07b5  Mega World International, Ltd
 	9902  GamePad
 07b6  Marubun Corp.
@@ -1848,6 +1897,7 @@
 	3801  Casio WMP-1 MP3-Watch
 	4500  LV-20 Digital Camera
 07d0  Dazzle
+	0001  Digital Video Creator I
 	0002  Global Village VideoFX Grabber
 	0004  DVC-800 (PAL) Grabber
 07d1  D-Link System
@@ -2188,6 +2238,7 @@
 	0001  ISDN TA
 09d9  KRF Tech, Ltd
 09da  A4 Tech Co., Ltd
+	001a  Wireless Mouse & RXM-15 Receiver
 09db  Measurement Computing Corp.
 09dc  Aimex Corp.
 09dd  Fellowes, Inc.
@@ -2280,6 +2331,7 @@
 0a7e  Octagon Systems Corp.
 0a80  Rexon Technology Corp., Ltd
 0a81  Chesen Electronics Corp.
+	0101 Keyboard
 0a82  Syscan
 	4600  TravelScan 460/464
 0a83  NextComm, Inc.
@@ -2297,6 +2349,7 @@
 0aa4  Develco Elektronik
 0aa5  First International Digital
 0aa6  Perception Digital, Ltd
+	0101  Hercules Jukebox
 0aa7  Wincor Nixdorf GmbH & Co KG
 0aa8  TriGem Computer, Inc.
 0aa9  Baromtec Co.
@@ -2335,6 +2388,8 @@
 0aeb  TTP Communications, Ltd
 0aec  Neodio Technologies Corp.
 	5010  ND5010 Card Reader
+0af0  Option
+	5000  UMTS Card
 0af6  Silver I Co., Ltd
 0af7  B2C2, Inc.
 0af9  Hama, Inc.
@@ -2390,6 +2445,7 @@
 0b60  Nsine, Ltd
 0b61  NEC Viewtechnology, Ltd
 0b62  Orange Micro, Inc.
+	0059  iBOT2 WebCam
 0b63  ADLink Technology, Inc.
 0b64  Wonderful Wire Cable Co., Ltd
 0b65  Expert Magnetics Corp.
@@ -2429,6 +2485,7 @@
 0bb3  Ofuji Technology
 0bb4  High Tech Computer Corp.
 	00ce  mmO2 XDA GSM/GPRS Pocket PC
+	0a02  Himalaya GSM/GPRS Pocket PC
 0bb5  Murata Manufacturing Co., Ltd
 0bb6  Network Alchemy
 0bb7  Joytech Computer Co., Ltd
@@ -2517,6 +2574,7 @@
 0c53  ViewPLUS, Inc.
 0c54  Glory, Ltd
 0c55  Spectrum Digital, Inc.
+	0510 Spectrum Digital XDS510 JTAG Debugger
 0c56  Billion Bright, Ltd
 0c57  Imaginative Design Operation Co., Ltd
 0c58  Vidar Systems Corp.
@@ -4878,3 +4936,46 @@ L 0060  Kashmiri
 	02  India
 L 0061  Nepali
 	02  India
+
+# HID Descriptor bCountryCode
+# HID Specification 1.11 (2001-06-27) page 23   
+#
+# Syntax:
+# CC country_code keymap_type
+
+CC 00  Not supported
+CC 01  Arabic
+CC 02  Belgian
+CC 03  Canadian-Bilingual
+CC 04  Canadian-French
+CC 05  Czech Republic
+CC 06  Danish
+CC 07  Finnish
+CC 08  French
+CC 09  German
+CC 10  Greek
+CC 11  Hebrew
+CC 12  Hungary
+CC 13  International (ISO)
+CC 14  Italian
+CC 15  Japan (Katakana)
+CC 16  Korean
+CC 17  Latin American
+CC 18  Netherlands/Dutch
+CC 19  Norwegian
+CC 20  Persian (Farsi)
+CC 21  Poland
+CC 22  Portuguese
+CC 23  Russia
+CC 24  Slovakia
+CC 25  Spanish
+CC 26  Swedish
+CC 27  Swiss/French
+CC 28  Swiss/German
+CC 29  Switzerland
+CC 30  Taiwan
+CC 31  Turkish-Q
+CC 32  UK
+CC 33  US
+CC 34  Yugoslavia
+CC 35  Turkish-F
