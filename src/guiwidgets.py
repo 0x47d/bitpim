@@ -34,6 +34,7 @@ import usbscan
 import comdiagnose
 import analyser
 import guihelper
+import pubsub
 
 ####
 #### A simple text widget that does nice pretty logging.
@@ -354,6 +355,7 @@ class ConfigDialog(wxDialog):
         # phone model
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
         self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
+        pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
         # ::TODO:: add/remove tabs depending on what phone supports
         # ensure config is saved
         self.mw.config.Flush()
