@@ -426,11 +426,16 @@ class LogWindow(wxPanel):
             # or the whole buffer if it was nothing
             if data is None or len(data)==0:
                 data=self.tb.GetValue()
+            try:
+                self.theanalyser.Show()
+            except:
+                self.theanalyser=None
+                
             if self.theanalyser is None:
                 self.theanalyser=analyser.Analyser(data=data)
-            else:
-                self.theanalyser.Show()
-                self.theanalyser.newdata(data)
+
+            self.theanalyser.Show()
+            self.theanalyser.newdata(data)
             evt.Skip()
             
 
