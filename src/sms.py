@@ -21,7 +21,17 @@ datetime: string "YYYYMMDDThhmmss"
 callback: string (optional callback phone #)
 folder: string (where this item belongs: inbox, sent, draft, etc)
 flags: [{"locked": True/<False|None>}]
-msg_id: unique message id (hexstring sha encoded (ESN+folder+datetime))
+msg_id: unique message id (hexstring sha encoded (datetime+text))
+
+To implement SMS read for a phone module:
+ Add an entry into Profile._supportedsyncs:
+        ...
+        ('sms', 'read', None),     # all todo reading
+
+ Implement the following method in your Phone class: 
+    def getsms(self, result, merge):
+        ...
+        return result
 
 """
 
