@@ -7,7 +7,11 @@
 ###
 ### $Id$
 
-"""Be at one with eGroupware"""
+"""Be at one with eGroupware
+
+We talk to eGroupware using its xmlrpc interface.  Unfortunately the interface
+has several quality issues, so we try to work around them in this code.
+"""
 
 import xmlrpclib
 import urlparse
@@ -76,14 +80,14 @@ class Session:
 
     def doescontactexist(self, id):
         try:
-            self.sp.addressbook.boaddressbook.read({'id': id})
-            return True
-        except xmlrpclib.Fault:
+            return self.sp.addressbook.boaddressbook.read({'id': id})
+        except xmlrpclib.Fault, f:
             # in theory only fault 10 - Entry does not (longer) exist!
             # should be looked for.  Unfortunately egroupware has a
             # bug and returns fault 9 - Access denied if the id
             # doesn't exist.  So we consider any failure to mean
             # that the id doesn't exist.  Reported as SF bug #1057984
+            print "eg contact doesn't exist, fault", f
             return False
 
     def getcontacts(self):
@@ -109,7 +113,13 @@ class Session:
             offset+=len(contacts)
 
     def writecontact(self, contact):
-        return self.sp.addressbook.boaddressbook.write(contact)
+        "Returns the id of the contact"
+        # egroupware returns True if the contact was written successfully using the
+        # existing id, otherwise it returns the new id
+        res=self.sp.addressbook.boaddressbook.write(contact)
+        if res is True:
+            return contact['id']
+        return res
 
     def getcontactspbformat(self):
         "returns contacts in a format suitable for the BitPim phonebook importer"
@@ -181,9 +191,10 @@ if __name__=='__main__':
     import sys
     import common
     s=getsession(*sys.argv[1:])
-    print s.getcategories()
-    for n,i in enumerate(s.getcontacts()):
-        print n,common.prettyprintdict(i)
+    for v in s.getcategories():
+        print common.prettyprintdict(v)
+    #for n,i in enumerate(s.getcontacts()):
+    #    print n,common.prettyprintdict(i)
         
         #print n,i.get('id',""),i.get('n_given', ""),i.get('n_family', "")
     
