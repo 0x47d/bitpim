@@ -57,7 +57,7 @@ def run(*args):
     print args
     ret=os.spawnl( *( (os.P_WAIT, args[0])+args)) # looks like C code ...
     if ret!=0:
-        raise common.CommandExecutionFailed(retcode, args)
+        raise common.CommandExecutionFailed(ret, args)
     
 
 def convertto8bitpng(pngdata, maxsize):
