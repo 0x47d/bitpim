@@ -70,6 +70,7 @@ numbers:
   - number     Phone number as ascii string
   - type       'home', 'office', 'cell', 'fax', 'pager', 'data', 'none'  (if you have home2 etc, list
                them without the digits.  The second 'home' is implicitly home2 etc)
+  - speeddial  (optional) Speed dial number
 
 serials:
 
@@ -146,17 +147,21 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         newkeys=self.main._data.keys()
         newkeys.sort()
         oldrows=self.rowkeys
+        print oldrows
         self.rowkeys=newkeys
         lo=len(oldrows)
         ln=len(self.rowkeys)
         if ln>lo:
+            print "append", ln,lo,ln-lo
             msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, ln-lo)
         elif lo>ln:
+            print "delete", ln,lo,lo-ln
             msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, lo-ln)
         else:
+            print "no change"
             msg=None
         if msg is not None:
-            self.GetView().ProcessTableMessage(msg)
+            print self.GetView().ProcessTableMessage(msg)
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().AutoSizeColumns()
 
