@@ -22,7 +22,7 @@ BOOL=BOOLlsb
 NUMPHONEBOOKENTRIES=300
 NUMEMAILS=3
 NUMPHONENUMBERS=6
-NUMCALENDARENTRIES=70
+NUMCALENDAREVENTS=70
 MAXNUMBERLEN=32
 
 NUMGROUPS=4
@@ -44,7 +44,7 @@ PACKET pbentry:
     * SAMINT slot "Internal Slot"
     * SAMINT uslot "User Slot, Speed dial"
     * SAMINT group
-    * SAMINT ringtone
+    * SAMINT {'default': 20} +ringtone
     * SAMSTRING name
     * SAMINT speeddial "Which phone number assigned to speed dial uslot"
     * SAMINT {'default': 0} +dunno1
@@ -101,6 +101,18 @@ PACKET eventrequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PISHR='} +command
     * SAMINT {'terminator': None} +slot
 
+PACKET eventresponse:
+    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PISHR:'} command
+    * evententry entry
+    
+PACKET evententry:
+    * SAMINT slot
+    * SAMTIME start
+    * SAMTIME end
+    * SAMTIME timestamp
+    * SAMINT alarm "0: 10 minutes, 1: 30 minutes, 2: 60 minutes, 3: No Alarm, 4: On Time"
+    * SAMSTRING {'quotechar': None} dunno
+    * SAMSTRING {'terminator': None} eventname
 
 PACKET esnrequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
