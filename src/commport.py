@@ -16,7 +16,7 @@ class CommTimeout(Exception):
         self.partial=partial
 
 class CommConnection:
-    def __init__(self, logtarget, port, baud=115200, timeout=2, rtscts=0):
+    def __init__(self, logtarget, port, baud=115200, timeout=3, rtscts=0):
         self.logtarget=logtarget
         self.port=port
         self.log("Connecting to port %s, %d baud, timeout %f, hardwareflow %d" %
