@@ -180,6 +180,7 @@ def formatexception(excinfo=None, lastframes=6):
                is used
      @param lastframes: local variables are shown for these number of
                   frames
+     @return: A pretty printed string
                """
      if excinfo is None:
           excinfo=sys.exc_info()
