@@ -310,7 +310,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             tone=self.serialsname+"Index_"+`entry.wallpaper`
             res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
             
-        res['speeddial']
 
         # We don't have a place to put these
         # print entry.name, entry.birthday
@@ -379,7 +378,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         # double quotes?  DSV strips these quotes, so we have to do it to
         # all fields.
         col=line.find(": ")
-        print line[col+2:]
         e=DSV.importDSV([line[col+2:]])[0]
         i=0
         while i<len(e):
@@ -730,7 +728,6 @@ class Profile(com_phone.Profile):
                 if tryuslot>=1 and tryuslot<=self.protocolclass.NUMPHONEBOOKENTRIES and not uslotsused.has_key(tryuslot):
                     uslotsused[tryuslot]=1
                     e['uslot']=tryuslot
-                    print slot, tryuslot
             else:
                 e['speeddial']=defaulttypenum
                 
@@ -765,7 +762,6 @@ class Profile(com_phone.Profile):
                     tryuslot+=1
                 uslotsused[tryuslot]=1
                 e['uslot'] = tryuslot
-                print e['slot'], tryuslot
                 results[slot] = e
 
         data['phonebook']=results
