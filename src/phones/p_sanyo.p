@@ -32,20 +32,21 @@ PACKET firmwarerequest:
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  string1
-    1 UNKNOWN dunno1
-    11 STRING {'terminator': None}  date3
-    1 UNKNOWN dunno2
-    8 STRING {'terminator': None}  time3
-    11 UNKNOWN dunno3
-    10 STRING {'terminator': None}  firmware
-    7 UNKNOWN dunno4
-    16 STRING {'terminator': None}  phonemodel
-    5 STRING {'terminator': None}  prl
+    * UNKNOWN unknown
+#    11 STRING {'terminator': None}  date1
+#    8 STRING {'terminator': None}  time1
+#    11 STRING {'terminator': None}  date2
+#    8 STRING {'terminator': None}  time2
+#    8 STRING {'terminator': None}  string1
+#    1 UNKNOWN dunno1
+#    11 STRING {'terminator': None}  date3
+#    1 UNKNOWN dunno2
+#    8 STRING {'terminator': None}  time3
+#    11 UNKNOWN dunno3
+#    10 STRING {'terminator': None}  firmware
+#    7 UNKNOWN dunno4
+#    16 STRING {'terminator': None}  phonemodel
+#    5 STRING {'terminator': None}  prl
 
 PACKET beginendupdaterequest:
     1 UINT {'constant': 0x29} +command
@@ -91,7 +92,7 @@ PACKET ownerentry:
     1 UINT birthday
     1 UINT bloodtype "0: ?, 1: A, 2: B, 3: O, 4: AB"
     96 STRING {'raiseonunterminatedread': False} address
-    14 UNKNWON +pad
+    14 UNKNOWN +pad
     48 STRING {'raiseonunterminatedread': False} homeemail
     48 STRING {'raiseonunterminatedread': False} workemail
     48 STRING {'raiseonunterminatedread': False} homephone
@@ -100,7 +101,7 @@ PACKET ownerentry:
 PACKET ownerinforesponse:
     * sanyoheader header
     * ownerentry entry
-    179 UNKNOWN pad
+    178 UNKNOWN pad
     
 PACKET eventrequest:
     * sanyoheader {'packettype': 0x0c,
