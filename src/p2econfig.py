@@ -26,10 +26,12 @@ for extra in ["win32com.shell"]:
 
 opts={
     "py2exe":  {
-        "dll_excludes": [ "_ssl.pyd", "libusb0.dll"],
-#        "packages": [ "encodings", "encodings.utf8"],
+        "dll_excludes": [ "_ssl.pyd", "libusb0.dll", "mfc42.dll"],
+    #        "packages": [ "encodings", "encodings.utf8"],
+        # this is outlook version 9, aka Outlook 2000
+        "typelibs": [('{00062FFF-0000-0000-C000-000000000046}',0,9,0)],
+        }
     }
-}
 
 setup(name="bitpim",
       options=opts,
