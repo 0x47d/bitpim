@@ -311,6 +311,7 @@ class MainApp(wxApp):
         frame.wt=wt
         self.frame=frame
         self.SetTopWindow(frame)
+        self.SetExitOnFrameDelete(True)
 
     def OnExit(self):
         print "onexit"
