@@ -417,7 +417,7 @@ class BPFSHandler(wx.FileSystemHandler):
         p={}
         for param in params:
             x=param.find('=')
-            key=param[:x]
+            key=str(param[:x])
             value=param[x+1:]
             if key=='width' or key=='height':
                 p[key]=int(value)
