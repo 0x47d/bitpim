@@ -32,3 +32,33 @@ _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
 
 %}
+
+PACKET eventresponse:
+    * sanyoheader header
+    * evententry entry
+    436 UNKNOWN pad
+
+PACKET eventupdaterequest:
+    * sanyowriteheader {'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    436 UNKNOWN +pad
+
+PACKET evententry:
+    1 UINT slot
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    7 UNKNOWN +pad1
+    1 UINT eventname_len
+    4 UINT start "# seconds since Jan 1, 1980 approximately"
+    4 UINT end
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    7 UNKNOWN +pad2
+    1 UINT location_len
+    4 UINT alarmdiff "Displayed alarm time"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT alarm
+    1 UNKNOWN +pad3
+    1 UINT {'default': 0} +serial "Some kind of serial number"
+    1 UINT +flag "0: Not used, Other Used"
+    2 UNKNOWN +pad4
+    1 UINT ringtone
