@@ -14,29 +14,38 @@ import guihelper
 import os
 import pubsub
 
+from wallpaper import BPFSHandler
+from wallpaper import ScaleImageIntoBitmap
+
 ###
 ###  Midi
 ###
 
-class RingerView(guiwidgets.FileView):
+class RingerView(guiwidgets.FileViewNew):
     CURRENTFILEVERSION=2
+
+    # N9YTY - not sure if this is needed, copied from wallpaper.py
+    # this is only used to prevent the pubsub module
+    # from being GC while any instance of this class exists
+    __publisher=pubsub.Publisher
+
     
     def __init__(self, mainwindow, parent, id=-1):
-        guiwidgets.FileView.__init__(self, mainwindow, parent, id)
-        self.InsertColumn(2, "Length")
-        self.InsertColumn(3, "Origin")
-        self.InsertColumn(4, "Description")
-        il=wx.ImageList(32,32)
-        il.Add(guihelper.getbitmap("ringer"))
-        self.AssignImageList(il, wx.IMAGE_LIST_NORMAL)
-        self._data={}
-        self._data['ringtone-index']={}
+        guiwidgets.FileViewNew.__init__(self, mainwindow, parent, guihelper.getresourcefile("ringtone.xy"),
+                                        guihelper.getresourcefile("ringtone-style.xy"), bottomsplit=200,
+                                        rightsplit=200)
+        self.SetColumns(["Name", "Length", "Origin", "Description"])
+        wx.FileSystem_AddHandler(BPFSHandler(self))
+        self._data={'ringtone-index': {}}
+        self.wildcard="Ringtone Files|*.mid;*.qcp"
 
-        self.wildcard="MIDI files (*.mid)|*.mid|PureVoice Files (*.qcp)|*.qcp"
-
+        self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(pubsub.REQUEST_RINGTONES, self, "OnListRequest")
+
+    def updateprofilevariables(self, profile):
+        pass
 
     def OnListRequest(self, msg=None):
         l=[self._data['ringtone-index'][x]['name'] for x in self._data['ringtone-index']]
@@ -95,18 +104,65 @@ class RingerView(guiwidgets.FileView):
         self._data['ringtone-index'][idx]={'name': file}
         self.modified=True
 
+
+    def GetItemImage(self, item):
+        image=wx.Image(guihelper.getresourcefile('ringer.png'))
+        return image
+
+    def GetItemSizedBitmap(self, item, width, height):
+        img=self.GetItemImage(item)
+        if width!=img.GetWidth() or height!=img.GetHeight():
+            if guihelper.IsMSWindows():
+                bg=None # transparent
+            elif guihelper.IsGtk():
+                # we can't use transparent as the list control gets very confused on Linux
+                # it also returns background as grey and foreground as black even though
+                # the window is drawn with a white background.  So we give up and hard code
+                # white
+                bg="ffffff"
+            elif guihelper.IsMac():
+                # use background colour
+                bg=self.GetBackgroundColour()
+                bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
+            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
+        else:
+            bitmap=img.ConvertToBitmap()
+        return bitmap
+
+    def GetItemValue(self, item, col):
+        if col=='Name':
+            return item['name']
+        elif col=='Length':
+            return item['filelen']
+        elif col=='Origin':
+            return item.get('origin', "")
+        elif col=='Description':
+            return item['description']
+        assert False, "unknown column"
+
+    def GetImage(self, file):
+        """Gets the named image
+
+        @return: (wxImage, filesize)
+        """
+        image=wx.Image(guihelper.getresourcefile('ringer.png'))
+        return image, int(os.stat(guihelper.getresourcefile('ringer.png')).st_size)
+
+    def updateindex(self, index):
+        if index!=self._data['ringtone-index']:
+            self._data['ringtone-index']=index.copy()
+            self.modified=True
+
     def populatefs(self, dict):
         self.thedir=self.mainwindow.ringerpath
         return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index', self.CURRENTFILEVERSION)
             
     def populate(self, dict):
-        self.Freeze()
-        self.DeleteAllItems()
         if self._data['ringtone-index']!=dict['ringtone-index']:
             self._data['ringtone-index']=dict['ringtone-index'].copy()
             self.modified=True
-
-        count=0
+        newitems=[]
+        existing=self.GetAllItems()
         keys=dict['ringtone-index'].keys()
         keys.sort()
         for i in keys:
@@ -116,22 +172,28 @@ class RingerView(guiwidgets.FileView):
             if not os.path.isfile(filename):
                 print "no file for",entry['name']
                 continue
-
             filelen=int(os.stat(filename).st_size)
-            
-            self.InsertImageStringItem(count, entry['name'], 0)
-            self.SetStringItem(count, 0, entry['name'])
-            self.SetStringItem(count, 1, `filelen`)
+            newentry={}
+            # Look through existing to see if we already have an entry for this
+            for k in existing:
+                if entry['name']==k['name']:
+                    newentry.update(k)
+                    break
+            # fill in new entry
+            newentry.update(newentry)
+            newentry['rt-index']=i
+            newentry['name']=entry['name']
+            newentry['filelen']=filelen
+            newentry['file']=filename
             if os.path.splitext(entry['name'])[1]=='.qcp':
-                self.SetStringItem(count, 2, "2 seconds :-)")
-                self.SetStringItem(count, 4, "PureVoice file")
+                newentry['length']="2 seconds :-)"
+                newentry['description']="PureVoice file"
             else:
-                self.SetStringItem(count, 2, "1 second :-)")
-                self.SetStringItem(count, 4, "Midi file")
-            self.SetStringItem(count, 3, entry.get("origin", ""))
-            count+=1
-        self.Thaw()
-        self.MakeTheDamnThingRedraw()
+                newentry['length']="1 second :-)"
+                newentry['description']="Midi file"
+            newentry['origin']=''
+            newitems.append(newentry)
+        self.SetItems(newitems)
 
     def getfromfs(self, result):
         self.thedir=self.mainwindow.ringerpath
