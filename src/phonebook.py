@@ -152,7 +152,9 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
 
 
 def formatcategories(cats):
-    return "; ".join([cat['category'] for cat in cats])
+    c=[cat['category'] for cat in cats]
+    c.sort()
+    return "; ".join(c)
 
 def formataddress(address):
     l=[]
@@ -511,7 +513,7 @@ class PhoneWidget(wx.Panel):
         self._data={}
         self.categories=[]
         self.modified=False
-        self.table=wx.grid.Grid(split, wx.NewId())
+        self.table=wx.grid.Grid(split, wx.NewId(), style=wx.NO_FULL_REPAINT_ON_RESIZE)
         self.table.EnableGridLines(False)
         # which columns?
         cur=config.Read("phonebookcolumns", "")
@@ -860,7 +862,7 @@ class PhoneWidget(wx.Panel):
         result=None
         if dlg.ShowModal()==wx.ID_OK:
             result=dlg.resultdata
-        guiwidgets.save_size(dlg.config, "ImportDialog", dlg.GetRect())
+        guiwidgets.save_size(dlg.config, "PhoneImportMergeDialog", dlg.GetRect())
         dlg.Destroy()
         if result is not None:
             d={}
@@ -1116,6 +1118,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         return self.main.rowdata[self.rowkeys[row]]
 
     def GetColLabelValue(self, col):
+        "Returns the label for the numbered column"
         return self.columns[col]
 
     def IsEmptyCell(self, row, col):
@@ -1126,6 +1129,17 @@ class ImportDataTable(wx.grid.PyGridTableBase):
 
     def GetNumberRows(self):
         return len(self.rowkeys)
+
+    def GetRowType(self, row):
+        """Returns what type the row is from DELETED, CHANGED, ADDED and UNALTERED"""
+        row=self.GetRowData(row)
+        if row[3] is None:
+            return self.DELETED
+        if row[1] is not None and row[2] is not None:
+            return self.CHANGED
+        if row[1] is not None and row[2] is None:
+            return self.ADDED
+        return self.UNALTERED
 
     def GetAttr(self, row, col, _):
         try:
@@ -1286,11 +1300,15 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                                           'colour': colour}
 
     def OnDataUpdated(self):
+        wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        wx.Yield() # so the cursor can be displayed
         # update row keys
         newkeys=self.main.rowdata.keys()
         oldrows=self.rowkeys
         # rowkeys is kept in the same order as oldrows
         self.rowkeys=[k for k in oldrows if k in newkeys]+[k for k in newkeys if k not in oldrows]
+        # now remove the ones that don't match checkboxes
+        self.rowkeys=[self.rowkeys[n] for n in range(len(self.rowkeys)) if self.GetRowType(n) in self.main.show]
         # work out which columns we actually need
         colsavail=ImportColumns
         colsused=[]
@@ -1308,7 +1326,10 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         lo=len(self.columns)
         ln=len(colsused)
 
-        sortcolumn=self.columns[self.main.sortedColumn]
+        try:
+            sortcolumn=self.columns[self.main.sortedColumn]
+        except IndexError:
+            sortcolumn=0
 
         # update columns
         self.columns=colsused
@@ -1347,6 +1368,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.GetView().ProcessTableMessage(msg)
         self.GetView().AutoSize()
+        wx.EndBusyCursor()
         wx.CallAfter(self.GetView().Fit)
         wx.CallAfter(self.sizetwiddle)
 
@@ -1445,19 +1467,26 @@ class ImportDialog(wx.Dialog):
         self.cbadded=wx.CheckBox(self, wx.NewId(), "Added")
         self.cbchanged=wx.CheckBox(self, wx.NewId(), "Merged")
         self.cbdeleted=wx.CheckBox(self, wx.NewId(), "Deleted")
+        wx.EVT_CHECKBOX(self, self.cbunaltered.GetId(), self.OnCheckbox)
+        wx.EVT_CHECKBOX(self, self.cbadded.GetId(), self.OnCheckbox)
+        wx.EVT_CHECKBOX(self, self.cbchanged.GetId(), self.OnCheckbox)
+        wx.EVT_CHECKBOX(self, self.cbdeleted.GetId(), self.OnCheckbox)
 
         for i in self.cbunaltered, self.cbadded, self.cbchanged, self.cbdeleted:
             i.SetValue(True)
             hbs.Add(i, 0, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, 7)
 
+        t=ImportDataTable
+        self.show=[t.ADDED, t.UNALTERED, t.CHANGED, t.DELETED]
+
         hbs.Add(wx.StaticText(self, -1, " "), 0, wx.EXPAND|wx.LEFT, 10)
 
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+        splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE|wx.NO_FULL_REPAINT_ON_RESIZE)
         splitter.SetMinimumPaneSize(20)
 
-        self.grid=wx.grid.Grid(splitter, wx.NewId())
+        self.grid=wx.grid.Grid(splitter, wx.NewId(), style=wx.NO_FULL_REPAINT_ON_RESIZE)
         self.table=ImportDataTable(self)
         self.grid.SetTable(self.table, False, wx.grid.Grid.wxGridSelectRows)
         self.grid.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
@@ -1489,7 +1518,7 @@ class ImportDialog(wx.Dialog):
         wx.CallAfter(self.DoMerge)
 
         self.config = parent.mainwindow.config
-        guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
+        guiwidgets.set_size(self.config, "PhoneImportMergeDialog", self, screenpct=95,  aspect=1.10)
         # the above doesn't change the splitter position
         w,_=splitter.GetSize()
         splitter.SetSashPosition(max(w/2, w-200))
@@ -1542,6 +1571,17 @@ class ImportDialog(wx.Dialog):
         else:
             self.sortedColumn=col
             self.sortedColumnDescending=False
+        self.table.OnDataUpdated()
+
+    def OnCheckbox(self, _):
+        t=ImportDataTable
+        vclist=((t.ADDED, self.cbadded), (t.UNALTERED, self.cbunaltered),
+                (t.CHANGED, self.cbchanged), (t.DELETED, self.cbdeleted))
+        self.show=[v for v,c in vclist if c.GetValue()]
+        if len(self.show)==0:
+            for v,c in vclist:
+                self.show.append(v)
+                c.SetValue(True)
         self.table.OnDataUpdated()
 
     def DoMerge(self):
