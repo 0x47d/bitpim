@@ -81,6 +81,7 @@ serials:
 
 # Standard imports
 import os
+import cStringIO
 
 # GUI
 import wx
@@ -468,7 +469,10 @@ class BPFSHandler(wx.FileSystemHandler):
             return True
         return False
 
-    def OpenFile(self, filesystem, location):
+    def OpenFile(self,filesystem,location):
+        return common.exceptionwrap(self._OpenFile)(filesystem,location)
+
+    def _OpenFile(self, filesystem, location):
         proto=self.GetProtocol(location)
         r=self.GetRightLocation(location)
         params=r.split(';')
@@ -495,8 +499,9 @@ class BPFSHandler(wx.FileSystemHandler):
     def OpenBPImageFile(self, location, name, **kwargs):
         f=gui.getresourcefile(name)
         if not os.path.isfile(f):
+            print f,"doesn't exist"
             return None
-
+        print "here"
         return BPFSImageFile(self, location, f, **kwargs)
 
 class BPFSImageFile(wx.FSFile):
@@ -506,7 +511,6 @@ class BPFSImageFile(wx.FSFile):
     """
 
     def __init__(self, fshandler, location, name, data=None, width=32, height=32):
-        wx.FSFile.__init__(self)
         self.fshandler=fshandler
         self.location=location
 
@@ -520,15 +524,30 @@ class BPFSImageFile(wx.FSFile):
         mdc.SelectObject(b)
         mdc.SetBackgroundMode(wx.TRANSPARENT)
         mdc.Clear()
-        
+        # ::TODO:: size conversions, center placing
         mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, True)
+        mdc.SelectObject(wx.NullBitmap)
+        
+        f=common.gettempfilename("png")
+        if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
+            raise Exception, "Saving to png failed"
+
+        file=open(f, "rb")
+        data=file.read()
+        file.close()
+        del file
+        os.remove(f)
+
+        s=cStringIO.StringIO(data)
+        
+        wx.FSFile.__init__(self, s, location, "image/png", "", wx.DateTime_Now())
 
 
 class StringInputStream(wx.InputStream):
 
     def __init__(self, data):
-        wx.InputStream.__init__(self)
-        self.data=data
+        f=cStringIO.StringIO(data)
+        wx.InputStream.__init__(self,f)
 
     
         
