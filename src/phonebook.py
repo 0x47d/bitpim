@@ -573,6 +573,7 @@ class PhoneWidget(wx.Panel):
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
+        wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
         pubsub.subscribe(pubsub.ALL_CATEGORIES, self, "OnCategoriesUpdate")
         # we draw the column headers
         # code based on original implementation by Paul Mcnett
@@ -729,8 +730,14 @@ class PhoneWidget(wx.Panel):
         row=event.GetRow()
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
+    def OnPreviewDClick(self, _):
+        self.EditEntry(self.table.GetGridCursorRow())
+
     def OnCellDClick(self, event):
         row=event.GetRow()
+        self.EditEntry(row)
+
+    def EditEntry(self, row):
         key=self.dt.rowkeys[row]
         data=self._data[key]
         dlg=phonebookentryeditor.Editor(self, data)
