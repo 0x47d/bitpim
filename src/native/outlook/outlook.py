@@ -286,6 +286,10 @@ if __name__=='__main__':
     keys=keys.keys()
     keys.sort()
 
+    # Print out keys so they can be pasted in elsewhere
+    for k in keys:
+        print "   ('%s',  )," % (k,)
+
     import wx
     import wx.grid
 
