@@ -514,7 +514,7 @@ class PhoneWidget(wx.Panel):
             wx.MessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wx.OK|wx.ICON_EXCLAMATION)
             version=2
             dict['phonebook']={}
-            dict['categories']={}
+            dict['categories']=[]
             
     def clear(self):
         self._data={}
@@ -534,7 +534,7 @@ class PhoneWidget(wx.Panel):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
-            dict['categories']={}
+            dict['categories']=[]
         return dict
 
     def populate(self, dict):
