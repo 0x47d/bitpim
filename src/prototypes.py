@@ -624,6 +624,100 @@ class SAMINT(SAMSTRING):
 
         return ival
 
+class SAMDATE(SAMSTRING):
+    """Dates in CSV lines"""
+    def __init__(self, *args, **kwargs):
+        super(SAMDATE,self).__init__(*args, **kwargs)
+
+        self._valuedate=(0,0,0) # Year month day
+
+        self._quotechar=None
+        
+        if self._ismostderived(SAMDATE):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._converttostring(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(self._converttostring(args[0]),)
+        else:
+            raise TypeError("expected (year,month,day) as arg")
+
+        super(SAMDATE,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(SAMDATE,kwargs)
+
+    def getvalue(self):
+        """Unpack the string into the date
+
+        @rtype: tuple
+        @return: (year, month, day)
+        """
+
+        s=super(SAMDATE,self).getvalue()
+        val=s.split("/") # List of of Month, day, year
+        year=int(val[2])
+        month=int(val[0])
+        day=int(val[1])
+        return (year, month, day)
+        
+    def _converttostring(self, date):
+        year,month,day=date
+        s='%2.2d/%2.2d/%4.4d'%(month, day, year)
+        return s
+        
+
+class SAMTIME(SAMSTRING):
+    """Timestamp in CSV lines"""
+    def __init__(self, *args, **kwargs):
+        super(SAMTIME,self).__init__(*args, **kwargs)
+
+        self._valuetime=(0,0,0,0,0,0) # Year month day, hour, minute, second
+
+        self._quotechar=None
+        
+        if self._ismostderived(SAMTIME):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._converttostring(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(self._converttostring(args[0]),)
+        else:
+            raise TypeError("expected (year,month,day) as arg")
+
+        super(SAMTIME,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(SAMTIME,kwargs)
+
+    def getvalue(self):
+        """Unpack the string into the date
+
+        @rtype: tuple
+        @return: (year, month, day)
+        """
+
+        s=super(SAMTIME,self).getvalue()
+        year=int(s[0:4])
+        month=int(s[4:6])
+        day=int(s[6:8])
+        hour=int(s[9:11])
+        minute=int(s[11:13])
+        second=int(s[13:15])
+        return (year, month, day, hour, minute, second)
+        
+    def _converttostring(self, time):
+        year,month,day,hour,minute,second=time
+        s='%4.4d%2.2d%2.2dT%2.2d%2.2d%2.2d'%(year, month, day, hour, minute, second)
+        return s
+        
+
 class COUNTEDBUFFEREDSTRING(BaseProtogenClass):
     """A string as used on Audiovox.  There is a one byte header saying how long the string
     is, followed by the string in a fixed sized buffer"""
