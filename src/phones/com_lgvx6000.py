@@ -91,5 +91,8 @@ class Profile(com_lgvx4400.Profile):
 
     serialsname='lgvx6000'
 
+    WALLPAPER_WIDTH=120
+    WALLPAPER_HEIGHT=131
+
     def __init__(self):
         com_lgvx4400.Profile.__init__(self)

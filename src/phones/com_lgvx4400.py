@@ -772,6 +772,9 @@ def phonize(str):
 class Profile:
     serialsname='lgvx4400'
 
+    WALLPAPER_WIDTH=120
+    WALLPAPER_HEIGHT=98
+
     def __init__(self):
         pass
 
