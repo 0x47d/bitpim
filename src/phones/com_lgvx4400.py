@@ -131,8 +131,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         except com_brew.BrewNoSuchFileException:
             pass
 
-        print "speed dials is",speeds
-            
         pbook={}
         # Bug in the phone.  if you repeatedly read the phone book it starts
         # returning a random number as the number of entries.  We get around
@@ -146,19 +144,31 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.log("There are %d entries" % (numentries,))
         # reset cursor
         self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
+        problemsdetected=False
+        dupecheck={}
         for i in range(0, numentries):
             ### Read current entry
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             entry=self.extractphonebookentry(res.entry, speeds, result)
-            pbook[i]=entry 
+            pbook[i]=entry
+            if res.entry.serial1 in dupecheck:
+                self.log("Entry %s has same serial as entry %s.  This will cause problems." % (`entry`, dupecheck[res.entry.serial1]))
+                problemsdetected=True
+            else:
+                dupecheck[res.entry.serial1]=entry
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
             self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
 
         self.progress(numentries, numentries, "Phone book read completed")
+
+        if problemsdetected:
+            self.log("There are duplicate serial numbers.  See above for details.")
+            raise common.IntegrityCheckFailed(self.desc, "Data in phonebook is inconsistent.  There are multiple entries with the same serial number.  See the log.")
+
         result['phonebook']=pbook
         cats=[]
         for i in result['groups']:

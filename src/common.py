@@ -26,6 +26,13 @@ class FeatureNotAvailable(Exception):
           self.device=device
           self.message=message
 
+class IntegrityCheckFailed(Exception):
+     def __init__(self, device, message):
+          Exception.__init__(self, "%s: %s" % (device, message))
+          self.device=device
+          self.message=message
+                  
+
 # generic comms exception and then various specialisations
 class CommsException(Exception):
      """Generic commmunications exception"""
