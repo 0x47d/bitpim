@@ -15,9 +15,11 @@ or a small icon (Linux, Mac) that you can click on to get the dialog."""
 # Standard Modules
 import sys
 import cStringIO
+import os
 
 # wx stuff
 import wx
+import wx.html
 
 # My stuff
 import native.usb
@@ -27,7 +29,6 @@ import xmlrpcstuff
 ID_CONFIG=wx.NewId()
 ID_LOG=wx.NewId()
 ID_RESCAN=wx.NewId()
-ID_HELP=wx.NewId()
 ID_EXIT=wx.NewId()
 
 if guihelper.IsMSWindows(): parentclass=wx.TaskBarIcon
@@ -46,10 +47,9 @@ class MyTaskBarIcon(parentclass):
             parentclass.__init__(self)
             self.windowsinit(iconfile)
             
-        self.leftdownpos=None
+        self.leftdownpos=0,0
         wx.EVT_MENU(menu, ID_CONFIG, self.OnConfig)
         wx.EVT_MENU(menu, ID_LOG, self.OnLog)
-        wx.EVT_MENU(menu, ID_HELP, self.OnHelp)
         wx.EVT_MENU(menu, ID_EXIT, self.OnExit)
         wx.EVT_MENU(menu, ID_RESCAN, self.OnRescan)
 
@@ -160,7 +160,59 @@ class ConfigPanel(wx.Panel):
 
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
 
+        # authorization
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Authorization"), wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        butadd=wx.Button(self, wx.NewId(), "Add ...")
+        hbs.Add(butadd, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
+        butedit=wx.Button(self, wx.NewId(), "Edit ...")
+        butedit.Enable(False)
+        hbs.Add(butedit, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
+        butdelete=wx.Button(self, wx.NewId(), "Delete")
+        butdelete.Enable(False)
+        hbs.Add(butdelete, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        hbs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
+        hbs.Add(wx.StaticText(self, -1, "Unmatched:"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        butprompt=wx.RadioButton(self, wx.NewId(), "Prompt")
+        hbs.Add(butprompt, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        butblock=wx.RadioButton(self, wx.NewId(), "Block")
+        hbs.Add(butblock, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
+        # and the authorization listview
+        self.authlist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT)
+        self.authlist.InsertColumn(0, "User")
+        self.authlist.InsertColumn(1, "Allowed Addresses")
+        self.authlist.InsertColumn(2, "Expires")
+        self.authlist.InsertColumn(3, "Then")
+        self.authlist.SetColumnWidth(0, 300)
+        self.authlist.SetColumnWidth(1, 300)
+        self.authlist.SetColumnWidth(2, 100)
+        self.authlist.SetColumnWidth(3, 100)
+        bs.Add(self.authlist, 1, wx.EXPAND|wx.ALL, 5)
+        
+        vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
+
+        # devices
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Devices"), wx.VERTICAL)
+        buttoggle=wx.Button(self, wx.NewId(), "Toggle Allowed")
+        bs.Add(buttoggle, 0, wx.ALL, 5)
+        self.devicelist=wx.ListCtrl(self, wx.NewId(), style=wx.LC_REPORT)
+        self.devicelist.InsertColumn(0, "Allowed")
+        self.devicelist.InsertColumn(1, "Name")
+        self.devicelist.InsertColumn(2, "Available")
+        self.devicelist.InsertColumn(3, "Description")
+        self.devicelist.SetColumnWidth(0, 100)
+        self.devicelist.SetColumnWidth(1, 300)
+        self.devicelist.SetColumnWidth(2, 100)
+        self.devicelist.SetColumnWidth(3, 300)
+        bs.Add(self.devicelist, 1, wx.EXPAND|wx.ALL, 5)
+
+        vbs.Add(bs, 1, wx.EXPAND|wx.ALL, 5)
+        
+        
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         
@@ -178,12 +230,12 @@ class MainWindow(wx.Frame):
         bs=wx.BoxSizer(wx.VERTICAL)
 
         self.nb=wx.Notebook(panel, -1)
-        bs.Add(self.nb, 1, wx.EXPAND)
+        bs.Add(self.nb, 1, wx.EXPAND|wx.ALL, 5)
         bs.Add(wx.StaticLine(panel, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
 
         gs=wx.GridSizer(1,3, 5, 5)
 
-        for name in ("Help", "Hide", "Exit" ):
+        for name in ("Rescan", "Hide", "Exit" ):
             but=wx.Button(panel, wx.NewId(), name)
             setattr(self, name.lower(), but)
             gs.Add(but)
@@ -197,7 +249,9 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.configpanel, "Configuration")
         self.lw=guihelper.LogWindow(self.nb)
         self.nb.AddPage(self.lw, "Log")
-
+        html=wx.html.HtmlWindow(self.nb, -1)
+        wx.CallAfter(html.LoadPage, os.path.join(guihelper.getresourcefile("help"), "index.html"))
+        self.nb.AddPage(html, "Help")
 
 
         wx.EVT_BUTTON(self, self.hide.GetId(), self.OnHideButton)
@@ -229,7 +283,6 @@ if __name__ == '__main__':
     menu.Append(ID_CONFIG, "Configuration")
     menu.Append(ID_LOG, "Log")
     menu.Append(ID_RESCAN, "Rescan devices")
-    menu.Append(ID_HELP, "Help")
     menu.Append(ID_EXIT, "Exit")
 
     mw=MainWindow(None, -1, "BitFling")

@@ -10,6 +10,8 @@
 """Various convenience functions and widgets to assist the gui"""
 
 import time
+import os
+import sys
 
 import wx
 
@@ -59,3 +61,16 @@ class LogWindow(wx.Panel):
         t=time.localtime(now)
         self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
+# Where to find bitmaps etc
+p=sys.path[0]
+if p.lower().endswith(".zip"): # zip importer in action
+    p=os.path.dirname(p)
+resourcedirectory=os.path.abspath(p)
+
+def getresourcefile(filename):
+    """Returns name of file by adding it to resource directory pathname
+
+    No attempt is made to verify the file exists
+    @rtype: string
+    """
+    return os.path.join(resourcedirectory, filename)
