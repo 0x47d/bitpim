@@ -107,6 +107,8 @@ import pubsub
 class HTMLWindow(wx.html.HtmlWindow):
     """BitPim customised HTML Window
 
+    Some extras on this:
+    
        - You can press Ctrl-Alt-S to get a source view
        - Clicking on a link opens a window in your browser
        - Shift-clicking on a link copies it to the clipboard
