@@ -20,6 +20,7 @@ import guihelper
 import usb_ids
 
 ids=None
+needdriver=None
 
 def usbscan(*args, **kwargs):
 
@@ -31,7 +32,15 @@ def usbscan(*args, **kwargs):
         ids=usb_ids.usb_ids()
         ids.add_data(guihelper.getresourcefile("usb.ids"))
         ids.add_data(guihelper.getresourcefile("bitpim_usb.ids"))
-        
+    global needdriver
+    if needdriver is None:
+        needdriver=[]
+        for line in open(guihelper.getresourcefile("usb_needdriver.ids"), "rt"):
+            line=line.strip()
+            if line.startswith("#") or len(line)==0:
+                continue
+            prod,vend,iface=[int(x, 16) for x in line.split()]
+            needdriver.append( (prod,vend,iface) )
 
     res=[]
     usb.UpdateLists()
@@ -60,6 +69,11 @@ def usbscan(*args, **kwargs):
                        'libusb': True,
                        'usb-vendor#': device.vendor(), 'usb-product#': device.product(),
                        'usb-interface#': iface.number()}
+
+                    if ( device.vendor(), device.product(), iface.number() ) in needdriver:
+                        v["available"]=False
+                        v['driver-required']=True
+                    
                     vend,prod,i=ids.lookupdevice(device.vendor(), device.product(), iface.number())
                     if vend is None:
                         vend="#%04X" % (device.vendor(),)

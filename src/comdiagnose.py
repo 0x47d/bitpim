@@ -69,9 +69,9 @@ def diagnose(portlist, phonemodule):
             res.append( (whattodisplay, portselected, htmldiagnosis) )
 
     if len(notavailablebutactive):
-        whattodisplay="===== Ports in use ====="
+        whattodisplay="===== Ports not available ====="
         portselected=None
-        htmldiagnosis="<p>These ports are active, but are in use by another program or device driver, or you do not have permissions to access them."
+        htmldiagnosis="<p>These ports are active, but cannot be used because they are in use by another program or device driver, you do not have permissions to access them, or a device driver is required."
         res.append( (whattodisplay, portselected, htmldiagnosis) )
         for port in notavailablebutactive:
             whattodisplay=port['description']
@@ -190,6 +190,8 @@ def genhtml(port):
         elif k=="libusb":
             res+=sfont+"""This indicates if the usb library is in use to access this device.  Operating system
             device drivers (if any) are bypassed when BitPim talks to the device"""+efont
+        elif k=="driver-required":
+            res+=sfont+"""This indicates if you must use a device driver, not direct USB access"""+efont
         elif k=="BitFling":
             res+=sfont+"""This indicates that the port is being accessed from a remote machine via BitFling,"""+efont
         elif k=="protocol":
