@@ -40,6 +40,7 @@ if __debug__:
 if __name__ == '__main__':
     import sys  
     import encodings.utf_8
+    import encodings.ascii
 
     # in production builds we don't need the stupid warnings
     if not __debug__:
