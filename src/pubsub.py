@@ -9,7 +9,17 @@
 
 from wxPython.lib.pubsub import Publisher
 import weakref
-#import wx
+
+
+"""The publish subscribe mechanism used to maintain lists of stuff.
+
+This helps different pieces of code maintain lists of things (eg wallpapers, categories)
+and other to express and interest and be notified when it changes (eg field editors).
+The wxPython pubsub module is the base.  The enhancements are a list of standard
+topics in this file, and the automatic use of weakrefs to allow the right garbage
+collection to happen at the right moment, and most importantly is that callers
+don't need to implement a __del__ method to unsubscribe.
+"""
 
 ###
 ### A list of topics
@@ -17,7 +27,7 @@ import weakref
 
 
 # Maintain the list of categories
-REQUEST_CATEGORIES=( 'request', 'categories' )
+REQUEST_CATEGORIES=( 'request', 'categories' ) # i wanna know ...
 ALL_CATEGORIES=( 'response', 'categories') # data is list of strings
 SET_CATEGORIES=( 'request', 'setcategories') # data is list of strings
 ADD_CATEGORY=( 'request', 'addcategory') # data is list of strings

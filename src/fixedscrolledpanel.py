@@ -1,13 +1,17 @@
-###
-### This file has been modified from the original and remains under the same
-### license as the original.  The following changes were made:
-###
-### - Doesn't automatically scroll back to the top when SetupScrolling()
-###   is called
-### - OnChildFocus is broken down into one method to get child focus
-###   window, and a second method to scroll to make it visible
-### - MakeChildVisible (second method from above) now works correctly
-###   if the child is not a direct child of the panel
+"""
+wxScrolledPanel with corrected behaviour.
+
+This file has been modified from the original and remains under the same
+license as the original.  (The original is in the wxPython distribution
+as lib/scrolledpanel.py.  The following changes were made:
+
+ - Doesn't automatically scroll back to the top when SetupScrolling()
+   is called
+ - OnChildFocus is broken down into one method to get child focus
+   window, and a second method to scroll to make it visible
+ - MakeChildVisible (second method from above) now works correctly
+   if the child is not a direct child of the panel
+"""
 ###
 ###  $Id$
 

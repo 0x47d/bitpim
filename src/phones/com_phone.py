@@ -31,6 +31,8 @@ modeignoreerrortypes=tuple(modeignoreerrortypes)
 
 
 class Phone:
+    """Base class for all phones"""
+    
     MODENONE="modenone"  # not talked to yet
     MODEMODEM="modemodem" # modem mode
 
@@ -45,24 +47,29 @@ class Phone:
         self.comm=None
 
     def log(self, str):
+        "Log a message"
         if self.logtarget:
             self.logtarget.log("%s: %s" % (self.desc, str))
 
     def logdata(self, str, data, klass=None):
+        "Log some data with option data object/class for the analyser"
         if self.logtarget:
             self.logtarget.logdata("%s: %s" % (self.desc, str), data, klass)
 
     def progress(self, pos, max, desc):
+        "Update the progress meter"
         if self.logtarget:
             self.logtarget.progress(pos, max, desc)
 
     def raisecommsexception(self, str):
+        "Raise a DeviceNeedsAttention Exception"
         self.mode=self.MODENONE
         self.comm.shouldloop=True
         raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nSee the help for troubleshooting tips")
         
 
     def setmode(self, desiredmode):
+        "Ensure the phone is in the right mode"
         if self.mode==desiredmode: return
 
         strmode=None

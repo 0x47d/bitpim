@@ -13,6 +13,8 @@ import fixedscrolledpanel
 import pubsub
 import phonebook
 
+"""The dialog for editing a phonebook entry"""
+
 
 class WallpaperEditor(wx.Panel):
 
