@@ -36,7 +36,7 @@ class Profile(com_phone.Profile):
     usbids=( (0x106c, 0x2101, 1), # VID=Curitel, PID=Audiovox CDM 8900, internal modem interface
         )
     # which device classes we are.
-    deviceclasses=("modem")
+    deviceclasses=("modem",)
 
     _supportedsyncs=(
         )
