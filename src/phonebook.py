@@ -55,6 +55,7 @@ addresses:
 wallpapers:
 
   - wallpaper   Name of wallpaper
+  - index       Index number of the wallpaper (fill out one of these two, not both)
   - use         see ringtones.use
 
 flags:
