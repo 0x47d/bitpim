@@ -84,6 +84,7 @@ serials:
 import os
 import cStringIO
 import webbrowser
+import difflib
 
 # GUI
 import wx
@@ -162,6 +163,7 @@ class PhoneEntryDetailsView(HTMLWindow):
         self.pblayoutfilestat=None
         self.xcp=None
         self.xcpstyles=None
+        self.ShowEntry({})
 
     def ShowEntry(self, entry):
         if self.xcp is None or self.pblayoutfilestat!=os.stat(self.pblayoutfile):
@@ -176,7 +178,8 @@ class PhoneEntryDetailsView(HTMLWindow):
             execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
             self.stylesfilestat=os.stat(self.stylesfile)
         self.xcpstyles['entry']=entry
-        self.SetPage(self.xcp.xcopywithdns(self.xcpstyles))
+        text=self.xcp.xcopywithdns(self.xcpstyles)
+        self.SetPage(text)
 
 ###
 ### Functions used to extra data from a record
@@ -289,28 +292,36 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         r.IncRef()
         return r
 
-class PhoneWidget(wx.SplitterWindow):
+class PhoneWidget(wx.Panel):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
-    def __init__(self, mainwindow, parent, id=-1):
-        wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+    def __init__(self, mainwindow, parent):
+        wx.Panel.__init__(self, parent,-1)
+        self.SetBackgroundColour("ORANGE")
+        split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.mainwindow=mainwindow
         self._data={}
         self.groupdict={}
         self.modified=False
-        self.table=wx.grid.Grid(self, -1)
+        self.table=wx.grid.Grid(split, -1)
         self.table.EnableGridLines(False)
         self.dt=PhoneDataTable(self)
         # 1 is GridSelectRows.  The symbol pathologically refused to be defined
         self.table.SetTable(self.dt, False, 1)
+        self.table.SetSelectionMode(1)
         self.table.SetRowLabelSize(0)
         self.table.EnableEditing(False)
         self.table.EnableDragRowSize(False)
-        self.table.SetSelectionMode(1)
         self.table.SetMargins(1,0)
-        self.preview=PhoneEntryDetailsView(self, -1, "styles.xy", "pblayout.xy")
-        self.preview.ShowEntry({})
-        self.SplitVertically(self.table, self.preview, -300)
+        self.preview=PhoneEntryDetailsView(split, -1, "styles.xy", "pblayout.xy")
+        # for some reason, preview doesn't show initial background
+        wx.CallAfter(self.preview.ShowEntry, {})
+        split.SplitVertically(self.table, self.preview, -300)
+        self.split=split
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(split, 1, wx.EXPAND)
+        self.SetSizer(bs)
+        self.SetAutoLayout(True)
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
 
@@ -651,13 +662,13 @@ class ImportDialog(wx.Dialog):
 
         hbs.Add(wx.StaticText(self, -1, " "), 0, wx.EXPAND|wx.LEFT, 10)
 
-        self.details=wx.CheckBox(self, wx.NewId(), "Details")
-        self.details.SetValue(True)
-        hbs.Add(self.details, 0, wx.EXPAND|wx.LEFT, 5)
+        self.details=wx.CheckBox(self, wx.NewId(), "Original/Import Details")
+        self.details.SetValue(False)
+        hbs.Add(self.details, 0, wx.EXPAND|wx.LEFT, 25)
 
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
-        splitterstyle=wx.SP_3DBORDER|wx.SP_LIVE_UPDATE
+        splitterstyle=wx.SP_3D|wx.SP_LIVE_UPDATE
         self.splitterstyle=splitterstyle
 
         hsplit=wx.SplitterWindow(self,-1, style=splitterstyle)
@@ -671,27 +682,22 @@ class ImportDialog(wx.Dialog):
         self.grid=wx.grid.Grid(vsplit, -1)
         self.grid.EnableGridLines(False)
         self.table=ImportDataTable(self)
+        # 1 is GridSelectRows.  The symbol pathologically refused to be defined
         self.grid.SetTable(self.table, False, 1)
+        self.grid.SetSelectionMode(1)
         self.grid.SetRowLabelSize(0)
+        self.grid.EnableDragRowSize(False)
         self.grid.EnableEditing(False)
         self.grid.SetMargins(1,0)
 
-        hhsplit=wx.SplitterWindow(vsplit, -1, style=splitterstyle)
-        hhsplit.SetMinimumPaneSize(20)
+        self.hhsplit=None
+        self.origpreview=None
+        self.importpreview=None
 
-        self.origpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
-        self.importpreview=PhoneEntryDetailsView(hhsplit, -1, "styles.xy", "pblayout.xy")
-
-        self.origpreview.ShowEntry( { 'names': [ {'name': 'origpreview'} ] } )
-        self.importpreview.ShowEntry( { 'names': [ {'name': 'importpreview'} ] } )
-
-        hhsplit.SplitVertically(self.origpreview, self.importpreview, 0)
-        vsplit.SplitHorizontally(self.grid, hhsplit, -200)
         hsplit.SplitVertically(vsplit, self.resultpreview, -250)
-
+        vsplit.Initialize(self.grid)
         # save these for OnDetailChanged
         self.vsplit=vsplit
-        self.hhsplit=hhsplit
         self.vsplitpos=-200
         self.hhsplitpos=0
 
@@ -704,24 +710,59 @@ class ImportDialog(wx.Dialog):
         self.SetAutoLayout(True)
 
         wx.EVT_CHECKBOX(self, self.details.GetId(), self.OnDetailChanged)
-
+        wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
 
     def DoMerge(self):
         count=0
         row={}
         results={}
+
+        em=EntryMatcher(self.importdata, self.existingdata)
+        usedexistingkeys=[]
         for i in self.importdata:
+            # does it match existing entry
+            matches=em.bestmatches(i)
+            if len(matches):
+                confidence, existingid=matches[0]
+                print confidence,self.importdata[i]['names'],self.existingdata[existingid]['names']
+                if confidence>90:
+                    results[count]=self.existingdata[existingid]
+                    row[count]=(confidence, i, existingid, count)
+                    count+=1
+                    usedexistingkeys.append(existingid)
+                    continue
+            # just add it
             results[count]=self.importdata[i]
             row[count]=(100, i, None, count)
             count+=1
         for i in self.existingdata:
+            if i in usedexistingkeys: continue
             results[count]=self.existingdata[i]
             row[count]=(100, None, i, count)
             count+=1
         self.rowdata=row
         self.resultdata=results
         self.table.OnDataUpdated()
+
+    def OnCellSelect(self, event):
+        row=self.rowdata[event.GetRow()]
+        confidence,importid,existingid,resultid=row
+        if self.importpreview is not None:
+            if importid is not None:
+                self.importpreview.ShowEntry(self.importdata[importid])
+            else:
+                self.importpreview.ShowEntry({})
+        if self.origpreview is not None:
+            if existingid is not None:
+                self.origpreview.ShowEntry(self.existingdata[existingid])
+            else:
+                self.origpreview.ShowEntry({})
+        if resultid is not None:
+            self.resultpreview.ShowEntry(self.resultdata[resultid])
+        else:
+            self.resultpreview.ShowEntry({})
+
 
     def OnDetailChanged(self, _):
         "Show or hide the exiting/imported data previews"
@@ -741,5 +782,44 @@ class ImportDialog(wx.Dialog):
             self.hhsplitpos=self.hhsplit.GetSashPosition()
             self.vsplit.Unsplit()
             self.hhsplit.Destroy()
+            self.origpreview=None
+            self.importpreview=None
                         
 
+class EntryMatcher:
+    "Implements matching phonebook entries"
+
+    def __init__(self, sources, against):
+        self.sources=sources
+        self.against=against
+
+        self.procsources={}
+        self.procagainst={}
+
+
+    def bestmatches(self, sourceid, limit=5):
+        """Gives best matches out of against list
+
+        @return: list of tuples of (percent match, againstid)
+        """
+        if self.procsources.get(sourceid, None) is None:
+            self.procsources[sourceid]=common.prettyprintdict(self.sources[sourceid])
+
+        res=[]
+        sm=difflib.SequenceMatcher()
+        sm.set_seq2(self.procsources[sourceid])
+
+        for i in self.against:
+            a=self.procagainst.get(i, None)
+            if a is None:
+                a=common.prettyprintdict(self.against[i])
+                self.procagainst[i]=a
+            sm.set_seq1(a)
+            res.append( (int(sm.ratio()*100), i) )
+
+        res.sort()
+        res.reverse()
+        if len(res)>limit:
+            return res[:limit]
+        return res
+        
