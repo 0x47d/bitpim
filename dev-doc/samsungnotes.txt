@@ -1,4 +1,4 @@
-Notes on the AT command phonebook protocol used by various Samsung Phones.
+maNotes on the AT command phonebook protocol used by various Samsung Phones.
 Thanks to the following individuals for loans or information about these phones
 
        John Sabato, Loan of SPH-8500
@@ -585,6 +585,350 @@ matched. Strange. :)
 
 
 - Troy
+
+==========================================================================
+
+SCH-N392  <nakeee@gmail.com>
+
+Phone model:
+
+AT+GMM
++GMM: SCH-N392/160
+
+OK
+
+Vendor:
+
+AT+GMI
++GMI: SAMSUNG ELECTRONICS CO.,LTD.
+
+OK
+
+Firmware version:
+
+AT+GMR
++GMR: S/W VER: N392         SCH-N392 
+
+OK
+
+Battary level:
+
+AT+CBC?
++CBC: 0,83
+
+OK
+
+Signal quality:
+
+AT+CSQ?
++CSQ: 27, 99
+
+OK
+
+Get phone number:
+
+AT#PBDYN?
+#PBDYN: <number>
+
+OK
+
+
+Phone reset:
+
+ATZ
+ok
+
+Toggle echo[off|on]:
+
+ATE[0|1]
+OK
+
+Toggle speaker?
+
+ATM[0|1]
+OK
+
+Toggle result code [on|off]
+
+ATQ[0|1]
+OK (only when ATQ0)
+
+
+Return ESN:
+
+AT+GSN
++GSN: 288E7F54
+
+OK
+
+Service type ?(1 is CDMA 0 analog?):
+
+AT+CAD?
++CAD: 1
+
+OK
+
+Some phone info smarter people might know what it means:
+
+AT+GCAP
++GCAP: +CIS707-A, +MS, +ES, +DS, +FCLASS
+
+OK
+
+Voice call a number:
+
+AT+CDV<phone number>
+OK
+
+Hang up a call:
+
+AT+CHV
+OK
+
+Add carrier? [off|on]
+ATV[0|1]
+OK (only when 1)
+
+Supported speeds:
+AT+IPR=?
++IPR: (0, 1200, 2400, 4800, 9600, 19200), (45, 50, 75, 110, 150, 300, 600, 38400, 57600, 115200)
+
+OK
+
+Current speed:
+
+AT+IPR?
++IPR: 115200
+
+OK
+
+Set speed:
+
+AT+IPR=115200
+OK
+
+Set timeout if not connected:
+
+ATS7=60
+OK
+
+Get timeout:
+
+ATS7?
+060
+
+OK
+
+
+Unknown: (guess timeouts for other things?)
+Note: set might be working as well.
+
+ATS3?
+013
+
+OK
+ATS4?
+010
+
+OK
+ATS5?
+008
+
+OK
+ATS6?
+002
+
+OK
+
+ATS8?
+002
+
+OK
+
+ATS9?
+006
+
+OK
+ATS10?
+014
+
+OK
+ATS11?
+095
+
+Set programing mode [off|on]
+
+AT#PMODE=[0|1]
+OK
+
+Get programing mode:
+
+AT#PMODE?
+#PMODE: 1
+
+OK
+
+#######################
+From here on all commands should be done in programing mode.
+
+Phone book info:
+range of phones allowed,group range,Name length,number length?,un,un
+
+AT#PBOKR=?
+#PBOKR: (1-900),(0-4),12,32,32,3
+
+Fields in phone book Entry as returned by AT#PBOKR=<phone num>:
+
+#PBOKR:
+
+Field num, Speed dial, Group ID, Ring id, Name (in ""), 
+Default number (speed dial), secret[0,1], Home, secret[0,1], Work,
+secret[0,1], Mobile, secret[0,1], Pager, secret[0,1],
+Fax, secret[0,1], No Label, secret[0,1],,,e-mail (in ""), 
+url (in ""), Bday (in ""), Image name (in "") ,
+time of last save? (changes every save only)
+
+Name is up to 12 chars
+Numbers are up to 32 chars
+Picture names,Email,URLs are up to 32 chars
+Groups are from 0-4
+
+Range of sms:
+
+AT#PSRMR=?
+#PSRMR: (0-97)
+
+OK
+
+Number of SMS:
+AT#PSRMR?
+#PSRMR: 2
+
+OK
+
+Read SMS:
+
+AT#PSRMR=<number>
+
+#PSRMR: 
+
+un,un,un,Time of arrival,message (in ""), Number it came from  
+(probebly new,protect,read need to check order)
+
+Get greeting format:(max number of chars,un)
+
+AT#PMUNA=?
+#PMUNA: 15,1
+
+OK
+
+Get current greeting:(time of last change,M first time S after,Text in "")
+
+AT#PMUNA?
+#PMUNA: 20050207T203049,S,"SAMSUNG"
+
+OK
+
+Get Rings:(ring ID,un,Name)
+
+AT#PUGSN?
+#PUGSN: (0-50)
+0,0,Ring 1
+1,0,Ring 2
+2,0,Ring 3
+3,0,Ring 4
+4,0,Wave1
+5,1,Wave2
+6,1,Bird
+7,1,Pure1
+8,1,Pure2
+9,1,Pure3
+10,1,Mystery1
+11,1,Mystery2
+12,1,Space
+13,1,The Trout
+14,1,Jesu joy of man's desiring
+15,1,Maiden's Prayer
+16,1,Triumphal March
+17,1,Cello Suit No.1
+18,1,Four Seasons - Winter
+19,1,A Little Night Music
+20,1,La Traviata
+21,1,Black Key Etude
+22,1,Minuet in G
+23,1,Ruslan and Lyudmila Overture
+24,1,In the Hall of the Mountain King
+25,1,Humoresque
+26,1,Violin Sonata No.12
+27,1,Arabesque
+28,1,Cancan
+29,1,C Minor Op.67
+30,1,Cat's Dance
+31,1,Wedding March
+32,1,Remembrance
+33,1,Walking the Street
+34,1,A Jazz Cat?
+35,1,Samba Party
+36,1,Musical
+37,1,Christmas Dance
+38,1,Cannon
+39,1,Drummer
+40,2,Empty
+41,2,Empty
+42,2,Empty
+43,2,Empty
+44,2,Empty
+45,2,Empty
+46,2,Empty
+47,2,Empty
+48,2,Empty
+49,2,Empty
+50,255,Inactive
+
+Get time zones:
+
+AT#PIWTM=?
+#PIWTM: (0-23),16
+San Francisco
+Denver,Arizona
+Chicago,Mexico
+NewYork,D.C.
+Caracas
+Buenos Aires
+Mid Atlantic
+Cape Verde
+London,Madrid
+Paris,Berlin
+Athens,Helsinki
+Moscow
+Abu Dabi
+Tashkent
+Alma-ata
+Bangkok,Jakarta
+Hongkong,Beijing
+Seoul,Tokyo
+Sydney,Guam
+Okhotsk
+Wellington
+Samoa,Midway
+Honolulu,Hawaii
+Alaska
+
+
+OK
+
+Planner: (range, Max name length)
+
+AT#PITDR = ?
+#PITDR: (0-8),32
+
+
+AT#PITDR = <number>
+
+#PITDR:
+
+ID,priority (0 low 1 high), End time, Timestamp,un (C), name (in "")
+
 ==========================================================================
 SPH-A700 Sprint  (AKA MM-A700?)
 
@@ -594,6 +938,10 @@ this puts the phone permanently into diagnostic mode at which point
 sync programs can no longer read and write the phonebook and the phone
 can not be used a modem.
 
+Jan 2005: One user reports that the new "Switch to modem" mode option in the
+filesystem viewer will take the A700 out of Brew/Diagnostic mode without
+needing to reboot or totally reset the phone.
+
 AT+GMI
 SAMSUNG ELECTRONICS CO.,  LTD.
 
@@ -602,3 +950,4 @@ ES.A700       1  [Jun 01 2004 24:00:00]
 
 AT+GMM
 SPH-A700/141
+
