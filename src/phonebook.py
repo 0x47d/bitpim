@@ -3,7 +3,7 @@
 ### Copyright (C) 2003 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This software is under the Artistic license.
-### http://www.opensource.org/licenses/artistic-license.php
+### Please see the accompanying LICENSE file
 ###
 ### $Id$
 
@@ -160,7 +160,55 @@ class PhoneEntryDetailsView(HTMLWindow):
             self.stylesfilestat=os.stat(self.stylesfile)
         self.xcpstyles['entry']=entry
         self.SetPage(self.xcp.xcopywithdns(self.xcpstyles))
-        
+
+###
+### Functions used to extra data from a record
+###
+
+def getdata(column, entry, default=None):
+    if column=="Name":
+        names=entry.get("names", [{}])
+        name=names[0]
+        x=formatname(name)
+        if len(x)==0:
+            return default
+        return x
+
+    if column=="Home":
+        for number in entry.get("numbers", []):
+            if number.get("type", "")=="home":
+                return number['number']
+        return default
+
+    if column=="Email":
+        for email in entry.get("emails", []):
+            return email['email']
+        return default
+
+    assert False, "Unknown column type "+column
+    return default
+
+
+def formatname(name):
+    # Returns a string of the name in name.
+    # Since there can be many fields, we try to make sense of them
+    res=""
+    res+=name.get("full", "")
+    f=name.get("first", "")
+    m=name.get("middle", "")
+    l=name.get("last", "")
+    if len(f) or len(m) or len(l):
+        if len(res):
+            res+=" | "
+        # severe abuse of booleans
+        res+=f+(" "*bool(len(f)))
+        res+=m+(" "*bool(len(m)))
+        res+=l+(" "*bool(len(l)))
+    if name.has_key("nickname"):
+        res+=" ("+name["nickname"]+")"
+    return res
+
+
 ###
 ### We use a table for speed
 ###
@@ -176,6 +224,10 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         self.oddattr.SetBackgroundColour("OLDLACE")
         self.evenattr=wx.grid.GridCellAttr()
         self.evenattr.SetBackgroundColour("ALICE BLUE")
+        self.columns=['Name', 'Home', 'Email']
+
+    def GetColLabelValue(self, col):
+        return self.columns[col]
 
     def OnDataUpdated(self):
         newkeys=self.main._data.keys()
@@ -204,26 +256,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         return len(self.rowkeys)
 
     def GetNumberCols(self):
-        return 2
-
-    def formatname(self,name):
-        # Returns a string of the name in name.
-        # Since there can be many fields, we try to make sense of them
-        res=""
-        res+=name.get("full", "")
-        f=name.get("first", "")
-        m=name.get("middle", "")
-        l=name.get("last", "")
-        if len(f) or len(m) or len(l):
-            if len(res):
-                res+=" | "
-            # severe abuse of booleans
-            res+=f+(" "*bool(len(f)))
-            res+=m+(" "*bool(len(m)))
-            res+=l+(" "*bool(len(l)))
-        if name.has_key("nickname"):
-            res+=" ("+name["nickname"]+")"
-        return res
+        return len(self.columns)
 
     def GetValue(self, row, col):
         try:
@@ -231,20 +264,13 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         except:
             print "bad row", row
             return "<error>"
-        if col==0:
-            names=entry.get("names", [{'full': '<not set>'}])
-            name=names[0]
-            return self.formatname(name)
-        if col==1:
-            numbers=entry.get("numbers", [])
-            if len(numbers)==0:
-                return ""
-            number=numbers[0]
-            return number['type']+" : "+number['number']
-        assert False, "Bad column "+`col`
 
-    def GetAttr(self, row, col, another):
-        return [self.evenattr, self.oddattr][row%2].Clone()
+        return getdata(self.columns[col], entry, "")
+
+    def GetAttr(self, row, col, _):
+        r=[self.evenattr, self.oddattr][row%2]
+        r.IncRef()
+        return r
 
 class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
@@ -256,11 +282,14 @@ class PhoneWidget(wx.SplitterWindow):
         self.groupdict={}
         self.modified=False
         self.table=wx.grid.Grid(self, -1)
+        self.table.EnableGridLines(False)
         self.dt=PhoneDataTable(self)
         # 1 is GridSelectRows.  The symbol pathologically refused to be defined
         self.table.SetTable(self.dt, False, 1)
         self.table.SetRowLabelSize(0)
         self.table.EnableEditing(False)
+        self.table.EnableDragRowSize(False)
+        self.table.SetSelectionMode(1)
         self.table.SetMargins(1,0)
         self.preview=PhoneEntryDetailsView(self, -1, "styles.xy", "pblayout.xy")
         self.preview.ShowEntry({})
@@ -477,8 +506,95 @@ class PhoneWidget(wx.SplitterWindow):
     def importdata(self, importdata):
         dlg=ImportDialog(self, self._data, importdata)
         dlg.ShowModal()
-        print dlg.resultdata()
+        print dlg.resultdata
 
+
+class ImportDataTable(wx.grid.PyGridTableBase):
+    ADDED=0
+    UNALTERED=1
+    CHANGED=2
+    DELETED=3
+    
+    def __init__(self, widget):
+        self.main=widget
+        self.rowkeys=[]
+        wx.grid.PyGridTableBase.__init__(self)
+        self.columns=['Confidence', 'Name', 'Home', 'Email']
+        self.addedattr=wx.grid.GridCellAttr()
+        self.addedattr.SetBackgroundColour("HONEYDEW")
+        self.unalteredattr=wx.grid.GridCellAttr()
+        self.unalteredattr.SetBackgroundColour("WHITE")
+        self.changedattr=wx.grid.GridCellAttr()
+        self.changedattr.SetBackgroundColour("LEMON CHIFFON")
+        self.deletedattr=wx.grid.GridCellAttr()
+        self.deletedattr.SetBackgroundColour("ROSYBROWN1")
+
+    def GetColLabelValue(self, col):
+        return self.columns[col]
+
+    def IsEmptyCell(self, row, col):
+        return False
+
+    def GetNumberCols(self):
+        return len(self.columns)
+
+    def GetNumberRows(self):
+        return len(self.rowkeys)
+
+    def GetAttr(self, row, col, _):
+        try:
+            # it likes to ask for non-existent cells
+            row=self.main.rowdata[self.rowkeys[row]]
+        except:
+            return None
+        v=None
+        if row[3] is None:
+            v=self.DELETED
+        if v is None and (row[1] is not None and row[2] is not None):
+            v=self.CHANGED
+        if v is None and (row[1] is not None and row[2] is None):
+            v=self.ADDED
+        if v is None:
+            v=self.UNALTERED
+        r=[self.addedattr, self.unalteredattr, self.changedattr, self.deletedattr][v]
+        r.IncRef()
+        return r
+                
+    def GetValue(self, row, col):
+        try:
+            row=self.main.rowdata[self.rowkeys[row]]
+        except:
+            print "bad row", row
+            return "<error>"
+        
+        if self.columns[col]=='Confidence':
+            return row[0]
+
+        for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
+            if row[i] is not None:
+                res=getdata(self.columns[col], ptr[row[i]], None)
+                if res is not None:
+                    return res
+        return ""
+            
+    def OnDataUpdated(self):
+        newkeys=self.main.rowdata.keys()
+        newkeys.sort()
+        oldrows=self.rowkeys
+        self.rowkeys=newkeys
+        lo=len(oldrows)
+        ln=len(self.rowkeys)
+        if ln>lo:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, ln-lo)
+        elif lo>ln:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, lo-ln)
+        else:
+            msg=None
+        if msg is not None:
+            self.GetView().ProcessTableMessage(msg)
+        msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        self.GetView().AutoSizeColumns()
+    
 
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
@@ -487,6 +603,16 @@ class ImportDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE,
                            size=(740,680))
+
+        # the data already in the phonebook
+        self.existingdata=existingdata
+        # the data we are importing
+        self.importdata=importdata
+        # the resulting data
+        self.resultdata={}
+        # each row to display showing what happened, with ids pointing into above data
+        self.rowdata={}
+
         vbs=wx.BoxSizer(wx.VERTICAL)
         
         bg=self.GetBackgroundColour()
@@ -497,11 +623,12 @@ class ImportDialog(wx.Dialog):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Show entries"), 0, wx.EXPAND|wx.ALL,3)
 
+        self.cbunaltered=wx.CheckBox(self, wx.NewId(), "Unaltered")
         self.cbadded=wx.CheckBox(self, wx.NewId(), "Added")
         self.cbchanged=wx.CheckBox(self, wx.NewId(), "Changed")
         self.cbdeleted=wx.CheckBox(self, wx.NewId(), "Deleted")
 
-        for i in self.cbadded, self.cbchanged, self.cbdeleted:
+        for i in self.cbunaltered, self.cbadded, self.cbchanged, self.cbdeleted:
             i.SetValue(True)
             hbs.Add(i, 0, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, 7)
 
@@ -525,6 +652,12 @@ class ImportDialog(wx.Dialog):
         vsplit.SetMinimumPaneSize(20)
 
         self.grid=wx.grid.Grid(vsplit, -1)
+        self.grid.EnableGridLines(False)
+        self.table=ImportDataTable(self)
+        self.grid.SetTable(self.table, False, 1)
+        self.grid.SetRowLabelSize(0)
+        self.grid.EnableEditing(False)
+        self.grid.SetMargins(1,0)
 
         hhsplit=wx.SplitterWindow(vsplit, -1, style=splitterstyle)
         hhsplit.SetMinimumPaneSize(20)
@@ -554,6 +687,24 @@ class ImportDialog(wx.Dialog):
         self.SetAutoLayout(True)
 
         wx.EVT_CHECKBOX(self, self.details.GetId(), self.OnDetailChanged)
+
+        wx.CallAfter(self.DoMerge)
+
+    def DoMerge(self):
+        count=0
+        row={}
+        results={}
+        for i in self.importdata:
+            results[count]=self.importdata[i]
+            row[count]=(100, i, None, count)
+            count+=1
+        for i in self.existingdata:
+            results[count]=self.existingdata[i]
+            row[count]=(100, None, i, count)
+            count+=1
+        self.rowdata=row
+        self.resultdata=results
+        self.table.OnDataUpdated()
 
     def OnDetailChanged(self, _):
         "Show or hide the exiting/imported data previews"
