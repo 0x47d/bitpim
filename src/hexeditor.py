@@ -186,16 +186,22 @@ class HexEditor(wx.ScrolledWindow):
         event.Skip() # default event handlers now do scrolling etc
 
 if __name__=='__main__':
+    import sys
+
+    app=wx.PySimpleApp()
     class MainWindow(wx.Frame):
         def __init__(self, parent, id, title):
             wx.Frame.__init__(self, parent, id, title, size=(800,600),
                              style=wx.DEFAULT_FRAME_STYLE)
             self.control=HexEditor(self)
             self.Show(True)
-    app=wx.PySimpleApp()
+
     frame=MainWindow(None, -1, "HexEditor Test")
-    frame.control.SetData("this is a test of this \x03\xf7code to see \thow well it draws stuff"*70)
-    frame.control.highlightrange(70, 123)
+    if len(sys.argv)==2:
+        frame.control.SetData(open(sys.argv[1], "rb").read())
+    else:
+        frame.control.SetData("this is a test of this \x03\xf7code to see \thow well it draws stuff"*70)
+        frame.control.highlightrange(70, 123)
 
     if False:
         import hotshot
