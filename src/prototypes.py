@@ -655,8 +655,11 @@ class SAMDATE(SAMSTRING):
         return (year, month, day)
         
     def _converttostring(self, date):
-        year,month,day=date
-        s='%2.2d/%2.2d/%4.4d'%(month, day, year)
+        if len(date)>=3:
+            year,month,day=date[:3]
+            s='%2.2d/%2.2d/%4.4d'%(month, day, year)
+        else:
+            s=""
         return s
         
 
@@ -703,8 +706,11 @@ class SAMTIME(SAMSTRING):
         return (year, month, day, hour, minute, second)
         
     def _converttostring(self, time):
-        year,month,day,hour,minute,second=time
-        s='%4.4d%2.2d%2.2dT%2.2d%2.2d%2.2d'%(year, month, day, hour, minute, second)
+        if len(time)>=6:
+            year,month,day,hour,minute,second=time[:6]
+            s='%4.4d%2.2d%2.2dT%2.2d%2.2d%2.2d'%(year, month, day, hour, minute, second)
+        else:
+            s=""
         return s
         
 
