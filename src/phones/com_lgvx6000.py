@@ -86,7 +86,8 @@ class Phone(com_lgvx4400.Phone):
                 index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
 
-class Profile(com_lgvx4400.Profile):
+parentprofile=com_lgvx4400.Profile
+class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
@@ -98,7 +99,28 @@ class Profile(com_lgvx4400.Profile):
    
     MAX_RINGTONE_BASENAME_LENGTH=32
     RINGTONE_FILENAME_CHARS="_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+
+    # nb we don't allow save to camera so it isn't listed here
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "mms"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "drm"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 120, 'height': 131, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 120, 'height': 131, 'format': "BMP"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 120, 'height': 160, 'format': "BMP"}))
+
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+    
  
     def __init__(self):
-        com_lgvx4400.Profile.__init__(self)
+        parentprofile.__init__(self)
 
