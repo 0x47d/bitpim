@@ -89,6 +89,8 @@ class Phone(com_samsung.Phone):
 		       'User 24', 'User 25', 'User 26', 'User 27', 'User 28', 'User 29',
 		       'User 30', 'User 31', 'User 32', 'User 33', 'User 34', 'User 35',
 		       'User 36', 'User 37', 'User 38', 'User 39')
+    allringtones={}
+
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
     __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 40)
     __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 30)
@@ -139,12 +141,18 @@ class Phone(com_samsung.Phone):
         results['groups']=groups
 
         # getting ringtone-index
-#        rti = self.get_built_in_ringtone_index()	#test
-#        rti =  self.get_user_rt_index(rti)		#test
-#	print rti					#test
-#	print self.get_wallpaper_index()		#test
 	self.log('Getting ringtone-index from ringers')
-        self.__ringtone_index=None
+        rti = self.ATget_builtin_ringtone_index()	#test
+#########################################################
+# The following actually works but puts the phone in the wrong
+# state to proceed. It apparently needs to be rebooted. So for
+# now we continue to use code modeled after A650
+#        rti =  self.get_user_rt_index(rti)		#test
+#	print "allringtones: ", self.allringtones	#test
+#	print "ringtone_index: ", rti			#test
+#	print self.get_wallpaper_index()		#test
+#########################################################
+	self.__ringtone_index=None
         pubsub.subscribe(self.ringtone_index_response, pubsub.ALL_RINGTONE_INDEX)
         pubsub.publish(pubsub.REQUEST_RINGTONE_INDEX)
         # waiting for a response from ringers
@@ -174,12 +182,13 @@ class Phone(com_samsung.Phone):
             r[k]={ 'name': n, 'origin': 'builtin' }
         return r
 
-    def get_built_in_ringtone_index(self): 	# Vic's version using AT command
+    def ATget_builtin_ringtone_index(self): 	# Vic's version using AT command
         r={}
 	s=self.comm.sendatcommand("#PUGSN?")
 	for rt in s[1:]:
 	    this_r = split(rt, ",")
 	    r[atoi(this_r[0])] = { 'name': this_r[2], 'origin': 'builtin' }
+	    self.allringtones[atoi(this_r[0])] = this_r[2]
 	return r
 
     def get_user_rt_index(self, r):		# IDs on phone needed for caller-ID
@@ -192,6 +201,7 @@ class Phone(com_samsung.Phone):
 	    rtname = rtlist[offset+23:offset+23+rtlen][len(self.__rt_dir)+1:]
 	    if rtlen > 0:
 		r[rtid + bi_cnt] = { 'name': rtname, 'origin': 'ringtone' }
+	    	self.allringtones[rtid + bi_cnt] = rtname
 	    offset+=77
 	return r
 
@@ -253,7 +263,8 @@ class Phone(com_samsung.Phone):
         # only one name
         res['names']=[ {'full': strip(entry[self.__pb_name], '"') } ]
         if len(entry[self.__pb_alias]):
-               res['names'][0]['nickname']=entry[self.__pb_alias]
+#               res['names'][0]['nickname']=entry[self.__pb_alias]
+            res['urls']=[ {'url': strip(entry[self.__pb_alias], '"') } ]
 
         # only one category
         g=fundamentals['groups']
@@ -617,14 +628,18 @@ class Phone(com_samsung.Phone):
 
         # name & alias
         e[self.__pb_name]='"'+pb_entry['names'][0]['full']+'"'
-        nick_name=''
+#        nick_name=''
+	url=''
         try:
-            nick_name=pb_entry['names'][0]['nickname']
+#            nick_name=pb_entry['names'][0]['nickname']
+            url=pb_entry['urls'][0]['url']
         except:
             pass
 
-        e[self.__pb_alias]=nick_name
-        if len(nick_name):
+#        e[self.__pb_alias]=nick_name
+#        if len(nick_name):
+        e[self.__pb_alias]=url
+        if len(url):
             e[self.__pb_alias+1]='0'
         else:
             e[self.__pb_alias+1]=''
@@ -778,7 +793,7 @@ class FileEntries:
                     index=k[path_len:]
 		    contents = self.__phone.getfilecontents(k)
 		    if self.__origin == "camera":
-			# dtstamp not currently used; how can we retain this useful info?
+			# dtstamp is saved in the date field of index.idx
 			dtstamp =( atoi(contents[47:51]), atoi(contents[51:53]), atoi(contents[53:55]), atoi(contents[55:57]), atoi(contents[57:59]))
 			index = index + ".jpg"
 			# how do we reference __wp_header_bytes and __wp_ts_offset here?
