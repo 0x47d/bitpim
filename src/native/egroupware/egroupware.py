@@ -88,11 +88,70 @@ class Session:
             if len(contacts)==0:
                 raise StopIteration()
             for i in contacts:
-                i=dict([(k,v) for k,v in i.items() if len(v)])
                 yield i
             if len(contacts)<limit:
                 raise StopIteration()
             offset+=len(contacts)
+
+    def getcontactspbformat(self):
+        "returns contacts in a format suitable for the BitPim phonebook importer"
+        # eGroupware gives a nice shine in the UI, but the underlying data is
+        # somewhat messy
+        for c in self.getcontacts():
+            res={}
+            # egroupware format is very similar to vCard
+            res['Name']=c['fn']
+            res['First Name']=c['n_given']
+            res['Middle Name']=c['n_middle']
+            res['Last Name']=c['n_family']
+            res['UniqueSerial-id']=c['id']
+            res['UniqueSerial-sourcetype']='egroupware'
+            # addresses
+            for t,prefix in ("business", "adr_one"), ("home", "adr_two"):
+                a={}
+                # egroupware has street 2 and 3 in the ui, but doesn't expose them
+                # via xmlrpc - reported as SF bug # 1043862
+                for p2,k in ("_street", "street"), ("_locality", "city"), ("_region", "state"), \
+                        ("_postalcode", "postalcode"), ("_countryname", "country"):
+                    if len(c.get(prefix+p2,"")): a[k]=c[prefix+p2]
+                if t=="business" and len(c.get("org_name", "")): a['company']=c["org_name"]
+                if len(a):
+                    a['type']=t
+                    aa="Address"
+                    if aa in res:
+                        aa+="2"
+                        assert aa not in res
+                    res[aa]=a
+            # categories
+            cats=[]
+            ccats=c.get("cat_id", "")
+            if len(ccats): # could be empty string or a dict
+                for cat in ccats:
+                    cats.append(ccats[cat])
+                if len(cats):
+                    res["Categories"]=cats
+            # email - we ignore the silly egroupware email type field
+            suf=""
+            if len(c.get("email","")):
+                res["Email Address"]={'email': c['email'], 'type': 'business'}
+                suf="2"
+            if len(c.get("email_home", "")):
+                res["Email Address"+suf]={'email': c['email_home'], 'type': 'home'}
+            # phone numbers
+            res["Home Phone"]=c['tel_home']
+            res["Mobile Phone"]=c['tel_cell'] # nb: in eGroupware this is business cell
+            res["Business Fax"]=c['tel_fax']
+            res["Pager"]=c['tel_pager'] # nb: in eGroupware this is business pager
+            res["Business Phone"]=c['tel_work']
+            # various other fields
+            res['Notes']=c['note']
+            res['Business Web Page']=c['url']
+
+            # filter out empty fields
+            res=dict([(k,v) for k,v in res.items() if len(v)])
+            yield res
+
+            
             
 if __name__=='__main__':
     import sys

@@ -1365,13 +1365,15 @@ class ImportQtopiaDesktopDialog(ImportDialog):
         self.origdata=self.data
         self.origcolumns=self.columns
 
+# The eGroupware login handling is a bit of a mess.  Feel free to fix it.
+
 class eGroupwareLoginDialog(wx.Dialog):
 
-    __pwdsentinel="\x99\xff\x01\x56\x80\x09\xfe\xae"
+    __pwdsentinel="\x01\x02\x01\x09\x01\x01\x14\x15"
 
 
     def __init__(self, parent, module, title="Login to eGroupware"):
-        wx.Dialog.__init__(self, parent, -1,  title)
+        wx.Dialog.__init__(self, parent, -1,  title, size=(400,-1))
         self.module=module
         gs=wx.GridBagSizer(5,5)
         for row,label in enumerate( ("URL", "Domain", "Username", "Password") ):
@@ -1411,6 +1413,48 @@ class eGroupwareLoginDialog(wx.Dialog):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
+        # make the window a decent width
+        self.SetDimensions(-1, -1, 500, -1, wx.SIZE_USE_EXISTING)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        self.session=None
+
+    def OnOk(self, evt):
+        try:
+            self.session=self._GetSession()
+            evt.Skip() # end modal
+            self.OnClose()
+            return
+        except Exception,e:
+            self.cmessage.SetLabel(str(e))
+            # go around again
+
+    def GetSession(self, auto=False):
+        """Returns the Session object from the eGroupware library
+        @param auto: If true then the user interface doesn't have to be shown"""
+
+        if auto:
+            try:
+                self.session=self._GetSession()
+                return self.session
+            except Exception,e:
+                self.cmessage.SetLabel(str(e))
+
+        self.ShowModal()
+        return self.session
+
+    def _GetSession(self):
+        # lets see if the user has given us sensible params
+        if self.curl.GetValue()=="http://server.example.com/egroupware":
+            raise Exception("You must set the URL for the server")
+        if len(self.cpassword.GetValue())==0:
+            raise Exception("You must fill in the password")
+        password=self.cpassword.GetValue()
+        if password==self.__pwdsentinel:
+            password=common.obfus_decode(wx.GetApp().config.Read("egroupware/password", ""))
+        try:
+            return self.module.getsession(self.curl.GetValue(), self.cuser.GetValue(), password, self.cdomain.GetValue())
+        finally:
+            del password
 
     def OnClose(self, event=None):
         cfg=wx.GetApp().config
@@ -1434,6 +1478,7 @@ class ImporteGroupwareDialog(ImportDialog):
         self.headerrowiseditable=False
         self.module=module
         ImportDialog.__init__(self, parent, id, title)
+        self.sp=None
 
     def gethtmlhelp(self):
         "Returns tuple of help text and size"
@@ -1446,28 +1491,75 @@ class ImporteGroupwareDialog(ImportDialog):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "URL"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
         self.curl=wx.StaticText(self, -1)
-        hbs.Add(self.curl, 3, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(self.curl, 3, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
         hbs.Add(wx.StaticText(self, -1, "Domain"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
         self.cdomain=wx.StaticText(self, -1)
-        hbs.Add(self.cdomain, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(self.cdomain, 1, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
         hbs.Add(wx.StaticText(self, -1, "User"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
         self.cuser=wx.StaticText(self, -1)
-        hbs.Add(self.cuser, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(self.cuser, 1, wx.ALIGN_CENTRE_VERTICAL|wx.ALL, 2)
         self.cchange=wx.Button(self, self.ID_CHANGE, "Change ...")
         hbs.Add(self.cchange, 0, wx.ALL, 2)
         vbs.Add(hbs,0,wx.ALL,5)
         wx.EVT_BUTTON(self, self.ID_CHANGE, self.OnChangeCreds)
+        self.setcreds()
 
     def OnChangeCreds(self,_):
         dlg=eGroupwareLoginDialog(self, self.module)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.sp=dlg.GetSp()
-        
+        newsp=dlg.GetSession()
+        if newsp is not None:
+            self.sp=newsp
+            self.setcreds()
+            self.DataNeedsUpdate()
+
+    def setcreds(self):
+        cfg=wx.GetApp().config
+        self.curl.SetLabel(cfg.Read("egroupware/url", "http://server.example.com/egroupware"))
+        self.cdomain.SetLabel(cfg.Read("egroupware/domain", "default"))
+        try:
+            import getpass
+            defuser=getpass.getuser()
+        except:
+            defuser="user"
+        self.cuser.SetLabel(cfg.Read("egroupware/user", defuser))        
+
+    _preferred=( "Name", "First Name", "Middle Name", "Last Name",
+                 "Address", "Address2", "Email Address", "Email Address2",
+                 "Home Phone", "Mobile Phone", "Business Fax", "Pager", "Business Phone",
+                 "Notes", "Business Web Page", "Categories" )
 
     def ReReadData(self):
+        if self.sp is None:
+            self.sp=eGroupwareLoginDialog(self, self.module).GetSession(auto=True)
+            self.setcreds()
         self.data=[]
         self.columns=[]
-
+        if self.sp is None:
+            self.EndModal(wx.ID_CANCEL)
+            return
+        # work out what columns we have
+        entries=[i for i in self.sp.getcontactspbformat()]
+        cols=[]
+        for e in entries:
+            for k in e:
+                if k not in cols:
+                    cols.append(k)
+        # now put columns in prefered order
+        cols.sort()
+        self.columns=[]
+        for p in self._preferred:
+            if p in cols:
+                self.columns.append(p)
+        cols=[c for c in cols if c not in self.columns]
+        self.columns.extend(cols)
+        # make data
+        self.data=[]
+        for e in entries:
+            self.data.append([e.get(c,None) for c in self.columns])
+        # strip trailing 2 off names in columns
+        for i,c in enumerate(self.columns):
+            if c.endswith("2"):
+                self.columns[i]=c[:-1]
 
 
 def OnFileImportCSVContacts(parent):
