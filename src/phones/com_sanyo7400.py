@@ -63,7 +63,7 @@ class Profile(com_sanyonewer.Profile):
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
