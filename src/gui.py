@@ -688,7 +688,7 @@ class MainWindow(wxFrame):
         
 
     def OnFileImport(self,_):
-        dlg=wxFileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv",
+        dlg=wxFileDialog(self, "Import CSV file", wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
                          style=wxOPEN|wxHIDE_READONLY|wxCHANGE_DIR)
         path=None
         if dlg.ShowModal()==wxID_OK:
