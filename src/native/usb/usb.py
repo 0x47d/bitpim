@@ -15,7 +15,7 @@ for sym in dir(usb):
     if sym.startswith("USB_CLASS_") or sym.startswith("USB_DT"):
         exec "%s=usb.%s" %(sym, sym)
 
-TRACE=False
+TRACE=True
 
 class USBException(Exception):
     def __init__(self):
@@ -204,8 +204,23 @@ class USBFile:
     def __del__(self):
         self.close()
 
+    def resetep(self, resetin=True, resetout=True):
+        return
+        print "unhalting/resetting endpoints"
+        self.write('')
+        return
+        if resetin:
+            res=usb.usb_clear_halt(self.iface.device.handle, self.addrin)
+            if TRACE: print "usb_clear_halt(%s,%d)=%d" % (self.iface.device.handle, self.addrin, res)
+            res=usb.usb_resetep(self.iface.device.handle, self.addrin)
+            if TRACE: print "usb_resetep(%s,%d)=%d" % (self.iface.device.handle, self.addrin, res)
+        if resetout:
+            res=usb.usb_clear_halt(self.iface.device.handle, self.addrout)
+            if TRACE: print "usb_clear_halt(%s,%d)=%d" % (self.iface.device.handle, self.addrout, res)
+            res=usb.usb_resetep(self.iface.device.handle, self.addrout)
+            if TRACE: print "usb_resetep(%s,%d)=%d" % (self.iface.device.handle, self.addrout, res)
+
     def read(self,howmuch=1024, timeout=1000):
-        print "reading from addr",self.addrin
         data=""
         while howmuch>0:
             res,str=usb.usb_bulk_read_wrapped(self.iface.device.handle, self.addrin, min(howmuch,self.insize), timeout)
@@ -213,7 +228,8 @@ class USBFile:
             if res<0:
                 if len(data)>0:
                     return data
-                raise USBException()
+                e=USBException()
+                raise e
             if res==0:
                 return data
             data+=str
@@ -225,8 +241,9 @@ class USBFile:
         return data
 
     def write(self, data, timeout=1000):
-        print "writing to addr",self.addrout
-        while len(data):
+        first=True
+        while first or len(data):
+            first=False
             res=usb.usb_bulk_write(self.iface.device.handle, self.addrout, data[:min(len(data), self.outsize)], timeout)
             if TRACE: print "usb_bulk_write(%s, %d, %d bytes, %d)=%d" % (self.iface.device.handle, self.addrout, min(len(data), self.outsize), timeout, res)
             if res<0:
