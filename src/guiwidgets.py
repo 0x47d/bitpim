@@ -1221,12 +1221,18 @@ class DayViewDialog(wxDialog):
 
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
+        EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
 
         self.seteditmode(False)
 
     def OnListBoxItem(self, _):
         self.updatefields(self.entrymap[self.listbox.GetSelection()])
         self.seteditmode(True)
+
+    def OnSaveButton(self, _=None):
+        for f in fields:
+            print f
+            print fields[f].GetValue()
 
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
@@ -1300,7 +1306,7 @@ class DVTimeControl(wxPanel):
     # A time control customised to work in the dayview editor
     def __init__(self,parent,id):
         wxPanel.__init__(self, parent, -1)
-        self.tc=wxTimeCtrl(self, id)
+        self.tc=wxTimeCtrl(self, id, display_seconds=False)
         self.spin=wxSpinButton(self, -1, style=wxSP_VERTICAL, size=wxSize(-1,20))
         self.tc.BindSpinButton(self.spin)
         bs=wxBoxSizer(wxHORIZONTAL)
