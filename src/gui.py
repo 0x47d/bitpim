@@ -1180,20 +1180,7 @@ class WorkerThread(WorkerThreadFramework):
     def rmdirs(self,path):
         if __debug__: self.checkthread()
         self.setupcomm()
-        self.progressminor(0,1, "Listing child files and directories")
-        all=self.dirlisting(path, 100)
-        keys=all.keys()
-        keys.sort()
-        keys.reverse()
-        count=0
-        for k in keys:
-            self.progressminor(count, len(keys), "Deleting "+k)
-            count+=1
-            if all[k]['type']=='directory':
-                self.rmdir(k)
-            else:
-                self.rmfile(k)
-        self.rmdir(path)
+        return self.commphone.rmdirs(path)
 
     # offline/reboot
     def phonerebootrequest(self):
