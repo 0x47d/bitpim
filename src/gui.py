@@ -19,6 +19,7 @@ import os
 from wxPython.wx import *
 from wxPython.lib import colourdb
 from wxPython.help import *
+from wxPython.gizmos import wxTreeListCtrl
 
 # my modules
 import guiwidgets
@@ -761,8 +762,11 @@ class MainWindow(wxFrame):
         
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
-        # ::TODO:: don't allow this to appear if we are busy
-        self.configdlg.ShowModal()
+        if wxIsBusy():
+            wxMessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wxOK|wxICON_EXCLAMATION)
+        else:
+            self.configdlg.ShowModal()
 
     # deal with graying out/in menu items on notebook page changing
     def OnNotebookPageChanged(self, _=None):
@@ -1047,6 +1051,10 @@ class FileSystemView(wxTreeCtrl):
     def __init__(self, mainwindow, parent, idd=-1):
         # I was using the id function hence idd instead of id
         wxTreeCtrl.__init__(self, parent, idd, style=wxWANTS_CHARS|wxTR_DEFAULT_STYLE)
+        # self.AddColumn("Name")
+        # self.AddColumn("Size")
+        # self.SetMainColumn(0)
+        # self.SetColumnWidth(0, 200)
         self.mainwindow=mainwindow
         self.root=self.AddRoot("/")
         self.SetPyData(self.root, None)
@@ -1147,6 +1155,7 @@ class FileSystemView(wxTreeCtrl):
                 self.SetPyData(found, None)
                 made=1
             if result[file]['type']=='file':
+                print result[file]
                 self.dirhash[result[file]['name']]=0
                 self.SetItemHasChildren(found, False)
             else: # it is a directory
@@ -1158,6 +1167,7 @@ class FileSystemView(wxTreeCtrl):
             if not result.has_key(self.itemtopath(i)):
                 self.Delete(i)
         self.SortChildren(item)
+
 
     def OnFileSave(self, _):
         path=self.itemtopath(self.GetSelection())
