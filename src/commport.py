@@ -7,6 +7,8 @@
 ###
 ### $Id$
 
+"""Encapsulates the serial port device"""
+
 import serial
 import common
 import time
