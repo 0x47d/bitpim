@@ -13,6 +13,7 @@
 
 import sys
 import re
+import traceback
 from wxPython.wx import *
 
 import common
@@ -21,6 +22,7 @@ import prototypes
 import p_lgvx4400
 
 class Eventlist(wxListCtrl):
+    "List control showing the various events"
 
     def __init__(self, parent, id=-1, events=[]):
         self.events=events
@@ -69,7 +71,7 @@ class Analyser(wxFrame):
 
         @param data: data to show.  If None, then it will be obtained from the clipboard
         """
-        wxFrame.__init__(self, parent, id, title, size=(800,650),
+        wxFrame.__init__(self, parent, id, title, size=(800,750),
                          style=wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE)
 
 
@@ -87,23 +89,35 @@ class Analyser(wxFrame):
         ta=wxTextAttr(font=f)
         self.hex.SetDefaultStyle(ta)
 
+        self.highlightstyle=wxTextAttr(font=f, colBack=wxColour(0xff,0xff,0))
+        self.errorstyle=wxTextAttr(font=f, colBack=wxColour(0xff,64,64))
+        self.dataline=0
+
         botsplit.SplitHorizontally(self.tree, self.hex, 200)
         
         if data is None:
             data=self.getclipboarddata()
 
-        self.parsedata(data)
-        self.list.newdata(self.packets)
+        self.newdata(data)
 
         EVT_LIST_ITEM_SELECTED(self, self.list.GetId(), self.OnListBoxItem)
         EVT_LIST_ITEM_ACTIVATED(self, self.list.GetId(), self.OnListBoxItem)
+
+        EVT_TREE_SEL_CHANGED(self, self.tree.GetId(), self.OnTreeSelection)
         
         self.Show()
 
+    def newdata(self, data):
+        "We have new data - the old data is tossed"
+        self.parsedata(data)
+        self.list.newdata(self.packets)
+
     def OnListBoxItem(self,evt):
+        "The user selected an event in the listbox"
         index=evt.m_itemIndex
         curtime, curdesc, curclass, curdata=self.packets[index]
         self.hex.Clear()
+        self.dataline=0
         if len(curdata):
             self.hex.AppendText(common.datatohexstring(curdata))
             self.hex.SetInsertionPoint(0)
@@ -131,42 +145,83 @@ class Analyser(wxFrame):
             root=self.tree.AddRoot(curclass)
             try:
                 self.tree.SetPyData(root, obj.packetspan())
-            except Exception,e:
-                self.errorme("Root item has no span!",e)
+            except:
+                self.errorme("Object did not construct correctly")
             self.addtreeitems(obj, root)
 
     def addtreeitems(self, obj, parent):
-        for name,field,desc in obj.containerelements():
-            if desc is None:
-                desc=""
-            else:
-                desc=" - "+desc
-            iscontainer=False
-            try:
-                iscontainer=field.iscontainer()
-            except:
-                pass
-            # Add ourselves
-            s=field.__class__.__name__+" "+name
-            if iscontainer:
-                c=field.__class__
-                s+=": <%s.%s>" % (c.__module__, c.__name__)
-            else:
-                v=field.getvalue()
-                s+=": "+`v`
-            node=self.tree.AppendItem(parent, s)
-            try:
-                self.tree.SetPyData(node, field.packetspan())
-            except:
-                pass
-            if iscontainer:
-                self.addtreeitems(field, node)
+        "Add fields from obj to parent node"
+        try:
+            for name,field,desc in obj.containerelements():
+                if desc is None:
+                    desc=""
+                else:
+                    desc=" - "+desc
+                iscontainer=False
+                try:
+                    iscontainer=field.iscontainer()
+                except:
+                    pass
+                # Add ourselves
+                s=field.__class__.__name__+" "+name
+                if iscontainer:
+                    c=field.__class__
+                    s+=": <%s.%s>" % (c.__module__, c.__name__)
+                else:
+                    try:
+                        v=field.getvalue()
+                    except Exception,e:
+                        v="<Exception: "+e.__str__()+">"
+                    s+=": "
+                    if isinstance(v, int) and not isinstance(v,bool):
+                        s+="%d 0x%x" % (v,v)
+                    else:
+                        s+=`v`
+                node=self.tree.AppendItem(parent, s)
+                try:
+                    self.tree.SetPyData(node, field.packetspan())
+                except:
+                    pass
+                if iscontainer:
+                    self.addtreeitems(field, node)
+        except Exception,e:
+            str="<Exception: "+e.__str__()+">"
+            self.tree.AppendItem(parent,s)
 
+    def OnTreeSelection(self, evt):
+        "User selected an item in the tree"
+        item=evt.GetItem()
+        begin=self.hex.XYToPosition(0, self.dataline)
+        self.hex.SetStyle(begin,self.hex.GetLastPosition(),self.hex.GetDefaultStyle())
+        try:
+            start,end=self.tree.GetPyData(item)
+        except:
+            return
+        begin=self.hex.XYToPosition(0, self.dataline+start/16)
+        self.hex.ShowPosition(begin)
+        for offset in range(start,end):
+            fudge=0
+            
+            # figure out hex bytes and char for this offset
+            line=self.hex.XYToPosition(0,self.dataline+offset/16)
+            if offset+1==end or (offset%16)==15:
+                fudge=-1
+            offset%=16
+            self.hex.SetStyle(line+9+offset*3, line+9+offset*3+3+fudge, self.highlightstyle)
+            # and now the char
+            self.hex.SetStyle(line+61+offset,  line+61+offset+1, self.highlightstyle)
 
     def errorme(self, desc, exception=None):
+        "Put exception information into the hex pane and output traceback to console"
         if exception is not None:
-            self.hex.WriteText(exception.str()+" while ")
+            self.hex.WriteText(exception.__str__()+" : ")
+            traceback.print_exc()
         self.hex.WriteText(desc+"\n")
+        for i,l in zip(range(10000), self.hex.GetValue().split("\n")):
+            if len(l)>8 and l[:8]=='00000000':
+                self.dataline=i
+                self.hex.SetStyle(0, self.hex.XYToPosition(0, self.dataline), self.errorstyle)
+                return
 
     def getclipboarddata(self):
         """Gets text data on clipboard"""
