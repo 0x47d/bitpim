@@ -146,24 +146,30 @@ PACKET callalarmrequest:
 PACKET callalarmentry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
-    1 UINT dunno1 "Related to Snooze?"
+    1 UINT {'default': 0} +dunno1 "Related to Snooze?"
     49 STRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT datedup "Copy of the date.  Always the same???"
-    16 STRING {'raiseonunterminatedread': False} name
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN +pad1
     1 UINT name_len
     1 UINT phonenumbertype "1: Home, 2: Work, ..." 
     2 UINT phonenumberslot
-    1 UINT dunno2 "Sort order by date?"
+    1 UINT {'default': 0} +serial
 
 PACKET callalarmresponse:
     * sanyoheader header
     * callalarmentry entry
     417 UNKNOWN pad
+
+PACKET callalarmupdaterequest:
+    * sanyoheader {'readwrite': 0x0e,
+                   'packettype': 0x0c, 'command':0x24} +header
+    * callalarmentry entry
+    417 UNKNOWN +pad
 
 PACKET todorequest:
     * sanyoheader {'packettype': 0x0c,
