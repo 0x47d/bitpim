@@ -214,7 +214,10 @@ class MainApp(wxPySimpleApp):
         mainthreadid=thread.get_ident()
         sys.setcheckinterval(100)
         wxPySimpleApp.__init__(self)
-        self.config=wxConfig("BitPim", style=wxCONFIG_USE_LOCAL_FILE)
+        cfgstr='bitpim'
+        if IsMSWindows():
+            cfgstr="BitPim"  # nicely capitalized on Windows
+        self.config=wxConfig(cfgstr, style=wxCONFIG_USE_LOCAL_FILE)
 
         global wxEVT_CALLBACK
         wxEVT_CALLBACK=wxNewEventType()
