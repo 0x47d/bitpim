@@ -1,6 +1,7 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Stephen Wood <saw@bitpim.org>
+### Copyright (C) 2004-2005 Stephen Wood <saw@bitpim.org>
+### Copyright (C) 2005 Todd Imboden
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -11,6 +12,7 @@
 
 import sha
 import re
+import struct
 
 import common
 import commport
@@ -48,6 +50,7 @@ class Phone(com_samsung_packet.Phone):
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
     __cal_end_datetime_value=None
+    __ams_index_file="ams/AmsRegistry"
 
     def __init__(self, logtarget, commport):
         com_samsung_packet.Phone.__init__(self, logtarget, commport)
@@ -182,7 +185,56 @@ class Phone(com_samsung_packet.Phone):
         
         return
         
-    getringtones=None
+    def getamsindices(self, results):
+        info_offset=900
+        label_offset=14420
+        contents=self.getfilecontents(self.__ams_index_file)
+        records=ord(contents[37424]) #this tells how many records there are in the ams file
+        offset=0
+        rt={}
+        j=0
+        for i in range(records):
+            info=struct.unpack('8hl8h',contents[info_offset+offset:info_offset+offset+36])
+            if info[9]==12: #ringtone file
+                rt_name=self.getamstext(label_offset,info[2],contents)
+                rt_dir='ams/'+self.getamstext(label_offset,info[0],contents)
+                rt_type=self.getamstext(label_offset,info[10],contents)
+                if rt_type=="audio/vnd.qcelp":
+                    rt_filetype='.qcp'
+                elif rt_type=="audio/midi":
+                    rt_filetype='.mid'
+                elif rt_type=="application/x-pmd":
+                    rt_filetype='.pmd'
+                else:
+                    rt_filetype=''
+                rt_file=rt_name+rt_filetype
+                rt[j]={'name':rt_file,'location':rt_dir,'origin':'ringers'}
+                j+=1
+            offset+=36
+        results['ringtone-index']=rt
+        return
+
+    def getamstext(self, offset,location,contents): #this reads from the amsregistry file until it hits the spacer which is '00'
+        length=1 
+        i=0
+        while i==0:
+            if common.hexify(contents[offset+location+length])=='00':
+                i=1
+            else:
+                length+=1
+        amstext=contents[offset+location:offset+location+length]       
+
+        return amstext    
+
+    def getringtones(self, results):
+        self.setmode(self.MODEBREW)
+        self.getamsindices(results)
+        tones={}
+        for i in range(len(results['ringtone-index'])):
+            tones[results['ringtone-index'][i]['name']]=self.getfilecontents(results['ringtone-index'][i]['location'])
+            i+=1
+        results['ringtone']=tones
+        self.setmode(self.MODEMODEM)
     
 class Profile(com_samsung_packet.Profile):
     protocolclass=Phone.protocolclass
@@ -196,6 +248,7 @@ class Profile(com_samsung_packet.Profile):
         ('phonebook', 'read', None),  # all phonebook reading
         #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('wallpaper', 'read', None),  # all wallpaper reading
+        #('ringtone', 'read', None),   # all ringtone reading
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         )
