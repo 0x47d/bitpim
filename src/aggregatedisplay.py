@@ -13,6 +13,8 @@ import wx
 import sys
 import guihelper
 
+ActivateEvent, EVT_ACTIVATE = wx.lib.newevent.NewCommandEvent()
+
 class Display(wx.ScrolledWindow):
     "This is the view"
 
@@ -73,6 +75,7 @@ class Display(wx.ScrolledWindow):
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         wx.EVT_LEFT_DOWN(self, self.OnLeftDown)
+        wx.EVT_LEFT_DCLICK(self, self.OnLeftDClick)
         wx.EVT_RIGHT_DOWN(self, self.OnRightDown)
         if watermark is not None:
             wx.EVT_SCROLLWIN(self, self.OnScroll)
@@ -217,6 +220,16 @@ class Display(wx.ScrolledWindow):
         # we toggle the item
         self.selected[res.sectionnum][res.itemnum]=not self.selected[res.sectionnum][res.itemnum]
         self.Refresh(False)
+
+    def OnLeftDClick(self, evt):
+        actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
+        res=self.HitTest(actualx, actualy)
+        if res.item is None:
+            if len(self.GetSelection()):
+                self.ClearSelection()
+            return
+        self.SetSelectedByNumber(res.sectionnum, res.itemnum,  False) # make this the only selected item
+        wx.PostEvent(self, ActivateEvent(self.GetId(), item=res.item))
 
     def OnRightDown(self, evt):
         actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
