@@ -241,19 +241,26 @@ class MySplashScreen(wxSplashScreen):
         # Product name
         str=version.name
         dc.SetTextForeground( wxNamedColour("MEDIUMORCHID4") ) 
-        dc.SetFont( wxTheFontList.FindOrCreateFont(25, wxROMAN, wxNORMAL, wxNORMAL) )
+        dc.SetFont( self._gimmethedamnsizeirequested(25, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x, y)
         y+=h+0
         # Version number
         str=version.versionstring
         dc.SetTextForeground( wxNamedColour("ORANGE4") )
-        dc.SetFont( wxTheFontList.FindOrCreateFont(15, wxROMAN, wxNORMAL, wxNORMAL) )
+        dc.SetFont( self._gimmethedamnsizeirequested(15, wxROMAN, wxNORMAL, wxNORMAL) )
         w,h=dc.GetTextExtent(str)
         dc.DrawText(str, x+10, y)
         y+=h+0
         # all done
         dc.SelectObject(wxNullBitmap)
+
+    def _gimmethedamnsizeirequested(self, ps, family, style, weight):
+        # on Linux we have to ask for bigger than we want
+        if IsGtk():
+            ps=ps*1.6
+        font=wxTheFontList.FindOrCreateFont(ps, family, style, weight)
+        return font
 
     def goforit(self):
         self.app.makemainwindow()
