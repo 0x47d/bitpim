@@ -13,14 +13,14 @@ import wx.lib.scrolledpanel
 class Editor(wx.Dialog):
 
     def __init__(self, parent, data, title="Edit PhoneBook entry"):
-        wx.Dialog.__init__(self, parent, -1, title, size=(640,480), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.data=data.copy()
         vs=wx.BoxSizer(wx.VERTICAL)
         tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
         sz=tb.GetToolBitmapSize()
-
-        tb.AddLabelTool(-1, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
-        tb.AddLabelTool(-1, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
+        print sz
+        tb.AddLabelTool(12, "Up", wx.ArtProvider_GetBitmap(wx.ART_GO_UP, wx.ART_TOOLBAR, sz))
+        tb.AddLabelTool(13, "Down", wx.ArtProvider_GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, sz))
 
         tb.Realize()
         vs.Add(tb, 0, wx.EXPAND|wx.BOTTOM, 5)
@@ -33,7 +33,8 @@ class Editor(wx.Dialog):
         self.namewidget=wx.lib.scrolledpanel.ScrolledPanel(self.nb)
         self.namewidgetsizer=wx.BoxSizer(wx.VERTICAL)
         self.namewidget.SetSizer(self.namewidgetsizer)
-        for i in range(12):
+
+        for i in range(2):
             self.MakeNamePane()
 
         nb.AddPage(self.namewidget, "Names")
@@ -43,24 +44,24 @@ class Editor(wx.Dialog):
         
     def MakeNamePane(self,pos=-1):
         p=wx.Panel(self.namewidget,-1)
-        vs=wx.BoxSizer(wx.VERTICAL)
+        vs=wx.StaticBoxSizer(wx.StaticBox(p, -1, "Name Details"), wx.VERTICAL)
         hstop=wx.BoxSizer(wx.HORIZONTAL)
         hsbot=wx.BoxSizer(wx.HORIZONTAL)
-        hstop.Add(wx.StaticText(p, -1, "First"), 0, wx.EXPAND|wx.ALL,5)
+        hstop.Add(wx.StaticText(p, -1, "First"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         hstop.Add(wx.TextCtrl(p, -1, "dummy"), 1, wx.EXPAND|wx.ALL, 5)
-        hstop.Add(wx.StaticText(p, -1, "Middle"), 0, wx.EXPAND|wx.ALL,5)
+        hstop.Add(wx.StaticText(p, -1, "Middle"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         hstop.Add(wx.TextCtrl(p, -1, "dummy"), 1, wx.EXPAND|wx.ALL, 5)
-        hstop.Add(wx.StaticText(p, -1, "Last"), 0, wx.EXPAND|wx.ALL,5)
+        hstop.Add(wx.StaticText(p, -1, "Last"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         hstop.Add(wx.TextCtrl(p, -1, "dummy"), 1, wx.EXPAND|wx.ALL, 5)
-        hsbot.Add(wx.StaticText(p, -1, "Full"), 0, wx.EXPAND|wx.ALL,5)
-        hsbot.Add(wx.TextCtrl(p, -1, "dummy"), 1, wx.EXPAND|wx.ALL, 5)
-        hsbot.Add(wx.StaticText(p, -1, "Nickname"), 0, wx.EXPAND|wx.ALL,5)
+        hsbot.Add(wx.StaticText(p, -1, "Full"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hsbot.Add(wx.TextCtrl(p, -1, "dummy"), 4, wx.EXPAND|wx.ALL, 5)
+        hsbot.Add(wx.StaticText(p, -1, "Nickname"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
         hsbot.Add(wx.TextCtrl(p, -1, "dummy"), 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hstop, 0, wx.EXPAND|wx.ALL, 5)
         vs.Add(hsbot, 0, wx.EXPAND|wx.ALL, 5)
         p.SetSizer(vs)
-        p.SetAutoLayout(True)
-        self.namewidgetsizer.Add(p,1,wx.EXPAND|wx.ALL, 5)
+        vs.Fit(p)
+        self.namewidgetsizer.Add(p,0,wx.EXPAND|wx.ALL, 5)
         self.namewidget.SetupScrolling()
         return p
         
