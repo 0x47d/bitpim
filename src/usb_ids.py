@@ -336,27 +336,27 @@ class USBClassList:
 ###
 ###  Interactive testing code
 ###
-def print_vendor_info(USBids):
-	# Print out vendor / device / interface info
-	vlist = USBids.getVendorList()
-	for v in vlist.getVendorList():
-		print ("VENDOR: %s %s" % (v.id, v.description))
-		for d in v.getDevices():
-			print ("\tDEVICE: %s %s" % (d.id, d.description))
-			for i in d.getInterfaces():
-				print ("\t\tIFACE: %s %s" % (i.id, i.description))
-
-def print_class_info(USBids):
-	# Print out class / subclass / protocol
-	clist = USBids.getUSBClassList()
-	for c in clist.getUSBClassList():
-		print ("CLASS: %s %s" % (c.id, c.description))
-		for s in c.getSubclasses():
-			print ("\tSUBCLASS: %s %s" % (s.id, s.description))
-			for p in s.getProtocols():
-				print ("\t\tPROTOCOL: %s %s" % (p.id, p.description))
-
 if (__name__ == "__main__"):
+	def print_vendor_info(USBids):
+		# Print out vendor / device / interface info
+		vlist = USBids.getVendorList()
+		for v in vlist.getVendorList():
+			print ("VENDOR: %s %s" % (v.id, v.description))
+			for d in v.getDevices():
+				print ("\tDEVICE: %s %s" % (d.id, d.description))
+				for i in d.getInterfaces():
+					print ("\t\tIFACE: %s %s" % (i.id, i.description))
+	
+	def print_class_info(USBids):
+		# Print out class / subclass / protocol
+		clist = USBids.getUSBClassList()
+		for c in clist.getUSBClassList():
+			print ("CLASS: %s %s" % (c.id, c.description))
+			for s in c.getSubclasses():
+				print ("\tSUBCLASS: %s %s" % (s.id, s.description))
+				for p in s.getProtocols():
+					print ("\t\tPROTOCOL: %s %s" % (p.id, p.description))	
+
 	myUSBids = usb_ids("resources/usb.ids")
 
 	# PRINT OUT THE WHOLE TREE AS A TEST CASE
@@ -367,7 +367,7 @@ if (__name__ == "__main__"):
 	vlist = myUSBids.getVendorList()
 	print vlist.getVendorInfo("05ac")
 	print vlist.getVendorInfo("05ac", "0206")
-	print vlist.getVendorInfo("05ac", "0206", "1")
+	print vlist.getVendorInfo("05ac", "0206", "01")
 	
 	# Test lookup for various bits of USB Class/Subclass/Protocol information
 	clist = myUSBids.getUSBClassList()
