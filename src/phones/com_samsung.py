@@ -118,11 +118,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 g.append('')
 	return g
 
-    def get_phone_entry(self, entry_index):
+    def get_phone_entry(self, entry_index, alias_column=-1, num_columns=-1):
         try:
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
-                return self.splitandunescape(s[0])
+                line=s[0]
+                if alias_column>=0 && alias_column<num_columns:
+                    line=defrell(line, alias_column, num_columns)
+                return self.splitandunescape(line)
         except commport.ATError:
             pass
         return []
