@@ -11,6 +11,7 @@ import time
 # wx modules
 from wxPython.grid import *
 from wxPython.wx import *
+from wxPython.lib.timectrl import *
 from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
 
 # my modules
@@ -1123,6 +1124,9 @@ class DayViewDialog(wxDialog):
     ID_ADD=3
     ID_DELETE=4
     ID_CLOSE=5
+    ID_LISTBOX=6
+    ID_START=7
+    ID_END=8
     
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
@@ -1140,20 +1144,29 @@ class DayViewDialog(wxDialog):
         hbs.Add(next, 0, wxEXPAND)
         vbs.Add(hbs, 0, wxEXPAND)
 
+        self.fieldnames=('description', 'start', 'end', 'repeat',
+        'alarm', 'ringtone', '?d')
+        
+        self.fielddesc=( 'Description', 'Start', 'End', 'Repeat',
+        'Alarm', 'Ringtone', '?Internal' )
+
         # right hand bit with all fields
         gs=wxFlexGridSizer(-1,2,5,5)
         gs.AddGrowableCol(1)
         self.fields={}
-        for desc,field in ( ('Description', 'description'), ('Start', 'start'), ('End', 'end'),
-                   ('Repeat', 'repeat'), ('Alarm', 'alarm'), ('Ringtone', 'ringtone'),
-                   ('?Internal', '?d') ):
+        for desc,field in zip(self.fielddesc, self.fieldnames):
             t=wxStaticText(self, -1, desc, style=wxALIGN_LEFT)
             gs.Add(t)
-            c=wxTextCtrl(self, len(self.fields)+10, "dummy")
+            if field=='start':
+                c=MyTimeControl(self,self.ID_START)
+            elif field=='end':
+                c=MyTimeControl(self,self.ID_END)
+            else:
+                c=wxTextCtrl(self, len(self.fields)+10, "dummy")
             gs.Add(c,0,wxEXPAND)
             self.fields[field]=c
                  
-        self.listbox=wxListBox(self, -1, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
+        self.listbox=wxListBox(self, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
         add=wxButton(self, self.ID_ADD, "New")
         delete=wxButton(self, self.ID_DELETE, "Delete")
         hbs=wxBoxSizer(wxHORIZONTAL)
@@ -1176,6 +1189,13 @@ class DayViewDialog(wxDialog):
         self.entries={}
         self.entrymap=[]
 
+        EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
+        EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
+
+
+    def OnListBoxItem(self, _):
+        self.updatefields(self.entrymap[self.listbox.GetSelection()])
+
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
         self.title.SetLabel(d)
@@ -1188,7 +1208,7 @@ class DayViewDialog(wxDialog):
         self.entrymap=[]
         for i in self.entries:
             entry=i
-            e=( entry['start'], entry['end'], entry['description'], entry)
+            e=( entry['start'][3:5], entry['end'][3:5], entry['description'], entry)
             self.entrymap.append(e)
         # time ordered
         self.entrymap.sort()
@@ -1205,17 +1225,46 @@ class DayViewDialog(wxDialog):
                 if hr==0: hr=12
                 str="%2d:%02d %s" % (hr, e[0][4], ap)
             str+=" "+e[2]
+            print "adding",str
             self.listbox.Append(str)
 
         # make entrymap only be entries
         self.entrymap=[x[3] for x in self.entrymap] 
 
     def updatefields(self, entry):
+        print entry
         if entry is None:
             for i in self.fields:
                 self.fields[i].SetValue("")
             return
+        for i in self.fieldnames:
+            self.fields[i].SetValue(entry[i])
+
+
+class MyTimeControl(wxPanel):
+    # A time control customised to work in the dayview editor
+    def __init__(self,parent,id):
+        wxPanel.__init__(self, parent, -1)
+        self.tc=wxTimeCtrl(self, id)
+        self.spin=wxSpinButton(self, -1, style=wxSP_VERTICAL, size=wxSize(-1,20))
+        self.tc.BindSpinButton(self.spin)
+        bs=wxBoxSizer(wxHORIZONTAL)
+        bs.Add(self.tc,0,wxEXPAND)
+        bs.Add(self.spin,0, wxEXPAND)
+        self.SetSizer(bs)
+        self.SetAutoLayout(True)
+        bs.Fit(self)
+
+    def SetValue(self, v):
+        if isinstance(v, str):
+            assert len(v)==0  # blank string
+            self.tc.SetWxDateTime(wxDateTimeFromHMS(0, 0))
+            return
+        self.tc.SetWxDateTime(wxDateTimeFromHMS(v[3], v[4]))
+    
         
+        
+
         
 ###
 ### Copied from wxPython.lib.dialogs.  This one is different in that it
