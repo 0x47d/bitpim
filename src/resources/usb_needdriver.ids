@@ -20,3 +20,6 @@
 
 # Prolific PL2303 chip as used in FutureDial cables
 067b  2303  0
+
+# Samsung - interface is USB modem protocol
+04e8  6601  1
