@@ -21,6 +21,7 @@ import common
 import prototypes
 
 import p_lg
+import p_lgvx6000
 import p_lgvx4400
 import p_brew
 import p_lgtm520
