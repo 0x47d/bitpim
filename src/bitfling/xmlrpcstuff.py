@@ -30,6 +30,9 @@
 # stuff, but the actual request handling still seems single threaded.
 
 
+TRACE=True
+
+
 # standard modules
 import threading
 import Queue
@@ -40,12 +43,14 @@ import xmlrpclib
 import base64
 import httplib
 import string
+import urllib
 
 # required add ons
 import M2Crypto
 
+# my modules
+if TRACE: import guihelper # to format exceptions
 
-TRACE=True
 
 class AuthenticationBad(Exception):
     pass
@@ -73,7 +78,10 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 cred=cred.split(None, 1)
                 if len(cred)!=2 or cred[0].lower()!="basic":
                     raise AuthenticationBad("Unknown authentication scheme "+`cred[0]`)
-                username,password=base64.decodestring(cred[1].strip()).split(":", 1)
+                cred=base64.decodestring(cred[1]).split(":", 1)
+                username=cred[0]
+                password=base64.decodestring(cred[1])
+                print "parsed auth to %s %s from %s" % (username, password, self.headers["Authorization"])
             response=self.server.processxmlrpcrequest(data, self.client_address, username, password)
         except AuthenticationBad:
             self.close_connection=True
@@ -83,7 +91,9 @@ class XMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.flush()
         except: # This should only happen if the module is buggy
             # internal error, report as HTTP server error
-            if __debug__ and TRACE: print "error in handling xmlrpcrequest"
+            if __debug__ and TRACE:
+                print "error in handling xmlrpcrequest"
+                print guihelper.formatexception()
             self.close_connection=True
             self.send_response(500, "Internal Error")
             self.end_headers()
@@ -376,6 +386,8 @@ class Server(threading.Thread):
         except xmlrpclib.Fault, fault:
             response = xmlrpclib.dumps(fault)
         except:
+            self.OnLog("Exception processing method "+`method`)
+            self.OnLogException(sys.exc_info())
             # report exception back to server
             response = xmlrpclib.dumps(
                 xmlrpclib.Fault(1, "%s:%s" % sys.exc_info()[:2])
@@ -418,8 +430,10 @@ class SSLTransport(xmlrpclib.Transport):
         # xmlrpclib.Transport.__init__(self)
         self.sslt_sslctx=sslctx
         self.sslt_uri=uri
-        self.sslt_user_passwd, self.sslt_host_port = M2Crypto.m2urllib.splituser(uri)
-        self.sslt_host, self.sslt_port = M2Crypto.m2urllib.splitport(self.sslt_host_port)
+        _, rest=urllib.splittype(uri)
+        host, _=urllib.splithost(rest)
+        self.sslt_user_passwd, hpart=urllib.splituser(host)
+        self.sslt_host, self.sslt_port = urllib.splitport(hpart)
         self.connection=None
 
     def getconnection(self):

@@ -737,7 +737,7 @@ class BitFlingSettingsDialog(wx.Dialog):
         "Copy settings from dialog fields into config object"
         username,pwd,host,port=self.GetSettings()
         self.config.Write("bitfling/username", username)
-        self.config.Write("bitfling/password", bitflingscan.flinger.encode(pwd))
+        self.config.Write("bitfling/password", bitflingscan.encode(pwd))
         self.config.Write("bitfling/host", host)
         self.config.WriteInt("bitfling/port", port)
 

@@ -23,6 +23,7 @@ import fnmatch
 import socket
 import threading
 import time
+from xmlrpclib import Fault
 
 # m2 stuff
 import M2Crypto
@@ -471,6 +472,7 @@ class MainWindow(wx.Frame):
         
         v=(peeraddr[0], username, password)
         if username is not None and password is None:
+            self.Log("%s: No password supplied for user %s" % (peeraddr, `username`))
             assert False, "No password supplied"
             return False # not allowed to have None as password
         print "ica of "+`v`
@@ -504,6 +506,9 @@ class MainWindow(wx.Frame):
             # remember expiry value (largest value)
             ret_expiry=max(ret_expiry, expires)
             ret_allowed=True
+
+        if not ret_allowed:
+            self.Log("No valid credentials for user %s from %s" % (username, peeraddr[0]))
             
         # recurse so that correct log messages about expiry get generated
         self.icacache[v]=ret_allowed, ret_expiry
@@ -664,6 +669,10 @@ class XMLRPCService(xmlrpcstuff.Server):
 
     def OnNewAccept(self, clientaddr):
         return self.mainwin.IsConnectionAllowed(clientaddr)
+
+    def verifyok(self, username, password, clientaddr):
+        if not self.mainwin.IsConnectionAllowed(clientaddr, username, password):
+            raise Fault(2, "Authentication failed")
 
     def OnNewConnection(self, clientaddr, _):
         return True
