@@ -400,8 +400,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 # file is empty, and hence same as non-existent
                 raise com_brew.BrewNoSuchFileException()
             sc=self.protocolclass.schedulefile()
-            sc.readfrombuffer(buf)
             self.logdata("Calendar", buf.getdata(), sc)
+            sc.readfrombuffer(buf)
             for event in sc.events:
                 entry={}
                 entry['pos']=event.pos
@@ -797,16 +797,8 @@ class Profile(com_phone.Profile):
                 e['numbers']=[]
                 for numindex in range(len(numbers)):
                     num=numbers[numindex]
-                    # deal with number
-                    number=phonize(num['number'])
-                    if len(number)==0:
-                        # no actual digits in the number
-                        continue
-                    if len(number)>48: # get this number from somewhere sensible
-                        # ::TODO:: number is too long and we have to either truncate it or ignore it?
-                        number=number[:48] # truncate for moment
-                    e['numbers'].append(number)
                     # deal with type
+                    b4=len(e['numbertypes'])
                     type=num['type']
                     for i,t in enumerate(self.protocolclass.numbertypetab):
                         if type==t:
@@ -819,6 +811,18 @@ class Profile(com_phone.Profile):
                         if t=='none': # conveniently last entry
                             e['numbertypes'].append(i)
                             break
+                    if len(e['numbertypes'])==b4:
+                        # we couldn't find a type for the number
+                        continue 
+                    # deal with number
+                    number=phonize(num['number'])
+                    if len(number)==0:
+                        # no actual digits in the number
+                        continue
+                    if len(number)>48: # get this number from somewhere sensible
+                        # ::TODO:: number is too long and we have to either truncate it or ignore it?
+                        number=number[:48] # truncate for moment
+                    e['numbers'].append(number)
                     # deal with speed dial
                     sd=num.get("speeddial", -1)
                     if self.protocolclass._NUMSPEEDDIALS:
