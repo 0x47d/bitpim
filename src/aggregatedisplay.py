@@ -213,8 +213,20 @@ class Display(wx.ScrolledWindow):
         if res.item is None:
             self.ClearSelection()
         else:
-            # if only one other item is selected then we cancel that and select this one
-            self.SetSelectedByNumber(res.sectionnum, res.itemnum, len(self.GetSelection())!=1)
+            # if item is not in selection then change selection to item
+            if not self.IsSelectedByNum(res.sectionnum, res.itemnum):
+                self.SetSelectedByNumber(res.sectionnum, res.itemnum)
+
+    def GetAllItems(self):
+        """Returns all items
+
+        The return value is a list.  Each item in the list is a tuple of
+        (sectionnumber, sectionobject, itemnumber, itemobject)"""
+        res=[]
+        for s,section in enumerate(self.sections):
+            for i,item in enumerate(self.items[s]):
+                res.append( (s,section,i,item) )
+        return res
 
     def IsSelectedByNum(self, sectionnum, itemnum):
         "Returns if the itemnum from sectionnum is selected"
@@ -257,7 +269,7 @@ class Display(wx.ScrolledWindow):
             for i,item in enumerate(self.items[s]):
                 if item is itemobj:
                     self.selected[s][i]=True
-                    self.Refresh()
+                    self.Refresh(False)
                     return
         raise ValueError("no such item "+itemobj)
         
@@ -501,7 +513,6 @@ if __name__=="__main__":
             def Draw(self, dc, width, height, selected):
                 # uncomment to see exactly what size is given
                 #dc.DrawRectangle(0,0,width,height)
-
                 us=dc.GetUserScale()
                 dc.SetClippingRegion(0,0,width,height)
                 hdc=wx.html.HtmlDCRenderer()
