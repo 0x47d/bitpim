@@ -20,7 +20,6 @@ import wx.html
 
 # my modules
 import guihelper
-import guiwidgets
 import fixedwxpTag
 
 ###
@@ -405,6 +404,10 @@ class HtmlEasyPrinting:
     def OnPreviewClose(self, event):
         guiwidgets.save_size(self.config, "PrintPreview", self.frame.GetRect())
         event.Skip()
+
+# done down here to prevent circular imports
+import guiwidgets
+
         
 if __name__=='__main__':
     src="""
