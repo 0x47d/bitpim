@@ -1112,7 +1112,7 @@ class ImportCellRenderer(wx.grid.PyGridCellRenderer):
 
     COLOURS=["HONEYDEW", "WHITE", "LEMON CHIFFON", "ROSYBROWN1"]
     
-    def __init__(self, table):
+    def __init__(self, table, grid):
         wx.grid.PyGridCellRenderer.__init__(self)
         self.calc=False
         self.table=table
@@ -1431,6 +1431,7 @@ def workaroundyetanotherwxpythonbug(method, *args):
     try:
         return method(*args)
     except TypeError:
+        print "swallowed a type error in workaroundyetanotherwxpythonbug"
         pass
 
 ###
@@ -1540,7 +1541,7 @@ class ImportDialog(wx.Dialog):
         self.table=ImportDataTable(self)
         
         # this is a work around for various wxPython/wxWidgets bugs
-        cr=ImportCellRenderer(self.table)
+        cr=ImportCellRenderer(self.table, self.grid)
         cr.IncRef()  # wxPython bug
         self.grid.RegisterDataType("string", cr, None) # wxWidgets bug - it uses the string renderer rather than DefaultCellRenderer
 
