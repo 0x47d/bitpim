@@ -373,6 +373,12 @@ class ConvertDialog(wx.Dialog):
         self.sound=None
         self.timer=wx.Timer(self, self.ID_TIMER)
 
+        # wxPython wrapper on Mac raises NotImplemented for wx.Sound.Stop() so
+        # we hack around that by supplying a zero length wav to play instead
+        if guihelper.IsMac():
+            self.zerolenwav=guihelper.getresourcefile("zerolen.wav")
+
+
     def create_convert_pane(self, vbs, file, convertinfo):
         params=self.PARAMETERS[convertinfo.format]
         # convert bit
@@ -521,8 +527,15 @@ class ConvertDialog(wx.Dialog):
     def OnStop(self, _=None):
         self.timer.Stop()
         if self.sound is not None:
-            self.sound.Stop()
-            self.sound=None
+            if guihelper.IsMac():
+                # There is no stop method for Mac so we play a one centisecond wav
+                # which cancels the existing playing sound
+                self.sound=None
+                sound=wx.Sound(self.zerolenwav)
+                sound.Play(wx.SOUND_ASYNC)
+            else:
+                self.sound.Stop()
+                self.sound=None
 
     def OnSliderCurrentChanged(self, evt):
         self.OnStop()
