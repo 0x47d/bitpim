@@ -15,7 +15,7 @@ for sym in dir(usb):
     if sym.startswith("USB_CLASS_") or sym.startswith("USB_DT"):
         exec "%s=usb.%s" %(sym, sym)
 
-TRACE=True
+TRACE=False
 
 class USBException(Exception):
     def __init__(self):
