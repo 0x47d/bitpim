@@ -1,0 +1,8 @@
+#
+# Test data for usb_ids.py
+#
+1004  LG Electroncs
+	6000  LG VX6000 Phone
+		00  Config Interface
+		01  USB Modem Interface
+		02  Vendor Specific Interface
