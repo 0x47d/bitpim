@@ -75,15 +75,18 @@ PACKET writefileblockrequest:
     * DATA data
     
 PACKET listdirectoriesrequest:
+    "Lists the subdirectories of dirname"
     * requestheader {'command': 0x02} +header
     * STRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET listdirectoriesresponse:
     * responseheader header
     2 UINT numentries
-    2 UINT datalen
-    * LIST {'length': self.numentries} items:
-        * STRING subdir
+    if self.numentries>0:
+        # Samsung A620 has garbage from this point on if numentries==0
+        2 UINT datalen
+        * LIST {'length': self.numentries} items:
+            * STRING subdir
     
 PACKET listfilerequest:
     "This gets one directory entry (files only) at a time"
