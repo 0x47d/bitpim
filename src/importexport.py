@@ -296,6 +296,17 @@ class ImportDialog(wx.Dialog):
             if len(flags):
                 entry["flags"]=flags
 
+            # unique serials
+            serial={}
+            for k in rec.keys():
+                if k.startswith("UniqueSerial-"):
+                    v=rec[k]
+                    del rec[k]
+                    k=k[len("UniqueSerial-"):]
+                    serial[k]=v
+            if len(serial):
+                entry["serials"]=[serial]
+
             # stash it away
             res[count]=entry
             # Did we forget anything?
@@ -651,7 +662,7 @@ class ImportOutlookDialog(ImportDialog):
         ('Categories',           "Categories"),
 
 
-# ('EntryID',              "UniqueSerial"),
+        ('EntryID',              "UniqueSerial-EntryID"),
         
         )
 
@@ -814,6 +825,10 @@ class ImportOutlookDialog(ImportDialog):
         # want now contains list of Outlook keys we want, and the order we want them in
         
         self.columns=[self.importmappingdict[k] for k in want]
+        # deal with serials
+        self.columns.append("UniqueSerial-FolderID")
+        self.columns.append("UniqueSerial-sourcetype")
+        moredata=[ self.outlook.getfolderid(self.folder), "outlook"]
 
         # build up data
         self.data=[]
@@ -826,7 +841,7 @@ class ImportOutlookDialog(ImportDialog):
                 except UnicodeEncodeError:
                     v=v.encode("ascii", 'xmlcharrefreplace')
                 row.append(v)
-            self.data.append(row)
+            self.data.append(row+moredata)
 
 def OnFileImportCSV(parent):
     dlg=wx.FileDialog(parent, "Import CSV file",
