@@ -29,7 +29,11 @@ class PhoneDataTable(wxPyGridTableBase):
 
     typestypename=wxGRID_VALUE_CHOICE+":"+",".join(numbertypetab)
 
-    intnames=( 'group', 'msgringtone', 'ringtone', 'serial1', 'serial2' )
+    groupnames=( 'group', )
+
+    grouptypenamebase=wxGRID_VALUE_CHOICE+":"
+
+    intnames=( 'msgringtone', 'ringtone', 'serial1', 'serial2' )
     
     boolnames=( 'secret', )
 
@@ -49,6 +53,11 @@ class PhoneDataTable(wxPyGridTableBase):
         self._data={}
         self.needswrite=False
         self.sequence=0xffff # for new entries we add
+        # default groups
+        self.groupdict={0: {'name': 'No Group', 'icon': 0}, 1: {'name': 'Family', 'icon': 1},
+                        2: {'name': 'Friends', 'icon': 2}, 3: {'name': 'Colleagues', 'icon': 3},
+                        4: {'name': 'Business', 'icon': 4}, 5: {'name': 'School', 'icon': 5}, }
+        self.buildgrouptypename(self.groupdict)
 
     def OnIdle(self, _):
         if self.needswrite:
@@ -59,8 +68,7 @@ class PhoneDataTable(wxPyGridTableBase):
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
-        print "phonebook keys", self._data.keys()
-        # need to add group
+        dict['groups']=self.groupdict.copy()
         return dict
 
     def setstandardlabels(self):
@@ -137,7 +145,9 @@ class PhoneDataTable(wxPyGridTableBase):
             # delete them all!
             os.remove(os.path.join(self.thedir, f))
         f=open(os.path.join(self.thedir, "index.idx"), "wb")
-        f.write("result['phonebook']="+`dict['phonebook']`)
+        f.write("result['phonebook']="+`dict['phonebook']`+"\n")
+        if dict.has_key('groups'):
+            f.write("result['groups']="+`dict['groups']`+"\n")
         f.close()
         return dict
 
@@ -155,6 +165,7 @@ class PhoneDataTable(wxPyGridTableBase):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
+            dict['groups']={}
         return dict
 
     def populate(self, dict):
@@ -194,6 +205,16 @@ class PhoneDataTable(wxPyGridTableBase):
             self.getcolumn(c)
 
         self.GetView().FitInside()
+
+        if dict.has_key('groups'):
+            self.buildgrouptypename(dict['groups'])
+
+    def buildgrouptypename(self, dict):
+        self.grouptypename=self.grouptypenamebase
+        keys=dict.keys()
+        keys.sort()
+        self.grouptypename+=(",".join([dict[k]['name'] for k in keys]))
+        self.groupdict=dict.copy()
                     
     def GetNumberRows(self):
         return len(self.roworder)
@@ -205,10 +226,15 @@ class PhoneDataTable(wxPyGridTableBase):
         return False
 
     def GetValue(self, row, col):
+        celldata=self._data[self.roworder[row]][self.labels[col]]
         try:
             if self.labels[col] in self.typesnames:
-                return self.numbertypetab[ self._data[self.roworder[row]][self.labels[col]] ]
-            return self._data[self.roworder[row]][self.labels[col]]
+                return self.numbertypetab[ celldata ]
+            elif self.labels[col] in self.groupnames:
+                if self.groupdict.has_key( celldata ):
+                    return self.groupdict[celldata]['name']
+                return "Group #"+`celldata`
+            return celldata
         except:
             print "bad request", row, self.labels[col]
             return ""
@@ -217,10 +243,12 @@ class PhoneDataTable(wxPyGridTableBase):
         # print "GetTypeName",row,col
         if self.labels[col] in self.typesnames:
             return self.typestypename
-        if self.labels[col] in self.intnames or self.labels[col][0]=='?':
+        elif self.labels[col] in self.intnames or self.labels[col][0]=='?':
             return wxGRID_VALUE_NUMBER
-        if self.labels[col] in self.boolnames:
+        elif self.labels[col] in self.boolnames:
             return wxGRID_VALUE_BOOL
+        elif self.labels[col] in self.groupnames:
+            return self.grouptypename
         return wxGRID_VALUE_STRING
 
     def SetValue(self, row, col, value):
@@ -229,7 +257,12 @@ class PhoneDataTable(wxPyGridTableBase):
                 if value==self.numbertypetab[i]:
                     value=i
                     break
-        print "SetValue",row,col,value
+        elif self.labels[col] in self.groupnames:
+            for i in self.groupdict:
+                if value==self.groupdict[i]['name']:
+                    value=i
+                    break
+        print "SetValue",row,col,`value`
         self._data[self.roworder[row]][self.labels[col]]=value
         if self.labels[col]=='name':
             self.GetView().GetGridRowLabelWindow().Refresh()
