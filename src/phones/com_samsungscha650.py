@@ -12,6 +12,7 @@
 
 # lib modules
 
+import re
 import sha
 from string import split,atoi,strip,join,replace
 
@@ -335,7 +336,7 @@ class Phone(com_samsung.Phone):
             if pb_entry['names'][0]['full']!=name:
                 pb_entry['names'][0]['full']=name
             if pb_entry['names'][0].has_key('nickname'):
-                name=replace(pb_entry['names'][0]['nickname'], '"', '')
+                name=re.sub('[,"]', '', pb_entry['names'][0]['nickname'])
                 if len(name)>self.__pb_max_name_len:
                     name=name[:self.__pb_max_name_len]
                 if pb_entry['names'][0]['nickname']!=name:
