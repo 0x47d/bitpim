@@ -114,6 +114,25 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
+        # Read speed dials first
+        speeds={}
+        try:
+            if self.protocolclass._NUMSPEEDDIALS:
+                self.log("Reading speed dials")
+                buf=prototypes.buffer(self.getfilecontents("pim/pbspeed.dat"))
+                sd=self.protocolclass.speeddials()
+                sd.readfrombuffer(buf)
+                for i in range(self.protocolclass._FIRSTSPEEDDIAL, self.protocolclass._LASTSPEEDDIAL+1):
+                    if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass._NUMPHONEBOOKENTRIES:
+                        continue
+                    l=speeds.get(sd.speeddials[i].entry, [])
+                    l.append((i, sd.speeddials[i].number))
+                    speeds[sd.speeddials[i].entry]=l
+        except com_brew.BrewNoSuchFileException:
+            pass
+
+        print "speed dials is",speeds
+            
         pbook={}
         # Bug in the phone.  if you repeatedly read the phone book it starts
         # returning a random number as the number of entries.  We get around
@@ -132,7 +151,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
-            entry=self.extractphonebookentry(res.entry, result)
+            entry=self.extractphonebookentry(res.entry, speeds, result)
             pbook[i]=entry 
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
@@ -166,7 +185,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def savephonebook(self, data):
+        "Saves out the phonebook"
         self.savegroups(data)
+
         # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
         # We then delete any entries that aren't in data
@@ -182,6 +203,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numexistingentries=res.numentries
         progressmax=numexistingentries+len(data['phonebook'].keys())
+        # if we are going to write out speeddials, we have to re-read the entire
+        # phonebook again
+        if data.get('speeddials',None) is not None:
+            progressmax+=len(data['phonebook'].keys())
+
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
         # reset cursor
@@ -272,10 +298,71 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                                      {'sourcetype': self.serialsname, 'serial1': res.newserial, 'serial2': res.newserial,
                                      'sourceuniqueid': data['uniqueserial']})
                                   )
-
         data["serialupdates"]=serialupdates
+        # deal with the speeddials
+        if data.get("speeddials",None) is not None:
+            # Yes, we have to read the ENTIRE phonebook again.  This
+            # is because we don't know which entry numbers actually
+            # got assigned to the various entries, and we need the
+            # actual numbers to assign to the speed dials
+            newspeeds={}
+            if len(data['speeddials']):
+                # Move cursor to begining of phonebook
+                self.mode=self.MODENONE
+                self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
+                self.setmode(self.MODEPHONEBOOK)
+                self.log("Searching for speed dials")
+                self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
+                for i in range(len(pbook)):
+                    ### Read current entry
+                    req=self.protocolclass.pbreadentryrequest()
+                    res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
+                    self.log("Scanning "+res.entry.name)
+                    progresscur+=1
+                    # we have to turn the entry serial number into a bitpim serial
+                    serial=res.entry.serial1
+                    found=False
+                    for bps, serials in serialupdates:
+                        if serials['serial1']==serial:
+                            # found the entry
+                            for sd in data['speeddials']:
+                                xx=data['speeddials'][sd]
+                                if xx[0]==bps:
+                                    found=True
+                                    newspeeds[sd]=(res.entry.entrynumber, xx[1])
+                                    nt=numbertypetab[res.entry.numbertypes[xx[1]].numbertype]
+                                    self.log("Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
+                                    self.progress(progresscur, progressmax, "Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
+                    if not found:
+                        self.progress(progresscur, progressmax, "Scanning "+res.entry.name)
+                    # move to next entry
+                    self.sendpbcommand(self.protocolclass.pbnextentryrequest(), self.protocolclass.pbnextentryresponse)
 
+            self.progress(progressmax, progressmax, "Finished scanning")
+            print "new speed dials is",newspeeds
+            req=self.protocolclass.speeddials()
+            for i in range(self.protocolclass._NUMSPEEDDIALS):
+                sd=self.protocolclass.speeddial()
+                if i in newspeeds:
+                    sd.entry=newspeeds[i][0]
+                    sd.number=newspeeds[i][1]
+                req.speeddials.append(sd)
+            buffer=prototypes.buffer()
+            req.writetobuffer(buffer)
 
+            # We check the existing speed dial file as changes require a reboot
+            self.log("Checking existing speed dials")
+            if buffer.getvalue()!=self.getfilecontents("pim/pbspeed.dat"):
+                self.logdata("New speed dial file", buffer.getvalue(), req)
+                self.writefile("pim/pbspeed.dat", buffer.getvalue())
+                self.log("Your phone has to be rebooted due to the speed dials changing")
+                self.progress(progressmax, progressmax, "Rebooting phone")
+                data["rebootphone"]=True
+            else:
+                self.log("No changes to speed dials")
+
+        return data
+        
 
     def _findserial(self, serial, dict):
         """Searches dict to find entry with matching serial.  If not found,
@@ -452,7 +539,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 res[k]=d[k]
         return res
 
-    def extractphonebookentry(self, entry, fundamentals):
+    def extractphonebookentry(self, entry, speeds, fundamentals):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
@@ -516,6 +603,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 if t[-1]=='2':
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
+        # speed dials
+        if entry.entrynumber in speeds:
+            for speeddial,numberindex in speeds[entry.entrynumber]:
+                try:
+                    res['numbers'][numberindex]['speeddial']=speeddial
+                except IndexError:
+                    print "speed dial refers to non-existent number\n",res['numbers'],"\n",numberindex,speeddial
         return res
 
     def _findmediainindex(self, index, name, pbentryname, type):
@@ -527,23 +621,31 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.log("%s: Unable to find %s %s in the index. Setting to default." % (pbentryname, type, name))
         return 0
                     
-    def makeentry(self, counter, entry, dict):
+    def makeentry(self, counter, entry, data):
+        """Creates pbentry object
+
+        @param counter: The new entry number
+        @param entry:   The phonebook object (as returned from convertphonebooktophone) that we
+                        are using as the source
+        @param data:    The main dictionary, which we use to get access to media indices amongst
+                        other things
+                        """
         e=self.protocolclass.pbentry()
         e.entrynumber=counter
         
         for k in entry:
             # special treatment for lists
-            if k=='emails' or k=='numbers' or k=='numbertypes':
+            if k in ('emails', 'numbers', 'numbertypes'):
                 l=getattr(e,k)
                 for item in entry[k]:
                     l.append(item)
             elif k=='ringtone':
-                e.ringtone=self._findmediainindex(dict['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
+                e.ringtone=self._findmediainindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
             elif k=='msgringtone':
-                e.msgringtone=self._findmediainindex(dict['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
+                e.msgringtone=self._findmediainindex(data['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
             elif k=='wallpaper':
-                e.wallpaper=self._findmediainindex(dict['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
-            else:
+                e.wallpaper=self._findmediainindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
+            elif k in e.getfields():
                 # everything else we just set
                 setattr(e,k,entry[k])
 
@@ -556,10 +658,9 @@ def phonize(str):
     All digits, P, T, * and # are kept, everything else is removed"""
     return re.sub("[^0-9PT#*]", "", str)
 
-    
-
 class Profile(com_phone.Profile):
-    serialsname='lgvx4400'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
@@ -641,7 +742,10 @@ class Profile(com_phone.Profile):
                         break
                        
         # yay, done
-        data['groups']=newgroups
+        if data['groups']!=newgroups:
+            data['groups']=newgroups
+            data['rebootphone']=True
+            self.log("Your phone will be rebooted because the groups have changed")
 
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone
@@ -650,14 +754,31 @@ class Profile(com_phone.Profile):
                      as well as where the results go"""
         results={}
 
+        speeds={}
+
         self.normalisegroups(helper, data)
 
         for pbentry in data['phonebook']:
+            if len(results)==self.protocolclass._NUMPHONEBOOKENTRIES:
+                break
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
+                # serials
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
+
+                e['serial1']=serial1
+                e['serial2']=serial2
+                for ss in entry["serials"]:
+                    if ss["sourcetype"]=="bitpim":
+                        e['bitpimserial']=ss
+                assert e['bitpimserial']
+
+                # name
                 e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
 
+                # categories/groups
                 cat=self.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
                 if cat is None:
                     e['group']=0
@@ -669,20 +790,26 @@ class Profile(com_phone.Profile):
                         # sorry no space for this category
                         e['group']=0
 
+                # email addresses
                 emails=helper.getemails(entry.get('emails', []) ,0,3,48)
                 e['emails']=self.filllist(emails, 3, "")
 
+                # url
                 e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
 
+                # memo
                 e['memo']=self.makeone(helper.getmemos(entry.get('memos', []), 0, 1, 32), "")
 
+                # phone numbers
                 # there must be at least one email address or phonenumber
                 minnumbers=1
                 if len(emails): minnumbers=0
                 numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,5)
                 e['numbertypes']=[]
                 e['numbers']=[]
-                for num in numbers:
+                for numindex in range(len(numbers)):
+                    num=numbers[numindex]
+                    # deal with number
                     number=phonize(num['number'])
                     if len(number)==0:
                         # no actual digits in the number
@@ -691,6 +818,7 @@ class Profile(com_phone.Profile):
                         # ::TODO:: number is too long and we have to either truncate it or ignore it?
                         number=number[:48] # truncate for moment
                     e['numbers'].append(number)
+                    # deal with type
                     type=num['type']
                     for i,t in zip(range(100),numbertypetab):
                         if type==t:
@@ -703,24 +831,20 @@ class Profile(com_phone.Profile):
                         if t=='none': # conveniently last entry
                             e['numbertypes'].append(i)
                             break
+                    # deal with speed dial
+                    sd=num.get("speeddial", -1)
+                    if sd>=self.protocolclass._FIRSTSPEEDDIAL and sd<=self.protocolclass._LASTSPEEDDIAL:
+                        speeds[sd]=(e['bitpimserial'], numindex)
 
                 e['numbertypes']=self.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=self.filllist(e['numbers'], 5, "")
 
-                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
-                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
-
-                e['serial1']=serial1
-                e['serial2']=serial2
-                for ss in entry["serials"]:
-                    if ss["sourcetype"]=="bitpim":
-                        e['bitpimserial']=ss
-                assert e['bitpimserial']
-                
+                # ringtones, wallpaper
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
                 e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
                 e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
+                # flags
                 e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
 
                 results[pbentry]=e
@@ -728,6 +852,8 @@ class Profile(com_phone.Profile):
             except helper.ConversionFailed:
                 continue
 
+        if self.protocolclass._NUMSPEEDDIALS:
+            data['speeddials']=speeds
         data['phonebook']=results
         return data
 
