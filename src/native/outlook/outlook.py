@@ -161,6 +161,8 @@ import pywintypes
 def getcontacts(folder, keys=None):
     """Returns a list of dicts"""
 
+    # There is a gross hack to only return email addresses if they are for SMTP
+
     res=[]
     for oc in range(folder.Items.Count):
         contact=folder.Items.Item(oc+1)
@@ -187,6 +189,12 @@ def getcontacts(folder, keys=None):
                        # semi-colon elsewhere for the same field so we
                        # munge the data
                        v=";".join([x.strip() for x in v.split(",")])
+                    if key.startswith("Email") and key.endswith("Address"):
+                       keytype=key+"Type"
+                       if keytype not in keys:
+                          if getattr(contact, keytype)!="SMTP":
+                             continue
+                          
                     record[key]=v
             res.append(record)
     return res
