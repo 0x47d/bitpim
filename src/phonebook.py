@@ -121,7 +121,7 @@ class PhoneWidget(wxTextCtrl):
 
         # 1 to 2 etc
         if version==1:
-            wxMessageBox("BitPim can't upgrade your old phone data stored on disk.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wxOK|wxICON_EXCLAMATION)
+            wxMessageBox("BitPim can't upgrade your old phone data stored on disk, and has discarded it.  Please re-read your phonebook from the phone.  If you downgrade, please delete the phonebook directory in the BitPim data directory first", "Phonebook file format not supported", wxOK|wxICON_EXCLAMATION)
             version=2
             dict['phonebook']={}
             
