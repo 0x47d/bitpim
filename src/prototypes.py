@@ -739,6 +739,8 @@ class buffer:
 
     def getnextbyte(self):
         "Returns next byte"
+        if self._offset>=len(self._data):
+            raise IndexError("trying to read one byte beyond end of "+`len(self._data)`+" byte buffer")
         res=ord(self._data[self._offset])
         self._offset+=1
         return res
@@ -746,6 +748,8 @@ class buffer:
     def getnextbytes(self, howmany):
         "Returns howmany bytes"
         assert howmany>=0
+        if self._offset+howmany>len(self._data):
+            raise IndexError("Trying to read "+`howmany`+" bytes starting at "+`self._offset`+" which will go beyond end of "+`len(self._data)`+" byte buffer")
         res=self._data[self._offset:self._offset+howmany]
         self._offset+=howmany
         return res
