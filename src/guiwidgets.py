@@ -231,6 +231,8 @@ class PhoneDataTable(wxPyGridTableBase):
                     break
         print "SetValue",row,col,value
         self._data[self.roworder[row]][self.labels[col]]=value
+        if self.labels[col]=='name':
+            self.GetView().Refresh()
         self.needswrite=1
 
     def GetColLabelValue(self, col):
