@@ -164,7 +164,7 @@ class PhoneDataTable(wxPyGridTableBase):
             dict.update(d['result'])
         else:
             dict['phonebook']={}
-            dict['groups']={}
+            dict['groups']=self.groupdict
         return dict
 
     def populate(self, dict):
