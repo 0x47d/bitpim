@@ -1365,9 +1365,71 @@ class ImportQtopiaDesktopDialog(ImportDialog):
         self.origdata=self.data
         self.origcolumns=self.columns
 
-class ImporteGroupwareDialog(ImportDialog):
+class eGroupwareLoginDialog(wx.Dialog):
 
     __pwdsentinel="\x99\xff\x01\x56\x80\x09\xfe\xae"
+
+
+    def __init__(self, parent, module, title="Login to eGroupware"):
+        wx.Dialog.__init__(self, parent, -1,  title)
+        self.module=module
+        gs=wx.GridBagSizer(5,5)
+        for row,label in enumerate( ("URL", "Domain", "Username", "Password") ):
+            gs.Add(wx.StaticText(self, -1, label), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL, pos=(row,0))
+        self.curl=wx.TextCtrl(self, -1)
+        self.cdomain=wx.TextCtrl(self, -1)
+        self.cuser=wx.TextCtrl(self, -1)
+        self.cpassword=wx.TextCtrl(self, -1, style=wx.TE_PASSWORD)
+        self.csavepassword=wx.CheckBox(self, -1, "Save")
+        for row,widget in enumerate( (self.curl, self.cdomain, self.cuser) ):
+            gs.Add(widget, flag=wx.EXPAND, pos=(row,1), span=(1,2))
+        gs.Add(self.cpassword, flag=wx.EXPAND, pos=(3,1))
+        gs.Add(self.csavepassword, flag=wx.ALIGN_CENTRE, pos=(3,2))
+        gs.AddGrowableCol(1)
+        self.cmessage=wx.StaticText(self, -1, "Please enter your details")
+        gs.Add(self.cmessage, flag=wx.EXPAND, pos=(4,0), span=(1,3))
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(gs, 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+
+        # set initial values
+        cfg=wx.GetApp().config
+        self.curl.SetValue(cfg.Read("egroupware/url", "http://server.example.com/egroupware"))
+        self.cdomain.SetValue(cfg.Read("egroupware/domain", "default"))
+        try:
+            import getpass
+            defuser=getpass.getuser()
+        except:
+            defuser="user"
+        self.cuser.SetValue(cfg.Read("egroupware/user", defuser))
+        p=cfg.Read("egroupware/password", "")
+        if len(p):
+            self.csavepassword.SetValue(True)
+            self.cpassword.SetValue(self.__pwdsentinel)
+    
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnClose(self, event=None):
+        cfg=wx.GetApp().config
+        cfg.Write("egroupware/url", self.curl.GetValue())
+        cfg.Write("egroupware/domain", self.cdomain.GetValue())
+        cfg.Write("egroupware/user", self.cuser.GetValue())
+        if self.csavepassword.GetValue():
+            p=self.cpassword.GetValue()
+            if p!=self.__pwdsentinel:
+                cfg.Write("egroupware/password", common.obfus_encode(p))
+        else:
+            cfg.DeleteEntry("egroupware/password")
+
+
+                
+class ImporteGroupwareDialog(ImportDialog):
+
+    ID_CHANGE=wx.NewId()
+
     def __init__(self, parent, id, title, module):
         self.headerrowiseditable=False
         self.module=module
@@ -1383,48 +1445,24 @@ class ImporteGroupwareDialog(ImportDialog):
         # need url, username, password and domain fields
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "URL"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
-        self.curl=wx.TextCtrl(self, -1)
+        self.curl=wx.StaticText(self, -1)
         hbs.Add(self.curl, 3, wx.EXPAND|wx.ALL, 2)
         hbs.Add(wx.StaticText(self, -1, "Domain"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
-        self.cdomain=wx.TextCtrl(self, -1)
+        self.cdomain=wx.StaticText(self, -1)
         hbs.Add(self.cdomain, 1, wx.EXPAND|wx.ALL, 2)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 2)
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "User"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
-        self.cuser=wx.TextCtrl(self, -1)
+        self.cuser=wx.StaticText(self, -1)
         hbs.Add(self.cuser, 1, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(wx.StaticText(self, -1, "Password"), 0, wx.ALIGN_CENTRE|wx.ALL,2)
-        self.cpassword=wx.TextCtrl(self, -1, style=wx.TE_PASSWORD)
-        hbs.Add(self.cpassword, 1, wx.EXPAND|wx.ALL, 2)
-        self.csavepassword=wx.CheckBox(self, -1, "Save")
-        hbs.Add(self.csavepassword, 0, wx.ALIGN_CENTRE|wx.ALL,2)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 2)
+        self.cchange=wx.Button(self, self.ID_CHANGE, "Change ...")
+        hbs.Add(self.cchange, 0, wx.ALL, 2)
+        vbs.Add(hbs,0,wx.ALL,5)
+        wx.EVT_BUTTON(self, self.ID_CHANGE, self.OnChangeCreds)
 
-        cfg=wx.GetApp().config
-        self.curl.SetValue(cfg.Read("egroupware/url", "http://server.example.com/egroupware"))
-        self.cdomain.SetValue(cfg.Read("egroupware/domain", "default"))
-        try:
-            import getpass
-            defuser=getpass.getuser()
-        except:
-            defuser="user"
-        self.cuser.SetValue(cfg.Read("egroupware/user", defuser))
-        p=cfg.Read("egroupware/password", "")
-        if len(p):
-            self.csavepassword.SetValue(True)
-            self.cpassword.SetValue(self.__pwdsentinel)
-
-    def OnClose(self, event=None):
-        cfg=wx.GetApp().config
-        cfg.Write("egroupware/url", self.curl.GetValue())
-        cfg.Write("egroupware/domain", self.cdomain.GetValue())
-        cfg.Write("egroupware/user", self.cuser.GetValue())
-        if self.csavepassword.GetValue():
-            p=self.cpassword.GetValue()
-            if p!=self.__pwdsentinel:
-                cfg.Write("egroupware/password", common.obfus_encode(p))
-        else:
-            cfg.DeleteEntry("egroupware/password")
+    def OnChangeCreds(self,_):
+        dlg=eGroupwareLoginDialog(self, self.module)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.sp=dlg.GetSp()
+        
 
     def ReReadData(self):
         self.data=[]
