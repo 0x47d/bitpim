@@ -14,28 +14,25 @@ import guihelper
 import os
 import pubsub
 
-from wallpaper import BPFSHandler
-from wallpaper import ScaleImageIntoBitmap
+import wallpaper
 
 ###
 ###  Midi
 ###
 
-class RingerView(guiwidgets.FileViewNew):
+class RingerView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
 
-    # N9YTY - not sure if this is needed, copied from wallpaper.py
     # this is only used to prevent the pubsub module
     # from being GC while any instance of this class exists
     __publisher=pubsub.Publisher
 
     
     def __init__(self, mainwindow, parent, id=-1):
-        guiwidgets.FileViewNew.__init__(self, mainwindow, parent, guihelper.getresourcefile("ringtone.xy"),
-                                        guihelper.getresourcefile("ringtone-style.xy"), bottomsplit=200,
+        guiwidgets.FileView.__init__(self, mainwindow, parent, guihelper.getresourcefile("ringtone.xy"),
+                                        guihelper.getresourcefile("ringtone-style.xy"), bottomsplit=400,
                                         rightsplit=200)
         self.SetColumns(["Name", "Length", "Origin", "Description"])
-        wx.FileSystem_AddHandler(BPFSHandler(self))
         self._data={'ringtone-index': {}}
         self.wildcard="Ringtone Files|*.mid;*.qcp"
 
@@ -43,6 +40,9 @@ class RingerView(guiwidgets.FileViewNew):
         self.modified=False
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(pubsub.REQUEST_RINGTONES, self, "OnListRequest")
+
+    def GetIconSize(self):
+        return (24,24)
 
     def updateprofilevariables(self, profile):
         pass
@@ -124,7 +124,7 @@ class RingerView(guiwidgets.FileViewNew):
                 # use background colour
                 bg=self.GetBackgroundColour()
                 bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
-            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
+            bitmap=wallpaper.ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
         else:
             bitmap=img.ConvertToBitmap()
         return bitmap

@@ -29,7 +29,7 @@ import pubsub
 ###  Wallpaper pane
 ###
 
-class WallpaperView(guiwidgets.FileViewNew):
+class WallpaperView(guiwidgets.FileView):
     CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
@@ -45,7 +45,7 @@ class WallpaperView(guiwidgets.FileViewNew):
         'png': wx.BITMAP_TYPE_PNG,
         }
     def __init__(self, mainwindow, parent):
-        guiwidgets.FileViewNew.__init__(self, mainwindow, parent, guihelper.getresourcefile("wallpaper.xy"),
+        guiwidgets.FileView.__init__(self, mainwindow, parent, guihelper.getresourcefile("wallpaper.xy"),
                                         guihelper.getresourcefile("wallpaper-style.xy"), bottomsplit=200,
                                         rightsplit=200)
         self.SetColumns(["Name", "Size", "Bytes", "Origin"])
