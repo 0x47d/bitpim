@@ -396,6 +396,7 @@ class MainWindow(wxFrame):
         menuBar.Append(menu, "&Data")
 
         menu=wxMenu()
+        menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
         menu.AppendCheckItem(guihelper.ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
         menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View filesystem", "View filesystem on the phone")
         menuBar.Append(menu, "&View")
@@ -447,6 +448,7 @@ class MainWindow(wxFrame):
         EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
         EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
+        EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
         EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
         EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
         EVT_MENU(self, guihelper.ID_FV_LIST, self.OnFileViewList)
@@ -487,7 +489,7 @@ class MainWindow(wxFrame):
         # EVT_ERASE_BACKGROUND(self.nb, lambda _=None: 0)
 
         ### notebook tabs
-        self.phonewidget=phonebook.PhoneWidget(self, self.nb)
+        self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
@@ -596,6 +598,11 @@ class MainWindow(wxFrame):
 
     def OnHelpTour(self, _=None):
         wxGetApp().displayhelpid(helpids.ID_TOUR)
+
+    def OnViewColumns(self, _):
+        dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def OnViewLogData(self, _):
         # toggle state of the log data
@@ -840,6 +847,9 @@ class MainWindow(wxFrame):
             self.GetMenuBar().Enable(guihelper.ID_FV_LIST, enablefv)
         self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enableedit)
         self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enableedit)
+
+        # View Columns .. is only in Phonebook
+        self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
          
     # Change how file viewer items are shown
     def OnFileViewList(self, _):
