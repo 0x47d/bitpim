@@ -668,7 +668,10 @@ class MainWindow(wxFrame):
             else:
                 merge=False
             self.phonewidget.importdata(results['phonebook'], results.get('categories', []), merge)
-                
+
+        # wallpaper-index
+        if results.has_key('wallpaper-index'):
+            self.wallpaperwidget.updateindex(results['wallpaper-index'])
         # wallpaper
         if results['sync'].has_key('wallpaper'):
             v=results['sync']['wallpaper']
