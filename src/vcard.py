@@ -16,6 +16,7 @@ import sys
 import quopri
 import base64
 import common
+import cStringIO
 
 class VFileException(Exception):
     pass
@@ -23,7 +24,9 @@ class VFileException(Exception):
 class VFile:
 
     def __init__(self, source):
-        self.source=source
+        self.source=source    
+        
+
         self.saved=None
 
     def __iter__(self):
@@ -116,7 +119,9 @@ class VFile:
         if line is not None:
             if len(line)==0:
                 return None
-            elif line[-2:]=="\r\n":
+            elif line[-2:]=="\r\n":    
+        
+
                 return line[:-2]
             elif line[-1]=='\r' or line[-1]=='\n':
                 return line[:-1]
@@ -178,7 +183,9 @@ class VCard:
             if f==["VERSION"]:
                 ver=v.split(".")
                 try:
-                    ver=[int(xx) for xx in ver]
+                    ver=[int(xx) for xx in ver]    
+        
+
                 except ValueError:
                     raise VFileException(v+" is not a valid vcard version")
                 self._version=ver
@@ -336,7 +343,7 @@ class VCard:
 
         preferred="PREF" in types
 
-        if type is None:
+        if type is None:    
             self._setvalue(result, "url", value, preferred)
         else:
             addr={'url': value, 'type': type}
@@ -357,6 +364,8 @@ class VCard:
         # type munging - we map vcard types to simpler ones
         munge={ "BBS": "DATA", "MODEM": "DATA", "ISDN": "DATA", "CAR": "CELL", "PCS": "CELL" }
         types=[munge.get(t, t) for t in types]
+    
+        
 
         # reduce types to home, work, msg, pref, voice, fax, cell, video, pager, data
         types=[t for t in types if t in ("HOME", "WORK", "MSG", "PREF", "VOICE", "FAX", "CELL", "VIDEO", "PAGER", "DATA")]
@@ -384,6 +393,8 @@ class VCard:
         if "HOME" in types: ishome=True
 
         if len(types)==0 or types==["PREF"]: iswork=True # special case when nothing else is specified
+    
+        
 
         if iswork and voice: self._setvalue(result, "phone", {"type": "business", "number": value}, preferred)
         if ishome and voice: self._setvalue(result, "phone", {"type": "home", "number": value}, preferred)
@@ -506,7 +517,9 @@ class VCard:
                 res.append(build)
                 build=""
                 v+=1
-                continue
+                continue    
+        
+
             if value[v]=="\\":
                 build+=value[v:v+2]
                 v+=2
@@ -524,8 +537,8 @@ class VCard:
 
     def origin(self):
         "Best guess as to what program wrote the vcard"
-        return self._origin
-
+        return self._origin    
+        
     def __repr__(self):
         str="Version: %s\n" % (`self.version()`)
         str+="Origin: %s\n" % (`self.origin()`)
@@ -533,13 +546,266 @@ class VCard:
         # str+=`self.lines`
         return str+"\n"
 
-if __name__=='__main__':
-    import bp
+###
+###  Outputting functions
+###    
 
-    def foo():
+# The formatters return a string
+
+def _quotechars(value):
+    return value \
+           .replace("\r", r"\\r") \
+           .replace("\n", r"\\n")
+
+def format_stringv2(value):
+    """Return a vCard v2 string.  Any embedded commas or semi-colons are removed."""
+    return _quotechars(value.replace("\\", "").replace(",", "").replace(";", ""))
+
+def format_stringv3(value):
+    """Return a vCard v3 string.  Embedded commas and semi-colons are backslash quoted"""
+    return _quotechars(value.replace("\\", "").replace(",", r"\,").replace(";", r"\;"))
+
+_string_formatters=(format_stringv2, format_stringv3)
+
+def format_binary(value):
+    """Return base 64 encoded string"""
+    # encodestring always adds a newline so we have to strip it off
+    return base64.encodestring(value).rstrip()
+
+def _is_sequence(v):
+    """Determine if v is a sequence such as passed to value in out_line.
+    Note that a sequence of chars is not a sequence for our purposes."""
+    return isinstance(v, (type( () ), type([])))
+
+def out_line(name, attributes, value, formatter, join_char=";"):
+    """Returns a single field correctly formatted and encoded (including trailing newline)
+
+    @param name:  The field name
+    @param attributes: A list of string attributes (eg "TYPE=intl,post" ).  Usually
+                  empty except for TEL and ADR.  You can also pass in None.
+    @param value: The field value.  You can also pass in a list of components which will be
+                  joined with join_char such as the 6 components of N
+    @param formatter:  The function that formats the value/components.  See the
+                  various format_ functions.  They will automatically ensure that
+                  ENCODING=foo attributes are added if appropriate"""
+
+    if attributes is None:     attributes=[] # ensure it is a list
+    else: attributes=list(attributes[:]) # ensure we work with a copy
+
+    if formatter in _string_formatters:
+        if _is_sequence(value):
+            qp=False
+            for f in value:
+                f=formatter(f)
+                if quopri.encodestring(f)!=f:
+                    qp=True
+                    break
+            if qp:
+                attributes.append("ENCODING=QUOTED-PRINTABLE")
+                value=[quopri.encodestring(f) for f in value]
+                
+            value=join_char.join(value)
+        else:
+            value=formatter(value)
+            # do the qp test
+            qp= quopri.encodestring(value)!=value
+            if qp:
+                value=quopri.encodestring(value)
+                attributes.append("ENCODING=QUOTED-PRINTABLE")
+    else:
+        assert not _is_sequence(value)
+        if formatter is not None:
+            value=formatter(value) # ::TODO:: deal with binary and other formatters and their encoding types
+
+    res=";".join([name]+attributes)+":"
+    res+=_line_reformat(value, 70, 70-len(res))
+    assert res[-1]!="\n"
+    
+    return res+"\n"
+
+def _line_reformat(line, width=70, firstlinewidth=0):
+    """Takes line string and inserts newlines
+    and spaces on following continuation lines
+    so it all fits in width characters
+
+    @param width: how many characters to fit it in
+    @param firstlinewidth: if >0 then first line is this width.
+         if equal to zero then first line is same width as rest.
+         if <0 then first line will go immediately to continuation.
+         """
+    if firstlinewidth==0: firstlinewidth=width
+    if len(line)<firstlinewidth:
+        return line
+    res=""
+    if firstlinewidth>0:
+        res+=line[:firstlinewidth]
+        line=line[firstlinewidth:]
+    while len(line):
+        res+="\n "+line[:width]
+        if len(line)<width: break
+        line=line[width:]
+    return res
+
+def out_names(vals, formatter, limit=1):
+    res=""
+    for v in vals[:limit]:
+        # full name
+        fn=v.get("full", "")
+        if len(fn):
+            res+=out_line("FN", None, fn, formatter)
+        # name
+        parts=("last", "first", "middle")
+        parts=[v.get(p, "") for p in parts]+["", ""] # last two are prefix and suffix
+        if max([len(p) for p in parts]):
+            res+=out_line("N", None, parts, formatter)
+        # nickname
+        nn=v.get("nickname", "")
+        if len(nn):
+            res+=out_line("NICKNAME", None, nn, formatter)
+    return res
+
+# Apple uses wrong field name so we do some futzing ...
+def out_categories(vals, formatter, field="CATEGORIES"):
+    cats=[v.get("category") for v in vals]
+    if len(cats):
+        return out_line(field, None, cats, formatter, join_char=",")
+    return ""
+
+def out_categories_apple(vals, formatter):
+    return out_categories(vals, formatter, field="CATEGORY")
+
+# Used for both email and urls. we don't put any limits on how many are output
+def out_eu(vals, formatter, field, bpkey):
+    res=""
+    first=True
+    for v in vals:
+        val=v.get(bpkey)
+        type=v.get("type", "")
+        if len(type):
+            if type=="business": type="work" # vcard uses different name
+            type=type.upper()
+            if first:
+                type=type+",PREF"
+        elif first:
+            type="PREF"
+        if len(type):
+            type=["TYPE="+type+["",",INTERNET"][field=="EMAIL"]] # email also has "INTERNET"
+        else:
+            type=None
+        res+=out_line(field, type, val, formatter)
+        first=False
+    return res
+
+def out_emails(vals, formatter):
+    return out_eu(vals, formatter, "EMAIL", "email")
+
+def out_urls(vals, formatter):
+    return out_eu(vals, formatter, "URL", "url")
+
+# This is the order we write things out to the vcard.  Although
+# vCard doesn't require an ordering, it looks nicer if it
+# is (eg name first)
+_field_order=("names", "wallpapers", "addresses", "numbers", "categories", "emails", "urls", "ringtones", "flags", "memos", "serials")
+
+def output_entry(entry, profile, limit_fields=None):
+
+    # debug build assertion that limit_fields only contains fields we know about
+    if __debug__ and limit_fields is not None:
+        assert len([f for f in limit_fields if f not in _field_order])==0
+    
+    fmt=profile["_formatter"]
+    io=cStringIO.StringIO()
+    io.write(out_line("BEGIN", None, "VCARD", None))
+    io.write(out_line("VERSION", None, profile["_version"], None))
+
+    if limit_fields is None:
+        fields=_field_order
+    else:
+        fields=[f for f in _field_order if f in limit_fields]
+
+    for f in fields:
+        if f in entry and f in profile:
+            func=profile[f]
+            # does it have a limit?  (nice scary introspection :-)
+            if "limit" in func.func_code.co_varnames[:func.func_code.co_argcount]:
+                lines=func(entry[f], fmt, limit=profile["_limit"])
+            else:
+                lines=func(entry[f], fmt)
+            if len(lines):
+                io.write(lines)
+
+    io.write(out_line("END", None, "VCARD", fmt))
+    return io.getvalue()
+
+profile_vcard2={
+    '_formatter': format_stringv2,
+    '_limit': 1,
+    '_version': "2.1",
+    'names': out_names,
+    'categories': out_categories,
+    'emails': out_emails,
+    'urls': out_urls,
+    }
+
+profile_vcard3={
+    '_formatter': format_stringv3,
+    '_limit': 1,
+    '_version': "3.0",
+    'names': out_names,
+    'categories': out_categories,
+    'emails': out_emails,
+    'urls': out_urls,    
+    }
+
+profile_apple=profile_vcard3.copy()
+profile_apple['categories']=out_categories_apple
+
+profile_full=profile_vcard3.copy()
+profile_full['_limit']=99999
+
+profiles={
+    'vcard2':  { 'description': "vCard v2.1", 'profile': profile_vcard2 },
+    'vcard3':  { 'description': "vCard v3.0", 'profile': profile_vcard3 },
+    'apple':   { 'description': "Apple",      'profile': profile_apple  },
+    'fullv3':  { 'description': "Full vCard v3.0", 'profile': profile_full},
+}
+    
+    
+if __name__=='__main__':
+
+    def _wrap(func):
+        try: return func()
+        except:
+            print common.formatexception()
+            sys.exit(1)
+
+    def dump_vcards():
         for vcard in VCards(VFile(common.opentextfile(sys.argv[1]))):
             # pass
             print vcard
 
-    bp.profile("vard.prof", "foo()")
+    def turn_around():
+        p="fullv3"
+        if len(sys.argv)==4: p=sys.argv[4]
+        print "Using profile", profiles[p]['description']
+        profile=profiles[p]['profile']
+
+        d={'result': {}}
+        execfile(sys.argv[1], d,d)
         
+        f=open(sys.argv[2], "wt")
+        for k in d['result']['phonebook']:
+            print >>f, output_entry(d['result']['phonebook'][k], profile)
+        f.close()
+
+    if len(sys.argv)==2:
+        # import bp
+        # bp.profile("vcard.prof", "dump_vcards()")
+        _wrap(dump_vcards)
+    elif len(sys.argv)==3 or len(sys.argv)==4:
+        _wrap(turn_around)
+    else:
+        print """one arg:  import the named vcard file
+two args:  first arg is phonebook/index.idx file,  write back out to arg2 in vcard format
+three args: same as two but last arg is profile to use.
+     profiles are""", profiles.keys()

@@ -423,8 +423,7 @@ class MainWindow(wx.Frame):
             expmenu.Append(x, desc, help)
             wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
-        if False: # disable export for build
-            menu.AppendMenu(guihelper.ID_FILEEXPORT, "Export", expmenu)
+        menu.AppendMenu(guihelper.ID_FILEEXPORT, "Export", expmenu)
 
 
         if not guihelper.IsMac():
