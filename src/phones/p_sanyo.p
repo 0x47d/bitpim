@@ -17,6 +17,10 @@ from prototypes import *
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
+_NUMPBSLOTS=300
+_NUMSPEEDDIALS=8
+_NUMLONGNUMBERS=5
+_LONGPHONENUMBERLEN=30
 
 %}
 
@@ -384,12 +388,12 @@ PACKET ringerpicbuffer:
     "Index of ringer and picture assignments"
     # This 1000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 46 0F through 0X 47 0F
-    P UINT {'constant': 300} numpbslots "Number of phone book slots"
+    P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
     P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 1000} bufsize
-    * LIST {'length': self.numpbslots} +ringtones:
+    * LIST {'length': _NUMPBSLOTS} +ringtones:
         1 UINT ringtone "ringtone index"
-    * LIST {'length': self.numpbslots} +wallpapers:
+    * LIST {'length': _NUMPBSLOTS} +wallpapers:
         1 UINT wallpaper "wallpaper index"
     400 UNKNOWN +pad
 
@@ -398,33 +402,29 @@ PACKET pbsortbuffer:
     # slots are in use, etc.
     # This 4000 byte buffer is formed from the concatenation of 500 bytes of
     # payload from commands 0X 3c 0F through 0X 43 0F
-    P UINT {'constant': 300} numpbslots "Number of phone book slots"
-    P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
-    P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
-    P UINT {'constant': 30} longphonenumberlen "Definition of a long phone number"
     P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 4000} bufsize
-    * LIST {'length': self.numpbslots, 'createdefault': True} +usedflags:
+    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
     2 UINT numemail "Num of slots with email"
     2 UINT numurl "Num of slots with URL"
-    * LIST {'length': self.numpbslots} +firsttypes:
+    * LIST {'length': _NUMPBSLOTS} +firsttypes:
         1 UINT firsttype "First phone number type in each slot"
-    * LIST {'length': self.numpbslots} +sortorder:
+    * LIST {'length': _NUMPBSLOTS} +sortorder:
         2 UINT {'default': 0xffff} pbslot
-    300 STRING {'terminator': None} pbfirstletters
-    * LIST {'length': self.numpbslots} +sortorder2: "Is this the same"
+    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
+    * LIST {'length': _NUMPBSLOTS} +sortorder2: "Is this the same"
         2 UINT {'default': 0xffff} pbslot
-    * LIST {'length': self.numspeeddials} +speeddialindex:
+    * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
         2 UINT {'default': 0xffff} pbslotandtype
-    * LIST {'length': self.numlongnumbers} +longnumbersindex:
+    * LIST {'length': _NUMLONGNUMBERS} +longnumbersindex:
         2 UINT {'default': 0xffff} pbslotandtype
-    * LIST {'length': self.numpbslots} +emails: "Sorted list of slots with Email"
+    * LIST {'length': _NUMPBSLOTS} +emails: "Sorted list of slots with Email"
         2 UINT {'default': 0xffff} pbslot
-    300 STRING {'terminator': None} emailfirstletters "First letters in sort order"
-    * LIST {'length': self.numpbslots} +urls: "Sorted list of slots with a URL"
+    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} emailfirstletters "First letters in sort order"
+    * LIST {'length': _NUMPBSLOTS} +urls: "Sorted list of slots with a URL"
         2 UINT {'default': 0xffff} pbslot
-    300 STRING {'terminator': None} urlfirstletters "First letters in sort order"
+    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
     66 UNKNOWN +pad
