@@ -1004,10 +1004,12 @@ class Calendar(calendarcontrol.Calendar):
         self.dialog=DayViewDialog(self, self)
 
     def getdata(self, dict):
+        # Return underlying calendar data in bitpim format
         dict['calendar']=self._data
         return dict
-        
-    def OnGetEntries(self, year, month, day):
+
+    def getentrydata(self, year, month, day):
+        # return the entry objects for corresponding date
         res=self.entrycache.get( (year,month,day), None)
         if res is not None:
             return res
@@ -1048,13 +1050,15 @@ class Calendar(calendarcontrol.Calendar):
                 continue
             assert False, "Unknown repeat type \""+repeating+"\""
 
-        for i in repeats:
-            res.append( (i['start'][3], i['start'][4], i['description']) )
-
-        res.sort()
+        res.extend(repeats)
         self.entrycache[(year,month,day)] = res
-        if len(res):
-            print year,month,day,`res`
+        return res
+        
+        
+    def OnGetEntries(self, year, month, day):
+        # return pretty printed sorted entries for date
+        res=[(i['start'][3], i['start'][4], i['description']) for i in self.getentrydata(year, month,day)]
+        res.sort()
         return res
 
     def OnEdit(self, year, month, day):
@@ -1072,7 +1076,7 @@ class Calendar(calendarcontrol.Calendar):
             y,m,d,h,min=entry['start']
             if entry['repeat'] is None:
                 if not self.entries.has_key( (y,m,d) ): self.entries[(y,m,d)]=[]
-                self.entries[(y,m,d)].append( (h,min,entry['description']) )
+                self.entries[(y,m,d)].append(entry)
                 continue
             if entry['repeat']=='weekly':
                 entry['dayofweek']=(calendar.weekday(y,m,d)+1)%7
@@ -1150,7 +1154,7 @@ class DayViewDialog(wxDialog):
             self.fields[field]=c
                  
         self.listbox=wxListBox(self, -1, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
-        add=wxButton(self, self.ID_ADD, "Add")
+        add=wxButton(self, self.ID_ADD, "New")
         delete=wxButton(self, self.ID_DELETE, "Delete")
         hbs=wxBoxSizer(wxHORIZONTAL)
         hbs.Add(delete, 0)
@@ -1164,7 +1168,6 @@ class DayViewDialog(wxDialog):
         hbs.Add(lbs, 1, wxEXPAND)
         hbs.Add(gs, 2, wxEXPAND)
 
-
         vbs.Add(hbs, 1, wxEXPAND)
 
         self.SetSizer(vbs)
@@ -1176,19 +1179,34 @@ class DayViewDialog(wxDialog):
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
         self.title.SetLabel(d)
+        self.entries=self.cw.getentrydata(year,month,day)
+        self.updatelistbox()
         self.updatefields(None)
 
     def updatelistbox(self):
         self.listbox.Clear()
         self.entrymap=[]
-        for i in entries:
-            entry=self.entries[i]
-            e=( entry.start, entry.end, desc, entry)
+        for i in self.entries:
+            entry=i
+            e=( entry['start'], entry['end'], entry['description'], entry)
             self.entrymap.append(e)
         # time ordered
         self.entrymap.sort()
         # add listbox entries
-        
+        for e in self.entrymap:
+            if 0: # ampm/miltime config here ::TODO::
+                str="%2d:%02d" % (e[0][3], e[0][4])
+            else:
+                hr=e[0][3]
+                ap="am"
+                if hr>=12:
+                    ap="pm"
+                    hr-=12
+                if hr==0: hr=12
+                str="%2d:%02d %s" % (hr, e[0][4], ap)
+            str+=" "+e[2]
+            self.listbox.Append(str)
+
         # make entrymap only be entries
         self.entrymap=[x[3] for x in self.entrymap] 
 
