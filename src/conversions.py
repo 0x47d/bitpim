@@ -27,12 +27,27 @@ osext={'win32': '.exe',
        'linux2': '.lbin'} \
        [sys.platform]
 
+# This shortname crap is needed because Windows programs (including ffmpeg)
+# don't correctly parse command line arguments.
+if sys.platform=='win32':
+    import win32api
+    def shortfilename(x):
+        # the name may already be short (eg from tempfile which always returns short names)
+        # and may not exist, so we are careful to only call GetShortPathName if necessary
+        if " " in x:
+            return win32api.GetShortPathName(x)
+        return x
+else:
+    def shortfilename(x): return x
+
 def gethelperbinary(basename):
     "Returns the full pathname to the specified helper binary"
     f=os.path.join(helperdir, basename)+osext
+    f=shortfilename(f)
     if not os.path.isfile(f):
         raise common.HelperBinaryNotFound(basename, f)
     return f
+
 
 def run(*args):
     """Runs the specified command (args[0]) with supplied parameters.
@@ -168,11 +183,15 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     wavfile=common.gettempfilename("wav")
     mp3file=common.gettempfilename("mp3")
     try:
-        run(ffmpeg, "-i", inputfilename, wavfile)
-        run(ffmpeg, "-i", wavfile, "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, mp3file)
+        run(ffmpeg, "-i", shortfilename(inputfilename), shortfilename(wavfile))
+        run(ffmpeg, "-i", wavfile, "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
         return open(mp3file, "rb").read()
     finally:
         try: os.remove(wavfile)
         except: pass
         try: os.remove(mp3file)
         except: pass
+
+def convertmp3towav(mp3filename, wavfilename):
+    ffmpeg=gethelperbinary("ffmpeg")
+    run(ffmpeg, "-i", shortfilename(mp3filename), shortfilename(wavfilename))
