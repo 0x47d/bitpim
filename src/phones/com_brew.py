@@ -236,14 +236,16 @@ class BrewProtocol:
             return 1
         except modeignoreerrortypes:
             pass
-        try:
-            # try again at 38400
-            self.comm.setbaudrate(38400)
-            self.sendbrewcommand(req, respc, callsetmode=False)
-            return 1
-        except modeignoreerrortypes:
-            pass
-        
+
+        for baud in 38400,115200:
+            try:
+                # try again at baud
+                self.comm.setbaudrate(baud)
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return 1
+            except modeignoreerrortypes:
+                pass
+
         # send AT$CDMG at various speeds
         for baud in (115200, 19200, 230400):
             if baud:
@@ -259,17 +261,18 @@ class BrewProtocol:
             try:
                 # if we got anything back then it was success
                 self.comm.readsome()
-                self.comm.setbaudrate(38400) # dm mode is always 38400
                 return 1
             except modeignoreerrortypes:
                 self.log("No response to setting QCDMG mode")
-                
-        self.comm.setbaudrate(38400) # just in case it worked
-        try:
-            self.sendbrewcommand(req, respc, callsetmode=False)
-            return 1
-        except modeignoreerrortypes:
-            return 0
+
+        # verify if we are in DM mode
+        for baud in 38400,115200:
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return 1
+            except modeignoreerrortypes:
+                pass
+        return 0
 
     def sendbrewcommand(self, request, responseclass, callsetmode=True):
         if callsetmode:
