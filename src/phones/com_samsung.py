@@ -14,6 +14,7 @@ import p_brew
 import com_brew
 import com_phone
 import common
+import commport
 from string import split,strip,atoi
 import time
 import re
@@ -94,21 +95,21 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
 	    self.comm.sendatcommand("E0V1")
 	    return True
-        except ATError:
+        except commport.ATError:
 	    return False
 
     def pmode_on(self):
         try:
 	    self.comm.sendatcommand("#PMODE=1")
 	    return True
-        except ATError:
+        except commport.ATError:
 	    return False
 
     def pmode_off(self):
         try:
 	    self.comm.sendatcommand("#PMODE=0")
 	    return Truth
-        except ATError:
+        except commport.ATError:
 	    return False
 
     def get_esn(self):
@@ -116,7 +117,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 	    s=self.comm.sendatcommand("+gsn")
 	    if len(s):
 	        return split(s[0], ": ")[1]
-	except ATError:
+	except commport.ATError:
             pass
         return ''
 
@@ -130,7 +131,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                     g.append(strip(split(split(s[0],": ")[1],",")[1], '"'))
                 else:
                     g.append('')
-            except ATError:
+            except commport.ATError:
                 g.append('')
 	return g
 
@@ -139,7 +140,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
             if len(s):
                 return split(split(s, ": ")[1], ",")
-        except ATError:
+        except commport.ATError:
             pass
         return []
 
@@ -147,14 +148,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             s=self.comm.sendatcommand("#PBOKW=%d" % entry_index)
             return Truth
-        except ATError:
+        except commport.ATError:
             return False
 
     def save_phone_entry(self, entry_str):
         try:
             s=self.comm.sendatcommand("#PBOKW="+entry_str)
             return Truth
-        except ATError:
+        except commport.ATError:
             return False
 
     def get_time_stamp(self):
