@@ -40,6 +40,8 @@ class basedataobject(dict):
     _knownproperties=[]
     # which ones we know about that should be a list of dicts
     _knownlistproperties={'serials': ['sourcetype', '*']}
+    # which ones we know about that should be a dict
+    _knowndictproperties={}
 
     if __debug__:
         # in debug code we check key name and value types
@@ -49,7 +51,7 @@ class basedataobject(dict):
             if value is None and name in ('__deepcopy__',): raise AttributeError(name)
             # check it
             assert isinstance(name, (str, unicode)), "keys must be a string type"
-            assert name in self._knownproperties or name in self._knownlistproperties, "unknown property named '"+name+"'"
+            assert name in self._knownproperties or name in self._knownlistproperties or name in self._knowndictproperties, "unknown property named '"+name+"'"
             if value is None: return
             if name in getattr(self, "_knownlistproperties"):
                 assert isinstance(value, list), "list properties ("+name+") must be given a list as value"
@@ -57,16 +59,27 @@ class basedataobject(dict):
                 for v in value:
                     self._check_property_dictvalue(name,v)
                 return
+            if name in getattr(self, "_knowndictproperties"):
+                assert isinstance(value, dict), "dict properties ("+name+") must be given a dict as value"
+                self._check_property_dictvalue(name,value)
+                return
             # the value must be a basetype supported by apsw/SQLite
             assert isinstance(value, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
 
         def _check_property_dictvalue(self, name, value):
-            assert isinstance(value, dict), "items in "+name+" (a list) must be dicts"
-            assert name in self._knownlistproperties
-            for key in value:
-                assert key in self._knownlistproperties[name] or '*' in self._knownlistproperties[name], "dict key "+key+" as member of item in list "+name+" is not known"
-                v=value[key]
-                assert isinstance(v, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
+            assert isinstance(value, dict), "item(s) in "+name+" (a list) must be dicts"
+            assert name in self._knownlistproperties or name in self._knowndictproperties
+            if name in self._knownlistproperties:
+                for key in value:
+                    assert key in self._knownlistproperties[name] or '*' in self._knownlistproperties[name], "dict key "+key+" as member of item in list "+name+" is not known"
+                    v=value[key]
+                    assert isinstance(v, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
+            elif name in self._knowndictproperties:
+                for key in value:
+                    assert key in self._knowndictproperties[name] or '*' in self._knowndictproperties[name], "dict key "+key+" as member of dict in item "+name+" is not known"
+                    v=value[key]
+                    assert isinstance(v, (str, unicode, buffer, int, long, float)), "only serializable types supported for values"
+                
                 
         def update(self, items):
             assert isinstance(items, dict), "update only supports dicts" # Feel free to fix this code ...
@@ -75,18 +88,13 @@ class basedataobject(dict):
             super(basedataobject, self).update(items)
 
         def __getitem__(self, name):
-            self._check_property(name)
-            v=super(basedataobject, self).__getitem__(name)
-            if name in self._knownproperties: return v
-            assert isinstance(v,list), name+" takes list of dicts as value"
-            # check list item dict values are legit - sadly we only
             # check when they are retrieved, not set.  I did try
             # catching the append method, but the layers of nested
             # namespaces got too confused
-            for value in v:
-                self._check_property_dictvalue(name, value)
+            self._check_property(name)
+            v=super(basedataobject, self).__getitem__(name)
+            self._check_property(name, v)
             return v
-            
 
         def __setitem__(self, name, value):
             self._check_property(name, value)
@@ -420,10 +428,11 @@ class Database:
         if len(missing):
             creates=[]
             # for each missing key, we have to work out if the value
-            # is a list type (which we indirect to another table)
+            # is a list or dict type (which we indirect to another table)
             for m in missing:
                 islist=None
-                isnotlist=None
+                isdict=None
+                isnotindirect=None
                 for r in dict.keys():
                     record=dict[r]
                     v=record.get(m,None)
@@ -431,25 +440,32 @@ class Database:
                         continue
                     if isinstance(v, list):
                         islist=record
+                    elif isinstance(v,type({})):
+                        isdict=record
                     else:
-                        isnotlist=record
+                        isnotindirect=record
                     # in devel code, we check every single value
                     # in production, we just use the first we find
                     if not __debug__:
                         break
-                if islist is None and isnotlist is None:
+                if islist is None and isdict is None and isnotindirect is None:
                     # they have the key but no record has any values, so we ignore it
                     del dk[dk.index(m)]
                     continue
-                if islist is not None and isnotlist is not None:
-                    # can't have it both ways
-                    raise ValueError("key %s for table %s has some values as list as some as not. eg LIST: %s, NOTLIST: %s" % (m,tablename,`islist`,`isnotlist`))
-                if isnotlist is not None:
-                    creates.append( (m, "valueBLOB") )
-                    continue
+                # don't do this type abuse at home ...
+                if int(islist is not None)+int(isdict is not None)+int(isnotindirect is not None)!=int(True):
+                    # can't have it more than one way
+                    raise ValueError("key %s for table %s has values with inconsistent types. eg LIST: %s, DICT: %s, NOTINDIRECT: %s" % (m,tablename,`islist`,`isdict`,`isnotindirect`))
                 if islist is not None:
                     creates.append( (m, "indirectBLOB") )
                     continue
+                if isdict:
+                    creates.append( (m, "indirectdictBLOB"))
+                    continue
+                if isnotindirect is not None:
+                    creates.append( (m, "valueBLOB") )
+                    continue
+                assert False, "You can't possibly get here!"
             if len(creates):
                 self._altertable(tablename, creates, createindex=1)
 
@@ -457,16 +473,19 @@ class Database:
         dbtkeys=self.getcolumns(tablename)
         # for every indirect, we have to replace the value with a pointer
         for _,n,t in dbtkeys:
-            if t=="indirectBLOB":
+            if t in ("indirectBLOB", "indirectdictBLOB"):
                 indirects={}
                 for r in dict.keys():
                     record=dict[r]
                     v=record.get(n,None)
                     if v is not None:
-                        if not len(v): # set zero length lists to None
+                        if not len(v): # set zero length lists/dicts to None
                             record[n]=None
                         else:
-                            indirects[r]=v
+                            if t=="indirectdictBLOB":
+                                indirects[r]=[v] # make it a one item dict list
+                            else:
+                                indirects[r]=v
                 if len(indirects):
                     self.updateindirecttable(tablename+"__"+n, indirects)
                     for r in indirects.keys():
@@ -576,20 +595,23 @@ class Database:
                 continue
             record=factory.newdataobject()
             for colnum,name,type in schema:
-                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
+                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB", "indirectdictBLOB") or row[colnum] is None:
                     continue
                 if type=="valueBLOB":
                     record[name]=row[colnum]
                     continue
-                assert type=="indirectBLOB"
+                assert type=="indirectBLOB" or type=="indirectdictBLOB"
                 if name not in indirects:
                     indirects[name]=[]
-                indirects[name].append( (row[uid], row[colnum]) )
+                indirects[name].append( (row[uid], row[colnum], type) )
             res[row[uid]]=record
         # now get the indirects
         for name,values in indirects.iteritems():
-            for uid,v in values:
-                res[uid][name]=self._getindirect(v)
+            for uid,v,type in values:
+                if type=="indirectBLOB":
+                    res[uid][name]=self._getindirect(v)
+                else:
+                    res[uid][name]=self._getindirect(v)[0]
         return res
 
     def _getindirect(self, what):
@@ -605,12 +627,12 @@ class Database:
         for row in self.sqlmany("select * from %s where __rowid__=?" % (idquote(tablename),), [(int(r),) for r in rows.split(',') if len(r)]):
             record={}
             for colnum,name,type in schema:
-                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB") or row[colnum] is None:
+                if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB", "indirectdictBLOB") or row[colnum] is None:
                     continue
                 if type=="valueBLOB":
                     record[name]=row[colnum]
                     continue
-                assert type=="indirectBLOB"
+                assert type=="indirectBLOB" or type=="indirectdictBLOB"
                 assert False, "indirect in indirect not handled"
             assert len(record)
             res.append(record)
@@ -794,6 +816,10 @@ if __name__=='__main__':
     import time
     import os
 
+    sys.excepthook=common.formatexceptioneh
+
+
+    # our own hacked version for testing
     class phonebookdataobject(basedataobject):
         # no change to _knownproperties (all of ours are list properties)
         _knownlistproperties=basedataobject._knownlistproperties.copy()
@@ -809,6 +835,8 @@ if __name__=='__main__':
                                       'numbers': ['number', 'type', 'speeddial'],
                                       # serials is in parent object
                                       })
+        _knowndictproperties=basedataobject._knowndictproperties.copy()
+        _knowndictproperties.update( {'repeat': ['daily', 'orange']} )
 
     phonebookobjectfactory=dataobjectfactory(phonebookdataobject)
     
@@ -891,7 +919,6 @@ if __name__=='__main__':
             print "\ttotal time was",after-b4,"seconds for",iterations*10,"iterations"
 
 
-    sys.excepthook=common.formatexceptioneh
 
     if len(sys.argv)==3:
         # also run under hotspot then
