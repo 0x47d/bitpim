@@ -9,6 +9,15 @@
 
 """Phonebook conversations with Sanyo phones"""
 
+# standard modules
+import re
+import time
+import cStringIO
+import sha
+
+from wxPython.wx import *
+
+# BitPim modules
 import com_brew
 import com_phone
 import p_sanyo
@@ -16,13 +25,25 @@ import prototypes
 import cStringIO
 import time
 
+numbertypetab=( 'home', 'office', 'cell', 'pager',
+                    'data', 'fax', 'none' )
+
 class SanyoPhonebook:
+    "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
+    
+    # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
+    # plus a fudge factor of 5 days for no reason I can find
+    _sanyoepochtounix=315532800+450000
+
+    getwallpapers=None
+    getringtones=None
 
     pbterminator="\x7e"
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
 
-    def __init__(self):
-        self.pbseq=0
+    def __init__(self, logtarget, commport):
+        com_phone.Phone.__init__(self, logtarget, commport)
+	com_brew.BrewProtocol.__init__(self)
     
     def _setmodelgdmgo(self):
         # see if we can turn on dm mode
@@ -168,10 +189,747 @@ class SanyoPhonebook:
         results['info']=d
         return results
 
+    def cleanupstring(str):
+        str=str.replace("\r", "\n")
+        str=str.replace("\n\n", "\n")
+        str=str.strip()
+        return str.split("\n")
 
 
-def cleanupstring(str):
-    str=str.replace("\r", "\n")
-    str=str.replace("\n\n", "\n")
-    str=str.strip()
-    return str.split("\n")
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI."""
+
+        # use a hash of ESN and other stuff (being paranoid)
+        self.log("Retrieving fundamental phone information")
+        self.log("Phone serial number")
+        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
+        self.log("Fundamentals retrieved")
+        return results
+
+    def sanyosort(self, x, y):
+        "Sanyo sort order.  Case insensitive, letters first"
+        if(x[0:1].isalpha() and not y[0:1].isalpha()):
+            return -1
+        if(y[0:1].isalpha() and not x[0:1].isalpha()):
+            return 1
+        return cmp(x.lower(), y.lower())
+    
+    def getphonebook(self,result):
+        pbook={}
+        # Get Sort buffer so we know which of the 300 phone book slots
+        # are in use.
+        sortstuff=self.protocolclass.pbsortbuffer()
+        buf=prototypes.buffer(self.getsanyobuffer(sortstuff.startcommand, sortstuff.bufsize, "sort buffer"))
+        sortstuff.readfrombuffer(buf)
+
+        ringpic=self.protocolclass.ringerpicbuffer()
+        buf=prototypes.buffer(self.getsanyobuffer(ringpic.startcommand, ringpic.bufsize, "ringer/picture assignments"))
+        ringpic.readfrombuffer(buf)
+
+        speedslot=[]
+        speedtype=[]
+        for i in range(self.protocolclass._NUMSPEEDDIALS):
+            speedslot.append(sortstuff.speeddialindex[i].pbslotandtype & 0xfff)
+            numtype=(sortstuff.speeddialindex[i].pbslotandtype>>12)-1
+            if(numtype >= 0 and numtype <= len(numbertypetab)):
+                speedtype.append(numbertypetab[numtype])
+            else:
+                speedtype.append("")
+
+        numentries=sortstuff.slotsused
+        self.log("There are %d entries" % (numentries,))
+        
+        count = 0
+        for i in range(0, self.protocolclass._NUMPBSLOTS):
+            if sortstuff.usedflags[i].used:
+                ### Read current entry
+                req=self.protocolclass.phonebookslotrequest()
+                req.slot = i
+                res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
+                self.log("Read entry "+`i`+" - "+res.entry.name)
+
+                entry=self.extractphonebookentry(res.entry, result)
+                # Speed dials
+                for j in range(len(speedslot)):
+                    if(speedslot[j]==req.slot):
+                        for k in range(len(entry['numbers'])):
+                            if(entry['numbers'][k]['type']==speedtype[j]):
+                                entry['numbers'][k]['speeddial']=j+2
+                                break
+
+                # ringtones
+                entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
+                # wallpapers
+                entry['wallpapers']=[{'index': ringpic.wallpapers[i].wallpaper, 'use': 'call'}]
+                    
+                pbook[i]=entry 
+                self.progress(count, numentries, res.entry.name)
+                count+=1
+        
+        self.progress(numentries, numentries, "Phone book read completed")
+        result['phonebook']=pbook
+        return pbook
+
+    def extractphonebookentry(self, entry, fundamentals):
+        """Return a phonebook entry in BitPim format"""
+        res={}
+        # serials
+        res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.slot, 'serial2': entry.slotdup,
+                          'sourceuniqueid': fundamentals['uniqueserial']} ]
+        # only one name
+        res['names']=[ {'full': entry.name} ]
+        # only one email
+        if len(entry.email):
+            res['emails']=[ {'email': entry.email} ]
+        # only one url
+        if len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
+        # private
+        res['flags']=[ {'secret': entry.secret } ]
+        # 7 phone numbers
+        res['numbers']=[]
+        numberindex = 0
+        for type in numbertypetab:
+            if len(entry.numbers[numberindex].number):
+                res['numbers'].append({'number': entry.numbers[numberindex].number, 'type': type })
+            
+            numberindex+=1
+        return res
+
+    def makeentry(self, entry, dict):
+        # dict is unused at moment, will be used later to convert string ringtone/wallpaper to numbers??
+        # This is stolen from com_lgvx4400 and modified for the Sanyo as
+        # we start to develop a vague understanding of what it is for.
+        e=self.protocolclass.phonebookentry()
+        
+        for k in entry:
+            # special treatment for lists
+            if k=='ringtones' or k=='wallpapers' or k=='numbertypes':
+                continue
+            if k=='numbers':
+                for numberindex in range(7):
+                    enpn=self.protocolclass.phonenumber()
+                    e.numbers.append(enpn)
+                    
+                for i in range(len(entry[k])):
+                    numberindex=entry['numbertypes'][i]
+                    e.numbers[numberindex].number=entry[k][i]
+                    e.numbers[numberindex].number_len=len(e.numbers[numberindex].number)
+                continue
+            # everything else we just set
+            setattr(e,k,entry[k])
+        return e
+
+    def phonize(self, str):
+        """Convert the phone number into something the phone understands
+
+        All digits, P, T, * and # are kept, everything else is removed"""
+        # Note: when looking at phone numbers on the phone, you will see
+        # "H" instead of "P".  However, phone saves this internally as "P".
+        return re.sub("[^0-9PT#*]", "", str)
+
+    def savephonebook(self, data):
+        # Overwrite the phonebook in the phone with the data.
+        # As we write the phone book slots out, we need to build up
+        # the indices in the callerid, ringpic and pbsort buffers.
+        # We could save some writing by reading the phonebook slots first
+        # and then only writing those that are different, but all the buffers
+        # would still need to be written.
+        #
+        newphonebook={}
+        self.mode=self.MODENONE
+        self.setmode(self.MODEBREW) # see note in getphonebook in com_lgvx4400 for why this is necessary
+        self.setmode(self.MODEPHONEBOOK)
+
+###
+### Create Sanyo buffers and Initialize lists
+###
+        sortstuff=self.protocolclass.pbsortbuffer()
+        ringpic=self.protocolclass.ringerpicbuffer()
+        callerid=self.protocolclass.calleridbuffer()
+
+        for i in range(self.protocolclass._NUMPBSLOTS):
+            sortstuff.usedflags.append(0)
+            sortstuff.firsttypes.append(0)
+            sortstuff.sortorder.append(0xffff)
+            sortstuff.sortorder2.append(0xffff)
+            sortstuff.emails.append(0xffff)
+            sortstuff.urls.append(0xffff)
+            ringpic.ringtones.append(0)
+            ringpic.wallpapers.append(0)
+
+        for i in range(self.protocolclass._NUMSPEEDDIALS):
+            sortstuff.speeddialindex.append(0xffff)
+
+        for i in range(self.protocolclass._NUMLONGNUMBERS):
+            sortstuff.longnumbersindex.append(0xffff)
+        
+            
+###
+### Initialize mappings
+###
+        namemap={}
+        emailmap={}
+        urlmap={}
+
+        callerid.numentries=0
+        
+        pbook=data['phonephonebook'] # Get converted phonebook
+        self.log("Putting phone into write mode")
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=1 # Start update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+
+        time.sleep(1)  # Wait a little bit to make sure phone is ready
+        
+        keys=pbook.keys()
+        keys.sort()
+        sortstuff.slotsused=len(keys)
+        sortstuff.slotsused2=len(keys)
+        sortstuff.numemail=0
+        sortstuff.numurl=0
+
+        progresscur=0
+        progressmax=len(keys)
+        self.log("Writing %d entries to phone" % (len(keys),))
+        nlongphonenumbers=0
+        for ikey in keys:
+            ii=pbook[ikey]
+            slot=ii['slot'] # Or should we just use i for the slot
+            # Will depend on Profile to keep the serial numbers in range
+            progresscur+=1
+            self.progress(progresscur, progressmax, "Writing "+ii['name'])
+            self.log("Writing entry "+`ikey`+" - "+ii['name'])
+            entry=self.makeentry(ii, data)
+            req=self.protocolclass.phonebookslotupdaterequest()
+            req.entry=entry
+            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse, writemode=True)
+            # Put entry into newphonebooks
+            entry=self.extractphonebookentry(entry, data)
+            entry['ringtones']=[{'ringtone': ii['ringtone'], 'use': 'call'}]
+            entry['wallpapers']=[{'index': ii['wallpaper'], 'use': 'call'}]
+            
+
+# Accumulate information in and needed for buffers
+            sortstuff.usedflags[slot].used=1
+            if(len(ii['numbers'])):
+                sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
+            else:
+                if(len(ii['email'])):
+                    sortstuff.firsttypes[slot].firsttype=8
+                elif(len(ii['url'])):
+                    sortstuff.firsttypes[slot].firsttype=9
+                else:
+                    sortstuff.firsttypes[slot].firsttype=0
+                    
+# Fill in Caller ID buffer
+# Want to move this out of this loop.  Callerid buffer is 500 numbers, but
+# can potentially hold 2100 numbers.  Would like to preferentially put the
+# first number for each name in this buffer
+            for i in range(len(ii['numbers'])):
+                nindex=ii['numbertypes'][i]
+                speeddial=ii['speeddials'][i]
+                code=slot+((nindex+1)<<12)
+                if(speeddial>=2 and speeddial<=self.protocolclass._NUMSPEEDDIALS+1):
+                    sortstuff.speeddialindex[speeddial-2]=code
+                    for k in range(len(entry['numbers'])):
+                        if(entry['numbers'][k]['type']==nindex):
+                            entry['numbers'][k]['speeddial']=speeddial
+                            break
+                if(callerid.numentries<callerid.maxentries):
+                    phonenumber=ii['numbers'][i]
+                    cidentry=self.makecidentry(phonenumber,slot,nindex)
+                    callerid.items.append(cidentry)
+                    callerid.numentries+=1
+                    if(len(phonenumber)>self.protocolclass._LONGPHONENUMBERLEN):
+                        if(nlongphonenumbers<self.protocolclass._NUMLONGNUMBERS):
+                            sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=code
+
+            namemap[ii['name']]=slot
+            if(len(ii['email'])):
+                emailmap[ii['email']]=slot
+                sortstuff.numemail+=1
+            if(len(ii['url'])):
+                urlmap[ii['url']]=slot
+                sortstuff.numurl+=1
+            # Add ringtone and wallpaper
+            ringpic.wallpapers[slot].wallpaper=ii['wallpaper']
+            ringpic.ringtones[slot].ringtone=ii['ringtone']
+
+            newphonebook[slot]=entry
+
+                    
+        # Sort Names, Emails and Urls for the sort buffer
+        # The phone sorts case insensitive and puts numbers after the
+        # letters.
+        i=0
+        sortstuff.pbfirstletters=""
+        keys=namemap.keys()
+        keys.sort(self.sanyosort)
+        for name in keys:
+            sortstuff.sortorder[i].pbslot=namemap[name]
+            sortstuff.sortorder2[i].pbslot=namemap[name]
+            sortstuff.pbfirstletters+=name[0:1]
+            i+=1
+
+        i=0
+        sortstuff.emailfirstletters=""
+        keys=emailmap.keys()
+        keys.sort(self.sanyosort)
+        for email in keys:
+            sortstuff.emails[i].pbslot=emailmap[email]
+            sortstuff.emailfirstletters+=email[0:1]
+            i+=1
+
+        i=0
+        sortstuff.urlfirstletters=""
+        keys=urlmap.keys()
+        keys.sort(self.sanyosort)
+        for url in keys:
+            sortstuff.urls[i].pbslot=urlmap[url]
+            sortstuff.urlfirstletters+=url[0:1]
+            i+=1
+
+        # Now write out the 3 buffers
+        buffer=prototypes.buffer()
+        sortstuff.writetobuffer(buffer)
+        self.logdata("Write sort buffer", buffer.getvalue(), sortstuff)
+        self.sendsanyobuffer(buffer.getvalue(),sortstuff.startcommand,"sort buffer")
+
+        buffer=prototypes.buffer()
+        ringpic.writetobuffer(buffer)
+        self.logdata("Write ringer picture buffer", buffer.getvalue(), ringpic)
+        self.sendsanyobuffer(buffer.getvalue(),ringpic.startcommand,"ringer/pictures assignments")
+        
+        buffer=prototypes.buffer()
+        callerid.writetobuffer(buffer)
+        self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
+        self.sendsanyobuffer(buffer.getvalue(),callerid.startcommand,"callerid")
+        time.sleep(1.0)
+
+        data['phonebook']=newphonebook
+        del data['phonephonebook']
+
+        self.log("Taking phone out of write mode")
+        self.log("Please wait for phone to restart before doing other phone operations")
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=2 # Stop update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+
+    def makecidentry(self, number, slot, nindex):
+        "Prepare entry for caller ID lookup buffer"
+        
+        numstripped=re.sub("[^0-9PT#*]", "", number)
+        numonly=re.sub("^(\\d*).*$", "\\1", numstripped)
+
+        cidentry=self.protocolclass.calleridentry()
+        cidentry.pbslotandtype=slot+((nindex+1)<<12)
+        cidentry.actualnumberlen=len(numonly)
+        cidentry.numberfragment=numonly[-10:]
+
+        return cidentry
+    
+    def getcalendar(self,result):
+        # Read the event list from the phone.  Proof of principle code.
+        # For now, join the event name and location into a single event.
+        # description.
+        # Todo:
+        #   Read Call Alarms (reminder to call someone)
+        #   Read call history into calendar.
+        #   
+        calres={}
+
+        req=self.protocolclass.eventrequest()
+        for i in range(0, self.protocolclass._NUMEVENTSLOTS):
+            req.slot = i
+            res=self.sendpbcommand(req, self.protocolclass.eventresponse)
+            if(res.entry.flag):
+                self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
+                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`)
+                entry={}
+                entry['pos']=i
+                entry['changeserial']=res.entry.serial
+                if(len(res.entry.location) > 0):
+                    entry['description']=res.entry.eventname+"/"+res.entry.location
+                else:
+                   entry['description']=res.entry.eventname
+               
+                starttime=res.entry.start
+                entry['start']=self.decodedate(starttime)
+                entry['end']=self.decodedate(res.entry.end)
+                entry['repeat']=self._calrepeatvalues[res.entry.period]
+                alarmtime=res.entry.alarm
+                entry['alarm']=(starttime-alarmtime)/60
+                entry['ringtone']=res.entry.alarm_type
+                entry['snoozedelay']=0
+                calres[i]=entry
+
+        req=self.protocolclass.callalarmrequest()
+        for i in range(0, self.protocolclass._NUMCALLALARMSLOTS):
+            req.slot=i
+            res=self.sendpbcommand(req, self.protocolclass.callalarmresponse)
+            if(res.entry.flag):
+                self.log("Read call alarm entry "+`i`+" - "+res.entry.phonenum)
+                self.log("Extra number: "+`res.entry.dunno1`)
+                entry={}
+                entry['pos']=i+self.protocolclass._NUMEVENTSLOTS # Make unique
+                entry['changeserial']=res.entry.serial
+                entry['description']=res.entry.phonenum
+                starttime=res.entry.date
+                entry['start']=self.decodedate(starttime)
+                entry['end']=entry['start']
+                entry['repeat']=self._calrepeatvalues[res.entry.period]
+                entry['alarm']=0
+                entry['ringtone']=0
+                entry['snoozedelay']=0
+                calres[i]=entry
+
+        result['calendar']=calres
+        return result
+
+    def savecalendar(self, dict, merge):
+        # ::TODO:: obey merge param
+        # what will be written to the files
+        #   Handle Change Serial better.
+        #   Advance date on repeating entries to after now so that they
+        #     won't all go off when the phone gets turned on.
+        #   Sort by date so that that already happened entries don't get
+        #     loaded if we don't have room
+        #
+        cal=dict['calendar']
+        newcal={}
+        keys=cal.keys()
+
+        eventslot=0
+        callslot=0
+        progressmax=self.protocolclass._NUMEVENTSLOTS+self.protocolclass._NUMCALLALARMSLOTS
+        for k in keys:
+            entry=cal[k]
+            
+            descloc=entry['description']
+            self.progress(eventslot+callslot, progressmax, "Writing "+descloc)
+
+            repeat=None
+            for k,v in self._calrepeatvalues.items():
+                if entry['repeat']==v:
+                    repeat=k
+                    break
+            if repeat is None:
+                self.log(descloc+": Repeat type "+`entry['repeat']`+" not valid for this phone")
+                repeat=0
+
+            phonenum=re.sub("\-","",descloc)
+            if(phonenum.isdigit()):  # This is a phone number, use call alarm
+                self.log("Write calendar call alarm slot "+`callslot`+ " - "+descloc)
+                e=self.protocolclass.callalarmentry()
+                e.slot=callslot
+                e.phonenum=phonenum
+                e.phonenum_len=len(e.phonenum)
+                
+                now=time.mktime(time.localtime(time.time()))
+
+                timearray=entry['start']+[0,0,0,0]
+                starttimelocal=time.mktime(timearray)
+                if(starttimelocal<now and repeat==0):
+                    e.flag=2 # In the past
+                else:
+                    e.flag=1 # In the future
+                e.date=starttimelocal-self._sanyoepochtounix
+                e.datedup=e.date
+                e.phonenumbertype=0
+                e.phonenumberslot=0
+                e.name="" # Could get this by reading phone book
+                          # But it would take a lot more time
+                e.name_len=len(e.name)
+
+                req=self.protocolclass.callalarmupdaterequest()
+                callslot+=1
+                respc=self.protocolclass.callalarmresponse
+            else: # Normal calender event
+                self.log("Write calendar event slot "+`eventslot`+ " - "+descloc)
+                e=self.protocolclass.evententry()
+                e.slot=eventslot
+
+                slashpos=descloc.find('/')
+                if(slashpos >= 0):
+                    eventname=descloc[0:slashpos]
+                    location=descloc[slashpos+1:]
+                else:
+                    eventname=descloc
+                    location=''
+            
+                e.eventname=eventname
+                e.eventname_len=len(e.eventname)
+                e.location=location
+                e.location_len=len(e.location)
+                now=time.mktime(time.localtime(time.time()))
+
+                timearray=entry['start']+[0,0,0,0]
+                starttimelocal=time.mktime(timearray)
+                if(starttimelocal<now and repeat==0):
+                    e.flag=2 # In the past
+                else:
+                    e.flag=1 # In the future
+                e.start=starttimelocal-self._sanyoepochtounix
+
+                timearray=entry.get('end', entry['start'])+[0,0,0,0]
+                e.end=time.mktime(timearray)-self._sanyoepochtounix
+
+                alarmdiff=entry.get('alarm',0)
+                e.alarm=starttimelocal-self._sanyoepochtounix-60*alarmdiff
+                e.location=location
+                e.location_len=len(e.location)
+
+                e.alarm_type=entry.get('ringtone',0)
+
+# What we should do is first find largest changeserial, and then increment
+# whenever we have one that is undefined or zero.
+            
+                req=self.protocolclass.eventupdaterequest()
+                eventslot+=1
+                respc=self.protocolclass.eventresponse
+
+            e.period=repeat
+            e.dom=entry['start'][2]
+            e.serial=entry.get('changeserial',0)
+            req.entry=e
+            res=self.sendpbcommand(req, respc, writemode=True)
+
+
+# Blank out unused slots
+        e=self.protocolclass.evententry()
+        e.flag=0 # Unused slot
+        e.eventname=""
+        e.eventname_len=0
+        e.location=""
+        e.location_len=0
+        e.start=0
+        e.end=0
+        e.alarm_type=0
+        e.period=0
+        e.dom=0
+        e.alarm=0
+        req=self.protocolclass.eventupdaterequest()
+        req.entry=e
+        for eventslot in range(eventslot,self.protocolclass._NUMEVENTSLOTS):
+            self.progress(eventslot+callslot, progressmax, "Writing unused")
+            self.log("Write calendar event slot "+`eventslot`+ " - Unused")
+            req.entry.slot=eventslot
+            res=self.sendpbcommand(req, self.protocolclass.eventresponse, writemode=True)
+
+        e=self.protocolclass.callalarmentry()
+        e.flag=0 # Unused slot
+        e.name=""
+        e.name_len=0
+        e.phonenum=""
+        e.phonenum_len=0
+        e.date=0
+        e.datedup=0
+        e.period=0
+        e.dom=0
+        e.phonenumbertype=0
+        e.phonenumberslot=0
+        req=self.protocolclass.callalarmupdaterequest()
+        req.entry=e
+        for callslot in range(callslot,self.protocolclass._NUMCALLALARMSLOTS):
+            self.progress(eventslot+callslot, progressmax, "Writing unused")
+            self.log("Write calendar call alarm slot "+`callslot`+ " - Unused")
+            req.entry.slot=callslot
+            res=self.sendpbcommand(req, self.protocolclass.callalarmresponse, writemode=True)
+
+        self.progress(progressmax, progressmax, "Calendar write done")
+
+#        dict['calendar'] = cal
+#        Not mucking with passed in calendar yet
+
+    def decodedate(self,val):
+        """Unpack 32 bit value into date/time
+
+        @rtype: tuple
+        @return: (year, month, day, hour, minute)
+        """
+        return list(time.localtime(val+self._sanyoepochtounix)[:5])
+
+    _calrepeatvalues={
+        0: None,
+        1: 'daily',
+        2: 'weekly',
+        3: 'monthly',
+        4: 'yearly'
+        }
+
+
+class Profile:
+    serialsname='sanyo'
+
+    def __init__(self):
+        pass
+    
+### Some drop in replacement routines for phonebook.py that can be moved
+### if they look OK.
+    def _getentries(self, list, min, max, name):
+        candidates=[]
+        for i in list:
+            # ::TODO:: possibly ensure that a key appears in each i
+            candidates.append(i)
+        if len(candidates)<min:
+            # ::TODO:: log this
+            raise ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
+        if len(candidates)>max:
+            # ::TODO:: mention this to user
+            candidates=candidates[:max]
+        return candidates
+
+    def _getfield(self,list,name):
+        res=[]
+        for i in list:
+            res.append(i[name])
+        return res
+
+    def _makefullnames(self, list, lastnamefirst=False):
+        res=[]
+        for i in list:
+            first=i.get('first','')
+            last=i.get('last','')
+            full=i.get('full','')
+            if len(last)>0:
+                if(lastnamefirst):
+                    res.append(last+", "+first)
+                else:
+                    res.append(first+" "+last)
+            elif len(first)>0:
+                res.append(first)
+            else:
+                res.append(full)
+
+        return res
+        
+    def _truncatefields(self, list, truncateat, compresscomma=False):
+        if truncateat is None:
+            return list
+        res=[]
+        for i in list:
+            if len(i)>truncateat:
+                # ::TODO:: log truncation
+                res.append(i[:truncateat])
+            else:
+                res.append(i)
+        return res
+
+    def getfullname(self, names, min, max, truncateat=None, lastnamefirst=False):
+        "Return at least min and at most max fullnames from the names list"
+        if(lastnamefirst):
+            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names"),lastnamefirst),truncateat,compresscomma=True)
+        else:
+            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names")),truncateat)
+
+###
+
+    def makeone(self, list, default):
+        "Returns one item long list"
+        if len(list)==0:
+            return default
+        assert len(list)==1
+        return list[0]
+
+    # Processes phone book for writing to Sanyo.  But does not leave phone book
+    # in a bitpim compatible format.  Need to understand exactly what bitpim
+    # is expecting the method to do.
+
+    def convertphonebooktophone(self, helper, data):
+        "Converts the data to what will be used by the phone"
+        results={}
+
+        lastnamefirst=wxGetApp().config.ReadInt("lastnamefirst")
+
+        slotsused={}
+        for pbentry in data['phonebook']:
+            entry=data['phonebook'][pbentry]
+            serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
+            if(serial1 >= 0 and serial1 < self.protocolclass._NUMPBSLOTS):
+                slotsused[serial1]=1
+
+        lastunused=0 # One more than last unused slot
+        
+        for pbentry in data['phonebook']:
+            e={} # entry out
+            entry=data['phonebook'][pbentry] # entry in
+            try:
+                e['name']=self.getfullname(entry.get('names', []),1,1,16,lastnamefirst)[0]
+                e['name_len']=len(e['name'])
+
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
+
+                if(serial1 >= 0 and serial1 < self.protocolclass._NUMPBSLOTS):
+                    e['slot']=serial1
+                else:  # A new entry.  Must find unused slot
+                    while(slotsused.has_key(lastunused)):
+                        lastunused+=1
+                        if(lastunused >= self.protocolclass._NUMPBSLOTS):
+                            raise helper.ConversionFailed()
+                    e['slot']=lastunused
+                    slotsused[lastunused]=1
+                
+                e['slotdup']=e['slot']
+
+                e['email']=self.makeone(helper.getemails(entry.get('emails', []),0,1,48), "")
+                e['email_len']=len(e['email'])
+
+                e['url']=self.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
+                e['url_len']=len(e['url'])
+# Could put memo in email or url
+
+                numbers=helper.getnumbers(entry.get('numbers', []),0,7)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                e['speeddials']=[]
+                unusednumbers=[] # Hold duplicate types here
+                typesused={}
+                for num in numbers:
+                    typename=num['type']
+                    if(typesused.has_key(typename)):
+                        unusednumbers.append(num)
+                        continue
+                    typesused[typename]=1
+                    for typenum,tnsearch in zip(range(100),numbertypetab):
+                        if typename==tnsearch:
+                            e['numbertypes'].append(typenum)
+                            e['numbers'].append(num['number'])
+                            if(num.has_key('speeddial')):
+                                e['speeddials'].append(num['speeddial'])
+                            else:
+                                e['speeddials'].append(-1)
+
+                            break
+
+# Now stick the unused numbers in unused types
+                trytype=len(numbertypetab)
+                for num in unusednumbers:
+                    while trytype>0:
+                        trytype-=1
+                        if not typesused.has_key(numbertypetab[trytype]):
+                            break
+                    else:
+                        break
+                    e['numbertypes'].append(trytype)
+                    e['numbers'].append(num['number'])
+                    if(num.has_key('speeddial')):
+                        e['speeddials'].append(num['speeddial'])
+                    else:
+                        e['speeddials'].append(-1)
+
+
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
+
+                e['wallpaper']=helper.getwallpaperindex(entry.get('wallpapers', []), 'call', 0)
+
+                e['secret']=helper.getflag(entry.get('flags', []), 'secret', False)
+
+                results[pbentry]=e
+                
+            except helper.ConversionFailed:
+                self.log("No Free Slot for "+e['name'])
+                continue
+
+        data['phonephonebook']=results
+        return data
