@@ -48,7 +48,11 @@ class DeveloperPanel(wx.Panel):
 
     def sql(self, cmd, bindings=()):
         "Executes sql statement and prints result"
+        desc=False
         for row in self.locals['db'].sql(cmd,bindings):
+            if not desc:
+                print "#",self.locals['db'].cursor.getdescription()
+                desc=True
             print row
 
     def tables(self):
