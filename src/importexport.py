@@ -140,24 +140,36 @@ class ImportDialog(wx.Dialog):
 
         self.getcontrols(vbs)
 
+        cfg=lambda key: wx.GetApp().config.ReadInt("importdialog/filter"+key, False)
+        
+
         # Only records with ... row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        # ::TODO:: remember settings in config and retrieve here as defaults
         hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.ALL|wx.ALIGN_CENTRE,2)
         self.wname=wx.CheckBox(self, wx.NewId(), "a name")
-        self.wname.SetValue(False)
+        self.wname.SetValue(cfg("name"))
         hbs.Add(self.wname, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wnumber=wx.CheckBox(self, wx.NewId(), "a number")
-        self.wnumber.SetValue(False)
+        self.wnumber.SetValue(cfg("phonenumber"))
         hbs.Add(self.wnumber, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.waddress=wx.CheckBox(self, wx.NewId(), "an address")
+        self.waddress.SetValue(cfg("postaladdress"))
         hbs.Add(self.waddress, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wemail=wx.CheckBox(self, wx.NewId(), "an email")
+        self.wemail.SetValue(cfg("emailaddress"))
         hbs.Add(self.wemail, 0, wx.LEFT|wx.ALIGN_CENTRE,7)
-        self.categorieswanted=None
+        cats=wx.GetApp().config.Read("importdialog/filtercategories", "")
+        if len(cats):
+            self.categorieswanted=cats.split(";")
+        else:
+            self.categorieswanted=None
         self.categoriesbutton=wx.Button(self, wx.NewId(), "Categories...")
         hbs.Add(self.categoriesbutton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE, 10)
-        self.categorieslabel=wx.StaticText(self, -1, "*ALL*")
+        self.categorieslabel=wx.StaticText(self, -1, "")
+        if self.categorieswanted is None:
+            self.categorieslabel.SetLabel("*ANY*")
+        else:
+            self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
         hbs.Add(self.categorieslabel, 1, wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, 5)
         vbs.Add(hbs,0, wx.EXPAND|wx.ALL,5)
         # Preview grid row
@@ -195,15 +207,29 @@ class ImportDialog(wx.Dialog):
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
 
-    def OnClose(self, event):
+    def OnClose(self, event=None):
+        # save various config pieces
         guiwidgets.save_size("importdialog", self.GetRect())
-        event.Skip()
+        cfg=lambda key, value: wx.GetApp().config.WriteInt("importdialog/filter"+key, value)
+        cfg("name", self.wname.GetValue())
+        cfg("phonenumber", self.wnumber.GetValue())
+        cfg("postaladdress", self.waddress.GetValue())
+        cfg("emailaddress", self.wemail.GetValue())
+        if self.categorieswanted is None:
+            cats=""
+        else:
+            cats=";".join(self.categorieswanted)
+        wx.GetApp().config.Write("importdialog/filtercategories", cats)
+        wx.GetApp().config.Flush()
+        if event is not None:
+            event.Skip()
 
     def OnOk(self,_):
         "Ok button was pressed"
         if self.preview.IsCellEditControlEnabled():
             self.preview.HideCellEditControl()
             self.preview.SaveEditControlValue()
+        self.OnClose()  # for some reason this isn't called automatically
         self.EndModal(wx.ID_OK)
         
     def GetFormattedData(self):
