@@ -486,6 +486,7 @@ class Calendar(wx.Panel):
     ID_UP=1
     ID_DOWN=2
     ID_YEARBUTTON=3
+    ID_TODAYBUTTON=4
 
     attrevenmonth=None
     attroddmonth=None
@@ -511,9 +512,10 @@ class Calendar(wx.Panel):
         wx.Panel.__init__(self, parent, id, style=wx.WANTS_CHARS|wx.FULL_REPAINT_ON_RESIZE)
         sizer=wx.GridBagSizer()
         self.upbutt=wx.BitmapButton(self, self.ID_UP, getupbitmapBitmap())
-        sizer.Add(self.upbutt, flag=wx.EXPAND, pos=(0,0), span=(1,8))
+        sizer.Add(self.upbutt, flag=wx.EXPAND, pos=(0,1), span=(1,7))
         self.year=wx.Button(self, self.ID_YEARBUTTON, "2003")
         sizer.Add(self.year, flag=wx.EXPAND, pos=(1,0))
+        sizer.Add(wx.Button(self, self.ID_TODAYBUTTON, "Today"), flag=wx.EXPAND, pos=(0,0))
         p=1
         calendar.setfirstweekday(calendar.SUNDAY)
         for i in ( "Sun", "Mon", "Tue", "Wed" , "Thu", "Fri", "Sat" ):
@@ -539,6 +541,7 @@ class Calendar(wx.Panel):
         wx.EVT_BUTTON(self, self.ID_UP, self.OnScrollUp)
         wx.EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
         wx.EVT_BUTTON(self, self.ID_YEARBUTTON, self.OnYearButton)
+        wx.EVT_BUTTON(self, self.ID_TODAYBUTTON, self.OnTodayButton)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         # grab key down from all children
         map(lambda child: wx.EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
@@ -594,6 +597,9 @@ class Calendar(wx.Panel):
 
     def OnYearButton(self, event):
         self.popupcalendar.Popup( * (self.selecteddate + (event,)) )
+
+    def OnTodayButton(self, _):
+        self.setday(*time.localtime()[:3])
 
     def OnEraseBackground(self, _):
         pass
