@@ -742,6 +742,9 @@ class PhoneWidget(wx.Panel):
 
     def GetSelectedRows(self):
         rows=[]
+        # if there is no data, there can't be any selected rows
+        if len(self._data)==0:
+            return rows
         gcr=self.table.GetGridCursorRow()
         set1=self.table.GetSelectionBlockTopLeft()
         set2=self.table.GetSelectionBlockBottomRight()
@@ -752,7 +755,8 @@ class PhoneWidget(wx.Panel):
                     if row not in rows:
                         rows.append(row)
         else:
-            rows.append(gcr)
+            if gcr>=0:
+                rows.append(gcr)
 
         return rows
 
