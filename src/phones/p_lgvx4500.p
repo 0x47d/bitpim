@@ -59,7 +59,7 @@ PACKET pbentry:
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    33 STRING {'raiseonunterminatedread': False} memo
+    65 STRING {'raiseonunterminatedread': False} memo
     1  UINT wallpaper
     * LIST {'length': self.numberofphonenumbers} +numbertypes:
         1 UINT numbertype
