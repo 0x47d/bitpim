@@ -13,6 +13,7 @@
 #                            data to a file, and to dump packets to a file.
 #           29.09.2003  0.61 Fix bug in todo and callback lists.
 #           07.10.2003  0.70 Write dump file in format for BITPIM analyzer
+#           14.10.2003  0.71 Fix formatting of bitpim dump
 # 
 # 
 # Usage:
@@ -90,7 +91,7 @@
 #
 use Device::SerialPort;
 
-$scriptversion = "0.70 (07.10.2003)";
+$scriptversion = "0.71 (14.10.2003)";
 $devicename = "/dev/pcsphone";
 $expectedphonename = "SCP-4900";
 
@@ -606,7 +607,7 @@ sub packetdump {
 	for($i=0;$i<16;$i++) {
 	    $chars[$i] = "  " if(not $chars[$i]);
 	}
-	printf $fh_dump "%8.8x: ",$bufp;
+	printf $fh_dump "%8.8x ",$bufp;
 	print $fh_dump join(" ",@chars),"     ";;
 	for($i=0;$i<16;$i++) {
 	    if($bufp+$i < $len) {

@@ -21,16 +21,49 @@ BOOL=BOOLlsb
 %}
 
 PACKET firmwarerequest:
-    * UNKNOWN unknown
+     1 UINT {'constant': 0x00} +command
 
-PACKET firmwaresponse:
-    * UNKNOWN unknown
+PACKET firmwareresponse:
+     1 UINT {'constant': 0x00} command
+     11 STRING {'sizeinbytes': 11, 'terminator': None}  date1
+     8 STRING {'sizeinbytes': 8, 'terminator': None}  time1
+     11 STRING {'sizeinbytes': 11, 'terminator': None}  date2
+     8 STRING {'sizeinbytes': 8, 'terminator': None}  time2
+     8 STRING {'sizeinbytes': 8, 'terminator': None}  string1
+     1 UNKNOWN dunno1
+     11 STRING {'sizeinbytes': 11, 'terminator': None}  date3
+     1 UNKNOWN dunno2
+     8 STRING {'sizeinbytes': 8, 'terminator': None}  time3
+     11 UNKNOWN dunno3
+     10 STRING {'sizeinbytes': 10, 'terminator': None}  firmware
+     7 UNKNOWN dunno4
+     16 STRING {'sizeinbytes': 16, 'terminator': None}  phonemodel
+     5 STRING {'sizeinbytes': 5, 'terminator': None}  prl
 
 PACKET phonenumberrequest:
-    * UNKNOWN unknown
+     1 UINT {'constant': 0x26} +command1
+     1 UINT {'constant': 0xb2} +command2
+     131 UNKNOWN +pad
 
 PACKET phonenumberresponse:
-    * UNKNOWN unknown
+    1 UINT {'constant': 0x26} command1
+    1 UINT {'constant': 0xb2} command2
+    2 UNKNOWN pad1
+    10 STRING {'sizeinbytes': 10, 'terminator': None}  myphonenumber
+    119 UNKNOWN pad2
+
+PACKET sanyoheader:
+    P UINT readwrite
+    if readwrite==0:
+       1 UINT {'constant': 0x0d} +headbyte1
+    if readwrite==1:
+       1 UINT {'constant': 0x0e} +headbyte1
+    1 UINT +command
+    1 UINT +packettype
+    if (command>=0x23 and command<=0x25) and packettype==0x0c:
+       1 UINT +slot
+    if command>=0x28 and packettype==0x0c:
+       2 UINT +slot
 
 PACKET esnrequest:
     * UNKNOWN unknown
@@ -45,7 +78,11 @@ PACKET ownerinforesponse:
     * UNKNOWN unknown
     
 PACKET eventrequest:
-    * UNKNOWN unknown
+    P UINT slot
+    * sanyoheader {'readwrite': 0, 'packettype': 0x0c,
+		'command': 0x23} +header
+    501 UNKNOWN pad
+### Would like to do (505-size) rather than 501.
 
 PACKET eventresponse:
     * UNKNOWN unknown
