@@ -60,7 +60,7 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
 class Profile(com_sanyo.Profile):
 
     WALLPAPER_WIDTH=132
-    WALLPAPER_HEIGHT=176
+    WALLPAPER_HEIGHT=144
     OVERSIZE_PERCENTAGE=100
     
     _supportedsyncs=(
