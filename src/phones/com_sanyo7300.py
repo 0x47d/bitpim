@@ -46,5 +46,9 @@ class Profile(com_sanyonewer.Profile):
     protocolclass=p_sanyo7300
     serialsname='scp7300'
 
+    WALLPAPER_WIDTH=132
+    WALLPAPER_HEIGHT=176
+    OVERSIZE_PERCENTAGE=100
+
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
