@@ -1,6 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2004 Peter Pletcher <peterpl@pacbell.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -35,6 +36,7 @@
 
 import sys
 import os
+import re
 
 if sys.platform!="linux2":
     raise ImportError()
@@ -48,12 +50,21 @@ except:
 userdir=os.path.expanduser("~")
 evolutionpath="evolution/local"
 evolutionbasedir=os.path.join(userdir, evolutionpath)
-
+evolutionexporter = {
+    'command'    : "evolution-addressbook-export",
+    'folderid'   : "<Evolution Addressbook Exporter>",
+    'name'       : "<Evolution Addressbook Exporter>",
+    'type'       : ["address book"]
+}
 
 def getcontacts(folder):
     """Returns the contacts as a list of string vcards
 
     Note that the Windows EOL convention is used"""
+
+    if folder == evolutionexporter['folderid']:
+        return getcontacts_evoexporter()
+    
     dir=os.path.expanduser(folder)
     p=os.path.join(dir, "addressbook.db")
     if not os.path.isfile(p):
@@ -73,7 +84,24 @@ def getcontacts(folder):
     db.close()
     return res
 
-def getfolders(basedir=evolutionbasedir):
+class EvolutionExportException(Exception):
+    pass
+
+def getcontacts_evoexporter():
+    """Get the cards by running evolution-addressbook-export
+
+    Note that this code returns all the contacts as a single
+    string item.  It seemed silly to split them apart when
+    the caller then just puts them back together as one
+    string"""
+    evo_export = os.popen(evolutionexporter['command'])
+    evo_cards = evo_export.read()
+    evo_export_status = evo_export.close()
+    if evo_export_status is not None:
+        raise EvolutionExportException("%s failed with code %s" % (evolutionexporter['command'], `evo_export_status`))
+    return [evo_cards]
+
+def getfsfolders(basedir=evolutionbasedir):
 
     res={}
     children=[]
@@ -83,7 +111,7 @@ def getfolders(basedir=evolutionbasedir):
 
         # deal with child folders (depth first)
         if os.path.isdir(p):
-            f=getfolders(p)
+            f=getfsfolders(p)
             if len(f):
                 children.extend(f)
             continue
@@ -118,6 +146,26 @@ def getfolders(basedir=evolutionbasedir):
             c['parent']=entry
         
     return [entry]
+
+def getspecialfolders():
+    "Return a list of any special folders"
+
+    # the only one we look for currently is evolution-addressbook-export
+    # command
+    evo_version = os.popen(evolutionexporter['command'] + " --version")
+    evo_version_result = evo_version.read()
+    evo_version_status = evo_version.close()
+    if evo_version_status is not None:
+        return []
+    # it doesn't work with earlier versions of evolution, so we do a version
+    # check
+    if evo_version_result.startswith("Gnome evolution 1.4"):
+        return [evolutionexporter]
+    else:
+        return []
+
+def getfolders():
+    return getspecialfolders()+getfsfolders()
 
 def pickfolder(selectedid=None, parent=None, title="Select Evolution Folder"):
     # we do the imports etc in the function so that this file won't
