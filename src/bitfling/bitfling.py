@@ -23,7 +23,7 @@ import fnmatch
 import socket
 import threading
 import time
-from xmlrpclib import Fault
+from xmlrpclib import Fault, Binary
 
 # wx stuff
 import wx
@@ -39,6 +39,7 @@ except ImportError:
     usb=None
 import usbscan
 import comscan
+import commport
     
 import guihelper
 import xmlrpcstuff
@@ -674,6 +675,19 @@ class BitFlingService(XMLRPCService):
 
     def __init__(self, mainwin, host, port, servercert):
         XMLRPCService.__init__(self, mainwin, host, port, servercert)
+        self.handles={}
+
+    def stashhandle(self, context, comm):
+        for i in range(10000):
+            if i not in self.handles:
+                self.handles[i]=[context, comm]
+                return i
+
+    def gethandle(self, context, num):
+        # ::TODO:: check context has access
+        return self.handles[num][1]
+
+    # Only methods begining with exp are exported to XML-RPC
     
     def exp_scan(self, context):
         return usbscan.usbscan()+comscan.comscan()
@@ -681,8 +695,33 @@ class BitFlingService(XMLRPCService):
     def exp_getversion(self, context):
         return version.description
 
-    def exp_add(self, a, b, context):
-        return a+b
+    def exp_deviceopen(self, port, baud, timeout, hardwareflow, softwareflow, context):
+        # ::TODO:: None is pointer to log object
+        return self.stashhandle(context, commport.CommConnection(None, port, baud, timeout,
+                                                                 hardwareflow, softwareflow))
+
+    def exp_deviceclose(self, handle, context):
+        comm=self.gethandle(context, handle)
+        comm.close()
+        del self.handles[handle]
+        return True
+
+    def exp_devicesetbaudrate(self, handle, rate, context):
+        return self.gethandle(context, handle).setbaudrate(rate)
+
+    def exp_devicewrite(self, handle, data, context):
+        self.gethandle(context, handle).write(data.data)
+        return len(data.data)
+
+    def exp_devicereaduntil(self, handle, char, numfailures, context):
+        return Binary(self.gethandle(context, handle).readuntil(char, numfailures=numfailures))
+
+    def exp_deviceread(self, handle, numchars, context):
+        return Binary(self.gethandle(context, handle).read(numchars))
+
+    def exp_devicereadsome(self, handle, context):
+        return Binary(self.gethandle(context, handle).readsome())
+    
 
 def run(args):
     theApp=wx.PySimpleApp()

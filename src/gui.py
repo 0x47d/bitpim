@@ -40,6 +40,7 @@ import ringers
 import guihelper
 import bpcalendar
 import bphtml
+import bitflingscan
 
 ###
 ### Used to check our threading
@@ -98,6 +99,8 @@ class Request:
 class HelperReturnEvent(wx.PyEvent):
     def __init__(self, callback, *args, **kwargs):
         if __debug__:
+            # verify not being called in main thread.  We could be called in
+            # the comms worker thread, or in the XML-RPC worker threads
             global helperthreadid
             assert helperthreadid==thread.get_ident()
         global EVT_CALLBACK
@@ -150,7 +153,8 @@ class WorkerThreadFramework(threading.Thread):
                 res=call()
             except Exception,e:
                 ex=e
-                ex.gui_exc_info=sys.exc_info()
+                if not hasattr(e,"gui_exc_info"):
+                    ex.gui_exc_info=sys.exc_info()
             wx.PostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
             if isinstance(ex, SystemExit):
                 raise ex
@@ -1036,12 +1040,19 @@ class WorkerThread(WorkerThreadFramework):
             else:
                 autofunc=None
             comcfg=self.dispatchto.commparams
-            comport=commport.CommConnection(self, self.dispatchto.commportsetting, autolistfunc=autofunc,
-                                            autolistargs=(self.dispatchto.phonemodule,),
-                                            baud=comcfg['baud'], timeout=comcfg['timeout'],
-                                            hardwareflow=comcfg['hardwareflow'],
-                                            softwareflow=comcfg['softwareflow'],
-                                            configparameters=comcfg)
+
+            name=self.dispatchto.commportsetting
+            if name.startswith("bitfling::"):
+                klass=bitflingscan.CommConnection
+            else:
+                klass=commport.CommConnection
+                
+            comport=klass(self, self.dispatchto.commportsetting, autolistfunc=autofunc,
+                          autolistargs=(self.dispatchto.phonemodule,),
+                          baud=comcfg['baud'], timeout=comcfg['timeout'],
+                          hardwareflow=comcfg['hardwareflow'],
+                          softwareflow=comcfg['softwareflow'],
+                          configparameters=comcfg)
                 
             try:
                 self.commphone=self.dispatchto.phonemodule.Phone(self, comport)

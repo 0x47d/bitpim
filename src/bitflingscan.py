@@ -69,6 +69,37 @@ class flinger:
             ports[p]['name']='bitfling::'+ports[p]['name']
         return ports
 
+    # All the device methods
+
+    def deviceopen(self, port, baud, timeout, hardwareflow, softwareflow):
+        self._configure()
+        return self.client.deviceopen(port, baud, timeout, hardwareflow, softwareflow)
+
+    def deviceclose(self, handle):
+        self._configure()
+        return self.client.deviceclose(handle)
+
+    def devicesetbaudrate(self, handle, rate):
+        self._configure()
+        return self.client.devicesetbaudrate(handle, rate)
+
+    def devicewrite(self, handle, data):
+        self._configure()
+        return self.client.devicewrite(handle, data)
+    
+    def devicereaduntil(self, handle, char, numfailures):
+        self._configure()
+        return self.client.devicereaduntil(handle, char, numfailures)
+
+    def deviceread(self, handle, numchars):
+        self._configure()
+        return self.client.deviceread(handle, numchars)
+
+    def devicereadsome(self, handle):
+        self._configure()
+        return self.client.devicereadsome(handle)
+
+
 
 # ensure there is a singleton
 flinger=flinger()
@@ -199,3 +230,75 @@ else:
         def __setattr__(self, name, value):
             raise Exception("BitFling is not enabled")
     flinger=flinger()
+
+
+class CommConnection:
+    # The constructor takes the same arguments as commport.CommConnection, but many
+    # are ignored
+    def __init__(self, logtarget, port, baud=115200, timeout=3, hardwareflow=0,
+                 softwareflow=0, autolistfunc=None, autolistargs=None, configparameters=None):
+        assert port.startswith("bitfling::")
+        self.logtarget=logtarget
+        self.port=port
+        self.baud=baud
+        self.timeout=timeout
+        self.hardwareflow=hardwareflow
+        self.softwareflow=softwareflow
+        self.handle=None
+        self._openport()
+
+    def _openport(self):
+        if self.handle is not None:
+            self.close()
+        self.log("Opening port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
+             (self.port, self.baud, float(self.timeout), self.hardwareflow, self.softwareflow) )
+        self.handle=flinger.deviceopen(self.port[len("bitfling::"):], self.baud, self.timeout, self.hardwareflow,
+                                       self.softwareflow)
+
+    def close(self):
+        if self.handle is not None:
+            flinger.deviceclose(self.handle)
+            self.handle=None
+
+    def reset(self):
+        self._openport()
+
+    def log(self, str):
+        if self.logtarget:
+            self.logtarget.log(self.port+": "+str)
+
+    def logdata(self, str, data):
+        if self.logtarget:
+            self.logtarget.logdata(self.port+": "+str, data)
+
+    def setbaudrate(self, rate):
+        res=flinger.devicesetbaudrate(self.handle, rate)
+        if res:
+            self.baud=rate
+        return res
+
+    def write(self, data, log=True):
+        if log:
+            self.logdata("Writing", data)
+        flinger.devicewrite(self.handle, data)
+
+    def read(self, numchars=1, log=True):
+        res=flinger.deviceread(self.handle, numchars)
+        if log:
+            self.logdata("Reading exact data - requested "+`numchars`, res)
+        return res
+
+    def readsome(self, log=True):
+        res=flinger.devicereadsome(self.handle)
+        if log:
+            self.logdata("Reading remaining data", res)
+        return res
+
+    def readuntil(self, char, log=True, logsuccess=True, numfailures=0):
+        res=flinger.devicereaduntil(self.handle, char, numfailures)
+        if log:
+            pass # ::TODO: something when we get a timeout exception
+        if logsuccess:
+            self.logdata("Read completed", res)
+        return res
+            

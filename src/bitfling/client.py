@@ -11,6 +11,7 @@
 
 # Standard imports
 import sys
+from xmlrpclib import Binary
 
 # My imports
 import xmlrpcstuff
@@ -32,3 +33,24 @@ class client:
 
     def scan(self):
         return self.server.scan()
+
+    def deviceopen(self, port, baud, timeout, hardwareflow, softwareflow):
+        return self.server.deviceopen(port, baud, timeout, hardwareflow, softwareflow)
+
+    def deviceclose(self, handle):
+        return self.server.deviceclose(handle)
+
+    def devicesetbaudrate(self, handle, rate):
+        return self.server.devicesetbaudrate(handle, rate)
+
+    def devicewrite(self, handle, data):
+        return self.server.devicewrite(handle, Binary(data))
+
+    def devicereaduntil(self, handle, char, numfailures):
+        return self.server.devicereaduntil(handle, char, numfailures).data
+
+    def deviceread(self, handle, numchars):
+        return self.server.deviceread(handle, numchars).data
+
+    def devicereadsome(self, handle):
+        return self.server.devicereadsome(handle).data

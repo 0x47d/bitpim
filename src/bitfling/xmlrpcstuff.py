@@ -28,7 +28,7 @@
 # stuff, but the actual request handling still seems single threaded.
 
 
-TRACE=True
+TRACE=False
 
 
 # standard modules
@@ -269,7 +269,7 @@ class Server(threading.Thread):
         self.setName("Threading SSH server controller for %s:%d" % (host, port))
         # setup logging
         l=logging.getLogger("paramiko")
-        l.setLevel(logging.DEBUG)
+        l.setLevel(logging.INFO)
         lh=FunctionLogHandler(self.OnLog)
         lh.setFormatter(logging.Formatter('%(levelname)-.3s [%(asctime)s] %(name)s: %(message)s', '%Y%m%d:%H%M%S'))
         l.addHandler(lh)
