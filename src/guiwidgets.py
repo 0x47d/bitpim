@@ -17,13 +17,9 @@ import time
 import copy
 import cStringIO
 
-# wx modules
-from wxPython.wx import *
-from wxPython.grid import *
-from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
-
-
-from wxPython.html import *
+# wx. modules
+import wx
+import wx.lib.mixins.listctrl
 
 # my modules
 import common
@@ -34,32 +30,33 @@ import comdiagnose
 import analyser
 import guihelper
 import pubsub
+import bphtml
 
 ####
 #### A simple text widget that does nice pretty logging.
 ####        
 
     
-class LogWindow(wxPanel):
+class LogWindow(wx.Panel):
 
     theanalyser=None
     
     def __init__(self, parent):
-        wxPanel.__init__(self,parent, -1, style=wxNO_FULL_REPAINT_ON_RESIZE)
+        wx.Panel.__init__(self,parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
         # have to use rich2 otherwise fixed width font isn't used on windows
-        self.tb=wxTextCtrl(self, 1, style=wxTE_MULTILINE| wxTE_RICH2|wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP|wxTE_READONLY)
-        f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
-        ta=wxTextAttr(font=f)
+        self.tb=wx.TextCtrl(self, 1, style=wx.TE_MULTILINE| wx.TE_RICH2|wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP|wx.TE_READONLY)
+        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
+        ta=wx.TextAttr(font=f)
         self.tb.SetDefaultStyle(ta)
-        self.sizer=wxBoxSizer(wxVERTICAL)
-        self.sizer.Add(self.tb, 1, wxEXPAND)
+        self.sizer=wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.tb, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
-        EVT_IDLE(self, self.OnIdle)
+        wx.EVT_IDLE(self, self.OnIdle)
         self.outstandingtext=""
 
-        EVT_KEY_UP(self.tb, self.OnKeyUp)
+        wx.EVT_KEY_UP(self.tb, self.OnKeyUp)
 
     def Clear(self):
         self.tb.Clear()
@@ -114,7 +111,7 @@ class LogWindow(wxPanel):
 ### Dialog asking what you want to sync
 ###
 
-class GetPhoneDialog(wxDialog):
+class GetPhoneDialog(wx.Dialog):
     # sync sources ("Pretty Name", "name used to query profile")
     sources= ( ('PhoneBook', 'phonebook'),
                 ('Calendar', 'calendar'),
@@ -137,50 +134,50 @@ class GetPhoneDialog(wxDialog):
     # ::TODO:: ok button should be grayed out unless at least one category is
     # picked
     def __init__(self, frame, title, id=-1):
-        wxDialog.__init__(self, frame, id, title,
-                          style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE)
-        gs=wxFlexGridSizer(2+len(self.sources), 2+len(self.types),5 ,10)
+        wx.Dialog.__init__(self, frame, id, title,
+                          style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
+        gs=wx.FlexGridSizer(2+len(self.sources), 2+len(self.types),5 ,10)
         gs.AddGrowableCol(1)
         gs.AddMany( [
-            (wxStaticText(self, -1, self.actions[0][0]), 0, wxEXPAND),
-            (wxStaticText(self, -1, "Source"), 0, wxEXPAND)])
+            (wx.StaticText(self, -1, self.actions[0][0]), 0, wx.EXPAND),
+            (wx.StaticText(self, -1, "Source"), 0, wx.EXPAND)])
 
         for pretty,_ in self.types:
-            gs.Add(wxStaticText(self, -1, pretty), 0, wxEXPAND)
+            gs.Add(wx.StaticText(self, -1, pretty), 0, wx.EXPAND)
 
 
         self.cb=[]
         self.rb=[]
 
         for desc, source in self.sources:
-            self.cb.append(wxCheckBox(self, -1, ""))
-            gs.Add(self.cb[-1], 0, wxEXPAND)
-            gs.Add(wxStaticText(self,-1,desc), 0, wxEXPAND|wxALIGN_CENTER_VERTICAL) # align needed for gtk
+            self.cb.append(wx.CheckBox(self, -1, ""))
+            gs.Add(self.cb[-1], 0, wx.EXPAND)
+            gs.Add(wx.StaticText(self,-1,desc), 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL) # align needed for gtk
             first=True
             for tdesc,tval in self.types:
                 if first:
-                    style=wxRB_GROUP
+                    style=wx.RB_GROUP
                     first=0
                 else:
                     style=0
-                self.rb.append( wxRadioButton(self, -1, "", style=style) )
+                self.rb.append( wx.RadioButton(self, -1, "", style=style) )
                 if not self._dowesupport(source, self.actions[0][1], tval):
                     self.rb[-1].Enable(False)
                     self.rb[-1].SetValue(False)
-                gs.Add(self.rb[-1], 0, wxEXPAND|wxALIGN_CENTRE)
+                gs.Add(self.rb[-1], 0, wx.EXPAND|wx.ALIGN_CENTRE)
 
-        bs=wxBoxSizer(wxVERTICAL)
-        bs.Add(gs, 0, wxEXPAND|wxALL, 10)
-        bs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 7)
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
+        bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
-        but=self.CreateButtonSizer(wxOK|wxCANCEL|wxHELP)
-        bs.Add(but, 0, wxEXPAND|wxALL, 10)
+        but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
+        bs.Add(but, 0, wx.EXPAND|wx.ALL, 10)
         
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
 
-        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
+        wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
 
     def _setting(self, type):
         for index in range(len(self.sources)):
@@ -208,7 +205,7 @@ class GetPhoneDialog(wxDialog):
         return self._setting("ringtone")
 
     def OnHelp(self,_):
-        wxGetApp().displayhelpid(self.HELPID)
+        wx.GetApp().displayhelpid(self.HELPID)
 
     # this is what BitPim itself supports - the phones may support a subset
     _notsupported=(
@@ -280,7 +277,7 @@ class SendPhoneDialog(GetPhoneDialog):
 ###  The master config dialog
 ###
 
-class ConfigDialog(wxDialog):
+class ConfigDialog(wx.Dialog):
     phonemodels={ 'LG-VX4400': 'com_lgvx4400',
                   'LG-VX6000': 'com_lgvx6000',
                   # 'LG-TM520': 'com_lgtm520',
@@ -294,40 +291,40 @@ class ConfigDialog(wxDialog):
     ID_COMBROWSE=2
     ID_RETRY=3
     def __init__(self, mainwindow, frame, title="BitPim Settings", id=-1):
-        wxDialog.__init__(self, frame, id, title,
-                          style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+        wx.Dialog.__init__(self, frame, id, title,
+                          style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.mw=mainwindow
-        gs=wxFlexGridSizer(2, 3,  5 ,10)
+        gs=wx.FlexGridSizer(2, 3,  5 ,10)
         gs.AddGrowableCol(1)
 
-        gs.Add( wxStaticText(self, -1, "Disk storage"), 0, wxCENTER)
-        self.diskbox=wxTextCtrl(self, -1, self.setme, size=wxSize( 400, 10))
-        gs.Add( self.diskbox, 0, wxEXPAND)
-        gs.Add( wxButton(self, self.ID_DIRBROWSE, "Browse ..."), 0, wxEXPAND)
+        gs.Add( wx.StaticText(self, -1, "Disk storage"), 0, wx.CENTER)
+        self.diskbox=wx.TextCtrl(self, -1, self.setme, size=wx.Size( 400, 10))
+        gs.Add( self.diskbox, 0, wx.EXPAND)
+        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), 0, wx.EXPAND)
 
-        gs.Add( wxStaticText(self, -1, "Com Port"), 0, wxCENTER)
-        self.commbox=wxTextCtrl(self, -1, self.setme)
-        gs.Add( self.commbox, 0, wxEXPAND)
-        gs.Add( wxButton(self, self.ID_COMBROWSE, "Browse ..."), 0, wxEXPAND)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), 0, wx.CENTER)
+        self.commbox=wx.TextCtrl(self, -1, self.setme)
+        gs.Add( self.commbox, 0, wx.EXPAND)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), 0, wx.EXPAND)
 
-        gs.Add( wxStaticText(self, -1, "Phone Type"), 0, wxCENTER)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), 0, wx.CENTER)
         keys=self.phonemodels.keys()
         keys.sort()
-        self.phonebox=wxComboBox(self, -1, "LG-VX4400", style=wxCB_DROPDOWN|wxCB_READONLY,choices=keys)
+        self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, 0, wxEXPAND)
+        gs.Add( self.phonebox, 0, wx.EXPAND)
 
-        bs=wxBoxSizer(wxVERTICAL)
-        bs.Add(gs, 0, wxEXPAND|wxALL, 10)
-        bs.Add(wxStaticLine(self, -1), 0, wxEXPAND|wxTOP|wxBOTTOM, 7)
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
+        bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
-        but=self.CreateButtonSizer(wxOK|wxCANCEL|wxHELP)
-        bs.Add(but, 0, wxCENTER, 10)
+        but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
+        bs.Add(but, 0, wx.CENTER, 10)
 
-        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
-        EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
-        EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
-        EVT_BUTTON(self, wxID_OK, self.OnOK)
+        wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
+        wx.EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
+        wx.EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOK)
 
         self.setdefaults()
 
@@ -343,20 +340,20 @@ class ConfigDialog(wxDialog):
         except:
             pass
         if os.path.isdir(dir):
-            self.EndModal(wxID_OK)
+            self.EndModal(wx.ID_OK)
             return
-        wxTipWindow(self.diskbox, "No such directory - please correct")
+        wx.TipWindow(self.diskbox, "No such directory - please correct")
             
 
     def OnHelp(self, _):
-        wxGetApp().displayhelpid(helpids.ID_SETTINGS_DIALOG)
+        wx.GetApp().displayhelpid(helpids.ID_SETTINGS_DIALOG)
 
     def OnDirBrowse(self, _):
-        dlg=wxDirDialog(self, defaultPath=self.diskbox.GetValue(), style=wxDD_NEW_DIR_BUTTON)
+        dlg=wx.DirDialog(self, defaultPath=self.diskbox.GetValue(), style=wx.DD_NEW_DIR_BUTTON)
         res=dlg.ShowModal()
         v=dlg.GetPath()
         dlg.Destroy()
-        if res==wxID_OK:
+        if res==wx.ID_OK:
             self.diskbox.SetValue(v)
 
     def OnComBrowse(self, _):
@@ -366,7 +363,7 @@ class ConfigDialog(wxDialog):
         h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
         dlg=CommPortDialog(self, __import__(self.phonemodels[self.phonebox.GetValue()]), defaultport=self.commbox.GetValue(), sashposition=p)
-        dlg.SetSize(wxSize(w,h))
+        dlg.SetSize(wx.Size(w,h))
         dlg.Centre()
         res=dlg.ShowModal()
         v=dlg.GetPort()
@@ -375,7 +372,7 @@ class ConfigDialog(wxDialog):
         self.mw.config.WriteInt("combrowseheight", sz.GetHeight())
         self.mw.config.WriteInt("combrowsesash", dlg.sashposition)
         dlg.Destroy()
-        if res==wxID_OK:
+        if res==wx.ID_OK:
             self.commbox.SetValue(v)
         
 
@@ -471,8 +468,8 @@ class ConfigDialog(wxDialog):
 
     def ShowModal(self):
         self.setfromconfig()
-        ec=wxDialog.ShowModal(self)
-        if ec==wxID_OK:
+        ec=wx.Dialog.ShowModal(self)
+        if ec==wx.ID_OK:
             self.updatevariables()
         return ec
 
@@ -480,7 +477,7 @@ class ConfigDialog(wxDialog):
 ### The select a comm port dialog box
 ###
 
-class CommPortDialog(wxDialog):
+class CommPortDialog(wx.Dialog):
     ID_LISTBOX=1
     ID_TEXTBOX=2
     ID_REFRESH=3
@@ -488,7 +485,7 @@ class CommPortDialog(wxDialog):
     ID_SAVE=5
     
     def __init__(self, parent, selectedphone, id=-1, title="Choose a comm port", defaultport="auto", sashposition=0):
-        wxDialog.__init__(self, parent, id, title, style=wxCAPTION|wxSYSTEM_MENU|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, id, title, style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.parent=parent
         self.port=defaultport
         self.sashposition=sashposition
@@ -497,23 +494,23 @@ class CommPortDialog(wxDialog):
         p=self # parent widget
 
         # the listbox and textbox in a splitter
-        splitter=wxSplitterWindow(p, self.ID_SASH, style=wxSP_3D|wxSP_LIVE_UPDATE)
-        self.lb=wxListBox(splitter, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
-        self.tb=wxHtmlWindow(splitter, self.ID_TEXTBOX, size=wxSize(400,400)) # default style is auto scrollbar
+        splitter=wx.SplitterWindow(p, self.ID_SASH, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+        self.lb=wx.ListBox(splitter, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+        self.tb=bphtml.HTMLWindow(splitter, self.ID_TEXTBOX, size=wx.Size(400,400)) # default style is auto scrollbar
         splitter.SplitHorizontally(self.lb, self.tb, sashposition)
 
         # the buttons
-        buttsizer=wxGridSizer(1, 5)
-        buttsizer.Add(wxButton(p, wxID_OK, "OK"), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, self.ID_REFRESH, "Refresh"), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, self.ID_SAVE, "Save..."), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, wxID_HELP, "Help"), 0, wxALL, 10)
-        buttsizer.Add(wxButton(p, wxID_CANCEL, "Cancel"), 0, wxALL, 10)
+        buttsizer=wx.GridSizer(1, 5)
+        buttsizer.Add(wx.Button(p, wx.ID_OK, "OK"), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(p, self.ID_REFRESH, "Refresh"), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(p, self.ID_SAVE, "Save..."), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(p, wx.ID_HELP, "Help"), 0, wx.ALL, 10)
+        buttsizer.Add(wx.Button(p, wx.ID_CANCEL, "Cancel"), 0, wx.ALL, 10)
 
         # vertical join of the two
-        vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add(splitter, 1, wxEXPAND)
-        vbs.Add(buttsizer, 0, wxCENTER)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(splitter, 1, wx.EXPAND)
+        vbs.Add(buttsizer, 0, wx.CENTER)
 
         # hook into self
         p.SetSizer(vbs)
@@ -524,14 +521,14 @@ class CommPortDialog(wxDialog):
         self.OnRefresh()
 
         # hook in all the widgets
-        EVT_BUTTON(self, wxID_CANCEL, self.OnCancel)
-        EVT_BUTTON(self, wxID_HELP, self.OnHelp)
-        EVT_BUTTON(self, self.ID_REFRESH, self.OnRefresh)
-        EVT_BUTTON(self, self.ID_SAVE, self.OnSave)
-        EVT_BUTTON(self, wxID_OK, self.OnOk)
-        EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBox)
-        EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
-        EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
+        wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
+        wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
+        wx.EVT_BUTTON(self, self.ID_REFRESH, self.OnRefresh)
+        wx.EVT_BUTTON(self, self.ID_SAVE, self.OnSave)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBox)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
+        wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
 
     def OnSashChange(self, _=None):
         self.sashposition=self.FindWindowById(self.ID_SASH).GetSashPosition()
@@ -559,17 +556,17 @@ class CommPortDialog(wxDialog):
             self.lb.SetSelection(sel)
             self.OnListBox()
         else:
-            self.FindWindowById(wxID_OK).Enable(False)
+            self.FindWindowById(wx.ID_OK).Enable(False)
             self.tb.SetPage("<html><body>You do not have any com/serial ports on your system</body></html>")
 
     def OnListBox(self, _=None):
         # enable/disable ok button
         p=self.portinfo[self.lb.GetSelection()]
         if p[1] is None:
-            self.FindWindowById(wxID_OK).Enable(False)
+            self.FindWindowById(wx.ID_OK).Enable(False)
         else:
             self.port=p[1]
-            self.FindWindowById(wxID_OK).Enable(True)
+            self.FindWindowById(wx.ID_OK).Enable(True)
         self.tb.SetPage(p[2])
         
 
@@ -585,22 +582,22 @@ class CommPortDialog(wxDialog):
             print >>html, "<tr><td colspan=3>%s</td></tr>" % (desc,)
             print >>html, "<tr><td colspan=3><hr></td></tr>"
         print >>html, "</table></body></html>"
-        dlg=wxFileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
-                         style=wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR)
-        if dlg.ShowModal()==wxID_OK:
+        dlg=wx.FileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
+                         style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
             f=open(dlg.GetPath(), "w")
             f.write(html.getvalue())
             f.close()
         dlg.Destroy()
 
     def OnCancel(self, _):
-        self.EndModal(wxID_CANCEL)
+        self.EndModal(wx.ID_CANCEL)
 
     def OnOk(self, _):
-        self.EndModal(wxID_OK)
+        self.EndModal(wx.ID_OK)
 
     def OnHelp(self, _):
-        wxGetApp().displayhelpid(helpids.ID_COMMSETTINGS_DIALOG)        
+        wx.GetApp().displayhelpid(helpids.ID_COMMSETTINGS_DIALOG)        
 
     def GetPort(self):
         return self.port
@@ -609,15 +606,15 @@ class CommPortDialog(wxDialog):
 ### File viewer
 ###
 
-class MyFileDropTarget(wxFileDropTarget):
+class MyFileDropTarget(wx.FileDropTarget):
     def __init__(self, target):
-        wxFileDropTarget.__init__(self)
+        wx.FileDropTarget.__init__(self)
         self.target=target
         
     def OnDropFiles(self, x, y, filenames):
         return self.target.OnDropFiles(x,y,filenames)
 
-class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
+class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
     # ::TODO:: be resilient to conversion failures in ringer
     # ringer onluanch should convert qcp to wav
     
@@ -634,22 +631,22 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     # acceptable characters in a filename
     filenamechars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
     
-    def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT):
-        wxListCtrl.__init__(self, parent, id, style=style)
-        wxListCtrlAutoWidthMixin.__init__(self)
+    def __init__(self, mainwindow, parent, id=-1, style=wx.LC_REPORT):
+        wx.ListCtrl.__init__(self, parent, id, style=style)
+        wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin.__init__(self)
         self.droptarget=MyFileDropTarget(self)
         self.SetDropTarget(self.droptarget)
         self.mainwindow=mainwindow
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
-        if (style&wxLC_REPORT)==wxLC_REPORT or guihelper.HasFullyFunctionalListView():
+        if (style&wx.LC_REPORT)==wx.LC_REPORT or guihelper.HasFullyFunctionalListView():
             # some can't do report and icon style
             self.InsertColumn(0, "Name")
-            self.InsertColumn(1, "Bytes", wxLIST_FORMAT_RIGHT)
+            self.InsertColumn(1, "Bytes", wx.LIST_FORMAT_RIGHT)
             
             self.SetColumnWidth(0, 200)
             
-        self.menu=wxMenu()
+        self.menu=wx.Menu()
         self.menu.Append(guihelper.ID_FV_OPEN, "Open")
         self.menu.AppendSeparator()
         self.menu.Append(guihelper.ID_FV_DELETE, "Delete")
@@ -658,25 +655,25 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
         self.menu.Append(guihelper.ID_FV_PROPERTIES, "Properties")
 
-        self.addfilemenu=wxMenu()
+        self.addfilemenu=wx.Menu()
         self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
         self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-        EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
-        EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
-        EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
-        EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
-        EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
 
-        EVT_LEFT_DCLICK(self, self.OnLaunch)
+        wx.EVT_LEFT_DCLICK(self, self.OnLaunch)
         # copied from the demo - much voodoo
-        EVT_LIST_ITEM_SELECTED(self, -1, self.OnItemActivated)
-        EVT_RIGHT_DOWN(self, self.OnRightDown)
-        EVT_COMMAND_RIGHT_CLICK(self, id, self.OnRightClick)
-        EVT_RIGHT_UP(self, self.OnRightClick)
+        wx.EVT_LIST_ITEM_SELECTED(self, -1, self.OnItemActivated)
+        wx.EVT_RIGHT_DOWN(self, self.OnRightDown)
+        wx.EVT_COMMAND_RIGHT_CLICK(self, id, self.OnRightClick)
+        wx.EVT_RIGHT_UP(self, self.OnRightClick)
 
-        EVT_KEY_DOWN(self, self.OnKeyDown)
+        wx.EVT_KEY_DOWN(self, self.OnKeyDown)
         
     def MakeTheDamnThingRedraw(self):
         "Force the screen to actually redraw since the control likes to avoid doing so"
@@ -691,7 +688,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         names=[]
         i=-1
         while True:
-            nexti=self.GetNextItem(i, state=wxLIST_STATE_SELECTED)
+            nexti=self.GetNextItem(i, state=wx.LIST_STATE_SELECTED)
             if nexti<0:
                 break
             i=nexti
@@ -701,10 +698,10 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         return names
 
     def OnRightDown(self,event):
-        item,flags=self.HitTest(wxPoint(event.GetX(), event.GetY()))
-        if flags&wxLIST_HITTEST_ONITEM:
+        item,flags=self.HitTest(wx.Point(event.GetX(), event.GetY()))
+        if flags&wx.LIST_HITTEST_ONITEM:
             self.selecteditem=item
-            self.SetItemState(item, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED)
+            self.SetItemState(item, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
         else:
             self.selecteditem=-1
         
@@ -715,7 +712,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
             self.PopupMenu(self.addfilemenu, event.GetPosition())
 
     def OnKeyDown(self,event):
-        if event.GetKeyCode()==WXK_DELETE:
+        if event.GetKeyCode()==wx.WXK_DELETE:
             self.OnDelete(event)
             return
         event.Skip()
@@ -726,21 +723,21 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
     def OnLaunch(self,_=None):
         name=self.GetItemText(self.selecteditem)
         ext=name[name.rfind('.')+1:]
-        type=wxTheMimeTypesManager.GetFileTypeFromExtension(ext)
+        type=wx.TheMimeTypesManager.GetFileTypeFromExtension(ext)
         cmd=type.GetOpenCommand(os.path.join(self.thedir, name))
         if cmd is None or len(cmd)==0:
             dlg=AlertDialogWithHelp(self, "You don't have any programs defined to open ."+ext+" files",
-                                "Unable to open", lambda _: wxGetApp().displayhelpid(helpids.ID_NO_MIME_OPEN),
-                                    style=wxOK|wxICON_INFORMATION)
+                                "Unable to open", lambda _: wx.GetApp().displayhelpid(helpids.ID_NO_MIME_OPEN),
+                                    style=wx.OK|wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
         else:
             try:
-                wxExecute(cmd)
+                wx.Execute(cmd)
             except:
                 dlg=AlertDialogWithHelp(self, "Unable to execute '"+cmd+"'",
-                                    "Open failed", lambda _: wxGetApp().displayhelpid(helpids.ID_MIME_EXEC_FAILED),
-                                        style=wxOK|wxICON_ERROR)
+                                    "Open failed", lambda _: wx.GetApp().displayhelpid(helpids.ID_MIME_EXEC_FAILED),
+                                        style=wx.OK|wx.ICON_ERROR)
                 dlg.ShowModal()
                 dlg.Destroy()
                 
@@ -761,8 +758,8 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         self.Thaw()
 
     def OnAdd(self, _=None):
-        dlg=wxFileDialog(self, "Choose files", style=wxOPEN|wxMULTIPLE, wildcard=self.wildcard)
-        if dlg.ShowModal()==wxID_OK:
+        dlg=wx.FileDialog(self, "Choose files", style=wx.OPEN|wx.MULTIPLE, wildcard=self.wildcard)
+        if dlg.ShowModal()==wx.ID_OK:
             self.Freeze()
             for file in dlg.GetPaths():
                 self.OnAddFile(file)
@@ -795,12 +792,12 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
         raise Exception("not implemented")
 
     def seticonview(self):
-        self.SetSingleStyle(wxLC_REPORT, False)
-        self.SetSingleStyle(wxLC_ICON, True)
+        self.SetSingleStyle(wx.LC_REPORT, False)
+        self.SetSingleStyle(wx.LC_ICON, True)
 
     def setlistview(self):
-        self.SetSingleStyle(wxLC_ICON, False)
-        self.SetSingleStyle(wxLC_REPORT, True)
+        self.SetSingleStyle(wx.LC_ICON, False)
+        self.SetSingleStyle(wx.LC_REPORT, True)
 
     def genericpopulatefs(self, dict, key, indexkey, version):
         try:
@@ -930,17 +927,17 @@ def getext(name):
 ### A dialog showing a message in a fixed font, with a help button
 ###
 
-class MyFixedScrolledMessageDialog(wxDialog):
+class MyFixedScrolledMessageDialog(wx.Dialog):
     """A dialog displaying a readonly text control with a fixed width font"""
-    def __init__(self, parent, msg, caption, helpid, pos = wxDefaultPosition, size = (850,600)):
-        wxDialog.__init__(self, parent, -1, caption, pos, size)
+    def __init__(self, parent, msg, caption, helpid, pos = wx.DefaultPosition, size = (850,600)):
+        wx.Dialog.__init__(self, parent, -1, caption, pos, size)
 
-        text=wxTextCtrl(self, 1,
-                        style=wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 |
-                        wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP  )
+        text=wx.TextCtrl(self, 1,
+                        style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 |
+                        wx.NO_FULL_REPAINT_ON_RESIZE|wx.TE_DONTWRAP  )
         # Fixed width font
-        f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
-        ta=wxTextAttr(font=f)
+        f=wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL )
+        ta=wx.TextAttr(font=f)
         text.SetDefaultStyle(ta)
 
         text.AppendText(msg) # if i supply this in constructor then the font doesn't take
@@ -948,16 +945,16 @@ class MyFixedScrolledMessageDialog(wxDialog):
         text.ShowPosition(text.XYToPosition(0,0))
 
         # vertical sizer
-        vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add(text, 1, wxEXPAND|wxALL, 10)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(text, 1, wx.EXPAND|wx.ALL, 10)
 
         # buttons
-        vbs.Add(self.CreateButtonSizer(wxOK|wxHELP), 0, wxALIGN_RIGHT|wxALL, 10)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.HELP), 0, wx.ALIGN_RIGHT|wx.ALL, 10)
 
         # plumb
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
-        EVT_BUTTON(self, wxID_HELP, lambda _,helpid=helpid: wxGetApp().displayhelpid(helpid))
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _,helpid=helpid: wx.GetApp().displayhelpid(helpid))
 
 ###
 ###  Dialog that deals with exceptions
@@ -982,13 +979,13 @@ class ExceptionDialog(MyFixedScrolledMessageDialog):
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
 ###
 
-class MyStatusBar(wxStatusBar):
+class MyStatusBar(wx.StatusBar):
     def __init__(self, parent, id=-1):
-        wxStatusBar.__init__(self, parent, id)
+        wx.StatusBar.__init__(self, parent, id)
         self.sizechanged=False
-        EVT_SIZE(self, self.OnSize)
-        EVT_IDLE(self, self.OnIdle)
-        self.gauge=wxGauge(self, 1000, 1)
+        wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_IDLE(self, self.OnIdle)
+        self.gauge=wx.Gauge(self, 1000, 1)
         self.SetFieldsCount(4)
         self.SetStatusWidths( [200, 180, -1, -4] )
         self.Reposition()
@@ -1001,15 +998,15 @@ class MyStatusBar(wxStatusBar):
             try:
                 self.Reposition()
             except:
-                # this works around a bug in wxPython (on Windows only)
+                # this works around a bug in wx (on Windows only)
                 # where we get a bogus exception.  See SF bug
                 # 873155 
                 pass
 
     def Reposition(self):
         rect=self.GetFieldRect(1)
-        self.gauge.SetPosition(wxPoint(rect.x+2, rect.y+4))
-        self.gauge.SetSize(wxSize(rect.width-4, rect.height-4))
+        self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+4))
+        self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
         self.sizeChanged = False
 
     def progressminor(self, pos, max, desc=""):
@@ -1029,80 +1026,80 @@ class MyStatusBar(wxStatusBar):
 ###  A MessageBox with a help button
 ###
 
-class AlertDialogWithHelp(wxDialog):
+class AlertDialogWithHelp(wx.Dialog):
     """A dialog box with Ok button and a help button"""
-    def __init__(self, parent, message, caption, helpfn, style=wxDEFAULT_DIALOG_STYLE, icon=wxICON_EXCLAMATION):
-        wxDialog.__init__(self, parent, -1, caption, style=style|wxDEFAULT_DIALOG_STYLE)
+    def __init__(self, parent, message, caption, helpfn, style=wx.DEFAULT_DIALOG_STYLE, icon=wx.ICON_EXCLAMATION):
+        wx.Dialog.__init__(self, parent, -1, caption, style=style|wx.DEFAULT_DIALOG_STYLE)
 
         p=self # parent widget
 
         # horiz sizer for bitmap and text
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        hbs.Add(wxStaticBitmap(p, -1, wxArtProvider_GetBitmap(self.icontoart(icon), wxART_MESSAGE_BOX)), 0, wxCENTER|wxALL, 10)
-        hbs.Add(wxStaticText(p, -1, message), 1, wxCENTER|wxALL, 10)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticBitmap(p, -1, wx.ArtProvider_GetBitmap(self.icontoart(icon), wx.ART_MESSAGE_BOX)), 0, wx.CENTER|wx.ALL, 10)
+        hbs.Add(wx.StaticText(p, -1, message), 1, wx.CENTER|wx.ALL, 10)
 
         # the buttons
-        buttsizer=self.CreateButtonSizer(wxHELP|style)
+        buttsizer=self.CreateButtonSizer(wx.HELP|style)
 
         # Both vertical
-        vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add(hbs, 1, wxEXPAND|wxALL, 10)
-        vbs.Add(buttsizer, 0, wxCENTER|wxALL, 10)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 10)
+        vbs.Add(buttsizer, 0, wx.CENTER|wx.ALL, 10)
 
         # wire it in
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
 
-        EVT_BUTTON(self, wxID_HELP, helpfn)
+        wx.EVT_BUTTON(self, wx.ID_HELP, helpfn)
 
     def icontoart(self, id):
-        if id&wxICON_EXCLAMATION:
-            return wxART_WARNING
-        if id&wxICON_INFORMATION:
-            return wxART_INFORMATION
+        if id&wx.ICON_EXCLAMATION:
+            return wx.ART_WARNING
+        if id&wx.ICON_INFORMATION:
+            return wx.ART_INFORMATION
         # ::TODO:: rest of these
         # fallthru
-        return wxART_INFORMATION
+        return wx.ART_INFORMATION
 
 ###
 ### Yet another dialog with user selectable buttons
 ###
 
-class AnotherDialog(wxDialog):
+class AnotherDialog(wx.Dialog):
     """A dialog box with user supplied buttons"""
     def __init__(self, parent, message, caption, buttons, helpfn=None,
-                 style=wxDEFAULT_DIALOG_STYLE, icon=wxICON_EXCLAMATION):
+                 style=wx.DEFAULT_DIALOG_STYLE, icon=wx.ICON_EXCLAMATION):
         """Constructor
 
         @param message:  Text displayed in body of dialog
         @param caption:  Title of dialog
         @param buttons:  A list of tuples.  Each tuple is a string and an integer id.
                          The result of calling ShowModal() is the id
-        @param helpfn:  The function called if the user presses the help button (wxID_HELP)
+        @param helpfn:  The function called if the user presses the help button (wx.ID_HELP)
         """
-        wxDialog.__init__(self, parent, -1, caption, style=style)
+        wx.Dialog.__init__(self, parent, -1, caption, style=style)
 
         p=self # parent widget
 
         # horiz sizer for bitmap and text
-        hbs=wxBoxSizer(wxHORIZONTAL)
-        hbs.Add(wxStaticBitmap(p, -1, wxArtProvider_GetBitmap(self.icontoart(icon), wxART_MESSAGE_BOX)), 0, wxCENTER|wxALL, 10)
-        hbs.Add(wxStaticText(p, -1, message), 1, wxCENTER|wxALL, 10)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticBitmap(p, -1, wx.ArtProvider_GetBitmap(self.icontoart(icon), wx.ART_MESSAGE_BOX)), 0, wx.CENTER|wx.ALL, 10)
+        hbs.Add(wx.StaticText(p, -1, message), 1, wx.CENTER|wx.ALL, 10)
 
         # the buttons
-        buttsizer=wxBoxSizer(wxHORIZONTAL)
+        buttsizer=wx.BoxSizer(wx.HORIZONTAL)
         for label,id in buttons:
-            buttsizer.Add( wxButton(self, id, label), 0, wxALL|wxALIGN_CENTER, 5)
-            if id!=wxID_HELP:
-                EVT_BUTTON(self, id, self.OnButton)
+            buttsizer.Add( wx.Button(self, id, label), 0, wx.ALL|wx.ALIGN_CENTER, 5)
+            if id!=wx.ID_HELP:
+                wx.EVT_BUTTON(self, id, self.OnButton)
             else:
-                EVT_BUTTON(self, wxID_HELP, helpfn)
+                wx.EVT_BUTTON(self, wx.ID_HELP, helpfn)
                 
         # Both vertical
-        vbs=wxBoxSizer(wxVERTICAL)
-        vbs.Add(hbs, 1, wxEXPAND|wxALL, 10)
-        vbs.Add(buttsizer, 0, wxCENTER|wxALL, 10)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 10)
+        vbs.Add(buttsizer, 0, wx.CENTER|wx.ALL, 10)
 
         # wire it in
         self.SetSizer(vbs)
@@ -1113,10 +1110,10 @@ class AnotherDialog(wxDialog):
         self.EndModal(event.GetId())
 
     def icontoart(self, id):
-        if id&wxICON_EXCLAMATION:
-            return wxART_WARNING
-        if id&wxICON_INFORMATION:
-            return wxART_INFORMATION
+        if id&wx.ICON_EXCLAMATION:
+            return wx.ART_WARNING
+        if id&wx.ICON_INFORMATION:
+            return wx.ART_INFORMATION
         # ::TODO:: rest of these
         # fallthru
-        return wxART_INFORMATION
+        return wx.ART_INFORMATION
