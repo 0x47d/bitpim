@@ -85,7 +85,7 @@ class BrewProtocol:
         if reset:
             req=p_brew.setmoderequest()
             req.request=2
-            self.log("Reseting phone")
+            self.log("Resetting phone")
             self.sendbrewcommand(req, p_brew.setmoderesponse)
             
 
