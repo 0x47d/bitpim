@@ -66,11 +66,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         pbook={}
         # Get Sort buffer so we know which of the 300 phone book slots
         # are in use.
-        buf=prototypes.buffer(self.getsanyobuffer(0x3c, 0x43, "sort buffer"))
         sortstuff=p_sanyo.pbsortbuffer()
+        buf=prototypes.buffer(self.getsanyobuffer(sortstuff.startcommand, sortstuff.bufsize, "sort buffer"))
         sortstuff.readfrombuffer(buf)
-        buf=prototypes.buffer(self.getsanyobuffer(0x46, 0x47, "ringer/picture assignments"))
+
         ringpic=p_sanyo.ringerpicbuffer()
+        buf=prototypes.buffer(self.getsanyobuffer(ringpic.startcommand, ringpic.bufsize, "ringer/picture assignments"))
         ringpic.readfrombuffer(buf)
 
         speedslot=[]
@@ -207,25 +208,25 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         return res
 
     def savephonebook(self, data):
-        # We overwrite the phonebook in the phone with the data.
+        # Overwrite the phonebook in the phone with the data.
         # As we write the phone book slots out, we need to build up
         # the indices in the callerid, ringpic and pbsort buffers.
         # We could save some writing by reading the phonebook slots first
         # and then only writing those that are different, but all the buffers
         # would still need to be written.
         #
-        # Rightnow there is not distinguishing between add and replace
         newphonebook={}
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW) # see note in getphonebook in com_lgvx4400 for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
 
+###
+### Create Sanyo buffers and Initialize lists
+###
         sortstuff=p_sanyo.pbsortbuffer()
         ringpic=p_sanyo.ringerpicbuffer()
         callerid=p_sanyo.calleridbuffer()
-###
-### Initialize lists
-###
+
         for i in range(sortstuff.numpbslots):
             sortstuff.usedflags.append(0)
             sortstuff.firsttypes.append(0)
@@ -252,13 +253,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
         callerid.numentries=0
         
-        pbook=data['phonephonebook']
+        pbook=data['phonephonebook'] # Get converted phonebook
         self.log("Putting phone into write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=1 # Start update
-        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
+        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse, writemode=True)
 
-        time.sleep(1)
+        time.sleep(1)  # Wait a little bit to make sure phone is ready
         
         keys=pbook.keys()
         keys.sort()
@@ -268,25 +269,27 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         sortstuff.numurl=0
 
         progresscur=0
-        progressmax=len(keys)+2+8+14 # Include the buffers
+        progressmax=len(keys)
         self.log("Writing %d entries to phone" % (len(keys),))
         nlongphonenumbers=0
-        for i in keys:
-            ii=pbook[i]
+        for ikey in keys:
+            ii=pbook[ikey]
             slot=ii['slot'] # Or should we just use i for the slot
             # Will depend on Profile to keep the serial numbers in range
             progresscur+=1
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            self.log("Writing entry "+`i`+" - "+ii['name'])
+            self.log("Writing entry "+`ikey`+" - "+ii['name'])
             entry=self.makeentry(ii, data)
             req=p_sanyo.phonebookslotupdaterequest()
             req.entry=entry
-            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
-            time.sleep(.10)
+            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse, writemode=True)
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
             sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
 # Fill in Caller ID buffer
+# Want to move this out of this loop.  Callerid buffer is 500 numbers, but
+# can potentially hold 2100 numbers.  Would like to preferentially put the
+# first number for each name in this buffer
             for i in range(len(ii['numbers'])):
                 nindex=ii['numbertypes'][i]
                 speeddial=ii['speeddials'][i]
@@ -315,7 +318,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                     
         # Sort Names, Emails and Urls for the sort buffer
         # The phone sorts case insensitive and puts numbers after the
-        # letters.  Yuk.
+        # letters.
         i=0
         sortstuff.pbfirstletters=""
         keys=namemap.keys()
@@ -348,32 +351,31 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         buffer=prototypes.buffer()
         sortstuff.writetobuffer(buffer)
         self.logdata("Write sort buffer", buffer.getvalue(), sortstuff)
-        self.sendsanyobuffer(buffer.getvalue(),0x3c,"sort buffer")
-        time.sleep(.1)
+        self.sendsanyobuffer(buffer.getvalue(),sortstuff.startcommand,"sort buffer")
 
         buffer=prototypes.buffer()
         ringpic.writetobuffer(buffer)
         self.logdata("Write ringer picture buffer", buffer.getvalue(), ringpic)
-        self.sendsanyobuffer(buffer.getvalue(),0x46,"ringer/pictures assignments")
-        time.sleep(.1)
+        self.sendsanyobuffer(buffer.getvalue(),ringpic.startcommand,"ringer/pictures assignments")
         
         buffer=prototypes.buffer()
         callerid.writetobuffer(buffer)
         self.logdata("Write caller id buffer", buffer.getvalue(), callerid)
-        self.sendsanyobuffer(buffer.getvalue(),0x50,"callerid")
-        time.sleep(.1)
+        self.sendsanyobuffer(buffer.getvalue(),callerid.startcommand,"callerid")
+
+        time.sleep(1.0)
 
         self.log("Taking phone out of write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=2 # Stop update
-        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
-        self.log("Please exit BITPIM and power cycle the phone")
+        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse, writemode=True)
+        self.log("Please wait for phone to restart before doing other phone operations")
         del data['phonephonebook']
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
         
-        numstripped=re.sub("[^0-9HT#*]", "", number)
+        numstripped=re.sub("[^0-9PT#*]", "", number)
         numonly=re.sub("^(\\d*).*$", "\\1", numstripped)
 
         cidentry=p_sanyo.calleridentry()
