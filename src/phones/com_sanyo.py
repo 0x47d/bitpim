@@ -425,7 +425,7 @@ class SanyoPhonebook:
         for i in range(100):
             req=self.protocolclass.statusrequest()
             res=self.sendpbcommand(req, self.protocolclass.statusresponse)
-            # print res.flag1, res.ready, res.flag3
+            # print res.flag0, res.ready, res.flag2, res.flag3
             if res.ready==res.readyvalue:
                 return
             time.sleep(0.1)
@@ -509,6 +509,7 @@ class SanyoPhonebook:
             entry=self.makeentry(ii, data)
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=entry
+            self.writewait()
             res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse, writemode=True)
             # Put entry into newphonebooks
             entry=self.extractphonebookentry(entry, data)
