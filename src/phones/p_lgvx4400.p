@@ -13,6 +13,9 @@
 
 from prototypes import *
 
+# Make all lg stuff available in this module as well
+from p_lg import *
+
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
@@ -21,18 +24,15 @@ BOOL=BOOLlsb
 
 # All STRINGS have raiseonterminatedread as False since the phone does
 # occassionally leave out the terminator byte
-PACKET readphoneentryresponse:
+PACKET pbreadentryresponse:
     "Results of reading one entry"
     P  UINT {'constant': 3} numberofemails
     P  UINT {'constant': 5} numberofphonenumbers
-    1  UINT {'constant': 0xff} pbcommand
-    1  UINT {'constant': 0x13} readphoneentrycommand
-    1  UINT sequence
-    1  UINT flag
+    *  pbheader header
     4  UINT serial1
     2  UINT {'constant': 0x0202} entrysize
     4  UINT serial2
-    2  UINT entrynumber
+    2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': self.numberofemails} emails:

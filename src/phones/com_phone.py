@@ -19,7 +19,7 @@ import time
 # when trying to setmode, we ignore various exception types
 # since the types are platform specific (eg on windows we get pywintypes.error)
 # so we have to construct the list here of which ones we ignore
-modeignoreerrortypes=[ commport.CommTimeout ]
+modeignoreerrortypes=[ commport.CommTimeout,common.CommsDeviceNeedsAttention ]
 try:
     import pywintypes
     modeignoreerrortypes.append(pywintypes.error)
@@ -102,3 +102,16 @@ class Phone:
         self.raisecommsexception("transitioning mode from %s to %s" \
                                  % (strmode, strdesiredmode))
         
+
+    def _setmodemodem(self):
+        for baud in (0, 115200, 38400, 19200, 230400):
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            self.comm.write("AT\r\n")
+            try:
+                self.comm.readsome()
+                return 1
+            except com_phone.modeignoreerrortypes:
+                pass
+        return 0        
