@@ -15,7 +15,7 @@ import com_brew
 import com_phone
 import common
 import commport
-from string import split,strip,atoi,join
+# from string import split,strip,atoi,join
 import time
 import re
 from DSV import DSV
@@ -100,7 +100,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
 	    s=self.comm.sendatcommand("+gsn")
 	    if len(s):
-	        return split(s[0], ": ")[1]
+	        return s[0].split(": ")[1]
 	except commport.ATError:
             pass
         return ''
@@ -112,7 +112,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             try:
                 s=self.comm.sendatcommand("#PBGRR=%d" % i)
                 if len(s):
-                    g.append(strip(split(split(s[0],": ")[1],",")[1], '"'))
+                    g.append(s[0].split(': ')[1].split(',')[1].strip('"'))
                 else:
                     g.append('')
             except commport.ATError:
@@ -171,7 +171,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def extract_timedate(self, td):
         # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
-        return (atoi(td[:4]), atoi(td[4:6]), atoi(td[6:8]), atoi(td[9:11]), atoi(td[11:13]))
+        return (int(td[:4]), int(td[4:6]), int(td[6:8]), int(td[9:11]), int(td[11:13]))
 
     def encode_timedate(self, td):
         # reverse if extract_timedate
@@ -372,7 +372,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
             # and save it
             self.progress(cal_cnt+1, l, "Updating "+name)
-            if not self.save_calendar_entry(join(e, ",")):
+            if not self.save_calendar_entry(",".join(e)):
                 self.log("Failed to save item: "+name)
             else:
                 cal_cnt += 1

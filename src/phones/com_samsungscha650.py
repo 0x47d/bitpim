@@ -190,17 +190,17 @@ class Phone(com_samsung.Phone):
                           'serial1': entry[self.__pb_entry],
                           'serial2': entry[self.__pb_mem_loc] }]
         # only one name
-        res['names']=[ {'full': strip(entry[self.__pb_name], '"') } ]
+        res['names']=[ {'full': entry[self.__pb_name].strip('"') } ]
         if len(entry[self.__pb_alias]):
                res['names'][0]['nickname']=entry[self.__pb_alias]
 
         # only one category
         g=fundamentals['groups']
-        i=atoi(entry[self.__pb_group])
+        i=int(entry[self.__pb_group])
         res['categories']=[ {'category': g[i]['name'] } ]
 
         # emails
-        s=strip(entry[self.__pb_email], '"')
+        s=entry[self.__pb_email].strip('"')
         if len(s):
                res['emails']=[ { 'email': s } ]
 
@@ -211,14 +211,14 @@ class Phone(com_samsung.Phone):
 
         # ringtones
         try:
-            res['ringtones']=[ { 'ringtone': self.builtinringtones[atoi(entry[self.__pb_ringtone])],
+            res['ringtones']=[ { 'ringtone': self.builtinringtones[int(entry[self.__pb_ringtone])],
                              'use': 'call' } ]
         except:
             res['ringtones']=[ { 'ringtone': self.builtinringtones[0],
                                 'use': 'call' } ]
 
         # numbers
-        speed_dial=atoi(entry[self.__pb_speed_dial])
+        speed_dial=int(entry[self.__pb_speed_dial])
         res['numbers']=[]
         for k, n in enumerate(self.__pb_numbers):
             for key in n:
@@ -226,7 +226,7 @@ class Phone(com_samsung.Phone):
                     if speed_dial==k:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key,
-                                        'speeddial': atoi(entry[self.__pb_mem_loc])})
+                                        'speeddial': int(entry[self.__pb_mem_loc])})
                     else:
                         res['numbers'].append({ 'number': entry[n[key]],
                                         'type': key })
@@ -277,8 +277,8 @@ class Phone(com_samsung.Phone):
                     found=True
                     break
             if found:
-                pb_locs[atoi(current_pb[k1]['serials'][0]['serial1'])]=True
-                pb_mem[atoi(current_pb[k1]['serials'][0]['serial2'])]=True
+                pb_locs[int(current_pb[k1]['serials'][0]['serial1'])]=True
+                pb_mem[int(current_pb[k1]['serials'][0]['serial2'])]=True
             else:
                 self.log("Deleted item: "+current_pb[k1]['names'][0]['full'])
                 # delete the entries from data and the phone
@@ -419,7 +419,7 @@ class Phone(com_samsung.Phone):
     def _update_speeddial(self, pb_entry):
         try:
             s=self._my_serials(pb_entry)
-            s1=atoi(s['serial2'])
+            s1=int(s['serial2'])
             sd=self._get_speeddial(pb_entry)
             if not sd:
                 # speed dial not set, set it to current mem slot
@@ -589,7 +589,7 @@ class Phone(com_samsung.Phone):
 
         # final check to determine if this entry has changed.
         # if it has not then do nothing and just return
-        ee=self.get_phone_entry(atoi(e[self.__pb_entry]))
+        ee=self.get_phone_entry(int(e[self.__pb_entry]))
         if len(ee):
             # DSV took the " out, need to put them back in for comparison
             ee[self.__pb_name]='"'+ee[self.__pb_name]+'"'
@@ -598,7 +598,7 @@ class Phone(com_samsung.Phone):
             if e[0:k]==ee[0:k]:
                 return True
 
-        return self.save_phone_entry('0,'+join(e,','))
+        return self.save_phone_entry('0,'+','.join(e))
 
     def getringtones(self, result):
         result[self.__ringtone_info[1]]=self.get_builtin_ringtone_index()
