@@ -24,6 +24,7 @@ import p_lg
 import p_lgvx4400
 import p_brew
 import p_lgtm520
+import p_sanyo
 
 import hexeditor
 
@@ -130,11 +131,13 @@ class Analyser(wx.Frame):
                 klass=eval(curclass)
             except Exception,e:
                 self.errorme("Finding class",e)
+                wx.TipWindow(self.tree,self.errorinfo)
                 return
             try:
                 obj=klass()
             except Exception,e:
                 self.errorme("Instantiating object",e)
+                wx.TipWindow(self.tree,self.errorinfo)
                 return
 
             try:
