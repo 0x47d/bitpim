@@ -12,7 +12,7 @@ import os
 
 # wxPython modules
 from wxPython.wx import *
-from wxPython.lib.dialogs import wxScrolledMessageDialog
+from wxPython.lib.dialogs import wxScrolledMessageDialog 
 
 # my modules
 import guiwidgets
