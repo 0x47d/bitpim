@@ -611,7 +611,7 @@ if __name__=='__main__':
     fn=os.path.splitext(fn)[0]
     f=open(sys.argv[1], "rt")
     tokens=tokenize.generate_tokens(f.readline)
-    tt=protogentokenizer(tokens, "_gen_"+fn)
+    tt=protogentokenizer(tokens, "_gen_"+fn+"_")
     f2=open(sys.argv[2], "wt")
     cg=codegen(tt)
     f2.write(cg.gencode())
