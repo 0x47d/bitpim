@@ -240,6 +240,7 @@ class ConfigDialog(wxDialog):
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wxComboBox(self, -1, "LG-VX4400", style=wxCB_DROPDOWN|wxCB_READONLY,choices=keys)
+        self.phonebox.SetValue("LG-VX4400")
         gs.Add( self.phonebox, 0, wxEXPAND)
 
         bs=wxBoxSizer(wxVERTICAL)
