@@ -408,9 +408,13 @@ class MainWindow(wxFrame):
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
         self.tb=self.CreateToolBar(wxTB_HORIZONTAL)
-        self.tb.AddSimpleTool(ID_FV_LIST, getbitmap('listview'), "List View", "View items as a list")
-        self.tb.AddSimpleTool(ID_FV_ICONS, getbitmap('report'), "Icon View", "View items as icons")
-        # dunno why this call has to be there, but without it the toolbar doesn't draw
+        sz=self.tb.GetToolBitmapSize()
+        # The art names are the opposite way round than people would normally describe ...
+        self.tb.AddSimpleTool(ID_FV_LIST, wxArtProvider_GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, sz),
+                              "List View", "View items as a list")
+        self.tb.AddSimpleTool(ID_FV_ICONS, wxArtProvider_GetBitmap(wxART_LIST_VIEW, wxART_TOOLBAR, sz),
+                              "Icon View", "View items as icons")
+        # You have to make this call for the toolbar to draw itself properly
         self.tb.Realize()
 
         ### logwindow (last notebook tab)
