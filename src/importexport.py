@@ -28,6 +28,7 @@ import common
 import guihelper
 import vcard
 import phonenumber
+import guiwidgets
 
 # control
 def GetPhonebookImports():
@@ -129,7 +130,7 @@ class ImportDialog(wx.Dialog):
 
     def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
-        wx.Dialog.__init__(self, parent, id=id, title=title, style=style, size=(640,480))
+        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
         
         vbs=wx.BoxSizer(wx.VERTICAL)
         t,sz=self.gethtmlhelp()
@@ -153,6 +154,7 @@ class ImportDialog(wx.Dialog):
         hbs.Add(self.waddress, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE,7)
         self.wemail=wx.CheckBox(self, wx.NewId(), "an email")
         hbs.Add(self.wemail, 0, wx.LEFT|wx.ALIGN_CENTRE,7)
+        self.categorieswanted=None
         self.categoriesbutton=wx.Button(self, wx.NewId(), "Categories...")
         hbs.Add(self.categoriesbutton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTRE, 10)
         self.categorieslabel=wx.StaticText(self, -1, "*ALL*")
@@ -170,12 +172,15 @@ class ImportDialog(wx.Dialog):
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
         vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
         self.SetSizer(vbs)
-        self.SetAutoLayout(True)
         for w in self.wname, self.wnumber, self.waddress, self.wemail:
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
 
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        wx.EVT_CLOSE(self, self.OnClose)
         wx.EVT_BUTTON(self, self.categoriesbutton.GetId(), self.OnCategories)
+
+        guiwidgets.set_size("importdialog", self, 90)
+        
         self.DataNeedsUpdate()
 
     def DataNeedsUpdate(self, _=None):
@@ -189,6 +194,10 @@ class ImportDialog(wx.Dialog):
         self.wcolumnsname.SetValue("Custom")
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
+
+    def OnClose(self, event):
+        guiwidgets.save_size("importdialog", self.GetRect())
+        event.Skip()
 
     def OnOk(self,_):
         "Ok button was pressed"
@@ -385,7 +394,12 @@ class ImportDialog(wx.Dialog):
 
 
     def OnCategories(self, _):
-        # find all categories in current data
+        # find all categories in current unfiltered data
+        savedcolumns,saveddata=self.columns, self.data
+        if self.categorieswanted is not None:
+            # we have to re-read the data if currently filtering categories!  This is
+            # because it would contain only the currently selected categories.
+            self.ReReadData()  
         catfn=self.GetExtractCategoriesFunction()
         cats=[]
         for row in self.data:
@@ -395,7 +409,16 @@ class ImportDialog(wx.Dialog):
         cats.sort()
         if len(cats) and cats[0]=="":
             cats=cats[1:]
-        
+        self.columns,self.data=savedcolumns, saveddata
+        dlg=CategorySelectorDialog(self, self.categorieswanted, cats)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.categorieswanted=dlg.GetCategories()
+            if self.categorieswanted is None:
+                self.categorieslabel.SetLabel("*ALL*")
+            else:
+                self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
+            self.DataNeedsUpdate()
+        dlg.Destroy()
     
     def UpdateData(self):
         "Actually update the preview data"
@@ -408,7 +431,18 @@ class ImportDialog(wx.Dialog):
             wx.Yield() # so the cursor can be displayed
             # reread the data
             self.ReReadData()
-            # now filter the data if needed
+            # category filtering
+            if self.categorieswanted is not None:
+                newdata=[]
+                catfn=self.GetExtractCategoriesFunction()
+                for row in self.data:
+                    for cat in catfn(row):
+                        if cat in self.categorieswanted:
+                            newdata.append(row)
+                            break
+                self.data=newdata
+                    
+            # name/number/address/email filtering
             if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
                 newdata=[]
                 for rownum in range(len(self.data)):
@@ -516,6 +550,54 @@ def _getpreviewformatted(value, column):
             print "don't know how to convert list",value,"for preview column",column
             assert False
     return common.strorunicode(value)
+
+
+class CategorySelectorDialog(wx.Dialog):
+
+    def __init__(self, parent, categorieswanted, categoriesavailable):
+        wx.Dialog.__init__(self, parent, title="Import Category Selector", style=wx.CAPTION|wx.MAXIMIZE_BOX|\
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER) #, size=(640,480))
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.selected=wx.RadioButton(self, wx.NewId(), "Selected Below", style=wx.RB_GROUP)
+        self.any=wx.RadioButton(self, wx.NewId(), "Any/All")
+        hbs.Add(self.selected, 0, wx.ALL, 5)
+        hbs.Add(self.any, 0, wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.ALL, 5)
+
+        self.categoriesavailable=categoriesavailable
+        self.cats=wx.CheckListBox(self, wx.NewId(), choices=categoriesavailable)
+        vbs.Add(self.cats, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+
+        if categorieswanted is None:
+            self.any.SetValue(True)
+            self.selected.SetValue(False)
+        else:
+            self.any.SetValue(False)
+            self.selected.SetValue(True)
+            for c in categorieswanted:
+                try:
+                    self.cats.Check(categoriesavailable.index(c))
+                except ValueError:
+                    pass # had one selected that wasn't in list
+
+        wx.EVT_CHECKLISTBOX(self, self.cats.GetId(), self.OnCatsList)
+
+        self.SetSizer(vbs)
+        vbs.Fit(self)
+
+    def OnCatsList(self, _):
+        self.any.SetValue(False)
+        self.selected.SetValue(True)
+
+    def GetCategories(self):
+        if self.any.GetValue():
+            return None
+        return [self.categoriesavailable[x] for x in range(len(self.categoriesavailable)) if self.cats.IsChecked(x)]
+
+
 
 class ImportCSVDialog(ImportDialog):
 
