@@ -94,13 +94,11 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
 
 class Profile(com_sanyo.Profile):
 
-    protocolclass=p_sanyo8100
-    serialsname='scp8100'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
 
     WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=144
-    # WALLPAPER_WIDTH=120
-    # WALLPAPER_HEIGHT=132
     OVERSIZE_PERCENTAGE=100
 
     _supportedsyncs=(
