@@ -62,31 +62,13 @@ class Phone(com_lgvx4400.Phone):
     builtinimages= ('Beach Ball', 'Towerbridge', 'Sunflower', 'Beach',
                     'Fish', 'Sea', 'Snowman')
 
-    builtinringtones= ('Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5', 'Ring 6',
-                       'Annen Polka', 'Leichte Kavallerie Overture',
-                       'Beethoven Symphony No. 9', 'Paganini', 'Bubble', 'Fugue',
-                       'Polka', 'Mozart Symphony No. 40', 'Cuckoo Waltz', 'Rodetzky',
-                       'Funicula', 'Hallelujah', 'Trumpets', 'Trepak', 'Prelude', 'Mozart Aria',
-                       'William Tell overture', 'Spring', 'Slavonic', 'Fantasy')
-                       
+    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps') + \
+                      tuple(['Ringtone '+`n` for n in range(1,11)]) + \
+                      ('No Ring',)
     
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
         self.mode=self.MODENONE
-
-    def getcameraindex(self):
-        buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
-        index={}
-        g=self.protocolclass.campicsdat()
-        g.readfrombuffer(buf)
-        for i in g.items:
-            if len(i.name):
-                # index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
-                # we currently use the filesystem name rather than rename in camera
-                # since the latter doesn't include the file extension which then makes
-                # life less pleasant once the file ends up on the computer
-                index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
-        return index
 
 class Profile(com_lgvx4400.Profile):
     protocolclass=Phone.protocolclass
@@ -96,7 +78,7 @@ class Profile(com_lgvx4400.Profile):
     WALLPAPER_HEIGHT=131
     MAX_WALLPAPER_BASENAME_LENGTH=36
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 ."
-    WALLPAPER_CONVERT_FORMAT="bmp"
+    WALLPAPER_CONVERT_FORMAT="jpg"
    
     MAX_RINGTONE_BASENAME_LENGTH=36
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 ."

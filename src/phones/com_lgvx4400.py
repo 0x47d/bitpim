@@ -141,8 +141,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
         problemsdetected=False
         dupecheck={}
-        for i in range(0, numentries):
-            ### Read current entry
+        for i in xrange(0, numentries):
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
@@ -576,7 +575,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         if  'memo' in entry.getfields() and len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
-        if entry.wallpaper>0:
+        if entry.wallpaper!=self.protocolclass._NOWALLPAPER:
             try:
                 paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
                 res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
@@ -586,13 +585,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             
         # ringtones
         res['ringtones']=[]
-        if 'ringtone' in entry.getfields() and entry.ringtone>0:
+        if 'ringtone' in entry.getfields() and entry.ringtone!=self.protocolclass._NORINGTONE:
             try:
                 tone=fundamentals['ringtone-index'][entry.ringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'call'})
             except:
                 print "can't find ringtone for index",entry.ringtone
-        if 'msgringtone' in entry.getfields() and entry.msgringtone>0:
+        if 'msgringtone' in entry.getfields() and entry.msgringtone!=self.protocolclass._NOMSGRINGTONE:
             try:
                 tone=fundamentals['ringtone-index'][entry.msgringtone]['name']
                 res['ringtones'].append({'ringtone': tone, 'use': 'message'})
@@ -621,13 +620,19 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         return res
 
     def _findmediainindex(self, index, name, pbentryname, type):
+        if type=="ringtone": default=self.protocolclass._NORINGTONE
+        elif type=="message ringtone": default=self.protocolclass._NOMSGRINGTONE
+        elif type=="wallpaper": default=self.protocolclass._NOWALLPAPER
+        else:
+            assert False, "unknown type "+type
+            
         if name is None:
-            return 0
+            return default
         for i in index:
             if index[i]['name']==name:
                 return i
         self.log("%s: Unable to find %s %s in the index. Setting to default." % (pbentryname, type, name))
-        return 0
+        return default
                     
     def makeentry(self, counter, entry, data):
         """Creates pbentry object

@@ -24,6 +24,10 @@ from p_lgvx4400 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NORINGTONE=65535 # -1 in two bytes
+_NOMSGRINGTONE=65535 # -1 in two bytes 
+_NOWALLPAPER=0 # of course it wouldn't be 65535 ...
+
 _NUMSPEEDDIALS=100
 _FIRSTSPEEDDIAL=2
 _LASTSPEEDDIAL=99
@@ -34,7 +38,7 @@ _NUMEMAILS=2
 _NUMPHONENUMBERS=5
 
 # The numbertype tab is different than all other LG phones
-numbertypetab= ( None, 'cell', 'home', 'office', 'cell2', 'fax' )
+numbertypetab= ( None, 'cell', 'home', 'office', 'cell2', 'fax', 'none')
 
 %}
 

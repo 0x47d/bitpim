@@ -29,6 +29,10 @@ _MAXCALENDARDESCRIPTION=38
 _NUMEMAILS=3
 _NUMPHONENUMBERS=5
 
+_NORINGTONE=0
+_NOMSGRINGTONE=0
+_NOWALLPAPER=0
+
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
 
