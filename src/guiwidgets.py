@@ -1474,17 +1474,19 @@ class ExceptionDialog(wx.Dialog):
 ###
 
 class MyStatusBar(wx.StatusBar):
-    __total_panes=6
-    __version_index=0
-    __phone_model_index=1
-    __app_status_index=2
-    __gauge_index=3
-    __major_progress_index=4
-    __minor_progress_index=5
-    __help_str_index=5
-    __pane_width=[200, 220, 50, 180, -1, -4]
+    __total_panes=3
+    __version_index=2
+    __phone_model_index=2
+    __app_status_index=0
+    __gauge_index=1
+    __major_progress_index=2
+    __minor_progress_index=2
+    __help_str_index=2
+    __general_pane=2
+    __pane_width=[50, 180, -1]
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
+        self.__major_progress_text=self.__version_text=self.__phone_text=''
         self.sizechanged=False
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
@@ -1497,6 +1499,8 @@ class MyStatusBar(wx.StatusBar):
         self.sizechanged=True
 
     def OnIdle(self,_):
+        if not len(self.GetStatusText(self.__general_pane)):
+            self.__set_version_phone_text()
         if self.sizechanged:
             try:
                 self.Reposition()
@@ -1515,39 +1519,40 @@ class MyStatusBar(wx.StatusBar):
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
         self.gauge.SetValue(pos)
-        self.SetStatusText(desc, self.__minor_progress_index)
+        if len(self.__major_progress_text):
+            s=self.__major_progress_text
+            if len(desc):
+                s+=' - '+desc
+        else:
+            s=desc
+        self.SetStatusText(s, self.__minor_progress_index)
 
     def progressmajor(self, pos, max, desc=""):
-        self.progressminor(0,1)
         if len(desc) and max:
-            str="%d/%d %s" % (pos+1, max, desc)
+            self.__major_progress_text="%d/%d %s" % (pos+1, max, desc)
         else:
-            str=desc
-        self.SetStatusText(str, self.__major_progress_index)
+            self.__major_progress_text=desc
+        self.progressminor(0,1)
 
-    def __adjust_and_set_field(self, string, pane):
-        dc=wx.ClientDC(self)
-        (w,h)=dc.GetTextExtent(string)
-        if guihelper.IsMac():
-            self.__pane_width[pane]=w+8
-        else:
-            self.__pane_width[pane]=w
-        self.SetStatusWidths(self.__pane_width)
-        self.SetStatusText(string, pane)
     def GetHelpPane(self):
         return self.__help_str_index
     def set_app_status(self, str=''):
         self.SetStatusText(str, self.__app_status_index)
     def set_phone_model(self, str=''):
-        self.__adjust_and_set_field(str, self.__phone_model_index)
+        self.__phone_text=str
+        self.__set_version_phone_text()
     def set_versions(self, current, latest=''):
         s='BitPim '+current
         if len(latest):
             s+='/Latest '+latest
         else:
             s+='/Latest <Unknown>'
-        self.__adjust_and_set_field(s, self.__version_index)
-
+        self.__version_text=s
+        self.__set_version_phone_text()
+    def __set_version_phone_text(self):
+        self.SetStatusText(\
+            self.__version_text+'\t'+self.__phone_text,
+            self.__general_pane)
 ###
 ###  A MessageBox with a help button
 ###
