@@ -122,6 +122,14 @@ wabmodule* Initialize(bool enableprofiles, const char *filename)
   return new wabmodule(hModule, openfn, lpaddrbook, lpwabobject);
 }
 
+void wabmodule::FreeObject(LPSRowSet rows)
+{
+  if (!rows) return;
+  for (unsigned int row=0; row<rows->cRows; row++)
+    wabobject->FreeBuffer(rows->aRow[row].lpProps);
+  wabobject->FreeBuffer(rows);
+}
+
 entryid* wabmodule::getpab()
 {
   ULONG cbpabeid;
@@ -196,6 +204,28 @@ int wabtable::getrowcount()
   return (int)l;
 }
 
+wabrow* wabtable::getnextrow()
+{
+  LPSRowSet rowset;
+  HRESULT hr=table->QueryRows(1,0, &rowset);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to get next row");
+      return NULL;
+    }
+  return new wabrow(module, rowset);
+}
+
+wabrow::~wabrow()
+{
+  module.FreeObject(rowset);
+}
+
+bool wabrow::IsEmpty()
+{
+  return rowset->cRows==0;
+}
+
 // see mapitypes.h for these names and ranges
 
 static struct { ULONG id; const char* name; }  propnames[]={
@@ -223,7 +253,7 @@ static char*propbuffy=NULL;
 
 const char *property_name(unsigned id)
 {
-  const int buflen=256;
+  const int buflen=4096;
 
   unsigned i=0;
   do
@@ -285,21 +315,23 @@ const char *property_name(unsigned id)
 
 static char *valuebuffy=NULL;
 
-const char *value(unsigned int type, const union _PV &value)
+const char *property_value(unsigned int type, const union _PV &value)
 {
-  const int buflen=4096;
+  const int buflen=65536;
   if (!valuebuffy)
     valuebuffy=(char*)malloc(buflen);
 
   if (type==PT_I2 || type==PT_SHORT)
-    snprintf(valuebuffy, buflen, "<short>: %d", (int)value.i);
+    snprintf(valuebuffy, buflen, "int:%d", (int)value.i);
   else if (type==PT_I4 || type==PT_LONG)
-    snprintf(valuebuffy, buflen, "<long>: %ld", value.l);
+    snprintf(valuebuffy, buflen, "int:%ld", value.l);
   else if (type==PT_BOOLEAN)
-    snprintf(valuebuffy, buflen, "<boolean>: %d", (int)value.b);
+    snprintf(valuebuffy, buflen, "bool:%d", (int)value.b);
   else if (type==PT_STRING8)
-    snprintf(valuebuffy, buflen, "<string>: %s", value.lpszA);
-#define tt(t) else if (type==t) snprintf(valuebuffy, buflen, "<%s>", #t)
+    snprintf(valuebuffy, buflen, "string:%s", value.lpszA);
+  else if (type==PT_BINARY)
+    snprintf(valuebuffy, buflen, "binary:%lu,%lu", (unsigned long)value.bin.lpb, (unsigned long)value.bin.cb);
+#define tt(t) else if (type==t) snprintf(valuebuffy, buflen, "%s:", #t)
   tt(PT_FLOAT);
   tt(PT_R4);
   tt(PT_R8);
@@ -307,7 +339,6 @@ const char *value(unsigned int type, const union _PV &value)
   tt(PT_CURRENCY);
   tt(PT_APPTIME);
   tt(PT_SYSTIME);
-  tt(PT_BINARY);
   tt(PT_UNICODE);
   tt(PT_CLSID);
   tt(PT_I8);
@@ -334,158 +365,34 @@ const char *value(unsigned int type, const union _PV &value)
 
 }
 
-
-static void print_property(const SPropValue &prop)
+unsigned wabrow::numproperties()
 {
-  printf("            %s\n", property_name(PROP_ID(prop.ulPropTag)));
-  printf("            %s\n", value(PROP_TYPE(prop.ulPropTag), prop.Value));
+  if (rowset->cRows<1)
+    return 0;
+  return rowset->aRow[0].cValues;
 }
 
-static void print_row(const SRow &row)
+const char* wabrow::getpropertyname(unsigned which)
 {
-  printf("   %ld properties\n", row.cValues);
-
-  for (unsigned i=0;i<row.cValues;i++)
-    {
-      if (PROP_TYPE(row.lpProps[i].ulPropTag)==PT_ERROR)
-	continue;
-      printf("        property %d\n", i);
-      print_property(row.lpProps[i]);
-    }
+  if (rowset->cRows<1)
+    return NULL;
+  SPropValue &val=rowset->aRow[0].lpProps[which];
+  return property_name(PROP_ID(val.ulPropTag));
 }
 
-static SPropValue *get_property(const SRow &row, ULONG propdetails)
+const char *wabrow::getpropertyvalue(unsigned which)
 {
-  for (unsigned i=0; i<row.cValues;i++)
-    if (row.lpProps[i].ulPropTag==propdetails)
-      return &row.lpProps[i];
-  return NULL;
+  if (rowset->cRows<1)
+    return NULL;
+  SPropValue &val=rowset->aRow[0].lpProps[which];
+  return property_value(PROP_TYPE(val.ulPropTag), val.Value);
 }
 
-static bool has_property_value(const SRow &row, ULONG propdetails, long value)
+// this depends on unsigned long being big enough to hold a void pointer
+entryid* wabtable::makeentryid(unsigned long pointer, unsigned long len)
 {
-  SPropValue *prop=get_property(row, propdetails);
-  if (!prop)
-    return false;
-  switch(PROP_TYPE(prop->ulPropTag))
-    {
-      // case PT_I2:
-    case PT_SHORT: return value==prop->Value.i;
-      // case PT_I4:
-    case PT_LONG: return value==prop->Value.l;
-    case PT_BOOLEAN: return value==prop->Value.b;
-    }
+  return new entryid((void*)pointer, len);
 }
-
-#if 0
-
-
-bool TopLevel(void)
-{
-  LPSRowSet lprowset=NULL;
-  HRESULT hr=lpaddrbook->GetSearchPath(0, &lprowset);
-  if (HR_FAILED(hr))
-    {
-      errorme(hr, "TopLevel:GetSearchPath failed");
-      return false;
-    }
-  
-
-  for (unsigned i=0;i<lprowset->cRows;i++)
-    print_row(lprowset->aRow[i]);
-
-
-  return true;
-  LPMAPITABLE table=NULL;
-  HRESULT hr=lpcontainer->GetHierarchyTable(CONVENIENT_DEPTH, &table);
-  if (HR_FAILED(hr))
-    {
-      errorme(hr, "TopLevel:GetHierarchyTable1 failed");
-      return false;
-    }
-
-  LPSRowSet lprowset=NULL;
-
-  do {
-    hr=table->QueryRows(1,0,&lprowset);
-    if (HR_FAILED(hr))
-      {
-	errorme(hr, "TopLevel:QueryRows2 failed");
-	return false;
-      }
-    if (lprowset->cRows==0)
-      {
-	lprowset=NULL;
-	break; //end of table
-      }
-
-    print_row(lprowset->aRow[0]);
-
-  } while(true);
-
-
-  
-  return true;
-}
-
-#define DO_PROPSIWANT
-#include "_genprops.h"
-#undef DO_PROPSIWANT
-
-bool List(void)
-{
-  HRESULT hr;
-
-  HRESULT hr=lptable->SeekRow(BOOKMARK_BEGINNING, 0, NULL);
-  if (HR_FAILED(hr))
-    return false;
-
-  hr=lptable->SetColumns((SPropTagArray*)&propsiwant, 0);
-  if (HR_FAILED(hr))
-    return false;
-
-  LPSRowSet lprowset;
-  do {
-    hr=lptable->QueryRows(1,0,&lprowset);
-    if (HR_FAILED(hr))
-      return false;
-    if (lprowset->cRows==0)
-      break; //end of table
-
-    print_row(lprowset->aRow[0]);
-
-  } while(true);
-
-  return true;
-}
-#endif
-
-/*
-int main(int argc, char **argv)
-{
-  printf("Initialize=%d\n", Initialize());
-  const char *fname=NULL;
-  if (argc==2)
-    fname=argv[1];
-
-  bool res=Load(fname);
-  printf("Load(%s)=%d\n", fname?fname:"<NULL>", res);
-  if (!res)
-    printf("Error: %s\n", errorstring);
-
-  res=TopLevel();
-  printf("TopLevel()=%d\n", res);
-  if (!res)
-    printf("Error: %s\n", errorstring);
-
-  res=List();
-  printf("List()=%d\n", res);
-  if (!res)
-    printf("Error: %s\n", errorstring);
-
-  return 0;
-}
-*/
 
 entryid::entryid(void *d, size_t l)
   : data(0), len(l)

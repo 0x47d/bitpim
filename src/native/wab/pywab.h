@@ -59,6 +59,7 @@ class wabmodule
  public:
 #ifndef SWIG
   wabmodule(const wabmodule&);
+  void FreeObject(LPSRowSet rows);
 #endif
   ~wabmodule();
   entryid *getpab(void);
@@ -84,7 +85,10 @@ class wabobject
 		 STATUS=MAPI_STATUS, SESSION=MAPI_SESSION, 
 		 FORMINFO=MAPI_FORMINFO }  thetype;
   thetype gettype(void) const { return (thetype)type; }
-  static enum {FLAG_WAB_LOCAL_CONTAINERS=WAB_LOCAL_CONTAINERS, FLAG_WAB_PROFILE_CONTENTS=WAB_PROFILE_CONTENTS} ;
+#ifdef SWIG
+  static // we need enum as class member in swig, not instance member
+#endif
+  enum {FLAG_WAB_LOCAL_CONTAINERS=WAB_LOCAL_CONTAINERS, FLAG_WAB_PROFILE_CONTENTS=WAB_PROFILE_CONTENTS} ;
   class wabtable* getcontentstable(unsigned long flags); 
 };
 
@@ -98,8 +102,27 @@ class wabtable
   wabtable(const wabmodule &mod, LPMAPITABLE t) : table(t), module(mod) {}
   friend class wabobject;
  public:
+  entryid* makeentryid(unsigned long pointer, unsigned long len);
   ~wabtable();
   int getrowcount();
+  class wabrow* getnextrow();
+};
+
+class wabrow
+{
+  LPSRowSet rowset;     
+  class wabmodule module;
+  wabrow(wabrow&);        //copying and assignment not allowed
+  void operator=(wabrow&);
+  // private constructor
+  wabrow(const wabmodule &mod, LPSRowSet r) : rowset(r), module(mod) {}
+  friend class wabtable;
+ public:
+  ~wabrow();
+  unsigned numproperties();
+  const char *getpropertyname(unsigned which);
+  const char *getpropertyvalue(unsigned which);
+  bool IsEmpty();
 };
 
 wabmodule* Initialize(bool enableprofiles=true, const char *INPUT=NULL);

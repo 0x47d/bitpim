@@ -44,15 +44,51 @@ class Table:
     def __init__(self, obj):
         self.obj=obj
 
+    def __iter__(self):
+        return self
+
     def next(self):
-        # play with LPSRowSet
-        pass
+        row=self.obj.getnextrow()
+        if row is None:
+            raise WABException()
+        row.thisown=1
+        if row.IsEmpty():
+            raise StopIteration()
+        # we return a dict, built from row
+        res={}
+        for i in range(row.numproperties()):
+            k=row.getpropertyname(i)
+            if len(k)==0:
+                continue
+            v=self._convertvalue(k, row.getpropertyvalue(i))
+            res[k]=v
+        return res
 
     def count(self):
         i=self.obj.getrowcount()
         if i<0:
             raise WABException()
         return i
+
+    def _convertvalue(self,key,v):
+        x=v.find(':')
+        t=v[:x]
+        v=v[x+1:]
+        if t=='int':
+            return int(v)
+        elif t=='string':
+            return v
+        elif t=='PT_ERROR':
+            return None
+        elif t=='bool':
+            return bool(v)
+        elif key=='PR_ENTRYID':
+            v=v.split(',')
+            eid=self.obj.makeentryid(int(v[0]), int(v[1]))
+            eid.thisown=1
+            return eid
+        print "Dunno how to handle key %s type %s value %s" % (key,t,v)
+        return None
 
 class Container:
     WAB_LOCAL_CONTAINERS=pywabimpl.wabobject.FLAG_WAB_LOCAL_CONTAINERS
@@ -79,7 +115,8 @@ if __name__=='__main__':
     root=wab.openobject(wab.getrootentry())
     items=root.items()
     print items.count(), "items in root"
-    items=root.items(root.WAB_LOCAL_CONTAINERS|root.WAB_PROFILE_CONTENTS)
-    print items.count(), "local/profile items"
+    for i in items:
+        print i
+    
     
     
