@@ -389,17 +389,6 @@ def ScaleImageIntoBitmap(img, usewidth, useheight, bgcolor=None):
 ### Virtual filesystem where the images etc come from for the HTML stuff
 ###
 
-# bug workaround for wxPython 2.5.2.7
-try:
-    import native.pyobj
-except:
-    import sys
-    print >>sys.stderr, "You need to compile the module native/pyobj using the build"
-    print >>sys.stderr, "scripts in that directory.  Windows users can find a precompiled"
-    print >>sys.stderr, "one at the BitPim download site."
-    raise
-    
-
 class BPFSHandler(wx.FileSystemHandler):
 
     def __init__(self, wallpapermanager):
@@ -416,7 +405,7 @@ class BPFSHandler(wx.FileSystemHandler):
     def OpenFile(self,filesystem,location):
         res=self._OpenFile(filesystem,location)
         if res is not None:
-            native.pyobj.incref(res) # work around bug in wxPython 2.5.2.7
+            res.thisown=False # work around bug in wxPython 2.5.2.7
         return res
 
     def _OpenFile(self, filesystem, location):
