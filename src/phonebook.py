@@ -1192,7 +1192,7 @@ class ImportDialog(wx.Dialog):
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
 
         splitter=wx.SplitterWindow(self,-1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        # splitter.SetMinimumPaneSize(20)
+        splitter.SetMinimumPaneSize(20)
 
         self.grid=wx.grid.Grid(splitter, wx.NewId())
         self.table=ImportDataTable(self)
@@ -1215,13 +1215,16 @@ class ImportDialog(wx.Dialog):
 
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
+        vbs.Fit(self)
 
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.CallAfter(self.DoMerge)
 
         self.config = parent.mainwindow.config
         guiwidgets.set_size(self.config, "ImportDialog", self, screenpct=95,  aspect=1.10)
-        self.splitter=splitter
+        # the above doesn't change the splitter position
+        w,_=splitter.GetSize()
+        splitter.SetSashPosition(max(w/2, w-200))
 
     def DoMerge(self):
         """Merges all the importdata with existing data
