@@ -144,7 +144,7 @@ class SanyoPhonebook:
 ###            time.sleep(1.0)
         except com_phone.modeignoreerrortypes:
             self.mode=self.MODENONE
-            self.raisecommsexception("manipulating the phonebook")
+            self.raisecommsdnaexception("manipulating the phonebook")
         self.comm.success=True
         data=com_brew.unescape(data)
         # get rid of leading junk

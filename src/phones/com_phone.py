@@ -61,12 +61,15 @@ class Phone:
         if self.logtarget:
             self.logtarget.progress(pos, max, desc)
 
-    def raisecommsexception(self, str):
-        "Raise a DeviceNeedsAttention Exception"
+    def raisecommsdnaexception(self, str):
+        "Raise a comms DeviceNeedsAttention Exception"
         self.mode=self.MODENONE
         self.comm.shouldloop=True
         raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nSee the help for troubleshooting tips")
-        
+
+    def raisecommsexception(self, str, klass):
+        self.mode=self.MODENONE
+        raise klass(self.desc+" on "+self.comm.port, str)
 
     def setmode(self, desiredmode):
         "Ensure the phone is in the right mode"
@@ -106,7 +109,7 @@ class Phone:
         while self.comm.IsAuto():
             self.comm.NextAutoPort()
             return self.setmode(desiredmode)
-        self.raisecommsexception("transitioning mode from %s to %s" \
+        self.raisecommsdnaexception("transitioning mode from %s to %s" \
                                  % (strmode, strdesiredmode))
         
 

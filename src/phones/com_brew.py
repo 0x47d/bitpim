@@ -158,21 +158,15 @@ class BrewProtocol:
                 results.update(self.getfilesystem(subdir, recurse-1))
         return results
 
-    def writefile(self, name, contents, first=True):
+    def writefile(self, name, contents):
+        start=time.time()
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         desc="Writing "+name
 	req=p_brew.writefilerequest()
 	req.filesize=len(contents)
 	req.data=contents[:0x100]
 	req.filename=name
-        try:
-            self.sendbrewcommand(req, p_brew.writefileresponse)
-        except BrewFileLockedException:
-            if True or not first: # True is to disable this auto-offline code
-                raise
-            self.log("File is locked.  Making phone go offline and trying again")
-            self.offlinerequest()
-            return self.writefile(name, contents, False)
+        self.sendbrewcommand(req, p_brew.writefileresponse)
         # do remaining blocks
         numblocks=len(contents)/0x100
         count=0
@@ -189,9 +183,13 @@ class BrewProtocol:
             block=block[:l]
 	    req.data=block
             self.sendbrewcommand(req, p_brew.writefileblockresponse)
+        end=time.time()
+        if end-start>3:
+            self.log("Wrote "+`len(contents)`+" bytes at "+`int(len(contents)/(end-start))`+" bytes/second")
 
 
     def getfilecontents(self, file):
+        start=time.time()
         self.log("Getting file contents '"+file+"'")
         desc="Reading "+file
 
@@ -220,9 +218,15 @@ class BrewProtocol:
         self.progress(1,1,desc)
         
         data=data.getvalue()
-        self.log("expected size "+`filesize`+"  actual "+`len(data)`)
-        assert filesize==len(data)
-        # ::todo:: throw fileintegrityexception if sizes don't match
+
+        # give the download speed if we got a non-trivial amount of data
+        end=time.time()
+        if end-start>3:
+            self.log("Read "+`filesize`+" bytes at "+`int(filesize/(end-start))`+" bytes/second")
+        
+        if filesize!=len(data):
+            self.log("expected size "+`filesize`+"  actual "+`len(data)`)
+            self.raisecommsexception("Brew file read is incorrect size", common.CommsDataCorruption)
         return data
 
 
@@ -288,19 +292,37 @@ class BrewProtocol:
 	    data=self.comm.readuntil(self.brewterminator, logsuccess=False)
         except modeignoreerrortypes:
             self.mode=self.MODENONE
-            self.raisecommsexception("manipulating the filesystem")
+            self.raisecommsdnaexception("manipulating the filesystem")
         self.comm.success=True
         origdata=data
-        data=unescape(data)
+        
         # sometimes there is junk at the begining, eg if the user
-        # turned off the phone and back on again. ::TODO:: if there
-        # is more than one 7e in the escaped data we should start
-        # after the first one
+        # turned off the phone and back on again.  So if there is more
+        # than one 7e in the escaped data we should start after the
+        # second to last one
+        d=data.find(self.brewterminator,0,-1)
+        if d>=0:
+            self.log("Multiple packets in data - taking last one starting at "+`d+1`)
+            self.logdata("Original data", origdata, None)
+            data=data[d+1:]
+
+        # turn it back to normal
+        data=unescape(data)
+
+        # sometimes there is other crap at the begining
         d=data.find(firsttwo)
         if d>0:
+            self.log("Junk at begining of packet, data at "+`d`)
+            self.logdata("Original data", origdata, None)
+            self.logdata("Working on data", data, None)
             data=data[d:]
-        # take off crc and terminator ::TODO:: check the crc
+        # take off crc and terminator
+        crc=data[-3:-1]
         data=data[:-3]
+        if crcs(data)!=crc:
+            self.logdata("Original data", origdata, None)
+            self.logdata("Working on data", data, None)
+            raise common.CommsDataCorruption(self.desc, "Brew packet failed CRC check")
         
         # log it
         self.logdata("brew response", data, responseclass)

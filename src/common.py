@@ -35,12 +35,19 @@ class CommsNeedConfiguring(CommsException):
         self.message=message
 
 class CommsDeviceNeedsAttention(CommsException):
-    """The communication port or device attached to it needs some
-    manual intervention"""
-    def __init__(self, device, message):
-        CommsException.__init__(self, device, message)
-        self.device=device
-        self.message=message
+     """The communication port or device attached to it needs some
+     manual intervention"""
+     def __init__(self, device, message):
+          CommsException.__init__(self, device, message)
+          self.device=device
+          self.message=message
+
+class CommsDataCorruption(CommsException):
+     """There was some form of data corruption"""
+     def __init__(self, device, message):
+          CommsException.__init__(self, device, message)
+          self.device=device
+          self.message=message
 
 class CommsTimeout(CommsException):
     """Timeout while reading or writing the commport"""
