@@ -40,7 +40,7 @@ wW   driverdescription  string   some generic description of the driver
   L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
-version="20 August 2003"
+version="15 September 2003"
 
 import sys
 import os
@@ -164,12 +164,14 @@ def _comscanwindows():
     reg=RegistryAccess(_winreg.HKEY_DYN_DATA)
     k=r"Config Manager\Enum"
     for device in reg.safegetchildren(k):
-        hw=reg.getvalue(k+"\\"+device, "hardwarekey")
-        status=reg.getvalue(k+"\\"+device, "status")
-        problem=reg.getvalue(k+"\\"+device, "problem")
+        hw=reg.safegetvalue(k+"\\"+device, "hardwarekey")
+        if hw is None:
+            continue
+        status=reg.safegetvalue(k+"\\"+device, "status", -1)
+        problem=reg.safegetvalue(k+"\\"+device, "problem", -1)
         activedrivers[hw.upper()]={ 'status': status, 'problem': problem }
 
-    # list of active drivers on win2k
+    # list of active drivers on winXP.  Apparently Win2k is different?
     reg=RegistryAccess(_winreg.HKEY_LOCAL_MACHINE)
     k=r"SYSTEM\CurrentControlSet\Services"
     for service in reg.safegetchildren(k):
@@ -177,67 +179,110 @@ def _comscanwindows():
         count=reg.safegetvalue(k+"\\"+service+"\\Enum", "Count", 0)
         next=reg.safegetvalue(k+"\\"+service+"\\Enum", "NextInstance", 0)
         for id in range(max(count,next)):
-            hw=reg.getvalue(k+"\\"+service+"\\Enum", `id`)
+            hw=reg.safegetvalue(k+"\\"+service+"\\Enum", `id`)
+            if hw is None:
+                continue
             activedrivers[hw.upper()]=None
 
 
-    # scan through everything listed in Enum
+    # scan through everything listed in Enum.  Enum is the key containing a list of all
+    # running hardware
     reg=RegistryAccess(_winreg.HKEY_LOCAL_MACHINE)
 
-    for enumstr, driverlocation, portnamelocation in ( \
-            (r"SYSTEM\CurrentControlSet\Enum", r"SYSTEM\CurrentControlSet\Control\Class", r"\Device Parameters"), \
-            (r"Enum", r"System\CurrentControlSet\Services\Class", ""), \
+    # The three keys are:
+    #
+    #  - where to find hardware
+    #    This then has three layers of children.
+    #    Enum
+    #     +-- Category   (something like BIOS, PCI etc)
+    #           +-- Driver  (vendor/product ids etc)
+    #                 +-- Instance  (An actual device.  You may have more than one instance)
+    # 
+    #  - where to find information about drivers.  The driver name is looked up in the instance
+    #    (using the key "driver") and then looked for as a child key of driverlocation to find
+    #    out more about the driver
+    #
+    #  - where to look for the portname key.  Eg in Win98 it is directly in the instance whereas
+    #    in XP it is below "Device Parameters" subkey of the instance
+
+    for enumstr, driverlocation, portnamelocation in ( 
+            (r"SYSTEM\CurrentControlSet\Enum", r"SYSTEM\CurrentControlSet\Control\Class", r"\Device Parameters"),  # win2K/XP
+            (r"Enum", r"System\CurrentControlSet\Services\Class", ""),   # win98
             ):
         for category in reg.safegetchildren(enumstr):
             catstr=enumstr+"\\"+category
-            for driver in reg.getchildren(catstr):
+            for driver in reg.safegetchildren(catstr):
                 drvstr=catstr+"\\"+driver
-                for instance in reg.getchildren(drvstr):
+                for instance in reg.safegetchildren(drvstr):
                     inststr=drvstr+"\\"+instance
+
+                    # see if there is a portname
+                    name=reg.safegetvalue(inststr+portnamelocation, "PORTNAME", "")
+
+                    # We only want com ports
+                    if len(name)<4 or name.lower()[:3]!="com":
+                        continue
+
+                    # Get rid of phantom devices
+                    phantom=reg.safegetvalue(inststr, "Phantom", 0)
+                    if phantom:
+                        continue
+
+                    # Lookup the class
+                    klassguid=reg.safegetvalue(inststr, "ClassGUID")
+                    if klassguid is not None:
+                        # win2k uses ClassGuid
+                        klass=reg.safegetvalue(driverlocation+"\\"+klassguid, "Class")
+                    else:
+                        # Win9x and WinXP use Class
+                        klass=reg.safegetvalue(inststr, "Class")
+                        
+                    if klass is None:
+                        continue
+                    if klass.lower()!="ports":
+                        continue
+
+                    # verify COM is followed by digits only
                     try:
-                        klass=reg.getvalue(inststr, "Class")
+                        portnum=int(name[3:])
                     except:
                         continue
 
-                    if klass.lower()=="ports":
-                        # see if there is a portname
-                        name=reg.safegetvalue(inststr+portnamelocation, "PORTNAME", "")
+                    # we now have some sort of match
+                    res={}
 
-                        if len(name)<4 or name.lower()[:3]!="com":
-                            continue
+                    res['name']=name.upper()
 
-                        # ::Todo:: - verify COM is followed by digits only
-                        # we now have some sort of match
+                    # is the device active?
+                    kp=inststr[len(enumstr)+1:].upper()
+                    if kp in activedrivers:
+                        res['active']=True
+                        if activedrivers[kp] is not None:
+                            res['driverstatus']=activedrivers[kp]
+                    else:
+                        res['active']=False
 
-                        res={}
-
-                        res['name']=name.upper()
-
-                        # is the device active?
-                        kp=inststr[len(enumstr)+1:].upper()
-                        if kp in activedrivers:
-                            res['active']=True
-                            if activedrivers[kp] is not None:
-                                res['driverstatus']=activedrivers[kp]
-                            # available?
-                            try:
-                                f=open(name, "rw")
-                                f.close()
-                                res['available']=True
-                            except:
-                                res['available']=False
-                        else:
-                            res['active']=False
+                    # available?
+                    if res['active']:
+                        try:
+                            f=open(name, "rw")
+                            f.close()
+                            res['available']=True
+                        except:
                             res['available']=False
+                    else:
+                        res['available']=False
 
-                        # hardwareinstance
-                        res['hardwareinstance']=kp
+                    # hardwareinstance
+                    res['hardwareinstance']=kp
 
-                        # friendly name
-                        res['description']=reg.getvalue(inststr, "FriendlyName")
+                    # friendly name
+                    res['description']=reg.safegetvalue(inststr, "FriendlyName", "<No Description>")
 
-                        # driver information key
-                        drv=reg.getvalue(inststr, "Driver")
+                    # driver information key
+                    drv=reg.safegetvalue(inststr, "Driver")
+
+                    if drv is not None:
                         driverkey=driverlocation+"\\"+drv
 
                         # get some useful driver information
@@ -253,10 +298,9 @@ def _comscanwindows():
                                 val2=val.split('-')
                                 val=int(val2[2]), int(val2[0]), int(val2[1])
                             res[reskey]=val
-                            
-                        
-                        results[resultscount]=res
-                        resultscount+=1
+
+                    results[resultscount]=res
+                    resultscount+=1
 
 
     return results
