@@ -78,6 +78,7 @@ class ImgFileInfo:
     def __init__(self, f, **kwds):
         for a in self.attrnames:
             setattr(self, a, None)
+        self.mimetypes=[]
         self.size=f.size
         self.__dict__.update(kwds)
 
@@ -115,6 +116,7 @@ def idimg_BMP(f):
         d['ncolours']=f.GetLSBUint32(46)
         d['nimportantcolours']=f.GetLSBUint32(50)
         d['_longdescription']=fmt_BMP
+        d['mimetypes']=['image/bmp', 'image/x-bmp']
         for i in d.itervalues():
             if i is None:  return None
         ifi=ImgFileInfo(f,**d)
@@ -153,6 +155,7 @@ def idimg_PNG(f):
         d['interlace']=f.GetByte(28)
         d['_shortdescription']=fmts_PNG
         d['_longdescription']=fmt_PNG
+        d['mimetypes']=['image/png', 'image/x-png']
         for i in d.itervalues():
             if i is None:  return None
         ifi=ImgFileInfo(f,**d)
@@ -204,6 +207,7 @@ def idimg_BCI(f):
         d['bpp']=8
         d['ncolours']=f.GetLSBUint16(0x1a)
         d['_longdescription']=fmt_BCI
+        d['mimetypes']=['image/x-brewcompressedimage']
         for i in d.itervalues():
             if i is None:  return None
         ifi=ImgFileInfo(f,**d)
@@ -242,6 +246,7 @@ def idimg_JPG(f):
             d['width']=f.GetMSBUint16(offset+3)
             d['components']=f.GetByte(offset+5)
             d['_shortdescription']=fmts_JPG
+            d['mimetypes']=['image/jpg', 'image/jpeg', 'image/x-jpg', 'image/x-jpeg']
             for i in d.itervalues():
                 if i is None:  return None
             ifi=ImgFileInfo(f,**d)
@@ -280,6 +285,7 @@ class AudioFileInfo:
     def __init__(self, f, **kwds):
         for a in self.attrnames:
             setattr(self, a, None)
+        self.mimetypes=[]
         self.size=f.size
         self.__dict__.update(kwds)
 
@@ -316,6 +322,7 @@ def idaudio_MIDI(f):
         d['numtracks']=f.GetMSBUint16(10)
         d['division']=f.GetMSBUint16(12)
         d['_shortdescription']=fmts_MIDI
+        d['mimetypes']=['audio/x-midi', 'audio/midi']
         for i in d.itervalues():
             if i is None:  return None
         afi=AudioFileInfo(f,**d)
@@ -392,7 +399,8 @@ def idaudio_MP3(f, returnframes=False):
        'samplerate': f0.samplerate,
        'channels': f0.channels,
        'copyright': f0.copyright,
-       'original': f0.original}
+       'original': f0.original,
+       'mimetypes': ['audio/x-mp3', 'audio/mpeg', 'audio/x-mpeg']}
 
     duration=f0.duration
     vbrmin=vbrmax=f0.bitrate
@@ -543,8 +551,16 @@ def idaudio_QCP(f):
         # block size is at 124, len 2
         d['samplingrate']=f.GetLSBUint16(126)
         d['samplesize']=f.GetLSBUint16(128)
-
         d['_longdescription']=fmt_QCP
+
+        if d['codecguid']==( 0x5e7f6d41, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ) or \
+           d['codecguid']==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ):
+            d['mimetypes']=['audio/qcelp'] # in theory audio/vnd.qcelp could also be used but is deprecated
+        elif d['codecguid']==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
+            d['mimetypes']=['audio/evrc-qcp']
+        elif d['codecguid']==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
+            d['mimetypes']=['audio/smv-qcp']
+        
         for i in d.itervalues():
             if i is None:  return None
         afi=AudioFileInfo(f,**d)
@@ -555,13 +571,13 @@ def fmt_QCP(afi):
     res=["QCP %s" % (afi.codecname,)]
     res.append("%d bps %d Hz %d bits/sample" % (afi.averagebps, afi.samplingrate, afi.samplesize))
     codecguid=afi.codecguid
-    if   codecguid==( 0x5e7f6d41, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97e ):
+    if   codecguid==( 0x5e7f6d41, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ):
         res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 1)")
-    elif codecguid==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97e ):
+    elif codecguid==( 0x5e7f6d42, 0xb115, 0x11d0, 0xba91, 0x00805fb4b97eL ):
         res.append("QCELP-13K V"+`afi.codecversion` + "  (guid 2)")
-    elif codecguid==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4 ):
+    elif codecguid==( 0xe689d48d, 0x9076, 0x46b5, 0x91ef, 0x736a5100ceb4L ):
         res.append("EVRC V"+`afi.codecversion`)
-    elif codecguid==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84 ):
+    elif codecguid==( 0x8d7c2b75, 0xa797, 0xed49, 0x985e, 0xd53c8cc75f84L ):
         res.append("SMV V"+`afi.codecversion`)
     else:
         res.append("Codec Guid {%08X-%04X-%04X-%04X-%012X} V%d" % (afi.codecguid+(afi.codecversion,)))
