@@ -1055,7 +1055,7 @@ class PhoneWidget(wx.Panel):
                 
         return newl
 
-     def makeone(self, list, default):
+    def makeone(self, list, default):
         "Returns one item long list"
         if len(list)==0:
             return default
