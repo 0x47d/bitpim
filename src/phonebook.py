@@ -701,7 +701,7 @@ class PhoneWidget(wx.Panel):
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
     def OnPreviewDClick(self, _):
-        self.EditEntry(self.table.GetGridCursorRow(), self.table.GetGridCursorColumn())
+        self.EditEntry(self.table.GetGridCursorRow(), self.table.GetGridCursorCol())
 
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
@@ -969,7 +969,7 @@ class PhoneWidget(wx.Panel):
         @param type: The type, such as cell, home, office
         @param count: Which number to return (eg with type=home, count=2 the second
                     home number is returned)
-        @param fallback: What is returned if there is no such number"""
+        @param default: What is returned if there is no such number"""
         for n in numbers:
             if n['type']==type:
                 if count==1:
@@ -1399,8 +1399,6 @@ ImportDataTable.htmltemplate[14]='<font color="#aa0000">%(existing)s</font>'
 class ImportDialog(wx.Dialog):
     "The dialog for mixing new (imported) data with existing data"
 
-    ID_EDIT_ITEM=wx.NewId()
-    
 
     def __init__(self, parent, existingdata, importdata):
         wx.Dialog.__init__(self, parent, id=-1, title="Import Phonebook data", style=wx.CAPTION|
@@ -1565,20 +1563,71 @@ class ImportDialog(wx.Dialog):
         else:
             self.resultpreview.ShowEntry({})
 
+    # menu and right click handling
+
+    ID_EDIT_ITEM=wx.NewId()
+    ID_REVERT_TO_IMPORTED=wx.NewId()
+    ID_REVERT_TO_EXISTING=wx.NewId()
+    
     def MakeMenus(self):
         menu=wx.Menu()
-        menu.Append(1, "Item Menu")
-        menu.Append(2, "with item stuff")
-        menu.Append(3, "and more stuff")
-
+        menu.Append(self.ID_EDIT_ITEM, "Edit...")
+        menu.Append(self.ID_REVERT_TO_EXISTING, "Revert field to existing value")
+        menu.Append(self.ID_REVERT_TO_IMPORTED, "Revert field to imported value")
         self.menu=menu
+
+        wx.EVT_MENU(menu, self.ID_EDIT_ITEM, self.OnEditItem)
+        wx.EVT_MENU(menu, self.ID_REVERT_TO_EXISTING, self.OnRevertFieldToExisting)
+        wx.EVT_MENU(menu, self.ID_REVERT_TO_IMPORTED, self.OnRevertFieldToImported)
 
     def OnRightGridClick(self, event):
         row,col=event.GetRow(), event.GetCol()
         self.grid.SetGridCursor(row,col)
-        self.grid.SelectRow(row, False)
+        self.grid.ClearSelection()
+        # enable/disable stuff in the menu
+        columnname=self.table.GetColLabelValue(col)
+        row=self.table.GetRowData(row)
+        self.menu.Enable(self.ID_REVERT_TO_EXISTING, row[2] is not None 
+                             and getdata(columnname, self.existingdata[row[2]], None) is not None)
+                             # ::TODO:: also check that existing is different than result
+        self.menu.Enable(self.ID_REVERT_TO_IMPORTED, row[1] is not None
+                             and getdata(columnname, self.importdata[row[1]], None) is not None)
+                             # ::TODO:: also check that imported is different than result
+        # pop it up
         pos=event.GetPosition()
         self.grid.PopupMenu(self.menu, pos)
+
+    def OnEditItem(self,_):
+        self.EditEntry(self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol())
+
+    def OnRevertFieldToExisting(self, _):
+        row,col=self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol()
+        columnname=self.table.GetColLabelValue(col)
+        row=self.table.GetRowData(row)
+        reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
+        exkey,exindex=getdatainfo(columnname, self.existingdata[row[2]])
+        assert resindex is not None
+        assert exindex is not None
+        if resindex<0:
+            self.resultdata[row[3]][reskey]=copy.deepcopy(self.existingdata[row[2]][exkey])
+        else:
+            self.resultdata[row[3]][reskey][resindex]=copy.deepcopy(self.existingdata[row[2]][exkey][exindex])
+        self.table.OnDataUpdated()
+
+    def OnRevertFieldToImported(self, _):
+        row,col=self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol()
+        columnname=self.table.GetColLabelValue(col)
+        row=self.table.GetRowData(row)
+        reskey,resindex=getdatainfo(columnname, self.resultdata[row[3]])
+        imkey,imindex=getdatainfo(columnname, self.importdata[row[1]])
+        assert resindex is not None
+        assert imindex is not None
+        if resindex<0:
+            self.resultdata[row[3]][reskey]=copy.deepcopy(self.importdata[row[1]][imkey])
+        else:
+            self.resultdata[row[3]][reskey][resindex]=copy.deepcopy(self.importdata[row[1]][imkey][imindex])
+        self.table.OnDataUpdated()
+
 
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
