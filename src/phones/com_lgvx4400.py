@@ -680,27 +680,37 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # urls
         if len(entry.url):
             res['urls']=[ {'url': entry.url} ]
-        # ringtones
-        res['ringtones']=[ {'ringtone': entry.ringtone, 'use': 'call'},
-                           {'ringtone': entry.msgringtone, 'use': 'message' } ] # ::TODO:: turn these into strings
         # private
         res['flags']=[ {'secret': entry.secret } ]
         # memos
         if len(entry.memo):
             res['memos']=[ {'memo': entry.memo } ]
         # wallpapers
-        wp=entry.wallpaper
-        paper=None
-        # 0 is default
-        if wp>0:
+        if entry.wallpaper>0:
             try:
-                paper=fundamentals['wallpaper-index'][wp]['name']
+                paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
+                res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
             except:
-                print "can't find wallpaper for index",wp
+                print "can't find wallpaper for index",entry.wallpaper
                 pass
-
-        if paper is not None:
-            res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]
+            
+        # ringtones
+        res['ringtones']=[]
+        if entry.ringtone>0:
+            try:
+                tone=fundamentals['ringtone-index'][entry.ringtone]['name']
+                res['ringtones'].append({'ringtone': tone, 'use': 'call'})
+            except:
+                print "can't find ringtone for index",entry.ringtone
+        if entry.msgringtone>0:
+            try:
+                tone=fundamentals['ringtone-index'][entry.msgringtone]['name']
+                res['ringtones'].append({'ringtone': tone, 'use': 'message'})
+            except:
+                print "can't find ringtone for index",entry.msgringtone
+        if len(res['ringtones'])==0:
+            del res['ringtones']
+                    
         # numbers
         res['numbers']=[]
         for i in range(entry.numberofphonenumbers):
