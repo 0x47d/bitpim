@@ -1398,6 +1398,22 @@ class DayViewDialog(wxDialog):
         if res==wxID_CANCEL:
             return self.ANSWER_CANCEL
 
+    def AskAboutRepeatChange(self):
+        """Asks the user if they wish to change the original (repeating) entry, or this instance
+
+        @return: An C{ANSWER_} constant
+        """
+        dlg=wxMessageDialog(self, "Do you want to change all the repeats?  Click Yes to change all, No to change just todays, or Cancel to make no changes",
+                            "Change repeating event",
+                            wxYES_NO|wxCANCEL|wxNO_DEFAULT|wxICON_QUESTION)
+        res=dlg.ShowModal()
+        if res==wxID_YES:
+            return self.ANSWER_ORIGINAL
+        if res==wxID_NO:
+            return self.ANSWER_THIS
+        if res==wxID_CANCEL:
+            return self.ANSWER_CANCEL
+
     def OnListBoxItem(self, _=None):
         """Callback for when user clicks on an event in the listbox"""
         self.updatefields(self.getcurrententry())
@@ -1420,17 +1436,48 @@ class DayViewDialog(wxDialog):
     def OnSaveButton(self, _=None):
         """Callback for when user presses save"""
         entry=self.getcurrententry()
-        newentry=copy.copy(entry)
+
+        # is it a repeat?
+        res=self.ANSWER_ORIGINAL
+        if entry['repeat'] is not None:
+            # ask the user
+            res=self.AskAboutRepeatChange()
+            if res==self.ANSWER_CANCEL:
+                return
+        # where do we get newentry template from?
+        if res==self.ANSWER_ORIGINAL:
+            newentry=copy.copy(entry)
+        else:
+            newentry=self.cw.newentryfactory(*self.date)
+
+        # update the fields
         for f in self.fields:
             control=self.fields[f]
             if isinstance(control, DVTimeControl):
-                # we have to use original date in the entry
-                # combined with our new time
-                v=list(entry[f][0:3])+list(control.GetValue())
+                # which dated we use?
+                if res==self.ANSWER_ORIGINAL:
+                    d=entry[f][0:3]
+                else:
+                    d=self.date
+                v=list(d)+list(control.GetValue())
             else:
                 v=control.GetValue()
+
+            # if we are changing a repeat, reset the new entry's repeat is off
+            if f=='repeat' and res==self.ANSWER_THIS:
+                v=None
+ 
             newentry[f]=v
-        self.cw.ChangeEntry(entry, newentry)
+
+        # update calendar widget
+        if res==self.ANSWER_ORIGINAL:
+            self.cw.ChangeEntry(entry, newentry)
+        else:
+            # delete the repeat and add this new entry
+            self.cw.DeleteEntryRepeat(entry, *self.date)
+            self.cw.AddEntry(newentry)
+
+        # tidy up
         self.setdirty(False)
         self.refreshentries()
         self.updatelistbox(newentry['pos'])
