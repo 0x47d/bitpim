@@ -37,6 +37,15 @@ class Phone(com_sanyonewer.Phone):
     protocolclass=p_sanyo8200
     serialsname='pm8200'
 
+    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+                       'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
+                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
+                       '', '', '', '', '', '', '',
+                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
+                       'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
+                       'Foster Ky. Home', 'The Moment', 'Asian Jingle',
+                       'Disco')
+
     calendar_defaultringtone=0
 
     def __init__(self, logtarget, commport):
