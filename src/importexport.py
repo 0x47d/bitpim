@@ -605,6 +605,157 @@ class ImportCSVDialog(ImportDialog):
             # here is where we would do some mapping
 
 class ImportOutlookDialog(ImportDialog):
+    # the order of this mapping matters ....
+    importmapping=(
+        # first column is field in Outlook
+        # second column is field in dialog (ImportDialog.possiblecolumns)
+        ('FirstName',            "First Name" ),
+        ('LastName',             "Last Name"),
+        ('MiddleName',           "Middle Name"),
+        # ('FullName',  ),       -- this includes the prefix (aka title in Outlook) and the suffix
+        # ('Title',  ),          -- the prefix (eg Dr, Mr, Mrs)
+        ('Subject',              "Name"),  # this is first middle last suffix - note no prefix!
+        # ('Suffix',  ),         -- Jr, Sr, III etc
+        ('NickName',             "Nickname"),
+        ('Email1Address',        "Email Address"),
+        ('Email2Address',        "Email Address"),
+        ('Email3Address',        "Email Address"),
+        # Outlook is seriously screwed over web pages.  It treats the Business Home Page
+        # and Web Page as the same field, so we can't really tell the difference.
+        ('WebPage',              "Web Page"),
+        ('OtherFaxNumber',       "Fax"  ),
+        ('HomeAddressStreet',    "Home Street"),
+        ('HomeAddressCity',      "Home City" ),
+        ('HomeAddressPostalCode',"Home Postal Code"  ),
+        ('HomeAddressState',     "Home State"),
+        ('HomeAddressCountry',   "Home Country/Region" ),
+        ('HomeTelephoneNumber',  "Home Phone"),
+        ('Home2TelephoneNumber', "Home Phone"),
+        ('HomeFaxNumber',        "Home Fax"),
+        ('MobileTelephoneNumber',"Mobile Phone"),
+        ('PersonalHomePage',     "Home Web Page"),
+
+        ('BusinessAddressStreet',"Business Street"),
+        ('BusinessAddressCity',  "Business City"),
+        ('BusinessAddressPostalCode', "Business Postal Code"),
+        ('BusinessAddressState', "Business State"),
+        ('BusinessAddressCountry', "Business Country/Region"),
+        # ('BusinessHomePage',), -- no use, see Web Page above
+        ('BusinessTelephoneNumber', "Business Phone"),        
+        ('Business2TelephoneNumber',"Business Phone"),
+        ('BusinessFaxNumber',    "Business Fax"),
+        ('PagerNumber',          "Pager"),
+        ('CompanyName',          "Company"),
+        
+        ('Body',                 "Notes"),  # yes, really
+
+        ('Categories',           "Categories"),
+
+
+# ('EntryID',              "UniqueSerial"),
+        
+        )
+
+    
+    # These are all the fields we do nothing about
+##           ('Anniversary',  ),
+##           ('AssistantName',  ),
+##           ('AssistantTelephoneNumber',  ),
+##           ('Birthday',  ),
+##           ('BusinessAddress',  ),
+##           ('BusinessAddressPostOfficeBox',  ),
+##           ('CallbackTelephoneNumber',  ),
+##           ('CarTelephoneNumber',  ),
+##           ('Children',  ),
+##           ('Class',  ),
+##           ('CompanyAndFullName',  ),
+##           ('CompanyLastFirstNoSpace',  ),
+##           ('CompanyLastFirstSpaceOnly',  ),
+##           ('CompanyMainTelephoneNumber',  ),
+##           ('ComputerNetworkName',  ),
+##           ('ConversationIndex',  ),
+##           ('ConversationTopic',  ),
+##           ('CreationTime',  ),
+##           ('CustomerID',  ),
+##           ('Department',  ),
+##           ('FTPSite',  ),
+##           ('FileAs',  ),
+##           ('FullNameAndCompany',  ),
+##           ('Gender',  ),
+##           ('GovernmentIDNumber',  ),
+##           ('Hobby',  ),
+##           ('HomeAddress',  ),
+##           ('HomeAddressPostOfficeBox',  ),
+##           ('ISDNNumber',  ),
+##           ('Importance',  ),
+##           ('Initials',  ),
+##           ('InternetFreeBusyAddress',  ),
+##           ('JobTitle',  ),
+##           ('Journal',  ),
+##           ('Language',  ),
+##           ('LastFirstAndSuffix',  ),
+##           ('LastFirstNoSpace',  ),
+##           ('LastFirstNoSpaceCompany',  ),
+##           ('LastFirstSpaceOnly',  ),
+##           ('LastFirstSpaceOnlyCompany',  ),
+##           ('LastModificationTime',  ),
+##           ('LastNameAndFirstName',  ),
+##           ('MAPIOBJECT',  ),
+##           ('MailingAddress',  ),
+##           ('MailingAddressCity',  ),
+##           ('MailingAddressCountry',  ),
+##           ('MailingAddressPostalCode',  ),
+##           ('MailingAddressState',  ),
+##           ('MailingAddressStreet',  ),
+##           ('ManagerName',  ),
+##           ('MessageClass',  ),
+##           ('Mileage',  ),
+##           ('NetMeetingAlias',  ),
+##           ('NetMeetingServer',  ),
+##           ('NoAging',  ),
+##           ('OfficeLocation',  ),
+##           ('OrganizationalIDNumber',  ),
+##           ('OtherAddress',  ),
+##           ('OtherAddressCity',  ),
+##           ('OtherAddressCountry',  ),
+##           ('OtherAddressPostOfficeBox',  ),
+##           ('OtherAddressPostalCode',  ),
+##           ('OtherAddressState',  ),
+##           ('OtherAddressStreet',  ),
+##           ('OtherTelephoneNumber',  ),
+##           ('OutlookInternalVersion',  ),
+##           ('OutlookVersion',  ),
+##           ('Parent',  ),
+##           ('PrimaryTelephoneNumber',  ),
+##           ('Profession',  ),
+##           ('RadioTelephoneNumber',  ),
+##           ('ReferredBy',  ),
+##           ('Saved',  ),
+##           ('SelectedMailingAddress',  ),
+##           ('Sensitivity',  ),
+##           ('Size',  ),
+##           ('Spouse',  ),
+##           ('TTYTDDTelephoneNumber',  ),
+##           ('TelexNumber',  ),
+##           ('UnRead',  ),
+##           ('User1',  ),
+##           ('User2',  ),
+##           ('User3',  ),
+##           ('User4',  ),
+ 
+        # these fields are of no value
+        ##        ('Email1DisplayName',  ),
+        ##        ('Email1EntryID',  ),
+        ##        ('Email2AddressType',  ),
+        ##        ('Email2DisplayName',  ),
+        ##        ('Email2EntryID',  ),
+        ##        ('Email3AddressType',  ),
+        ##        ('Email3DisplayName',  ),
+        ##        ('Email3EntryID',  ),
+
+
+    importmappingdict={}
+    for o,i in importmapping: importmappingdict[o]=i
 
     def __init__(self, parent, id, title, outlook):
         self.headerrowiseditable=False
@@ -642,31 +793,39 @@ class ImportOutlookDialog(ImportDialog):
         self.folder=p
         wx.GetApp().config.Write("outlook/contacts", self.outlook.getfolderid(self.folder))
         self.folderctrl.SetValue(self.outlook.getfoldername(self.folder))
-        # reread here
+        self.DataNeedsUpdate()
 
     def ReReadData(self):
-        print "b4"
+        # this can take a really long time if the user doesn't spot the dialog
+        # asking for permission to access email addresses :-)
         items=self.outlook.getcontacts(self.folder)
-        print "after"
+
         # work out what keys are actually present
         keys={}
         for item in items:
             for k in item.keys():
                 keys[k]=1
-        keys=keys.keys()
-        keys.sort()
-        self.columns=keys
+
+        # We now need to produce columns with BitPim names not the Outlook ones.
+        # mappings are in self.importmapping
+        want=[]
+        for o,i in self.importmapping:
+            if o in keys.keys():
+                want.append(o)
+        # want now contains list of Outlook keys we want, and the order we want them in
+        
+        self.columns=[self.importmappingdict[k] for k in want]
 
         # build up data
         self.data=[]
         for item in items:
             row=[]
-            for k in keys:
-                if k=='Email1EntryID':
-                    print "email1id",`item.get(k, None)`
+            for k in want:
                 v=item.get(k, "")
-                if not isinstance(v, (str,unicode)):
-                    v=`v`
+                try:
+                    v=str(v)
+                except UnicodeEncodeError:
+                    v=v.encode("ascii", 'xmlcharrefreplace')
                 row.append(v)
             self.data.append(row)
 
