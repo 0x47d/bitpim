@@ -10,6 +10,7 @@
 """Encapsulates the serial port device"""
 
 import serial
+import sys
 import common
 import time
 try:
@@ -82,7 +83,9 @@ class CommConnection:
                 if port.startswith("usb::"):
                     self.ser=self._openusb(port, timeout)
                 else:
-                    self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
+                    useport=port
+                    if sys.platform=='win32' and port.lower().startswith("com"): useport="\\\\?\\"+port
+                    self.ser=serial.Serial(useport, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
                 self.log("Open of comm port suceeded")
                 self.port=port
                 self.clearcounters()

@@ -276,8 +276,10 @@ def _comscanwindows():
                     # available?
                     if res['active']:
                         try:
-                            f=open(name, "rw")
-                            f.close()
+                            usename=name
+                            if sys.platform=='win32' and name.lower().startswith("com"):
+                                usename="\\\\?\\"+name
+                            open(usename, "rw").close()
                             res['available']=True
                         except:
                             res['available']=False
