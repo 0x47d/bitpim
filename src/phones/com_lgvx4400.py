@@ -74,7 +74,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         self.logdata("Groups read", buf.getdata(), g)
         groups={}
         for i in range(len(g.groups)):
-            groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
+            if len(g.groups[i].name): # sometimes have zero length names
+                groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
         results['groups']=groups
         # wallpaper index
         self.log("Reading wallpaper indices")
@@ -121,7 +122,24 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         print "returning keys",result.keys()
         return pbook
 
+    def savegroups(self, data):
+        groups=data['groups']
+        keys=groups.keys()
+        keys.sort()
+
+        g=self.protocolclass.pbgroups()
+        for k in keys:
+            e=self.protocolclass.pbgroup()
+            e.icon=groups[k]['icon']
+            e.name=groups[k]['name']
+            g.groups.append(e)
+        buffer=prototypes.buffer()
+        g.writetobuffer(buffer)
+        self.logdata("New group file", buffer.getvalue(), g)
+        self.writefile("pim/pbgroup.dat", buffer.getvalue())
+
     def savephonebook(self, data):
+        self.savegroups(data)
         # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
         # We then delete any entries that aren't in data
@@ -630,9 +648,84 @@ class Profile:
             l.append(blank)
         return l
 
+    def _getgroup(self, name, groups):
+        for key in groups:
+            if groups[key]['name']==name:
+                return key,groups[key]
+        return None,None
+        
+
+    def normalisegroups(self, helper, data):
+        "Assigns groups based on category data"
+
+        # find the 9 most popular categories
+        freq={}
+        for entry in data['phonebook']:
+            e=data['phonebook'][entry]
+            for cat in e.get('categories', []):
+               n=cat['category'][:22] # truncate
+               if n != "No Group":
+                   freq[n]=1+freq.get(n,0)
+
+        freq=[(count,value) for value,count in freq.items()]
+        freq.sort()
+        freq.reverse() # most popular first
+        if len(freq)>9:
+            print "too many groups",freq
+            print "removing",freq[9:] # ::TODO:: log this to helper
+            freq=freq[:9] # clip to 9 items
+
+        # name only
+        freq=[value for count,value in freq]
+
+        # uniqify (since some may have been different after char 22)
+        u={}
+        for f in freq: u[f]=1
+        freq=u.keys()
+
+        # if less than 9 entries, add some back in, using earliest entries first (most likely to be most important to the user)
+        keys=data['groups'].keys()
+        keys.sort()
+        for k in keys:
+            if k and len(freq)<9: # ignore key 0 which is 'No Group'
+                name=data['groups'][k]['name']
+                if name not in freq:
+                    freq.append(name)
+
+        # alpha sort
+        freq.sort()
+
+        # newgroups
+        newgroups={}
+
+        # put in No group
+        newgroups[0]={'name': 'No Group', 'icon': 0}
+
+        # populate
+        for name in freq:
+            # existing entries remain unchanged
+            key,value=self._getgroup(name, data['groups'])
+            if key is not None:
+                newgroups[key]=value
+        # new entries get whatever numbers are free
+        for name in freq:
+            key,value=self._getgroup(name, newgroups)
+            if key is None:
+                for key in range(1,10):
+                    if key not in newgroups:
+                        newgroups[key]={'name': name, 'icon': 1}
+                        break
+                       
+        # yay, done
+        print data['groups']
+        print newgroups
+        data['groups']=newgroups
+
     def convertphonebooktophone(self, helper, data):
         "Converts the data to what will be used by the phone"
         results={}
+
+        self.normalisegroups(helper, data)
 
         for pbentry in data['phonebook']:
             e={} # entry out
@@ -640,7 +733,16 @@ class Profile:
             try:
                 e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
 
-                e['group']=self.makeone(helper.getcategory(entry.get('categories', []),0,1), None)
+                cat=self.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
+                if cat is None:
+                    e['group']=0
+                else:
+                    key,value=self._getgroup(cat, data['groups'])
+                    if key is not None:
+                        e['group']=key
+                    else:
+                        # sorry no space for this category
+                        e['group']=0
 
                 e['emails']=self.filllist(helper.getemails(entry.get('emails', []) ,0,3,48), 3, "")
 
@@ -674,10 +776,10 @@ class Profile:
                 e['serial1']=serial1
                 e['serial2']=serial2
                 
-                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
-                e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', 0)
-
-                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', 0)
+                # e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', 0)
+                # e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', 0)
+                # e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', 0)
+                e['ringtone']=e['msgringtone']=e['wallpaper']=0
 
                 e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
 
