@@ -35,7 +35,7 @@ class Phone(com_sanyonewer.Phone):
     protocolclass=p_sanyo7300
     serialsname='scp7300'
 
-    calendar_defaultringtone=0
+    calendar_defaultringtone=4
 
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
@@ -52,6 +52,7 @@ class Profile(com_sanyonewer.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
     )
 
     def __init__(self):
