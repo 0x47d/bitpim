@@ -43,7 +43,7 @@ class CalendarCellAttributes:
         self.labelfont=wxFont(14, wxSWISS, wxNORMAL, wxNORMAL )
         self.labelforeground=wxNamedColour("CORNFLOWER BLUE")
         self.labelalign=wxALIGN_RIGHT
-        self.timefont=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
+        self.timefont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
         self.timeforeground=wxNamedColour("ORCHID")
         self.entryfont=wxFont(10, wxSWISS, wxNORMAL, wxNORMAL )
         self.entryforeground=wxNamedColour("BLACK")
@@ -193,7 +193,7 @@ class CalendarCell(wxWindow):
             self.attr.setfortime(dc, fontscale)
             boundingspace=2
             space,_=dc.GetTextExtent("i")
-            timespace,timeheight=dc.GetTextExtent("88:88")
+            timespace,timeheight=dc.GetTextExtent("mm:mm")
             if self.attr.ismiltime():
                 ampm=0
             else:
@@ -215,7 +215,7 @@ class CalendarCell(wxWindow):
                 x+=boundingspace # we don't draw anything yet
                 timey=y
                 if timeheight<firstrowheight:
-                    timey+=firstrowheight-timeheight
+                    timey+=(firstrowheight-timeheight)/2
                 text=""
                 
                 if self.attr.ismiltime():
@@ -233,13 +233,13 @@ class CalendarCell(wxWindow):
                 
                 text+="%d:%02d%s" % (h,m,ap)
                 dc.DrawText(text, x, timey)
-                x+=timespace+space
+                x+=timespace
                 if not self.attr.ismiltime: x+=ampm
                 
                 self.attr.setforentry(dc, fontscale)
                 ey=y
                 if entryheight<firstrowheight:
-                    ey+=firstrowheight-ey
+                    ey+=(firstrowheight-entryheight)/2
                 dc.DrawText(desc, x, ey)
                 # that row is dealt with!
                 y+=firstrowheight
@@ -376,7 +376,7 @@ class Calendar(wxPanel):
     attroddmonth=CalendarCellAttributes()
     attroddmonth.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(255, 255, 230), wxSOLID)
     attrselectedcell=CalendarCellAttributes()
-    attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxCROSS_HATCH)
+    attrselectedcell.cellbackground=wxTheBrushList.FindOrCreateBrush( wxColour(240,240,240), wxSOLID)
     attrselectedcell.labelfont=wxFont(17, wxSWISS, wxNORMAL, wxBOLD )
     attrselectedcell.labelforeground=wxNamedColour("BLACK")
     
@@ -480,7 +480,6 @@ class Calendar(wxPanel):
 
     def setday(self, year, month, day):
        # makes specified day be shown and selected
-       print "setday", year, month, day
        self.showday(year, month, day)
        self.setselection(year, month, day)
        
@@ -491,18 +490,13 @@ class Calendar(wxPanel):
        y,m,d=self.rows[0][0].year, self.rows[0][0].month, self.rows[0][0].day
        if rowtoshow==-1:
           if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
-             print "showday", year,month,day, "off top of screen"
-             print y,m,d
              rowtoshow=0
        # check last cell   
        y,m,d=self.rows[-1][-1].year, self.rows[-1][-1].month, self.rows[-1][-1].day
        if rowtoshow==-1:
           if year>y or (year>=y and month>m) or (year>=y and month>=m and day>d):
-             print "showday", year,month,day, "off bottom of screen"
-             print y,m,d
              rowtoshow=self.numrows-1
        if rowtoshow!=-1:
-          print "now showing on row", rowtoshow
           d=calendar.weekday(year, month, day)
           d=(d+1)%7
           
@@ -524,6 +518,7 @@ class Calendar(wxPanel):
              self._unselect()
              self.rows[row][d].setattr(self.attrselectedcell)
              self.selectedcell=(row,d)
+             self.ensureallpainted()
              return
 
     def _unselect(self):
@@ -560,13 +555,11 @@ class Calendar(wxPanel):
 class PopupCalendar(wxDialog):
     def __init__(self, parent, calendar, style=wxSIMPLE_BORDER):
         wxDialog.__init__(self, parent, -1, '', style=wxSTAY_ON_TOP)
-        #p=wxPanel(self, -1)
         self.calendar=calendar
-        self.control=wxCalendarCtrl(self, -1, style=wxCAL_SUNDAY_FIRST, # |wxCAL_SEQUENTIAL_MONTH_SELECTION,
-                                    pos=(0,0)) # |wxCAL_SHOW_SURROUNDING_WEEKS|
+        self.control=wxCalendarCtrl(self, 1, style=wxCAL_SUNDAY_FIRST, pos=(0,0))
         sz=self.control.GetBestSize()
-        # p.SetSize( sz )
         self.SetSize(sz)
+        EVT_CALENDAR(self, self.control.GetId(), self.OnCalSelected)
 
     def Popup(self, year, month, day, event):
         d=wxDateTimeFromDMY(day, month, year)
@@ -575,12 +568,14 @@ class PopupCalendar(wxDialog):
         pos=btn.ClientToScreen( (0,0) )
         sz=btn.GetSize()
         self.Move( (pos[0], pos[1]+sz.height ) )
-        print pos, (0,sz.height)
         self.ShowModal()
-        # wxPopupWindow.Popup(self)
-        
-    
 
+    def OnCalSelected(self, evt):
+        dt=evt.GetDate()
+        self.calendar.setday(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        self.calendar.ensureallpainted()
+        self.EndModal(1)
+        
 
 _monthranges=[0, 31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
