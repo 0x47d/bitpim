@@ -455,8 +455,9 @@ class codegen:
         return out.getvalue()
 
     def genclasscode(self, out, namestuff, fields):
+        classname=namestuff[1]
         tokens=self.tokenizer
-        print >>out, "class %s(BaseProtogenClass):" % (namestuff[1],)
+        print >>out, "class %s(BaseProtogenClass):" % (classname,)
         if namestuff[4] is not None:
             print >>out, indent()+namestuff[4]
 
@@ -519,7 +520,7 @@ class codegen:
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
-                    print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
+                    print >>out, indent(i)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
                     self.makefield(out, i+1, f, isreading=False)
                 print >>out, indent(i)+"sz+=self.__field_"+f[1]+".packetsize()"
             elif f[0]==tokens.CONDITIONALSTART:
@@ -539,7 +540,7 @@ class codegen:
         for f in fields:
             if f[0]==tokens.FIELD and f[2]!='P':
                 if '+' in f[7]:
-                    print >>out, indent(i)+"if not hasattr(self, '__field_%s'):" % (f[1],)
+                    print >>out, indent(i)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
                     self.makefield(out, i+1, f, isreading=False)
                 print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buf)"
             elif f[0]==tokens.CONDITIONALSTART:
@@ -576,6 +577,9 @@ class codegen:
             if f[0]==tokens.FIELD:
                 # get
                 print >>out, indent()+"def __getfield_%s(self):" % (f[1],)
+                if '+' in f[7]:
+                    print >>out, indent(2)+"if not hasattr(self, '_%s__field_%s'):" % (classname,f[1])
+                    self.makefield(out, 3, f)
                 print >>out, indent(2)+"return self.__field_%s.getvalue()\n" % (f[1],)
                 # set
                 print >>out, indent()+"def __setfield_%s(self, value):" % (f[1],)
