@@ -63,13 +63,15 @@ class Phone(com_samsung_packet.Phone):
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
+        print "Calling setmode MODEMODEM"
         self.setmode(self.MODEMODEM)
+        print "Getting serial number"
         results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
 
         self.log("Reading group information")
-
+        print "Getting Groups"
         results['groups']=self.read_groups()
-
+        print "Got Groups"
         # Comment the next to out if you want to read the phonebook
         #self.getwallpaperindices(results)
         #self.getringtoneindices(results)
@@ -128,9 +130,24 @@ class Phone(com_samsung_packet.Phone):
                 filename=res.filename
                 p=filename.rfind("/")
                 basefilename=filename[p+1:]+".jpg"
-                print "Getting ",basefilename
                 contents=self.getfilecontents(filename)
-                media[basefilename]=contents[148:]
+
+                name_len=ord(contents[5])
+                new_basefilename=contents[6:6+name_len]+".jpg"
+                duplicate=False
+                for k in results['wallpaper-index'].keys():
+                    if results['wallpaper-index'][k]['name']==new_basefilename:
+                        duplicate=True
+                        break
+                    if results['wallpaper-index'][k]['name']==basefilename:
+                        ksave=k
+                if duplicate:
+                    new_basefilename=basefilename
+                else:
+                    self.log("Renaming to "+new_basefilename)
+                    results['wallpaper-index'][ksave]['name']=new_basefilename                  
+                media[new_basefilename]=contents[148:]
+
             except com_brew.BrewNoMoreEntriesException:
                 break
 
