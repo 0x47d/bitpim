@@ -7,6 +7,7 @@ check.out
 core.*
 dist
 i386
+nohup.out
 pyxr
 setup.cfg
 tests
