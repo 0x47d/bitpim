@@ -37,7 +37,13 @@ class WallpaperView(guiwidgets.FileViewNew):
     # this is only used to prevent the pubsub module
     # from being GC while any instance of this class exists
     __publisher=pubsub.Publisher
-    
+
+    _bitmaptypemapping={
+        # the extensions we use and corresponding wx types
+        'bmp': wx.BITMAP_TYPE_BMP,
+        'jpg': wx.BITMAP_TYPE_JPEG,
+        'png': wx.BITMAP_TYPE_PNG,
+        }
     def __init__(self, mainwindow, parent):
         guiwidgets.FileViewNew.__init__(self, mainwindow, parent, guihelper.getresourcefile("wallpaper.xy"),
                                         guihelper.getresourcefile("wallpaper-style.xy"), bottomsplit=200,
@@ -46,8 +52,7 @@ class WallpaperView(guiwidgets.FileViewNew):
         wx.FileSystem_AddHandler(BPFSHandler(self))
         self._data={'wallpaper-index': {}}
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
-        self.usewidth=self.mainwindow.phoneprofile.WALLPAPER_WIDTH
-        self.useheight=self.mainwindow.phoneprofile.WALLPAPER_HEIGHT
+        self.updateprofilevariables(self.mainwindow.phoneprofile)
 
         self.addfilemenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
         wx.EVT_MENU(self.addfilemenu, guihelper.ID_FV_PASTE, self.OnPaste)
@@ -58,9 +63,16 @@ class WallpaperView(guiwidgets.FileViewNew):
 
     def OnPhoneModelChanged(self, msg):
         phonemodule=msg.data
-        self.usewidth=phonemodule.Profile.WALLPAPER_WIDTH
-        self.useheight=phonemodule.Profile.WALLPAPER_HEIGHT
+        self.updateprofilevariables(phonemodule.Profile)
         self.OnRefresh()
+
+    def updateprofilevariables(self, profile):
+        self.usewidth=profile.WALLPAPER_WIDTH
+        self.useheight=profile.WALLPAPER_HEIGHT
+        self.maxlen=profile.MAX_WALLPAPER_BASENAME_LENGTH
+        self.filenamechars=profile.WALLPAPER_FILENAME_CHARS
+        self.convertextension=profile.WALLPAPER_CONVERT_FORMAT
+        self.convertwxbitmaptype=self._bitmaptypemapping[self.convertextension.lower()]
         
     def OnListRequest(self, msg=None):
         l=[self._data['wallpaper-index'][x]['name'] for x in self._data['wallpaper-index']]
@@ -134,9 +146,14 @@ class WallpaperView(guiwidgets.FileViewNew):
         elif col=='Bytes':
             return int(os.stat(item['file']).st_size)
         elif col=='Origin':
-            return item['origin']
+            return item.get('origin', "")
         assert False, "unknown column"
-            
+
+    def GetItemValueForSorting(self, item, col):
+        if col=='Size':
+            w,h=item['size']
+            return w*h
+        return self.GetItemValue(item, col) 
 
     def GetImage(self, file):
         """Gets the named image
@@ -183,8 +200,6 @@ class WallpaperView(guiwidgets.FileViewNew):
             newitems.append(newentry)
         self.SetItems(newitems)
                     
-
-        
     def OnPaste(self, _=None):
         do=wx.BitmapDataObject()
         wx.TheClipboard.Open()
@@ -212,32 +227,31 @@ class WallpaperView(guiwidgets.FileViewNew):
         self._data['wallpaper-index'][idx]={'name': file}
         self.modified=True
 
-    def OnAddFile(self, file):
-        self.thedir=self.mainwindow.wallpaperpath
-        # special handling for BCI files
-        if self.isBCI(file):
-            target=os.path.join(self.thedir, os.path.basename(file).lower())
-            src=open(file, "rb")
-            dest=open(target, "wb")
-            dest.write(src.read())
-            dest.close()
-            src.close()
-            self.AddToIndex(os.path.basename(file).lower())
-            self.OnRefresh()
-            return
-        img=wx.Image(file)
-        if not img.Ok():
-            dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
-                                "Image not understood", style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            return
-        self.OnAddImage(img,file)
+    def OnAddFiles(self, filenames):
+        for file in filenames:
+            self.thedir=self.mainwindow.wallpaperpath
+            # special handling for BCI files
+            if self.isBCI(file):
+                target=os.path.join(self.thedir, os.path.basename(file).lower())
+                src=open(file, "rb")
+                dest=open(target, "wb")
+                dest.write(src.read())
+                dest.close()
+                src.close()
+                self.AddToIndex(os.path.basename(file).lower())
+                continue
+            img=wx.Image(file)
+            if not img.Ok():
+                dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
+                                    "Image not understood", style=wx.OK|wx.ICON_ERROR)
+                dlg.ShowModal()
+                continue
+            self.OnAddImage(img,file,refresh=False)
+        self.OnRefresh()
 
 
-
-    def OnAddImage(self, img, file):
-        # Everything else is converted to BMP
-        target=self.getshortenedbasename(file, 'bmp')
+    def OnAddImage(self, img, file, refresh=True):
+        target=self.getshortenedbasename(file, self.convertextension)
         if target==None: return # user didn't want to
         obj=img
         # if image is more than 20% bigger or 60% smaller than screen, resize
@@ -247,7 +261,7 @@ class WallpaperView(guiwidgets.FileViewNew):
            img.GetHeight()<self.useheight*60/100:
             obj=ScaleImageIntoBitmap(obj, self.usewidth, self.useheight, "FFFFFF") # white background ::TODO:: something more intelligent
             
-        if not obj.SaveFile(target, wx.BITMAP_TYPE_BMP):
+        if not obj.SaveFile(target, self.convertwxbitmaptype):
             os.remove(target)
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
@@ -255,7 +269,8 @@ class WallpaperView(guiwidgets.FileViewNew):
             return
 
         self.AddToIndex(os.path.basename(target))
-        self.OnRefresh()
+        if refresh:
+            self.OnRefresh()
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.wallpaperpath
