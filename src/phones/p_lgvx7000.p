@@ -38,7 +38,7 @@ _NUMEMAILS=2
 _NUMPHONENUMBERS=5
 
 # The numbertype tab is different than all other LG phones
-numbertypetab= ( None, 'cell', 'home', 'office', 'cell2', 'fax', 'none')
+numbertypetab= ( None, 'cell', 'home', 'office', 'cell2', 'fax' )
 
 %}
 
