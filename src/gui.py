@@ -1366,6 +1366,7 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         pt = event.GetPosition();
         item, flags,unknown = self.HitTest(pt)
         if flags:
+            self.SelectItem(item)
             # is it a file or a directory
             path=self.itemtopath(item)
             if path in self.dirhash:
