@@ -10,6 +10,47 @@ END:VCARD
 
 BEGIN:VCARD
 VERSION:2.1
+X-EVOLUTION-FILE-AS:Dude, Evolution
+FN:Prefix Evolution Middle Dude the Last
+N:Dude;Evolution;Middle;Prefix;the Last
+ADR;WORK:po box;address line 2;address line 1;city;state/province;zip code;United States
+ADR;HOME;PREF:home pobox;home line 2;home line 1;home city;home state;home zip;Afghanistan
+ADR;POSTAL:other pobox;other line 2;othe rline 1;other city;other state;other zip;Antigua And Barbuda
+LABEL;QUOTED-PRINTABLE;WORK:po box address line 1=0Aaddress line 2=0Acity, state/province zip code=0AU=
+nited States
+LABEL;QUOTED-PRINTABLE;HOME;PREF:home pobox home line 1=0Ahome line 2=0Ahome city, home state home zip=0AAf=
+ghanistan
+LABEL;QUOTED-PRINTABLE;POSTAL:other pobox othe rline 1=0Aother line 2=0Aother city, other state other zi=
+p=0AAntigua And Barbuda
+TEL;WORK;VOICE:bus 903218490809
+TEL;WORK;FAX:bus fax 908908098908
+TEL;HOME:hom 90809809809809809
+TEL;CELL:mob 9807908098908
+EMAIL;INTERNET:primary@email.com
+EMAIL;INTERNET:secondary@example.com
+EMAIL;INTERNET:tertiary@emailexample.com
+BDAY:2004-06-25
+URL:web page address
+ORG:organization;department
+X-EVOLUTION-OFFICE:office
+TITLE:job title
+ROLE:profession
+X-EVOLUTION-MANAGER:managers name
+X-EVOLUTION-ASSISTANT:assistants name
+NICKNAME:nickname
+X-EVOLUTION-SPOUSE:spouse
+X-EVOLUTION-ANNIVERSARY:2004-06-07
+CALURI:public calendar url
+FBURL:free busy url
+NOTE;QUOTED-PRINTABLE:this is =0Athe multii=0Aline=0A=0A=0Anotes field=0A=0Awith some magic !@##=
+%$^%^&*&(){}|:";',./=0A=0Achars
+CATEGORIES:Favorites,International,Personal,VIP
+UID:pas-id-40CB54DB0000000B
+END:VCARD
+
+
+BEGIN:VCARD
+VERSION:2.1
 N:My Surname;My Firstname
 FN:My Firstname My Surname
 TITLE:Title,Title2
