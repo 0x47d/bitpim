@@ -82,8 +82,10 @@ class LogWindow(wx.Panel):
 
     def OnIdle(self,_):
         if len(self.outstandingtext):
-            self.tb.AppendText(self.outstandingtext)
+            # this code is written to be re-entrant
+            newt=self.outstandingtext
             self.outstandingtext=""
+            self.tb.AppendText(newt)
             self.tb.ScrollLines(-1)
 
     def log(self, str):
@@ -1259,10 +1261,10 @@ class MyStatusBar(wx.StatusBar):
                 pass
 
     def Reposition(self):
+        self.sizeChanged = False
         rect=self.GetFieldRect(1)
         self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+4))
         self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
-        self.sizeChanged = False
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
