@@ -23,9 +23,9 @@ import com_sanyomedia
 import com_sanyonewer
 import prototypes
 
-# Uncomment if it entry turns out to be ordered like PM-8200
-#numbertypetab=( 'cell', 'home', 'office', 'pager',
-#                    'fax', 'data', 'none' )
+# Order is like the PM-8200
+numbertypetab=( 'cell', 'home', 'office', 'pager',
+                    'fax', 'data', 'none' )
 
 class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo RL-4920 cell phone"
