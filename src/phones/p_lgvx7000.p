@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -9,7 +9,9 @@
 
 %{
 
-"""Various descriptions of data specific to LG VX6000"""
+"""Various descriptions of data specific to LG VX7000"""
+
+from common import PhoneBookBusyException
 
 from prototypes import *
 
@@ -71,7 +73,7 @@ PACKET sizefile:
 # in the convertphonebooktophone method
 PACKET pbentry:
     4  UINT serial1
-    2  UINT {'constant': 0x181} +entrysize
+    2  UINT {'constant': 0x181, 'constantexception': PhoneBookBusyException} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
     23 STRING {'raiseonunterminatedread': False} name
