@@ -12,6 +12,54 @@
 """Calendar user interface and data for bitpim.
 
 This module has a bp prefix so it doesn't clash with the system calendar module
+
+The format for the calendar is standardised.  It is a dict with the following
+fields:
+
+(Note: hour fields are in 24 hour format)
+
+start:
+
+   - (year, month, day, hour, minute) as integers
+end:
+
+   - (year, month, day, hour, minute) as integers  # if you want no end, set to the same value as start, or to the year 4000
+
+repeat:
+
+   - one of None, "daily", "monfri", "weekly", "monthly", "yearly"
+
+description:
+
+   - "String description"
+   
+changeserial:
+
+   - Set to integer 1
+   
+snoozedelay:
+
+   - Set to an integer number of minutes (default 0)
+   
+alarm:
+
+   - how many minutes beforehand to set the alarm (use 0 for on-time, None for no alarm)
+   
+daybitmap:
+
+   - default 0, it will become which days of the week weekly events happen on (eg every monday and friday)
+   
+ringtone:
+
+   - index number of the ringtone for the alarm (use 0 for none - will become a string)
+   
+pos:
+
+   - integer that should be the same as the dictionary key for this entry
+   
+exceptions:
+
+   - (optional) A list of (year,month,day) tuples that repeats are suppressed
 """
 
 # Standard modules
