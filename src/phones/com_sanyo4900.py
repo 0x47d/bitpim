@@ -77,6 +77,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 self.log("Read entry "+`i`+" - "+res.entry.name)
 
                 entry=self.extractphonebookentry(res.entry, result)
+                # ringtones
+                entry['ringtones']=[{'ringtone': ringpic.ringtones[i].ringtone, 'use': 'call'}]
+                # wallpapers
+                entry['wallpapers']=[ {'wallpaper': ringpic.wallpapers[i].wallpaper, 'use': 'call'} ]
+                    
                 pbook[i]=entry 
                 self.progress(count, numentries, res.entry.name)
                 count+=1
