@@ -171,7 +171,6 @@ class ImportDialog(wx.Dialog):
         if self.wname.GetValue() or self.wnumber.GetValue() or self.waddress.GetValue() or self.wemail.GetValue():
             self.DataNeedsUpdate()
 
-
     def OnOk(self,_):
         "Ok button was pressed"
         if self.preview.IsCellEditControlEnabled():
@@ -798,7 +797,7 @@ class ImportOutlookDialog(ImportDialog):
     def ReReadData(self):
         # this can take a really long time if the user doesn't spot the dialog
         # asking for permission to access email addresses :-)
-        items=self.outlook.getcontacts(self.folder)
+        items=self.outlook.getcontacts(self.folder, self.importmappingdict.keys())
 
         # work out what keys are actually present
         keys={}
@@ -855,5 +854,6 @@ def OnFileImportOutlookContacts(parent):
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
     dlg.Destroy()
+    native.outlook.releaseoutlook()
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
