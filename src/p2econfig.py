@@ -27,7 +27,7 @@ for extra in ["win32com.shell"]:
 opts={
     "py2exe":  {
         "dll_excludes": [ "_ssl.pyd", "libusb0.dll"],
-        "packages": [ "encodings", "encodings.utf8"],
+#        "packages": [ "encodings", "encodings.utf8"],
     }
 }
 
