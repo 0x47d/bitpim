@@ -765,7 +765,7 @@ class TodoList(object):
     def __encode_fields(self, i, entry):
         e=['']*self.__td_max_write_fields
         e[self.__td_entry]=`i`
-        if entry.priority<5:
+        if entry.priority is not None and entry.priority<5:
             e[self.__td_priority]='1'
         else:
             e[self.__td_priority]='0'
@@ -801,7 +801,7 @@ class TodoList(object):
                 cnt += 1
             else:
                 self.__phone.log('Failed to save todo entry '+str(k))
-            self.__phone.progress(cnt, self.__td_max_entries, 'Saving entry: '+self.__data[k]['name'])
+            self.__phone.progress(cnt, self.__td_max_entries, 'Saving entry: '+n.summary)
         for i in xrange(cnt, self.__td_max_entries):
             self.__phone.progress(i, self.__td_max_entries, 'Deleting entry: '+str(i))
             self.__phone.save_todo_entry(`i`)

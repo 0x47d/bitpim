@@ -926,7 +926,7 @@ class MainWindow(wx.Frame):
             self.memowidget.populate(results)
         # todo
         if results['sync'].has_key('todo'):
-            v=results['sync']['memo']
+            v=results['sync']['todo']
             if v=='MERGE': raise NotImplementedError
             self.todowidget.populatefs(results)
             self.todowidget.populate(results)

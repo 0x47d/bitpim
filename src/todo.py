@@ -193,7 +193,7 @@ class TodoEntry(object):
         return self.__data.get('priority', None)
     def __set_priority(self, v):
         if v is not None and v not in self.PR_Range:
-            raise ValueError, 'Illefal priority value'
+            raise ValueError, 'Illegal priority value'
         self.__set_or_del('priority', v, [])
     priority=property(fget=__get_priority, fset=__set_priority)
 
