@@ -176,7 +176,8 @@ class GetPhoneDialog(wx.Dialog):
         self.rb=[]
 
         for desc, source in self.sources:
-            self.cb.append(wx.CheckBox(self, -1, ""))
+            self.cb.append(wx.CheckBox(self, wx.NewId(), ""))
+            wx.EVT_CHECKBOX(self, self.cb[-1].GetId(), self.DoOkStatus)
             gs.Add(self.cb[-1], 0, wx.EXPAND)
             gs.Add(wx.StaticText(self,-1,desc), 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL) # align needed for gtk
             first=True
@@ -283,8 +284,21 @@ class GetPhoneDialog(wx.Dialog):
                             self.rb[index].SetValue(not done)
                             done=False
                             
-                
+    def ShowModal(self):
+        # we ensure the OK button is in the correct state
+        self.DoOkStatus()
+        return wx.Dialog.ShowModal(self)
 
+    def DoOkStatus(self, evt=None):
+        # ensure the OK button is in the right state
+        enable=False
+        for i in self.cb:
+            if i.GetValue():
+                enable=True
+                break
+        self.FindWindowById(wx.ID_OK).Enable(enable)
+        if evt is not None:
+            evt.Skip()
 
 class SendPhoneDialog(GetPhoneDialog):
     HELPID=helpids.ID_SEND_PHONE_DATA
