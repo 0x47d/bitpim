@@ -138,9 +138,10 @@ PACKET firmwareresponse:
     8 STRING {'terminator': None}  time3
     11 UNKNOWN dunno3
     10 STRING {'terminator': None}  firmware
-    7 UNKNOWN dunno4
-    16 STRING {'terminator': None}  phonemodel
-    5 STRING {'terminator': None}  prl
+    # things differ from this point on depending on the model
+    # 7 UNKNOWN dunno4
+    # 16 STRING {'terminator': None}  phonemodel
+    # 5 STRING {'terminator': None}  prl
 
 PACKET testing0crequest:
     1 UINT {'constant': 0x0c} +command
