@@ -170,6 +170,9 @@ class BrewProtocol:
         res=self.sendbrewcommand(req, p_brew.listdirectoriesresponse)
         for i in range(res.numentries):
             subdir=res.items[i].subdir
+            # sometimes subdir can already include the parent directory
+            f=subdir.rfind("/")
+            if f>=0: subdir=subdir[f+1:]
             if len(dir):
                 subdir=dir+"/"+subdir
             results[subdir]={ 'name': subdir, 'type': 'directory' }
