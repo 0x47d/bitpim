@@ -112,11 +112,11 @@ class Phone:
 
     def savephonebook(self, data):
         print "savephonebookcalled"
-        # to write the phone book, we scan through all existing entries
+        # To write the phone book, we scan through all existing entries
         # and record their record number and serials.
-        # we then write out our records, usng overwrite or append
+        # We then delete any entries that aren't in data
+        # We then write out our records, usng overwrite or append
         # commands as necessary
-        # finally we clear out any remaining entries
         existingpbook={}
         self.setmode(self.MODEBREW) # see note in getphonebook() for why this is necessary
         self.setmode(self.MODEPHONEBOOK)
@@ -129,32 +129,39 @@ class Phone:
             numexistingentries=ord(res[0x12])
         except:
             numexistingentries=0
-        progressmax=numexistingentries*2+len(data['phonebook'].keys())
+        progressmax=numexistingentries+len(data['phonebook'].keys())
         progresscur=0
         self.log("There are %d existing entries" % (numexistingentries,))
         for i in range(0, numexistingentries):
             ### Read current entry
-            self.log("Reading entry "+`i`)
             res=self.sendpbcommand(0x13, "\x01\x00\x00\x00\x00\x00\x00")
             entry={ 'number':  readlsb(res[0xe:0xf]), 'serial1':  readlsb(res[0x04:0x08]),
                     'serial2': readlsb(res[0xa:0xe]), 'name': readstring(res[0x10:0x27])}
+            assert entry['serial1']==entry['serial2'] # always the same
+            self.log("Reading entry "+`i`+" - "+entry['name'])            
             existingpbook[i]=entry 
             self.progress(progresscur, progressmax, "existing "+`progresscur`)
             #### Advance to next entry
             self.sendpbcommand(0x12, "\x01\x00\x00\x00\x00\x00\x00")
             progresscur+=1
         # we have now looped around back to begining
-        
-        # The phone ignores if you try to write an entry that has the same
-        # serial as a later entry.  This makes things fun if you then delete
-        # that later entry since the update won't be picked up at all.  There
-        # are two solutions to this problem.  One is to delete all entries first
-        # so that there is no possibility of duplication, and the second is
-        # to do some sort of advanced diff function to minimize the amount of
-        # writes happening.  I pick option one (delete all first)
-        
+
+        # Find entries that have been deleted
+        pbook=data['phonebook']
+        dellist=[]
         for i in range(0, numexistingentries):
+            ii=existingpbook[i]
+            serial=ii['serial1']
+            item=self._findserial(serial, pbook)
+            if item is None:
+                dellist.append(i)
+
+        progressmax+=len(dellist) # more work to do
+
+        # Delete those entries
+        for i in dellist:
             progresscur+=1
+            numexistingentries-=1  # keep count right
             ii=existingpbook[i]
             self.log("Deleting entry "+`i`+" - "+ii['name'])
             cmddata="\x01"+makelsb(ii['serial1'],4)+ \
@@ -162,23 +169,56 @@ class Phone:
                   makelsb(ii['serial2'],4) + \
                   makelsb(ii['number'],2)
             self.sendpbcommand(0x05, cmddata)
-            self.progress(progresscur, progressmax, "Preparing "+`i`)
+            self.progress(progresscur, progressmax, "Deleting "+`i`)
+            # also remove them from existingpbook
+            del existingpbook[i]
 
-        # should now be back at begining
-        pbook=data['phonebook']
-        entries=pbook.keys()
-        entries.sort() # need roworder data
-        numentries=len(pbook.keys())
-        for i in range(0, numentries):
+        # counter to keep track of record number (otherwise appends don't work)
+        counter=0
+        # Now rewrite out existing entries
+        keys=existingpbook.keys()
+        existingserials=[]
+        keys.sort()
+        for i in keys:
             progresscur+=1
-            ii=pbook[entries[i]]
-            entry=self.makeentry(i, ii, data)
-            cmd=0x03 # append
-            self.log("Appending entry "+`i`+" - "+ii['name'])
+            ii=pbook[self._findserial(existingpbook[i]['serial1'], pbook)]
+            self.log("Writing entry "+`i`+" - "+ii['name'])
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            res=self.sendpbcommand(cmd, "\x01"+entry)
+            entry=self.makeentry(counter, ii, data)
+            counter+=1
+            existingserials.append(existingpbook[i]['serial1'])
+            res=self.sendpbcommand(0x04, "\x01"+entry)  # overwrite
+            assert ii['serial1']==readlsb(res[0x04:0x08]) # serial should stay the same
+            # ii['serial1']=readlsb(res[0x04:0x08])
+            # ii['serial2']=ii['serial1']
+
+        # Finally write out new entries
+        keys=pbook.keys()
+        keys.sort()
+        for i in keys:
+            ii=pbook[i]
+            if ii['serial1'] in existingserials:
+                continue # already wrote this one out
+            progresscur+=1
+            entry=self.makeentry(counter, ii, data)
+            counter+=1
+            self.log("Appending entry "+ii['name'])
+            self.progress(progresscur, progressmax, "Writing "+ii['name'])
+            res=self.sendpbcommand(0x03, "\x01"+entry)  # append
             ii['serial1']=readlsb(res[0x04:0x08])
             ii['serial2']=ii['serial1']
+            if ii['serial1']==0:
+                self.log("Failed to add "+ii['name']+" - make sure the entry has at least one phone number")
+           
+
+
+    def _findserial(self, serial, dict):
+        """Searches dict to find entry with matching serial.  If not found,
+        returns None"""
+        for i in dict:
+            if dict[i]['serial1']==serial:
+                return i
+        return None
             
     def getcalendar(self,result):
         self.setmode(self.MODEBREW)
@@ -755,7 +795,7 @@ class Phone:
         # byte e is entry number
         # we ignore what user supplied
         assert len(res)==0xe
-        res+=makelsb(num,1)
+        res+=makelsb(num,1) 
 
         # byte f is unknown - always 0
         assert len(res)==0xf
