@@ -48,7 +48,8 @@ class Phone(com_sanyo.Phone):
 
     def sendpbcommand(self, request, responseclass, callsetmode=True, writemode=False, numsendretry=2):
          
-        res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=writemode, numsendretry=numsendretry)
+        # writemode seems not need for this phone
+        res=com_sanyo.Phone.sendpbcommand(self, request, responseclass, callsetmode=callsetmode, writemode=False, numsendretry=numsendretry)
         return res
  
 #
