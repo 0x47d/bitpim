@@ -425,6 +425,10 @@ class WallpaperView(guiwidgets.FileView):
             theimg=obj
         # ensure highest quality if saving as jpeg
         theimg.SetOptionInt("quality", 100)
+        # if a bmp, use 8 bit+palette if necessary
+        if self.convertwxbitmaptype:
+            if theimg.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less
+                theimg.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
         if not theimg.SaveFile(target, self.convertwxbitmaptype):
             os.remove(target)
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
