@@ -1009,7 +1009,12 @@ class MainWindow(wx.Frame):
             self.todowidget.getdata(data)
             todo.append((self.wt.writetodo, "Todo", merge))
 
-        ### SMS, nothing to send, yet!
+        ### SMS
+        v=dlg.GetSMSSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=v!=dlg.OVERWRITE
+            self.smswidget.getdata(data)
+            todo.append((self.wt.writesms, "SMS", merge))
 
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
@@ -1446,6 +1451,11 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savetodo(data, merge)
+
+    def writesms(self, data, merge):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.savesms(data, merge)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

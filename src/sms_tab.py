@@ -160,9 +160,12 @@ class CannedMsgPage(wx.Panel):
         self.__item_list.Clear()
         self.__populate_each(None)
     def __populate(self):
+        self.ignoredirty=True
         self.__clear()
         for n in self.__data:
             self.__item_list.Append(n)
+        self.ignoredirty=False
+        self.setdirty(False)
     def __populate_each(self, k):
         # populate the detailed info of the item keyed k
         if k is None:
@@ -235,6 +238,15 @@ class CannedMsgPage(wx.Panel):
             ce.set_db_dict(e)
             r[self.__data_key]=ce
         result.update({ self.__data_key: r })
+    def merge(self, dict):
+        d=dict.get(self.__data_key, {})
+        for k,e in d.items():
+            msg_lst=e.msg_list
+        for n in msg_lst:
+            if n not in self.__data:
+                self.__data.append(n)
+        self.__save_to_db(self.__data)
+        self.__populate()
 
 #-------------------------------------------------------------------------------
 class FolderPage(wx.Panel):
@@ -376,7 +388,7 @@ class SMSWidget(wx.Panel):
             self.__save_to_db(self.__data)
 
     def getdata(self,dict,want=None):
-        dict[self.__data_key]=copy.deepcopy(self.__data)
+        dict[self.__data_key]=self.__data.copy()
         self.__canned_msg.getdata(dict, want)
 
     def populate(self, dict):
@@ -422,3 +434,5 @@ class SMSWidget(wx.Panel):
         # populate the display and save the data
         self.__populate()
         self.__save_to_db(self.__data)
+        # merge the canned msg list
+        self.__canned_msg.merge(dict)

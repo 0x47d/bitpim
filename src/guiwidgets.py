@@ -322,7 +322,7 @@ class SendPhoneDialog(GetPhoneDialog):
         GetPhoneDialog.__init__(self, frame, title, id)
 
     # this is what BitPim itself doesn't supports - the phones may support less
-    _notsupported=('sms', 'write', None )
+    _notsupported=()
         
 
 ###

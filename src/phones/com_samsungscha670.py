@@ -755,13 +755,9 @@ class Phone(com_samsung.Phone):
         return result
 
     def getsms(self, result):
-        self.log("Getting SMS entries")
-        self.setmode(self.MODEPHONEBOOK)
-        sms_l=com_samsung.SMSList(self)
-        sms_l.read()
-        result['sms']=sms_l.get()
-        self.setmode(self.MODEMODEM)
-        return result
+        return self._getsms(result)
+    def savesms(self, result, merge):
+        return self._savesms(result, merge)
 
     getmedia=None
 

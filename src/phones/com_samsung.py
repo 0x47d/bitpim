@@ -296,6 +296,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         except commport.ATError:
             pass
         return []
+    def get_canned_msg(self, entry_index):
+        try:
+            s=self.comm.sendatcommand('#psstr=%d'%entry_index)
+            if len(s):
+                return self.splitandunescape(s[0])
+        except commport.ATError:
+            pass
+        return []
+    def save_canned_msg(self, entry_str):
+        try:
+            self.comm.sendatcommand('#psstw='+entry_str)
+            return True
+        except:
+            return False
 
     def extract_timedate(self, td):
         # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
@@ -584,6 +598,25 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         self.setmode(self.MODEMODEM)
 
         return dict
+    # common methods for individual phones if they can use them w/o changes
+    def _getsms(self, result):
+        self.log("Getting SMS entries")
+        self.setmode(self.MODEPHONEBOOK)
+        sms_l=SMSList(self)
+        sms_l.read()
+        result['sms']=sms_l.get()
+        canned_msg=CannedMsgList(self)
+        canned_msg.read()
+        result['canned_msg']=canned_msg.get()
+        self.setmode(self.MODEMODEM)
+        return result
+    def _savesms(self, result, merge):
+        self.log("Saving SMS Canned Messages")
+        self.setmode(self.MODEPHONEBOOK)
+        canned_msg=CannedMsgList(self, result.get('canned_msg', {}))
+        canned_msg.write()
+        self.setmode(self.MODEMODEM)
+        return result
 
 #------------------------------------------------------------------------------
 class Profile(com_phone.Profile):
@@ -969,5 +1002,59 @@ class SMSList(object):
         self.__data.update(self.__saved.get())
         self.__sent.read()
         self.__data.update(self.__sent.get())
+
+#-------------------------------------------------------------------------------
+class CannedMsgList(SMS_Generic_List):
+    __max_entries=20
+    __valid_range=xrange(__max_entries)
+    __field_num=4
+    __text_index=3
+    __data_key='canned_msg'
+    __max_write_fields=3
+    __count_index=0
+    __timestamp_index=1
+    __write_text_index=2
+    def __init__(self, phone, data={}):
+        super(CannedMsgList, self).__init__(phone)
+        self._data=data
+    def read(self):
+        msg_list=[]
+        for i in self.__valid_range:
+            self._phone.progress(i, self.__max_entries,
+                                 'Reading SMS Canned Msg '+str(i))
+            s=self._phone.get_canned_msg(i)
+            if len(s)==self.__field_num:
+                msg_list.append(s[self.__text_index])
+        e=sms.CannedMsgEntry()
+        e.msg_list=msg_list
+        self._data[self.__data_key]=e
+    def validate(self):
+        for k,n in self._data.items():
+            msg_lst=n.msg_list
+            for k1,n1 in enumerate(msg_lst):
+                msg_lst[k1]=n1.replace('"', '')
+            self._data[k].msg_list=msg_lst
+    def write(self):
+        self.validate()
+        for k,n in self._data.items():
+            msg_lst=n.msg_list
+        k=None
+        for k,n in enumerate(msg_lst):
+            if k>=self.__max_entries:
+                # enough of that
+                break
+            self._phone.progress(k, self.__max_entries,
+                                 'Writing SMS Canned Msg '+str(k))
+            s=`k`+','+self._phone.get_time_stamp()+',"'+n+'"'
+            if not self._phone.save_canned_msg(s):
+                self._phone.log('Failed to write SMS Canned Msg entry: '+str(k))
+        if k is None:
+            k=0
+        else:
+            k+=1
+        for i in xrange(k, self.__max_entries):
+            self._phone.progress(i, self.__max_entries,
+                                 'Deleting SMS Canned Msg entry: '+str(i))
+            self._phone.save_canned_msg(`i`)
 
 #-------------------------------------------------------------------------------

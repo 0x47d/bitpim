@@ -581,13 +581,9 @@ class Phone(com_samsung.Phone):
         return result
 
     def getsms(self, result):
-        self.log("Getting SMS entries")
-        self.setmode(self.MODEPHONEBOOK)
-        sms_l=com_samsung.SMSList(self)
-        sms_l.read()
-        result['sms']=sms_l.get()
-        self.setmode(self.MODEMODEM)
-        return result
+        return self._getsms(result)
+    def savesms(self, result, merge):
+        return self._savesms(result, merge)
 
     getmedia=None
 
@@ -625,6 +621,7 @@ class Profile(com_samsung.Profile):
         ('todo', 'read', None),     # all todo list reading DJP
         ('todo', 'write', 'OVERWRITE'),  # all todo list writing DJP
         ('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'write', 'OVERWRITE')     # all SMS list writing DJP
         )
 
     def convertphonebooktophone(self, helper, data):
