@@ -9,7 +9,7 @@
 ###
 ### $Id$
 
-"""This modules generates opinions on the attached com devices"""
+"""Generate opinions on the attached com devices"""
 
 def diagnose(portlist):
     """Returns data suitable for use in com port settings dialog
@@ -125,4 +125,45 @@ def genhtml(port):
     res+="\n</table>"
 
     return res
+
+# A list of USB vendor and product ids we look for
+usbdb=( ( 0x1004, 0x6000), # VID=LG Electronics, PID=LG VX4400 -internal USB interface
+        ( 0x067b, 0x2303), # VID=Prolific, PID=USB to serial
+        )
+
             
+def autoguessports():
+    """Returns a list of ports (most likely first) for finding the phone on"""
+    res=[]
+    # we only care about available ports
+    ports=filter(lambda x: x['available'], comscan.comscan())
+
+    # some special cases
+    np=[]
+    for p in ports:
+        if p.has_key('hardwareinstance'):
+            v=p['hardwareinstance'].lower()
+            if v.find("lgatcr")>=0:
+                res.append(p)
+                continue
+        np.append(p)
+    ports=np
+
+    # look through usbdb
+    for vid,pid in usddb:
+        np=[]
+        for p in ports:
+            if p['hardwareinstance']:
+                v=p['hardwareinstance'].lower()
+                str="vid_%04x&pid_%04x"
+                if v.find(str)>=0:
+                    res.append(p)
+                    continue
+            np.append(p)
+        ports=np
+
+    # at the end, we now have res containing a list of ports we
+    # recommend, and ports containing a list of remaining available
+    # ports
+
+    return map(lambda x: x['name'], res)
