@@ -359,6 +359,7 @@ class ConfigDialog(wx.Dialog):
             gs.Add(self.bitflingenabled, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
             gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), 0, wx.EXPAND)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
+            wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
         else:
             self.bitflingenabled=None
 
@@ -439,7 +440,7 @@ class ConfigDialog(wx.Dialog):
         if res==wx.ID_OK:
             self.commbox.SetValue(v)
 
-    def ApplyBitFlingSettings(self):
+    def ApplyBitFlingSettings(self, _=None):
         if self.bitflingenabled is not None:
             if self.bitflingenabled.GetValue():
                 bitflingscan.flinger.configure(self.mw.config.Read("bitfling/username", "<unconfigured>"),
