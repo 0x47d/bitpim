@@ -59,7 +59,7 @@ class Display(wxFrame):
     """Used for the builtin tester"""
 
     def __init__(self, file, parent=None):
-        bmp=getbitmap(file)
+        bmp=wxBitmapFromImage(getimage(file))
         
         wxFrame.__init__(self, parent, -1, "Image Display")
 
