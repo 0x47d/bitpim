@@ -20,7 +20,19 @@ from p_lg import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NUMSPEEDDIALS=100
+_FIRSTSPEEDDIAL=1
+_LASTSPEEDDIAL=99
+_NUMPHONEBOOKENTRIES=200
+
 %}
+
+PACKET speeddial:
+    1 UINT {'default': 0xff} +entry
+    1 UINT {'default': 0xff} +number
+
+PACKET speeddials:
+    * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 PACKET pbreadentryresponse:
     "Results of reading one entry"

@@ -24,6 +24,8 @@ from p_lgvx4400 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NUMSPEEDDIALS=0
+_NUMPHONEBOOKENTRIES=500
 %}
 
 # desc file used for wallpaper and ringtone indices

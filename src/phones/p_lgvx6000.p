@@ -24,9 +24,19 @@ from p_lgvx4400 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+_NUMSPEEDDIALS=100
+_FIRSTSPEEDDIAL=2
+_LASTSPEEDDIAL=99
+_NUMPHONEBOOKENTRIES=500
 %}
 
+PACKET speeddial:
+    2 UINT {'default': 0xffff} +entry
+    1 UINT {'default': 0xff} +number
 
+PACKET speeddials:
+    * LIST {'length': _NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
+    
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
     50 STRING {'default': ""} +name
