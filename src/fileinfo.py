@@ -222,7 +222,7 @@ def idimg_JPG(f):
     "Identify a JPEG image"
     # The people who did jpeg decided to see just how complicated an image
     # format they could make.
-    if f.GetBytes(0,4)=="\xff\xd8\xff\xe0":
+    if f.GetBytes(0,2)=="\xff\xd8":
         # in theory we could also parse EXIF information
         offset=2
         while True:
