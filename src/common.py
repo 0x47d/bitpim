@@ -13,6 +13,7 @@
 
 # standard modules
 import string
+import cStringIO
 
 # generic comms exception and then various specialisations
 class CommsException(Exception):
@@ -66,7 +67,7 @@ def datatohexstring(data):
     """Returns a pretty printed hexdump of the data
 
     @rtype: string"""
-    res=""
+    res=cStringIO.StringIO()
     lchar=""
     lhex="00000000 "
     for count in range(0, len(data)):
@@ -78,15 +79,15 @@ def datatohexstring(data):
             lchar=lchar+'.'
 
         if (count+1)%16==0:
-            res=res+lhex+"    "+lchar+"\n"
+            res.write(lhex+"    "+lchar+"\n")
             lhex="%08x " % (count+1,)
             lchar=""
     if len(data):
         while (count+1)%16!=0:
             count=count+1
             lhex=lhex+"   "
-        res=res+lhex+"    "+lchar+"\n"
-    return res
+        res.write(lhex+"    "+lchar+"\n")
+    return res.getvalue()
 
 def prettyprintdict(dictionary, indent=0):
      """Returns a pretty printed version of the dictionary
