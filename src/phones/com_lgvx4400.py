@@ -641,7 +641,8 @@ class Phone:
                 self.comm.setbaudrate(38400) # dm mode is always 38400
                 return 1
             except:
-                pass
+                self.log("No response to setting DM mode")
+        self.comm.setbaudrate(38400) # just in case it worked
         return 0
         
 
