@@ -9,8 +9,8 @@ import calendar
 import time
 
 # wx modules
-from wxPython.grid import *
 from wxPython.wx import *
+from wxPython.grid import *
 from wxPython.lib.timectrl import *
 from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidthMixin
 from wxPython.lib.intctrl import *
@@ -1159,7 +1159,6 @@ class DayViewDialog(wxDialog):
         lbs.Add(self.listbox, 1, wxEXPAND|wxBOTTOM, border=5)
         lbs.Add(hbs2, 0, wxEXPAND)
 
-
         self.fieldnames=('description', 'start', 'end', 'repeat',
         'alarm', 'ringtone', '?d')
         
@@ -1228,6 +1227,11 @@ class DayViewDialog(wxDialog):
         EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
         EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
+        EVT_BUTTON(self, self.ID_REVERT, self.OnRevertButton)
+        EVT_BUTTON(self, self.ID_CLOSE, self.OnCloseButton)
+
+        # this is allegedly called automatically but didn't work for me
+        EVT_CLOSE(self, self.OnCloseWindow)
 
         # Dirty tracking.  We restrict what the user can do while editting an
         # entry to only be able to edit that entry.  'dirty' gets fired when
@@ -1239,17 +1243,19 @@ class DayViewDialog(wxDialog):
         self.setdirty(False)
 
         # Tracking of the entries in the listbox.  Each entry is a dict. Entries are just the
-        # entries in a random order.  entrymap 
-        
-        self.entries={}
+        # entries in a random order.  entrymap maps from the order in the listbox to a
+        # specific entry
+        self.entries=[]
         self.entrymap=[]
 
-
-
-    def OnListBoxItem(self, _):
-        self.updatefields(self.entrymap[self.listbox.GetSelection()])
+    def OnListBoxItem(self, _=None):
+        self.updatefields(self.getentry(self.listbox.GetSelection()))
         self.setdirty(False)
         self.FindWindowById(self.ID_DELETE).Enable(True)
+
+    def getentry(self, num):
+        # maps from entry number in listbox to an entry in entries
+        return self.entries[self.entrymap[num]]
 
     def OnSaveButton(self, _=None):
         for f in self.fields:
@@ -1260,6 +1266,25 @@ class DayViewDialog(wxDialog):
             else:
                 v=control.GetValue()
             print f,v
+
+    def OnRevertButton(self, _=None):
+        # We basically pretend the user has selected the item in the listbox again (which they
+        # can't actually do as it is disabled)
+        self.OnListBoxItem()
+
+    def OnCloseWindow(self, event):
+        # only allow closing to happen if the close button is
+        # enabled
+        if self.FindWindowById(self.ID_CLOSE).IsEnabled():
+            self.Show(False)
+        else:
+            # veto it if allowed
+            if event.CanVeto():
+                event.Veto()
+                wxBell()
+
+    def OnCloseButton(self, _=None):
+        self.Show(False)
 
     def setdate(self, year, month, day):
         d=time.strftime("%A %d %B %Y", (year,month,day,0,0,0, calendar.weekday(year,month,day),1, 0))
@@ -1272,30 +1297,29 @@ class DayViewDialog(wxDialog):
     def updatelistbox(self):
         self.listbox.Clear()
         self.entrymap=[]
-        for i in self.entries:
-            entry=i
-            e=( entry['start'][3:5], entry['end'][3:5], entry['description'], entry)
+        for index, entry in zip(range(0,len(self.entries)), self.entries):
+            e=( entry['start'][3:5], entry['end'][3:5], entry['description'],  index)
             self.entrymap.append(e)
         # time ordered
         self.entrymap.sort()
+        # now undecorate
+        self.entrymap=[index for ign0, ign1, ign2, index in self.entrymap]
         # add listbox entries
-        for e in self.entrymap:
+        for index in self.entrymap:
+            e=self.entries[index]
             if 0: # ampm/miltime config here ::TODO::
-                str="%2d:%02d" % (e[0][0], e[0][1])
+                str="%2d:%02d" % (e['start'][3], e['start'][4])
             else:
-                hr=e[0][0]
+                hr=e['start'][3]
                 ap="am"
                 if hr>=12:
                     ap="pm"
                     hr-=12
                 if hr==0: hr=12
-                str="%2d:%02d %s" % (hr, e[0][1], ap)
-            str+=" "+e[2]
+                str="%2d:%02d %s" % (hr, e['start'][4], ap)
+            str+=" "+e['description']
             print "adding",str
             self.listbox.Append(str)
-
-        # make entrymap only be entries
-        self.entrymap=[x[3] for x in self.entrymap]
 
         print `self.entrymap`
         print `self.entries`
@@ -1353,6 +1377,7 @@ class DayViewDialog(wxDialog):
             self.FindWindowById(self.ID_REVERT).Enable(False)
 
             # enable delete, close, left, right, new
+            self.FindWindowById(self.ID_CLOSE).Enable(True)
             self.FindWindowById(self.ID_DELETE).Enable(True)
             self.FindWindowById(self.ID_PREV).Enable(True)
             self.FindWindowById(self.ID_NEXT).Enable(True)
