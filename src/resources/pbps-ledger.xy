@@ -1,3 +1,4 @@
 Ledger
 
-# do nothing
+styles['rowodd']={ '': ('bgcolor', '#fdf5e6') }
+styles['roweven']={ '': ('bgcolor', '#f0f8ff') }
