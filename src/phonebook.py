@@ -589,7 +589,6 @@ class PhoneWidget(wx.Panel):
 
     def OnCategoriesUpdate(self, msg):
         if self.categories!=msg.data:
-            print "categories updated"
             self.categories=msg.data[:]
             self.modified=True
 
@@ -1295,7 +1294,7 @@ def cleannumber(num):
     return re.sub(nondigits, "", num)
 
 def comparenumbers(s,a):
-    """Give a score on two numbers
+    """Give a score on two phone numbers
 
     """
 
@@ -1325,6 +1324,7 @@ def comparenumbers(s,a):
     return score
 
 def comparefields(s,a,valuekey,threshold=0.8,lookat=3):
+    """Compares the valuekey field in source and against lists returning a score for closeness of match"""
     sm=difflib.SequenceMatcher()
     ss=[x[valuekey] for x in s if x.has_key(valuekey)]
     aa=[x[valuekey] for x in a if x.has_key(valuekey)]
@@ -1351,13 +1351,26 @@ def comparefields(s,a,valuekey,threshold=0.8,lookat=3):
     return score
     
 def compareallfields(s,a,fields,threshold=0.8,lookat=3):
+    """Like comparefields, but for source and against lists where multiple keys have values in each item
+
+    @param fields: This should be a list of keys from the entries that are in the order the human
+                   would write them down."""
+
+    # we do it in "write them down order" as that means individual values that move don't hurt the matching
+    # much  (eg if the town was wrongly in address2 and then moved into town, the concatenated string would
+    # still be the same and it would still be an appropriate match)
     args=[]
     for d in s,a:
         str=""
-        for f in fields:
-            if d.has_key(f):
-                str+=d[f]+"  "
-        args.append({'value': str})
+        list=[]
+        for entry in d:
+            for f in fields:
+                # we merge together the fields space separated in order to make one long string from the values
+                if entry.has_key(f):
+                    str+=entry.get(f)+"  "
+            list.append( {'value': str} )
+        args.append( list )
+    # and then give the result to comparefields
     args.extend( ['value', threshold, lookat] )
     return comparefields(*args)
 
