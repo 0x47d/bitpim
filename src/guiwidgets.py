@@ -19,15 +19,22 @@ import gui
 #### A widget for displaying the phone information
 ####            
 
-class PhoneGrid(wxGrid):
-    # The various FitInside calls are because wxGrid doesn't update its scrollbars without
-    # them.  See the wxPython FAQ
-    def __init__(self, mainwindow, parent, id=-1, *args, **kwargs):
-        apply(wxGrid.__init__, (self,parent,id)+args, kwargs)
+# we use a custom table class
+class PhoneDataTable(wxPyGridTableBase):
+    def __init__(self, mainwindow):
+        wxPyGridTableBase.__init__(self)
         self.mainwindow=mainwindow
-        self.CreateGrid(0,0)
-        self.labels=[]
-        self.rows=0
+        self.numrows=0
+        self.numcols=0
+        self.labels=[] # columns
+        self.roworder=[] # rows
+        self._data={}
+
+    def getdata(self, dict):
+        print "getdata"
+        return dict
+
+    def setstandardlabels(self):
         # get some nice columns setup first
         self.addcolumn('name')
         self.addcolumn('#')
@@ -35,15 +42,27 @@ class PhoneGrid(wxGrid):
         for i in range(1,6):
             self.addcolumn('type'+`i`)
             self.addcolumn('number'+`i`)
-        self.AutoSize()
+
+    def addcolumn(self, name):
+        print "addcolumn"
+        self.labels.append(name)
+        msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_COLS_APPENDED, 1)
+        self.GetView().ProcessTableMessage(msg)
 
     def clear(self):
-        self.rows=0
-        self.ClearGrid()
+        # we never clear out columns
+        oldr=self.numrows
+        self.numrows=0
+        msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, 0, oldr)
+        if oldr:
+            self.GetView().ProcessTableMessage(msg)
 
-    def getdata(self, dict):
-        print "make mne"
-        pass # in future should actually fill the dict out
+    def getcolumn(self,name):
+        if len(self.labels)==0:
+            self.setstandardlabels()
+        if name not in self.labels:
+            self.addcolumn(name)
+        return self.labels.index(name)
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.phonebookpath
@@ -76,51 +95,105 @@ class PhoneGrid(wxGrid):
         else:
             dict['phonebook']={}
         return dict
-        
+
     def populate(self, dict):
         self.clear()
         pb=dict['phonebook']
+        self.mainwindow.OnLog(`pb`)
         k=pb.keys()
         k.sort()
-        for i in k:
-            self.addentry(pb[i])
-        # clear fails to actually clear for some reason, so we need to cleanup
-        cur=self.GetNumberRows()
-        if cur>self.rows:
-            self.DeleteRows(self.rows,cur-self.rows)
-        
+        self._data.update(pb)
+        self.roworder=k
+        oldrows=self.numrows
+        self.numrows=len(k)
+        msg=None
+        if self.numrows>oldrows:
+            msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_APPENDED, self.numrows-oldrows)
+        elif self.numrows<oldrows:
+            msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, self.numrows, oldrows-self.numrows)
+        if msg is not None:
+            print `msg`
+            self.GetView().ProcessTableMessage(msg)
 
-    def addentry(self, entry):
-        # entry is a dictionary
-        self.AppendRows(1)
-        k=entry.keys()
-        k.sort()
+        # get list of all columns
+        cols=[]
+        for e in pb:
+            keys=pb[e].keys()
+            for k in keys:
+                if k not in cols:
+                    cols.append(k)
+        # now order the columns
+        cols.sort()
         k2=[]
-        for i in k:
-            if i[0]=='?':
-                k2.append(i)
-                continue
-            self.SetCellValue(self.rows, self.getcolumn(i), entry[i])
-        # do ones beginging with ? last
-        for i in k2:
-            self.SetCellValue(self.rows, self.getcolumn(i), entry[i])
-        self.SetRowLabelValue(self.rows, entry['name'])
-        self.rows+=1
+        for c in cols:
+            if c[0]=='?':
+                k2.append(c)
+            else:
+                self.getcolumn(c)
+        k2.sort()
+        for c in k2:
+            self.getcolumn(c)
+
+        self.GetView().FitInside()
+                    
+    def GetNumberRows(self):
+        return len(self.roworder)
+
+    def GetNumberCols(self):
+        return len(self.labels)
+
+    def IsEmptyCell(self, row, col):
+        return false
+
+    def GetValue(self, row, col):
+        try:
+            return self._data[self.roworder[row]][self.labels[col]]
+        except:
+            # print "bad request", row, col
+            return ""
+
+    def SetValue(self, row, col, value):
+        print "SetValue",row,col,value
+
+    def GetColLabelValue(self, col):
+        return self.labels[col]
+
+    def GetRowLabelValue(self, row):
+        return self._data[self.roworder[row]]['name']
+
+    def CanGetValueAs(self, row, col, typename):
+        print "CanGetValueAs", row, col, typename
+        return true
+
+    def CanSetValueAs(self, row, col, typename):
+        return self.CanGetValueAs(row, col, typename)
+
+class PhoneGrid(wxGrid):
+    # The various FitInside calls are because wxGrid doesn't update its scrollbars without
+    # them.  See the wxPython FAQ
+    def __init__(self, mainwindow, parent, id=-1, *args, **kwargs):
+        apply(wxGrid.__init__, (self,parent,id)+args, kwargs)
+        self.mainwindow=mainwindow
+        self.table=PhoneDataTable(mainwindow)
+        self.SetTable( self.table, true)
+        self.table.setstandardlabels()
+        self.AutoSizeColumns(true)
         self.AutoSize()
-        self.FitInside()
 
-    def addcolumn(self, name):
-        self.AppendCols(1)
-        self.SetColLabelValue(len(self.labels), name)
-        self.labels.append(name)
-        self.FitInside()
+    def clear(self):
+        self.table.clear()
 
-    def getcolumn(self,name):
-        if name not in self.labels:
-            self.addcolumn(name)
-            self.FitInside()
-        return self.labels.index(name)
+    def getdata(self, dict):
+        self.table.getdata(self, dict)
 
+    def populatefs(self, dict):
+        return self.table.populatefs(dict)
+    
+    def populate(self, dict):
+        return self.table.populate(dict)
+
+    def getfromfs(self, dict):
+        return self.table.getfromfs(dict)
 
 ####
 #### A simple text widget that does nice pretty logging.
@@ -634,16 +707,14 @@ class WallpaperView(FileView):
             # gifs
             file=os.path.join(self.mainwindow.wallpaperpath, i)
             image=wxImage(file)
-            print "%s ok=%d actual = %d x %d" % (file, image.Ok(), image.GetWidth(), image.GetHeight())
             width=min(image.GetWidth(), self.usewidth)
             height=min(image.GetHeight(), self.useheight)
             img=image.GetSubImage(wxRect(0,0,width,height))
-            print "new image %d x %d" % (width, height)
             if width!=self.usewidth or height!=self.useheight:
                 b=wxEmptyBitmap(self.usewidth, self.useheight)
                 mdc=wxMemoryDC()
                 mdc.SelectObject(b)
-                mdc.DrawRectangle(-1,-1,self.usewidth+2,self.useheight+2)
+                mdc.Clear()
                 mdc.DrawBitmap(img.ConvertToBitmap(), 0, 0, true)
                 mdc.SelectObject(wxNullBitmap)
                 bitmap=b
@@ -700,7 +771,7 @@ class WallpaperView(FileView):
             posx=self.usewidth-(self.usewidth+newwidth)/2
             posy=self.useheight-(self.useheight+newheight)/2
             # background fill in white
-            mdc.DrawRectangle(-1,-1,self.usewidth+2,self.useheight+2)
+            mdc.Clear()
             mdc.DrawBitmap(img.ConvertToBitmap(), posx, posy, true)
             obj=bitmap
         if not obj.SaveFile(target, wxBITMAP_TYPE_BMP):
@@ -799,7 +870,7 @@ class MyStatusBar(wxStatusBar):
     def progressmajor(self, pos, max, desc=""):
         self.progressminor(0,1)
         if len(desc):
-            str="%d/%d %s" % (pos+1, max+1, desc)
+            str="%d/%d %s" % (pos+1, max, desc)
         else:
             str=desc
         self.SetStatusText(str,1)
