@@ -121,6 +121,7 @@ class WallpaperView(guiwidgets.FileView):
             self.modified=True
         
     def populate(self, dict):
+        self.Freeze()
         self.DeleteAllItems()
         if self._data['wallpaper-index']!=dict['wallpaper-index']:
             self._data['wallpaper-index']=dict['wallpaper-index'].copy()
@@ -184,6 +185,7 @@ class WallpaperView(guiwidgets.FileView):
                 self.SetStringItem(count, 3, entry.get("origin", ""))
             image.Destroy()
             count+=1
+        self.Thaw()
 
     def OnPaste(self, _=None):
         do=wx.BitmapDataObject()
