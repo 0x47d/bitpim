@@ -64,7 +64,7 @@ PACKET writefilerequest:
     1 BOOL {'value': self.filesize>0x100} +*thereismore
     1 UINT {'constant': 1} +unknown1
     4 UINT filesize
-    4 UINT {'constant': 0x000100ff} +unknown2
+    4 UINT {'constant': 0x000100ff} +unknown2 "probably file attributes"
     * STRING {'terminator': 0, 'pascal': True} filename
     2 UINT {'value': len(self.data)} +*datalen
     * DATA data
