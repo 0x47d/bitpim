@@ -70,8 +70,9 @@ import time
 
 # wx stuff
 import wx
-from wxPython.lib.maskededit import wxMaskedTextCtrl
-from wxPython.lib.intctrl import wxIntCtrl, EVT_INT
+import wx.lib
+import wx.lib.maskededit
+import wx.lib.intctrl
 
 # my modules
 import calendarcontrol
@@ -845,14 +846,14 @@ class DayViewDialog(wx.Dialog):
 
 
 # We derive from wxPanel not the control directly.  If we derive from
-# wxMaskedTextCtrl then all hell breaks loose as our {Get|Set}Value
+# wx.MaskedTextCtrl then all hell breaks loose as our {Get|Set}Value
 # methods make the control malfunction big time
 class DVDateTimeControl(wx.Panel):
     """A datetime control customised to work in the dayview editor"""
     def __init__(self,parent,id):
         f="EUDATETIMEYYYYMMDD.HHMM"
         wx.Panel.__init__(self, parent, -1)
-        self.c=wxMaskedTextCtrl(self, id, "",
+        self.c=wx.lib.maskededit.MaskedTextCtrl(self, id, "",
                                 autoformat=f)
         bs=wx.BoxSizer(wx.HORIZONTAL)
         bs.Add(self.c,0,wx.EXPAND)
@@ -930,16 +931,16 @@ class DVRepeatControl(wx.Choice):
         if s<0: s=0
         return self.vals[s]
 
-class DVIntControl(wxIntCtrl):
+class DVIntControl(wx.lib.intctrl.IntCtrl):
     # shows integer values
     def __init__(self, parent, id):
-        wxIntCtrl.__init__(self, parent, id, limited=True)
-        EVT_INT(self, id, parent.OnMakeDirty)
+        wx.lib.intctrl.IntCtrl.__init__(self, parent, id, limited=True)
+        wx.lib.intctrl.EVT_INT(self, id, parent.OnMakeDirty)
 
     def SetValue(self, v):
         if v is None:
             v=-1
-        wxIntCtrl.SetValue(self,v)
+        wx.lib.intctrl.IntCtrl.SetValue(self,v)
         
 class DVTextControl(wx.TextCtrl):
     def __init__(self, parent, id, value=""):
