@@ -445,7 +445,7 @@ class ConvertDialog(wx.Dialog):
         f.seek(offset)
         open(self.workingmp3file, "wb").write(f.read(length))
         f.close()
-        conversions.convertmp3towav(self.workingmp3file, self.wavfile)
+        conversions.converttowav(self.workingmp3file, self.wavfile)
         self.sound=wx.Sound(self.wavfile)
         assert self.sound.IsOk()
         res=self.sound.Play(wx.SOUND_ASYNC)
@@ -549,7 +549,7 @@ class ConvertMP3toQCP(ConvertDialog):
             if self.endframe:
                 kargc['start']=self.beginframe
                 kargc['duration']=self.endframe-self.beginframe
-            conversions.convertmp3towav(self.file, self.wavfile, **kargc)
+            conversions.converttowav(self.file, self.wavfile, **kargc)
             conversions.convertwavtoqcp(self.wavfile)
             self.lengthlabel.SetLabel(str(os.stat(self.qcpfile).st_size))
             self.afi=fileinfo.getpcmfileinfo(self.wavfile)
@@ -572,7 +572,7 @@ class ConvertMP3toQCP(ConvertDialog):
         self.OnStop()
         self.startpos=self.slider.GetValue()
         duration=self.endframe-self.startpos
-        conversions.convertmp3towav(self.wavfile, self.workingwavfile,
+        conversions.converttowav(self.wavfile, self.workingwavfile,
                                     start=self.startpos)
         self.sound=wx.Sound(self.workingwavfile)
         assert self.sound.IsOk()

@@ -57,7 +57,7 @@ def run(*args):
     print args
     ret=os.spawnl( *( (os.P_WAIT, args[0])+args)) # looks like C code ...
     if ret!=0:
-        raise common.CommandExecutionFailed(retcode, args)
+        raise common.CommandExecutionFailed(ret, args)
     
 
 def convertto8bitpng(pngdata, maxsize):
@@ -180,19 +180,15 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     @param channels: 1 is mono, 2 is stereo
     """
     ffmpeg=gethelperbinary("ffmpeg")
-    wavfile=common.gettempfilename("wav")
     mp3file=common.gettempfilename("mp3")
     try:
-        run(ffmpeg, "-i", shortfilename(inputfilename), shortfilename(wavfile))
-        run(ffmpeg, "-i", wavfile, "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
+        run(ffmpeg, "-i", shortfilename(inputfilename), "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
         return open(mp3file, "rb").read()
     finally:
-        try: os.remove(wavfile)
-        except: pass
         try: os.remove(mp3file)
         except: pass
 
-def convertmp3towav(mp3filename, wavfilename, samplerate=None,
+def converttowav(mp3filename, wavfilename, samplerate=None,
                     channels=None, start=None, duration=None):
     ffmpeg=gethelperbinary("ffmpeg")
     cmd=(ffmpeg, "-i", shortfilename(mp3filename))
@@ -205,6 +201,10 @@ def convertmp3towav(mp3filename, wavfilename, samplerate=None,
     if duration is not None:
         cmd+=('-t', str(duration))
     cmd+=(shortfilename(wavfilename),)
+    # ffmpeg queries about overwrite - grrr
+    try: os.remove(cmd[-1])
+    except OSError: pass
+
     run(*cmd)
 
 def convertwavtoqcp(wavfile):
