@@ -46,7 +46,8 @@ class RingerView(guiwidgets.FileView):
         return (24,24)
 
     def updateprofilevariables(self, profile):
-        pass
+        self.maxlen=profile.MAX_RINGTONE_BASENAME_LENGTH
+        self.filenamechars=profile.RINGTONE_FILENAME_CHARS
 
     def OnListRequest(self, msg=None):
         l=[self._data['ringtone-index'][x]['name'] for x in self._data['ringtone-index']]
@@ -193,7 +194,7 @@ class RingerView(guiwidgets.FileView):
             else:
                 newentry['length']="1 second :-)"
                 newentry['description']="Midi file"
-            newentry['origin']=entry['origin']
+            newentry['origin']=entry.get('origin','ringers')
             newitems.append(newentry)
         self.SetItems(newitems)
 

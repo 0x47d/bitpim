@@ -31,6 +31,10 @@ class Profile(com_phone.Profile):
     WALLPAPER_CONVERT_FORMAT="jpg"
 
     MAX_WALLPAPER_BASENAME_LENGTH=16
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    
+    MAX_RINGTONE_BASENAME_LENGTH=16
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
 
     # which usb ids correspond to us
     usbids=( (0x106c, 0x2101, 1), # VID=Curitel, PID=Audiovox CDM 8900, internal modem interface

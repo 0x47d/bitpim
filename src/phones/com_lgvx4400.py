@@ -790,6 +790,9 @@ class Profile:
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
     WALLPAPER_CONVERT_FORMAT="bmp"
     
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    
     # which usb ids correspond to us
     usbids=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial

@@ -946,8 +946,6 @@ class FileView(bpmedia.MediaDisplayer):
 
     def __init__(self, mainwindow, parent, xyfile, stylefile, topsplit=None, bottomsplit=None, rightsplit=None):
         bpmedia.MediaDisplayer.__init__(self, parent, xyfile, stylefile, topsplit, bottomsplit, rightsplit)
-        self.droptarget=MyFileDropTarget(self)
-        self.SetDropTarget(self.droptarget)
         self.mainwindow=mainwindow
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
@@ -962,7 +960,6 @@ class FileView(bpmedia.MediaDisplayer):
         self.menu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
-
         self.addfilemenu=wx.Menu()
         self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
         self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
@@ -975,6 +972,11 @@ class FileView(bpmedia.MediaDisplayer):
         wx.EVT_BUTTON(self, guihelper.ID_FV_DELETE, self.OnDelete)
 
         self.SetRightClickMenus(self.menu, self.addfilemenu)
+
+        self.droptarget=MyFileDropTarget(self)
+        self.SetDropTarget(self.droptarget)
+        self.icons.SetDropTarget(self.droptarget)
+        self.preview.SetDropTarget(self.droptarget)
 
     def OnDelete(self,_):
         names=self.GetSelectedItemNames()

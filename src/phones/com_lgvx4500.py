@@ -76,6 +76,9 @@ class Profile(com_lgvx4400.Profile):
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
     WALLPAPER_CONVERT_FORMAT="bmp"
+
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
     
     def __init__(self):
         com_lgvx4400.Profile.__init__(self)
