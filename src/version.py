@@ -8,7 +8,7 @@ import time
 name="BitPim"
 version="0.7"
 release=0  # when rereleases of the same version happen, this gets incremented
-testver=4  # value of zero is non-test build
+testver=5  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
 contact="The BitPim home page is at http://bitpim.sf.net.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
