@@ -24,6 +24,9 @@ class Phone(com_sanyonewer.Phone):
 
     desc="SCP-5400"
 
+    FIRST_MEDIA_DIRECTORY=2
+    LAST_MEDIA_DIRECTORY=3
+
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
         )    
@@ -48,7 +51,7 @@ class Profile(com_sanyonewer.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-#        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
     )
 
     def __init__(self):
