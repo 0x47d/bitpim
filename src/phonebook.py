@@ -574,6 +574,7 @@ class PhoneWidget(wx.Panel):
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
         wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
         pubsub.subscribe(self.OnCategoriesUpdate, pubsub.ALL_CATEGORIES)
+        pubsub.subscribe(self.OnPBLookup, pubsub.REQUEST_PB_LOOKUP)
         # we draw the column headers
         # code based on original implementation by Paul Mcnett
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
@@ -645,6 +646,29 @@ class PhoneWidget(wx.Panel):
         if self.categories!=msg.data:
             self.categories=msg.data[:]
             self.modified=True
+
+    def OnPBLookup(self, msg):
+        d=msg.data
+        s=d.get('item', '')
+        if not len(s):
+            return
+        d['name']=None
+        for k,e in self._data.items():
+            for n in e.get('numbers', []):
+                if s==n.get('number', None):
+                    # found a number, stop and reply
+                    d['name']=nameparser.getfullname(e['names'][0])+'('+\
+                               n.get('type', '')+')'
+                    pubsub.publish(pubsub.RESPONSE_PB_LOOKUP, d)
+                    return
+            for n in e.get('emails', []):
+                if s==n.get('email', None):
+                    # found an email, stop and reply
+                    d['name']=nameparser.getfullname(e['names'][0])+'(email)'
+                    pubsub.publish(pubsub.RESPONSE_PB_LOOKUP, d)
+                    return
+        # done and reply
+        pubsub.publish(pubsub.RESPONSE_PB_LOOKUP, d)
 
     def OnIdle(self, _):
         "We save out changed data"

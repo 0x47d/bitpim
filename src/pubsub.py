@@ -42,6 +42,8 @@ REQUEST_RINGTONES=( 'request', 'ringtones') # no data
 PHONE_MODEL_CHANGED=( 'notification', 'phonemodelchanged') # data is phone module
 REQUEST_RINGTONE_INDEX=('request', 'ringtone-index') # no data
 ALL_RINGTONE_INDEX=('response', 'ringtone-index') # data is the ringtone-index dict
+REQUEST_PB_LOOKUP=('request', 'phonebook') # Request to lookup a number
+RESPONSE_PB_LOOKUP=('response', 'phonebook') # Response to the request
 
 def subscribe(listener, topic):
     Publisher.subscribe(listener, topic)

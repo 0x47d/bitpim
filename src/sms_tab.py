@@ -20,6 +20,7 @@ import wx.lib.scrolledpanel as scrolled
 # BitPim modules
 import database
 import phonebookentryeditor as pb_editor
+import pubsub
 import sms
 
 #-------------------------------------------------------------------------------
@@ -92,7 +93,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
 class FolderPage(wx.Panel):
     def __init__(self, parent):
         super(FolderPage, self).__init__(parent, -1)
-        self.__data=self.__data_map={}
+        self.__data=self.__data_map=self.__name_map={}
         # main box sizer
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the tree
@@ -123,6 +124,7 @@ class FolderPage(wx.Panel):
         # event handlers
         wx.EVT_TREE_SEL_CHANGED(self, self.__item_list.GetId(),
                                 self.__OnSelChanged)
+        pubsub.subscribe(self.__OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
         # populate data
         self.__populate()
         # turn on dirty flag
@@ -131,6 +133,15 @@ class FolderPage(wx.Panel):
         # an item was clicked on/selected
         k=self.__item_list.GetPyData(evt.GetItem())
         self.__populate_each(k)
+
+    def __OnPBLookup(self, msg):
+        d=msg.data
+        k=d.get('item', None)
+        name=d.get('name', None)
+        print k, name
+        if k is None:
+            return
+        self.__name_map[k]=name
 
     def __clear_info(self):
         self.__item_info.Clear()
@@ -153,6 +164,12 @@ class FolderPage(wx.Panel):
             i=self.__item_list.AppendItem(self.__nodes[n.folder], n.subject)
             self.__item_list.SetItemPyData(i, k)
             self.__data_map[k]=i
+            if len(n._from) and not self.__name_map.has_key(n._from):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': n._from } )
+            if len(n._to) and not self.__name_map.has_key(n._to):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': n._to } )
 
     def __populate_each(self, k):
         # populate the detailed info of the item keyed k
@@ -167,8 +184,16 @@ class FolderPage(wx.Panel):
         # there're data, first enable the widgets
         self.__item_info.Enable(True)
         # set the general detail
-        self.__item_info.Set(entry)
-        self.__item_text.Set({'memo': entry.text})
+        e=copy.deepcopy(entry)
+        # lookup names if available
+        s=self.__name_map.get(e._from, None)
+        if s is not None:
+            e._from=s
+        s=self.__name_map.get(e._to, None)
+        if s is not None:
+            e._to=s
+        self.__item_info.Set(e)
+        self.__item_text.Set({'memo': e.text})
 
     def Set(self, data):
         self.__data=data
