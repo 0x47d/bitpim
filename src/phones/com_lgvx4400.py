@@ -108,6 +108,15 @@ class Phone:
 
         self.progress(numentries, numentries, "Phone book read completed")
         result['phonebook']=pbook
+        # now read groups
+        self.setmode(self.MODEBREW)
+        self.log("Reading group information")
+        res=self.getfilecontents("pim/pbgroup.dat")
+        groups={}
+        for i in range(0, len(res), 24):
+            groups[i/24]={ 'icon': readlsb(res[i]), 'name': readstring(res[i+1:i+24]) }
+        result['groups']=groups
+        self.log(`groups`)
         return pbook
 
     def savephonebook(self, data):
@@ -249,81 +258,65 @@ class Phone:
         result['wallpaper-index']=index
         return result
 
+    def saveprettystuff(self, data, directory, indexfile, stuffkey, stuffindexkey):
+        self.setmode(self.MODEBREW)
+        dirs=directory.split('/')
+        for i in range(0,len(dirs)):
+            try:
+                self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
+            except:
+                pass
+        # clean out any existing entries
+        entries=self.getfilesystem(directory)
+        for file in entries:
+            f=entries[file]
+            if f['type']=='file':
+                self.rmfile(file)
+        # Write out the files
+        files=data[stuffkey]
+        for file in files:
+            self.writefile(directory+"/"+file, files[file])
+        # Check all the indexes actually point at files
+        index=data[stuffindexkey]
+        keys=index.keys()
+        for i in keys:
+            if index[i] not in data[stuffkey]:
+                self.log("removing index "+`i`+" that points to non-existent file "+index[i])
+                del index[i]
+
+        # Generate the index entries
+        for f in files:
+            num=-1
+            for key in index.keys():
+                if index[key]==file:
+                    num=key
+                    break
+            if num==-1:
+                num=self._firstfree(index)
+                index[num]=file
+
+        # Now write out index
+        keys=index.keys()
+        keys.sort() # ... in sorted order
+        if len(keys)>30: keys=keys[:30] # maximum of 30 entries
+        newdata=makelsb(len(keys),2)
+        for i in keys:
+            newdata+=makelsb(i,2)
+            newdata+=makestring(index[i], 40)
+        for dummy in range(len(keys), (1262-2)/42):
+            newdata+="\xff\xff"
+            newdata+=makestring("", 40)
+        self.writefile(indexfile, newdata)
+        return data
+
+
     def savewallpapers(self, data):
-        self.setmode(self.MODEBREW)
-        try: self.mkdir("brew/shared")
-        except: pass
-        entries=self.getfilesystem("brew/shared")
-        for file in entries:
-            f=entries[file]
-            if f['type']=='file':
-                self.rmfile(file)
-        papers=data['wallpaper']
-        for wp in papers:
-            self.writefile("brew/shared/"+wp, papers[wp])
-
-        index=data['wallpaper-index']
-
-        files=papers.keys()
-        numexist=len(files)
-        newdata=makelsb(numexist,2)
-        for file in files:
-            num=-1
-            for key in index.keys():
-                if index[key]==file:
-                    num=key
-                    break
-            if num==-1:
-                num=self._firstfree(index)
-                index[num]=file
-            newdata+=makelsb(num,2)
-            newdata+=makestring(file, 40)
-        for dummy in range(numexist, (1262-2)/42):
-            newdata+="\xff\xff"
-            newdata+=makestring("", 40)
-
-        self.writefile('dloadindex/brewImageIndex.map', newdata)
-        return data
-
-    def saveringtones(self, data):
-        self.setmode(self.MODEBREW)
-        try: self.mkdir("user")
-        except: pass
-        try: self.mkdir("user/sound")
-        except: pass
-        try: self.mkdir("user/sound/ringer")
-        except: pass
-        entries=self.getfilesystem("user/sound/ringer")
-        for file in entries:
-            f=entries[file]
-            if f['type']=='file':
-                self.rmfile(file)
-        papers=data['ringtone']
-        for wp in papers:
-            self.writefile("user/sound/ringer/"+wp, papers[wp])
-
-        index=data['ringtone-index']
-
-        files=papers.keys()
-        numexist=len(files)
-        newdata=makelsb(numexist,2)
-        for file in files:
-            num=-1
-            for key in index.keys():
-                if index[key]==file:
-                    num=key
-                    break
-            if num==-1:
-                num=self._firstfree(index)
-                index[num]=file
-            newdata+=makelsb(num,2)
-            newdata+=makestring(file, 40)
-        for dummy in range(numexist, (1262-2)/42):
-            newdata+="\xff\xff"
-            newdata+=makestring("", 40)
-
-        self.writefile('dloadindex/brewRingerIndex.map', newdata)
-        return data
+        return self.saveprettystuff(data, "brew/shared", "dloadindex/brewImageIndex.map",
+                                    'wallpaper', 'wallpaper-index')
+        
+    def saveringtones(self,data):
+        return self.saveprettystuff(data, "user/sound/ringer", "dloadindex/brewRingerIndex.map",
+                                    'ringtone', 'user/sound/ringer')
 
 
     def _firstfree(self, index):
@@ -413,7 +406,7 @@ class Phone:
         return results
 
     def writefile(self, name, contents):
-        self.log("New file '"+name+"' bytes "+`len(contents)`)
+        self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         if len(contents)>65534:
             raise Exception(name+" is too large at "+`len(contents)`+" bytes - limit is 64kb")
         self.setmode(self.MODEBREW)
@@ -885,12 +878,6 @@ class Phone:
 
         return res[4:]  # chop off cosmetic first bit
     
-
-    numbertypetab=( 'Home', 'Home2', 'Office', 'Office2', 'Mobile', 'Mobile2',
-                    'Pager', 'Fax', 'Fax2', 'None' )
-
-    grouptab=(   'No Group', 'Family', 'Friends', 'Colleagues', 'Business', 'School' )
-
     tonetab=( 'Default', 'Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5',
               'Ring 6', 'Voices of Spring', 'Twinkle Twinkle',
               'The Toreadors', 'Badinerie', 'The Spring',
@@ -931,7 +918,7 @@ def readstring(data):
         if i=='\x00':
             return res
         res=res+i
-    print "NOT NULL TERMINATED!!!!", data
+    raise Exception(" NOT NULL TERMINATED!!!! "+common.datatohexstring(data))
     return res
 
 def makestring(str, length):
