@@ -16,7 +16,7 @@ import comscan
 import usbscan
 import sys
 
-def diagnose(portlist):
+def diagnose(portlist, phonemodule):
     """Returns data suitable for use in com port settings dialog
 
     @param portlist: A list of ports as returned by L{comscan.comscan}()
@@ -45,9 +45,15 @@ def diagnose(portlist):
         htmldiagnosis="<p>These ports are open and can be selected"
         res.append( (whattodisplay, portselected, htmldiagnosis) )
         for port in available:
+            likely=islikelyport(port, phonemodule)
             whattodisplay=port['description']
+            if likely:
+                whattodisplay="(*) "+whattodisplay
             portselected=port['name']
-            htmldiagnosis="<p>This port is open and can be selected.<p>"+genhtml(port)
+            if likely:
+                htmldiagnosis="<p>This port is likely to be your phone.  The port is available and can be selected.<p>"+genhtml(port)
+            else:
+                htmldiagnosis="<p>This port is available and can be selected.<p>"+genhtml(port)
             res.append( (whattodisplay, portselected, htmldiagnosis) )
 
     if len(notavailablebutactive):
@@ -138,6 +144,13 @@ def genhtml(port):
             device drivers (if any) are bypassed when BitPim talks to the device"""+efont
         elif k=="protocol":
             res+=sfont+"""This is the protocol the USB device claims to speak"""+efont
+        elif k=="class":
+            if port[k]=="serial":
+                res+=sfont+"""This is a serial connection"""+efont
+            elif port[k]=="modem":
+                res+=sfont+"""This is a modem connection"""+efont
+            else:
+                res+=sfont+"""The port type (serial, modem etc)"""+efont
         else:
             res+="&nbsp;"
 
@@ -157,6 +170,44 @@ usbdb=( ( 0x1004, 0x6000, 2), # VID=LG Electronics, PID=LG VX4400 -internal USB 
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
         )
 
+def islikelyport(port, phonemodule):
+
+    usbids=phonemodule.Profile.usbids
+    deviceclasses=phonemodule.Profile.deviceclasses
+
+    # it must be the right class
+    if port.has_key("class") and port["class"] not in deviceclasses:
+        return False
+
+    # check the usbids
+    for vid,pid,iface in usbids:
+        if port.has_key("libusb"):
+            if port['usb-vendor#']==vid and \
+                   port['usb-product#']==pid and \
+                   port['usb-interface#']==iface:
+                return True
+        if port.has_key('hardwareinstance'):
+            v=port['hardwareinstance'].lower()
+            str="vid_%04x&pid_%04x" % (vid,pid)
+            if v.find(str)>=0:
+                return True
+
+    # did it have a usb id that didn't match?
+    if port.has_key("libusb"):
+        return false
+
+    # did the hardware instance have usb info?
+    if port.has_key("hardwareinstance") and \
+       re.search("vid_([0-9a-f]){4}&pid_([0-9a-f]){4}", port['hardwareinstance'], re.I) is not None:
+        return False
+
+    # are we on non-windows platform?  if so, just be happy if 'usb' is in the name or the driver name
+    if sys.platform!='win32' and ( \
+        port['name'].lower().find('usb')>0 or port.get("driver","").lower().find('usb')>=0):
+        return True
+
+    # ok, not then
+    return False
             
 def autoguessports():
     """Returns a list of ports (most likely first) for finding the phone on"""

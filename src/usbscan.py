@@ -9,7 +9,7 @@
 
 "Scans the USB busses in the same way that comscan scans comm ports"
 
-version="7 December 2003"
+version="$Revision$"
 
 try:
     import native.usb as usb
@@ -19,15 +19,19 @@ except ImportError:
 import guihelper
 import usb_ids
 
-ids=usb_ids.usb_ids()
-ids.add_data(guihelper.getresourcefile("usb.ids"))
-ids.add_data(guihelper.getresourcefile("bitpim_usb.ids"))
-
+ids=None
 
 def usbscan(*args, **kwargs):
 
     if usb is None:
         return []
+
+    global ids
+    if ids is None:
+        ids=usb_ids.usb_ids()
+        ids.add_data(guihelper.getresourcefile("usb.ids"))
+        ids.add_data(guihelper.getresourcefile("bitpim_usb.ids"))
+        
 
     res=[]
     usb.UpdateLists()
