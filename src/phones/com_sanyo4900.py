@@ -54,6 +54,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         self.log("Fundamentals retrieved")
         return results
 
+    def sanyosort(self, x, y):
+        "Sanyo sort order.  Case insensitive, letters first"
+        if(x[0:1].isalpha() and not y[0:1].isalpha()):
+            return -1
+        if(y[0:1].isalpha() and not x[0:1].isalpha()):
+            return 1
+        return cmp(x.lower(), y.lower())
+    
     def getphonebook(self,result):
         pbook={}
         # Get Sort buffer so we know which of the 300 phone book slots
@@ -149,6 +157,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # "H" instead of "P".  However, phone saves this internally as "P".
         return re.sub("[^0-9PT#*]", "", str)
 
+    def fakesendpbcommand(self, request, responseclass, callsetmode=True):
+        if callsetmode:
+            self.setmode(self.MODEPHONEBOOK)
+        buffer=prototypes.buffer()
+        request.writetobuffer(buffer)
+        data=buffer.getvalue()
+        self.logdata("Sanyo phonebook request", data, request)
+
+        # parse data
+        buffer=prototypes.buffer(data)
+        res=responseclass()
+        res.readfrombuffer(buffer)
+        return res
+
     def savephonebook(self, data):
         # We overwrite the phonebook in the phone with the data.
         # As we write the phone book slots out, we need to build up
@@ -169,7 +191,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 ###
 ### Initialize lists
 ###
-        for i in range(300):
+        for i in range(sortstuff.numpbslots):
             sortstuff.usedflags.append(0)
             sortstuff.firsttypes.append(0)
             sortstuff.sortorder.append(0xffff)
@@ -178,6 +200,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             sortstuff.urls.append(0xffff)
             ringpic.ringtones.append(0)
             ringpic.wallpapers.append(0)
+
+        for i in range(sortstuff.numspeeddials):
+            sortstuff.speeddialindex.append(0xffff)
+
+        for i in range(sortstuff.numlongnumbers):
+            sortstuff.longnumbersindex.append(0xffff)
+        
+            
 ###
 ### Initialize mappings
 ###
@@ -191,16 +221,19 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         self.log("Putting phone into write mode")
         req=p_sanyo.beginendupdaterequest()
         req.beginend=1 # Start update
-#        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
+        res=self.fakesendpbcommand(req, p_sanyo.beginendupdateresponse)
 
         keys=pbook.keys()
         keys.sort()
         sortstuff.slotsused=len(keys)
         sortstuff.slotsused2=len(keys)
+        sortstuff.numemail=0
+        sortstuff.numurl=0
 
         progresscur=0
         progressmax=len(keys)+2+8+14 # Include the buffers
         self.log("Writing %d entries to phone" % (len(keys),))
+        nlongphonenumbers=0
         for i in keys:
             ii=pbook[i]
             slot=ii['slot'] # Or should we just use i for the slot
@@ -211,24 +244,65 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             entry=self.makeentry(ii, data)
             req=p_sanyo.phonebookslotupdaterequest()
             req.entry=entry
-#            res=self.sendpbcommand(req, p_sanyo.phonebookslotresponse)
+            res=self.fakesendpbcommand(req, p_sanyo.phonebookslotresponse)
 
 # Accumulate information in and needed for buffers
             sortstuff.usedflags[slot].used=1
-            sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]
+            sortstuff.firsttypes[slot].firsttype=ii['numbertypes'][0]+1
 # Fill in Caller ID buffer
             for i in range(len(ii['numbers'])):
-                if(callerid.numentries<500):
-                    cidentry=self.makecidentry(ii['numbers'][i],slot,ii['numbertypes'][i])
+                if(callerid.numentries<callerid.maxentries):
+                    phonenumber=ii['numbers'][i]
+                    nindex=ii['numbertypes'][i]
+                    cidentry=self.makecidentry(phonenumber,slot,nindex)
                     callerid.items.append(cidentry)
                     callerid.numentries+=1
+                    if(len(phonenumber)>sortstuff.longphonenumberlen):
+                        if(nlongphonenumbers<sortstuff.numlongnumbers):
+                            sortstuff.longnumbersindex[nlongphonenumbers].pbslotandtype=slot+((nindex+1)>>12)
 
             namemap[ii['name']]=slot
-            emailmap[ii['email']]=slot
-            urlmap[ii['url']]=slot
+            if(len(ii['email'])):
+                emailmap[ii['email']]=slot
+                sortstuff.numemail+=1
+            if(len(ii['url'])):
+                urlmap[ii['url']]=slot
+                sortstuff.numurl+=1
+            # Add ringtone and wallpaper
+            ringpic.wallpapers[slot].wallpaper=ii['wallpaper']
+            ringpic.ringtones[slot].ringtone=ii['ringtone']
                     
         # Sort Names, Emails and Urls for the sort buffer
-        
+        # The phone sorts case insensitive and puts numbers after the
+        # letters.  Yuk.
+        i=0
+        sortstuff.pbfirstletters=""
+        keys=namemap.keys()
+        keys.sort(self.sanyosort)
+        for name in keys:
+            sortstuff.sortorder[i].pbslot=namemap[name]
+            sortstuff.sortorder2[i].pbslot=namemap[name]
+            sortstuff.pbfirstletters+=name[0:1]
+            i+=1
+
+        i=0
+        sortstuff.emailfirstletters=""
+        keys=emailmap.keys()
+        keys.sort(self.sanyosort)
+        for email in keys:
+            sortstuff.emails[i].pbslot=emailmap[email]
+            sortstuff.emailfirstletters+=email[0:1]
+            i+=1
+
+        i=0
+        sortstuff.urlfirstletters=""
+        keys=urlmap.keys()
+        keys.sort(self.sanyosort)
+        for url in keys:
+            sortstuff.urls[i].pbslot=urlmap[url]
+            sortstuff.urlfirstletters+=url[0:1]
+            i+=1
+
         # Now write out the 3 buffers
         buffer=prototypes.buffer()
         sortstuff.writetobuffer(buffer)
@@ -246,10 +320,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         
         self.log("Taking phone out of write mode")
         req=p_sanyo.beginendupdaterequest()
-        req.beginend=2 # Start update
-#        res=self.sendpbcommand(req, p_sanyo.beginendupdateresponse)
+        req.beginend=2 # Stop update
+        res=self.fakesendpbcommand(req, p_sanyo.beginendupdateresponse)
         self.log("Please exit BITPIM and power cycle the phone")
-        del data['phonephonebook']        
+        del data['phonephonebook']
 
     def makecidentry(self, number, slot, nindex):
         "Prepare entry for caller ID lookup buffer"
@@ -284,7 +358,7 @@ class Profile:
             entry=data['phonebook'][pbentry] # entry in
             try:
                 e['name']=helper.getfullname(entry['names'],1,1,16)[0]
-
+                e['name_len']=len(e['name'])
 
                 if(entry.has_key('emails')):
                     e['email']=self.makeone(helper.getemails(entry['emails'],0,1,48), "")
