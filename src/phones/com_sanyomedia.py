@@ -65,8 +65,9 @@ class SanyoMedia:
                 req=self.protocolclass.sanyomediafilenamerequest()
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
+                # self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
                 if idir==self.CAMERA_DIRECTORY:
+
                     if res.num3==0:    # Original Camera Picture
                         # Could convert filename to to a date
                         imagemedia[ifile+1000*idir]={'name': "$camera_"+res.filename, 'origin': "camera"}
@@ -149,7 +150,7 @@ class SanyoMedia:
                 req=self.protocolclass.sanyomediafilenamerequest()
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
+                # self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
                 if idir==self.CAMERA_DIRECTORY and res.num3==0:
                     filename="$camera_"+res.filename
                 else:
@@ -187,7 +188,7 @@ class SanyoMedia:
         return self.getmedia(self.wallpaperexts, result, 'wallpapers')
 
     def getringtones(self, result):
-        return self.getmedia(self.ringerexts, result, 'ringtones')
+        return self.getmedia(self.ringerexts, result, 'ringtone')
 
     
     def mediatestcode(self, results):
