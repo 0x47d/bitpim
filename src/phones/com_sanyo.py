@@ -961,7 +961,7 @@ class SanyoPhonebook:
                 e.phonenum_len=len(e.phonenum)
                 
 
-                timearray=entry['start']+[0,0,0,0]
+                timearray=list(entry['start'])+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
@@ -1000,7 +1000,7 @@ class SanyoPhonebook:
                 e.location=location
                 e.location_len=len(e.location)
 
-                timearray=entry['start']+[0,0,0,0]
+                timearray=list(entry['start'])+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
                 if(starttimelocal<now and repeat==0):
                     e.flag=2 # In the past
@@ -1008,7 +1008,7 @@ class SanyoPhonebook:
                     e.flag=1 # In the future
                 e.start=starttimelocal-self._sanyoepochtounix
 
-                timearray=entry.get('end', entry['start'])+[0,0,0,0]
+                timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
                 e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
 
                 alarmdiff=entry.get('alarm',0)
