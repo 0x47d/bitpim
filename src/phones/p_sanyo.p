@@ -147,10 +147,25 @@ PACKET callalarmresponse:
     417 UNKNOWN pad
 
 PACKET todorequest:
-    * UNKNOWN unknown
+    * sanyoheader {'packettype': 0x0c,
+		'command': 0x25} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
+PACKET todoentry:
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Used"
+    14 STRING {'raiseonunterminatedread': False} todo
+    7 UNKNOWN +pad1
+    1 UINT todo_len
+    1 UINT priority "0: Normal, 1: Urgent, 2: Done"
+    1 UINT +dunno "Maybe always zero"
+    1 UINT order "Gets sorted on screen in this order"
 
 PACKET todoresponse:
-    * UNKNOWN unknown
+    * sanyoheader header
+    * todoentry entry
+    472 UNKNOWN pad
 
 PACKET holidaybitsrequest:
     * UNKNOWN unknown
@@ -292,17 +307,17 @@ PACKET pbsortbuffer:
         1 UINT firsttype "First phone number type in each slot"
     * LIST {'length': self.numpbslots} sortorder:
         2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} firstletters
+    300 STRING {'terminator': None} pbfirstletters
     * LIST {'length': self.numpbslots} sortorder2: "Is this the same"
         2 UINT {'default': 0xffff} +pbslot
     * LIST {'length': self.numspeeddials} speeddialindex:
         2 UINT {'default': 0xffff} +pbslotandtype
     * LIST {'length': self.numlongnumbers} longnumbersindex:
         2 UINT {'default': 0xffff} +pbslotandtype
-    * LIST {'length': self.numpbslots} emails: "List of slots with Email"
+    * LIST {'length': self.numpbslots} emails: "Sorted list of slots with Email"
         2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} unknownstring1
-    * LIST {'length': self.numpbslots} urls: "List of slots with a URL"
+    300 STRING {'terminator': None} emailfirstletters "First letters in sort order"
+    * LIST {'length': self.numpbslots} urls: "Sorted list of slots with a URL"
         2 UINT {'default': 0xffff} +pbslot
-    300 STRING {'terminator': None} unknownstring2 "Just guess at 300"
+    300 STRING {'terminator': None} urlfirstletters "First letters in sort order"
     66 UNKNOWN +pad
