@@ -88,7 +88,7 @@ class LogWindow(wxPanel):
 
     def OnKeyUp(self, evt):
         keycode=evt.GetKeyCode()
-        if keycode==80 and evt.ControlDown() and evt.AltDown():
+        if keycode==ord('P') and evt.ControlDown() and evt.AltDown():
             # analysze what was selected
             data=self.tb.GetStringSelection()
             # or the whole buffer if it was nothing
