@@ -9,7 +9,7 @@
 
 """This is the BitFling client
 
-It acts as an XML-RPC server over SSL.  The UI consists of a tray icon (Windows)
+It acts as an XML-RPC server over SSH.  The UI consists of a tray icon (Windows)
 or a small icon (Linux, Mac) that you can click on to get the dialog."""
 
 # Standard Modules
@@ -33,10 +33,15 @@ import wx.lib.maskededit
 import wx.lib.mixins.listctrl
 
 # My stuff
-import native.usb
+try:
+    import native.usb as usb
+except ImportError:
+    usb=None
+    
 import guihelper
 import xmlrpcstuff
 import version
+import paramiko_bp as paramiko
 
 ID_CONFIG=wx.NewId()
 ID_LOG=wx.NewId()
@@ -126,14 +131,14 @@ class MyTaskBarIcon(parentclass):
         self.MoveXY(screenx+xdelta, screeny+ydelta)
 
     def windowsinit(self, iconfile):
-        bitmap=wx.Bitmap(iconfile, wx.BITMAP_TYPE_PNG)
+        bitmap=wx.Bitmap(guihelper.getresourcefile(iconfile), wx.BITMAP_TYPE_PNG)
         icon=wx.EmptyIcon()
         icon.CopyFromBitmap(bitmap)
         self.SetIcon(icon, "BitFling")
 
     def genericinit(self, iconfile):
         self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-        bitmap=wx.Bitmap(iconfile, wx.BITMAP_TYPE_PNG)
+        bitmap=wx.Bitmap(guihelper.getresourcefile(iconfile), wx.BITMAP_TYPE_PNG)
         bit=wx.StaticBitmap(self, -1, bitmap)
         self.Show(True)
         wx.EVT_RIGHT_UP(bit, self.OnRButtonUp)
@@ -149,32 +154,15 @@ class ConfigPanel(wx.Panel, wx.lib.mixins.listctrl.ColumnSorterMixin):
         self.mw=mw
         vbs=wx.BoxSizer(wx.VERTICAL)
 
-        # certificate
-        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Certificate"), wx.HORIZONTAL)
-        bs.Add(wx.StaticText(self, -1, "Name"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.certname=wx.StaticText(self, -1, "<No certificate>")
-        bs.Add(self.certname, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        bs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
+        # General
+        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "General"), wx.HORIZONTAL)
         bs.Add(wx.StaticText(self, -1, "Fingerprint"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.fingerprint=wx.StaticText(self, -1, "<No certificate>")
-        bs.Add(self.fingerprint, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        self.fingerprint=wx.TextCtrl(self, -1, "a", style=wx.TE_READONLY,  size=(300,-1))
+        bs.Add(self.fingerprint, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         bs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
-        butgenerate=wx.Button(self, wx.NewId(), "Generate New ...")
-        bs.Add(butgenerate, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-
-        vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
-
-        # networking
-        bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Networking"), wx.HORIZONTAL)
         bs.Add(wx.StaticText(self, -1, "Port"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.porttext=wx.StaticText(self, -1, "<No Port>")
         bs.Add(self.porttext, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        bs.Add(wx.StaticText(self, -1, ""), 0, wx.ALL, 5) # spacer
-        self.upnp=wx.CheckBox(self, wx.NewId(), "UPnP")
-        bs.Add(self.upnp, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        butport=wx.Button(self, wx.NewId(), "Change ...")
-        bs.Add(butport, 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
 
         # authorization
@@ -408,7 +396,7 @@ class MainWindow(wx.Frame):
         if guihelper.IsMSWindows():
             cfgstr="BitFling"  # nicely capitalized on Windows
         self.config=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
-
+        # self.config.SetRecordDefaults(True)
         # for help to save prefs
         wx.GetApp().SetAppName(cfgstr)
         wx.GetApp().SetVendorName(cfgstr)
@@ -441,7 +429,7 @@ class MainWindow(wx.Frame):
         self.lw=guihelper.LogWindow(self.nb)
         self.nb.AddPage(self.lw, "Log")
         html=wx.html.HtmlWindow(self.nb, -1)
-        wx.CallAfter(html.LoadPage, os.path.join(guihelper.getresourcefile("help"), "index.html"))
+        wx.CallAfter(html.LoadPage, guihelper.getresourcefile("index.html"))
         self.nb.AddPage(html, "Help")
 
 
@@ -525,7 +513,11 @@ class MainWindow(wx.Frame):
         for i in range(0, len(salt), 2):
             x+=chr(int(salt[i:i+2], 16))
         salt=x
-        val=sha.new(salt+password)
+        # we do this silly string stuff to avoid issues with encoding - it only works for iso 8859-1
+        str=[]
+        str.extend([ord(x) for x in salt])
+        str.extend([ord(x) for x in password])
+        val=sha.new("".join([chr(x) for x in str]))
         print password, pwd, val.hexdigest(), val.hexdigest()==hash
         return val.hexdigest()==hash
             
@@ -620,61 +612,41 @@ class MainWindow(wx.Frame):
     def StartIfICan(self):
         certfile=self.GetCertificateFilename()
         if not os.path.isfile(certfile):
-            certfile=None
-        port=self.config.ReadInt("port", 0)
+            bi=wx.BusyInfo("Creating host certificate & keys")
+            ret=generate_certificate(certfile)
+            del bi
+        port=self.config.ReadInt("port", 12652)
         if port<1 or port>65535: port=None
         host=self.config.Read("bindaddress", "")
         if certfile is None or port is None:
-            if self.xmlrpcserver is not None:
-                self.xmlrpcserver.Stop()
-                self.xmlrpcserver=None
-            if certfile is None:
-                self.Log("Unable to start as there is no certificate")
-            if port is None:
-                self.Log("Unable to start as there is no port configured")
             return
         self.Log("Starting on port "+`port`)
-        ctx=M2Crypto.SSL.Context("sslv23")
-        ctx.load_cert(certfile)
-        self.xmlrpcserver=BitFlingService(self, host, port, ctx)
+        key=paramiko.DSSKey()
+        key.read_private_key_file(certfile)
+        fp=paramiko.util.hexify(key.get_fingerprint())
+        self.configpanel.fingerprint.SetValue(fp)
+        self.configpanel.porttext.SetLabel(`port`)
+        self.configpanel.GetSizer().Layout()
+        self.xmlrpcserver=BitFlingService(self, host, port, key)
         self.xmlrpcserver.setDaemon(True)
         self.xmlrpcserver.start()
         
-class CertificateDialog(wx.Dialog):
-    """A dialog for generating a self-signed certificate"""
-    def __init__(self, parent):
-        wx.Dialog.__init__(self, parent)
 
-
-def _sanitize(x):
-    return x
-
-def GenerateSelfSignedCert(fileout, subject, email="", org="", orgunit="", l="", country=""):
-
-    # ::TODO:: verify all strings only contain appropriate characters
-
-    assert len(country)==2 or len(country)==0
-    
+def generate_certificate(outfile):
     if guihelper.IsMSWindows():
-        cmd=guihelper.getresourcefile("openssl.exe")
+        cmd=guihelper.getresourcefile("ssh-keygen.exe")
     else:
-        cmd="openssl"
+        cmd="ssh-keygen"
 
-    ret=guihelper.run (cmd, "req", "-config", guihelper.getresourcefile("bitfling.cnf"), "-new", "-x509",
-                       "-newkey", "rsa:1024", "-nodes", "-days", "365", "-keyout",
-                       fileout, "-out", fileout, "-subj", "/countryName=%s/emailAddress=%s/L=%s/O=%s/OU=%s/CN=%s"
-                       % (country, email, l, org, orgunit, subject))
+    ret=guihelper.run (cmd, "-q", "-t", "dsa", "-f", outfile, "-N", "")
     return ret
-        # -nodes means keyfile is not password protected (obviously)
-        # openssl req -config bitfling.cfg -new -x509 -newkey rsa:1024 -nodes -days 365 -keyout file.pem -out file.pem \
-        #    -subj "/countryName=US/L=Texas/O=org/OU=orgunit/CN=Who Me?"  # can have zero length strings
 
 
 class XMLRPCService(xmlrpcstuff.Server):
 
-    def __init__(self, mainwin, host, port, ctx):
+    def __init__(self, mainwin, host, port, servercert):
         self.mainwin=mainwin
-        xmlrpcstuff.Server.__init__(self, host, port, ctx)
+        xmlrpcstuff.Server.__init__(self, host, port, servercert)
 
     def OnLog(self, msg):
         wx.PostEvent(self.mainwin, XmlServerEvent(cmd="log", data=msg))
@@ -685,30 +657,23 @@ class XMLRPCService(xmlrpcstuff.Server):
     def OnNewAccept(self, clientaddr):
         return self.mainwin.IsConnectionAllowed(clientaddr)
 
-    def verifyok(self, username, password, clientaddr):
-        if not self.mainwin.IsConnectionAllowed(clientaddr, username, password):
-            raise Fault(2, "Authentication failed")
+    def OnNewUser(self, clientaddr, username, password):
+        return self.mainwin.IsConnectionAllowed(clientaddr, username, password)
 
-    def OnNewConnection(self, clientaddr, _):
-        return True
-
-    def OnMethodDispatch(self, method, params, username, password, clientaddr, clientcert):
-        # we don't care about clientcert
-        self.verifyok(username, password, clientaddr) # are they legitimately using the username, password and address?
-
+    def OnMethodDispatch(self, method, params, username, clientaddr):
         method="exp_"+method
         if not hasattr(self, method):
             raise Fault(3, "No such method")
 
-        context={ 'username': username, 'password': password, 'clientaddr': clientaddr, 'clientcert': clientcert }
+        context={ 'username': username, 'clientaddr': clientaddr }
         
         return getattr(self, method)(*params, **{'context': context})
 
 
 class BitFlingService(XMLRPCService):
 
-    def __init__(self, mainwin, host, port, ctx):
-        XMLRPCService.__init__(self, mainwin, host, port, ctx)
+    def __init__(self, mainwin, host, port, servercert):
+        XMLRPCService.__init__(self, mainwin, host, port, servercert)
     
     def exp_comscan(self, context):
         return self.mainwin.comscan_info
@@ -718,6 +683,9 @@ class BitFlingService(XMLRPCService):
 
     def exp_getversion(self, context):
         return version.description
+
+    def exp_add(self, a, b, context):
+        return a+b
 
 if __name__ == '__main__':
     theApp=wx.PySimpleApp()
