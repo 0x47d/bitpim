@@ -1,0 +1,1 @@
+g++ -O -Wall -I c:\projects\fixedwab -L "c:\program files\microsoft\ Internet Explorer 6SP1 Header and Library Files\Lib" -o wab.exe wab.cpp -lmapi32
