@@ -13,7 +13,7 @@
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/173216
 # Chris Somerlot also gave some insights
 
-import win32com.client
+import outlook_com
 
 import pywintypes
 
@@ -151,48 +151,6 @@ import pywintypes
 ##    YomiFirstName
 ##YomiLastName
 
-TRACE=1
-
-def _getkeys(folder):
-    ofContacts=folder
-
-    contact = ofContacts.Items.Item(1) # look at keys on first contact
-    keys = []
-    for key in contact._prop_map_get_:
-        if True or isinstance(getattr(contact, key), (int, str, unicode)):
-            keys.append(key)
-    if TRACE:
-        keys.sort()
-        print "Fields\n======================================"
-        for key in keys:
-            print key
-    return keys
-
-
-def _getcontacts(folder, keys):
-
-    records=[]
-    
-    # this should use more try/except blocks or nested blocks
-    ofContacts =  folder
-
-    if TRACE:
-        print "number of contacts:", ofContacts.Items.Count
-
-    for oc in range(ofContacts.Items.Count):
-        record=[]
-        # COM never could make up its mind whether indexes start at zero or
-        # one.  Raymond Chen's weblog details why.
-        contact = ofContacts.Items.Item(oc + 1)
-        if contact.Class == win32com.client.constants.olContact:
-            record = []
-            for key in keys:
-                record.append(getattr(contact, key))
-            if TRACE:
-                print oc, getattr(contact, 'FullName')
-            records.append(record)
-    return records
-
 def getcontacts(folder):
     """Returns a list of dicts"""
 
@@ -200,7 +158,7 @@ def getcontacts(folder):
     keys=None
     for oc in range(folder.Items.Count):
         contact=folder.Items.Item(oc+1)
-        if contact.Class == win32com.client.constants.olContact:
+        if contact.Class == outlook_com.constants.olContact:
             record={}
             if keys is None:
                 keys=[]
@@ -234,7 +192,7 @@ def getfolderfromid(id, default=False):
         
     # ::TODO:: should be supplied default type (contacts, calendar etc)
     if not folder:
-        folder=onMAPI.GetDefaultFolder(win32com.client.constants.olFolderContacts)
+        folder=onMAPI.GetDefaultFolder(outlook_com.constants.olFolderContacts)
     return folder
 
 def getfoldername(folder):
@@ -257,10 +215,7 @@ _outlookappobject=None
 def getoutlookapp():
     global _outlookappobject
     if _outlookappobject is None:
-        if __debug__:
-            # ensure stubs are generated in developer code
-            win32com.client.gencache.EnsureDispatch("Outlook.Application.9")
-        _outlookappobject=win32com.client.Dispatch("Outlook.Application.9")
+        _outlookappobject=outlook_com.Application()
     return _outlookappobject
 
 _mapinamespaceobject=None
@@ -272,7 +227,7 @@ def getmapinamespace():
 
 
 if __name__=='__main__':
-    oOutlookApp=win32com.client.Dispatch("Outlook.Application.9")
+    oOutlookApp=outlook_com.Application()
     onMAPI = oOutlookApp.GetNamespace("MAPI")
 
     res=onMAPI.PickFolder()
