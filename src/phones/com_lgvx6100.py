@@ -100,13 +100,13 @@ class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
-    WALLPAPER_WIDTH=128
+    WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=148
-    MAX_WALLPAPER_BASENAME_LENGTH=36
+    MAX_WALLPAPER_BASENAME_LENGTH=24
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
     WALLPAPER_CONVERT_FORMAT="jpg"
    
-    MAX_RINGTONE_BASENAME_LENGTH=32
+    MAX_RINGTONE_BASENAME_LENGTH=24
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
 
     # nb we don't allow save to camera so it isn't listed here
@@ -120,11 +120,11 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 128, 'height': 148, 'format': "JPEG"}))
+                                      {'width': 132, 'height': 148, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 128, 'height': 148, 'format': "JPEG"}))
+                                      {'width': 132, 'height': 148, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 128, 'height': 160, 'format': "JPEG"}))
+                                      {'width': 132, 'height': 160, 'format': "JPEG"}))
     # can the outside lcd display images?
     #imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
     #                                  {'width': 96, 'height': 64, 'format': "JPEG"}))
