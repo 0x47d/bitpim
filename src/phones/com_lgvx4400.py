@@ -1145,6 +1145,11 @@ def brewbasename(str):
     return str
 
 def brewdecodedate(val):
+    """Unpack 32 bit value into date/time
+
+    @rtype: tuple
+    @return: (year, month, day, hour, minute)
+    """
     min=val&0x3f # 6 bits
     val>>=6
     hour=val&0x1f # 5 bits (uses 24 hour clock)
@@ -1157,6 +1162,12 @@ def brewdecodedate(val):
     return (year, month, day, hour, min)
 
 def brewencodedate(year, month, day, hour, minute):
+    """Pack date/time into 32 bit value
+
+    @rtype: int
+    """
+    if year>4095:
+        year=4095
     val=year
     val<<=4
     val|=month
