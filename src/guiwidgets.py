@@ -517,13 +517,16 @@ class MyFileDropTarget(wxFileDropTarget):
 class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
 
-    # ::TODO:: stop storing file data in 'data' and get from
-    # disk instead.
     # be resilient to conversion failures in ringer
     # ringer onluanch should convert qcp to wav
     
-    # File we should ignore
+    # Files we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
+
+    # how much data do we want in call to getdata
+    NONE=0
+    SELECTED=1
+    ALL=2
     
     def __init__(self, mainwindow, parent, id=-1, style=wxLC_REPORT):
         wxListCtrl.__init__(self, parent, id, style=style)
@@ -679,6 +682,7 @@ class FileView(wxListCtrl, wxListCtrlAutoWidthMixin):
 
         # delete all files we don't know about if 'key' contains replacements
         if dict.has_key(key):
+            print key,"present - updating disk"
             for f in os.listdir(self.thedir):
                 # delete them all except windows magic ones which we ignore
                 if f.lower() not in self.skiplist:
