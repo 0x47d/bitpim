@@ -346,7 +346,6 @@ class CategoryManager:
         pubsub.subscribe(pubsub.ADD_CATEGORY, self, "OnAddCategory")
 
     def OnListRequest(self, msg=None):
-        print "publish all categories", self.categories
         # nb we publish a copy of the list, not the real
         # thing.  otherwise other code inadvertently modifies it!
         pubsub.publish(pubsub.ALL_CATEGORIES, self.categories[:])
