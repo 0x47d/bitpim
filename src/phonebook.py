@@ -171,65 +171,72 @@ def formatnumber(number):
 # or dictionary order would be user hostile).  The data
 # is converted to a dict below
 _getdatalist=[
-    # column   (matchnum   match   func_or_field)
-    'Name', ("names", 0, None, nameparser.formatfullname),
-    'First', ("names", 0, None, nameparser.getfirst),
-    'Middle', ("names", 0, None, nameparser.getmiddle),
-    'Last', ("names", 0, None, nameparser.getlast),
+    # column   (key matchnum   match   func_or_field  showinimport)
+    'Name', ("names", 0, None, nameparser.formatfullname, True),
+    'First', ("names", 0, None, nameparser.getfirst, False),
+    'Middle', ("names", 0, None, nameparser.getmiddle, False),
+    'Last', ("names", 0, None, nameparser.getlast, False),
 
+    'Category', ("categories", 0,  None, "category", False),
+    'Category2', ("categories", 1,  None, "category", False),
+    'Category3', ("categories", 2,  None, "category", False),
+    'Categories', ("categories", None, None, formatcategories, True),
+
+    "Phone", ("numbers", 0, None, formatnumber, True),
+    "Phone2", ("numbers", 1, None, formatnumber, True),
+    "Phone3", ("numbers", 2, None, formatnumber, True),
+    "Phone4", ("numbers", 3, None, formatnumber, True),
+    "Phone5", ("numbers", 4, None, formatnumber, True),
+    "Phone6", ("numbers", 5, None, formatnumber, True),
+    "Phone7", ("numbers", 6, None, formatnumber, True),
+    "Phone8", ("numbers", 7, None, formatnumber, True),
+    "Phone9", ("numbers", 8, None, formatnumber, True),
+    "Phone10", ("numbers", 9, None, formatnumber, True),
+    
     # phone numbers are inserted here
 
-    'Category', ("categories", 0,  None, "category"),
-    'Category2', ("categories", 1,  None, "category"),
-    'Category3', ("categories", 2,  None, "category"),
-    'Categories', ("categories", None, None, formatcategories),
+    'Email', ("emails", 0, None, "email", True),
+    'Email2', ("emails", 1, None, "email", True),
+    'Email3', ("emails", 2, None, "email", True),
+    'Business Email', ("emails", 0, ("type", "business"), "email", False),
+    'Home Email', ("emails", 0, ("type", "home"), "email", False),
 
-    'Email', ("emails", 0, None, "email"),
-    'Email2', ("emails", 1, None, "email"),
-    'Email3', ("emails", 2, None, "email"),
-    'Business Email', ("emails", 0, ("type", "business"), "email"),
-    'Home Email', ("emails", 0, ("type", "home"), "email"),
+    'URL', ("urls", 0, None, "url", True),
+    'URL2', ("urls", 1, None, "url", True),
+    'URL3', ("urls", 2, None, "url", True),
+    'Business URL', ("urls", 0, ("type", "business"), "url", False),
+    'Home URL', ("urls", 0, ("type", "home"), "url", False),
 
-    'URL', ("urls", 0, None, "url"),
-    'URL2', ("urls", 1, None, "url"),
-    'URL3', ("urls", 2, None, "url"),
-    'Business URL', ("urls", 0, ("type", "business"), "url"),
-    'Home URL', ("urls", 0, ("type", "home"), "url"),
+    'Ringtone', ("ringtones", 0, ("use", "call"), "ringtone", True),
+    'Message Ringtone', ("ringtones", 0, ("use", "message"), "ringtone", True),
 
-    'Ringtone', ("ringtones", 0, ("use", "call"), "ringtone"),
-    'Message Ringtone', ("ringtones", 0, ("use", "message"), "ringtone"),
+    'Address', ("addresses", 0, None, formataddress, True),
+    'Address2', ("addresses", 1, None, formataddress, True),
+    'Address3', ("addresses", 1, None, formataddress, True),
+    'Home Address', ("addresses", 0, ("type", "home"), formataddress, False),
+    'Business Address', ("addressess", 0, ("type", "business"), formataddress, False),
 
-    'Address', ("addresses", 0, None, formataddress),
-    'Address2', ("addresses", 1, None, formataddress),
-    'Home Address', ("addresses", 0, ("type", "home"), formataddress),
-    'Business Address', ("addressess", 0, ("type", "business"), formataddress),
+    "Wallpaper", ("wallpapers", 0, None, "wallpaper", True),
 
-    "Wallpaper", ("wallpapers", 0, None, "wallpaper"),
+    "Secret", ("flags", 0, ("secret", True), "secret", True),
 
-    "Secret", ("flags", 0, ("secret", True), "secret"),
+    "Memo", ("memos", 0, None, "memo", True),
+    "Memo2", ("memos", 1, None, "memo", True),
+    "Memo3", ("memos", 2, None, "memo", True),
 
-    "Memo", ("memos", 0, None, "memo"),
-    "Memo2", ("memos", 1, None, "memo"),
-    "Memo3", ("memos", 2, None, "memo"),
-
-    "Phone", ("numbers", 0, None, formatnumber),
-    "Phone2", ("numbers", 1, None, formatnumber),
-    "Phone3", ("numbers", 2, None, formatnumber),
-    "Phone4", ("numbers", 3, None, formatnumber),
-    "Phone5", ("numbers", 4, None, formatnumber),
-    
     ]
 
 ll=[]
 for pretty, actual in ("Home", "home"), ("Office", "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"), ("Data", "data"):
     for suf,n in ("", 0), ("2", 1), ("3", 2):
         ll.append(pretty+suf)
-        ll.append(("numbers", n, ("type", actual), 'number'))
-_getdatalist[8:8]=ll
+        ll.append(("numbers", n, ("type", actual), 'number', False))
+_getdatalist[36:36]=ll
 
 _getdatatable={}
 AvailableColumns=[]
 DefaultColumns=['Name', 'Phone', 'Phone2', 'Phone3', 'Email', 'Categories', 'Memo', 'Secret']
+ImportColumns=[_getdatalist[x*2] for x in range(len(_getdatalist)/2) if _getdatalist[x*2+1][4]]
 
 for n in range(len(_getdatalist)/2):
     AvailableColumns.append(_getdatalist[n*2])
@@ -239,7 +246,7 @@ del _getdatalist  # so we don't accidentally use it
 
 def getdata(column, entry, default=None):
 
-    key, count, prereq, formatter=_getdatatable[column]
+    key, count, prereq, formatter, _ =_getdatatable[column]
 
     # do we even have that key
     if key not in entry:
@@ -1020,7 +1027,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.main=widget
         self.rowkeys=[]
         wx.grid.PyGridTableBase.__init__(self)
-        self.columns=['Confidence']+thephonewidget.GetColumns()
+        self.columns=['Confidence']+ImportColumns
         self.addedattr=wx.grid.GridCellAttr()
         self.addedattr.SetBackgroundColour("HONEYDEW")
         self.unalteredattr=wx.grid.GridCellAttr()
@@ -1075,6 +1082,22 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
             if row[i] is not None:
                 return getdata(self.columns[col], ptr[row[i]], "")
+        assert False, "Can't get here"
+        return ""
+
+    def GetValueWithNamedColumn(self, row, column):
+        try:
+            row=self.main.rowdata[self.rowkeys[row]]
+        except:
+            print "bad row", row
+            return "<error>"
+        
+        if column=='Confidence':
+            return row[0]
+
+        for i,ptr in (3,self.main.resultdata), (1,self.main.importdata), (2, self.main.existingdata):
+            if row[i] is not None:
+                return getdata(column, ptr[row[i]], "")
         assert False, "Can't get here"
         return ""
 
@@ -1172,10 +1195,40 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                                           'colour': colour}
 
     def OnDataUpdated(self):
+        # update row keys
         newkeys=self.main.rowdata.keys()
         newkeys.sort()
         oldrows=self.rowkeys
         self.rowkeys=newkeys
+        # work out which columns we actually need
+        colsavail=ImportColumns
+        colsused=[]
+        for row in range(len(self.rowkeys)):
+            can=[] # cols available now
+            for col in colsavail:
+                if len(self.GetValueWithNamedColumn(row, col)):
+                    colsused.append(col)
+                else:
+                    can.append(col)
+            colsavail=can
+        # colsused won't be in right order
+        colsused=[c for c in ImportColumns if c in colsused]
+        colsused=["Confidence"]+colsused
+        lo=len(self.columns)
+        ln=len(colsused)
+
+        # update columns
+        self.columns=colsused
+        if ln>lo:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_COLS_APPENDED, ln-lo)
+        elif lo>ln:
+            msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_COLS_DELETED, 0, lo-ln)
+        else:
+            msg=None
+        if msg is not None:
+            self.GetView().ProcessTableMessage(msg)
+        
+        # update rows
         lo=len(oldrows)
         ln=len(self.rowkeys)
         if ln>lo:
@@ -1220,7 +1273,7 @@ ImportDataTable.htmltemplate[4]=ImportDataTable.htmltemplate[0]  # just display 
 #  5 - imported equals result, existing not equals result
 ImportDataTable.htmltemplate[5]='<font color="%(colour)s"><font color="#00ff00">+</font>%(result)s<br><b><font size=-1>Existing</font></b> %(existing)s</font>'
 #  6 - imported not equal result, existing equals result
-
+ImportDataTable.htmltemplate[6]='<font color="%(colour)s">%(result)s<br><b><font size=-1>Imported</font></b> %(imported)s</font>'
 #  7 - imported not equal result, existing not equal result
 
 ###
