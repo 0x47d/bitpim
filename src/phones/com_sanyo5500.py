@@ -32,6 +32,9 @@ class Phone(com_sanyonewer.Phone):
 
     desc="SCP-5500"
 
+    FIRST_MEDIA_DIRECTORY=1
+    LAST_MEDIA_DIRECTORY=3
+
     NUM_MEDIA_DIRECTORIES=4
     # Directories:
     #    1: Camera Pictures and Videos.  MDM - Video
