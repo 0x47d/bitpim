@@ -1707,6 +1707,8 @@ class DayViewDialog(wxDialog):
         EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
         EVT_BUTTON(self, self.ID_DELETE, self.OnDeleteButton)
         EVT_BUTTON(self, self.ID_HELP, lambda _: wxGetApp().displayhelpid(helpids.ID_EDITING_CALENDAR_EVENTS))
+        EVT_BUTTON(self, self.ID_PREV, self.OnPrevDayButton)
+        EVT_BUTTON(self, self.ID_NEXT, self.OnNextDayButton)
 
         # this is allegedly called automatically but didn't work for me
         EVT_CLOSE(self, self.OnCloseWindow)
@@ -1856,6 +1858,18 @@ class DayViewDialog(wxDialog):
         else:
             self.refreshentries()
         self.updatelistbox(newentry['pos'])
+
+    def OnPrevDayButton(self, _):
+        y,m,d=self.date
+        y,m,d=calendarcontrol.normalizedate(y,m,d-1)
+        self.setdate(y,m,d)
+        self.cw.setday(y,m,d)
+
+    def OnNextDayButton(self, _):
+        y,m,d=self.date
+        y,m,d=calendarcontrol.normalizedate(y,m,d+1)
+        self.setdate(y,m,d)
+        self.cw.setday(y,m,d)
 
     def OnNewButton(self, _=None):
         entry=self.cw.newentryfactory(*self.date)
