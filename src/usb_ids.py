@@ -11,12 +11,13 @@
 
 import re
 
-vendor_re = re.compile(r"^([0-9A-Fa-f]{4,4})\s(.*)$")
-device_re = re.compile(r"^\t([0-9A-Fa-f]{4,4})\s(.*)$")
-iface_re = re.compile(r"^\t\t([0-9A-Fa-f]{4,4})\s(.*)$")
-usbclass_re = re.compile(r"^C\s([0-9A-Fa-f]{2,2})\s(.*)$")
-usbsubclass_re = re.compile(r"^\t([0-9A-Fa-f]{2,2})\s(.*)$")
-usbprotocol_re = re.compile(r"^\t\t([0-9A-Fa-f]{2,2})\s(.*)$")
+blank_re = re.compile(r"^\s*$")
+vendor_re = re.compile(r"^([0-9A-Fa-f]{4,4})\s+(.*)$")
+device_re = re.compile(r"^\t([0-9A-Fa-f]{4,4})\s+(.*)$")
+iface_re = re.compile(r"^\t\t([0-9A-Fa-f]{2,2})\s+(.*)$")
+usbclass_re = re.compile(r"^C\s([0-9A-Fa-f]{2,2})\s+(.*)$")
+usbsubclass_re = re.compile(r"^\t([0-9A-Fa-f]{2,2})\s+(.*)$")
+usbprotocol_re = re.compile(r"^\t\t([0-9A-Fa-f]{2,2})\s+(.*)$")
 
 ###
 ###  USB Info superclass
@@ -70,6 +71,8 @@ class usb_ids:
 		"""
 		self.vendorlist = VendorList()
 		self.usbclasslist = USBClassList()
+		self.inVendor = 0
+		self.inClass = 0
 		
 		try:
 			ufile = open(fname, "r")
@@ -78,43 +81,49 @@ class usb_ids:
 				while aline != "":
 					aline = aline[:-1]
 
-					# Skip comment lines
-					if aline[0:] == "#":
-						continue
+					# Blank lines or comment resets our view
+					m = blank_re.match(aline)
+					if ((m) or (aline[0:] == "#")):
+						self.inVendor = 0
+						self.inClass = 0
 					
 					# Check for a vendor ID line
 					m = vendor_re.match(aline)
 					if (m):
+						self.inVendor = 1
 						self.curr_vendor = VendorID(m.group(1), m.group(2))
 						self.vendorlist.addVendor(m.group(1), self.curr_vendor)
-					
-					# Check for a device ID line
-					m = device_re.match(aline)
-					if (m):
-						self.curr_device = DeviceID(m.group(1), m.group(2))
-						self.curr_vendor.addDevice(self.curr_device)
 
-					# Check for a interface ID line
-					m = iface_re.match(aline)
-					if (m):
-						self.curr_device.addInterface(InterfaceID(m.group(1), m.group(2)))
+					if (self.inVendor):
+						# Check for a device ID line
+						m = device_re.match(aline)
+						if (m):
+							self.curr_device = DeviceID(m.group(1), m.group(2))
+							self.curr_vendor.addDevice(self.curr_device)
+	
+						# Check for a interface ID line
+						m = iface_re.match(aline)
+						if (m):
+							self.curr_device.addInterface(InterfaceID(m.group(1), m.group(2)))
 
 					# Check for a USB Class line
 					m = usbclass_re.match(aline)
 					if (m):
+						self.inClass = 1
 						self.curr_usbclass = USBClass(m.group(1), m.group(2))
 						self.usbclasslist.addClass(m.group(1), self.curr_usbclass)
 					
-					# Check for a USB SubClass line
-					m = usbsubclass_re.match(aline)
-					if (m):
-						self.curr_usbsubclass = USBClassSubclass(m.group(1), m.group(2))
-						self.curr_usbclass.addSubclass(self.curr_usbsubclass)
-
-					# Check for a USB Protocol line
-					m = usbprotocol_re.match(aline)
-					if (m):
-						self.curr_usbsubclass.addProtocol(USBClassProtocol(m.group(1), m.group(2)))
+					if (self.inClass):
+						# Check for a USB SubClass line
+						m = usbsubclass_re.match(aline)
+						if (m):
+							self.curr_usbsubclass = USBClassSubclass(m.group(1), m.group(2))
+							self.curr_usbclass.addSubclass(self.curr_usbsubclass)
+	
+						# Check for a USB Protocol line
+						m = usbprotocol_re.match(aline)
+						if (m):
+							self.curr_usbsubclass.addProtocol(USBClassProtocol(m.group(1), m.group(2)))
 
 					# Get next line (if it exists)
 					aline = ufile.readline()
