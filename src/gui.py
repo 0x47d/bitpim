@@ -21,6 +21,7 @@ from wxPython.lib.dialogs import wxScrolledMessageDialog
 # my modules
 import guiwidgets
 import common
+import calendarcontrol
 
 ###
 ### Used to check our threading
@@ -322,6 +323,9 @@ class MainWindow(wxFrame):
         self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
         self.ringerwidget=guiwidgets.RingerView(self, self.nb)
         self.nb.AddPage(self.ringerwidget, "Ringers")
+        self.calendarwidget=calendarcontrol.Calendar(self.nb)
+        self.calendarwidget.setday( * (time.localtime()[:3]))
+        self.nb.AddPage(self.calendarwidget, "Calendar")
 
         ### toolbar
         # self.tb=self.CreateToolBar(wxTB_HORIZONTAL|wxNO_BORDER|wxTB_FLAT)
