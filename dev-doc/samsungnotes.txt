@@ -300,7 +300,7 @@ OK
 #PMODE: (0-1)
 OK
 
-#PMUNA?
+a
 #PMUNA: 20040922T003356,S,"BitPim J"
 OK
 
@@ -425,28 +425,30 @@ Field	Value
 02	10	Speeddial assignment
 03	3	Group assignment (0-4, friend,family, etc)
 04	18	Ringtone id (0-15 built-in; 16-55 listed in nvm/nvm/brew_melody)
-05	"A..."	Name of contact (22 chars max)
+05	"A..."	Name of contact (22 chars max) in double quotes
 06	2	Speed-dial selector (0=Home, 1=Work, 2=Mobile, 3=Pager, 4=Fax)
 07	0	Always?
 08	nnn	Home phone number (32 chars max)
-09	0	Always?
+09	0	0 if home number exists, blank otherwise
 10	nnn	Work phone number (32 chars max)
-11	0	Always?
+11	0	0 if work number exists, blank otherwise
 12	nnn	Mobile phone number (32 chars max)
-13	0	Always?
+13	0	0 if mobile number exists, blank otherwise
 14	nnn	Pager phone number (32 chars max)
-15	0	Always?
+15	0	0 if pager number exists, blank otherwise
 16	nnn	Fax phone number (32 chars max)
-17	0	Always?
-18	"Al..."	Alias (48 chars max)
-19	0	Always?
+17	0	0 if fax number exists, blank otherwise
+18	Alia...	Alias (48 chars max) (no quotes?!!!)
+19	0	0 if alias exists, blank otherwise
 20	empty	?
 21	empty	?
-22	"em"	E-mail address (48 char max)
+22	"em"	E-mail address (48 char max) in double quotes or "" if none
 23	3	Caller-id image flag (3=photo gallery, 4=wallpaper, 5=none)
 24	empty	ID of caller-id wallpaper when flag above=4
-25	"di..."	Path to caller-id gallery image when flag above=3
-26	"20..."	Timestamp
+25	"di..."	Path to caller-id gallery image when flag above=3 or ""
+26	2004...	Timestamp
+
+Note on field #18: Purpose of this field is unknown. It could be for website URLs or instant messenger screen names. Is is not double-quoted like the name or email field. It CAN have commas in it which may cause problems.
 
 Note on field #24:  This id seems to be mapped to image file name and path in /nvm/nvm/brew_image. Mapping of the id to phonebook contact name appears to be in /nvm/nvm/dial_tbl
 
@@ -456,6 +458,8 @@ at#pbokr=42
 #PBOKR: 42,10,3,18,"A test",2,0,5550000000,0,5551111111,0,5552222222,0,5553333333,0,5554444444,0,Alias  (48  chars),0,,,"Email (48 chars)",4,3,"",20041115T124103
 
 Note the flag is now 4 and the wallpaper id is now 3.
+
+Commas can be put in text fields with uncertain impact on AT#PBOKR. Double quote chars in text fields get replaced with the "}" char in the PBOKR response.
  
 Vic Heintz
 
