@@ -22,6 +22,7 @@ import commport
 import com_brew
 import com_samsung
 import com_phone
+import conversions
 import p_samsungscha650
 import prototypes
 
@@ -551,7 +552,7 @@ class Profile(com_samsung.Profile):
     MAX_WALLPAPER_BASENAME_LENGTH=19
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
-    
+   
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
 
@@ -676,7 +677,16 @@ class FileEntries:
                     self.__phone.log('File '+name+' exists')
                 else:
                     self.__phone.log('Writing file '+name)
-                    self.__phone.writefile(name, media[k]['data'])
+                    if self.__origin=='wallpapers':
+                        if __debug__:
+                            print 'FileEntries.save_media: optimizing png'
+                        # copy from Sanyo code, not sure what's the
+                        # significant of size 16383 ??
+                        self.__phone.writefile(name,
+                        conversions.convertto8bitpng(\
+                        media[k]['data'], 16383))
+                    else:
+                        self.__phone.writefile(name, media[k]['data'])
                     media[k]['origin']=self.__origin
             except:
                 self.__phone.report('Failed to write file: '+media[k]['name'])
