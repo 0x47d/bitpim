@@ -246,7 +246,8 @@ class Server(threading.Thread):
 
         def processxmlrpcrequest(self, data, client_addr, username):
             msg=Server.Message(Server.Message.CMD_XMLRPC_REQUEST, self.responsequeue, client_addr, data=(data, username))
-            self.log("%s: req %s" % (username, `data`))
+            if __debug__ and TRACE:
+                self.log("%s: req %s" % (username, `data`))
             self.requestqueue.put(msg)
             resp=self.responsequeue.get()
             assert resp.cmd==resp.CMD_XMLRPC_RESPONSE
