@@ -459,6 +459,16 @@ class codegen:
         if namestuff[4] is not None:
             print >>out, indent()+namestuff[4]
 
+        # fields
+        fieldlist=[]
+        for f in fields:
+            if f[0]==tokens.FIELD:
+                fieldlist.append(f[1])
+
+        print >>out, indent(1)+"__fields="+`fieldlist`
+        print >>out, ""
+
+
         # Constructor
         print >>out, indent()+"def __init__(self, *args, **kwargs):"
         print >>out, indent(2)+"dict={}"
@@ -472,13 +482,7 @@ class codegen:
         print >>out, indent(2)+"dict.update(kwargs)"
         print >>out, indent(2)+"# Parent constructor"
         print >>out, indent(2)+"super(%s,self).__init__(**dict)"%(namestuff[1],)
-        fieldlist=[]
-        for f in fields:
-            if f[0]==tokens.FIELD:
-                fieldlist.append(f[1])
-        print >>out, indent(2)+"# What fields do we have?"
-        print >>out, indent(2)+"self.__fields="+`fieldlist`
-        print >>out, indent(2)+"if self._ismostderived(%s):" % (classname,)
+        print >>out, indent(2)+"if self.__class__ is %s:" % (classname,)
         print >>out, indent(3)+"self._update(args,dict)"
         print >>out, "\n"
         # getfields
@@ -494,7 +498,8 @@ class codegen:
         print >>out, indent(4)+"setattr(self, key, kwargs[key])"
         print >>out, indent(4)+"del kwargs[key]"
         print >>out, indent(2)+"# Were any unrecognized kwargs passed in?"
-        print >>out, indent(2)+"self._complainaboutunusedargs(%s,kwargs)" % (namestuff[1],)
+        print >>out, indent(2)+"if __debug__:"
+        print >>out, indent(3)+"self._complainaboutunusedargs(%s,kwargs)" % (namestuff[1],)
         # if only field, pass stuff on to it
         if len(fields)==1:
             print >>out, indent(2)+"if len(args):"
@@ -599,7 +604,6 @@ class codegen:
                 i+=1
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
-        print >>out, indent(2)+"raise StopIteration()\n"
         assert i==2
         
 
