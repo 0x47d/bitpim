@@ -206,7 +206,7 @@ class OutlookCalendarImportData:
         elif rt==self.olRecursMonthly:
             rp.repeat_type=rp.monthly
         else:
-            rp.repeat=rp.yearly
+            rp.repeat_type=rp.yearly
         if rp.repeat_type==rp.daily:
             rp.interval=r_interval
         elif rp.repeat_type==rp.weekly:
