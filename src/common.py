@@ -125,3 +125,19 @@ def prettyprintdict(dictionary, indent=0):
      return res
 
      
+class exceptionwrap:
+     """A debugging assist class that helps in tracking down functions returning exceptions"""
+     def __init__(self, callable):
+          self.callable=callable
+          
+     def __call__(self, *args, **kwargs):
+          try:
+               print "in exception wrapped call"
+               res=self.callable(*args, **kwargs)
+               print `self.callable`, "returned", datatohexstring(res)
+               return res
+          except:
+               import traceback
+               traceback.print_stack()
+               traceback.print_exc()
+               raise
