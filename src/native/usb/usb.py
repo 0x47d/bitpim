@@ -235,7 +235,7 @@ class USBFile:
     def read(self,howmuch=1024, timeout=1000):
         data=""
         while howmuch>0:
-            res,str=usb.usb_bulk_read_wrapped(self.iface.device.handle, self.addrin, self.insize, timeout)
+            res,str=usb.usb_bulk_read_wrapped(self.iface.device.handle, self.addrin, self.insize, int(timeout))
             if TRACE: print "usb_bulk_read(%s,%d,%d,%d)=%d,%s" % (self.iface.device.handle, self.addrin, self.insize, timeout, res, `str`)
             if res<0:
                 if len(data)>0:
