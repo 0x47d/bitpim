@@ -368,6 +368,10 @@ class CalendarEntry(object):
             r=RepeatEntry()
             r.set(self.repeat)
             self.repeat=r
+        # try to clean up the dict
+        for k, e in self.__data.items():
+            if e is None or e=='' or e==[]:
+                del self.__data[k]
 
     def set_db_dict(self, data):
         # update our data with dict return from database
@@ -387,9 +391,6 @@ class CalendarEntry(object):
     def is_active(self, y, m ,d):
         # return true if if this event is active on this date,
         # mainly used for repeating events.
-##        s=datetime.date(*self.start[:3])
-##        e=datetime.date(*self.end[:3])
-##        d=datetime.date(y, m, d)
         s=self.__data['start'].date
         e=self.__data['end'].date
         d=datetime.date(y, m, d)
@@ -418,7 +419,7 @@ class CalendarEntry(object):
     def __get_description(self):
         return self.__data.get('description', '')
     def __set_description(self, desc):
-        self.__set_or_del('description', desc)
+        self.__set_or_del('description', desc, (''))
     description=property(fget=__get_description, fset=__set_description)
 
     def __get_location(self):
@@ -487,7 +488,7 @@ class CalendarEntry(object):
     def __get_notes(self):
         return self.__data.get('notes', '')
     def __set_notes(self, s):
-        self.__set_or_del('notes', s)
+        self.__set_or_del('notes', s, (''))
     notes=property(fget=__get_notes, fset=__set_notes)
 
     def __get_categories(self):
@@ -501,13 +502,13 @@ class CalendarEntry(object):
     def __get_ringtone(self):
         return self.__data.get('ringtone', '')
     def __set_ringtone(self, rt):
-        self.__set_or_del('ringtone', rt)
+        self.__set_or_del('ringtone', rt, (''))
     ringtone=property(fget=__get_ringtone, fset=__set_ringtone)
 
     def __get_wallpaper(self):
         return self.__data.get('wallpaper', '')
     def __set_wallpaper(self, wp):
-        self.__set_or_del('wallpaper', wp)
+        self.__set_or_del('wallpaper', wp, (''))
     wallpaper=property(fget=__get_wallpaper, fset=__set_wallpaper)
 
     # we use two random numbers to generate the serials.  _persistrandom
@@ -526,7 +527,7 @@ class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
     used to edit the content of one particular day."""
 
-    CURRENTFILEVERSION=3
+    CURRENTFILEVERSION=4
     
     def __init__(self, mainwindow, parent, id=-1):
         """constructor
@@ -748,8 +749,12 @@ class Calendar(calendarcontrol.Calendar):
         # read data from the database
         cal_dict=self.mainwindow.database.getmajordictvalues('calendar',
                                                       calendarobjectfactory)
+        if __debug__:
+            print 'Calendar.getfromfs: dicts returned from Database:'
         r={}
         for k,e in cal_dict.items():
+            if __debug__:
+                print e
             ce=CalendarEntry()
             ce.set_db_dict(e)
             r[ce.id]=ce
@@ -784,6 +789,11 @@ class Calendar(calendarcontrol.Calendar):
             dict['result']['converted']=True    # already converted
 
         # 3 to 4 etc
+        if version==3:
+            version=4
+            dict['result']['calendar']=self.convert_dict(dict['result'].get('calendar', {}), 3, 4)
+
+        # 4 to 5 etc
 
     def convert_dict(self, dict, from_version, to_version, ringtone_index={}):
         """
@@ -796,9 +806,25 @@ class Calendar(calendarcontrol.Calendar):
             return self.__convert2to3(dict, ringtone_index)
         elif from_version==3 and to_version==2:
             return self.__convert3to2(dict, ringtone_index)
+        elif from_version==3 and to_version==4:
+            return self.__convert3to4(dict, ringtone_index)
         else:
             raise 'Invalid conversion'
 
+    def __convert3to4(self, dict, ringtone_index):
+        """
+        Convert calendar dict from version 3 to 4.
+        """
+        r={}
+        for k,e in dict.items():
+            r[k]=e
+            # update start & end to ISO string
+            r[k]['start']='%04d%02d%02dT%02d%02d'%\
+                           tuple(e['start']['date']+e['start']['time'])
+            r[k]['end']='%04d%02d%02dT%02d%02d'%\
+                         tuple(e['end']['date']+e['end']['time'])
+        return r
+        
     def __convert2to3(self, dict, ringtone_index):
         """
         Convert calendar dict from version 2 to 3.

@@ -614,9 +614,6 @@ class Editor(wx.Dialog):
         newentry.wallpaper=self.__widgets[self.__wallpapers_page].Get().get('wallpaper', None)
         newentry.ringtone=self.__widgets[self.__ringtones_page].Get().get('ringtone', None)
         # got the data
-        print newentry.get()
-        print 'New DB Calendar object:'
-        print bpcalendar.CalendarDataObject(newentry)
         # update calendar widget
         if res==self.ANSWER_ORIGINAL:
             self.cw.ChangeEntry(entry, newentry)
@@ -624,7 +621,11 @@ class Editor(wx.Dialog):
             # delete the repeat and add this new entry
             self.cw.DeleteEntryRepeat(entry, *self.date)
             self.cw.AddEntry(newentry)
-
+        if __debug__:
+            print 'Editor.OnSaveButton: updated entry:'
+            print newentry.get()
+            print 'Equivalent DB dict:'
+            print bpcalendar.CalendarDataObject(newentry)
         # tidy up
         self.setdirty(False)
         # did the user change the date on us?
