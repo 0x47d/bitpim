@@ -24,6 +24,7 @@ NUMEMAILS=3
 NUMPHONENUMBERS=6
 NUMCALENDAREVENTS=70
 MAXNUMBERLEN=32
+NUMTODOENTRIES=9
 
 NUMGROUPS=4
 
@@ -121,6 +122,27 @@ PACKET esnresponse:
     * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
     * SAMSTRING {'quotechar': None, 'terminator': None} esn
 
+PACKET todorequest:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDR='} +command
+    * SAMINT {'terminator': None} +slot
+
+PACKET todoresponse:
+    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '#PITDR:'} command
+    * SAMINT slot
+    * SAMINT priority
+    * SAMTIME duedate
+    * SAMTIME timestamp
+    * SAMSTRING {'quotechar': None} status
+    * SAMSTRING {'terminator': None} subject
+    
+PACKET todoupdaterequest:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDW='} +command
+    * SAMINT slot
+    * SAMINT priority
+    * SAMTIME duedate 
+    * SAMTIME timestamp
+    * SAMSTRING {'terminator': None} subject
+
 PACKET filepbentry:
     1 UINT  dunno1
     1 UINT  dunno2
@@ -171,3 +193,4 @@ PACKET ringer:
 # 0x45-0x4c Tone 1-9
 # 0x51-0x5a Ringtone 1-10
 # 0x5b-0x64 Fuer Elise - Boardwalk
+
