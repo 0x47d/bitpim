@@ -4,5 +4,5 @@ LIBDIR=/usr/lib/$PYTHONVER/config
 
 swig -python -I/usr/include libusb.i
 
-gcc -Wall -O2  -shared  -I $INCLUDEDIR -L $LIBDIR -o _libusb.so libusb_wrap.c -lusb -l$PYTHONVER
+gcc -Wall -O2  -shared  -I $INCLUDEDIR -L $LIBDIR -o _libusb.so libusb_wrap.c -lusb 
 strip _libusb.so
