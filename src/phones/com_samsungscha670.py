@@ -813,13 +813,6 @@ class FileEntries:
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
-        # check for file name length
-        for k in media:
-            if len(media[k]['name']) > self.__max_file_len:
-		print self.__max_file_len, len(media[k]['name'])
-                self.__phone.log('%s %s name is too long.  Operation aborted'% \
-                                    (self.__file_type, media[k]['name']))
-                return result
         # get existing dir listing
         try:
             dir_l=self.__phone.getfilesystem(self.__path)
@@ -848,6 +841,10 @@ class FileEntries:
             try:
                 origin=media[k].get('origin', None)
                 if origin is not None and origin != self.__origin:
+                    continue
+                if len(media[k]['name']) > self.__max_file_len:
+                    self.__phone.log('%s %s name is too long and will not be sent.'% \
+                                     (self.__file_type, media[k]['name']))
                     continue
                 file_count+=1
                 if file_count>self.__max_file_count:

@@ -550,11 +550,11 @@ class Profile(com_samsung.Profile):
 
     WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=160
-    MAX_WALLPAPER_BASENAME_LENGTH=19
+    MAX_WALLPAPER_BASENAME_LENGTH=17
     WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="png"
    
-    MAX_RINGTONE_BASENAME_LENGTH=19
+    MAX_RINGTONE_BASENAME_LENGTH=17
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     RINGTONE_LIMITS= {
         'MAXSIZE': 30000
@@ -646,12 +646,6 @@ class FileEntries:
     def save_media(self, result):
         self.__phone.log('Saving media for type '+self.__file_type)
         media, idx=result[self.__file_type], result[self.__index_type]
-        # check for file name length
-        for k in media:
-            if len(media[k]['name']) > self.__max_file_len:
-                self.__phone.log('%s %s name is too long.  Save %s aborted'% \
-                                    (self.__file_type, media[k]['name'], self.__file_type))
-                return result
         # get existing dir listing
         try:
             dir_l=self.__phone.getfilesystem(self.__path)
@@ -680,6 +674,10 @@ class FileEntries:
             try:
                 origin=media[k].get('origin', None)
                 if origin is not None and origin != self.__origin:
+                    continue
+                if len(media[k]['name']) > self.__max_file_len:
+                    self.__phone.log('%s %s name is too long and will not be sent.'% \
+                                     (self.__file_type, media[k]['name']))
                     continue
                 file_count+=1
                 if file_count>self.__max_file_count:
