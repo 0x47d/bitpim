@@ -45,6 +45,9 @@ class SanyoPhonebook:
     pbterminator="\x7e"
     MODEPHONEBOOK="modephonebook" # can speak the phonebook protocol
 
+    calendar_defaultringtone=0
+    calendar_defaultcaringtone=0
+
     def __init__(self):
         self.numbertypetab=numbertypetab
     
@@ -965,7 +968,7 @@ class SanyoPhonebook:
                 repeat=self._calrepeatvalues[res.entry.period]
                 entry.repeat = self.makerepeat(repeat,entry.start)
                 entry.alarm=0
-                if res.entry.ringtone!=self.calendar_defaultringtone:
+                if res.entry.ringtone!=self.calendar_defaultcaringtone:
                     entry.ringtone=result['ringtone-index'][res.entry.ringtone]['name']
                 entry.snoozedelay=0
                 calres[entry.id]=entry
@@ -1072,7 +1075,7 @@ class SanyoPhonebook:
                 #else:
                 #    e.ringtone=entry.ringtone
                 # Use default ringtone for now
-                e.ringtone=self.calendar_defaultringtone
+                e.ringtone=self.calendar_defaultcaringtone
                 print "Setting ringtone "+`e.ringtone`
 
                 req=self.protocolclass.callalarmupdaterequest()
