@@ -188,6 +188,13 @@ class FilterDialog(wx.Dialog):
                                           | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
         self.__end_date.Disable()
         fgs.Add(self.__end_date, 1, wx.ALIGN_LEFT, 5)
+        # new repeat to single events option
+        fgs.Add(wx.StaticText(self, -1, 'Repeat Events:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        self.__rpt_chkbox=wx.CheckBox(self, id=wx.NewId())
+        self.__rpt_chkbox.Disable()
+        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_CENTRE, 0)
+        fgs.Add(wx.StaticText(self, -1, 'Import as multi-single events.'),
+                0, wx.ALIGN_CENTRE, 0)
         fgs.Add(wx.StaticText(self, -1, 'Categories:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
         self.__cat_chkbox=wx.CheckBox(self, id=wx.NewId())
         fgs.Add(self.__cat_chkbox, 0, wx.ALIGN_CENTRE, 0)
@@ -233,12 +240,22 @@ class FilterDialog(wx.Dialog):
                     data[i]='<None>'
             for i in range(c.GetCount()):
                 c.Check(i, c.GetString(i) in data)
-          
+
+    def __set_rpt(self, data):
+        if self.__start_date_chkbox.GetValue() and\
+           self.__end_date_chkbox.GetValue():
+            self.__rpt_chkbox.Enable()
+            self.__rpt_chkbox.SetValue(data)
+        else:
+            self.__rpt_chkbox.SetValue(False)
+            self.__rpt_chkbox.Disable()
+
     def set(self, data):
         self.__set_date(self.__start_date_chkbox, self.__start_date,
                         data.get('start', None))
         self.__set_date(self.__end_date_chkbox, self.__end_date,
                         data.get('end', None))
+        self.__set_rpt(data.get('rpt_events', False))
         self.__set_cats(self.__cat_chkbox, self.__cats, data.get('categories', None))
 
     def get(self):
@@ -253,6 +270,7 @@ class FilterDialog(wx.Dialog):
             r['end']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
         else:
             r['end']=None
+        r['rpt_events']=self.__rpt_chkbox.GetValue()
         if self.__cat_chkbox.GetValue():
             c=[]
             for i in range(self.__cats.GetCount()):
@@ -279,3 +297,12 @@ class FilterDialog(wx.Dialog):
             w2.Enable()
         else:
             w2.Disable()
+        # turn on the repeat event option of both start date and end date
+        # are specified.
+        if self.__start_date_chkbox.GetValue() and \
+           self.__end_date_chkbox.GetValue():
+            self.__rpt_chkbox.Enable()
+        else:
+            self.__rpt_chkbox.SetValue(False)
+            self.__rpt_chkbox.Disable()
+

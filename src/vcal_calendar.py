@@ -20,6 +20,7 @@ import wx
 import bpcalendar
 import bptime
 import common_calendar
+import helpids
 import vcard
 
 module_debug=False
@@ -66,7 +67,8 @@ class VCalendarImportData(object):
     __default_filter={
         'start': None,
         'end': None,
-        'categories': None
+        'categories': None,
+        'rpt_events': False
         }
     __rrule_dow={
         'SU': 0x01, 'MO': 0x02, 'TU': 0x04, 'WE': 0x08, 'TH': 0x10,
@@ -96,7 +98,7 @@ class VCalendarImportData(object):
 
     def __accept(self, entry):
         # start & end time within specified filter
-        if self.__filter['start']is not None and \
+        if self.__filter['start'] is not None and \
            entry['start'][:3]<self.__filter['start'][:3]:
             return False
         if self.__filter['end'] is not None and \
@@ -198,14 +200,43 @@ class VCalendarImportData(object):
         # look at repeat
         self.__populate_repeat_entry(e, ce)
 
+    def __generate_repeat_events(self, e):
+        # generate multiple single events from this repeat event
+        ce=bpcalendar.CalendarEntry()
+        self.__populate_entry(e, ce)
+        l=[]
+        new_e=e.copy()
+        new_e['repeat']=False
+        for k in ('repeat_type', 'repeat_interval', 'repeat_dow'):
+            if new_e.has_key(k):
+                del new_e[k]
+        s_date=datetime.datetime(*self.__filter['start'])
+        e_date=datetime.datetime(*self.__filter['end'])
+        one_day=datetime.timedelta(1)
+        this_date=s_date
+        while this_date<=e_date:
+            date_l=(this_date.year, this_date.month, this_date.day)
+            if ce.is_active(*date_l):
+                new_e['start']=date_l+new_e['start'][3:]
+                new_e['end']=date_l+new_e['end'][3:]
+                l.append(new_e.copy())
+            this_date+=one_day
+        return l
+        
     def get(self):
         res={}
+        single_rpt=self.__filter.get('rpt_events', False)
         for k in self.__data:
             try:
                 if self.__accept(k):
-                    ce=bpcalendar.CalendarEntry()
-                    self.__populate_entry(k, ce)
-                    res[ce.id]=ce
+                    if k.get('repeat', False) and single_rpt:
+                        d=self.__generate_repeat_events(k)
+                    else:
+                        d=[k]
+                    for n in d:
+                        ce=bpcalendar.CalendarEntry()
+                        self.__populate_entry(n, ce)
+                        res[ce.id]=ce
             except:
                 if module_debug:
                     raise
@@ -335,7 +366,7 @@ class VCalendarImportData(object):
     def __convert(self, vcal, d):
         for i in vcal:
             try:
-                dd={}
+                dd={'start': None, 'end': None }
                 for j in self.__calendar_keys:
                     if i.has_key(j[0]):
                         k=i[j[0]]
@@ -343,6 +374,13 @@ class VCalendarImportData(object):
                             dd[j[1]]=j[2](k, dd)
                         else:
                             dd[j[1]]=k['value']
+                if dd['start'] is None and dd['end'] is None:
+                    # no start or end, drop this one
+                    continue
+                if dd['start'] is None:
+                    dd['start']=dd['end']
+                elif dd['end'] is None:
+                    dd['end']=dd['start']
                 if module_debug: print dd
                 d.append(dd)
             except:
@@ -351,11 +389,16 @@ class VCalendarImportData(object):
     def get_display_data(self):
         cnt=0
         res={}
+        single_rpt=self.__filter.get('rpt_events', False)
         for k in self.__data:
             if self.__accept(k):
-                d=k.copy()
-                res[cnt]=d
-                cnt += 1
+                if k.get('repeat', False) and single_rpt:
+                    d=self.__generate_repeat_events(k)
+                else:
+                    d=[k.copy()]
+                for n in d:
+                    res[cnt]=n
+                    cnt+=1
         return res
 
     def get_file_name(self):
@@ -419,11 +462,13 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         hbs.Add(wx.Button(self, self.ID_ADD, 'Add'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         id_filter=wx.NewId()
-        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)       
+        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)       
+        hbs.Add(wx.Button(self, wx.ID_HELP, 'Help'), 0,  wx.ALIGN_CENTRE|wx.ALL, 5)
         main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, id_import, self.OnImport)
         wx.EVT_BUTTON(self, id_filter, self.OnFilter)
         wx.EVT_BUTTON(self, self.ID_ADD, self.OnAdd)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
     def OnImport(self, evt):
         wx.BeginBusyCursor()

@@ -10,6 +10,7 @@
 "Deals with Outlook calendar import stuff"
 
 # System modules
+import datetime
 import pywintypes
 import sys
 import time
@@ -26,6 +27,7 @@ import bpcalendar
 import common
 import common_calendar
 import guiwidgets
+import helpids
 import native.outlook
 
 # common convertor functions
@@ -104,7 +106,8 @@ class OutlookCalendarImportData:
     __default_filter={
         'start': None,
         'end': None,
-        'categories': None
+        'categories': None,
+        'rpt_events': False
         }
 
     # Outlook constants
@@ -121,6 +124,7 @@ class OutlookCalendarImportData:
     def __init__(self, outlook):
         self.__outlook=outlook
         self.__data=[]
+        self.__single_data=[]
         self.__folder=None
         self.__filter=self.__default_filter
         self.__total_count=0
@@ -208,24 +212,58 @@ class OutlookCalendarImportData:
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])
         ce.repeat=rp
+
+    def __generate_repeat_events(self, e):
+        # generate multiple single events from this repeat event
+        ce=bpcalendar.CalendarEntry()
+        self.__populate_entry(e, ce)
+        l=[]
+        new_e=e.copy()
+        new_e['repeat']=False
+        for k in ('repeat_type', 'repeat_interval', 'repeat_dow'):
+            if new_e.has_key(k):
+                del new_e[k]
+        s_date=datetime.datetime(*self.__filter['start'])
+        e_date=datetime.datetime(*self.__filter['end'])
+        one_day=datetime.timedelta(1)
+        this_date=s_date
+        while this_date<=e_date:
+            date_l=(this_date.year, this_date.month, this_date.day)
+            if ce.is_active(*date_l):
+                new_e['start']=date_l+new_e['start'][3:]
+                new_e['end']=date_l+new_e['end'][3:]
+                l.append(new_e.copy())
+            this_date+=one_day
+        return l
         
     def get(self):
         res={}
+        single_rpt=self.__filter.get('rpt_events', False)
         for k in self.__data:
             if self.__accept(k):
-                ce=bpcalendar.CalendarEntry()
-                self.__populate_entry(k, ce)
-                res[ce.id]=ce
+                if k.get('repeat', False) and single_rpt:
+                    d=self.__generate_repeat_events(k)
+                else:
+                    d=[k]
+                for n in d:
+                    ce=bpcalendar.CalendarEntry()
+                    self.__populate_entry(n, ce)
+                    res[ce.id]=ce
         return res
 
     def get_display_data(self):
         cnt=0
         res={}
+        single_rpt=self.__filter.get('rpt_events', False)
         for k in self.__data:
             if self.__accept(k):
-                d=k.copy()
-                res[cnt]=d
-                cnt += 1
+                if k.get('repeat', False) and single_rpt:
+                    d=self.__generate_repeat_events(k)
+                else:
+                    d=[k.copy()]
+                for n in d:
+                    res[cnt]=n
+                    cnt+=1
         return res
 
     def get_category_list(self):
@@ -385,11 +423,13 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         hbs.Add(wx.Button(self, self.ID_ADD, 'Add'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         id_filter=wx.NewId()
-        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)       
+        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_HELP, 'Help'), 0,  wx.ALIGN_CENTRE|wx.ALL, 5)
         main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, id_import, self.OnImport)
         wx.EVT_BUTTON(self, id_filter, self.OnFilter)
         wx.EVT_BUTTON(self, self.ID_ADD, self.OnAdd)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
     def OnImport(self, evt):
         wx.BeginBusyCursor()
@@ -413,7 +453,6 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
         dlg.set(self.__oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
-            print dlg.get()
             self.__oc.set_filter(dlg.get())
             self.populate(self.__oc.get_display_data())
 
