@@ -131,10 +131,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
             if k=='ringtones' or k=='wallpapers' or k=='numbertypes':
                 continue
             if k=='numbers':
+                for numberindex in range(7):
+                    enpn=p_sanyo.phonenumber()
+                    e.numbers.append(enpn)
+                    
                 for i in range(len(entry[k])):
                     numberindex=entry['numbertypes'][i]
-                    print i,numberindex,entry[k][i]
-                    e.numbers[numberindex].number=self.phonize(entry[k][i])
+                    print i,numberindex,entry[k][i],len(e.numbers)
+                    e.numbers[numberindex].number=entry[k][i]
                     e.numbers[numberindex].number_len=len(e.numbers[numberindex].number)
                 continue
             # everything else we just set

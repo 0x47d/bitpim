@@ -271,13 +271,15 @@ PACKET phonebookslotrequest:
     2 UINT slot
     500 UNKNOWN +pad
 
+PACKET phonenumber:
+    1 UINT +number_len
+    49 STRING +number
+
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     16 STRING {'raiseonunterminatedread': False} name
-    * LIST {'length': 7} numbers:
-        1 UINT number_len
-        49 STRING number
+    * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT email_len
     49 STRING email
     1 UINT url_len
@@ -353,8 +355,8 @@ PACKET pbsortbuffer:
     P UINT {'constant': 300} numpbslots "Number of phone book slots"
     P UINT {'constant': 8} numspeeddials "Number of speed dial slots"
     P UINT {'constant': 5} numlongnumbers "Number of long phone numbers"
-    * LIST {'length': self.numpbslots} usedflags:
-        1 UINT used "1 of slot in use"
+    * LIST {'length': self.numpbslots, 'createdefault': True} +usedflags:
+        1 UINT +used "1 of slot in use"
     2 UINT slotsused
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
     2 UINT numemail "Num of slots with email"
