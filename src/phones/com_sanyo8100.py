@@ -41,6 +41,8 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
                        'Disco' )
 
     calendar_defaultringtone=4
+    calendar_tonerange=xrange(18,26)
+    calendar_toneoffset=8
 
     def __init__(self, logtarget, commport):
         com_sanyo.Phone.__init__(self, logtarget, commport)
