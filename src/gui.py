@@ -1217,6 +1217,11 @@ class MainWindow(wx.Frame):
             title="Phonebook busy on phone"
             style=wx.OK|wx.ICON_INFORMATION
             help=lambda _: wx.GetApp().displayhelpid(helpids.ID_PHONEBOOKBUSY)
+        elif isinstance(exception, common.IntegrityCheckFailed):
+            text="The phonebook on your phone is partially corrupt.  Please read the\nhelp for more details on the cause and fix"
+            title="IntegrityCheckFailed"
+            style=wx.OK|wx.ICON_EXCLAMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_LG_INTEGRITYCHECKFAILED)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
