@@ -86,6 +86,7 @@ import cStringIO
 import webbrowser
 import difflib
 import re
+import time
 
 # GUI
 import wx
@@ -348,7 +349,7 @@ class PhoneWidget(wx.Panel):
         self._data={}
         self.groupdict={}
         self.modified=False
-        self.table=wx.grid.Grid(split, -1)
+        self.table=wx.grid.Grid(split, wx.NewId())
         self.table.EnableGridLines(False)
         self.dt=PhoneDataTable(self)
         self.table.SetTable(self.dt, False, wx.grid.Grid.wxGridSelectRows)
@@ -379,6 +380,7 @@ class PhoneWidget(wx.Panel):
             self.populatefs(self.getdata({}))
 
     def OnCellSelect(self, event):
+        event.Skip()
         row=event.GetRow()
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
@@ -392,8 +394,46 @@ class PhoneWidget(wx.Panel):
             self._data[key]=data
             self.dt.OnDataUpdated()
             self.SetPreview(data)
+            self.modified=True
         dlg.Destroy()
-        
+
+    def OnAdd(self, _):
+        dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]})
+        if dlg.ShowModal()==wx.ID_OK:
+            data=dlg.GetData()
+            while True:
+                key=int(time.time())
+                if key in self._data:
+                    continue
+                break
+            self._data[key]=data
+            self.dt.OnDataUpdated()
+            self.SetPreview(data)
+            self.modified=True
+        dlg.Destroy()
+
+    def OnDelete(self,_):
+        rows=[]
+        gcr=self.table.GetGridCursorRow()
+        set1=self.table.GetSelectionBlockTopLeft()
+        set2=self.table.GetSelectionBlockBottomRight()
+        if len(set1):
+            assert len(set1)==len(set2)
+            for i in range(len(set1)):
+                for row in range(set1[i][0], set2[i][0]+1): # range in wx is inclusive of last element
+                    if row not in rows:
+                        rows.append(row)
+        else:
+            rows.append(gcr)
+
+        self.table.ClearSelection()
+        rowkeys=[]
+        for r in rows:
+            rowkeys.append(self.dt.rowkeys[r])
+        for r in rowkeys:
+            del self._data[r]
+        self.dt.OnDataUpdated()
+        self.modified=True
 
     def SetPreview(self, entry):
         self.preview.ShowEntry(entry)
@@ -449,6 +489,7 @@ class PhoneWidget(wx.Panel):
         self.clear()
         self._data=pb.copy()
         self.dt.OnDataUpdated()
+        self.modified=True
 
     def populatefs(self, dict):
         self.thedir=self.mainwindow.phonebookpath
