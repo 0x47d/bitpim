@@ -33,6 +33,7 @@ class Phone(com_phone.Phone):
 
 class Profile(com_sanyo.Profile):
 
+    protocolclass=p_sanyo8100
     serialsname='scp8100'
 
     def __init__(self):

@@ -32,6 +32,7 @@ class Phone(com_sanyo.Phone):
 
 class Profile(com_sanyo.Profile):
 
+    protocolclass=p_sanyo4900
     serialsname='scp4900'
 
     def __init__(self):
