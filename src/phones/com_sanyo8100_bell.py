@@ -54,7 +54,7 @@ class Profile(com_sanyonewer.Profile):
     protocolclass=p_sanyo8100_bell
     serialsname='scp8100bell'
 
-    WALLPAPER_WIDTH=120
+    WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=144
     OVERSIZE_PERCENTAGE=100
 
