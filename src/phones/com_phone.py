@@ -68,11 +68,11 @@ class Phone:
         "Raise a comms DeviceNeedsAttention Exception"
         self.mode=self.MODENONE
         self.comm.shouldloop=True
-        raise common.CommsDeviceNeedsAttention(self.desc+" on "+self.comm.port, "The phone is not responding while "+str+".\n\nSee the help for troubleshooting tips")
+        raise common.CommsDeviceNeedsAttention( "The phone is not responding while "+str+".\n\nSee the help for troubleshooting tips", self.desc+" on "+self.comm.port)
 
     def raisecommsexception(self, str, klass):
         self.mode=self.MODENONE
-        raise klass(self.desc+" on "+self.comm.port, str)
+        raise klass(str, self.desc+" on "+self.comm.port)
 
     def setmode(self, desiredmode):
         "Ensure the phone is in the right mode"

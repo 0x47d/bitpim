@@ -322,7 +322,7 @@ class BrewProtocol:
         if crcs(data)!=crc:
             self.logdata("Original data", origdata, None)
             self.logdata("Working on data", data, None)
-            raise common.CommsDataCorruption(self.desc, "Brew packet failed CRC check")
+            raise common.CommsDataCorruption("Brew packet failed CRC check", self.desc)
         
         # log it
         self.logdata("brew response", data, responseclass)

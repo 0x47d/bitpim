@@ -212,7 +212,7 @@ class SanyoPhonebook:
         if com_brew.crcs(data)!=crc:
             self.logdata("Original Sanyo data", origdata, None)
             self.logdata("Working on Sanyo data", data, None)
-            raise common.CommsDataCorruption(self.desc, "Sanyo packet failed CRC check")
+            raise common.CommsDataCorruption("Sanyo packet failed CRC check", self.desc)
 
         # log it
         self.logdata("sanyo phonebook response", data, responseclass)

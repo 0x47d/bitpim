@@ -113,7 +113,7 @@ class LGPhonebook:
         if com_brew.crcs(data)!=crc:
             self.logdata("Original LG data", origdata, None)
             self.logdata("Working on LG data", data, None)
-            raise common.CommsDataCorruption(self.desc, "LG packet failed CRC check")
+            raise common.CommsDataCorruption("LG packet failed CRC check", self.desc)
         
         # log it
         self.logdata("lg phonebook response", data, responseclass)
