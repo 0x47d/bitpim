@@ -9,11 +9,10 @@
 
 """Code if you want to be a client of BitFling"""
 
-# Currently this file does nothing except some imports.  That
-# is to help test the installer generators etc
-
+# Standard imports
 import sys
 
+# My imports
 import xmlrpcstuff
 
 class client:
