@@ -7,6 +7,16 @@
 
 from __future__ import generators
 
+import sys
+
+if sys.platform=='win32':
+    try:
+        import win32api
+        handle=win32api.LoadLibrary("libusb0.dll")
+        win32api.FreeLibrary(handle)
+    except:
+        raise ImportError("libusb needs to be installed for this module to work")
+    
 import libusb as usb
 
 # grab some constants and put them in our namespace
