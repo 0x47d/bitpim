@@ -337,17 +337,20 @@ PACKET historymiscresponse:
     493 UNKNOWN pad
 
 PACKET bufferpartrequest:
+    P UINT {'constant': 500} bufpartsize
     * sanyoheader {'packettype': 0x0f} +header
     502 UNKNOWN +pad
 
 PACKET bufferpartresponse:
+    P UINT {'constant': 500} bufpartsize
     * sanyoheader header
-    500 DATA data
+    * DATA {'sizeinbytes': self.bufpartsize} data
     2 UNKNOWN pad
 
 PACKET bufferpartupdaterequest:
+    P UINT {'constant': 500} bufpartsize
     * sanyoheader {'readwrite': 0x0e, 'packettype': 0x0f} +header
-    500 DATA data
+    * DATA {'sizeinbytes': self.bufpartsize} data
     2 UNKNOWN +pad
         
 PACKET phonebookslotrequest:
@@ -419,6 +422,7 @@ PACKET calleridbuffer:
     P UINT {'constant': 500} maxentries
     P UINT {'constant': 0x50} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 7000} bufsize
+    P STRING {'default': "callerid"} +comment
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     498 UNKNOWN +pad
@@ -430,6 +434,7 @@ PACKET ringerpicbuffer:
     P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
     P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 1000} bufsize
+    P STRING {'default': "ringer/picture assignments"} +comment
     * LIST {'length': _NUMPBSLOTS} +ringtones:
         1 UINT ringtone "ringtone index"
     * LIST {'length': _NUMPBSLOTS} +wallpapers:
@@ -443,6 +448,7 @@ PACKET pbsortbuffer:
     # payload from commands 0X 3c 0F through 0X 43 0F
     P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 4000} bufsize
+    P STRING {'default': "sort buffer"} +comment
     * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
