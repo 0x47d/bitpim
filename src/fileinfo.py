@@ -402,95 +402,97 @@ def getmp3fileinfo(filename):
 twooheightzeros="\x00"*208
 def idaudio_MP3(f, returnframes=False):
     # http://mpgedit.org/mpgedit/mpeg_format/mpeghdr.htm
+    try:
+        idv3present=False
+        id3v1present=False
 
-    idv3present=False
-    id3v1present=False
+        header=f.GetMSBUint32(0)
 
-    header=f.GetMSBUint32(0)
-
-    # there may be ffmpeg output with 208 leading zeros for no apparent reason
-    if header==0 and f.data.startswith(twooheightzeros):
-        offset=208
-    # there may be an id3 header at the begining
-    elif header==0x49443303:
-        sz=[f.GetByte(x) for x in range(6,10)]
-        if len([zz for zz in sz if zz<0 or zz>=0x80]):
+        # there may be ffmpeg output with 208 leading zeros for no apparent reason
+        if header==0 and f.data.startswith(twooheightzeros):
+            offset=208
+        # there may be an id3 header at the begining
+        elif header==0x49443303:
+            sz=[f.GetByte(x) for x in range(6,10)]
+            if len([zz for zz in sz if zz<0 or zz>=0x80]):
+                return None
+            sz=(sz[0]<<21)+(sz[1]<<14)+(sz[2]<<7)+sz[3]
+            offset=10+sz
+            idv3present=True
+            header=f.GetMSBUint32(offset)
+        elif header is None:
             return None
-        sz=(sz[0]<<21)+(sz[1]<<14)+(sz[2]<<7)+sz[3]
-        offset=10+sz
-        idv3present=True
-        header=f.GetMSBUint32(offset)
-    elif header is None:
+        else:
+            offset=0
+
+        # locate the 1st sync frame
+        while True:
+            v=f.GetMSBUint16(offset)
+            if v is None: return None
+            if v&0xffe0==0xffe0:
+                break
+            offset=f.data.find("\xff", offset+1)
+            if offset<0:
+                # not an mp3 file or sync is way later in
+                return None
+
+        frames=[]
+        while offset<f.size:
+            if offset==f.size-128 and f.GetBytes(offset,3)=="TAG":
+                offset+=128
+                id3v1present=True
+                continue
+            frame=MP3Frame(f, offset)
+            if not frame.OK or frame.nextoffset>f.size:  break
+            offset=frame.nextoffset
+            frames.append(frame)
+
+        if len(frames)==0: return
+
+        if offset!=f.size:
+            print "MP3 offset is",offset,"size is",f.size
+
+        # copy some information from the first frame
+        f0=frames[0]
+        d={'format': 'MP3',
+           'id3v1present': id3v1present,  # badly named ...
+           'idv3present': idv3present,
+           'unrecognisedframes': offset!=f.size,
+           'version': f0.version,
+           'layer': f0.layer,
+           'bitrate': f0.bitrate,
+           'samplerate': f0.samplerate,
+           'channels': f0.channels,
+           'copyright': f0.copyright,
+           'original': f0.original,
+           'mimetypes': ['audio/x-mp3', 'audio/mpeg', 'audio/x-mpeg']}
+
+        duration=f0.duration
+        vbrmin=vbrmax=f0.bitrate
+        
+        for frame in frames[1:]:
+            duration+=frame.duration
+            if frame.bitrate!=f0.bitrate:
+                d['bitrate']=0
+            if frame.samplerate!=f0.samplerate:
+                d['samplerate']=0
+                vbrmin=min(frame.bitrate,vbrmin)
+                vbrmax=max(frame.bitrate,vbrmax)
+            if frame.channels!=f0.channels:
+                d['channels']=0
+          
+        d['duration']=duration
+        d['vbrmin']=vbrmin
+        d['vbrmax']=vbrmax
+        d['_longdescription']=fmt_MP3
+        d['_shortdescription']=fmts_MP3
+
+        if returnframes:
+            d['frames']=frames
+
+        return AudioFileInfo(f, **d)
+    except:
         return None
-    else:
-        offset=0
-
-    # locate the 1st sync frame
-    while True:
-        v=f.GetMSBUint16(offset)
-        if v is None: return None
-        if v&0xffe0==0xffe0:
-            break
-        offset=f.data.find("\xff", offset+1)
-        if offset<0:
-            # not an mp3 file or sync is way later in
-            return None
-
-    frames=[]
-    while offset<f.size:
-        if offset==f.size-128 and f.GetBytes(offset,3)=="TAG":
-            offset+=128
-            id3v1present=True
-            continue
-        frame=MP3Frame(f, offset)
-        if not frame.OK or frame.nextoffset>f.size:  break
-        offset=frame.nextoffset
-        frames.append(frame)
-
-    if len(frames)==0: return
-
-    if offset!=f.size:
-        print "MP3 offset is",offset,"size is",f.size
-
-    # copy some information from the first frame
-    f0=frames[0]
-    d={'format': 'MP3',
-       'id3v1present': id3v1present,  # badly named ...
-       'idv3present': idv3present,
-       'unrecognisedframes': offset!=f.size,
-       'version': f0.version,
-       'layer': f0.layer,
-       'bitrate': f0.bitrate,
-       'samplerate': f0.samplerate,
-       'channels': f0.channels,
-       'copyright': f0.copyright,
-       'original': f0.original,
-       'mimetypes': ['audio/x-mp3', 'audio/mpeg', 'audio/x-mpeg']}
-
-    duration=f0.duration
-    vbrmin=vbrmax=f0.bitrate
-    
-    for frame in frames[1:]:
-        duration+=frame.duration
-        if frame.bitrate!=f0.bitrate:
-            d['bitrate']=0
-        if frame.samplerate!=f0.samplerate:
-            d['samplerate']=0
-            vbrmin=min(frame.bitrate,vbrmin)
-            vbrmax=max(frame.bitrate,vbrmax)
-        if frame.channels!=f0.channels:
-            d['channels']=0
-      
-    d['duration']=duration
-    d['vbrmin']=vbrmin
-    d['vbrmax']=vbrmax
-    d['_longdescription']=fmt_MP3
-    d['_shortdescription']=fmts_MP3
-
-    if returnframes:
-        d['frames']=frames
-
-    return AudioFileInfo(f, **d)
 
 def fmt_MP3(afi):
     res=[]
@@ -663,37 +665,71 @@ def idaudio_PMD(f):
     #     19 "string" -- a version number that has some correlation with the pmd version number
     #
     #  Various other sections that cover the contents that don't matter for identification
-    if f.GetBytes(0,4)=="cmid":
-        if f.GetBytes(13,5)=="vers\0":
-            verlen=f.GetByte(18)
-            verstr=f.GetBytes(19,verlen)
-        elif f.GetBytes(36,5)=="vers\0":
-            verlen=f.GetByte(41)
-            verstr=f.GetBytes(42,verlen)
-        else:
+    try:
+        if f.GetBytes(0, 4)!='cmid':
             return None
-
-        return AudioFileInfo(f, **{'format': 'PMD', 'fileversion': verstr, '_shortdescription': fmts_PMD} )
+        d={ 'format': 'PMD' }
+        hdr_len=f.GetMSBUint16(8)
+        i=f.GetByte(10)
+        d['content']=['Unknown', 'Ringer', 'Pictures&Audio'][i]
+        d['numtracks']=f.GetByte(12)
+        ofs=13
+        ofs_end=hdr_len+10
+        while ofs<ofs_end:
+            s=f.GetBytes(ofs, 4)
+            i=f.GetMSBUint16(ofs+4)
+            ofs+=6
+            if i==0:
+                continue
+            if s=='vers':
+                d['version']=f.GetBytes(ofs, i)
+            elif s=='titl':
+                d['title']=f.GetBytes(ofs, i)
+            elif s=='cnts':
+                d['media']=f.GetBytes(ofs, i)
+            ofs+=i
+        d['_longdescription']=fmt_PMD
+        d['_shortdescription']=fmts_PMD
+        return AudioFileInfo(f, **d)
+    except:
+        return None
 
 def fmts_PMD(afi):
-    return "%s v %s" % (afi.format, afi.fileversion)
+    return 'PMD/CMF %s'% afi.content
+
+def fmt_PMD(afi):
+    res=['PMD/CMF']
+    if hasattr(afi, 'version'):
+        res.append('Version: '+afi.version)
+    res.append('Content: '+afi.content)
+    res.append('%d Tracks'%afi.numtracks)
+    if hasattr(afi, 'title'):
+        res.append('Title: '+afi.title)
+    if hasattr(afi, 'media'):
+        res.append('Media: '+afi.media)
+    return '\n'.join(res)
     
 def idaudio_PCM(f):
     "Identify a PCM/WAV file"
-    if f.GetBytes(0, 4)!='RIFF' or f.GetBytes(8, 4)!='WAVE' or \
-       f.GetBytes(12, 4)!='fmt ' or f.GetLSBUint16(20)!=1:
+    try:
+        if f.GetBytes(0, 4)!='RIFF' or f.GetBytes(8, 4)!='WAVE' or \
+           f.GetBytes(12, 4)!='fmt ' or f.GetLSBUint16(20)!=1:
+            return None
+        d={ 'format': 'PCM' }
+        d['numchannels']=f.GetLSBUint16(22)
+        d['samplerate']=f.GetLSBUint32(24)
+        d['byterate']=f.GetLSBUint32(28)
+        d['blockalign']=f.GetLSBUint16(32)
+        d['bitspersample']=f.GetLSBUint16(34)
+        # compute the approximate duration
+        subchunk1size=f.GetLSBUint32(16)
+        datasize=f.GetLSBUint32(20+subchunk1size+4)
+        d['duration']=float(datasize)/(d['blockalign']*d['samplerate'])
+        d['_longdescription']=fmt_PCM
+        d['_shortdescription']=fmts_PCM
+        return AudioFileInfo(f, **d)
+    except:
         return None
-    d={ 'format': 'PCM' }
-    d['numchannels']=f.GetLSBUint16(22)
-    d['samplerate']=f.GetLSBUint32(24)
-    d['byterate']=f.GetLSBUint32(28)
-    d['blockalign']=f.GetLSBUint16(32)
-    d['bitspersample']=f.GetLSBUint16(34)
-    # compute the approximate duration
-    subchunk1size=f.GetLSBUint32(16)
-    datasize=f.GetLSBUint32(20+subchunk1size+4)
-    d['duration']=float(datasize)/(d['blockalign']*d['samplerate'])
-    return AudioFileInfo(f, **d)
 
 def fmts_PCM(afi):
     return afi.format

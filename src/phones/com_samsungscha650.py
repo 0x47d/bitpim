@@ -579,12 +579,13 @@ class Profile(com_samsung.Profile):
     def convertphonebooktophone(self, helper, data):
         return data
 
+    __audio_ext={ 'MIDI': 'mid', 'QCP': 'qcp', 'PMD': 'pmd' }
     def QueryAudio(self, origin, currentextension, afi):
         # we don't modify any of these
         if afi.format in ("MIDI", "QCP", "PMD"):
             for k,n in self.RINGTONE_LIMITS.items():
                 setattr(afi, k, n)
-            return currentextension, afi
+            return self.__audio_ext[afi.format], afi
         d=self.RINGTONE_LIMITS.copy()
         d['format']='QCP'
         return ('qcp', fileinfo.AudioFileInfo(afi, **d))
