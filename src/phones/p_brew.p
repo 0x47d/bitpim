@@ -119,6 +119,40 @@ PACKET memoryconfigresponse:
     * responseheader header
     4 UINT amountofmemory  "how much memory the EFS has in bytes"
 
+PACKET firmwarerequest:
+    1 UINT {'constant': 0x00} +command
+
+PACKET firmwareresponse:
+    1 UINT command
+    11 STRING {'terminator': None}  date1
+    8 STRING {'terminator': None}  time1
+    11 STRING {'terminator': None}  date2
+    8 STRING {'terminator': None}  time2
+    8 STRING {'terminator': None}  string1
+    1 UNKNOWN dunno1
+    11 STRING {'terminator': None}  date3
+    1 UNKNOWN dunno2
+    8 STRING {'terminator': None}  time3
+    11 UNKNOWN dunno3
+    10 STRING {'terminator': None}  firmware
+    7 UNKNOWN dunno4
+    16 STRING {'terminator': None}  phonemodel
+    5 STRING {'terminator': None}  prl
+
+PACKET testing0crequest:
+    1 UINT {'constant': 0x0c} +command
+
+PACKET testing0cresponse:
+    * UNKNOWN pad
+
+PACKET setmoderequest:
+    1 UINT {'constant': 0x29} +command
+    1 UINT request  "1=offline 2-reset.  Reset has no effect unless already offline"
+    1 UINT {'constant': 0x00} +zero
+
+PACKET setmoderesponse:
+    * UNKNOWN pad
+
 %{
 # Several responses are nothing
 mkdirresponse=responseheader

@@ -38,6 +38,10 @@ class BrewNoSuchFileException(BrewCommandException):
 class BrewBadPathnameException(BrewCommandException):
     def __init__(self, errnum=0x1a):
         BrewCommandException.__init__(self, errnum, "Bad pathname")
+
+class BrewFileLockedException(BrewCommandException):
+    def __init__(self, errnum=0x0b):
+        BrewCommandException.__init__(self, errnum, "File is locked")
     
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,)
@@ -54,6 +58,28 @@ class BrewProtocol:
 
     def __init__(self):
         pass
+
+    def getfirmwareinformation(self):
+        self.log("Getting firmware information")
+        req=p_brew.firmwarerequest()
+        res=self.sendbrewcommand(req, p_brew.firmwareresponse)
+
+    def explore0c(self):
+        self.log("Trying stuff with command 0x0c")
+        req=p_brew.testing0crequest()
+        res=self.sendbrewcommand(req, p_brew.testing0cresponse)
+
+    def offlinerequest(self, reset=False):
+        req=p_brew.setmoderequest()
+        req.request=1
+        self.log("Taking phone offline")
+        self.sendbrewcommand(req, p_brew.setmoderesponse)
+        if reset:
+            req=p_brew.setmoderequest()
+            req.request=2
+            self.log("Reseting phone")
+            self.sendbrewcommand(req, p_brew.setmoderesponse)
+            
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
@@ -266,7 +292,7 @@ class BrewProtocol:
         self.logdata("brew response", data, responseclass)
 
         # look for errors
-        if data[2]!="\x00":
+        if data[0]=="Y" and data[2]!="\x00":  # Y is 0x59 which is brew command prefix
                 err=ord(data[2])
                 if err==0x1c:
                     raise BrewNoMoreEntriesException()
@@ -276,6 +302,8 @@ class BrewProtocol:
                     raise BrewNoSuchFileException()
                 if err==0x1a:
                     raise BrewBadPathnameException()
+                if err==0x0b:
+                    raise BrewFileLockedException()
                 raise BrewCommandException(err)
         # parse data
         buffer=prototypes.buffer(data)
