@@ -17,7 +17,7 @@ Current View
 <py-line>entry=data[key]</py-line>
 <tr class="row" class="${('roweven', 'rowodd')[rownum%2]}">
 <py-open>for h in currentcolumns:</py-open>
-<td class="${h}">${phonebook.htmlify(phonebook.getdata(h, entry, " "))}</td>
+<td class="item" class="${h}">${phonebook.htmlify(phonebook.getdata(h, entry, " "))}</td>
 <py-close/>
 </tr>
 <py-close/>
