@@ -48,6 +48,138 @@ CATEGORIES:Favorites,International,Personal,VIP
 UID:pas-id-40CB54DB0000000B
 END:VCARD
 
+BEGIN:VCARD
+VERSION:2.1
+N:Desktop;Exported
+FN:Exported Desktop
+TITLE:Title
+ORG:Company
+ADR;ENCODING=QUOTED-PRINTABLE:;;street 1=0D=0Astreet 2=0D=0Astreet 3=0D=0Astreet 4=0D=0Astreet 5;city;state;zip;country
+NOTE;ENCODING=QUOTED-PRINTABLE:This is the note=0D=0A=0D=0Aand it can be across =0D=0Amultiple lines=0D=0A=0D=0AThis record was exported from palm desktop 4.1=0D=0A=0D=0Athe category is busniess
+TEL;WORK:work 3248098098
+TEL;HOME:home 90809890809
+TEL;FAX:fax 09890890809
+TEL:other 90890809809
+EMAIL:email@example.com
+X-Palm-Custom1:custom field 1 value
+X-Palm-Custom2:custom field 2 value
+X-Palm-Custom3:custom field 3 value
+X-Palm-Custom4:custom field 4 value
+END:VCARD
+
+begin:vcard
+fn:first ; bit last bit
+n:last bit;first ; bit
+org:organisation;department
+adr:line2;;line 1;city;state;zip;counyry
+email;internet:myemail@example.com
+title:title
+tel;work:7987987987
+tel;fax:987987987
+tel;pager:987987987
+tel;home:987987987987
+tel;cell:9879879877
+note;quoted-printable:This was=0D=0A=
+	=0D=0A=
+	=3D=0D=0A=
+	=0D=0A=
+	exported from mozilla
+x-mozilla-html:TRUE
+url:http://work web page
+version:2.1
+end:vcard
+
+BEGIN:VCARD
+VERSION:3.0
+N:Knack;Herbert;;;
+FN:Herbert Knack
+item1.TEL;type=pref:0041-27-2885504 (Haute Nendaz)
+item1.X-ABLabel:_$!<Other>!$_
+TEL;type=HOME:011-49-6118-945-5466 (Irmgard)
+TEL;type=CELL:011-49-166-847-1518 (handy)
+CATEGORY:Family,Cellphone
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+N:;;;;
+FN:Moods in Hair
+ORG:Moods in Hair;
+TEL;type=WORK;type=pref:973-762-1070
+item1.ADR;type=HOME;type=pref:;;81 Second Street;South Orange;NJ;07079;
+item1.X-ABADR:us
+X-ABShowAs:COMPANY
+CATEGORY:Business,Cellphone
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+N:Greene;Mary;;;
+FN:Mary Greene
+EMAIL;type=INTERNET;type=HOME;type=pref:cocoon4t@yahoo.com
+TEL;type=HOME;type=pref:510-649-7872
+item1.ADR;type=HOME;type=pref:;;1 Grove Street;Berkeley;CA;94704;
+item1.X-ABADR:us
+CATEGORY:Friends,Cellphone
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+N:Hodgkinson;Keith;;;
+FN:Keith Hodgkinson
+TEL;type=HOME;type=pref:718-575-1310
+item1.ADR;type=HOME;type=pref:;;67-25 Cliff Street  Apt. 3B;Forest Hills;NY;11375;
+item1.X-ABADR:us
+item2.X-ABRELATEDNAMES;type=pref:Trevor Pinto
+item2.X-ABLabel:_$!<Friend>!$_
+item3.X-ABRELATEDNAMES:Mala Hodgkinson
+item3.X-ABLabel:_$!<Spouse>!$_
+CATEGORY:Friends,Cellphone
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+N:Laso;Heidi;;;
+FN:Heidi Laso
+TITLE:Mom (Mala)
+EMAIL;type=INTERNET;type=WORK;type=pref:hlaso@att.net
+TEL;type=HOME;type=pref:301-984-8223
+TEL;type=WORK:301-469-4070
+TEL;type=WORK;type=FAX:301-496-9519 (work)
+item1.ADR;type=HOME;type=pref:;;9801 Lakeshore Drive;Montgomery Township;Md;28086-4266;
+item1.X-ABADR:us
+CATEGORY:Family,Cellphone
+END:VCARD
+
+
+BEGIN:VCARD
+VERSION:3.0
+N:Joseph\; alias Joe;Schmidlap;;;
+FN:Schmidlap Joseph\; alias Joe
+ORG:Acme Widgets;
+EMAIL;type=INTERNET;type=HOME;type=pref:joe@schmidlap.net
+EMAIL;type=INTERNET;type=WORK:schmidlap@acme.com
+TEL;type=WORK;type=pref:(646) 366-1234
+TEL;type=CELL:(973) 600-5678
+TEL;type=HOME;type=FAX:(973) 378-6678
+TEL;type=WORK;type=FAX:(646) 366-1357
+item1.TEL:(703) 459-7850
+item1.X-ABLabel:weekend
+item2.ADR;type=HOME;type=pref:;;37 Grove Street;Bloomfield;NJ;07689;USA
+item2.X-ABADR:us
+item3.ADR;type=WORK:;;271 W45th Street;New York;NY;10036;
+item3.X-ABADR:us
+URL:http://www.schmidlap.net
+BDAY;value=date:1971-03-15
+item4.X-ABRELATEDNAMES;type=pref:Elmer G Lu
+item4.X-ABLabel:_$!<Friend>!$_
+item5.X-ABRELATEDNAMES:Skiptu Mai Lu
+item5.X-ABLabel:aunt
+item6.X-ABRELATEDNAMES:Baba Lu\; Elmer's wife
+item6.X-ABLabel:_$!<Other>!$_
+CATEGORY:Family,Work
+END:VCARD
+
 
 BEGIN:VCARD
 VERSION:2.1
