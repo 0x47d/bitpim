@@ -12,7 +12,7 @@
 import time
 
 name="BitPim"
-version="0.7.14"
+version="0.7.15"
 release=0  # when rereleases of the same version happen, this gets incremented
 testver=0  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
@@ -60,7 +60,13 @@ description="BitPim "+versionstring
 copyright="(C) 2003-2004 Roger Binns <rogerb@users.sf.net> and others - see http://bitpim.sf.net"
 
 if __name__=='__main__':
-    # generated for the benefit of the help
-    # purposely missing " around values
-    print "#define VERSION", versionstring
-    print "#define DATENOW", time.strftime("%d %B %Y")
+    import sys
+    if len(sys.argv)==1:
+        # generated for the benefit of the help
+        # purposely missing " around values
+        print "#define VERSION", versionstring
+        print "#define DATENOW", time.strftime("%d %B %Y")
+    elif sys.argv[1]=="--majorminor":
+        print ".".join(version.split(".")[:2])
+    else:
+        print "Unknown arguments",sys.argv[1:]
