@@ -104,9 +104,14 @@ class Phone(com_sanyo.Phone):
             req.data=block
             command+=1
             self.sendpbcommand(req, self.protocolclass.bufferpartresponse, writemode=True)
-        
-    
 
+    def savecalendar(self, dict, merge):
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=1 # Start update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+
+        self.writewait()
+        result = com_sanyo.Phone.savecalendar(self, dict, merge)
     
 class Profile(com_sanyo.Profile):
 
