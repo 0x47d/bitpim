@@ -17,7 +17,6 @@ import cStringIO
 # wx modules
 import wx
 import wx.html
-from wxPython.wx import EVT_CLOSE
 
 # my modules
 import guihelper
@@ -327,7 +326,7 @@ class HtmlEasyPrinting:
         # Retrieve saved settings... Use 75% of screen if not specified
         self.winRect=guiwidgets.retrieve_size(self.config, "PrintPreview", 75)
         self.frame.SetDimensions(self.winRect.x, self.winRect.y, self.winRect.width, self.winRect.height)
-        EVT_CLOSE(self.frame, self.OnPreviewClose)
+        wx.EVT_CLOSE(self.frame, self.OnPreviewClose)
         self.frame.Initialize()
         # self.frame.SetPosition(self.parent.GetPosition())
         # self.frame.SetSize(self.parent.GetSize())
