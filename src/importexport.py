@@ -24,6 +24,20 @@ from DSV import DSV
 import common
 import guihelper
 
+# control
+def GetPhonebookImports():
+    res=[]
+    # CSV - always possible
+    res.append( ("CSV...", "Import a CSV file for the phonebook", OnFileImportCSV) )
+    # Outlook
+    try:
+        import native.outlook
+        res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
+    except:
+        pass
+    return res
+    
+
 class PreviewGrid(wx.grid.Grid):
 
     def __init__(self, parent, id):
@@ -37,8 +51,8 @@ class PreviewGrid(wx.grid.Grid):
         if self.CanEnableCellControl():
             self.EnableCellEditControl()
 
-class ImportCSVDialog(wx.Dialog):
-    "The dialog for importing CSV"
+class ImportDialog(wx.Dialog):
+    "The dialog for importing phonebook stuff"
 
     delimiternames={
         '\t': "Tab",
@@ -100,65 +114,18 @@ class ImportCSVDialog(wx.Dialog):
         }
 
 
-    def __init__(self, filename, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
+    def __init__(self, parent, id, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.NO_FULL_REPAINT_ON_RESIZE):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style, size=(640,480))
-
-        self.UpdatePredefinedColumns()
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        bg=self.GetBackgroundColour()
-        w=wx.html.HtmlWindow(self, -1, size=wx.Size(600,100), style=wx.html.HW_SCROLLBAR_NEVER)
-        w.SetPage('<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets of columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(),filename))
-        vbs.Add(w, 0, wx.EXPAND|wx.ALL,5)
-        f=open(filename, "rt")
-        data=f.read()
-        f.close()
-        # turn all EOL chars into \n and then ensure only one \n terminates each line
-        data=data.replace("\r", "\n")
-        oldlen=-1
-        while len(data)!=oldlen:
-            oldlen=len(data)
-            data=data.replace("\n\n", "\n")
-            
-        self.rawdata=data
         
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        t,sz=self.gethtmlhelp()
+        w=wx.html.HtmlWindow(self, -1, size=sz, style=wx.html.HW_SCROLLBAR_NEVER)
+        w.SetPage(t)
+        vbs.Add(w, 0, wx.EXPAND|wx.ALL,5)
 
-        self.qualifier=DSV.guessTextQualifier(self.rawdata)
-        if self.qualifier is None or len(self.qualifier)==0:
-            self.qualifier='"'
-        self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
-        self.delimiter=DSV.guessDelimiter(self.data)
-        # sometimes it picks the letter 'w'
-        if self.delimiter is not None and self.delimiter.lower() in "abcdefghijklmnopqrstuvwxyz":
-            self.delimiter=None
-        if self.delimiter is None:
-            if filename.lower().endswith("tsv"):
-                self.delimiter="\t"
-            else:
-                self.delimiter=","
-        # complete processing the data otherwise we can't guess if first row is headers
-        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
-        # Delimter and Qualifier row
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
-        self.wdelimiter=wx.ComboBox(self, wx.NewId(), self.PrettyDelimiter(self.delimiter), choices=self.delimiternames.values(), style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
-        hbs.Add(self.wdelimiter, 1, wx.EXPAND|wx.ALL, 2)
-        hbs.Add(wx.StaticText(self, -1, "Text Qualifier"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
-        self.wqualifier=wx.ComboBox(self, wx.NewId(), self.qualifier, choices=['"', "'", "(None)"], style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
-        hbs.Add(self.wqualifier, 1, wx.EXPAND|wx.ALL, 2)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        # Pre-set columns, save and header row
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
-        self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN|wx.WANTS_CHARS)
-        hbs.Add(self.wcolumnsname, 1, wx.EXPAND|wx.ALL, 2)
-        self.wsave=wx.CheckBox(self, wx.NewId(), "Save")
-        self.wsave.SetValue(False)
-        hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
-        self.wfirstisheader=wx.CheckBox(self, wx.NewId(), "First row is header")
-        self.wfirstisheader.SetValue(DSV.guessHeaders(self.data))
-        hbs.Add(self.wfirstisheader, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 5)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        self.getcontrols(vbs)
+
         # Only records with ... row
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "Only rows with "), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
@@ -187,11 +154,7 @@ class ImportCSVDialog(wx.Dialog):
         self.SetAutoLayout(True)
         for w in self.wname, self.wnumber, self.waddress, self.wemail:
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
-        wx.EVT_CHECKBOX(self, self.wfirstisheader.GetId(), self.OnHeaderToggle)
-        wx.grid.EVT_GRID_CELL_CHANGE(self, self.OnGridCellChanged)
-        wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
-        wx.EVT_TEXT(self, self.wqualifier.GetId(), self.OnQualifierChanged)
-        wx.EVT_TEXT(self, self.wcolumnsname.GetId(), self.OnColumnsNameChanged)
+
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         self.DataNeedsUpdate()
 
@@ -540,6 +503,77 @@ class ImportCSVDialog(wx.Dialog):
                 continue
             # here is where we would do some mapping
 
+      
+class ImportCSVDialog(ImportDialog):
+
+    def __init__(self, filename, parent, id, title):
+        self.filename=filename
+        self.UpdatePredefinedColumns()
+        ImportDialog.__init__(self, parent, id, title)
+
+    def gethtmlhelp(self):
+        "Returns tuple of help text and size"
+        bg=self.GetBackgroundColour()
+        return '<html><body BGCOLOR="#%02X%02X%02X">Importing %s.  BitPim has guessed the delimiter seperating each column, and the text qualifier that quotes values.  You need to select what each column is by clicking in the top row, or select one of the predefined sets of columns.</body></html>' % (bg.Red(), bg.Green(), bg.Blue(), self.filename), \
+                (600,100)
+
+    def getcontrols(self, vbs):
+        f=open(self.filename, "rt")
+        data=f.read()
+        f.close()
+        # turn all EOL chars into \n and then ensure only one \n terminates each line
+        data=data.replace("\r", "\n")
+        oldlen=-1
+        while len(data)!=oldlen:
+            oldlen=len(data)
+            data=data.replace("\n\n", "\n")
+            
+        self.rawdata=data
+
+        self.qualifier=DSV.guessTextQualifier(self.rawdata)
+        if self.qualifier is None or len(self.qualifier)==0:
+            self.qualifier='"'
+        self.data=DSV.organizeIntoLines(self.rawdata, textQualifier=self.qualifier)
+        self.delimiter=DSV.guessDelimiter(self.data)
+        # sometimes it picks the letter 'w'
+        if self.delimiter is not None and self.delimiter.lower() in "abcdefghijklmnopqrstuvwxyz":
+            self.delimiter=None
+        if self.delimiter is None:
+            if self.filename.lower().endswith("tsv"):
+                self.delimiter="\t"
+            else:
+                self.delimiter=","
+        # complete processing the data otherwise we can't guess if first row is headers
+        self.data=DSV.importDSV(self.data, delimiter=self.delimiter, textQualifier=self.qualifier, errorHandler=DSV.padRow)
+        # Delimter and Qualifier row
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Delimiter"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wdelimiter=wx.ComboBox(self, wx.NewId(), self.PrettyDelimiter(self.delimiter), choices=self.delimiternames.values(), style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
+        hbs.Add(self.wdelimiter, 1, wx.EXPAND|wx.ALL, 2)
+        hbs.Add(wx.StaticText(self, -1, "Text Qualifier"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE,2)
+        self.wqualifier=wx.ComboBox(self, wx.NewId(), self.qualifier, choices=['"', "'", "(None)"], style=wx.CB_DROPDOWN|wx.WANTS_CHARS)
+        hbs.Add(self.wqualifier, 1, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        # Pre-set columns, save and header row
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "Columns"), 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wcolumnsname=wx.ComboBox(self, wx.NewId(), "Custom", choices=self.predefinedcolumns+["Custom"], style=wx.CB_READONLY|wx.CB_DROPDOWN|wx.WANTS_CHARS)
+        hbs.Add(self.wcolumnsname, 1, wx.EXPAND|wx.ALL, 2)
+        self.wsave=wx.CheckBox(self, wx.NewId(), "Save")
+        self.wsave.SetValue(False)
+        hbs.Add(self.wsave, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 2)
+        self.wfirstisheader=wx.CheckBox(self, wx.NewId(), "First row is header")
+        self.wfirstisheader.SetValue(DSV.guessHeaders(self.data))
+        hbs.Add(self.wfirstisheader, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTRE, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        # event handlers
+        wx.EVT_CHECKBOX(self, self.wfirstisheader.GetId(), self.OnHeaderToggle)
+        wx.grid.EVT_GRID_CELL_CHANGE(self, self.OnGridCellChanged)
+        wx.EVT_TEXT(self, self.wdelimiter.GetId(), self.OnDelimiterChanged)
+        wx.EVT_TEXT(self, self.wqualifier.GetId(), self.OnQualifierChanged)
+        wx.EVT_TEXT(self, self.wcolumnsname.GetId(), self.OnColumnsNameChanged)
+
     def PrettyDelimiter(self, delim):
         "Returns a pretty version of the delimiter (eg Tab, Space instead of \t, ' ')"
         assert delim is not None
@@ -558,14 +592,28 @@ class ImportCSVDialog(wx.Dialog):
             f=open(i, "rt")
             self.predefinedcolumns.append(f.readline().strip())
             f.close()
-      
 
-def OnImportCSVPhoneBook(parent, phonebook, path):
+
+
+def OnFileImportCSV(parent):
+    print "fileimportcsv"
+    dlg=wx.FileDialog(parent, "Import CSV file",
+                      wildcard="CSV files (*.csv)|*.csv|Tab Seperated file (*.tsv)|*.tsv|All files|*",
+                      style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+    path=None
+    if dlg.ShowModal()==wx.ID_OK:
+        path=dlg.GetPath()
+        dlg.Destroy()
+    if path is None:
+        return
+
     dlg=ImportCSVDialog(path, parent, -1, "Import CSV file")
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        phonebook.importdata(data, merge=True)
+        parent.phonewidget.importdata(data, merge=True)
         
+def OnFileImportOutlookContacts(parent):
+    import native.outlook
