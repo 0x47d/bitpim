@@ -460,7 +460,7 @@ class ConfigDialog(wx.Dialog):
         bitflingscan.flinger.SetCertVerifier(self.dispatchVerifyBitFlingCert)
         bitflingscan.flinger.setthreadeventloop(wx.SafeYield)
 
-    def dispatchVerifyBitFlingCert(self, addr, keytype, hostkey):
+    def dispatchVerifyBitFlingCert(self, addr, key):
         """Handle a certificate verification from any thread
 
         The request is handed to the main gui thread, and then we wait for the
@@ -471,7 +471,7 @@ class ConfigDialog(wx.Dialog):
             q=Queue.Queue()
             self.bitflingresponsequeues[thread.get_ident()]=q
         print thread.get_ident(), "Posting BitFlingCertificateVerificationEvent"
-        wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, keytype=keytype, hostkey=hostkey, q=q))
+        wx.PostEvent(self, BitFlingCertificateVerificationEvent(addr=addr, key=key, q=q))
         print thread.get_ident(), "After posting BitFlingCertificateVerificationEvent, waiting for response"
         res, exc = q.get()
         print thread.get_ident(), "Got response", res, exc
@@ -487,14 +487,14 @@ class ConfigDialog(wx.Dialog):
         We unpack the parameters, call the verification method"""
         print "_wrapVerifyBitFlingCert"
         
-        addr, keytype, hostkey, q = evt.addr, evt.keytype, evt.hostkey, evt.q
-        self.VerifyBitFlingCert(addr, keytype, hostkey, q)
+        addr, hostkey, q = evt.addr, evt.key, evt.q
+        self.VerifyBitFlingCert(addr, hostkey, q)
 
-    def VerifyBitFlingCert(self, addr, keytype, hostkey, q):
-        print "VerifyBitFlingCert for", addr, "type",keytype
+    def VerifyBitFlingCert(self, addr, key, q):
+        print "VerifyBitFlingCert for", addr, "type",key.get_name()
         # ::TODO:: reject if not dsa
         # get fingerprint
-        fingerprint=md5.new(hostkey).hexdigest()
+        fingerprint=common.hexify(key.get_fingerprint())
         # do we already know about it?
         existing=wx.GetApp().config.Read("bitfling/certificates/%s" % (addr[0],), "")
         if len(existing):
