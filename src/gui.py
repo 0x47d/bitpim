@@ -236,7 +236,7 @@ class MySplashScreen(wxSplashScreen):
         dc=wxMemoryDC()
         dc.SelectObject(bmp)
         # where we start writing
-        x=25 
+        x=23 
         y=40
         # Product name
         str=version.name
