@@ -972,17 +972,6 @@ class ImportOutlookDialog(ImportDialog):
 ##           ('User3',  ),
 ##           ('User4',  ),
  
-        # these fields are of no value
-        ##        ('Email1DisplayName',  ),
-        ##        ('Email1EntryID',  ),
-        ##        ('Email2AddressType',  ),
-        ##        ('Email2DisplayName',  ),
-        ##        ('Email2EntryID',  ),
-        ##        ('Email3AddressType',  ),
-        ##        ('Email3DisplayName',  ),
-        ##        ('Email3EntryID',  ),
-
-
     importmappingdict={}
     for o,i in importmapping: importmappingdict[o]=i
 
