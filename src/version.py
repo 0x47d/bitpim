@@ -1,7 +1,7 @@
 # $Id$
 # Version information
 
-name="bitpim"
+name="BitPim"
 version="0.6"
 release="0"  # when rereleases of the same version happen, this gets incremented
 testver=3  # value of zero is non-test build
@@ -16,3 +16,8 @@ if testver:
     contact="For questions or feedback, please use the bitpim developer mailing list.  Details " \
              "are at the BitPim web site."
 
+versionstring=version
+if testver>0:
+    versionstring+="-test"+`testver`
+if release>0:
+    versionstring+="-"+release
