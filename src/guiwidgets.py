@@ -981,11 +981,29 @@ class FileView(bpmedia.MediaDisplayer):
         # self.icons.SetDropTarget(self.droptarget)
         # self.preview.SetDropTarget(self.droptarget)
 
+    def EndSelectedFilesContext(self, context, deleteitems=False):
+        # We have a fun additional problem.  By default Windows
+        # returns a code that it is copying, when in fact it is
+        # moving.  Consequently we do a delete if either the
+        # source file is gone, or deleteitems is true
+        if not deleteitems:
+            for item in context:
+                if not os.path.exists(item['file']):
+                    print "Forcing EndSelectedFilesContext to delete mode even though not specified"
+                    deleteitems=True
+                    break
+        if deleteitems:
+            for item in context:
+                if os.path.exists(item['file']):
+                    os.remove(item['file'])
+            self.RemoveFromIndex([item['name'] for item in context])
+            self.OnRefresh()
+
     def OnDelete(self,_):
-        names=self.GetSelectedItemNames()
-        for name in names:
-            os.remove(os.path.join(self.thedir, name))
-        self.RemoveFromIndex(names)
+        items=self.GetAllSelectedItems()
+        for item in items:
+            os.remove(item['file'])
+        self.RemoveFromIndex([item['name'] for item in items])
         self.OnRefresh()
 
     def genericpopulatefs(self, dict, key, indexkey, version):
