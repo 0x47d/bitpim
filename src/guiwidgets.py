@@ -5,6 +5,7 @@
 # standard modules
 import os
 import re
+import calendar
 
 # wx modules
 from wxPython.grid import *
@@ -14,6 +15,7 @@ from wxPython.lib.mixins.listctrl import wxColumnSorterMixin, wxListCtrlAutoWidt
 # my modules
 import common
 import gui
+import calendarcontrol
 
 ####
 #### A widget for displaying the phone information
@@ -518,14 +520,24 @@ class ConfigDialog(wxDialog):
     def updatevariables(self):
         path=self.diskbox.GetValue()
         self.mw.configpath=path
-        self.mw.ringerpath=os.path.join(path, "ringer")
-        self.mw.wallpaperpath=os.path.join(path, "wallpaper")
-        self.mw.phonebookpath=os.path.join(path, "phonebook")
+        self.mw.ringerpath=self._fixup(os.path.join(path, "ringer"))
+        self.mw.wallpaperpath=self._fixup(os.path.join(path, "wallpaper"))
+        self.mw.phonebookpath=self._fixup(os.path.join(path, "phonebook"))
+        self.mw.calendarpath=self._fixup(os.path.join(path, "calendar"))
         self.mw.config.Write("path", path)
         self.mw.commportsetting=self.commbox.GetValue()
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
         if self.mw.wt is not None:
             self.mw.wt.commphone=None # cause it to be recreated
+
+    def _fixup(self, path):
+        # os.path.join screws up adding root directory of a drive to
+        # a directory.  eg join("c:\", "foo") gives "c:\\foo" whch
+        # is invalid.  This function fixes that
+        if len(path)>=3:
+            if path[1]==':' and path[2]=='\\' and path[3]=='\\':
+                return path[0:2]+path[3:]
+        return path
         
     def needconfig(self):
         self.setfromconfig()
@@ -974,6 +986,103 @@ def getext(name):
     if name.rfind('.')>=0:
         return name[name.rfind('.')+1:]
     return ''
+
+###
+###  Calendar
+###
+
+class Calendar(calendarcontrol.Calendar):
+    def __init__(self, mainwindow, parent, id=-1):
+        self.mainwindow=mainwindow
+        self.entrycache={}
+        self.entries={}
+        self.repeating=[]  # nb this is stored unsorted
+
+        calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
+        
+    def OnGetEntries(self, year, month, day):
+        res=self.entrycache.get( (year,month,day), None)
+        if res is not None:
+            return res
+        dayofweek=calendar.weekday(year, month, day)
+        dayofweek=(dayofweek+1)%7 # normalize to sunday == 0
+        res=[]
+        # find non-repeating entries
+        fixed=self.entries.get((year,month,day), [])
+        res.extend(fixed)
+        # now find repeating entries
+        repeats=[]
+        for i in self.repeating:
+            y,m,d=i['start'][0:3]
+            if year<y or (year<=y and month<m) or (year<=y and month<=m and day<d):
+                continue # we are before this entry
+            # look in exception list            
+            if (year,month,day) in i.get('exceptions', ()):
+                continue # yup, so ignore
+            repeating=i['repeat']
+            if repeating=='daily':
+                repeats.append(i)
+                continue
+            if repeating=='monfri':
+                if dayofweek>0 and dayofweek<6:
+                    repeats.append(i)
+                continue
+            if repeating=='weekly':
+                if i['dayofweek']==dayofweek:
+                    repeats.append(i)
+                continue
+            if repeating=='monthly':
+                if day==i['start'][2]:
+                    repeats.append(i)
+                continue
+            if repeating=='yearly':
+                if day==i['start'][2] and month==i['start'][1]:
+                    repeats.append(i)
+                continue
+            assert False, "Unknown repeat type \""+repeating+"\""
+
+        for i in repeats:
+            res.append( (i['start'][3], i['start'][4], i['description']) )
+
+        res.sort()
+        self.entrycache[(year,month,day)] = res
+        if len(res):
+            print year,month,day,`res`
+        return res
+            
+    def populate(self, dict):
+        self.entrycache={}
+        self.entries={}
+        self.repeating=[]
+
+        for entry in dict['calendar']:
+            entry=dict['calendar'][entry]
+            y,m,d,h,min=entry['start']
+            if entry['repeat'] is None:
+                if not self.entries.has_key( (y,m,d) ): self.entries[(y,m,d)]=[]
+                self.entries[(y,m,d)].append( (h,min,entry['description']) )
+                continue
+            if entry['repeat']=='weekly':
+                entry['dayofweek']=(calendar.weekday(y,m,d)+1)%7
+            self.repeating.append(entry)
+
+        self.RefreshAllEntries()
+
+    def populatefs(self, dict):
+        self.thedir=self.mainwindow.calendarpath
+        try:
+            os.makedirs(self.thedir)
+        except:
+            pass
+        if not os.path.isdir(self.thedir):
+            raise Exception("Bad directory for calendar '"+self.thedir+"'")
+        for f in os.listdir(self.thedir):
+            # delete them all!
+            os.remove(os.path.join(self.thedir, f))
+        f=open(os.path.join(self.thedir, "index.idx"), "wb")
+        f.write("result['calendar']="+`dict['calendar']`+"\n")
+        f.close()
+        return dict
 
 ###
 ### Copied from wxPython.lib.dialogs.  This one is different in that it
