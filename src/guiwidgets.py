@@ -325,6 +325,8 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX6000': 'com_lgvx6000',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
+                  'PM-8200': 'com_sanyo8200',
+                  'RL-4920': 'com_sanyo4920',
                   'SCP-4900': 'com_sanyo4900',
                   'SCP-5300': 'com_sanyo5300',
                   'SCP-5400': 'com_sanyo5400',
@@ -332,7 +334,6 @@ class ConfigDialog(wx.Dialog):
                   'SCP-7200': 'com_sanyo7200',
                   'SCP-7300': 'com_sanyo7300',
                   'SCP-8100': 'com_sanyo8100',
-                  'PM-8200': 'com_sanyo8200',
                   'Other CDMA phone': 'com_othercdma',
                   }
 
