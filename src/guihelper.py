@@ -171,4 +171,4 @@ def getresourcefiles(wildcard):
     return glob.glob(os.path.join(resourcedirectory, wildcard))
 
 # Where to find bitmaps etc
-resourcedirectory=os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), 'resources'))
+resourcedirectory=os.path.abspath(os.path.join(sys.path[0], 'resources'))
