@@ -1131,6 +1131,7 @@ class DayViewDialog(wxDialog):
     ID_REPEAT=9
     ID_REVERT=10
     ID_SAVE=11
+    ID_HELP=12
     
     def __init__(self, parent, calendarwidget, id=-1, title="Edit Calendar"):
         self.cw=calendarwidget
@@ -1154,9 +1155,7 @@ class DayViewDialog(wxDialog):
         self.listbox=wxListBox(self, self.ID_LISTBOX, style=wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB)
         add=wxButton(self, self.ID_ADD, "New")
         hbs2=wxBoxSizer(wxHORIZONTAL)
-        close=wxButton(self, self.ID_CLOSE, "Close")
         hbs2.Add(add, 1, wxALIGN_CENTER|wxLEFT|wxRIGHT, border=5)
-        hbs2.Add(close, 1, wxALIGN_CENTER|wxRIGHT, border=5)
         
         # sizer for listbox
         lbs=wxBoxSizer(wxVERTICAL)
@@ -1212,6 +1211,15 @@ class DayViewDialog(wxDialog):
 
         vbs.Add(hbs3, 1, wxEXPAND)
 
+        # horizontal rules plus help and cancel buttons
+        vbs.Add(wxStaticLine(self, -1, style=wxLI_HORIZONTAL), 0, wxEXPAND)
+        help=wxButton(self, self.ID_HELP, "Help")
+        close=wxButton(self, self.ID_CLOSE, "Close")
+        hbs4=wxBoxSizer(wxHORIZONTAL)
+        hbs4.Add(help, 0, wxALL, 5)
+        hbs4.Add(close, 0, wxALL, 5)
+        vbs.Add(hbs4, 0, wxALIGN_RIGHT|wxALL, 5)
+
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
@@ -1219,7 +1227,7 @@ class DayViewDialog(wxDialog):
         self.entrymap=[]
 
         self.add=add
-        self.close=close
+        # self.close=close
         self.delete=delete
         self.revert=revert
         self.save=save
