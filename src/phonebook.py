@@ -91,12 +91,12 @@ import re
 import wx
 import wx.grid
 import wx.html
-import wx.stc
 
 # My imports
 import common
 import xyaptu
 import guihelper
+import phonebookentryeditor
 
 ###
 ###  Enhanced HTML Widget
@@ -151,10 +151,8 @@ class HTMLWindow(wx.html.HtmlWindow):
 class ViewSourceFrame(wx.Frame):
     def __init__(self, parent, text, id=-1):
         wx.Frame.__init__(self, parent, id, "HTML Source")
-        stc=wx.stc.StyledTextCtrl(self, -1)
-        stc.SetLexer(wx.stc.STC_LEX_HTML)
-        stc.SetText(text)
-        stc.Colourise(0,-1)
+        stc=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
+        stc.AppendText(text)
 
 
 ###
@@ -190,7 +188,7 @@ class PhoneEntryDetailsView(HTMLWindow):
         self.SetPage(text)
 
 ###
-### Functions used to extra data from a record
+### Functions used to get data from a record
 ###
 
 def getdata(column, entry, default=None):
@@ -221,17 +219,34 @@ def formatname(name):
     # Returns a string of the name in name.
     # Since there can be many fields, we try to make sense of them
     res=""
-    res+=name.get("full", "")
+    full=name.get("full", "")
+    fml=""
+
     f=name.get("first", "")
     m=name.get("middle", "")
     l=name.get("last", "")
     if len(f) or len(m) or len(l):
-        if len(res):
-            res+=" | "
-        # severe abuse of booleans
-        res+=f+(" "*bool(len(f)))
-        res+=m+(" "*bool(len(m)))
-        res+=l+(" "*bool(len(l)))
+        fml+=f
+        if len(m) and len(fml) and fml[-1]!=' ':
+            fml+=" "
+        fml+=m
+        if len(l) and len(fml) and fml[-1]!=' ':
+            fml+=" "
+        fml+=l
+
+    if len(fml) or len(full):
+        # are they the same
+        if fml==full:
+            res+=full
+        else:
+            # different
+            if len(full):
+                res+=full
+            if len(fml):
+                if len(res):
+                    res+=" | "
+                res+=fml
+
     if name.has_key("nickname"):
         res+=" ("+name["nickname"]+")"
     return res
@@ -353,6 +368,7 @@ class PhoneWidget(wx.Panel):
         self.SetAutoLayout(True)
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
+        wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
 
 
     def OnIdle(self, _):
@@ -365,6 +381,19 @@ class PhoneWidget(wx.Panel):
     def OnCellSelect(self, event):
         row=event.GetRow()
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
+
+    def OnCellDClick(self, event):
+        row=event.GetRow()
+        key=self.dt.rowkeys[row]
+        data=self._data[key]
+        dlg=phonebookentryeditor.Editor(self, data)
+        if dlg.ShowModal()==wx.ID_OK:
+            data=dlg.GetData()
+            self._data[key]=data
+            self.dt.OnDataUpdated()
+            self.SetPreview(data)
+        dlg.Destroy()
+        
 
     def SetPreview(self, entry):
         self.preview.ShowEntry(entry)
