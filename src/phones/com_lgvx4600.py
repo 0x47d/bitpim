@@ -29,7 +29,7 @@ import com_phone
 import com_lg
 import prototypes
 
-class Phone(com_lgvx4400.Phone):
+class Phone(com_lg.LGDirectoryMedia,com_lgvx4400.Phone):
     "Talk to the LG VX4600 cell phone"
 
     desc="LG-VX4600"
@@ -38,9 +38,15 @@ class Phone(com_lgvx4400.Phone):
     serialsname='lgvx4600'
 
     # more VX4600 indices
-    imagelocations=()
+    imagelocations=(
+        # offset location origin maxentries
+        (50, "usr/Wallpaper", "images", 30),
+        )
 
-    ringtonelocations=()
+    ringtonelocations=(
+        # offset location origin maxentries
+        (50, "usr/Ringtone", "ringers", 30),
+        )
 
     builtinimages=('Butterfly', 'Flowers', 'Bird', 'Puppy','Fall',
                    'Castle', 'Puppy2', 'Sky', 'Teddy','Desert')
@@ -56,6 +62,7 @@ class Phone(com_lgvx4400.Phone):
 
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
+        com_lg.LGDirectoryMedia.__init__(self)
         self.mode=self.MODENONE
 
 
@@ -66,11 +73,11 @@ class Profile(com_lgvx4400.Profile):
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
     MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
     WALLPAPER_CONVERT_FORMAT="bmp"
 
     MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwyz0123456789 "
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
     
     def __init__(self):
         com_lgvx4400.Profile.__init__(self)
