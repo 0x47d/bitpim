@@ -24,6 +24,7 @@ import p_brew
 import p_lg
 import p_lgtm520
 import p_lgvx4400
+import p_lgvx4500
 import p_lgvx6000
 import p_sanyo
 import p_sanyo4900
