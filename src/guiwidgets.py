@@ -30,6 +30,7 @@ import comdiagnose
 import analyser
 import guihelper
 import pubsub
+import bpmedia
 import bphtml
 
 ####
@@ -613,6 +614,104 @@ class MyFileDropTarget(wx.FileDropTarget):
         
     def OnDropFiles(self, x, y, filenames):
         return self.target.OnDropFiles(x,y,filenames)
+
+class FileViewNew(bpmedia.MediaDisplayer):
+    # Files we should ignore
+    skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
+
+    # how much data do we want in call to getdata
+    NONE=0
+    SELECTED=1
+    ALL=2
+
+    # maximum length of a filename
+    maxlen=31
+    # acceptable characters in a filename
+    filenamechars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwyz0123456789 "
+
+    def __init__(self, mainwindow, parent, xyfile, stylefile, topsplit=None, bottomsplit=None, rightsplit=None):
+        bpmedia.MediaDisplayer.__init__(self, parent, xyfile, stylefile, topsplit, bottomsplit, rightsplit)
+        self.droptarget=MyFileDropTarget(self)
+        self.SetDropTarget(self.droptarget)
+        self.mainwindow=mainwindow
+        self.thedir=None
+        self.wildcard="I forgot to set wildcard in derived class|*"
+
+        # Menus
+
+        self.menu=wx.Menu()
+        self.menu.Append(guihelper.ID_FV_OPEN, "Open")
+        self.menu.AppendSeparator()
+        self.menu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.menu.AppendSeparator()
+        self.menu.Append(guihelper.ID_FV_RENAME, "Rename")
+        self.menu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+        self.menu.Append(guihelper.ID_FV_PROPERTIES, "Properties")
+
+        self.addfilemenu=wx.Menu()
+        self.addfilemenu.Append(guihelper.ID_FV_ADD, "Add ...")
+        self.addfilemenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+
+        #EVT_MENU(self.menu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        #EVT_MENU(self.addfilemenu, guihelper.ID_FV_REFRESH, self.OnRefresh)
+        #EVT_MENU(self.addfilemenu, guihelper.ID_FV_ADD, self.OnAdd)
+        #EVT_MENU(self.menu, guihelper.ID_FV_OPEN, self.OnLaunch)
+        #EVT_MENU(self.menu, guihelper.ID_FV_DELETE, self.OnDelete)
+        #EVT_MENU(self.menu, guihelper.ID_FV_PROPERTIES, self.OnProperties)
+
+    def genericpopulatefs(self, dict, key, indexkey, version):
+        try:
+            os.makedirs(self.thedir)
+        except:
+            pass
+        if not os.path.isdir(self.thedir):
+            raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
+
+        # delete all files we don't know about if 'key' contains replacements
+        if dict.has_key(key):
+            print key,"present - updating disk"
+            for f in os.listdir(self.thedir):
+                # delete them all except windows magic ones which we ignore
+                if f.lower() not in self.skiplist:
+                    os.remove(os.path.join(self.thedir, f))
+
+            d=dict[key]
+            for i in d:
+                f=open(os.path.join(self.thedir, i), "wb")
+                f.write(d[i])
+                f.close()
+        d={}
+        d[indexkey]=dict[indexkey]
+        common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
+        return dict
+
+    def genericgetfromfs(self, result, key, indexkey, currentversion):
+        try:
+            os.makedirs(self.thedir)
+        except:
+            pass
+        if not os.path.isdir(self.thedir):
+            raise Exception("Bad directory for "+key+" '"+self.thedir+"'")
+        dict={}
+        for file in os.listdir(self.thedir):
+            if file=='index.idx':
+                d={}
+                d['result']={}
+                common.readversionedindexfile(os.path.join(self.thedir, file), d, self.versionupgrade, currentversion)
+                result.update(d['result'])
+            elif file.lower() in self.skiplist:
+                # ignore windows detritus
+                continue
+            elif key is not None:
+                f=open(os.path.join(self.thedir, file), "rb")
+                data=f.read()
+                f.close()
+                dict[file]=data
+        if key is not None:
+            result[key]=dict
+        if indexkey not in result:
+            result[indexkey]={}
+        return result
 
 class FileView(wx.ListCtrl, wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin):
     # ::TODO:: be resilient to conversion failures in ringer

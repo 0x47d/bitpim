@@ -29,7 +29,7 @@ import pubsub
 ###  Wallpaper pane
 ###
 
-class WallpaperView(guiwidgets.FileView):
+class WallpaperView(guiwidgets.FileViewNew):
     CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
@@ -38,12 +38,12 @@ class WallpaperView(guiwidgets.FileView):
     # from being GC while any instance of this class exists
     __publisher=pubsub.Publisher
     
-    def __init__(self, mainwindow, parent, id=-1):
-        guiwidgets.FileView.__init__(self, mainwindow, parent, id, style=wx.LC_ICON)
+    def __init__(self, mainwindow, parent):
+        guiwidgets.FileViewNew.__init__(self, mainwindow, parent, guihelper.getresourcefile("wallpaper.xy"),
+                                        guihelper.getresourcefile("wallpaper-style.xy"), bottomsplit=200,
+                                        rightsplit=200)
+        self.SetColumns(["Name", "Size", "Bytes", "Origin"])
         wx.FileSystem_AddHandler(BPFSHandler(self))
-        if guihelper.HasFullyFunctionalListView():
-            self.InsertColumn(2, "Size")
-            self.InsertColumn(3, "Origin")
         self._data={'wallpaper-index': {}}
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
         self.usewidth=self.mainwindow.phoneprofile.WALLPAPER_WIDTH
@@ -55,11 +55,6 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(pubsub.REQUEST_WALLPAPERS, self, "OnListRequest")
         pubsub.subscribe(pubsub.PHONE_MODEL_CHANGED, self, "OnPhoneModelChanged")
-        wx.EVT_SIZE(self, self.OnSize)
-
-    def OnSize(self, event):
-        self.Arrange()
-        event.Skip()
 
     def OnPhoneModelChanged(self, msg):
         phonemodule=msg.data
@@ -101,6 +96,48 @@ class WallpaperView(guiwidgets.FileView):
                     del wp[k]
                     self.modified=True
 
+    def GetItemImage(self, item):
+        file=item['file']
+        if self.isBCI(file):
+            image=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+        else:
+            image=wx.Image(file)
+        return image
+
+    def GetItemSizedBitmap(self, item, width, height):
+        img=self.GetItemImage(item)
+        if width!=img.GetWidth() or height!=img.GetHeight():
+            if guihelper.IsMSWindows():
+                bg=None # transparent
+            elif guihelper.IsGtk():
+                # we can't use transparent as the list control gets very confused on Linux
+                # it also returns background as grey and foreground as black even though
+                # the window is drawn with a white background.  So we give up and hard code
+                # white
+                bg="ffffff"
+            elif guihelper.IsMac():
+                # use background colour
+                bg=self.GetBackgroundColour()
+                bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
+            bitmap=ScaleImageIntoBitmap(img, width, height, bgcolor=bg)
+        else:
+            bitmap=img.ConvertToBitmap()
+        return bitmap
+
+    def GetItemValue(self, item, col):
+        if col=='Name':
+            return item['name']
+        elif col=='Size':
+            img=self.GetItemImage(item)
+            item['size']=img.GetWidth(), img.GetHeight()
+            return '%d x %d' % item['size']
+        elif col=='Bytes':
+            return int(os.stat(item['file']).st_size)
+        elif col=='Origin':
+            return item['origin']
+        assert False, "unknown column"
+            
+
     def GetImage(self, file):
         """Gets the named image
 
@@ -120,82 +157,31 @@ class WallpaperView(guiwidgets.FileView):
             self.modified=True
         
     def populate(self, dict):
-        self.Freeze()
-        self.DeleteAllItems()
-        if self._data['wallpaper-index']!=dict['wallpaper-index']:
-            self._data['wallpaper-index']=dict['wallpaper-index'].copy()
-            self.modified=True
-        il=wx.ImageList(self.usewidth,self.useheight)
-        self.AssignImageList(il, wx.IMAGE_LIST_NORMAL)
-        count=0
+        newitems=[]
+        existing=self.GetAllItems()
         keys=dict['wallpaper-index'].keys()
         keys.sort()
-        for i in keys:
-            # ignore ones we don't have a file for
-            entry=dict['wallpaper-index'][i]
-            if not os.path.isfile(os.path.join(self.mainwindow.wallpaperpath, entry['name'])):
-                print "no file for",entry['name']
+        for k in keys:
+            entry=dict['wallpaper-index'][k]
+            filename=os.path.join(self.mainwindow.wallpaperpath, entry['name'])
+            if not os.path.exists(filename):
+                print "no file for wallpaper",entry['name']
                 continue
+            newentry={}
+            # look through existing to see if we already have a match
+            for i in existing:
+                if entry['name']==existing[i]['name']:
+                    newentry.update(existing[i])
+                    break
+            # fill in newentry
+            newentry.update(entry)
+            newentry['wp-index']=k
+            newentry['file']=filename
+            newitems.append(newentry)
+        self.SetItems(newitems)
+                    
 
-            # ImageList barfs big time when adding bmps that came from
-            # gifs
-            file=entry['name']
-            image,filelen=self.GetImage(file)
-
-            if not image.Ok():
-                dlg=guiwidgets.AnotherDialog(self, "This is not a valid image file:\n\n"+file, "Invalid Image file",
-                                  ( ("Delete", self.ID_DELETEFILE), ("Ignore", self.ID_IGNOREFILE), ("Help", wx.ID_HELP)),
-                                  lambda _: wx.GetApp().displayhelpid(helpids.ID_INVALID_FILE_MESSAGE))
-                x=dlg.ShowModal()
-                dlg.Destroy()
-                print "result is",x
-                if x==self.ID_DELETEFILE:
-                    del dict['wallpaper-index'][i]
-                    try:
-                        os.remove(file)
-                    except:
-                        pass
-                    self.modified=True
-                continue
-            
-            width=image.GetWidth()
-            height=image.GetHeight()
-            img=image
-            if width!=self.usewidth or height!=self.useheight:
-                if guihelper.IsMSWindows():
-                    bg=None # transparent
-                elif guihelper.IsGtk():
-                    # we can't use transparent as the list control gets very confused on Linux
-                    # it also returns background as grey and foreground as black even though
-                    # the window is drawn with a white background.  So we give up and hard code
-                    # white
-                    bg="ffffff"
-                elif guihelper.IsMac():
-                    # use background colour
-                    bg=self.GetBackgroundColour()
-                    bg="%02x%02x%02x" % (bg.Red(), bg.Green(), bg.Blue())
-                bitmap=ScaleImageIntoBitmap(img, self.usewidth, self.useheight, bgcolor=bg)
-            else:
-                bitmap=img.ConvertToBitmap()
-            pos=-1
-            try: pos=il.Add(bitmap)
-            except: pass
-            if pos<0:  # sadly they throw up a dialog as well
-                dlg=wx.MessageDialog(self, "Failed to add to imagelist image in '"+file+"'",
-                                "Imagelist got upset", style=wx.OK|wx.ICON_ERROR)
-                dlg.ShowModal()
-                il.Add(wx.NullBitmap)
-            self.InsertImageStringItem(count, file, count)
-            if guihelper.HasFullyFunctionalListView():
-                self.SetStringItem(count, 0, file)
-                self.SetStringItem(count, 1, `filelen`)
-                self.SetStringItem(count, 2, "%d x %d" % (image.GetWidth(), image.GetHeight()))
-                self.SetStringItem(count, 3, entry.get("origin", ""))
-            image.Destroy()
-            count+=1
-        self.Thaw()
-        self.MakeTheDamnThingRedraw()
-
+        
     def OnPaste(self, _=None):
         do=wx.BitmapDataObject()
         wx.TheClipboard.Open()
