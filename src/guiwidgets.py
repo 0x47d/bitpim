@@ -741,7 +741,9 @@ class RingerView(FileView):
         self._data['ringtone']=dict['ringtone'].copy()
         self._data['ringtone-index']=dict['ringtone-index'].copy()
         count=0
-        for i in dict['ringtone']:
+        keys=dict['ringtone'].keys()
+        keys.sort()
+        for i in keys:
             item={}
             item['name']=i
             item['data']=dict['ringtone'][i]
@@ -792,7 +794,9 @@ class WallpaperView(FileView):
         il=wxImageList(self.usewidth,self.useheight)
         self.AssignImageList(il, wxIMAGE_LIST_NORMAL)
         count=0
-        for i in dict['wallpaper']:
+        keys=dict['wallpaper'].keys()
+        keys.sort()
+        for i in keys:
             item={}
             item['name']=i
             item['data']=dict['wallpaper'][i]
