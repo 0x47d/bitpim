@@ -475,7 +475,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             for i in index:
                 try:
                     media[index[i]]=self.getfilecontents(location+"/"+index[i])
-                except com_brew.BrewNoSuchFileException:
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
                     self.log("It was in the index, but not on the filesystem")
                     
         if type=="camera":
