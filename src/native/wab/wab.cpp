@@ -241,6 +241,21 @@ bool wabtable::enableallcolumns()
   return true;
 }
 
+bool wabtable::enablecolumns(proptagarray &pta)
+{
+  // we do some nasty voodo here.  SPropTagArray is actually a ULONG of
+  // how many members and then that many ULONGS (the underlying property
+  // type) all nicely wrapped in a structure.  We just use one huge
+  // array which will have the same memory layout
+  HRESULT hr=table->SetColumns( (LPSPropTagArray) pta.array, 0);
+  if (HR_FAILED(hr))
+    {
+      errorme(hr, "Failed to turn on specied %lu columns", pta.array[0]);
+      return false;
+    }
+  return true;
+}
+
 wabrow::~wabrow()
 {
   module.FreeObject(rowset);
@@ -255,22 +270,7 @@ bool wabrow::IsEmpty()
 
 static struct { ULONG id; const char* name; }  propnames[]={
 #define PR(t) { PROP_ID(t), #t }
-  // these are for debug purposes only
-  PR(PR_DISPLAY_TYPE),
-  PR(PR_ACCESS_LEVEL),
-  PR(PR_RECORD_KEY),
-  PR(PR_ROWID),
-  PR(PR_CONTAINER_FLAGS),
-  PR(PR_FOLDER_TYPE),
-  PR(PR_SUBFOLDERS),
-  PR(PR_CONTAINER_HIERARCHY),
-  PR(PR_CONTAINER_CONTENTS),
-  PR(PR_INSTANCE_KEY),
-  PR(PR_AB_PROVIDER_ID),
-  PR(PR_CONTAINER_CLASS),
-#define DO_PRSTUFF
 #include "_genprops.h"
-#undef DO_PRSTUFF
 #undef PR
   { 0, NULL } };
 
