@@ -45,10 +45,10 @@ class Phone(com_lgvx4400.Phone):
     # more VX6100 indices
     imagelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 50, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 60) ,
-        ( 110, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 60),
-        ( 170, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
-        ( 200, None, None, "camera", 20) # nb camera must be last
+        ( 16, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 60) ,
+        ( 202, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 30),
+        ( 240, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
+        ( 130, None, None, "camera", 60) # nb camera must be last
         )
 
     ringtonelocations=(
