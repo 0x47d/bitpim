@@ -172,6 +172,10 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         self.rowkeys=self.main._data.keys()
         self.rowkeys.sort()
         wx.grid.PyGridTableBase.__init__(self)
+        self.oddattr=wx.grid.GridCellAttr()
+        self.oddattr.SetBackgroundColour("OLDLACE")
+        self.evenattr=wx.grid.GridCellAttr()
+        self.evenattr.SetBackgroundColour("ALICE BLUE")
 
     def OnDataUpdated(self):
         newkeys=self.main._data.keys()
@@ -238,7 +242,10 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
             number=numbers[0]
             return number['type']+" : "+number['number']
         assert False, "Bad column "+`col`
-    
+
+    def GetAttr(self, row, col, another):
+        print row,col,another
+        return [self.evenattr, self.oddattr][row%2]
 
 class PhoneWidget(wx.SplitterWindow):
     """Main phone editing/displaying widget"""
