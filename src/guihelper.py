@@ -115,6 +115,8 @@ def BusyWrapper(method):
         finally:
             wx.EndBusyCursor()
 
+    setattr(_busywrapper, "__doc__", getattr(method, "__doc__"))
+
     return _busywrapper
 
 # Filename functions.  These work on brew names which use forward slash /
