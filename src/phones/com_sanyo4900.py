@@ -18,18 +18,17 @@ import com_sanyo
 import prototypes
 
 
-class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
+class Phone(com_sanyo.Phone):
     "Talk to the Sanyo SCP-4900 cell phone"
+
     desc="SCP-4900"
 
     protocolclass=p_sanyo4900
     serialsname='scp4900'
     
     def __init__(self, logtarget, commport):
-        com_sanyo.SanyoPhonebook.__init__(self, logtarget, commport)
-        self.log("Attempting to contact phone")
+        com_sanyo.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
-
 
 class Profile(com_sanyo.Profile):
 
