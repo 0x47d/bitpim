@@ -25,13 +25,11 @@ import com_samsung
 import com_phone
 
 
-
-class Phone(com_brew.BrewProtocol,com_samsung.Phone):
+class Phone(com_samsung.Phone):
 
     "Talk to the Samsung SCH-A650 Cell Phone"
 
     desc="SCH-A650"
-
     serialsname='scha650'
 
     __groups_range=xrange(5)
@@ -60,12 +58,23 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
                     {'pager': __pb_pager_num},
                     {'fax': __pb_fax_num})
 
+    __cal_entries_range=xrange(20)
+    __cal_num_of_read_fields=7
+    __cal_num_of_write_fields=6
+    __cal_entry=0
+    __cal_start_datetime=1
+    __cal_end_datetime=2
+    __cal_datetime_stamp=3
+    __cal_alarm_type=4
+    __cal_read_name=6
+    __cal_write_name=5
+    __cal_alarm_values={
+        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
 
     def __init__(self, logtarget, commport):
 
         "Calls all the constructors and sets initial modes"
         com_samsung.Phone.__init__(self, logtarget, commport)
-	com_brew.BrewProtocol.__init__(self)
         self.mode=self.MODENONE
 
     def getfundamentals(self, results):
@@ -109,7 +118,6 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
         return results
 
     def _get_phone_num_count(self):
-
         try:
             s=self.comm.sendatcommand("#PCBIT?")
             if len(s)==0:
@@ -145,8 +153,6 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
         self.pmode_off()
 
         return pb_book
-
-        
 
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -474,7 +480,127 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
         else:
             return self.save_phone_entry('0,'+join(e,','))
 
-    getcalendar=None
+
+    def getcalendar(self, result):
+        if not self.is_online():
+            self.log("Failed to talk to phone")
+            return result
+
+        self.log("Getting calendar entries")
+        self.pmode_on()
+        res={}
+        l=len(self.__cal_entries_range)
+        cal_cnt=0
+        for k in self.__cal_entries_range:
+            r=self.get_calendar_entry(k)
+            if not len(r):
+                # blank, no entry
+                self.progress(k+1, l, "Getting blank entry: %d"%k)
+                continue
+            self.progress(k+1, l, "Getting "+r[self.__cal_read_name])
+
+            # build a calendar entry
+            entry={}
+
+            # start time date
+            entry['start']=self.extract_timedate(r[self.__cal_start_datetime])
+
+            # no end time, end time=start time
+            entry['end']=entry['start'][:]
+
+            # description
+            entry['description']=strip(r[self.__cal_read_name], '"')
+
+            # alarm
+            try:
+                alarm=self.__cal_alarm_values[r[self.__cal_alarm_type]]
+            except:
+                alarm=None
+            entry['alarm']=alarm
+
+            # pos
+            entry['pos']=cal_cnt
+
+            # Misc stuff
+            self._set_unused_calendar_fields(entry)
+
+            # update calendar dict
+            res[cal_cnt]=entry
+            cal_cnt += 1
+        result['calendar']=res
+        self.pmode_off()
+        return result
+
+    def _set_unused_calendar_fields(self, entry):
+            entry['repeat']=None
+            entry['changeserial']=1
+            entry['snoozedelay']=0
+            entry['daybitmap']=0
+            entry['ringtone']=0
+
+    def savecalendar(self, dict, merge):
+        if not self.is_online():
+            self.log("Failed to talk to phone")
+            return dict
+        cal=dict['calendar']
+        cal_len=len(cal)
+        l=len(self.__cal_entries_range)
+        if cal_len > l:
+            self.log("The number of events (%d ) exceeded the mamximum (%d)" % (cal_len, l))
+            return dict
+        self.pmode_on()
+        self.log("Saving calendar entries")
+        cal_cnt=0
+        for k in cal:
+
+            # Save this entry to phone
+            # self.log('Item %d' %k)
+            self._set_unused_calendar_fields(cal[k])
+            c=cal[k]
+            e=['']*self.__cal_num_of_write_fields
+
+            # pos
+            e[self.__cal_entry]=`cal_cnt`
+
+            # start date time
+            e[self.__cal_start_datetime]=self.encode_timedate(c['start'])
+
+            # end date time
+            e[self.__cal_end_datetime]='19800106T000000'
+            c['end']=c['start'][:]
+
+            # time stamp
+            e[self.__cal_datetime_stamp]=self.get_time_stamp()
+
+            # Alarm type
+            e[self.__cal_alarm_type]=None
+            alarm=c['alarm']
+            for i in self.__cal_alarm_values:
+                if self.__cal_alarm_values[i]==alarm:
+                    e[self.__cal_alarm_type]=i
+                    break
+            if e[self.__cal_alarm_type] is None:
+                self.log("Invalid alarm value (%d), reset to 0" % alarm)
+                e[self.__cal_alarm_type]='0'
+                c['alarm']=0
+
+            # Name
+            e[self.__cal_write_name]='"'+c['description']+'"'
+
+            # and save it
+            self.progress(cal_cnt+1, l, "Updating "+c['description'])
+            if not self.save_calendar_entry(join(e, ",")):
+                self.log("Failed to save item: "+c['description'])
+            else:
+                cal_cnt += 1
+
+        # delete the rest of the
+        self.log('Deleting unused entries')
+        for k in range(cal_cnt, l):
+            self.progress(k, l, "Deleting entry %d" % k)
+            self.save_calendar_entry(`k`)
+        self.pmode_off()
+        return dict
 
     getringtones=None
 
@@ -482,18 +608,19 @@ class Phone(com_brew.BrewProtocol,com_samsung.Phone):
 
     getmedia=None
 
+class Profile(com_samsung.Profile):
 
-
-class Profile(com_phone.Profile):
+    serialsname='scha650'
 
     def __init__(self):
-        com_phone.Profile.__init__(self)
+        com_samsung.Profile.__init__(self)
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         )
 
     def convertphonebooktophone(self, helper, data):
-        return data;
-
+        return data
