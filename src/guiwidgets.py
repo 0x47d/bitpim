@@ -31,7 +31,8 @@ class PhoneDataTable(wxPyGridTableBase):
         self._data={}
 
     def getdata(self, dict):
-        print "getdata"
+        dict['phonebook']=self._data.copy()
+        # need to add group
         return dict
 
     def setstandardlabels(self):
@@ -44,7 +45,6 @@ class PhoneDataTable(wxPyGridTableBase):
             self.addcolumn('number'+`i`)
 
     def addcolumn(self, name):
-        print "addcolumn"
         self.labels.append(name)
         msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_COLS_APPENDED, 1)
         self.GetView().ProcessTableMessage(msg)
@@ -112,7 +112,6 @@ class PhoneDataTable(wxPyGridTableBase):
         elif self.numrows<oldrows:
             msg=wxGridTableMessage(self, wxGRIDTABLE_NOTIFY_ROWS_DELETED, self.numrows, oldrows-self.numrows)
         if msg is not None:
-            print `msg`
             self.GetView().ProcessTableMessage(msg)
 
         # get list of all columns
@@ -184,7 +183,7 @@ class PhoneGrid(wxGrid):
         self.table.clear()
 
     def getdata(self, dict):
-        self.table.getdata(self, dict)
+        self.table.getdata(dict)
 
     def populatefs(self, dict):
         return self.table.populatefs(dict)
