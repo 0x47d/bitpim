@@ -92,7 +92,7 @@ class Phone(com_samsung.Phone):
 
     # 'type name', 'type index name', 'origin', 'dir path', 'max file name length', 'max file name count'    
     __ringtone_info=('ringtone', 'ringtone-index', 'ringtone', 'brew/ringer', 19, 20)
-    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 17, 10)
+    __wallpaper_info=('wallpapers', 'wallpaper-index', 'wallpapers', 'brew/shared', 19, 10)
     __camerapix_info=('wallpapers', 'wallpaper-index', 'camera', 'digital_cam', 19, 40)
         
     def __init__(self, logtarget, commport):
