@@ -389,18 +389,19 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
         # Todo:
         #   Read Call Alarms (reminder to call someone)
         #   Read call history into calendar.
+        #   
         calres={}
 
         req=p_sanyo.eventrequest()
-        maxevents=req.maxevents
-        for i in range(0, maxevents):
+        for i in range(0, p_sanyo._NUMEVENTSLOTS):
             req.slot = i
             res=self.sendpbcommand(req, p_sanyo.eventresponse)
             if(res.entry.flag):
                 self.log("Read calendar event "+`i`+" - "+res.entry.eventname)
-                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`+" "+`res.entry.dunno4`)
+                self.log("Extra numbers: "+`res.entry.dunno1`+" "+`res.entry.dunno2`+" "+`res.entry.dunno3`+" "+`res.entry.serial`)
                 entry={}
                 entry['pos']=i
+                entry['changeserial']=res.entry.serial
                 if(len(res.entry.location) > 0):
                     entry['description']=res.entry.eventname+"/"+res.entry.location
                 else:
@@ -409,13 +410,108 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
                 starttime=res.entry.start
                 entry['start']=self.decodedate(starttime)
                 entry['end']=self.decodedate(res.entry.end)
-                entry['repeat']=self._calrepeatvalues[0]
+                entry['repeat']=self._calrepeatvalues[res.entry.period]
                 alarmtime=res.entry.alarm
                 entry['alarm']=(starttime-alarmtime)/60
                 calres[i]=entry
+                entry['ringtone']=res.entry.alarm_type
 
         result['calendar']=calres
         return result
+
+    def savecalendar(self, dict, merge):
+        # ::TODO:: obey merge param
+        # what will be written to the files
+        #   Handle Change Serial better.
+        #   Advance date on repeating entries to after now so that they
+        #   won't all go off when the phone gets turned on.
+        #
+        cal=dict['calendar']
+        newcal={}
+        keys=cal.keys()
+
+        slot=0
+        progressmax=p_sanyo._NUMEVENTSLOTS
+        for k in keys:
+            entry=cal[k]
+            
+            e=p_sanyo.evententry()
+
+            setattr(e,'slot',slot)
+
+            repeat=None
+            for k,v in self._calrepeatvalues.items():
+                if entry['repeat']==v:
+                    repeat=k
+                    break
+            if repeat is None:
+                self.log(descloc+": Repeat type "+`entry['repeat']`+" not valid for this phone")
+                repeat=0
+            setattr(e, 'period', repeat)
+
+            descloc=entry['description']
+            self.progress(slot, progressmax, "Writing "+descloc)
+            self.log("Write calendar slot "+`slot`+ " - "+descloc)
+
+            slashpos=descloc.find('/')
+            if(slashpos >= 0):
+                eventname=descloc[0:slashpos]
+                location=descloc[slashpos+1:]
+            else:
+                eventname=descloc
+                location=''
+            
+            setattr(e,'eventname',eventname)
+            setattr(e,'eventname_len',len(e.eventname))
+            setattr(e,'location',location)
+            setattr(e,'location_len',len(e.location))
+            now=time.mktime(time.localtime(time.time()))
+
+            setattr(e,'dom',entry['start'][2])
+
+            timearray=entry['start']+(0,0,0,0)
+            starttimelocal=time.mktime(timearray)
+            if(starttimelocal<now and repeat==0):
+                setattr(e,'flag',2) # In the past
+            else:
+                setattr(e,'flag',1) # In the future
+            setattr(e,'start',starttimelocal-self._sanyoepochtounix)
+
+            timearray=entry.get('end', entry['start'])+(0,0,0,0)
+            setattr(e,'end',time.mktime(timearray)-self._sanyoepochtounix)
+
+            alarmdiff=entry.get('alarm',0)
+            setattr(e,'alarm',starttimelocal-self._sanyoepochtounix-60*alarmdiff)
+            setattr(e,'location',location)
+            setattr(e,'location_len',len(e.location))
+
+            setattr(e,'alarm_type',entry.get('ringtone',0))
+
+# What we should do is first find largest changeserial, and then increment
+# whenever we have one that is undefined or zero.
+            setattr(e, 'serial', entry.get('changeserial',0))
+                                    
+            
+            req=p_sanyo.eventupdaterequest()
+            req.entry=e
+            res=self.sendpbcommand(req, p_sanyo.eventresponse)
+
+            slot+=1
+
+#        for slot in range(slot,20):
+        for slot in range(slot,p_sanyo._NUMEVENTSLOTS):
+            self.progress(slot, progressmax, "Writing unused")
+            self.log("Write calendar slot "+`slot`+ " - Unused")
+            setattr(e,'slot',slot)
+            setattr(e,'flag',0) # Unused slot
+            req=p_sanyo.eventupdaterequest()
+            req.entry=e
+            res=self.sendpbcommand(req, p_sanyo.eventresponse)
+
+        self.progress(progressmax, progressmax, "Calendar write done")
+
+#        dict['calendar'] = cal
+#        Not mucking with passed in calendar yet
 
     def decodedate(self,val):
         """Unpack 32 bit value into date/time
@@ -436,6 +532,66 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_sanyo.SanyoPhonebook):
 
 
 class Profile:
+
+### Some drop in replacement routines for phonebook.py that can be moved
+### if they look OK.
+    def _getentries(self, list, min, max, name):
+        candidates=[]
+        for i in list:
+            # ::TODO:: possibly ensure that a key appears in each i
+            candidates.append(i)
+        if len(candidates)<min:
+            # ::TODO:: log this
+            raise ConversionFailed("Too few %s.  Need at least %d but there were only %d" % (name,min,len(candidates)))
+        if len(candidates)>max:
+            # ::TODO:: mention this to user
+            candidates=candidates[:max]
+        return candidates
+
+    def _getfield(self,list,name):
+        res=[]
+        for i in list:
+            res.append(i[name])
+        return res
+
+    def _makefullnames(self, list, lastnamefirst=False):
+        res=[]
+        for i in list:
+            first=i.get('first','')
+            last=i.get('last','')
+            full=i.get('full','')
+            if len(last)>0:
+                if(lastnamefirst):
+                    res.append(last+", "+first)
+                else:
+                    res.append(first+" "+last)
+            elif len(first)>0:
+                res.append(first)
+            else:
+                res.append(full)
+
+        return res
+        
+    def _truncatefields(self, list, truncateat, compresscomma=False):
+        if truncateat is None:
+            return list
+        res=[]
+        for i in list:
+            if len(i)>truncateat:
+                # ::TODO:: log truncation
+                res.append(i[:truncateat])
+            else:
+                res.append(i)
+        return res
+
+    def getfullname(self, names, min, max, truncateat=None, lastnamefirst=False):
+        "Return at least min and at most max fullnames from the names list"
+        if(lastnamefirst):
+            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names"),lastnamefirst),truncateat,compresscomma=True)
+        else:
+            return self._truncatefields(self._makefullnames(self._getentries(names,min,max,"names")),truncateat)
+
+###
 
     def makeone(self, list, default):
         "Returns one item long list"
@@ -465,7 +621,7 @@ class Profile:
             e={} # entry out
             entry=data['phonebook'][pbentry] # entry in
             try:
-                e['name']=helper.getfullname(entry.get('names', []),1,1,16)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,16,lastnamefirst=True)[0]
                 e['name_len']=len(e['name'])
 
                 serial1=helper.getserial(entry.get('serials', []), 'scp4900', data['uniqueserial'], 'serial1', -1)
