@@ -14,6 +14,7 @@ import common
 import time
 try:
     import native.usb as usb
+    usb=usb.usb
 except:
     usb=None
 
@@ -77,7 +78,10 @@ class CommConnection:
         for dummy in range(2):
             try:
                 self.close()
-                self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
+                if port.startswith("usb::"):
+                    self.ser=self._openusb(port, timeout)
+                else:
+                    self.ser=serial.Serial(port, baud, timeout=timeout, rtscts=hardwareflow, xonxoff=softwareflow)
                 self.log("Open of comm port suceeded")
                 self.port=port
                 self.clearcounters()
@@ -87,6 +91,26 @@ class CommConnection:
                 time.sleep(2)
         self.log("Open of comm port failed")
         raise ex
+
+    def _openusb(self, name, timeout):
+        if usb is None:
+            self.log("USB module not available - unable to open "+name)
+            raise Exception("USB module not available - unable to open "+name)
+        _,wantedbus,wanteddev,wantediface=name.split("::")
+        wantediface=int(wantediface)
+        for bus in usb.AllBusses():
+            if bus.name()!=wantedbus:
+                continue
+            for device in bus.devices():
+                if device.name()!=wanteddev:
+                    continue
+                for iface in device.interfaces():
+                    if iface.number()!=wantediface:
+                        continue
+                    return _usbdevicewrapper(iface.openbulk(), timeout)
+        self.log("Failed to find "+name+".  You may need to rescan.")
+        raise Exception("Failed to find usb device "+name)
+        
 
     def reset(self):
         self._openport(self.port, *self.params)
@@ -144,6 +168,8 @@ class CommConnection:
             self.log("Changed port speed to "+`rate`)
             time.sleep(.5)
             return True
+        except SilentException:
+            return False
         except Exception,e:
             self.log("Port speed "+`rate`+" not supported")
             return False
@@ -217,9 +243,14 @@ class CommConnection:
         # set numfailures to non-zero for retries on timeouts
         res=''
         while len(res)==0 or res[-1]!=char:
-            b=self.ser.inWaiting()
-            if b<1: b=1
-            res2=self.read(b,0)
+            if hasattr(self.ser, 'readuntil'):
+                # usb does it directly
+                res2=self.ser.readuntil(char)
+                b=-99999
+            else:
+                b=self.ser.inWaiting()
+                if b<1: b=1
+                res2=self.read(b,0)
             if len(res2)<1:
                 if numfailures==0:
                     if log:
@@ -238,4 +269,43 @@ class CommConnection:
         if logsuccess:
             self.logdata("Read completed", res)
         return res
+
+class SilentException(Exception): pass
         
+class _usbdevicewrapper:
+
+    def __init__(self, dev, timeout):
+        self.dev=dev
+        self.timeout=int(timeout*1000)
+
+    def read(self, numchars=1):
+        return self.dev.read(numchars, self.timeout)
+    
+    def write(self, data):
+        self.dev.write(data, self.timeout)
+
+    def close(self):
+        self.dev.close()
+
+    def readuntil(self, char):
+        # try and get it all in one shot
+        try:
+            data=self.dev.read(999999, self.timeout)
+            if len(data) and data[-1]==char:
+                return data
+        except usb.USBException:
+            # ahh, buggy hardware or something
+            self.dev.resetep()
+            data=""
+        # do it the old fashioned way
+        basetime=time.time()
+        while 1000*(time.time()-basetime)<self.timeout:
+            try:
+                more=self.dev.read(99999, max(100,self.timeout-1000*(time.time()-basetime)))
+                data+=more
+                if len(data) and data[-1]==char:
+                    return data
+            except usb.USBException:
+                pass
+        # timed out
+        return data
