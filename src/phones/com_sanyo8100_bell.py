@@ -21,7 +21,7 @@ import prototypes
 
 import os
 
-class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
+class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo SCP-8100 Bell Mobility (Canada) cell phone"
 
     desc="SCP-8100-Bell"
@@ -32,7 +32,7 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     protocolclass=p_sanyo8100_bell
     serialsname='scp8100bell'
     
-# Need to check these from Bell
+# Need to check these from Bell.  
 
     builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
@@ -46,11 +46,10 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     calendar_defaultringtone=4
 
     def __init__(self, logtarget, commport):
-        com_sanyo.Phone.__init__(self, logtarget, commport)
-        com_sanyomedia.SanyoMedia.__init__(self)
+        com_sanyonewer.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
-class Profile(com_sanyo.Profile):
+class Profile(com_sanyonewer.Profile):
 
     protocolclass=p_sanyo8100_bell
     serialsname='scp8100bell'
@@ -71,4 +70,4 @@ class Profile(com_sanyo.Profile):
     )
 
     def __init__(self):
-        com_sanyo.Profile.__init__(self)
+        com_sanyonewer.Profile.__init__(self)
