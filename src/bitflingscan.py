@@ -77,7 +77,11 @@ class flinger:
 
     def deviceclose(self, handle):
         self._configure()
-        return self.client.deviceclose(handle)
+        try:
+            # we don't care about close's failing
+            self.client.deviceclose(handle)
+        except:
+            pass
 
     def devicesetbaudrate(self, handle, rate):
         self._configure()
@@ -99,7 +103,9 @@ class flinger:
         self._configure()
         return self.client.devicereadsome(handle)
 
-
+    def devicewritethenreaduntil(self, handle, data, char, numfailures):
+        self._configure()
+        return self.client.devicewritethenreaduntil(handle, data, char, numfailures)
 
 # ensure there is a singleton
 flinger=flinger()
@@ -302,3 +308,11 @@ class CommConnection:
             self.logdata("Read completed", res)
         return res
             
+    # composite methods which reduce round trips
+    def writethenreaduntil(self, data, logwrite, char, logreaduntil=True, logreaduntilsuccess=True, numfailures=0):
+        if logwrite:
+            self.logdata("Writing", data)
+        res=flinger.devicewritethenreaduntil(self.handle, data, char, numfailures)
+        if logreaduntilsuccess:
+            self.logdata("Read completed", res)
+        return res
