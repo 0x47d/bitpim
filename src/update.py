@@ -237,13 +237,15 @@ def check_update(update_url=None, current_version=None,
     dlg.Destroy()
     if s is None:
         s=bp_update.display_update_info(current_version, platform, flavor)
-        return bp_update.latest_version
+        latest_version=bp_update.latest_version
+    else:
+        latest_version=''
     if s is not None:
         # error messages being return, display them
         dlg=wx.MessageDialog(None, s, 'BitPim Update', wx.OK|wx.ICON_ERROR)
         dlg.ShowModal()
         dlg.Destroy()
-        return ''
+    return latest_version
 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
