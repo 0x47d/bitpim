@@ -40,7 +40,6 @@ class WallpaperView(guiwidgets.FileView):
             self.InsertColumn(2, "Size")
             self.InsertColumn(3, "Origin")
         self._data={'wallpaper-index': {}}
-        self.maxlen=19
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
         self.usewidth=120
         self.useheight=98
@@ -66,38 +65,10 @@ class WallpaperView(guiwidgets.FileView):
         if four=="BCI\x00":
             return True
         return False
-        
-    def getdata(self,dict,want=guiwidgets.FileView.NONE):
-        dict.update(self._data)
-        names=None
-        if want==self.SELECTED:
-            names=self.GetSelectedItemNames()
-            if len(names)==0:
-                want=self.ALL
-        if want==self.ALL:
-            names=[]
-            for i in range(0,self.GetItemCount()):
-                names.append(self.GetItemText(i))
 
-        if names is not None:
-            wp={}
-            i=0
-            for name in names:
-                file=os.path.join(self.mainwindow.wallpaperpath, name)
-                f=open(file, "rb")
-                data=f.read()
-                f.close()
-                wp[i]={'name': name, 'data': data}
-                for k in self._data['wallpaper-index']:
-                    if self._data['wallpaper-index'][k]['name']==name:
-                        v=self._data['wallpaper-index'][k].get("origin", "")
-                        if len(v):
-                            wp[i]['origin']=v
-                            break
-                i+=1
-            dict['wallpapers']=wp
-                
-        return dict
+
+    def getdata(self,dict,want=guiwidgets.FileView.NONE):
+        return self.genericgetdata(dict, want, self.mainwindow.wallpaperpath, 'wallpapers', 'wallpaper-index')
 
     def RemoveFromIndex(self, names):
         for name in names:
@@ -122,7 +93,7 @@ class WallpaperView(guiwidgets.FileView):
 
     def updateindex(self, index):
         if index!=self._data['wallpaper-index']:
-            self._data['wallpaper-index']=index
+            self._data['wallpaper-index']=index.copy()
             self.modified=True
         
     def populate(self, dict):
@@ -157,7 +128,10 @@ class WallpaperView(guiwidgets.FileView):
                 print "result is",x
                 if x==self.ID_DELETEFILE:
                     del dict['wallpaper-index'][i]
-                    os.remove(file)
+                    try:
+                        os.remove(file)
+                    except:
+                        pass
                     self.modified=True
                 continue
             
@@ -207,9 +181,6 @@ class WallpaperView(guiwidgets.FileView):
             if not os.path.exists(os.path.join(self.thedir, name)):
                 break
         self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), name)
-
-    def OnRefresh(self,_=None):
-        self.populate(self._data)
 
     def AddToIndex(self, file):
         for i in self._data['wallpaper-index']:
@@ -312,6 +283,7 @@ class WallpaperView(guiwidgets.FileView):
             for i in input:
                 d[i]={'name': input[i]}
             dict['wallpaper-index']=d
+        return dict
 
 ###
 ### Virtual filesystem where the images etc come from for the HTML stuff
