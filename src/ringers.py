@@ -188,12 +188,13 @@ class RingerView(guiwidgets.FileView):
             newentry['name']=entry['name']
             newentry['filelen']=filelen
             newentry['file']=filename
-            if os.path.splitext(entry['name'])[1]=='.qcp':
-                newentry['length']="2 seconds :-)"
+            ext=os.path.splitext(entry['name'])[1]
+            if ext=='.qcp':
                 newentry['description']="PureVoice file"
-            else:
-                newentry['length']="1 second :-)"
+            elif ext=='.mid':
                 newentry['description']="Midi file"
+            else:
+                newentry['description']="Unknown file"
             newentry['origin']=entry.get('origin','ringers')
             newitems.append(newentry)
         self.SetItems(newitems)
