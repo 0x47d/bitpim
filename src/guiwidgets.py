@@ -34,6 +34,7 @@ import comscan
 import comdiagnose
 import brewcompressedimage
 import bpaudio
+import analyser
 
 ####
 #### A widget for displaying the phone information
@@ -379,7 +380,7 @@ class LogWindow(wxPanel):
     def __init__(self, parent):
         wxPanel.__init__(self,parent, -1, style=wxNO_FULL_REPAINT_ON_RESIZE)
         # have to use rich2 otherwise fixed width font isn't used on windows
-        self.tb=wxTextCtrl(self, 1, style=wxTE_MULTILINE| wxTE_RICH2|wxTE_READONLY|wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP  )
+        self.tb=wxTextCtrl(self, 1, style=wxTE_MULTILINE| wxTE_RICH2|wxNO_FULL_REPAINT_ON_RESIZE|wxTE_DONTWRAP|wxTE_READONLY)
         f=wxFont(10, wxMODERN, wxNORMAL, wxNORMAL )
         ta=wxTextAttr(font=f)
         self.tb.SetDefaultStyle(ta)
@@ -391,6 +392,7 @@ class LogWindow(wxPanel):
         EVT_IDLE(self, self.OnIdle)
         self.outstandingtext=""
 
+        EVT_KEY_UP(self.tb, self.OnKeyUp)
 
     def OnIdle(self,_):
         if len(self.outstandingtext):
@@ -402,11 +404,27 @@ class LogWindow(wxPanel):
         t=time.localtime(now)
         self.outstandingtext+="%d:%02d:%02d.%03d %s\r\n"  % ( t[3], t[4], t[5],  int((now-int(now))*1000), str)
 
-    def logdata(self, str, data):
+    def logdata(self, str, data, klass=None):
         hd=""
         if data is not None:
-            hd="Data - "+`len(data)`+" bytes\n"+common.datatohexstring(data)
+            hd="Data - "+`len(data)`+" bytes\n"
+            if klass is not None:
+                if getattr(klass, "__class__") is not None:
+                    klass=klass.__class__
+                hd+="<#! %s.%s !#>\n" % (klass.__module__, klass.__name__)
+            hd+=common.datatohexstring(data)
         self.log("%s %s" % (str, hd))
+
+    def OnKeyUp(self, evt):
+        keycode=evt.GetKeyCode()
+        if keycode==80 and evt.ControlDown() and evt.AltDown():
+            # analysze what was selected
+            data=self.tb.GetStringSelection()
+            # or the whole buffer if it was nothing
+            if data is None or len(data)==0:
+                data=self.tb.GetValue()
+            analyser.Analyser(data=data)
+            evt.Skip()
             
 
 
