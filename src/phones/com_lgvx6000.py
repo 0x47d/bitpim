@@ -19,7 +19,6 @@ the 6000 has extra functionality
 """
 
 # standard modules
-import re
 import time
 import cStringIO
 import sha
