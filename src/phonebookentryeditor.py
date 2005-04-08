@@ -217,7 +217,7 @@ class WallpaperEditor(DirtyUIBase):
         self.SetPreview(v)
 
     def SetPreview(self, name):
-        if name is None:
+        if name is None or name is self.unnamed:
             self.preview.SetImage(None)
         else:
             self.preview.SetImage(name)        

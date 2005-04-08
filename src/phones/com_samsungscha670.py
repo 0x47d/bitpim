@@ -893,6 +893,8 @@ class FileEntries:
                           int(contents[53:55]), int(contents[55:57]),
                           int(contents[57:59]))
                         contents=contents[96:]
+                        if contents[-1]=='\xff':
+                            contents+='\x00'
                     media[file_key]=contents
                 except:
                     self.__phone.log('Failed to read file '+file_name)
