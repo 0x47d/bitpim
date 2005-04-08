@@ -428,14 +428,17 @@ class MainApp(wx.App):
         if not len(update_rate) or update_rate =='Never':
             return
         last_update=self.config.Read('last_update', '')
-        if len(last_update):
-            last_date=datetime.date(int(last_update[:4]), int(last_update[4:6]),
-                                    int(last_update[6:]))
-            next_date=last_date+datetime.timedelta(\
-                self.update_delta.get(update_rate, 7))
-        else:
+        try:
+            if len(last_update):
+                last_date=datetime.date(int(last_update[:4]), int(last_update[4:6]),
+                                        int(last_update[6:]))
+                next_date=last_date+datetime.timedelta(\
+                    self.update_delta.get(update_rate, 7))
+            else:
+                next_date=last_date=datetime.date.today()
+        except ValueError:
+            # month day swap problem
             next_date=last_date=datetime.date.today()
-        print 'Update Rate:', update_rate, ', last update:', last_date, ', next update:', next_date
         if datetime.date.today()<next_date:
             return
         self.frame.AddPendingEvent(\
