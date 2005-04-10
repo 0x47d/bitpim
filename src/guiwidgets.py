@@ -147,7 +147,8 @@ class GetPhoneDialog(wx.Dialog):
                 ('Ringtone', 'ringtone'),
                ('Memo', 'memo'),
                ('Todo', 'todo'),
-               ('SMS', 'sms'))
+               ('SMS', 'sms'),
+               ('Call History', 'call_history'))
     
     # actions ("Pretty Name", "name used to query profile")
     actions = (  ("Get", "read"), )
@@ -240,6 +241,8 @@ class GetPhoneDialog(wx.Dialog):
 
     def GetSMSSetting(self):
         return self._setting("sms")
+    def GetCallHistorySetting(self):
+        return self._setting("call_history")
 
     def OnHelp(self,_):
         wx.GetApp().displayhelpid(self.HELPID)
@@ -322,7 +325,8 @@ class SendPhoneDialog(GetPhoneDialog):
         GetPhoneDialog.__init__(self, frame, title, id)
 
     # this is what BitPim itself doesn't supports - the phones may support less
-    _notsupported=()
+    _notsupported=(
+        ('call_history', 'write', None),)
         
 
 ###

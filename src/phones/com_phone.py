@@ -142,6 +142,7 @@ class Phone:
     getmemo=NotImplemented
     gettodo=NotImplemented
     getsms=NotImplemented
+    getcallhistory=NotImplemented
 
 class Profile:
 

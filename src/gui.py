@@ -48,6 +48,7 @@ import update
 import todo
 import sms_tab
 import phoneinfo
+import call_history
 
 ###
 ### Used to check our threading
@@ -679,6 +680,8 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.todowidget, 'Todo')
         self.smswidget=sms_tab.SMSWidget(self, self.nb)
         self.nb.AddPage(self.smswidget, 'SMS')
+        self.callhistorywidget=call_history.CallHistoryWidget(self, self.nb)
+        self.nb.AddPage(self.callhistorywidget, 'Call History')
 
         ### logwindow (last notebook tab)
         self.lw=guiwidgets.LogWindow(self.nb)
@@ -958,6 +961,14 @@ class MainWindow(wx.Frame):
             else:
                 self.smswidget.populatefs(results)
                 self.smswidget.populate(results)
+        # call history
+        if results['sync'].has_key('call_history'):
+            v=results['sync']['call_history']
+            if v=='MERGE':
+                self.callhistorywidget.merge(results)
+            else:
+                self.callhistorywidget.populatefs(results)
+                self.callhistorywidget.populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -1076,6 +1087,7 @@ class MainWindow(wx.Frame):
             self.memowidget.getfromfs(results)
             self.todowidget.getfromfs(results)
             self.smswidget.getfromfs(results)
+            self.callhistorywidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -1091,6 +1103,8 @@ class MainWindow(wx.Frame):
             self.todowidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.smswidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.callhistorywidget.populate(results)
             # close the splash screen if it is still up
             self.CloseSplashScreen()
         finally:
@@ -1398,7 +1412,8 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetRingtoneSetting, self.commphone.getringtones, "Ringtones", "ringtone"),
             (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo"),
             (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo"),
-            (req.GetSMSSetting, self.commphone.getsms, "SMS", "sms")):
+            (req.GetSMSSetting, self.commphone.getsms, "SMS", "sms"),
+            (req.GetCallHistorySetting, self.commphone.getcallhistory, 'Call History', 'call_history')):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
