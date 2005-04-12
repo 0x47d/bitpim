@@ -577,6 +577,9 @@ class Phone(com_samsung.Phone):
 class Profile(com_samsung.Profile):
 
     serialsname='scha310'
+    # use for auto-detection
+    phone_manufacturer='SAMSUNG ELECTRONICS'
+    phone_model='SCH-A310/148'
     
     def __init__(self):
         com_samsung.Profile.__init__(self)

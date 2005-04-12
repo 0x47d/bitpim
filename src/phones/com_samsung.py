@@ -78,6 +78,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
             self.comm.sendatcommand('$QCDMG')
             return True
+        except:
+            pass
+        # give it another try
+        self.log('Retry switching from modem to BREW')
+        try:
+            self.comm.sendatcommand('$QCDMG')
+            return True
         except commport.ATError:
 	    return False
 	except:
@@ -85,10 +92,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 self.log('Got an excepetion')
             return False
 
-    def _setmodebrew(self):
-        self.setmode(self.MODEMODEM)
-        self.setmode(self.MODEBREW)
-        return True
+    _setmodebrew=_setmodemodemtobrew
 
     def _setmodebrewtomodem(self):
         self.log('Switching from BREW to modem')
@@ -169,7 +173,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         try:
 	    s=self.comm.sendatcommand("+gsn")
 	    if len(s):
-	        return s[0].split(": ")[1]
+	        return ' '.join(s[0].split(": ")[1:])
 	except commport.ATError:
             pass
         return ''

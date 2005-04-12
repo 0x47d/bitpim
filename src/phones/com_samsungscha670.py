@@ -776,6 +776,9 @@ class Profile(com_samsung.Profile):
     RINGTONE_LIMITS= {
         'MAXSIZE': 30000
     }
+    # use for auto-detection
+    phone_manufacturer='SAMSUNG ELECTRONICS'
+    phone_model='SCH-A670/164'
 
     def __init__(self):
         com_samsung.Profile.__init__(self)
@@ -960,16 +963,16 @@ class FileEntries:
     def __mms_file_name(self):
         now = time.localtime(time.time())
         return '%02d%02d%02d%02d%02d%02d'%((now[0]%2000,)+now[1:6])
-    def __to_mms_JPEG(self, img_name, img_data_len):
+    def _to_mms_JPEG(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 0, img_data_len))
-    def __to_mms_BMP(self, img_name, img_data_len):
+    def _to_mms_BMP(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 1, img_data_len))
-    def __to_mms_PNG(self, img_name, img_data_len):
+    def _to_mms_PNG(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 2, img_data_len))
-    def __to_mms_GIF(self, img_name, img_data_len):
+    def _to_mms_GIF(self, img_name, img_data_len):
         return (self.__mms_file_name(),
                 self.__mms_header(img_name, 3, img_data_len))
        
@@ -1024,7 +1027,7 @@ class FileEntries:
                 if file_info.format in ('JPEG', 'GIF', 'BMP'):
                     # jpeg/gif/bmp file/picture ID files
                     (mms_file_name, file_hdr)=\
-                                    getattr(self, '__to_mms_'+file_info.format)(
+                                    getattr(self, '_to_mms_'+file_info.format)(
                                         n['name'], len(n['data']))
                     file_name=self.__path+'/'+mms_file_name
                     file_contents=file_hdr+n['data']

@@ -29,6 +29,8 @@ import nameparser
 import p_samsungscha650
 import prototypes
 
+import call_history
+
 #-------------------------------------------------------------------------------
 class Phone(com_samsung.Phone):
 
@@ -583,6 +585,26 @@ class Phone(com_samsung.Phone):
     def getsms(self, result):
         return self._getsms(result)
 
+    def getcallhistory(self, result):
+        import time
+        test_data=(
+            ('Incoming', '20050101T120000', '2345678910'),
+            ('Incoming', '20050202T141255', '5551234567'),
+            ('Outgoing', '20050303T133333', '2345678911'),
+            ('Outgoing', '20050301T040506', '5551234568'),
+            ('Missed',   '20050110T140000', '2345678914'),
+            ('Data',     '20041230T090000', '2345678915'))
+        r={}
+        for l in test_data:
+            e=call_history.CallHistoryEntry()
+            e.folder=l[0]
+            e.datetime=l[1]
+            e.number=l[2]
+            r[e.id]=e
+            time.sleep(1)
+        result['call_history']=r
+        return result
+            
     getphoneinfo=com_samsung.Phone._getphoneinfo
 
     getmedia=None
@@ -603,7 +625,10 @@ class Profile(com_samsung.Profile):
     RINGTONE_LIMITS= {
         'MAXSIZE': 30000
     }
-
+    # use for auto-detection
+    phone_manufacturer='SAMSUNG ELECTRONICS'
+    phone_model='SCH-A650/163'
+    
     def __init__(self):
         com_samsung.Profile.__init__(self)
 
@@ -621,6 +646,7 @@ class Profile(com_samsung.Profile):
         ('todo', 'read', None),     # all todo list reading DJP
         ('todo', 'write', 'OVERWRITE'),  # all todo list writing DJP
         ('sms', 'read', None),     # all SMS list reading DJP
+        ('call_history', 'read', None),
         )
 
     def convertphonebooktophone(self, helper, data):

@@ -1822,3 +1822,15 @@ def save_size(confname, myRect):
     confobj.WriteInt(confname + "/width", width)
     confobj.WriteInt(confname + "/height", height)
     confobj.Flush()
+
+class LogProgressDialog(wx.ProgressDialog):
+    def __init__(self, title, message, maximum=100, parent=None,
+                 style=wx.PD_AUTO_HIDE|wx.PD_APP_MODAL):
+        super(LogProgressDialog, self).__init__(title, message, maximum,
+                                                parent, style)
+        self.__progress_value=0
+    def Update(self, value, newmsg='', skip=None):
+        self.__progress_value=value
+        super(LogProgressDialog, self).Update(value, newmsg, skip)
+    def log(self, msgstr):
+        super(LogProgressDialog, self).Update(self.__progress_value, msgstr)

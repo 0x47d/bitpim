@@ -49,6 +49,7 @@ import todo
 import sms_tab
 import phoneinfo
 import call_history
+import phone_detect
 
 ###
 ### Used to check our threading
@@ -558,6 +559,9 @@ class MainWindow(wx.Frame):
         menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITPHONEINFO,
                     "&Phone Info", "Display Phone Information")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_EDITDETECT,
+                    "Detect Phone", "Auto Detect Phone")
         if guihelper.IsMac():
             wx.App_SetMacPreferencesMenuItemId(guihelper.ID_EDITSETTINGS)
             menu.Append(guihelper.ID_EDITSETTINGS, "&Preferences...", "Edit Settings")
@@ -642,6 +646,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
         wx.EVT_MENU(self, guihelper.ID_EDITPHONEINFO, self.OnPhoneInfo)
+        wx.EVT_MENU(self, guihelper.ID_EDITDETECT, self.OnDetectPhone)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -832,6 +837,34 @@ class MainWindow(wx.Frame):
             dlg=phoneinfo.PhoneInfoDialog(self, phone_info)
         dlg.ShowModal()
         dlg.Destroy()
+    def OnDetectPhone(self, _):
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+            return
+        self.OnBusyStart()
+        self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
+        if self.wt is not None:
+            self.wt.clearcomm()
+        p=phone_detect.DetectPhone()
+        r=p.detect()
+        if r is None:
+            wx.MessageBox('No phone detected/recognized',
+                          'Phone Detection Failed', wx.OK)
+        else:
+            import pubsub
+            self.config.Write("phonetype", r['phone_name'])
+            self.commportsetting=str(r['port'])
+            if self.wt is not None:
+                self.wt.clearcomm()
+            self.config.Write("lgvx4400port", r['port'])
+            self.phonemodule=__import__(r['phone_module'])
+            self.phoneprofile=self.phonemodule.Profile()
+            pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
+            self.SetPhoneModelStatus()
+            wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
+                          'Phone Detection', wx.OK)
+        self.OnBusyEnd()
 
     def SetVersionsStatus(self):
         current_v=version.version

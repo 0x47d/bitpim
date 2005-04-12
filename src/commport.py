@@ -97,10 +97,10 @@ class CommConnection:
                 self.clearcounters()
                 return
             except serial.serialutil.SerialException,e:
-                ex=common.CommsOpenFailure(e.__str__(), port)
+                if dummy:
+                    self.log('Open of comm port failed')
+                    raise common.CommsOpenFailure(e.__str__(), port)
                 time.sleep(2)
-        self.log("Open of comm port failed")
-        raise ex
 
     def _openusb(self, name, timeout):
         self.close()
