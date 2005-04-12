@@ -20,6 +20,7 @@ import wx.lib.scrolledpanel as scrolled
 # BitPim modules
 import database
 import phonebookentryeditor as pb_editor
+import phonenumber
 import pubsub
 import sms
 
@@ -169,6 +170,9 @@ class FolderPage(wx.Panel):
             if len(n._to) and not self.__name_map.has_key(n._to):
                 pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
                                { 'item': n._to } )
+            if len(n.callback) and not self.__name_map.has_key(n.callback):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': n.callback } )
 
     def __populate_each(self, k):
         # populate the detailed info of the item keyed k
@@ -186,11 +190,20 @@ class FolderPage(wx.Panel):
         e=copy.deepcopy(entry)
         # lookup names if available
         s=self.__name_map.get(e._from, None)
-        if s is not None:
+        if s is None:
+            e._from=phonenumber.format(e._from)
+        else:
             e._from=s
         s=self.__name_map.get(e._to, None)
-        if s is not None:
+        if s is None:
+            e._to=phonenumber.format(e._to)
+        else:
             e._to=s
+        s=self.__name_map.get(e.callback, None)
+        if s is None:
+            e.callback=phonenumber.format(e.callback)
+        else:
+            e.callback=s
         self.__item_info.Set(e)
         self.__item_text.Set({'memo': e.text})
 
