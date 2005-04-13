@@ -92,7 +92,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 self.log('Got an excepetion')
             return False
 
-    _setmodebrew=_setmodemodemtobrew
+    def _setmodebrew(self):
+        # switch from None to BREW
+        self.log('Switching from None to BREW')
+        # do it the long, but sure, way: 1st try to switch to modem
+        if not self._setmodemodem():
+            # can't switch to modem, give up
+            return False
+        # then switch from modem to BREW
+        return self._setmodemodemtobrew()
 
     def _setmodebrewtomodem(self):
         self.log('Switching from BREW to modem')
