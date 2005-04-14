@@ -470,9 +470,8 @@ class TodoWidget(wx.Panel):
         wx.EVT_LISTBOX(self, self.__item_list.GetId(), self.__OnListBoxItem)
         wx.EVT_BUTTON(self, self.__save_btn.GetId(), self.__OnSave)
         wx.EVT_BUTTON(self, self.__revert_btn.GetId(), self.__OnRevert)
-        help_btn.Enable(False)
-##        wx.EVT_BUTTON(self, wx.ID_HELP,
-##                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_TODO))
+        wx.EVT_BUTTON(self, wx.ID_HELP,
+                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_TODO))
         # DIRTY UI Event handlers
         for w in self.__w:
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
