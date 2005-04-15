@@ -141,11 +141,14 @@ class DetectPhone(object):
                phone_model==e['model']:
                 return k
             
-    def detect(self):
+    def detect(self, using_port=None):
         # start the detection process
         # 1st, get the list of available ports
-        coms=comscan.comscan()
-        available_coms=[x['name'] for x in coms if x['available']]
+        if using_port is None:
+            coms=comscan.comscan()
+            available_coms=[x['name'] for x in coms if x['available']]
+        else:
+            available_coms=[using_port]
         # loop through each port and gather data
         for e in available_coms:
             self.log('Checking on port: '+e)

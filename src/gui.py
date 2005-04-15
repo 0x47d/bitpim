@@ -51,6 +51,11 @@ import phoneinfo
 import call_history
 import phone_detect
 
+if guihelper.IsMSWindows():
+    import win32api
+    import win32con
+    import win32gui
+
 ###
 ### Used to check our threading
 ###
@@ -740,6 +745,12 @@ class MainWindow(wx.Frame):
 
         # Populate all widgets from disk
         wx.CallAfter(self.OnPopulateEverythingFromDisk)
+        # check for device changes
+        if guihelper.IsMSWindows():
+            # save the old window proc
+            self.oldwndproc = win32gui.SetWindowLong(self.GetHandle(),
+                                                     win32con.GWL_WNDPROC,
+                                                     self.MyWndProc)
 
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
@@ -837,17 +848,21 @@ class MainWindow(wx.Frame):
             dlg=phoneinfo.PhoneInfoDialog(self, phone_info)
         dlg.ShowModal()
         dlg.Destroy()
+
     def OnDetectPhone(self, _):
         if wx.IsBusy():
             wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
             return
+        self.__detect_phone()
+
+    def __detect_phone(self, using_port=None):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         if self.wt is not None:
             self.wt.clearcomm()
         p=phone_detect.DetectPhone()
-        r=p.detect()
+        r=p.detect(using_port)
         if r is None:
             wx.MessageBox('No phone detected/recognized',
                           'Phone Detection Failed', wx.OK)
@@ -865,6 +880,44 @@ class MainWindow(wx.Frame):
             wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
                           'Phone Detection', wx.OK)
         self.OnBusyEnd()
+
+    if guihelper.IsMSWindows():
+        def OnDeviceChanged(self, type, name="", drives=[], flag=None):
+            if type=='DBT_DEVICEREMOVECOMPLETE':
+                # device is removed, if it's ours, clear the port
+                if name==self.config.Read('lgvx4400port', '') and \
+                   self.wt is not None:
+                    self.wt.clearcomm()
+                return
+            if type!='DBT_DEVICEARRIVAL':
+                # not interested
+                return
+            print 'New device on port:',name
+            if wx.IsBusy():
+                # current phone operation ongoing, abort this
+                return
+            # check the new device
+            self.__detect_phone(name)
+
+        def MyWndProc(self, hwnd, msg, wparam, lparam):
+
+            if msg==win32con.WM_DEVICECHANGE:
+                type,params=DeviceChanged(wparam, lparam).GetEventInfo()
+                self.OnDeviceChanged(type, **params)
+                return True
+            
+            # Restore the old WndProc.  Notice the use of win32api
+            # instead of win32gui here.  This is to avoid an error due to
+            # not passing a callable object.
+            if msg == win32con.WM_DESTROY:
+                win32api.SetWindowLong(self.GetHandle(),
+                                       win32con.GWL_WNDPROC,
+                                       self.oldwndproc)
+
+            # Pass all messages (in this case, yours may be different) on
+            # to the original WndProc
+            return win32gui.CallWindowProc(self.oldwndproc,
+                                           hwnd, msg, wparam, lparam)
 
     def SetVersionsStatus(self):
         current_v=version.version
@@ -2151,4 +2204,70 @@ class RestoreDialog(wx.Dialog):
         self.okcb(self.zipf, names, self.path)
         self.Show(False)
         self.Destroy()
+#-------------------------------------------------------------------------------
+# For windows platform only
+if guihelper.IsMSWindows():
+    import struct
+    class DeviceChanged:
 
+        DBT_DEVICEARRIVAL = 0x8000
+        DBT_DEVICEQUERYREMOVE = 0x8001
+        DBT_DEVICEQUERYREMOVEFAILED = 0x8002
+        DBT_DEVICEREMOVEPENDING =  0x8003
+        DBT_DEVICEREMOVECOMPLETE = 0x8004
+        DBT_DEVICETYPESPECIFIC = 0x8005    
+        DBT_DEVNODES_CHANGED = 7
+        DBT_CONFIGCHANGED = 0x18
+
+        DBT_DEVTYP_OEM = 0
+        DBT_DEVTYP_DEVNODE = 1
+        DBT_DEVTYP_VOLUME = 2
+        DBT_DEVTYP_PORT = 3
+        DBT_DEVTYP_NET = 4
+
+        DBTF_MEDIA   =   0x0001
+        DBTF_NET    =    0x0002
+
+        def __init__(self, wparam, lparam):
+            self._info=None
+            for name in dir(self):
+                if name.startswith("DBT") and \
+                   not name.startswith("DBT_DEVTYP") and \
+                   getattr(self,name)==wparam:
+                    self._info=(name, dict(self._decode_struct(lparam)))
+
+        def GetEventInfo(self):
+            return self._info
+            
+        def _decode_struct(self, lparam):
+            if lparam==0: return ()
+            format = "iii"
+            buf = win32gui.PyMakeBuffer(struct.calcsize(format), lparam)
+            dbch_size, dbch_devicetype, dbch_reserved = struct.unpack(format, buf)
+
+            buf = win32gui.PyMakeBuffer(dbch_size, lparam) # we know true size now
+
+            if dbch_devicetype==self.DBT_DEVTYP_PORT:
+                name=""
+                for b in buf[struct.calcsize(format):]:
+                    if b!="\x00":
+                        name+=b
+                        continue
+                    break
+                return ("name", name),
+
+            if dbch_devicetype==self.DBT_DEVTYP_VOLUME:
+                # yes, the last item is a WORD, not a DWORD like the hungarian would lead you to think
+                format="iiiih0i"
+                dbcv_size, dbcv_devicetype, dbcv_reserved, dbcv_unitmask, dbcv_flags = struct.unpack(format, buf)
+                units=[chr(ord('A')+x) for x in range(26) if dbcv_unitmask&(2**x)]
+                flag=""
+                for name in dir(self):
+                    if name.startswith("DBTF_") and getattr(self, name)==dbcv_flags:
+                        flag=name
+                        break
+
+                return ("drives", units), ("flag", flag)
+
+            print "unhandled devicetype struct", dbch_devicetype
+            return ()
