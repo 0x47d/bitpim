@@ -219,6 +219,12 @@ class RingerView(guiwidgets.FileView):
                     continue
             else:
                 filedata=open(file, "rb").read()
+            # check for the size limit on the file, if specified
+            max_size=getattr(convertinfo, 'MAXSIZE', None)
+            if max_size is not None and len(filedata)>max_size:
+                # the data is too big
+                self.log('ringtone %s is too big!'%common.basename(file))
+                continue
             self.thedir=self.mainwindow.ringerpath
             target=self.getshortenedbasename(file, newext)
             open(target, "wb").write(filedata)

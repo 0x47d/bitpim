@@ -1328,6 +1328,9 @@ class FileView(wx.Panel):
                 
         return dict
 
+    def log(self, log_str):
+        self.mainwindow.log(log_str)
+
 class FileViewDisplayItem(object):
 
     datakey="Someone forgot to set me"
@@ -1406,7 +1409,6 @@ class FileViewDisplayItem(object):
         del self.view._data[self.datakey][self.key]
         self.view.modified=True
         self.view.OnRefresh()
-        
 
 ###
 ### Various platform independent filename functions

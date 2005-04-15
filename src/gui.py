@@ -861,7 +861,7 @@ class MainWindow(wx.Frame):
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         if self.wt is not None:
             self.wt.clearcomm()
-        p=phone_detect.DetectPhone()
+        p=phone_detect.DetectPhone(self)
         r=p.detect(using_port)
         if r is None:
             wx.MessageBox('No phone detected/recognized',
@@ -1295,7 +1295,7 @@ class MainWindow(wx.Frame):
             dlg.ShowModal()
             dlg.Destroy()
             self.OnLog("Alert dialog closed")
-            
+    log=OnLog
     def OnLogData(self, str, data, klass=None):
         if self.lwdata is not None:
             self.lwdata.logdata(str,data, klass)
