@@ -224,6 +224,10 @@ class FolderPage(wx.Panel):
         self.__clear_info()
         del data[k]
         del self.__data_map[k]
+        # check for new selection
+        sel_idx=self.__item_list.GetSelection()
+        if sel_idx.Ok():
+            self.__populate_each(self.__item_list.GetPyData(sel_idx))
         return True
 
 #-------------------------------------------------------------------------------
