@@ -849,40 +849,40 @@ class MainWindow(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-    if guihelper.IsMSWindows():
-        # only available on Windows
-        def OnDetectPhone(self, _):
-            if wx.IsBusy():
-                wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                             "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
-                return
-            self.__detect_phone()
+    def OnDetectPhone(self, _):
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+            return
+        self.__detect_phone()
 
-        def __detect_phone(self, using_port=None):
-            self.OnBusyStart()
-            self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
+    def __detect_phone(self, using_port=None):
+        self.OnBusyStart()
+        self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
+        if self.wt is not None:
+            self.wt.clearcomm()
+        p=phone_detect.DetectPhone()
+        r=p.detect(using_port)
+        if r is None:
+            wx.MessageBox('No phone detected/recognized',
+                          'Phone Detection Failed', wx.OK)
+        else:
+            import pubsub
+            self.config.Write("phonetype", r['phone_name'])
+            self.commportsetting=str(r['port'])
             if self.wt is not None:
                 self.wt.clearcomm()
-            p=phone_detect.DetectPhone()
-            r=p.detect(using_port)
-            if r is None:
-                wx.MessageBox('No phone detected/recognized',
-                              'Phone Detection Failed', wx.OK)
-            else:
-                import pubsub
-                self.config.Write("phonetype", r['phone_name'])
-                self.commportsetting=str(r['port'])
-                if self.wt is not None:
-                    self.wt.clearcomm()
-                self.config.Write("lgvx4400port", r['port'])
-                self.phonemodule=__import__(r['phone_module'])
-                self.phoneprofile=self.phonemodule.Profile()
-                pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
-                self.SetPhoneModelStatus()
-                wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
-                              'Phone Detection', wx.OK)
-            self.OnBusyEnd()
+            self.config.Write("lgvx4400port", r['port'])
+            self.phonemodule=__import__(r['phone_module'])
+            self.phoneprofile=self.phonemodule.Profile()
+            pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
+            self.SetPhoneModelStatus()
+            wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
+                          'Phone Detection', wx.OK)
+        self.OnBusyEnd()
 
+    if guihelper.IsMSWindows():
+        # only available on Windows
         def OnDeviceChanged(self, type, name="", drives=[], flag=None):
             if type=='DBT_DEVICEREMOVECOMPLETE':
                 # device is removed, if it's ours, clear the port
