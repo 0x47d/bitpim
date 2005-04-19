@@ -85,7 +85,7 @@ def html_results(r):
             elif n[f].get('x', False):
                 print '<td align=center>X'
             else:
-                print '<td align=center>&nbsp'
+                print '<td align=center>&nbsp;'
         print '</tr>'
     print '</table>'
 
