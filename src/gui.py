@@ -855,14 +855,14 @@ class MainWindow(wx.Frame):
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
             return
         self.__detect_phone()
-
     def __detect_phone(self, using_port=None):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
-        if self.wt is not None:
-            self.wt.clearcomm()
-        p=phone_detect.DetectPhone()
-        r=p.detect(using_port)
+        self.MakeCall(Request(self.wt.detectphone, using_port),
+                      Callback(self.OnDetectPhoneReturn))
+    def OnDetectPhoneReturn(self, exception, r):
+        self.OnBusyEnd()
+        if self.HandleException(exception): return
         if r is None:
             wx.MessageBox('No phone detected/recognized',
                           'Phone Detection Failed', wx.OK)
@@ -870,8 +870,7 @@ class MainWindow(wx.Frame):
             import pubsub
             self.config.Write("phonetype", r['phone_name'])
             self.commportsetting=str(r['port'])
-            if self.wt is not None:
-                self.wt.clearcomm()
+            self.wt.clearcomm()
             self.config.Write("lgvx4400port", r['port'])
             self.phonemodule=__import__(r['phone_module'])
             self.phoneprofile=self.phonemodule.Profile()
@@ -879,8 +878,7 @@ class MainWindow(wx.Frame):
             self.SetPhoneModelStatus()
             wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
                           'Phone Detection', wx.OK)
-        self.OnBusyEnd()
-
+        
     if guihelper.IsMSWindows():
         # only available on Windows
         def OnDeviceChanged(self, type, name="", drives=[], flag=None):
@@ -1588,6 +1586,11 @@ class WorkerThread(WorkerThreadFramework):
             phone_info=phoneinfo.PhoneInfo()
             getattr(self.commphone, 'getphoneinfo')(phone_info)
             return phone_info
+
+    def detectphone(self, using_port=None):
+        self.clearcomm()
+##        p=phone_detect.DetectPhone()
+        return phone_detect.DetectPhone().detect(using_port)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

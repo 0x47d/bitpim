@@ -22,11 +22,14 @@ phone_model='string'
 The phone_manufacturer attribute will be checked for substring ie, 'SAMSUNG' in
 'SAMSUNG ELECTRONICS CO.,LTD.'; phone_model must match exactly.
 
-2.  If your phone detection scheme is more complex, define a method
+2.  If your phone detection scheme is more complex, define a staticmethod
 'detectphone' in your Phone class.  The declaration of the method is:
 
-def detectphone(self, detect_dict)
+def detectphone(ports, likely_ports, detect_dict)
 
+ports: list of available ports returned from comscan
+likely_ports: list of likely ports as returned from comdiagnose.islikelyport,
+            ie ['com1', 'com2'].
 where detect_dict is a dict with the following key/value pairs:
 'port': {
 'mode_modem': True if the phone can be set to modem mode, False otherwise
@@ -52,6 +55,7 @@ port associated with that phone, otherwise just return None.
 import wx
 
 # BitPim modules
+import comdiagnose
 import common
 import commport
 import comscan
@@ -144,8 +148,8 @@ class DetectPhone(object):
     def detect(self, using_port=None):
         # start the detection process
         # 1st, get the list of available ports
+        coms=comscan.comscan()
         if using_port is None:
-            coms=comscan.comscan()
             available_coms=[x['name'] for x in coms if x['available']]
         else:
             available_coms=[using_port]
@@ -164,7 +168,12 @@ class DetectPhone(object):
             # check for detectphone in module.Phone or
             # phone_model and phone_manufacturer in module.Profile
             if hasattr(module.Phone, 'detectphone'):
-                found_port=getattr(module.Phone, 'detectphone')(self.__data)
+                likely_ports=[x['name'] for x in coms if \
+                              x['available'] and \
+                              comdiagnose.islikelyport(x, module)]
+                found_port=getattr(module.Phone, 'detectphone')(coms,
+                                                                likely_ports,
+                                                                self.__data)
                 if found_port is not None:
                     # found it
                     found_model=model
