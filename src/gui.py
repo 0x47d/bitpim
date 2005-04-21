@@ -967,7 +967,7 @@ class MainWindow(wx.Frame):
 
 
     def OnFilePrint(self,_):
-        self.phonewidget.OnPrintDialog(self, self.config)
+        self.nb.GetPage(self.nb.GetSelection()).OnPrintDialog(self, self.config)
 
     ### 
     ### Main bit for getting stuff from phone
@@ -1246,7 +1246,8 @@ class MainWindow(wx.Frame):
         # View Columns .. is only in Phonebook
         self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
         # as is File Print
-        self.GetMenuBar().Enable(guihelper.ID_FILEPRINT, widget is self.phonewidget)
+        self.GetMenuBar().Enable(guihelper.ID_FILEPRINT,
+                                 hasattr(widget, 'OnPrintDialog'))
 
         # select all
         self.GetMenuBar().Enable(guihelper.ID_EDITSELECTALL, hasattr(widget, "OnSelectAll"))

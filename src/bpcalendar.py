@@ -109,6 +109,7 @@ import datetime
 import random
 import sha
 import time
+import webbrowser
 
 # wx stuff
 import wx
@@ -122,7 +123,9 @@ import calendarcontrol
 import calendarentryeditor
 import common
 import database
+import guihelper
 import helpids
+import xyaptu
 
 #-------------------------------------------------------------------------------
 class CalendarDataObject(database.basedataobject):
@@ -536,6 +539,53 @@ class CalendarEntry(object):
         num.update(`rand2.random()`)
         self.__data["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
 
+    def __get_print_data(self):
+        """ return a list of strings used for printing this event:
+        [0]: start time, [1]: '', [2]: end time, [3]: Description
+        [4]: Repeat Type, [5]: Alarm
+        """
+        if self.allday:
+            t0='All'
+            t1='Day'
+        else:
+            t0=self.__data['start'].time_str()
+            t1=self.__data['end'].time_str()
+        rp=self.repeat
+        if rp is None:
+            rp_str=''
+        else:
+            rp_str=rp.repeat_type[0].upper()
+        if self.alarm==-1:
+            alarm_str=''
+        else:
+            alarm_str='%d:%02d'%(self.alarm/60, self.alarm%60)
+        return [t0, '', t1, self.description, rp_str, alarm_str]
+    print_data=property(fget=__get_print_data)
+    def cmp_by_time(a, b):
+        """ compare 2 objects by start times.
+        -1 if a<b, 0 if a==b, and 1 if a>b
+        allday is always less than having start times.
+        Mainly used for sorting list of events
+        """
+        if not isinstance(a, CalendarEntry) or \
+           not isinstance(b, CalendarEntry):
+            raise TypeError, 'must be a CalendarEntry object'
+        if a.allday and b.allday:
+            return 0
+        if a.allday and not b.allday:
+            return -1
+        if not a.allday and b.allday:
+            return 1
+        t0=a.start[3:]
+        t1=b.start[3:]
+        if t0<t1:
+            return -1
+        if t0==t1:
+            return 0
+        if t0>t1:
+            return 1
+    cmp_by_time=staticmethod(cmp_by_time)
+
 #-------------------------------------------------------------------------------
 class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
@@ -558,6 +608,51 @@ class Calendar(calendarcontrol.Calendar):
         self._data={} # the underlying data
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
         self.dialog=calendarentryeditor.Editor(self)
+
+    def OnPrintDialog(self, mainwindow, config):
+        dlg=CalendarPrintDialog(self, mainwindow, config)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def get_print_data(self, dt_start, dt_end):
+        """ generate a dict suitable for printing"""
+        dt_index=dt_start
+        one_day=wx.DateSpan(days=1)
+        current_month=None
+        res=a_month=month_events=[]
+        while dt_index<=dt_end:
+            y=dt_index.GetYear()
+            m=dt_index.GetMonth()
+            d=dt_index.GetDay()
+            entries=self.getentrydata(y, m+1, d)
+            dt_index+=one_day
+            if not len(entries):
+                # no events on this day
+                continue
+            entries.sort(CalendarEntry.cmp_by_time)
+            if m!=current_month:
+                # save the current month
+                if len(month_events):
+                    a_month.append(month_events)
+                    res.append(a_month)
+                # start a new month
+                current_month=m
+                a_month=['%s %d'%(dt_index.GetMonthName(m), y)]
+                month_events=[]
+            # go through the entries and build a list of print data
+            for i,e in enumerate(entries):
+                if i:
+                    date_str=day_str=''
+                else:
+                    date_str=str(d)
+                    day_str=dt_index.GetWeekDayName(
+                        dt_index.GetWeekDay()-1, wx.DateTime.Name_Abbr)
+                month_events.append([date_str, day_str]+e.print_data)
+        if len(month_events):
+            # data left in the list
+            a_month.append(month_events)
+            res.append(a_month)
+        return res
 
     def getdata(self, dict):
         """Return underlying calendar data in bitpim format
@@ -967,3 +1062,96 @@ class Calendar(calendarcontrol.Calendar):
             print 'Calendar.__convert3to2: V2 dict:'
             print r
         return r
+
+#-------------------------------------------------------------------------------
+class CalendarPrintDialog(wx.Dialog):
+    __regular_template='cal_regular.xy'
+    def __init__(self, calwidget, mainwindow, config):
+        super(CalendarPrintDialog, self).__init__(mainwindow, -1, 'Print Calendar')
+        self.__cal_widget=calwidget
+        self.__xcp=self.__html=self.__dns=None
+        self.__date_changed=False
+        self.__tmp_file=common.gettempfilename("htm")
+        # main box sizer
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        # the print range box
+        sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Print Range'),
+                               wx.VERTICAL)
+        gs=wx.FlexGridSizer(-1, 2, 5, 5)
+        gs.AddGrowableCol(1)
+        gs.Add(wx.StaticText(self, -1, 'Start:'), 0, wx.ALL, 0)
+        self.__start_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        wx.EVT_DATE_CHANGED(self, self.__start_date.GetId(),
+                            self.OnDateChanged)
+        gs.Add(self.__start_date, 0, wx.ALL, 0)
+        gs.Add(wx.StaticText(self, -1, 'End:'), 0, wx.ALL, 0)
+        self.__end_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        wx.EVT_DATE_CHANGED(self, self.__end_date.GetId(),
+                            self.OnDateChanged)
+        gs.Add(self.__end_date, 0, wx.ALL, 0)
+        sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(sbs, 1, wx.EXPAND|wx.ALL, 5)
+        # and the bottom buttons
+        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        for b in (('Print', -1, self.OnPrint),
+                  ('Page Setup', -1, self.OnPageSetup),
+                  ('Print Preview', -1, self.OnPrintPreview),
+                  ('Help', wx.ID_HELP, self.OnHelp),
+                  ('Close', wx.ID_CANCEL, self.OnClose)):
+            btn=wx.Button(self, b[1], b[0])
+            hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+            if b[2] is not None:
+                wx.EVT_BUTTON(self, btn.GetId(), b[2])
+        # all done
+        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def __gen_print_data(self):
+        if not self.__date_changed and self.__html is not None:
+            # already generate the print data, no changes needed
+            return
+        dt_start=self.__start_date.GetValue()
+        dt_end=self.__end_date.GetValue()
+        if not dt_start.IsValid() or not dt_end.IsValid():
+            # invalid print range
+            return
+        # tell the calendar widget to give me the dict I need
+        print_dict=self.__cal_widget.get_print_data(dt_start, dt_end)
+        # generate the html data
+        if self.__xcp is None:
+            self.__xcp=xyaptu.xcopier(None)
+            tmpl=open(guihelper.getresourcefile(self.__regular_template),
+                      'rt').read()
+            self.__xcp.setupxcopy(tmpl)
+        if self.__dns is None:
+            self.__dns={ 'common': __import__('common') }
+            self.__dns['guihelper']=__import__('guihelper')
+            self.__dns['events']=[]
+        self.__dns['events']=print_dict
+        self.__html=self.__xcp.xcopywithdns(self.__dns.copy())
+        self.__date_changed=False
+
+    def OnDateChanged(self, _):
+        self.__date_changed=True
+    def OnPrint(self, _):
+        self.__gen_print_data()
+        wx.GetApp().htmlprinter.PrintText(self.__html)
+    def OnPageSetup(self, _):
+        wx.GetApp().htmlprinter.PageSetup()
+    def OnPrintPreview(self, _):
+        self.__gen_print_data()
+##        wx.GetApp().htmlprinter.PreviewText(self.__html)
+        file(self.__tmp_file, 'wt').write(self.__html)
+        webbrowser.open('file://localhost/'+self.__tmp_file)
+    def OnHelp(self, _):
+        pass
+    def OnClose(self, _):
+        try:
+            # remove the temp file, ignore exception if file does not exist
+            os.remove(self.__tmp_file)
+        except:
+            pass
+        self.EndModal(wx.ID_CANCEL)

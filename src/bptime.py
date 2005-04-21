@@ -91,6 +91,23 @@ class BPTime(object):
                                 self.__date.day)
         return s
 
+    def time_str(self, am_pm=True):
+        if self.__time is None:
+            s=''
+        else:
+            h=self.__time.hour
+            if am_pm:
+                if h>11:
+                    ampm_str='pm'
+                else:
+                    ampm_str='am'
+                if h>12:
+                    h-=12
+                s='%02d:%02d%s'%(h, self.__time.minute, ampm_str)
+            else:
+                s='%02d:%02d'%(h, self.__time.minute)
+        return s
+
     def get(self):
         if self.__date is None:
             t=(0, 0, 0)
