@@ -142,7 +142,7 @@ class DetectPhone(object):
                e['model'] is None:
                 continue
             if phone_manufacturer in e['manufacturer'] and \
-               phone_model==e['model']:
+               phone_model==e['model'][:len(phone_model)]:
                 return k
             
     def detect(self, using_port=None):
