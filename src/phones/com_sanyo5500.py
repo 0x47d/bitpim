@@ -53,6 +53,9 @@ class Profile(com_sanyonewer.Profile):
 
     protocolclass=p_sanyo5500
     serialsname='scp5500'
+    phone_manufacturer='SANYO'
+    phone_model='SCP-5500/US'
+    # GMR: 1.010SP   ,10024
 
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)
