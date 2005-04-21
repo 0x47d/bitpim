@@ -1,0 +1,155 @@
+<html>
+
+<head>
+<meta name="generator" content="Corel WordPerfect 12">
+<meta http-equiv="content-Type" content="text/html; charset=utf-8">
+
+<style>
+table
+{
+	border-collapse: collapse;
+	border-spacing: 0pt;
+	border-color: black;
+	empty-cells: show;
+	font-family: "Times New Roman", serif;
+	font-size: 12pt;
+	font-weight: normal;
+	font-style: normal
+}
+
+td
+{
+	border-color: black
+}
+
+td.table1column1
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column2
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column3
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column4
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column5
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column6
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column7
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+td.table1column8
+{
+	padding-left: 0.03in;
+	padding-right: 0.03in;
+	border: 0.0133333in solid
+}
+
+p
+{
+	margin-top: 0px;
+	margin-bottom: 1px
+}
+
+body
+{
+	font-family: "Times New Roman", serif;
+	font-size: 12pt;
+	font-weight: normal;
+	font-style: normal
+}
+</style>
+
+</head>
+
+<BODY><TABLE><TR><TD>
+<table width="100%" cellpadding="6" cellspacing="0">
+<tr>
+<td colspan="2" class="table1column2" width="14%" style="padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-weight: bold"><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif">Date/Day</span></span></span></p>
+</td>
+<td class="table1column3" width="13%" style="border-right: none; padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">Start</span></span></span></p>
+</td>
+<td class="table1column4" width="4%" style="border-right: none; border-left: none; padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">to</span></span></span></p>
+</td>
+<td class="table1column5" width="12%" style="border-left: none; padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">End</span></span></span></p>
+</td>
+<td class="table1column6" width="41%" style="padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">Description</span></span></span></p>
+</td>
+<td class="table1column7" width="10%" style="padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">Repeat</span></span></span></p>
+</td>
+<td class="table1column8" width="6%" style="padding-top: 0.03in; padding-bottom: 0.02in; background-color: #c0c0c0" align="center" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">Alarm</span></span></span></p>
+</td>
+</tr>
+
+<py-open code="for m in events:"/>
+
+<tr>
+<td colspan="8" class="table1column8" width="100%" style="border-left: none; border-right: none" valign="top"><p><span style="font-size: 11pt"><span style="font-family: 'Arial', sans-serif"></span></span><span style="font-family: 'Arial', sans-serif"><span style="font-weight: bold">${m[0]}</span></span></p>
+</td>
+</tr>
+
+<py-open code="for n in m[1]:"/>
+<tr>
+<td class="table1column1" width="6%" style="border-right: none; padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-weight: bold"><span style="font-size: 11pt">${n[0]}</span></span></p>
+</td>
+<td class="table1column2" width="8%" style="border-left: none; padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">${n[1]}</span></p>
+</td>
+<td class="table1column3" width="13%" style="border-right: none; padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">${n[2]}</span></p>
+</td>
+<td class="table1column4" width="4%" style="border-right: none; border-left: none; padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">&#8211;</span></p>
+</td>
+<td class="table1column5" width="12%" style="border-left: none; padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">${n[4]}</span></p>
+</td>
+<td class="table1column6" width="41%" style="padding-top: 0.03in; padding-bottom: 0.01in" valign="top"><p><span style="font-size: 11pt">${n[5]}</span></p>
+</td>
+<td class="table1column7" width="10%" style="padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">${n[6]}</span></p>
+</td>
+<td class="table1column8" width="6%" style="padding-top: 0.03in; padding-bottom: 0.01in" align="center" valign="top"><p><span style="font-size: 11pt">${n[7]}</span></p>
+</td>
+</tr>
+
+<py-close/>
+
+<py-close/>
+
+</table>
+<br>
+<br>
+<p><span style="font-size: 10pt">&#8220;Repeat&#8221; denotes events that are repeated daily (D), weekly (W), monthly (M) or yearly (Y).</span></p>
+<p><span style="font-size: 10pt">&#8220;Alarm&#8221; indicated the time in advance of the event that the phone&#8217;s alarm will sound.</span></p>
+</TD></TR></TABLE></BODY><BR>
+
+</html>
