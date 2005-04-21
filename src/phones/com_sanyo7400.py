@@ -58,6 +58,8 @@ class Profile(com_sanyonewer.Profile):
 
     protocolclass=p_sanyo7400
     serialsname='mm7400'
+    phone_manufacturer='SANYO'
+    phone_model='SCP-7400/US'
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
