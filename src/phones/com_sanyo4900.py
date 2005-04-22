@@ -49,6 +49,9 @@ class Profile(com_sanyo.Profile):
 
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-4900/US'
+    # GMR: 1.057SP   ,10018
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=128
