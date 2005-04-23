@@ -242,7 +242,7 @@ def check_update(update_url=None, current_version=None,
         latest_version=''
     if s is not None:
         # error messages being return, display them
-        dlg=wx.MessageDialog(None, s, 'BitPim Update', wx.OK|wx.ICON_ERROR)
+        dlg=wx.MessageDialog(None, s, 'BitPim Update', wx.OK|wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
     return latest_version
