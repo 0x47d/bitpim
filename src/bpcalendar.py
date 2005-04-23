@@ -1090,7 +1090,7 @@ class CalendarPrintDialog(wx.Dialog):
                             self.OnDateChanged)
         gs.Add(self.__end_date, 0, wx.ALL, 0)
         sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(sbs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(sbs, 0, wx.ALL, 5)
         # and the bottom buttons
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
