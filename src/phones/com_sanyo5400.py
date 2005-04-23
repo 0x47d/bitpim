@@ -43,8 +43,10 @@ class Phone(com_sanyonewer.Phone):
 
 class Profile(com_sanyonewer.Profile):
 
-    protocolclass=p_sanyo5400
-    serialsname='scp5400'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-5400/US'
 
     def __init__(self):
         com_sanyonewer.Profile.__init__(self)

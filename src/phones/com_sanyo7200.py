@@ -44,8 +44,10 @@ class Phone(com_sanyo.Phone):
 
 class Profile(com_sanyo.Profile):
 
-    protocolclass=p_sanyo7200
-    serialsname='scp7200'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-7200/US'
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=128

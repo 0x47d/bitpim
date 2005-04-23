@@ -47,6 +47,8 @@ class Profile(com_sanyo.Profile):
 
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-5300/US'
 
     WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=144
