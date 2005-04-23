@@ -60,8 +60,10 @@ class Phone(com_sanyonewer.Phone):
 
 class Profile(com_sanyonewer.Profile):
 
-    protocolclass=p_sanyo4920
-    serialsname='rl4920'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-4920/US'
 
     WALLPAPER_WIDTH=128
     WALLPAPER_HEIGHT=112
