@@ -21,6 +21,7 @@ import sys
 import shutil
 import types
 import datetime
+import sha
 
 # wx modules
 import wx
@@ -831,9 +832,11 @@ class MainWindow(wx.Frame):
         self.DoCheckUpdate()
 
     def SetPhoneModelStatus(self):
+        owner=self.config.Read('owner_name', '')
         phone=self.config.Read('phonetype', 'None')
         port=self.config.Read('lgvx4400port', 'None')
-        self.GetStatusBar().set_phone_model(phone+'/'+port)
+        self.GetStatusBar().set_phone_model(
+            '%s %s/%s'%(owner, phone, port))
 
     def OnPhoneInfo(self, _):
         self.MakeCall(Request(self.wt.getphoneinfo),
@@ -860,6 +863,32 @@ class MainWindow(wx.Frame):
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         self.MakeCall(Request(self.wt.detectphone, using_port),
                       Callback(self.OnDetectPhoneReturn))
+    def __get_owner_name(self, esn):
+        """ retrieve or ask user for the owner's name of this phone
+        """
+        if esn is None:
+            return None
+        # esn is found, check if we detected this phone before
+        phone_id='phones/'+sha.new(esn).hexdigest()
+        phone_name=self.config.Read(phone_id, '<None/>')
+        s=None
+        if phone_name=='<None/>':
+            # not seen before
+            dlg=guiwidgets.AskPhoneNameDialog(
+                self, 'A new phone has been detected,\n'
+                "Would you like to enter the owner's name:")
+            r=dlg.ShowModal()
+            if r==wx.ID_OK:
+                # user gave a name
+                s=dlg.GetValue()
+            elif r==wx.ID_CANCEL:
+                s=''
+            if s is not None:
+                self.config.Write(phone_id, s)
+            dlg.Destroy()
+            return s
+        return phone_name
+        
     def OnDetectPhoneReturn(self, exception, r):
         self.OnBusyEnd()
         if self.HandleException(exception): return
@@ -868,6 +897,13 @@ class MainWindow(wx.Frame):
                           'Phone Detection Failed', wx.OK)
         else:
             import pubsub
+            owner_name=self.__get_owner_name(r.get('phone_esn', None))
+            if owner_name is None or not len(owner_name):
+                owner_name='phone model'
+                self.config.Write('owner_name', '')
+            else:
+                owner_name+="'s"
+                self.config.Write('owner_name', owner_name)
             self.config.Write("phonetype", r['phone_name'])
             self.commportsetting=str(r['port'])
             self.wt.clearcomm()
@@ -876,7 +912,8 @@ class MainWindow(wx.Frame):
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
             self.SetPhoneModelStatus()
-            wx.MessageBox('Found phone model %s on %s'%(r['phone_name'], r['port']),
+            wx.MessageBox('Found %s %s on %s'%(owner_name, r['phone_name'],
+                                               r['port']),
                           'Phone Detection', wx.OK)
         
     if guihelper.IsMSWindows():

@@ -52,7 +52,6 @@ port associated with that phone, otherwise just return None.
 # standard modules
 
 # wx modules
-import wx
 
 # BitPim modules
 import comdiagnose

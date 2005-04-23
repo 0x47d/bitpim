@@ -1826,6 +1826,8 @@ def save_size(confname, myRect):
     confobj.Flush()
 
 class LogProgressDialog(wx.ProgressDialog):
+    """ display log string and progress bar at the same time
+    """
     def __init__(self, title, message, maximum=100, parent=None,
                  style=wx.PD_AUTO_HIDE|wx.PD_APP_MODAL):
         super(LogProgressDialog, self).__init__(title, message, maximum,
@@ -1836,3 +1838,36 @@ class LogProgressDialog(wx.ProgressDialog):
         super(LogProgressDialog, self).Update(value, newmsg, skip)
     def log(self, msgstr):
         super(LogProgressDialog, self).Update(self.__progress_value, msgstr)
+
+class AskPhoneNameDialog(wx.Dialog):
+    def __init__(self, parent, message, caption="Enter phone owner's name"):
+        """ Ask a user to enter an owner's name of a phone.
+        Similar to the wx.TextEntryDialog but has 3 buttons, Ok, No Thanks, and
+        Maybe latter.
+        """
+        super(AskPhoneNameDialog, self).__init__(parent, -1, caption)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(wx.StaticText(self, -1, message), 0, wx.ALL, 5)
+        self.__text_ctrl=wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
+        vbs.Add(self.__text_ctrl,  0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        ok_btn=wx.Button(self, wx.ID_OK, 'OK')
+        hbs.Add(ok_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        cancel_btn=wx.Button(self, wx.ID_CANCEL, 'No Thanks')
+        hbs.Add(cancel_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        maybe_btn=wx.Button(self, wx.NewId(), 'Maybe next time')
+        hbs.Add(maybe_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        vbs.Add(hbs, 1, wx.ALL, 5)
+        wx.EVT_BUTTON(self, maybe_btn.GetId(), self.__OnMaybe)
+        wx.EVT_TEXT_ENTER(self, self.__text_ctrl.GetId(), self.__OnTextEnter)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+    def GetValue(self):
+        return self.__text_ctrl.GetValue()
+    def __OnMaybe(self, evt):
+        self.EndModal(evt.GetId())
+    def __OnTextEnter(self, _):
+        self.EndModal(wx.ID_OK)
+
