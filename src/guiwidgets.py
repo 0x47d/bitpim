@@ -1063,6 +1063,7 @@ class FileView(wx.Panel):
         self.mainwindow=mainwindow
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
+        self.__dragging=False
 
         # use the aggregatedisplay to do the actual item display
         self.aggdisp=aggregatedisplay.Display(self, self, watermark) # we are our own datasource
@@ -1075,6 +1076,9 @@ class FileView(wx.Panel):
         self.motionpos=None
         wx.EVT_MOUSE_EVENTS(self.aggdisp, self.OnMouseEvent)
         self.tipwindow=None
+        if guihelper.IsMSWindows():
+            # turn on drag-and-drag for windows
+            wx.EVT_MOTION(self.aggdisp, self.OnStartDrag)
 
         # Menus
 
@@ -1137,6 +1141,29 @@ class FileView(wx.Panel):
             wx.Bell()
         else:
             wx.Execute(cmd, wx.EXEC_ASYNC)
+
+    if guihelper.IsMSWindows():
+        # drag-and-drop files only works in Windows
+        def OnStartDrag(self, evt):
+            if not evt.LeftIsDown():
+                return
+            items=self.GetSelectedItems()
+            if not len(items):
+                return
+            drag_source=wx.DropSource(self)
+            file_names=wx.FileDataObject()
+            for item in items:
+                file_names.AddFile(item.filename)
+            drag_source.SetData(file_names)
+            self.__dragging=True
+            res=drag_source.DoDragDrop(wx.Drag_AllowMove)
+            self.__dragging=False
+            # check of any of the files have been removed,
+            # can't trust result returned by DoDragDrop
+            for item in items:
+                if not os.access(item.filename, os.F_OK):
+                    # item has been moved, remove from index
+                    item.RemoveFromIndex()
 
     def OnMouseEvent(self, evt):
         self.motionpos=evt.GetPosition()
@@ -1269,6 +1296,9 @@ class FileView(wx.Panel):
         # in the notebook that accepts filedrop receives these
         # files, not the most visible one.  We find the currently
         # viewed tab in the notebook and send the files there
+        if self.__dragging:
+            # I'm the drag source, forget 'bout it !
+            return
         target=self # fallback
         t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
         if isinstance(t, FileView):
