@@ -614,46 +614,6 @@ class Calendar(calendarcontrol.Calendar):
         dlg.ShowModal()
         dlg.Destroy()
 
-    def get_print_data(self, dt_start, dt_end):
-        """ generate a dict suitable for printing"""
-        dt_index=dt_start
-        one_day=wx.DateSpan(days=1)
-        current_month=None
-        res=a_month=month_events=[]
-        while dt_index<=dt_end:
-            y=dt_index.GetYear()
-            m=dt_index.GetMonth()
-            d=dt_index.GetDay()
-            entries=self.getentrydata(y, m+1, d)
-            dt_index+=one_day
-            if not len(entries):
-                # no events on this day
-                continue
-            entries.sort(CalendarEntry.cmp_by_time)
-            if m!=current_month:
-                # save the current month
-                if len(month_events):
-                    a_month.append(month_events)
-                    res.append(a_month)
-                # start a new month
-                current_month=m
-                a_month=['%s %d'%(dt_index.GetMonthName(m), y)]
-                month_events=[]
-            # go through the entries and build a list of print data
-            for i,e in enumerate(entries):
-                if i:
-                    date_str=day_str=''
-                else:
-                    date_str=str(d)
-                    day_str=dt_index.GetWeekDayName(
-                        dt_index.GetWeekDay()-1, wx.DateTime.Name_Abbr)
-                month_events.append([date_str, day_str]+e.print_data)
-        if len(month_events):
-            # data left in the list
-            a_month.append(month_events)
-            res.append(a_month)
-        return res
-
     def getdata(self, dict):
         """Return underlying calendar data in bitpim format
 
@@ -1065,18 +1025,23 @@ class Calendar(calendarcontrol.Calendar):
 
 #-------------------------------------------------------------------------------
 class CalendarPrintDialog(wx.Dialog):
+
     __regular_template='cal_regular.xy'
+    __monthly_template='cal_monthly.xy'
+        
     def __init__(self, calwidget, mainwindow, config):
         super(CalendarPrintDialog, self).__init__(mainwindow, -1, 'Print Calendar')
         self.__cal_widget=calwidget
         self.__xcp=self.__html=self.__dns=None
-        self.__date_changed=False
+        self.__dt__index=self.__dt_start=self.__dt_end=None
+        self.__date_changed=self.__style_changed=False
         self.__tmp_file=common.gettempfilename("htm")
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the print range box
         sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Print Range'),
-                               wx.VERTICAL)
+                              wx.VERTICAL)
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
         gs.Add(wx.StaticText(self, -1, 'Start:'), 0, wx.ALL, 0)
@@ -1090,14 +1055,21 @@ class CalendarPrintDialog(wx.Dialog):
                             self.OnDateChanged)
         gs.Add(self.__end_date, 0, wx.ALL, 0)
         sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(sbs, 0, wx.ALL, 5)
+        hbs.Add(sbs, 0, wx.ALL, 5)
+        # thye print style box
+        self.__print_style=wx.RadioBox(self, -1, 'Print Style',
+                                       choices=['List View', 'Month View'],
+                                       style=wx.RA_SPECIFY_ROWS)
+        wx.EVT_RADIOBOX(self, self.__print_style.GetId(), self.OnStyleChanged)
+        hbs.Add(self.__print_style, 0, wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.ALL, 5)
         # and the bottom buttons
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         for b in (('Print', -1, self.OnPrint),
                   ('Page Setup', -1, self.OnPageSetup),
                   ('Print Preview', -1, self.OnPrintPreview),
-                  ('Help', wx.ID_HELP, self.OnHelp),
+##                  ('Help', wx.ID_HELP, self.OnHelp),
                   ('Close', wx.ID_CANCEL, self.OnClose)):
             btn=wx.Button(self, b[1], b[0])
             hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
@@ -1109,21 +1081,126 @@ class CalendarPrintDialog(wx.Dialog):
         self.SetAutoLayout(True)
         vbs.Fit(self)
 
+    # constant class variables
+    __one_day=wx.DateSpan(days=1)
+    __empty_day=['', []]
+    def __one_day_data(self):
+        # generate data for 1 day
+        r=[str(self.__dt_index.GetDay())]
+        events=[]
+        if self.__dt_start<=self.__dt_index<=self.__dt_end:
+            entries=self.__cal_widget.getentrydata(self.__dt_index.GetYear(),
+                                                   self.__dt_index.GetMonth()+1,
+                                                   self.__dt_index.GetDay())
+        else:
+            entries=[]
+        self.__dt_index+=self.__one_day
+        if len(entries):
+            entries.sort(CalendarEntry.cmp_by_time)
+            for e in entries:
+                print_data=e.print_data
+                events.append('%s %s'%(print_data[0], print_data[3]))
+        r.append(events)
+        return r
+    def __one_week_data(self):
+        # generate data for 1 week
+        dow=self.__dt_index.GetWeekDay()
+        if dow:
+            r=[self.__empty_day]*dow
+        else:
+            r=[]
+        for d in range(dow, 7):
+            r.append(self.__one_day_data())
+            if self.__dt_index.GetDay()==1:
+                # new month
+                break
+        return r
+    def __one_month_data(self):
+        # generate data for a month
+        m=self.__dt_index.GetMonth()
+        y=self.__dt_index.GetYear()
+        r=['%s %d'%(self.__dt_index.GetMonthName(m), y)]
+        while self.__dt_index.GetMonth()==m:
+            r.append(self.__one_week_data())
+        return r
+    def __get_monthly_data(self):
+        """ generate a dict suitable to print monthly events
+        """
+        res=[]
+        self.__dt_index=wx.DateTimeFromDMY(1, self.__dt_start.GetMonth(),
+                                           self.__dt_start.GetYear())
+        while self.__dt_index<=self.__dt_end:
+            res.append(self.__one_month_data())
+        return res
+
+    def __get_list_data(self):
+        """ generate a dict suitable for printing"""
+        self.__dt_index=wx.DateTimeFromDMY(self.__dt_start.GetDay(),
+                                    self.__dt_start.GetMonth(),
+                                    self.__dt_start.GetYear())
+        current_month=None
+        res=a_month=month_events=[]
+        while self.__dt_index<=self.__dt_end:
+            y=self.__dt_index.GetYear()
+            m=self.__dt_index.GetMonth()
+            d=self.__dt_index.GetDay()
+            entries=self.__cal_widget.getentrydata(y, m+1, d)
+            self.__dt_index+=self.__one_day
+            if not len(entries):
+                # no events on this day
+                continue
+            entries.sort(CalendarEntry.cmp_by_time)
+            if m!=current_month:
+                # save the current month
+                if len(month_events):
+                    a_month.append(month_events)
+                    res.append(a_month)
+                # start a new month
+                current_month=m
+                a_month=['%s %d'%(self.__dt_index.GetMonthName(m), y)]
+                month_events=[]
+            # go through the entries and build a list of print data
+            for i,e in enumerate(entries):
+                if i:
+                    date_str=day_str=''
+                else:
+                    date_str=str(d)
+                    day_str=self.__dt_index.GetWeekDayName(
+                        self.__dt_index.GetWeekDay()-1, wx.DateTime.Name_Abbr)
+                month_events.append([date_str, day_str]+e.print_data)
+        if len(month_events):
+            # data left in the list
+            a_month.append(month_events)
+            res.append(a_month)
+        return res
+
     def __gen_print_data(self):
-        if not self.__date_changed and self.__html is not None:
+        if not self.__date_changed and \
+           not self.__style_changed and \
+           self.__html is not None:
             # already generate the print data, no changes needed
             return
-        dt_start=self.__start_date.GetValue()
-        dt_end=self.__end_date.GetValue()
-        if not dt_start.IsValid() or not dt_end.IsValid():
+        self.__dt_start=self.__start_date.GetValue()
+        self.__dt_end=self.__end_date.GetValue()
+        if not self.__dt_start.IsValid() or not self.__dt_end.IsValid():
             # invalid print range
             return
+        print_data=(
+            (self.__regular_template, self.__get_list_data),
+            (self.__monthly_template, self.__get_monthly_data))
+        print_style=self.__print_style.GetSelection()
         # tell the calendar widget to give me the dict I need
-        print_dict=self.__cal_widget.get_print_data(dt_start, dt_end)
+        print_dict=print_data[print_style][1]()
         # generate the html data
         if self.__xcp is None:
+            # build the whole document template
             self.__xcp=xyaptu.xcopier(None)
-            tmpl=open(guihelper.getresourcefile(self.__regular_template),
+            tmpl=file(guihelper.getresourcefile(print_data[print_style][0]),
+                      'rt').read()
+            self.__xcp.setupxcopy(tmpl)
+        elif self.__style_changed:
+            # just update the template
+            tmpl=file(guihelper.getresourcefile(print_data[print_style][0]),
                       'rt').read()
             self.__xcp.setupxcopy(tmpl)
         if self.__dns is None:
@@ -1132,10 +1209,12 @@ class CalendarPrintDialog(wx.Dialog):
             self.__dns['events']=[]
         self.__dns['events']=print_dict
         self.__html=self.__xcp.xcopywithdns(self.__dns.copy())
-        self.__date_changed=False
+        self.__date_changed=self.__style_change=False
 
     def OnDateChanged(self, _):
         self.__date_changed=True
+    def OnStyleChanged(self, _):
+        self.__style_changed=True
     def OnPrint(self, _):
         self.__gen_print_data()
         wx.GetApp().htmlprinter.PrintText(self.__html)
