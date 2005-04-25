@@ -91,6 +91,10 @@ class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
+    # use for auto-detection
+    phone_manufacturer='LG Electronics Inc.'
+    phone_model='VX6000 102'
+
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
     MAX_WALLPAPER_BASENAME_LENGTH=32
