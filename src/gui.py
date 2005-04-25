@@ -916,44 +916,48 @@ class MainWindow(wx.Frame):
                                                r['port']),
                           'Phone Detection', wx.OK)
         
+    def WindowsOnDeviceChanged(self, type, name="", drives=[], flag=None):
+        if not name.lower().startswith("com"):
+            return
+        if type=='DBT_DEVICEREMOVECOMPLETE':
+            print "Device remove", name
+            # device is removed, if it's ours, clear the port
+            if name==self.config.Read('lgvx4400port', '') and \
+               self.wt is not None:
+                self.wt.clearcomm()
+            return
+        if type!='DBT_DEVICEARRIVAL':
+            # not interested
+            return
+        print 'New device on port:',name
+        if wx.IsBusy():
+            # current phone operation ongoing, abort this
+            return
+        # check the new device
+        self.__detect_phone(name)
+
+    def MyWndProc(self, hwnd, msg, wparam, lparam):
+
+        if msg==win32con.WM_DEVICECHANGE:
+            type,params=DeviceChanged(wparam, lparam).GetEventInfo()
+            self.OnDeviceChanged(type, **params)
+            return True
+
+        # Restore the old WndProc.  Notice the use of win32api
+        # instead of win32gui here.  This is to avoid an error due to
+        # not passing a callable object.
+        if msg == win32con.WM_DESTROY:
+            win32api.SetWindowLong(self.GetHandle(),
+                                   win32con.GWL_WNDPROC,
+                                   self.oldwndproc)
+
+        # Pass all messages (in this case, yours may be different) on
+        # to the original WndProc
+        return win32gui.CallWindowProc(self.oldwndproc,
+                                       hwnd, msg, wparam, lparam)
+
     if guihelper.IsMSWindows():
-        # only available on Windows
-        def OnDeviceChanged(self, type, name="", drives=[], flag=None):
-            if type=='DBT_DEVICEREMOVECOMPLETE':
-                # device is removed, if it's ours, clear the port
-                if name==self.config.Read('lgvx4400port', '') and \
-                   self.wt is not None:
-                    self.wt.clearcomm()
-                return
-            if type!='DBT_DEVICEARRIVAL':
-                # not interested
-                return
-            print 'New device on port:',name
-            if wx.IsBusy():
-                # current phone operation ongoing, abort this
-                return
-            # check the new device
-            self.__detect_phone(name)
-
-        def MyWndProc(self, hwnd, msg, wparam, lparam):
-
-            if msg==win32con.WM_DEVICECHANGE:
-                type,params=DeviceChanged(wparam, lparam).GetEventInfo()
-                self.OnDeviceChanged(type, **params)
-                return True
-            
-            # Restore the old WndProc.  Notice the use of win32api
-            # instead of win32gui here.  This is to avoid an error due to
-            # not passing a callable object.
-            if msg == win32con.WM_DESTROY:
-                win32api.SetWindowLong(self.GetHandle(),
-                                       win32con.GWL_WNDPROC,
-                                       self.oldwndproc)
-
-            # Pass all messages (in this case, yours may be different) on
-            # to the original WndProc
-            return win32gui.CallWindowProc(self.oldwndproc,
-                                           hwnd, msg, wparam, lparam)
+        OnDeviceChanged=WindowsOnDeviceChanged
 
     def SetVersionsStatus(self):
         current_v=version.version
