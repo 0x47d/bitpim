@@ -50,6 +50,11 @@ port associated with that phone, otherwise just return None.
 """
 
 # standard modules
+try:
+    import threading
+    has_threading=True
+except:
+    has_threading=False
 
 # wx modules
 
@@ -123,10 +128,12 @@ class DetectPhone(object):
             self.log('Failed to open port: '+port)
             return r
         r['mode_modem']=self.__get_mode_modem(c)
-        r['manufacturer']=self.__get_manufacturer(c)
-        r['model']=self.__get_model(c)
-        r['firmware_version']=self.__get_firmware_version(c)
-        r['esn']=self.__get_esn(c)
+        if r['mode_modem'] is not None:
+            # in modem mode, ok to try other info
+            r['manufacturer']=self.__get_manufacturer(c)
+            r['model']=self.__get_model(c)
+            r['firmware_version']=self.__get_firmware_version(c)
+            r['esn']=self.__get_esn(c)
         c.close()
         return r
 
@@ -143,19 +150,37 @@ class DetectPhone(object):
             if phone_manufacturer in e['manufacturer'] and \
                phone_model==e['model'][:len(phone_model)]:
                 return k
-            
+
+    def do_get_data(self, port):
+        self.log('Gathering data on port: '+port)
+        self.__data[port]=self.__get_data(port)
+        self.log('Done on port: '+port)
+
     def detect(self, using_port=None):
         # start the detection process
         # 1st, get the list of available ports
         coms=comscan.comscan()
+        available_modem_coms=[x['name'] for x in coms if x['available'] \
+                              and x['class']=='modem']
         if using_port is None:
             available_coms=[x['name'] for x in coms if x['available']]
         else:
             available_coms=[using_port]
+            available_modem_coms=[x for x in available_coms if x in available_modem_coms]
         # loop through each port and gather data
-        for e in available_coms:
-            self.log('Checking on port: '+e)
-            self.__data[e]=self.__get_data(e)
+        self.log('Available ports: '+str(available_coms))
+        self.log('Available modem ports: '+str(available_modem_coms))
+        # only try those AT commands on modem ports
+        if has_threading:
+            threads=[threading.Thread(target=self.do_get_data, args=(e,)) \
+                     for e in available_modem_coms]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        else:
+            for e in available_modem_coms:
+                self.do_get_data(e)
         # go through each phone and ask it
         pm=guiwidgets.ConfigDialog.phonemodels
         models=pm.keys()
