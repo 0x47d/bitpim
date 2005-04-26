@@ -71,6 +71,8 @@ class DetectPhone(object):
         # get standard commport parameters
         self.__log=log
         self.__data={}
+        if has_threading:
+            self.__data_lock=threading.Lock()
 
     def log(self, log_str):
         if self.__log is None:
@@ -153,7 +155,12 @@ class DetectPhone(object):
 
     def do_get_data(self, port):
         self.log('Gathering data on port: '+port)
-        self.__data[port]=self.__get_data(port)
+        r=self.__get_data(port)
+        if has_threading:
+            self.__data_lock.acquire()
+        self.__data[port]=r
+        if has_threading:
+            self.__data_lock.release()
         self.log('Done on port: '+port)
 
     def detect(self, using_port=None):
