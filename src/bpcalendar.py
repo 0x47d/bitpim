@@ -545,8 +545,8 @@ class CalendarEntry(object):
         [4]: Repeat Type, [5]: Alarm
         """
         if self.allday:
-            t0='All'
-            t1='Day'
+            t0='All Day'
+            t1=''
         else:
             t0=self.__data['start'].time_str()
             t1=self.__data['end'].time_str()
@@ -1099,7 +1099,7 @@ class CalendarPrintDialog(wx.Dialog):
             entries.sort(CalendarEntry.cmp_by_time)
             for e in entries:
                 print_data=e.print_data
-                events.append('%s %s'%(print_data[0], print_data[3]))
+                events.append('%s: %s'%(print_data[0], print_data[3]))
         r.append(events)
         return r
     def __one_week_data(self):
