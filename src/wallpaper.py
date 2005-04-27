@@ -76,8 +76,8 @@ class WallpaperView(guiwidgets.FileView):
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
 
 
-        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
-        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
+##        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
+##        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
 
         self.organizeinfo={}
         last_mode=mainwindow.config.Read('imageorganizedby',
@@ -318,16 +318,19 @@ class WallpaperView(guiwidgets.FileView):
             self.modified=True
         self.OnRefresh()
                     
-    def OnPaste(self, _=None):
+    def OnPaste(self, evt=None):
+        super(WallpaperView, self).OnPaste(evt)
+        if not wx.TheClipboard.Open():
+            # can't access the clipboard
+            return
+        if not wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_BITMAP)):
+            return
         do=wx.BitmapDataObject()
-        wx.TheClipboard.Open()
         success=wx.TheClipboard.GetData(do)
         wx.TheClipboard.Close()
-        if not success:
-            wx.MessageBox("There isn't an image in the clipboard", "Error")
-            return
-        # work out a name for it
-        self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), None)
+        if success:
+            # work out a name for it
+            self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), None)
 
     def AddToIndex(self, file, origin):
         for i in self._data['wallpaper-index']:

@@ -1086,6 +1086,8 @@ class FileView(wx.Panel):
         self.itemmenu.Append(guihelper.ID_FV_OPEN, "Open")
         self.itemmenu.Append(guihelper.ID_FV_SAVE, "Save ...")
         self.itemmenu.AppendSeparator()
+        if guihelper.IsMSWindows():
+            self.itemmenu.Append(guihelper.ID_FV_COPY, "Copy")
         self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.itemmenu.AppendSeparator()
         # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
@@ -1095,14 +1097,18 @@ class FileView(wx.Panel):
         if self.organizemenu is not None:
             self.bgmenu.AppendMenu(wx.NewId(), "Organize by", self.organizemenu)
         self.bgmenu.Append(guihelper.ID_FV_ADD, "Add ...")
+        self.bgmenu.Append(guihelper.ID_FV_PASTE, "Paste")
         self.bgmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OPEN, self.OnLaunch)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_SAVE, self.OnSave)
+        if guihelper.IsMSWindows():
+            wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_COPY, self.OnCopy)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
 
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_ADD, self.OnAdd)
+        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh)
 
         wx.EVT_RIGHT_UP(self.aggdisp, self.OnRightClick)
@@ -1233,6 +1239,29 @@ class FileView(wx.Panel):
                 for item in items:
                     shutil.copyfile(item.filename, os.path.join(dlg.GetPath(), basename(item.filename)))
             dlg.Destroy()
+
+    if guihelper.IsMSWindows():
+        def OnCopy(self, _):
+            items=self.GetSelectedItems()
+            file_names=wx.FileDataObject()
+            for item in items:
+                file_names.AddFile(item.filename)
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(file_names)
+                wx.TheClipboard.Close()
+
+    def OnPaste(self, _=None):
+        if not wx.TheClipboard.Open():
+            # can't access the clipboard
+            return
+        if not wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)):
+            # no filename data to get
+            return
+        file_names=wx.FileDataObject()
+        has_data=wx.TheClipboard.GetData(file_names)
+        wx.TheClipboard.Close()
+        if has_data:
+            self.OnAddFiles(file_names.GetFilenames())
 
     def OnDelete(self,_):
         items=self.GetSelectedItems()
