@@ -50,12 +50,8 @@ port associated with that phone, otherwise just return None.
 """
 
 # standard modules
-try:
-    import threading
-    has_threading=True
-except:
-    has_threading=False
 import Queue
+import threading
 
 # wx modules
 
@@ -72,10 +68,9 @@ class DetectPhone(object):
         # get standard commport parameters
         self.__log=log
         self.__data={}
-        if has_threading:
-            self.__data_lock=threading.Lock()
-            self.__q_log=Queue.Queue(0)
-            self.__q_on=False
+        self.__data_lock=threading.Lock()
+        self.__q_log=Queue.Queue(0)
+        self.__q_on=False
 
     def log(self, log_str):
         if self.__log is None:
@@ -85,6 +80,14 @@ class DetectPhone(object):
                 self.__q_log.put_nowait(log_str)
             else:
                 self.__log.log(log_str)
+    def logdata(self, log_str, log_data):
+        if self.__log is None:
+            print log_str,log_data
+        else:
+            if self.__q_on:
+                self.__q_log.put_nowait((log_str, log_data))
+            else:
+                self.__log.logdata(log_str, log_data)
 
     def __get_mode_modem(self, comm):
         """ check if this port supports mode modem"""
@@ -130,13 +133,13 @@ class DetectPhone(object):
             'manufacturer': None, 'model': None, 'firmware_version': None,
             'esn': None, 'firmwareresponse': None }
         try:
-            c=commport.CommConnection(None, port,
+            c=commport.CommConnection(self, port,
                                       timeout=self.__default_timeout)
         except:
             self.log('Failed to open port: '+port)
             return r
         r['mode_modem']=self.__get_mode_modem(c)
-        if r['mode_modem'] is not None:
+        if r['mode_modem']:
             # in modem mode, ok to try other info
             r['manufacturer']=self.__get_manufacturer(c)
             r['model']=self.__get_model(c)
@@ -162,11 +165,9 @@ class DetectPhone(object):
     def do_get_data(self, port):
         self.log('Gathering data on port: '+port)
         r=self.__get_data(port)
-        if has_threading:
-            self.__data_lock.acquire()
+        self.__data_lock.acquire()
         self.__data[port]=r
-        if has_threading:
-            self.__data_lock.release()
+        self.__data_lock.release()
         self.log('Done on port: '+port)
 
     def detect(self, using_port=None):
@@ -184,20 +185,24 @@ class DetectPhone(object):
         self.log('Available ports: '+str(available_coms))
         self.log('Available modem ports: '+str(available_modem_coms))
         # only try those AT commands on modem ports
-        if has_threading:
-            self.__q_on=True
-            threads=[threading.Thread(target=self.do_get_data, args=(e,)) \
-                     for e in available_modem_coms]
-            for t in threads:
-                t.start()
-            for t in threads:
-                t.join()
-            self.__q_on=False
-            while not self.__q_log.empty():
-                self.log(self.__q_log.get_nowait())
-        else:
-            for e in available_modem_coms:
-                self.do_get_data(e)
+        # using threads
+        self.__q_on=True
+        threads=[threading.Thread(target=self.do_get_data, args=(e,)) \
+                 for e in available_modem_coms]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.__q_on=False
+        while not self.__q_log.empty():
+            q=self.__q_log.get_nowait()
+            if isinstance(q, (list, tuple)):
+                self.logdata(*q)
+            else:
+                self.log(q)
+        # non-thread version
+##        for e in available_modem_coms:
+##            self.do_get_data(e)
         # go through each phone and ask it
         pm=guiwidgets.ConfigDialog.phonemodels
         models=pm.keys()
@@ -229,4 +234,3 @@ class DetectPhone(object):
                      'phone_esn': self.__data[found_port]['esn'] }
     def get(self):
         return self.__data
-
