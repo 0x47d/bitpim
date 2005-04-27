@@ -118,6 +118,7 @@ import wx.lib.masked.textctrl
 import wx.lib.intctrl
 
 # my modules
+import bphtml
 import bptime
 import calendarcontrol
 import calendarentryeditor
@@ -1027,7 +1028,9 @@ class Calendar(calendarcontrol.Calendar):
 class CalendarPrintDialog(wx.Dialog):
 
     __regular_template='cal_regular.xy'
+    __regular_style='cal_regular_style.xy'
     __monthly_template='cal_monthly.xy'
+    __monthly_style='cal_monthly_style.xy'
         
     def __init__(self, calwidget, mainwindow, config):
         super(CalendarPrintDialog, self).__init__(mainwindow, -1, 'Print Calendar')
@@ -1186,11 +1189,11 @@ class CalendarPrintDialog(wx.Dialog):
             # invalid print range
             return
         print_data=(
-            (self.__regular_template, self.__get_list_data),
-            (self.__monthly_template, self.__get_monthly_data))
+            (self.__regular_template, self.__regular_style, self.__get_list_data),
+            (self.__monthly_template, self.__monthly_style, self.__get_monthly_data))
         print_style=self.__print_style.GetSelection()
         # tell the calendar widget to give me the dict I need
-        print_dict=print_data[print_style][1]()
+        print_dict=print_data[print_style][2]()
         # generate the html data
         if self.__xcp is None:
             # build the whole document template
@@ -1208,7 +1211,19 @@ class CalendarPrintDialog(wx.Dialog):
             self.__dns['guihelper']=__import__('guihelper')
             self.__dns['events']=[]
         self.__dns['events']=print_dict
-        self.__html=self.__xcp.xcopywithdns(self.__dns.copy())
+        self.__dns['date_range']='%s - %s'%\
+                                  (self.__dt_start.FormatDate(),
+                                   self.__dt_end.FormatDate())
+        html=self.__xcp.xcopywithdns(self.__dns.copy())
+        # apply styles
+        sd={'styles': {}, '__builtins__': __builtins__ }
+        execfile(guihelper.getresourcefile(print_data[print_style][1]), sd, sd)
+        try:
+            self.__html=bphtml.applyhtmlstyles(html, sd['styles'])
+        except:
+            if __debug__:
+                file('debug.html', 'wt').write(html)
+            raise
         self.__date_changed=self.__style_change=False
 
     def OnDateChanged(self, _):
@@ -1222,9 +1237,9 @@ class CalendarPrintDialog(wx.Dialog):
         wx.GetApp().htmlprinter.PageSetup()
     def OnPrintPreview(self, _):
         self.__gen_print_data()
-##        wx.GetApp().htmlprinter.PreviewText(self.__html)
-        file(self.__tmp_file, 'wt').write(self.__html)
-        webbrowser.open('file://localhost/'+self.__tmp_file)
+        wx.GetApp().htmlprinter.PreviewText(self.__html)
+##        file(self.__tmp_file, 'wt').write(self.__html)
+##        webbrowser.open('file://localhost/'+self.__tmp_file)
     def OnHelp(self, _):
         pass
     def OnClose(self, _):
