@@ -55,6 +55,7 @@ try:
     has_threading=True
 except:
     has_threading=False
+import Queue
 
 # wx modules
 
@@ -73,12 +74,17 @@ class DetectPhone(object):
         self.__data={}
         if has_threading:
             self.__data_lock=threading.Lock()
+            self.__q_log=Queue.Queue(0)
+            self.__q_on=False
 
     def log(self, log_str):
         if self.__log is None:
             print log_str
         else:
-            self.__log.log(log_str)
+            if self.__q_on:
+                self.__q_log.put_nowait(log_str)
+            else:
+                self.__log.log(log_str)
 
     def __get_mode_modem(self, comm):
         """ check if this port supports mode modem"""
@@ -124,7 +130,7 @@ class DetectPhone(object):
             'manufacturer': None, 'model': None, 'firmware_version': None,
             'esn': None, 'firmwareresponse': None }
         try:
-            c=commport.CommConnection(self.__log, port,
+            c=commport.CommConnection(None, port,
                                       timeout=self.__default_timeout)
         except:
             self.log('Failed to open port: '+port)
@@ -179,12 +185,16 @@ class DetectPhone(object):
         self.log('Available modem ports: '+str(available_modem_coms))
         # only try those AT commands on modem ports
         if has_threading:
+            self.__q_on=True
             threads=[threading.Thread(target=self.do_get_data, args=(e,)) \
                      for e in available_modem_coms]
             for t in threads:
                 t.start()
             for t in threads:
                 t.join()
+            self.__q_on=False
+            while not self.__q_log.empty():
+                self.log(self.__q_log.get_nowait())
         else:
             for e in available_modem_coms:
                 self.do_get_data(e)

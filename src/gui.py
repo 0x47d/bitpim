@@ -1631,8 +1631,7 @@ class WorkerThread(WorkerThreadFramework):
 
     def detectphone(self, using_port=None):
         self.clearcomm()
-##        p=phone_detect.DetectPhone()
-        return phone_detect.DetectPhone().detect(using_port)
+        return phone_detect.DetectPhone(self).detect(using_port)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):
