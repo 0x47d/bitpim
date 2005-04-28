@@ -12,7 +12,7 @@
 """Proposed descriptions of data usign AT commands"""
 
 from prototypes import *
-# from p_samsung import *
+from p_samsung_packet import *
 
 # We use LSB for all integer like fields in diagnostic mode
 UINT=UINTlsb
@@ -31,14 +31,6 @@ NUMGROUPS=4
 # Packets describe single line AT responses or commands with no carriage
 # returns or line feeds.
 
-PACKET phonenumber:
-    * SAMSTRING {'quotechar': None, 'default': ""} +number
-    * SAMINT {'default': 0} +secret
-
-PACKET phonebookslotresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
-    * pbentry entry
-
 PACKET pbentry:
     P STRING {'default': ""} +url
     P SAMDATE {'default': ""} +birthday
@@ -55,25 +47,14 @@ PACKET pbentry:
     * SAMSTRING email
     * SAMTIME {'terminator': None, 'default': (1980,1,1,12,0,0)} +timestamp "Use terminator None for last item"
 
-PACKET phonebookslotrequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKR='} +command
-    * SAMINT {'terminator': None} +slot "Internal Slot"
-
-PACKET phonebooksloterase:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW='} +command
-    * SAMINT {'terminator': None} +slot "Internal Slot"
+PACKET phonebookslotresponse:
+    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
+    * pbentry entry
 
 PACKET phonebookslotupdaterequest:
     * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
     * pbentry entry
     
-PACKET phonebookslotupdateresponse:
-    * UKNOWN pad
-    
-PACKET groupnamerequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBGRR='} +command
-    * SAMINT {'terminator': None} +gid "Group #"
-
 PACKET groupnameresponse:
     * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBGRR:'} command
     * groupnameentry entry
@@ -82,12 +63,6 @@ PACKET groupnameentry:
     * SAMINT gid
     * SAMSTRING {'terminator': None} groupname
 
-PACKET groupnamesetrequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBGRW='} +command
-    * SAMINT +gid "Group #"
-    * SAMSTRING +groupname
-    * SAMINT {'terminator': None, 'default': 0} +ringtone "Ringtone assignment"
-    
 PACKET unparsedresponse:
     * UNKNOWN pad
     
