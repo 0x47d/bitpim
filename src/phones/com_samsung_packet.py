@@ -30,19 +30,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     __read_timeout=0.1
     # Calendar class vars
-    __cal_entries_range=xrange(20)
-    __cal_num_of_read_fields=7
-    __cal_num_of_write_fields=6
-    __cal_entry=0
-    __cal_start_datetime=1
-    __cal_end_datetime=2
-    # if your phone does not support and end-datetime, set this to a default value
+    # if your phone does not support and end-datetime, set this to a default
+    # value such as 19800106T000000
     # if it does support end-datetime, set this to None
-    __cal_end_datetime_value='19800106T000000'
-    __cal_datetime_stamp=3
-    __cal_alarm_type=4
-    __cal_read_name=6
-    __cal_write_name=5
+    __cal_end_datetime_value=None
     __cal_alarm_values={
         '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
     __cal_max_name_len=32
@@ -395,38 +386,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             setattr(e, k, entry[k])
         return e
 
-    def get_phone_entry(self, entry_index, alias_column=-1, num_columns=-1):
-        try:
-            s=self.comm.sendatcommand("#PBOKR=%d" % entry_index)
-            if len(s):
-                line=s[0]
-                if alias_column >= 0 and alias_column < num_columns:
-                    line=self.defrell(line, alias_column, num_columns)
-                return self.splitandunescape(line)
-        except commport.ATError:
-            pass
-        return []
-
     def get_time_stamp(self):
 
         now = time.localtime(time.time())
         return "%04d%02d%02dT%02d%02d%02d" % now[0:6]
-
-    def get_calendar_entry(self, entry_index):
-        try:
-            s=self.comm.sendatcommand('#PISHR=%d' % entry_index)
-            if len(s):
-                return self.splitandunescape(s[0])
-        except commport.ATError:
-            pass
-        return []
-
-    def save_calendar_entry(self, entry_str):
-        try:
-            self.comm.sendatcommand('#PISHW='+entry_str)
-            return True
-        except:
-            return False
 
     def extract_timedate(self, td):
         # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
@@ -463,90 +426,51 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         "Add commas so that a line has a desired number of fields"
         return s
     
-    def defrell(self, s, acol, ncol):
-        """Fixes up phonebook responses with the alias field.  The alias field
-        does not have quotes around it, but can still contain commas"""
-        # Example with A670  self.defrell(s, 17, 26)
-        if acol<0 or acol>=ncol: # Invalid alias column, do nothing
-            return s
-        e=s.split(",")
-        i=0
-
-        while i<len(e):
-            # Recombine when ,'s in quotes
-            if len(e[i]) and e[i][0]=='"' and e[i][-1]!='"':
-                while i+1<len(e) and (len(e[i+1])==0 or e[i+1][-1]!='"'):
-                    e[i] += ","+e[i+1]
-                    del e[i+1]
-                else:
-                    if i+1<len(e):
-                        e[i] += ","+e[i+1]
-                        del e[i+1]
-            i+=1
-
-        if len(e)<=ncol: # Return original string if no excess commas
-            return s
-        
-        for k in range(len(e)-ncol):
-            e[acol]+=","+e[acol+1]
-            del e[acol+1]
-
-        e[acol]='"'+e[acol]+'"' # quote the string
-    
-        res=e[0]
-        for item in e[1:]:  # Rejoin the columns
-            res+=","+item
-
-        return res
-        
     def getcalendar(self, result):
+        entries = {}
         self.log("Getting calendar entries")
         self.setmode(self.MODEPHONEBOOK)
-        res={}
-        l=len(self.__cal_entries_range)
+        req=self.protocolclass.eventrequest()
         cal_cnt=0
-        for k in self.__cal_entries_range:
-            r=self.get_calendar_entry(k)
-            if not len(r):
-                # blank, no entry
-                self.progress(k+1, l, "Getting blank entry: %d"%k)
-                continue
-            self.progress(k+1, l, "Getting "+r[self.__cal_read_name])
+        for slot in range(self.protocolclass.NUMCALENDAREVENTS):
+            req.slot=slot
+            res=self.sendpbcommand(req,self.protocolclass.eventresponse)
+            if len(res) > 0:
+                self.progress(slot+1, self.protocolclass.NUMCALENDAREVENTS,
+                              res[0].eventname)
+                
+                # build a calendar entry
+                entry={}
 
-            # build a calendar entry
-            entry={}
+                # start time date
+                entry['start']=res[0].start
 
-            # start time date
-            entry['start']=self.extract_timedate(r[self.__cal_start_datetime])
+                if res[0].end:
+                    # valid end time
+                    entry['end']=res[0].end
+                else:
+                    entry['end']=entry['start'][:]
 
-            
-            if self.__cal_end_datetime_value is None:
-                # valid end time
-                entry['end']=self.extract_timedate(r[self.__cal_end_datetime])
-            else:
-                # no end time, end time=start time
-                entry['end']=entry['start'][:]
+                # description
+                entry['description']=res[0].eventname
 
-            # description
-            entry['description']=r[self.__cal_read_name]
+                try:
+                    alarm=self.__cal_alarm_values[res[0].alarm]
+                except:
+                    alarm=None
+                entry['alarm']=alarm
 
-            # alarm
-            try:
-                alarm=self.__cal_alarm_values[r[self.__cal_alarm_type]]
-            except:
-                alarm=None
-            entry['alarm']=alarm
+                # pos
+                entry['pos']=cal_cnt
 
-            # pos
-            entry['pos']=cal_cnt
+                # Misc stuff
+                self._set_unused_calendar_fields(entry)
 
-            # Misc stuff
-            self._set_unused_calendar_fields(entry)
+                # update calendar dict
+                entries[cal_cnt]=entry
+                cal_cnt += 1
 
-            # update calendar dict
-            res[cal_cnt]=entry
-            cal_cnt += 1
-        result['calendar']=res
+        result['calendar']=entries
         self.setmode(self.MODEMODEM)
         return result
 
@@ -563,13 +487,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         cal=dict['calendar']
         cal_len=len(cal)
-        l=len(self.__cal_entries_range)
+        l=self.protocolclass.NUMCALENDAREVENTS
         if cal_len > l:
             self.log("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
 
         self.setmode(self.MODEPHONEBOOK)
         self.log("Saving calendar entries")
         cal_cnt=0
+        req=self.protocolclass.eventupdaterequest()
         for k in cal:
             if cal_cnt >= l:
                 # sent max events, stop
@@ -577,58 +502,58 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             # Save this entry to phone
             # self.log('Item %d' %k)
             self._set_unused_calendar_fields(cal[k])
-            c=cal[k]
-            e=['']*self.__cal_num_of_write_fields
-
+            c = cal[k]
+            
             # pos
-            e[self.__cal_entry]=`cal_cnt`
+            req.slot=cal_cnt
 
             # start date time
-            e[self.__cal_start_datetime]=self.encode_timedate(c['start'])
+            print "Start ",c['start']
+            req.start=list(c['start'])+[0]
 
             # end date time
             if self.__cal_end_datetime_value is None:
                 # valid end-datetime
-                e[self.__cal_end_datetime]=self.encode_timedate(c['end'])
+                req.end=list(c['end'])+[0]
+                print "End ",c['end']
             else:
                 # no end-datetime, set to start-datetime
-                e[self.__cal_end_datetime]=self.__cal_end_datetime_value
-                c['end']=c['start'][:]
+                req.end=req.start
 
             # time stamp
-            e[self.__cal_datetime_stamp]=self.get_time_stamp()
+            req.timestamp=list(time.localtime(time.time())[0:6])
 
             # Alarm type
-            e[self.__cal_alarm_type]=None
+            alarm_type=None
             alarm=c['alarm']
             for i in self.__cal_alarm_values:
                 if self.__cal_alarm_values[i]==alarm:
-                    e[self.__cal_alarm_type]=i
+                    alarm_type=i
                     break
-            if e[self.__cal_alarm_type] is None:
+            if alarm_type is None:
                 self.log(c['description']+": Alarm value not specified, set to -1.")
-                e[self.__cal_alarm_type]='0'
-                c['alarm']=self.__cal_alarm_values['0']
+                alarm_type=0
+                c['alarm']=self.__cal_alarm_values[0]
+            req.alarm=alarm_type
 
             # Name, check for bad char & proper length
             name=c['description'].replace('"', '')
             if len(name)>self.__cal_max_name_len:
                 name=name[:self.__cal_max_name_len]
-            e[self.__cal_write_name]='"'+name+'"'
+            req.eventname=name
 
             # and save it
             self.progress(cal_cnt+1, l, "Updating "+name)
-            if not self.save_calendar_entry(",".join(e)):
-                self.log("Failed to save item: "+name)
-            else:
-                cal_cnt += 1
+            self.sendpbcommand(req,self.protocolclass.eventupdateresponse)
+            cal_cnt += 1
 
-        # delete the rest of the
+        # delete the rest of the calendar slots
         self.log('Deleting unused entries')
         for k in range(cal_cnt, l):
             self.progress(k, l, "Deleting entry %d" % k)
-            self.save_calendar_entry(`k`)
-
+            reqerase=self.protocolclass.eventsloterase()
+            reqerase.slot=k
+            self.sendpbcommand(reqerase, self.protocolclass.eventupdateresponse)
         self.setmode(self.MODEMODEM)
 
         return dict
