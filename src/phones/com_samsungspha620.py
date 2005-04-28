@@ -37,19 +37,6 @@ class Phone(com_samsung_packet.Phone):
     imagelocations=()
         # offset, index file, files location, type, maximumentries
     
-    __cal_entries_range=xrange(70)
-    __cal_num_of_read_fields=7
-    __cal_num_of_write_fields=6
-    __cal_entry=0
-    __cal_start_datetime=1
-    __cal_end_datetime=2
-    __cal_datetime_stamp=3
-    __cal_alarm_type=4
-    __cal_read_name=6
-    __cal_write_name=5
-    __cal_alarm_values={
-        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
-    __cal_end_datetime_value=None
     __ams_index_file="ams/AmsRegistry"
 
     def __init__(self, logtarget, commport):
@@ -241,6 +228,8 @@ class Phone(com_samsung_packet.Phone):
 class Profile(com_samsung_packet.Profile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='SAMSUNG'
+    phone_model='SPH-A620/152'
 
     def __init__(self):
         com_samsung_packet.Profile.__init__(self)
