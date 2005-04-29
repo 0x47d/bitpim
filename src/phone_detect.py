@@ -96,38 +96,30 @@ class DetectPhone(object):
             return True
         except:
             return False
+    def __send_at_and_get(self, comm, cmd):
+        try:
+            resp=comm.sendatcommand(cmd)
+            return ': '.join(resp[0].split(': ')[1:])
+        except:
+            return None
     def __get_manufacturer(self, comm):
-        try:
-            resp=comm.sendatcommand('+GMI')
-            return resp[0].split(': ')[1]
-        except:
-            return None
+        return self.__send_at_and_get(comm, '+GMI')
     def __get_model(self, comm):
-        try:
-            resp=comm.sendatcommand('+GMM')
-            return resp[0].split(': ')[1]
-        except:
-            return None
+        return self.__send_at_and_get(comm, '+GMM')
     def __get_firmware_version(self, comm):
-        try:
-            resp=comm.sendatcommand('+GMR')
-            return resp[0].split(': ')[1]
-        except:
-            return None
+        return self.__send_at_and_get(comm, '+GMR')
     def __get_esn(self, comm):
-        try:
-            resp=comm.sendatcommand('+GSN')
-            return resp[0].split(': ')[1]
-        except:
-            return None
+        return self.__send_at_and_get(comm, '+GSN')
     def __get_mode_brew(self, comm):
-        try:
-            resp=comm.sendatcommand('$QCDMG')
-            return True
-        except:
-            return False
+        raise NotImplemented
+##        try:
+##            resp=comm.sendatcommand('$QCDMG')
+##            return True
+##        except:
+##            return False
     def __get_firmware_response(self, comm):
-        pass
+        raise NotImplemented
+
     def __get_data(self, port):
         r={ 'mode_modem': False, 'mode_brew': False,
             'manufacturer': None, 'model': None, 'firmware_version': None,
@@ -174,6 +166,7 @@ class DetectPhone(object):
         # start the detection process
         # 1st, get the list of available ports
         coms=comscan.comscan()
+        self.log('coms:'+str(coms))
         available_modem_coms=[x['name'] for x in coms if x['available'] \
                               and x['class']=='modem']
         if using_port is None:
@@ -217,6 +210,7 @@ class DetectPhone(object):
                 likely_ports=[x['name'] for x in coms if \
                               x['available'] and \
                               comdiagnose.islikelyport(x, module)]
+                self.log('Likely ports:'+str(likely_ports))
                 found_port=getattr(module.Phone, 'detectphone')(coms,
                                                                 likely_ports,
                                                                 self.__data)

@@ -666,6 +666,47 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         phone_info.append('Analog/Digital:', self.get_analog_digital())
         self.setmode(self.MODEMODEM)
 
+    def get_detect_data(self):
+        # get detection data
+        def __send_at_and_get(cmd):
+            try:
+                resp=self.comm.sendatcommand(cmd)
+                return ': '.join(resp[0].split(': ')[1:])
+            except:
+                raise
+                return None
+        print 'get_detect_data'
+        r={ 'mode_modem': False, 'mode_brew': False,
+            'manufacturer': None, 'model': None, 'firmware_version': None,
+            'esn': None, 'firmwareresponse': None }
+        try:
+            resp=self.comm.sendatcommand('E0V1')
+            r['mode_modem']=True
+        except:
+            raise
+            return None
+        r['manufacturer']=__send_at_and_get('+GMI')
+        r['model']=__send_at_and_get('+GMM')
+        r['firmware_version']=__send_at_and_get('+GMR')
+        r['esn']=__send_at_and_get('+GSN')
+        return r
+
+    def _detectphone(coms, likely_ports, res):
+        if not len(likely_ports):
+            return None
+        for port in likely_ports:
+            if res.has_key(port):
+                # port already read, skip it
+                continue
+            try:
+                r=Phone(None, commport.CommConnection(None, port, timeout=1)).get_detect_data()
+                if r is not None:
+                    res[port]=r
+            except:
+                # this port is not available
+                pass
+    _detectphone=staticmethod(_detectphone)
+
 #------------------------------------------------------------------------------
 class Profile(com_phone.Profile):
 
@@ -677,7 +718,7 @@ class Profile(com_phone.Profile):
         )
 
     # which device classes we are.
-    deviceclasses=("modem",)
+    deviceclasses=("modem", "serial")
 
     _supportedsyncs=()
 
