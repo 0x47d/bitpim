@@ -102,10 +102,10 @@ class FolderPage(wx.Panel):
         vbs0=wx.BoxSizer(wx.VERTICAL)
         self.__item_list=wx.TreeCtrl(scrolled_panel, wx.NewId())
         vbs0.Add(self.__item_list, 1, wx.EXPAND|wx.ALL, 5)
-        root=self.__item_list.AddRoot('SMS')
+        self.__root=self.__item_list.AddRoot('SMS')
         self.__nodes={}
         for s in sms.SMSEntry.Valid_Folders:
-            self.__nodes[s]=self.__item_list.AppendItem(root, s)
+            self.__nodes[s]=self.__item_list.AppendItem(self.__root, s)
         scrolled_panel.SetSizer(vbs0)
         scrolled_panel.SetAutoLayout(True)
         vbs0.Fit(scrolled_panel)
@@ -118,6 +118,15 @@ class FolderPage(wx.Panel):
         self.__item_text=pb_editor.MemoEditor(self, -1)
         vbs1.Add(self.__item_text, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(vbs1, 3, wx.EXPAND|wx.ALL, border=5)
+        # context menu
+        self.__bgmenu=wx.Menu()
+        context_menu_data=(
+            ('Expand All', self.__OnExpandAll),
+            ('Collapse All', self.__OnCollapseAll))
+        for e in context_menu_data:
+            id=wx.NewId()
+            self.__bgmenu.Append(id, e[0])
+            wx.EVT_MENU(self, id, e[1])
         # all done
         self.SetSizer(hbs)
         self.SetAutoLayout(True)
@@ -126,14 +135,37 @@ class FolderPage(wx.Panel):
         wx.EVT_TREE_SEL_CHANGED(self, self.__item_list.GetId(),
                                 self.__OnSelChanged)
         pubsub.subscribe(self.__OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
+        wx.EVT_RIGHT_UP(self.__item_list, self.__OnRightClick)
         # populate data
         self.__populate()
         # turn on dirty flag
 
+    def __OnExpandAll(self, _):
+        sel_id=self.__item_list.GetSelection()
+        if not sel_id.IsOk():
+            sel_id=self.__root
+        self.__item_list.Expand(sel_id)
+        id, cookie=self.__item_list.GetFirstChild(sel_id)
+        while id.IsOk():
+            self.__item_list.Expand(id)
+            id, cookie=self.__item_list.GetNextChild(sel_id, cookie)
+    def __OnCollapseAll(self, _):
+        sel_id=self.__item_list.GetSelection()
+        if not sel_id.IsOk():
+            sel_id=self.__root
+        self.__item_list.Collapse(sel_id)
+        id, cookie=self.__item_list.GetFirstChild(sel_id)
+        while id.IsOk():
+            self.__item_list.Collapse(id)
+            id, cookie=self.__item_list.GetNextChild(sel_id, cookie)
+    def __OnRightClick(self, evt):
+        self.__item_list.PopupMenu(self.__bgmenu, evt.GetPosition())
+
     def __OnSelChanged(self, evt):
         # an item was clicked on/selected
-        k=self.__item_list.GetPyData(evt.GetItem())
-        self.__populate_each(k)
+        if evt.GetItem().IsOk():
+            k=self.__item_list.GetPyData(evt.GetItem())
+            self.__populate_each(k)
 
     def __OnPBLookup(self, msg):
         d=msg.data
