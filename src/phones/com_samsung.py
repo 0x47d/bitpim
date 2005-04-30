@@ -673,9 +673,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 resp=self.comm.sendatcommand(cmd)
                 return ': '.join(resp[0].split(': ')[1:])
             except:
-                raise
                 return None
-        print 'get_detect_data'
         r={ 'mode_modem': False, 'mode_brew': False,
             'manufacturer': None, 'model': None, 'firmware_version': None,
             'esn': None, 'firmwareresponse': None }
@@ -683,7 +681,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             resp=self.comm.sendatcommand('E0V1')
             r['mode_modem']=True
         except:
-            raise
             return None
         r['manufacturer']=__send_at_and_get('+GMI')
         r['model']=__send_at_and_get('+GMM')
