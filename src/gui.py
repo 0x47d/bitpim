@@ -560,7 +560,10 @@ class MainWindow(wx.Frame):
         menuBar.Append(menu, "&File");
         menu=wx.Menu()
         menu.Append(guihelper.ID_EDITSELECTALL, "Select All\tCtrl+A", "Select All")
+        menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITADDENTRY, "New...\tCtrl+N", "Add an item")
+        menu.Append(guihelper.ID_EDITCOPY, "Copy\tCtrl+C", "Copy to the clipboard")
+        menu.Append(guihelper.ID_EDITPASTE,"Paste\tCtrl+V", "Paste from the clipboard")
         menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete\tDel", "Delete currently selected entry")
         menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITPHONEINFO,
@@ -645,6 +648,8 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.OnEditSelectAll)
+        wx.EVT_MENU(self, guihelper.ID_EDITCOPY, self.OnCopyEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITPASTE, self.OnPasteEntry)
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
@@ -1254,6 +1259,10 @@ class MainWindow(wx.Frame):
         widget=self.nb.GetPage(self.nb.GetSelection())
         enable_add=hasattr(widget, "OnAdd")
         enable_del=hasattr(widget, "OnDelete")
+        enable_copy=hasattr(widget, "OnCopy")
+        enable_paste=hasattr(widget, "OnPaste")
+        enable_print=hasattr(widget, "OnPrintDialog")
+        enable_select_all=hasattr(widget, "OnSelectAll")
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
@@ -1281,17 +1290,19 @@ class MainWindow(wx.Frame):
         self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enable_add)
         self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enable_del)
         # menu items
-        self.GetMenuBar().Enable(guihelper.ID_EDITADDENTRY, enable_add)
-        self.GetMenuBar().Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
+        menu_bar=self.GetMenuBar()
+        menu_bar.Enable(guihelper.ID_EDITADDENTRY, enable_add)
+        menu_bar.Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
+        menu_bar.Enable(guihelper.ID_EDITCOPY, enable_copy)
+        menu_bar.Enable(guihelper.ID_EDITPASTE, enable_paste)
 
         # View Columns .. is only in Phonebook
-        self.GetMenuBar().Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
+        menu_bar.Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
         # as is File Print
-        self.GetMenuBar().Enable(guihelper.ID_FILEPRINT,
-                                 hasattr(widget, 'OnPrintDialog'))
+        menu_bar.Enable(guihelper.ID_FILEPRINT, enable_print)
 
         # select all
-        self.GetMenuBar().Enable(guihelper.ID_EDITSELECTALL, hasattr(widget, "OnSelectAll"))
+        menu_bar.Enable(guihelper.ID_EDITSELECTALL, enable_select_all)
          
     # add/delete entry in the current tab
     def OnEditAddEntry(self, evt):
@@ -1302,6 +1313,12 @@ class MainWindow(wx.Frame):
 
     def OnEditSelectAll(self, evt):
         self.nb.GetPage(self.nb.GetSelection()).OnSelectAll(evt)
+
+    def OnCopyEntry(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnCopy(evt)
+
+    def OnPasteEntry(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnPaste(evt)
 
     # Busy handling
     def OnBusyStart(self):

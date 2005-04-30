@@ -1243,6 +1243,9 @@ class FileView(wx.Panel):
     if guihelper.IsMSWindows():
         def OnCopy(self, _):
             items=self.GetSelectedItems()
+            if not len(items):
+                # nothing selected
+                return
             file_names=wx.FileDataObject()
             for item in items:
                 file_names.AddFile(item.filename)
