@@ -1132,6 +1132,7 @@ class FileView(wx.Panel):
                 menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
         else:
             menu=self.bgmenu
+            menu.Enable(guihelper.ID_FV_PASTE, self.CanPaste())
         if menu is None:
             return
         self.aggdisp.PopupMenu(menu, evt.GetPosition())
@@ -1252,19 +1253,29 @@ class FileView(wx.Panel):
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(file_names)
                 wx.TheClipboard.Close()
+        def CanCopy(self):
+            return len(self.GetSelectedItems())
 
     def OnPaste(self, _=None):
         if not wx.TheClipboard.Open():
             # can't access the clipboard
             return
-        if not wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)):
-            # no filename data to get
-            return
-        file_names=wx.FileDataObject()
-        has_data=wx.TheClipboard.GetData(file_names)
+        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)):
+            file_names=wx.FileDataObject()
+            has_data=wx.TheClipboard.GetData(file_names)
+        else:
+            has_data=False
         wx.TheClipboard.Close()
         if has_data:
             self.OnAddFiles(file_names.GetFilenames())
+    def CanPaste(self):
+        """ Return True if can accept clipboard data, False otherwise
+        """
+        if not wx.TheClipboard.Open():
+            return False
+        r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME))
+        wx.TheClipboard.Close()
+        return r
 
     def OnDelete(self,_):
         items=self.GetSelectedItems()

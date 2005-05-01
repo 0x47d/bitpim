@@ -558,7 +558,7 @@ class MainWindow(wx.Frame):
             menu.AppendSeparator()
             menu.Append(guihelper.ID_FILEEXIT, "E&xit", "Close down this program")
         menuBar.Append(menu, "&File");
-        menu=wx.Menu()
+        self.__menu_edit=menu=wx.Menu()
         menu.Append(guihelper.ID_EDITSELECTALL, "Select All\tCtrl+A", "Select All")
         menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITADDENTRY, "New...\tCtrl+N", "Add an item")
@@ -636,6 +636,7 @@ class MainWindow(wx.Frame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
+        wx.EVT_MENU_OPEN(self, self.OnMenuOpen)
         wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
         wx.EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
@@ -769,6 +770,20 @@ class MainWindow(wx.Frame):
                 pass
             thesplashscreen=None
             wx.SafeYield(onlyIfNeeded=True)
+
+    def OnMenuOpen(self, evt):
+        if evt.GetMenu()!=self.__menu_edit:
+            return
+        widget=self.nb.GetPage(self.nb.GetSelection())
+        enable_copy=hasattr(widget, "OnCopy") and \
+                     hasattr(widget, "CanCopy") and \
+                     widget.CanCopy()
+        enable_paste=hasattr(widget, "OnCopy") and \
+                      hasattr(widget, "CanPaste") and \
+                      widget.CanPaste()
+        menu_bar=self.GetMenuBar()
+        menu_bar.Enable(guihelper.ID_EDITCOPY, enable_copy)
+        menu_bar.Enable(guihelper.ID_EDITPASTE, enable_paste)
 
     def OnExit(self,_=None):
         self.Close()
@@ -1259,8 +1274,6 @@ class MainWindow(wx.Frame):
         widget=self.nb.GetPage(self.nb.GetSelection())
         enable_add=hasattr(widget, "OnAdd")
         enable_del=hasattr(widget, "OnDelete")
-        enable_copy=hasattr(widget, "OnCopy")
-        enable_paste=hasattr(widget, "OnPaste")
         enable_print=hasattr(widget, "OnPrintDialog")
         enable_select_all=hasattr(widget, "OnSelectAll")
 
@@ -1293,8 +1306,6 @@ class MainWindow(wx.Frame):
         menu_bar=self.GetMenuBar()
         menu_bar.Enable(guihelper.ID_EDITADDENTRY, enable_add)
         menu_bar.Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
-        menu_bar.Enable(guihelper.ID_EDITCOPY, enable_copy)
-        menu_bar.Enable(guihelper.ID_EDITPASTE, enable_paste)
 
         # View Columns .. is only in Phonebook
         menu_bar.Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
