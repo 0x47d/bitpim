@@ -111,14 +111,14 @@ class DetectPhone(object):
     def __get_esn(self, comm):
         return self.__send_at_and_get(comm, '+GSN')
     def __get_mode_brew(self, comm):
-        raise NotImplemented
+        raise NotImplementedError
 ##        try:
 ##            resp=comm.sendatcommand('$QCDMG')
 ##            return True
 ##        except:
 ##            return False
     def __get_firmware_response(self, comm):
-        raise NotImplemented
+        raise NotImplementedError
 
     def __get_data(self, port):
         r={ 'mode_modem': False, 'mode_brew': False,
