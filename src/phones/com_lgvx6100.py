@@ -124,7 +124,7 @@ class Profile(parentprofile):
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
                                       {'width': 132, 'height': 148, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 132, 'height': 160, 'format': "JPEG"}))
+                                      {'width': 128, 'height': 160, 'format': "JPEG"}))
     # can the outside lcd display images?
     #imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
     #                                  {'width': 96, 'height': 64, 'format': "JPEG"}))
