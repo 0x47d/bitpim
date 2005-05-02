@@ -1089,6 +1089,7 @@ class FileView(wx.Panel):
         if guihelper.IsMSWindows():
             self.itemmenu.Append(guihelper.ID_FV_COPY, "Copy")
         self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.AppendSeparator()
         # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
@@ -1105,8 +1106,8 @@ class FileView(wx.Panel):
         if guihelper.IsMSWindows():
             wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_COPY, self.OnCopy)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_RENAME, self.OnRename)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
-
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_ADD, self.OnAdd)
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh)
@@ -1127,6 +1128,7 @@ class FileView(wx.Panel):
         if len(self.aggdisp.GetSelection()):
             menu=self.itemmenu
             item=self.GetSelectedItems()[0]
+            menu.Enable(guihelper.ID_FV_RENAME, len(self.GetSelectedItems())==1)
             # we always launch on mac
             if not guihelper.IsMac():
                 menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
@@ -1355,6 +1357,28 @@ class FileView(wx.Panel):
             self.OnAddFiles(dlg.GetPaths())
         dlg.Destroy()
 
+    def CanRename(self):
+        return len(self.GetSelectedItems())==1
+    def OnRename(self, _=None):
+        items=self.GetSelectedItems()
+        if len(items)!=1:
+               # either none or more than 1 items selected
+               return
+        old_name=items[0].name
+        dlg=wx.TextEntryDialog(self, "Enter a new name:", "Item Rename",
+                               old_name)
+        if dlg.ShowModal()==wx.ID_OK:
+            new_name=dlg.GetValue()
+            if len(new_name) and new_name!=old_name:
+                old_file_name=items[0].filename
+                new_file_name=self.getshortenedbasename(new_name)
+                try:
+                    os.rename(old_file_name, new_file_name)
+                    items[0].RenameInIndex(os.path.basename(new_file_name))
+                except:
+                    pass
+        dlg.Destroy()
+          
     def OnAddFiles(self,_):
         raise Exception("not implemented")
 
@@ -1480,6 +1504,11 @@ class FileViewDisplayItem(object):
 
     def RemoveFromIndex(self):
         del self.view._data[self.datakey][self.key]
+        self.view.modified=True
+        self.view.OnRefresh()
+
+    def RenameInIndex(self, new_name):
+        self.view._data[self.datakey][self.key]['name']=new_name
         self.view.modified=True
         self.view.OnRefresh()
 

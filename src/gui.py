@@ -565,6 +565,7 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_EDITCOPY, "Copy\tCtrl+C", "Copy to the clipboard")
         menu.Append(guihelper.ID_EDITPASTE,"Paste\tCtrl+V", "Paste from the clipboard")
         menu.Append(guihelper.ID_EDITDELETEENTRY, "Delete\tDel", "Delete currently selected entry")
+        menu.Append(guihelper.ID_EDITRENAME, "Rename\tF2", "Rename currently selected entry")
         menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITPHONEINFO,
                     "&Phone Info", "Display Phone Information")
@@ -651,6 +652,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.OnEditSelectAll)
         wx.EVT_MENU(self, guihelper.ID_EDITCOPY, self.OnCopyEntry)
         wx.EVT_MENU(self, guihelper.ID_EDITPASTE, self.OnPasteEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITRENAME, self.OnRenameEntry)
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
@@ -781,9 +783,13 @@ class MainWindow(wx.Frame):
         enable_paste=hasattr(widget, "OnCopy") and \
                       hasattr(widget, "CanPaste") and \
                       widget.CanPaste()
+        enable_rename=hasattr(widget, "OnRename") and \
+                       hasattr(widget, "CanRename") and \
+                       widget.CanRename()
         menu_bar=self.GetMenuBar()
         menu_bar.Enable(guihelper.ID_EDITCOPY, enable_copy)
         menu_bar.Enable(guihelper.ID_EDITPASTE, enable_paste)
+        menu_bar.Enable(guihelper.ID_EDITRENAME, enable_rename)
 
     def OnExit(self,_=None):
         self.Close()
@@ -1330,6 +1336,9 @@ class MainWindow(wx.Frame):
 
     def OnPasteEntry(self, evt):
         self.nb.GetPage(self.nb.GetSelection()).OnPaste(evt)
+
+    def OnRenameEntry(self, evt):
+        self.nb.GetPage(self.nb.GetSelection()).OnRename(evt)
 
     # Busy handling
     def OnBusyStart(self):
