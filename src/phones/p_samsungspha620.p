@@ -78,27 +78,6 @@ PACKET esnresponse:
     * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
     * SAMSTRING {'quotechar': None, 'terminator': None} esn
 
-PACKET todorequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDR='} +command
-    * SAMINT {'terminator': None} +slot
-
-PACKET todoresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '#PITDR:'} command
-    * SAMINT slot
-    * SAMINT priority
-    * SAMTIME duedate
-    * SAMTIME timestamp
-    * SAMSTRING {'quotechar': None} status
-    * SAMSTRING {'terminator': None} subject
-    
-PACKET todoupdaterequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDW='} +command
-    * SAMINT slot
-    * SAMINT priority
-    * SAMTIME duedate 
-    * SAMTIME timestamp
-    * SAMSTRING {'terminator': None} subject
-
 PACKET filepbentry:
     1 UINT  dunno1
     1 UINT  dunno2
