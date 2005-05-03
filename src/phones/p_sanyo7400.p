@@ -94,3 +94,17 @@ PACKET callalarmentry:
     3 UNKNOWN +pad3
     1 UINT ringtone
 
+PACKET sanyomediafilenameresponse:
+    * sanyomediaheader header
+    1 UINT pad1
+    154 STRING filename
+    1 UINT num1
+    1 UNKNOWN pad2
+    1 UINT num2
+    1 UNKNOWN pad3
+    1 UINT num5
+    1 UNKNOWN pad4
+    1 UINT num4
+    1 UNKNOWN pad5
+    1 UINT num3
+    8 UNKNOWN pad5
