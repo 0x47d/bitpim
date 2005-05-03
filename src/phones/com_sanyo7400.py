@@ -26,16 +26,18 @@ class Phone(com_sanyonewer.Phone):
     "Talk to the Sanyo MM-7400 cell phone"
 
     desc="MM-7400"
+    protocolclass=p_sanyo7400
+    serialsname='mm7400'
 
     FIRST_MEDIA_DIRECTORY=1
     LAST_MEDIA_DIRECTORY=3
 
+    wallpaperexts=(".jpg", ".png", ".mp4", "3g2")
+    ringerexts=(".mid", ".qcp", ".mp3", ".m4a")
+
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
         )    
-
-    protocolclass=p_sanyo7400
-    serialsname='mm7400'
 
     builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
@@ -56,8 +58,8 @@ class Phone(com_sanyonewer.Phone):
 
 class Profile(com_sanyonewer.Profile):
 
-    protocolclass=p_sanyo7400
-    serialsname='mm7400'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
     phone_manufacturer='SANYO'
     phone_model='SCP-7400/US'
 
