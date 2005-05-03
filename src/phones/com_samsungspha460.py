@@ -99,5 +99,6 @@ class Profile(com_samsung_packet.Profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('todo', 'read', None),     # all todo list reading
         )
 
