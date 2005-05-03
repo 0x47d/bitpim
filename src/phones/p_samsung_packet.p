@@ -19,6 +19,7 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 NUMCALENDAREVENTS=70
+NUMTODOENTRIES=9
 
  %}
 
@@ -87,3 +88,26 @@ PACKET eventsloterase:
 PACKET eventupdateresponse:
     * UKNOWN pad
 
+PACKET todorequest:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDR='} +command
+    * SAMINT {'terminator': None} +slot
+
+PACKET todoresponse:
+    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '#PITDR:'} command
+    * SAMINT slot
+    * SAMINT priority
+    * SAMTIME duedate
+    * SAMTIME timestamp
+    * SAMSTRING {'quotechar': None} status
+    * SAMSTRING {'terminator': None} subject
+    
+PACKET todoupdaterequest:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDW='} +command
+    * SAMINT slot
+    * SAMINT priority
+    * SAMTIME duedate 
+    * SAMTIME timestamp
+    * SAMSTRING {'terminator': None} subject
+
+PACKET todoupdateresponse:
+    * UKNOWN pad
