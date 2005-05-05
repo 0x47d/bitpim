@@ -420,16 +420,12 @@ class VCalendarImportData(object):
         self.__convert(v.data, self.__data)
 
 #-------------------------------------------------------------------------------
-def bp_repeat_str(dict, v):
-    if v is None:
-        return ''
-    return v
 class VcalImportCalDialog(common_calendar.PreviewDialog):
     __column_labels=[
         ('description', 'Description', 400, None),
         ('start', 'Start', 150, common_calendar.bp_date_str),
         ('end', 'End', 150, common_calendar.bp_date_str),
-        ('repeat_type', 'Repeat', 80, bp_repeat_str),
+        ('repeat_type', 'Repeat', 80, common_calendar.bp_repeat_str),
         ('alarm', 'Alarm', 80, common_calendar.bp_alarm_str),
         ('categories', 'Category', 150, common_calendar.category_str)
         ]

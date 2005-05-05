@@ -37,6 +37,7 @@ def GetPhonebookImports():
     res=[]
     # CSV - always possible
     res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
+    res.append( ("CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
     # Vcards - always possible
     res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Vcal - always possible
@@ -1777,7 +1778,34 @@ def OnFileImportVCal(parent):
         parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
     # all done
     dlg.Destroy()
-        
+
+def OnFileImportCSVCalendar(parent):
+    import csv_calendar
+    import pubsub
+    dlg=csv_calendar.CSVImportDialog(parent, -1, 'Import CSV Calendar')
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and save the new data
+        calendar_r={ 'calendar': dlg.get() }
+        parent.calendarwidget.populate(calendar_r)
+        parent.calendarwidget.populatefs(calendar_r)
+    elif res==csv_calendar.CSVImportDialog.ID_ADD:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # get existing data
+        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
+        # and add the imported data
+        calendar_r.update(dlg.get())
+        # and save it
+        parent.calendarwidget.populate({ 'calendar': calendar_r } )
+        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
+    # all done
+    dlg.Destroy()
+
 ###
 ###   EXPORTS
 ###
@@ -1790,6 +1818,7 @@ def GetPhonebookExports():
     res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
     # CSV - always possible
     res.append( ('CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
+    res.append( ('CSV Calendar...', 'Export the calendar to CSV', OnFileExportCSVCalendar) )
     return res
 
 class BaseExportDialog(wx.Dialog):
@@ -2325,5 +2354,11 @@ def OnFileExporteGroupware(parent):
 
 def OnFileExportCSV(parent):
     dlg=ExportCSVDialog(parent, "Export phonebook to CSV")
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExportCSVCalendar(parent):
+    import csv_calendar
+    dlg=csv_calendar.ExportCSVDialog(parent, 'Export Calendar to CSV')
     dlg.ShowModal()
     dlg.Destroy()

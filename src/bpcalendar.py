@@ -31,7 +31,7 @@ serials - list of dicts of serials.
 repeat - None, or RepeatEntry object
 id - string id of this object.  Created the same way as bpserials IDs for phonebook entries.
 notes - string notes
-category - [ { 'category': string category }, ... ]
+categories - [ { 'category': string category }, ... ]
 ringtone - string ringtone assignment
 wallpaper - string wallpaper assignment.
 
@@ -161,7 +161,11 @@ class RepeatEntry(object):
     __dow=1
     __dom=0
     __moy=1
-    
+    __dow_names=(
+        {1: 'Sun'}, {2: 'Mon'}, {4: 'Tue'}, {8: 'Wed'},
+        {16: 'Thu'}, {32: 'Fri'}, {64: 'Sat'})
+    dow_names={ 'Sun': 1, 'Mon': 2, 'Tue': 4, 'Wed': 8,
+                'Thu': 16, 'Fri': 32, 'Sat': 64 }
     def __init__(self, repeat_type=daily):
         self.__type=repeat_type
         self.__data=[0,0]
@@ -316,6 +320,18 @@ class RepeatEntry(object):
         else:
             raise AttributeError, 'dow'
     dow=property(fget=__get_dow, fset=__set_dow)
+    def __get_dow_str(self):
+        try:
+            _dow=self.dow
+        except AttributeError:
+            return ''
+        names=[]
+        for l in self.__dow_names:
+            for k,e in l.items():
+                if k&_dow:
+                    names.append(e)
+        return ';'.join(names)
+    dow_str=property(fget=__get_dow_str)
 
     def __get_suppressed(self):
         return self.__suppressed
@@ -335,6 +351,9 @@ class RepeatEntry(object):
     def get_suppressed_list(self):
         return [x.date_str() for x in self.__suppressed]
     suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
+    def __get_suppressed_str(self):
+        return ';'.join(self.get_suppressed_list())
+    suppressed_str=property(fget=__get_suppressed_str)
 
 #-------------------------------------------------------------------------------
 class CalendarEntry(object):
@@ -469,12 +488,20 @@ class CalendarEntry(object):
     def __set_start(self, datetime):
         self.__data['start'].set(datetime)
     start=property(fget=__get_start, fset=__set_start)
+    def __get_start_str(self):
+        return self.__data['start'].date_str()+' '+\
+               self.__data['start'].time_str(False, '00:00')
+    start_str=property(fget=__get_start_str)
     
     def __get_end(self):
         return self.__data['end'].get()
     def __set_end(self, datetime):
         self.__data['end'].set(datetime)
     end=property(fget=__get_end, fset=__set_end)
+    def __get_end_str(self):
+        return self.__data['end'].date_str()+' '+\
+               self.__data['end'].time_str(False, '00:00')
+    end_str=property(fget=__get_end_str)
 
     def __get_serials(self):
         return self.__data.get('serials', None)
@@ -516,6 +543,13 @@ class CalendarEntry(object):
         if s==[] and self.__data.has_key('categories'):
             del self.__data['categories']
     categories=property(fget=__get_categories, fset=__set_categories)
+    def __get_categories_str(self):
+        c=self.categories
+        if len(c):
+            return ';'.join([x['category'] for x in c])
+        else:
+            return ''
+    categories_str=property(fget=__get_categories_str)
 
     def __get_ringtone(self):
         return self.__data.get('ringtone', '')

@@ -1225,7 +1225,12 @@ class MainWindow(wx.Frame):
         print results.keys()
         for f in funcscb:
             f(results)
-                
+
+    def GetCalendarData(self):
+        # return calendar data for export
+        d={}
+        return self.calendarwidget.getdata(d).get('calendar', {})
+
     # Get data from disk
     def OnPopulateEverythingFromDisk(self,_=None):
         self.OnBusyStart()

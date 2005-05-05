@@ -91,9 +91,9 @@ class BPTime(object):
                                 self.__date.day)
         return s
 
-    def time_str(self, am_pm=True):
+    def time_str(self, am_pm=True, default=''):
         if self.__time is None:
-            s=''
+            s=default
         else:
             h=self.__time.hour
             if am_pm:
