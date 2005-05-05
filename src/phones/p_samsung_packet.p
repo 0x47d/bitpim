@@ -109,5 +109,9 @@ PACKET todoupdaterequest:
     * SAMTIME timestamp
     * SAMSTRING {'terminator': None} subject
 
+PACKET todoerase:
+    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDW='} +command
+    * SAMINT {'terminator': None} slot
+
 PACKET todoupdateresponse:
     * UKNOWN pad
