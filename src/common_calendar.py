@@ -22,6 +22,11 @@ import guiwidgets
 
 no_end_date=(4000, 1, 1, 0, 0)
 
+def bp_repeat_str(dict, v):
+    if v is None:
+        return ''
+    return v
+
 def bp_date_str(dict, v):
     try:
         if v[0]>=no_end_date[0]:
