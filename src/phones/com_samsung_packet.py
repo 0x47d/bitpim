@@ -584,7 +584,42 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         result['todo']=todos
         return result
         
+    def savetodo(self, dict, merge):
+        self.setmode(self.MODEPHONEBOOK)
+        todos=dict.get('todo', {})
+        #todos=dict['todo']
+        todos_len=len(todos)
+        l=self.protocolclass.NUMTODOENTRIES
+        if todos_len > l:
+            self.log("The number of Todo entries (%d) exceeded the mamximum (%d)" % (cal_len, l))
+        self.setmode(self.MODEPHONEBOOK)
+        self.log("Saving todo entries")
+        todo_cnt=0
+        req=self.protocolclass.todoupdaterequest()
+        for k in todos:
+            todo=todos[k]
+            print todo.__doc__
+            if todo_cnt >= l:
+                break
+            
+            req.slot=todo_cnt
+            if todo.priority is not None and todo.priority<5:
+                req.priority=0
+            else:
+                req.priority=1
+                
+            dd=todo.due_date
+            req.duedate=(int(dd[0:3]),int(dd[4:5]),int(dd[6:7]),0,0,0)
+            req.timestamp=list(time.localtime(time.time())[0:6])
+            req.subject=todo.summary
+            self.sendpbcommand(req,self.protocolclass.todoupdateresponse)
+            todo_cnt += 1
 
+        req=self.protocolclass.todoerase()
+        for slot in range(todo_cnt, self.protocolclass.NUMTODOENTRIES):
+            req.slot=slot
+            self.sendpbcommand(req,self.protocolclass.todoupdateresponse)
+        
 class Profile(com_phone.Profile):
 
     usbids=( ( 0x04e8, 0x6601, 1),  # Samsung internal USB interface
