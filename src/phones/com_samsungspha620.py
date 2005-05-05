@@ -243,6 +243,6 @@ class Profile(com_samsung_packet.Profile):
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('todo', 'read', None),     # all todo list reading
-        #('todo', 'write', 'OVERWRITE'),  # all todo list writing
+        ('todo', 'write', 'OVERWRITE'),  # all todo list writing
         )
 
