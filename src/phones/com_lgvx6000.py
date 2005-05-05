@@ -92,8 +92,9 @@ class Profile(parentprofile):
     serialsname=Phone.serialsname
 
     # use for auto-detection
-    phone_manufacturer='LG Electronics Inc.'
-    phone_model='VX6000 102'
+    if __debug__:
+        phone_manufacturer='LG Electronics Inc.'
+        phone_model='VX6000 102'
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
