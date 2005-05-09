@@ -339,7 +339,7 @@ class ConvertDialog(wx.Dialog):
         
 
     def __init__(self, parent, file, convertinfo):
-        wx.Dialog.__init__(self, parent, title="Convert Audio File")
+        wx.Dialog.__init__(self, parent, title="Convert Audio File", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.MAXIMIZE_BOX)
         self.file=file
         self.convertinfo=convertinfo
         self.afi=None
