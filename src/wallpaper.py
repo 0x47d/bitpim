@@ -250,7 +250,7 @@ class WallpaperView(guiwidgets.FileView):
                     self.modified=True
 
     def GetItemThumbnail(self, name, width, height):
-        img,_=self.GetImage(name)
+        img,_=self.GetImage(name.encode(guiwidgets.media_codec))
         if img is None or not img.Ok():
             # unknown image file, display wallpaper.png
             img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
@@ -358,9 +358,10 @@ class WallpaperView(guiwidgets.FileView):
     def OnAddFiles(self, filenames):
         for file in filenames:
             if self.__raw_image:
-                targetfilename=self.getshortenedbasename(file)
+                decoded_file=str(file).decode(guiwidgets.media_codec)
+                targetfilename=self.getshortenedbasename(decoded_file)
                 open(targetfilename, 'wb').write(open(file, 'rb').read())
-                self.AddToIndex(os.path.basename(targetfilename),
+                self.AddToIndex(str(os.path.basename(targetfilename)).decode(guiwidgets.media_codec),
                                 'images')
             else:
                 # :::TODO:: do i need to handle bci specially here?
@@ -391,9 +392,12 @@ class WallpaperView(guiwidgets.FileView):
         extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
         # munge name
-        targetfilename=self.getshortenedbasename(file, extension)
+        decoded_file=str(file).decode(guiwidgets.media_codec)
+        targetfilename=self.getshortenedbasename(decoded_file, extension)
 
-        res=getattr(self, "saveimage_"+imgparams['format'])(img, targetfilename, imgparams)
+        res=getattr(self, "saveimage_"+imgparams['format'])(
+            img,
+            targetfilename, imgparams)
         if not res:
             try:    os.remove(targetfilename)
             except: pass
@@ -402,7 +406,7 @@ class WallpaperView(guiwidgets.FileView):
             dlg.ShowModal()
             return
 
-        self.AddToIndex(os.path.basename(targetfilename), origin)
+        self.AddToIndex(str(os.path.basename(targetfilename)).decode(guiwidgets.media_codec), origin)
         if refresh:
             self.OnRefresh()
 

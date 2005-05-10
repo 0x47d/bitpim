@@ -44,6 +44,7 @@ import pubsub
 import bphtml
 import bitflingscan
 import aggregatedisplay
+import phone_media_codec
 
 ###
 ### BitFling cert stuff
@@ -1007,7 +1008,7 @@ class BitFlingSettingsDialog(wx.Dialog):
 ###
 ### File viewer
 ###
-
+media_codec=phone_media_codec.codec_name
 class MyFileDropTarget(wx.FileDropTarget):
     def __init__(self, target):
         wx.FileDropTarget.__init__(self)
@@ -1025,7 +1026,6 @@ class FileView(wx.Panel):
     item_line_font=None
     item_term="..."
     item_guardspace=None
-    
     # Files we should ignore
     skiplist= ( 'desktop.ini', 'thumbs.db', 'zbthumbnail.info' )
 
@@ -1305,7 +1305,7 @@ class FileView(wx.Panel):
 
             d=dict[key]
             for i in d:
-                open(os.path.join(self.thedir, i), "wb").write(d[i])
+                open(os.path.join(self.thedir, i.encode(media_codec)), "wb").write(d[i])
         d={}
         d[indexkey]=dict[indexkey]
         common.writeversionindexfile(os.path.join(self.thedir, "index.idx"), d, version)
@@ -1329,7 +1329,7 @@ class FileView(wx.Panel):
                 # ignore windows detritus
                 continue
             elif key is not None:
-                dict[file]=open(os.path.join(self.thedir, file), "rb").read()
+                dict[file.decode(media_codec)]=open(os.path.join(self.thedir, file), "rb").read()
         if key is not None:
             result[key]=dict
         if indexkey not in result:
@@ -1374,7 +1374,8 @@ class FileView(wx.Panel):
                 new_file_name=self.getshortenedbasename(new_name)
                 try:
                     os.rename(old_file_name, new_file_name)
-                    items[0].RenameInIndex(os.path.basename(new_file_name))
+                    items[0].RenameInIndex(os.path.basename(
+                        str(new_file_name).decode(media_codec)))
                 except:
                     pass
         dlg.Destroy()
@@ -1397,7 +1398,7 @@ class FileView(wx.Panel):
         if len(filename)>self.maxlen:
             chop=len(filename)-self.maxlen
             filename=stripext(filename)[:-chop].strip()+'.'+getext(filename)
-        return os.path.join(self.thedir, filename)
+        return os.path.join(self.thedir, filename.encode(media_codec))
 
     def genericgetdata(self,dict,want, mediapath, mediakey, mediaindexkey):
         # this was originally written for wallpaper hence using the 'wp' variable
@@ -1445,7 +1446,7 @@ class FileViewDisplayItem(object):
         me=self.view._data[self.datakey][self.key]
         self.name=me['name']
         self.origin=me.get('origin', None)
-        self.filename=os.path.join(self.mediapath, self.name)
+        self.filename=os.path.join(self.mediapath, self.name.encode(media_codec))
         self.fileinfo=self.view.GetFileInfo(self.filename)
         self.size=self.fileinfo.size
         self.short=self.fileinfo.shortdescription()

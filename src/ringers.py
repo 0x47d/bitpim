@@ -226,9 +226,10 @@ class RingerView(guiwidgets.FileView):
                 self.log('ringtone %s is too big!'%common.basename(file))
                 continue
             self.thedir=self.mainwindow.ringerpath
-            target=self.getshortenedbasename(file, newext)
+            decoded_file=str(file).decode(guiwidgets.media_codec)
+            target=self.getshortenedbasename(decoded_file, newext)
             open(target, "wb").write(filedata)
-            self.AddToIndex(os.path.basename(target))
+            self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
         self.OnRefresh()
 
     OnAddFiles=guihelper.BusyWrapper(OnAddFiles)

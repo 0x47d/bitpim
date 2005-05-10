@@ -22,6 +22,7 @@ import shutil
 import types
 import datetime
 import sha
+import codecs
 
 # wx modules
 import wx
@@ -51,6 +52,7 @@ import sms_tab
 import phoneinfo
 import call_history
 import phone_detect
+import phone_media_codec
 
 if guihelper.IsMSWindows():
     import win32api
@@ -277,6 +279,7 @@ class MainApp(wx.App):
     def __init__(self, *_):
         self.frame=None
         self.SAFEMODE=False
+        codecs.register(phone_media_codec.search_func)
         wx.App.__init__(self, redirect=False, useBestVisual=True)
         
     def OnInit(self):
