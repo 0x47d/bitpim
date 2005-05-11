@@ -11,6 +11,7 @@
 import os
 import time
 import wx
+from wx.lib import masked
 
 import guiwidgets
 import guihelper
@@ -440,13 +441,21 @@ class ConvertDialog(wx.Dialog):
         hbs.Add(wx.StaticText(self, -1, "Current Position"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.positionlabel=wx.StaticText(self, -1, "0                 ")
         hbs.Add(self.positionlabel, 0, wx.ALL, 5)
-        hbs.Add(wx.StaticText(self, -1, "Clip Duration"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
-        self.durationlabel=wx.StaticText(self, -1, "0                 ")
-        hbs.Add(self.durationlabel, 0, wx.ALL, 5)
-        hbs.Add(wx.StaticText(self, -1, "Clip File length"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        hbs.Add(wx.StaticText(self, -1, "Approx. Clip File length"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.lengthlabel=wx.StaticText(self, -1, "0                   ")
         hbs.Add(self.lengthlabel, 0, wx.ALL, 5)
         bs.Add(hbs, 0, wx.ALL, 5)
+        # the start & end manual entry items
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, 'Clip Start:'), 0, wx.EXPAND|wx.ALL, 5)
+        self.clip_start=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
+        hbs.Add(self.clip_start, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, 'Clip Duration:'), 0, wx.EXPAND|wx.ALL, 5)
+        self.clip_duration=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
+        hbs.Add(self.clip_duration, 1, wx.EXPAND|wx.ALL, 5)
+        clip_set_btn=wx.Button(self, wx.NewId(), 'Set')
+        hbs.Add(clip_set_btn, 0, wx.EXPAND|wx.ALL, 5)
+        bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         self.slider=rangedslider.RangedSlider(self, id=self.ID_SLIDER, size=(-1, 30))
         hbs.Add(self.slider, 1, wx.EXPAND|wx.ALL, 5)
@@ -456,16 +465,18 @@ class ConvertDialog(wx.Dialog):
         hbs.Add(wx.Button(self, self.ID_PLAY, "Play Position"), 0, wx.ALL, 5)
         hbs.Add(wx.Button(self, self.ID_PLAY_CLIP, "Play Clip"), 0, wx.ALL, 5)
         bs.Add(hbs, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
-
         vbs.Add(bs, 0, wx.EXPAND|wx.ALL, 5)
         wx.EVT_BUTTON(self, self.ID_PLAY, self.OnPlayPosition)
         wx.EVT_BUTTON(self, self.ID_PLAY_CLIP, self.OnPlayClip)
         wx.EVT_BUTTON(self, self.ID_STOP, self.OnStop)
+        wx.EVT_BUTTON(self, clip_set_btn.GetId(), self.OnSetClip)
 
         rangedslider.EVT_POS_CHANGED(self, self.ID_SLIDER, self.OnSliderCurrentChanged)
         rangedslider.EVT_CHANGING(self, self.ID_SLIDER, self.OnSliderChanging)
 
-        self.cropids=[self.ID_SLIDER, self.ID_STOP, self.ID_PLAY, self.ID_PLAY_CLIP]
+        self.cropids=[self.ID_SLIDER, self.ID_STOP, self.ID_PLAY,
+                      self.ID_PLAY_CLIP, self.clip_start.GetId(),
+                      self.clip_duration.GetId(), clip_set_btn.GetId()]
 
 
     def OnConvert(self, _):
@@ -475,6 +486,8 @@ class ConvertDialog(wx.Dialog):
         self.FindWindowById(wx.ID_OK).Enable(False)
         getattr(self, self.PARAMETERS[self.convertinfo.format]['convert'])()
         self.wfi=fileinfo.getpcmfileinfo(self.wavfile)
+        self.clip_start.SetParameters(min=0.0, max=self.wfi.duration, limited=True)
+        self.clip_duration.SetParameters(min=0.0, max=self.wfi.duration, limited=True)
         self.UpdateCrop()
         for i in self.cropids:
             self.FindWindowById(i).Enable(True)
@@ -486,7 +499,8 @@ class ConvertDialog(wx.Dialog):
     def UpdateCrop(self):
         self.positionlabel.SetLabel("%.1f secs" % (self.slider.GetCurrent()*self.wfi.duration),)
         duration=(self.slider.GetEnd()-self.slider.GetStart())*self.wfi.duration
-        self.durationlabel.SetLabel("%.1f secs" % (duration,))
+        self.clip_start.SetValue(self.slider.GetStart()*self.wfi.duration)
+        self.clip_duration.SetValue(duration)
         v=getattr(self, self.PARAMETERS[self.convertinfo.format]['filelength'])(duration)
         self.lengthlabel.SetLabel("%s" % (v,))
 
@@ -569,6 +583,15 @@ class ConvertDialog(wx.Dialog):
         self.OnStop()
         self._removetempfiles()
         evt.Skip()
+
+    def OnSetClip(self, _=None):
+        s=self.clip_start.GetValue()
+        d=self.clip_duration.GetValue()
+        e=s+d
+        if e<=self.wfi.duration:
+            self.slider.SetStart(s/self.wfi.duration)
+            self.slider.SetEnd(e/self.wfi.duration)
+        self.UpdateCrop()
 
     ###
     ###  MP3 functions
