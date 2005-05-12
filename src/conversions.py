@@ -12,6 +12,7 @@
 
 import os
 import tempfile
+import struct
 import sys
 import wx
 
@@ -300,7 +301,39 @@ def convertqcptowav(qcpfile, wavfile):
         pass
     os.rename(w_name, wavfile)
 
-def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
+def adjustwavfilevolume(wavfilename, gain):
+    """ Ajdust the volume of a wav file.
+    """
+    f=open(wavfilename, 'rb')
+    # read in the headers
+    headers=f.read(20)
+    subchunk1size=common.LSBUint32(headers[16:20])
+    headers+=f.read(subchunk1size)
+    headers+=f.read(8)  # 4 byte ID and 4 byte length
+    subchunk2size=common.LSBUint32(headers[-4:])
+    blockalign=common.LSBUint16(headers[32:34])
+    if blockalign!=2:
+        print 'Only works with 16-bit wave file'
+        f.close()
+        return
+    sample_num=subchunk2size/blockalign
+    temp_name=common.gettempfilename("wav")
+    f_temp=file(temp_name, 'wb')
+    f_temp.write(headers)
+    delta=pow(10.0, (gain/10.0))
+    for i in range(sample_num):
+        d=int(struct.unpack('<h', f.read(2))[0]*delta)
+        if d>32767:
+            d=32767
+        elif d<-32768:
+            d=-32768
+        f_temp.write(struct.pack('<h', d))
+    f_temp.close()
+    f.close()
+    os.remove(wavfilename)
+    os.rename(temp_name, wavfilename)
+
+def trimwavfile(wavfilename, wavoutfilename, start, duration=None, gain=None):
     f=None
     try:
         f=open(wavfilename, 'rb')
@@ -334,6 +367,8 @@ def trimwavfile(wavfilename, wavoutfilename, start, duration=None):
                                                   'data',
                                                   common.LSBstr32(new_size),
                                                   f.read(new_size)]))
+        if gain is not None:
+            adjustwavfilevolume(wavoutfilename, gain)
     finally:
         if f is not None:
             f.close()

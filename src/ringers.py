@@ -446,13 +446,17 @@ class ConvertDialog(wx.Dialog):
         hbs.Add(self.lengthlabel, 0, wx.ALL, 5)
         bs.Add(hbs, 0, wx.ALL, 5)
         # the start & end manual entry items
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs=wx.GridSizer(-1, 2, 0, 0)
         hbs.Add(wx.StaticText(self, -1, 'Clip Start:'), 0, wx.EXPAND|wx.ALL, 5)
         self.clip_start=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
         hbs.Add(self.clip_start, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(wx.StaticText(self, -1, 'Clip Duration:'), 0, wx.EXPAND|wx.ALL, 5)
         self.clip_duration=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
         hbs.Add(self.clip_duration, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, 'Volume Adjustment(dB):'), 0,
+                wx.EXPAND|wx.ALL, 5)
+        self.clip_volume=masked.NumCtrl(self, wx.NewId(), fractionWidth=1)
+        hbs.Add(self.clip_volume, 1, wx.EXPAND|wx.ALL, 5)
         clip_set_btn=wx.Button(self, wx.NewId(), 'Set')
         hbs.Add(clip_set_btn, 0, wx.EXPAND|wx.ALL, 5)
         bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
@@ -476,7 +480,8 @@ class ConvertDialog(wx.Dialog):
 
         self.cropids=[self.ID_SLIDER, self.ID_STOP, self.ID_PLAY,
                       self.ID_PLAY_CLIP, self.clip_start.GetId(),
-                      self.clip_duration.GetId(), clip_set_btn.GetId()]
+                      self.clip_duration.GetId(), self.clip_volume.GetId(),
+                      clip_set_btn.GetId()]
 
 
     def OnConvert(self, _):
@@ -491,6 +496,7 @@ class ConvertDialog(wx.Dialog):
         self.UpdateCrop()
         for i in self.cropids:
             self.FindWindowById(i).Enable(True)
+        self.clip_volume.Enable(self.convertinfo.format=='QCP')
         self.FindWindowById(wx.ID_OK).Enable(True)
 
     OnConvert=guihelper.BusyWrapper(OnConvert)
@@ -507,12 +513,13 @@ class ConvertDialog(wx.Dialog):
 
 
     def OnPlayClip(self,_):
-        self._Play(self.slider.GetStart(), self.slider.GetEnd())
+        self._Play(self.slider.GetStart(), self.slider.GetEnd(),
+                   self.clip_volume.GetValue())
               
     def OnPlayPosition(self, _):
         self._Play(self.slider.GetCurrent(), 1.0)
 
-    def _Play(self, start, end):
+    def _Play(self, start, end, volume=None):
         self.OnStop()
         assert start<=end
         self.playstart=start
@@ -520,7 +527,9 @@ class ConvertDialog(wx.Dialog):
         
         self.playduration=(self.playend-self.playstart)*self.wfi.duration
 
-        conversions.trimwavfile(self.wavfile, self.clipwavfile, self.playstart*self.wfi.duration, self.playduration)
+        conversions.trimwavfile(self.wavfile, self.clipwavfile,
+                                self.playstart*self.wfi.duration,
+                                self.playduration, volume)
         self.sound=wx.Sound(self.clipwavfile)
         assert self.sound.IsOk()
         res=self.sound.Play(wx.SOUND_ASYNC)
@@ -573,7 +582,8 @@ class ConvertDialog(wx.Dialog):
         # make new data
         start=self.slider.GetStart()*self.wfi.duration
         duration=(self.slider.GetEnd()-self.slider.GetStart())*self.wfi.duration
-        self.newfiledata=getattr(self, self.PARAMETERS[self.convertinfo.format]['final'])(start, duration)
+        self.newfiledata=getattr(self, self.PARAMETERS[self.convertinfo.format]['final'])(
+            start, duration, self.clip_volume.GetValue())
         # now remove files
         self._removetempfiles()
         # use normal handler to quit dialog
@@ -617,7 +627,7 @@ class ConvertDialog(wx.Dialog):
         length=sum([frames[frame].nextoffset-frames[frame].offset for frame in range(self.beginframe, self.endframe)])
         return length
 
-    def mp3final(self, start, duration):
+    def mp3final(self, start, duration, volume=None):
         # mp3 writing out
         f=None
         try:
@@ -656,9 +666,11 @@ class ConvertDialog(wx.Dialog):
         # 5% overhead due to the file format (I often see closer to 7%)
         return int(duration*1625*1.05) 
 
-    def qcpfinal(self, start, duration):
+    def qcpfinal(self, start, duration, volume=None):
         # use the original to make a new wav, not the one that went through foo -> qcp -> wav
         conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1, start=start, duration=duration)
+        if volume is not None:
+            conversions.adjustwavfilevolume(self.wavfile, volume)
         conversions.convertwavtoqcp(self.wavfile, self.qcpfile)
         return open(self.qcpfile, "rb").read()
         
