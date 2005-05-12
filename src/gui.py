@@ -895,7 +895,7 @@ class MainWindow(wx.Frame):
     def __get_owner_name(self, esn):
         """ retrieve or ask user for the owner's name of this phone
         """
-        if esn is None:
+        if esn is None or not len(esn):
             return None
         # esn is found, check if we detected this phone before
         phone_id='phones/'+sha.new(esn).hexdigest()
