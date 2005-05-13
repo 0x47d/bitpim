@@ -514,6 +514,7 @@ class MainWindow(wx.Frame):
         self.lw=None
         self.lwdata=None
         self.filesystemwidget=None
+        self.__owner_name=''
 
         self.database=None
         
@@ -861,11 +862,10 @@ class MainWindow(wx.Frame):
         self.DoCheckUpdate()
 
     def SetPhoneModelStatus(self):
-        owner=self.config.Read('owner_name', '')
         phone=self.config.Read('phonetype', 'None')
         port=self.config.Read('lgvx4400port', 'None')
         self.GetStatusBar().set_phone_model(
-            '%s %s/%s'%(owner, phone, port))
+            '%s %s/%s'%(self.__owner_name, phone, port))
 
     def OnPhoneInfo(self, _):
         self.MakeCall(Request(self.wt.getphoneinfo),
@@ -922,17 +922,16 @@ class MainWindow(wx.Frame):
         self.OnBusyEnd()
         if self.HandleException(exception): return
         if r is None:
+            self.__owner_name=''
             wx.MessageBox('No phone detected/recognized',
                           'Phone Detection Failed', wx.OK)
         else:
             import pubsub
-            owner_name=self.__get_owner_name(r.get('phone_esn', None))
-            if owner_name is None or not len(owner_name):
-                owner_name='phone model'
-                self.config.Write('owner_name', '')
+            self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
+            if self.__owner_name is None:
+                self.__owner_name=''
             else:
-                owner_name+="'s"
-                self.config.Write('owner_name', owner_name)
+                self.__owner_name+="'s"
             self.config.Write("phonetype", r['phone_name'])
             self.commportsetting=str(r['port'])
             self.wt.clearcomm()
@@ -941,7 +940,8 @@ class MainWindow(wx.Frame):
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
             self.SetPhoneModelStatus()
-            wx.MessageBox('Found %s %s on %s'%(owner_name, r['phone_name'],
+            wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
+                                               r['phone_name'],
                                                r['port']),
                           'Phone Detection', wx.OK)
         
@@ -1276,6 +1276,8 @@ class MainWindow(wx.Frame):
             wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
         else:
+            # clear the ower's name for manual setting
+            self.__owner_name=''
             self.configdlg.ShowModal()
 
     # deal with graying out/in menu items on notebook page changing
