@@ -411,6 +411,44 @@ class STRING(BaseProtogenClass):
             raise ValueNotSetException()
         return self._value
 
+class SEVENBITSTRING(BaseProtogenClass):
+    """A text string where ASCII characters are stored as packed 7 bit characters.  This is
+    typically used in SMS messages."""
+    def __init__(self, *args, **kwargs):
+        """
+        @keyword terminator: (Default=\x00) The termination character
+        @keyword sizeinbytes: Amount of space the string sits in
+        """
+        super(SEVENBITSTRING, self).__init__(*args, **kwargs)
+        self._value=None
+        self._terminator='\x00'
+        self._sizeinbytes=None
+        if self._ismostderived(SEVENBITSTRING):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(SEVENBITSTRING,self)._update(args, kwargs)
+
+        self._consumekw(kwargs, ("terminator", "value", "sizeinbytes"))
+        self._complainaboutunusedargs(SEVENBITSTRING, kwargs)
+        if len(args):
+            raise TypeError("Unexpected arguments "+`args`)
+        if self._sizeinbytes is None:
+            raise ValueException("You must specify a size in bytes")
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        bytes=[ord(c) for c in buf.getnextbytes(self._sizeinbytes)]
+        self._value=common.decodecharacterbits(bytes, bitsperchar=7, charconv=chr, terminator=self._terminator)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def getvalue(self):
+        """Returns the string we are"""
+        if self._value is None:
+            raise ValueNotSetException()
+        return self._value        
+        
+
 class SAMSTRING(BaseProtogenClass):
     """A text string enclosed in quotes, with a way to escape quotes that a supposed
     to be part of the string.  Typical of Samsung phones."""
@@ -934,7 +972,9 @@ class UNKNOWN(DATA):
         self._complainaboutunusedargs(UNKNOWN,kwargs)
 
         # Was a value specified?
-        if len(args):
+        if len(args)==1:
+            self._value=args[0]
+        elif len(args)>1:
             raise TypeError("Unexpected arguments "+`args`)
 
 class LIST(BaseProtogenClass):

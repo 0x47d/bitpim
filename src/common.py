@@ -555,6 +555,44 @@ def MSBstr16(v):
 def MSBstr32(v):
     return chr((v>>24)&0xff)+chr((v>>16)&0xff)+chr((v>>8)&0xff)+chr(v&0xff)
 
+
+###
+### Binary handling
+###
+
+nibbles=("0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111")
+
+def tobinary(v):
+     return nibbles[v>>4]+nibbles[v&0x0f]
+
+def frombinary(v):
+     res=0
+     for i in v:
+          res*=2
+          res+=bool(i=="1")
+     return res
+
+# This could be done more efficiently through clever combinations of
+# masks and shifts but it is harder to write and debug (I tried :-)
+# and isn't any more effective on the short strings we work with
+def decodecharacterbits(bytes, bitsperchar, charconv=chr, terminator=None):
+     """Decodes the characters out of a string of bytes where each
+     character takes a fixed number of bits (eg 7)
+
+     @param bytes: atring containing the raw bytes
+     @param bitsperchar: number of bits making up each character
+     @param charconv: the function used to convert the integer value
+                 into a character
+     @param terminator: if this character is seen then it and the remaining bits are ignored"""
+     bits="".join([tobinary(ord(c)) for c in bytes])
+     value=[]
+     while len(bits):
+            c=charconv(frombinary(bits[:bitperchar]))
+            if c==terminator:
+                break
+            value.append(c)
+            bits=bits[bitsperchar:]
+    return "".join(value)
             
 ###
 ### Cache information against a file
