@@ -592,7 +592,7 @@ def decodecharacterbits(bytes, bitsperchar, charconv=chr, terminator=None):
                 break
             value.append(c)
             bits=bits[bitsperchar:]
-    return "".join(value)
+     return "".join(value)
             
 ###
 ### Cache information against a file
