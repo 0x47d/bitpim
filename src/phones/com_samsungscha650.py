@@ -602,7 +602,7 @@ class Profile(com_samsung.Profile):
         )
 
     if __debug__:
-        _supportedsyncs.append(('sms', 'write', 'OVERWRITE'))
+        _supportedsyncs+=(('sms', 'write', 'OVERWRITE'),)
 
     def convertphonebooktophone(self, helper, data):
         return data
