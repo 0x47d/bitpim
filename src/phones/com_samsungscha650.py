@@ -39,6 +39,7 @@ class Phone(com_samsung.Phone):
     desc="SCH-A650"
     serialsname='scha650'
     protocolclass=p_samsungscha650
+    parent_phone=com_samsung.Phone
 
     __groups_range=xrange(5)
     __phone_entries_range=xrange(1,501)
@@ -546,50 +547,20 @@ class Phone(com_samsung.Phone):
         self.setmode(self.MODEMODEM)
         return r
 
-    def getmemo(self, result):
-        self.setmode(self.MODEPHONEBOOK)
-        m=com_samsung.MemoList(self)
-        m.read()
-        m_dict=m.get()
-        result['memo']=m_dict
-        self.setmode(self.MODEMODEM)
-        return m_dict
+    getmemo=parent_phone._getmemo
+    savememo=parent_phone._savememo
 
-    def savememo(self, result, merge):
-        self.setmode(self.MODEPHONEBOOK)
-        m=com_samsung.MemoList(self)
-        r=result.get('memo', {})
-        m.set(r)
-        m.write()
-        self.setmode(self.MODEMODEM)
-        return r
+    gettodo=parent_phone._gettodo
+    savetodo=parent_phone._savetodo
 
-    def gettodo(self, result):
-        self.log("Getting todo entries")
-        self.setmode(self.MODEPHONEBOOK)
-        td_l=com_samsung.TodoList(self)
-        td_l.read()
-        result['todo']=td_l.get()
-        self.setmode(self.MODEMODEM)
-        return result
+    getsms=parent_phone._getsms
+    savesms=parent_phone._savesms
 
-    def savetodo(self, result, merge):
-        self.log("Saving todo entries")
-        self.setmode(self.MODEPHONEBOOK)
-        td_l=com_samsung.TodoList(self, result.get('todo', {}))
-        td_l.validate()
-        td_l.write()
-        self.setmode(self.MODEMODEM)
-        return result
-
-    def getsms(self, result):
-        return self._getsms(result)
-
-    getphoneinfo=com_samsung.Phone._getphoneinfo
+    getphoneinfo=parent_phone._getphoneinfo
 
     getmedia=None
 
-    detectphone=staticmethod(com_samsung.Phone._detectphone)
+    detectphone=staticmethod(parent_phone._detectphone)
 
 #-------------------------------------------------------------------------------
 class Profile(com_samsung.Profile):
@@ -629,6 +600,9 @@ class Profile(com_samsung.Profile):
         ('todo', 'write', 'OVERWRITE'),  # all todo list writing DJP
         ('sms', 'read', None),     # all SMS list reading DJP
         )
+
+    if __debug__:
+        _supportedsyncs.append(('sms', 'write', 'OVERWRITE'))
 
     def convertphonebooktophone(self, helper, data):
         return data

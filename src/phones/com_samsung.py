@@ -642,12 +642,51 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
         return dict
     # common methods for individual phones if they can use them w/o changes
+    def _getmemo(self, result):
+        self.setmode(self.MODEPHONEBOOK)
+        m=MemoList(self)
+        m.read()
+        m_dict=m.get()
+        result['memo']=m_dict
+        self.setmode(self.MODEMODEM)
+        return m_dict
+
+    def _savememo(self, result, merge):
+        self.setmode(self.MODEPHONEBOOK)
+        m=MemoList(self)
+        r=result.get('memo', {})
+        m.set(r)
+        m.write()
+        self.setmode(self.MODEMODEM)
+        return r
+
+    def _gettodo(self, result):
+        self.log("Getting todo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        td_l=TodoList(self)
+        td_l.read()
+        result['todo']=td_l.get()
+        self.setmode(self.MODEMODEM)
+        return result
+
+    def _savetodo(self, result, merge):
+        self.log("Saving todo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        td_l=TodoList(self, result.get('todo', {}))
+        td_l.validate()
+        td_l.write()
+        self.setmode(self.MODEMODEM)
+        return result
+
     def _getsms(self, result):
         self.log("Getting SMS entries")
         self.setmode(self.MODEPHONEBOOK)
         sms_l=SMSList(self)
         sms_l.read()
         result['sms']=sms_l.get()
+        sms_canned=CannedMsgList(self)
+        sms_canned.read()
+        result['canned_msg']=sms_canned.get()
         self.setmode(self.MODEMODEM)
         return result
     def _savesms(self, result, merge):
