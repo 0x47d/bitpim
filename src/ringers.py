@@ -441,19 +441,19 @@ class ConvertDialog(wx.Dialog):
         hbs.Add(wx.StaticText(self, -1, "Current Position"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.positionlabel=wx.StaticText(self, -1, "0                 ")
         hbs.Add(self.positionlabel, 0, wx.ALL, 5)
-        hbs.Add(wx.StaticText(self, -1, "Approx. Clip File length"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+        hbs.Add(wx.StaticText(self, -1, "Est. Clip File length"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.lengthlabel=wx.StaticText(self, -1, "0                   ")
         hbs.Add(self.lengthlabel, 0, wx.ALL, 5)
         bs.Add(hbs, 0, wx.ALL, 5)
         # the start & end manual entry items
         hbs=wx.GridSizer(-1, 2, 0, 0)
-        hbs.Add(wx.StaticText(self, -1, 'Clip Start:'), 0, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, 'Clip Start (sec):'), 0, wx.EXPAND|wx.ALL, 5)
         self.clip_start=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
         hbs.Add(self.clip_start, 1, wx.EXPAND|wx.ALL, 5)
-        hbs.Add(wx.StaticText(self, -1, 'Clip Duration:'), 0, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(wx.StaticText(self, -1, 'Clip Duration (sec):'), 0, wx.EXPAND|wx.ALL, 5)
         self.clip_duration=masked.NumCtrl(self, wx.NewId(), fractionWidth=2)
         hbs.Add(self.clip_duration, 1, wx.EXPAND|wx.ALL, 5)
-        hbs.Add(wx.StaticText(self, -1, 'Volume Adjustment(dB):'), 0,
+        hbs.Add(wx.StaticText(self, -1, 'Volume Adjustment (dB):'), 0,
                 wx.EXPAND|wx.ALL, 5)
         self.clip_volume=masked.NumCtrl(self, wx.NewId(), fractionWidth=1)
         hbs.Add(self.clip_volume, 1, wx.EXPAND|wx.ALL, 5)
