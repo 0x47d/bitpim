@@ -443,11 +443,12 @@ def _getbits(start, length, value):
 
 def getmp3fileinfo(filename):
     f=SafeFileWrapper(filename)
-    return idaudio_MP3(f, True)
+    return idaudio_zzMP3(f, True)
 
 
 twooheightzeros="\x00"*208
-def idaudio_MP3(f, returnframes=False):
+# want to make sure this gets evaluated last
+def idaudio_zzMP3(f, returnframes=False):
     # http://mpgedit.org/mpgedit/mpeg_format/mpeghdr.htm
     try:
         idv3present=False
@@ -792,7 +793,7 @@ def getpcmfileinfo(filename):
     f=SafeFileWrapper(filename)
     return idaudio_PCM(f)
 
-audioids=[globals()[f] for f in dir()[::-1] if f.startswith("idaudio_")]
+audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 print audioids
 def identify_audiofile(filename):
     v=thefileinfocache.get(filename)
