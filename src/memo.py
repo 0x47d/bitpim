@@ -43,6 +43,7 @@ implement the following 2 methods in your Phone class:
         ...
         return result
 
+The result dict key is 'memo'.
 """
 
 # standard modules
@@ -76,140 +77,140 @@ memoobjectfactory=database.dataobjectfactory(MemoDataObject)
 
 #-------------------------------------------------------------------------------
 class MemoEntry(object):
-    __body_subject_len=12   # the # of chars from body to fill in for subj + ...
+    _body_subject_len=12   # the # of chars from body to fill in for subj + ...
     def __init__(self):
-        self.__data={ 'body': [], 'serials': [] }
+        self._data={ 'body': [], 'serials': [] }
         self.set_date_now()
-        self.__create_id()
+        self._create_id()
 
     def get(self):
-        return copy.deepcopy(self.__data, {})
+        return copy.deepcopy(self._data, {})
     def set(self, d):
-        self.__data={}
-        self.__data.update(d)
+        self._data={}
+        self._data.update(d)
 
     def get_db_dict(self):
         return self.get()
     def set_db_dict(self, d):
         self.set(d)
 
-    def __set_or_del(self, key, v, v_list=()):
+    def _set_or_del(self, key, v, v_list=()):
         if v is None or v in v_list:
-            if self.__data.has_key(key):
-                del self.__data[key]
+            if self._data.has_key(key):
+                del self._data[key]
         else:
-            self.__data[key]=v
+            self._data[key]=v
 
-    def __get_subject(self):
-        return self.__data.get('subject', '')
-    def __set_subject(self, v):
-        self.__set_or_del('subject', v, ('',))
-    subject=property(fget=__get_subject, fset=__set_subject)
+    def _get_subject(self):
+        return self._data.get('subject', '')
+    def _set_subject(self, v):
+        self._set_or_del('subject', v, ('',))
+    subject=property(fget=_get_subject, fset=_set_subject)
 
-    def __get_text(self):
-        b=self.__data.get('body', [])
+    def _get_text(self):
+        b=self._data.get('body', [])
         for n in b:
             if n.get('type', None)=='text':
                 return n.get('data', '')
         return ''
-    def __set_text(self, v):
+    def _set_text(self, v):
         if v is None:
             v=''
-        if not len(self.subject):
-            self.subject=v[:self.__body_subject_len]+'...'
-        b=self.__data.get('body', [])
+        if not self.subject:
+            self.subject=v[:self._body_subject_len]+'...'
+        b=self._data.get('body', [])
         for n in b:
             if n.get('type', None)=='text':
                 n['data']=v
                 return
-        self.__data.setdefault('body', []).append(\
+        self._data.setdefault('body', []).append(\
             {'type': 'text', 'data': v })
-    text=property(fget=__get_text, fset=__set_text)
+    text=property(fget=_get_text, fset=_set_text)
 
-    def __get_secret(self):
-        f=self.__data.get('flags', [])
+    def _get_secret(self):
+        f=self._data.get('flags', [])
         for n in f:
             if n.has_key('secret'):
                 return n['secret']
         return False
-    def __set_secret(self, v):
-        f=self.__data.get('flags', [])
+    def _set_secret(self, v):
+        f=self._data.get('flags', [])
         for i, n in enumerate(f):
             if n.has_key('secret'):
                 if v is None or not v:
                     del f[i]
-                    if not len(self.__data['flags']):
-                        del self.__data['flags']
+                    if not self._data['flags']:
+                        del self._data['flags']
                 else:
                     n['secret']=v
                 return
         if v is not None and v:
-            self.__data.setdefault('flags', []).append({'secret': v})
-    secret=property(fget=__get_secret, fset=__set_secret)
+            self._data.setdefault('flags', []).append({'secret': v})
+    secret=property(fget=_get_secret, fset=_set_secret)
     
-    def __get_categories(self):
-        return self.__data.get('categories', [])
-    def __set_categories(self, v):
-        self.__set_or_del('categories', v, ([],))
-    categories=property(fget=__get_categories, fset=__set_categories)
+    def _get_categories(self):
+        return self._data.get('categories', [])
+    def _set_categories(self, v):
+        self._set_or_del('categories', v, ([],))
+    categories=property(fget=_get_categories, fset=_set_categories)
 
     def set_date_now(self):
         # set the date/time stamp to now
         n=datetime.datetime.now()
-        self.__data['date']=n.strftime('%b %d, %Y %H:%M')
+        self._data['date']=n.strftime('%b %d, %Y %H:%M')
     def set_date_isostr(self, iso_string):
         n=bptime.BPTime(iso_string)
-        self.__data['date']=n.date.strftime('%b %d, %Y')+n.time.strftime(' %H:%M')
-    def __get_date(self):
-        return self.__data.get('date', '')
-    date=property(fget=__get_date)
+        self._data['date']=n.date.strftime('%b %d, %Y')+n.time.strftime(' %H:%M')
+    def _get_date(self):
+        return self._data.get('date', '')
+    date=property(fget=_get_date)
 
-    def __create_id(self):
+    def _create_id(self):
         "Create a BitPim serial for this entry"
-        self.__data.setdefault("serials", []).append(\
+        self._data.setdefault("serials", []).append(\
             {"sourcetype": "bitpim", "id": str(time.time())})
-    def __get_id(self):
-        s=self.__data.get('serials', [])
+    def _get_id(self):
+        s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 return n.get('id', None)
         return None
-    id=property(fget=__get_id)
+    id=property(fget=_get_id)
 
 #-------------------------------------------------------------------------------
 class GeneralEditor(pb_editor.DirtyUIBase):
-    __dict_key_index=0
-    __label_index=1
-    __class_index=2
-    __get_index=3
-    __set_index=4
-    __w_index=5
+    _dict_key_index=0
+    _label_index=1
+    _class_index=2
+    _get_index=3
+    _set_index=4
+    _w_index=5
     def __init__(self, parent, _=None):
         pb_editor.DirtyUIBase.__init__(self, parent)
-        self.__fields=[
+        self._fields=[
             ['subject', 'Subject:', cal_editor.DVTextControl, None, None, None],
-            ['date', 'Date:', wx.StaticText, self.__get_date_str, self.__set_date_str, None],
+            ['date', 'Date:', wx.StaticText, self._get_date_str, self._set_date_str, None],
             ['secret', 'Private:', wx.CheckBox, None, None, None]
             ]
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
-        for n in self.__fields:
-            gs.Add(wx.StaticText(self, -1, n[self.__label_index],
+        for n in self._fields:
+            gs.Add(wx.StaticText(self, -1, n[self._label_index],
                                  style=wx.ALIGN_LEFT),0, wx.EXPAND|wx.BOTTOM, 5)
-            w=n[self.__class_index](self, -1)
+            w=n[self._class_index](self, -1)
             gs.Add(w, 0, wx.EXPAND|wx.BOTTOM, 5)
-            n[self.__w_index]=w
+            n[self._w_index]=w
         # event handlers
-        wx.EVT_CHECKBOX(self, self.__fields[2][self.__w_index].GetId(),
+        wx.EVT_CHECKBOX(self, self._fields[2][self._w_index].GetId(),
                         self.OnMakeDirty)
         # all done
         self.SetSizer(gs)
         self.SetAutoLayout(True)
         gs.Fit(self)
 
-    def __set_date_str(self, w, data):
+    def _set_date_str(self, w, data):
         w.SetLabel(getattr(data, 'date'))
-    def __get_date_str(self, w, _):
+    def _get_date_str(self, w, _):
         pass
     def OnMakeDirty(self, evt):
         self.OnDirtyUI(evt)
@@ -217,70 +218,70 @@ class GeneralEditor(pb_editor.DirtyUIBase):
     def Set(self, data):
         self.ignore_dirty=True
         if data is None:
-            for n in self.__fields:
-                n[self.__w_index].Enable(False)
+            for n in self._fields:
+                n[self._w_index].Enable(False)
         else:
-            for n in self.__fields:
-                w=n[self.__w_index]
+            for n in self._fields:
+                w=n[self._w_index]
                 w.Enable(True)
-                if n[self.__set_index] is None:
-                    w.SetValue(getattr(data, n[self.__dict_key_index]))
+                if n[self._set_index] is None:
+                    w.SetValue(getattr(data, n[self._dict_key_index]))
                 else:
-                    n[self.__set_index](w, data)
+                    n[self._set_index](w, data)
         self.ignore_dirty=self.dirty=False
 
     def Get(self, data):
         self.ignore_dirty=self.dirty=False
         if data is None:
             return
-        for n in self.__fields:
-            w=n[self.__w_index]
-            if n[self.__get_index] is None:
+        for n in self._fields:
+            w=n[self._w_index]
+            if n[self._get_index] is None:
                 v=w.GetValue()
             else:
-                v=n[self.__get_index](w, None)
+                v=n[self._get_index](w, None)
             if v is not None:
-                setattr(data, n[self.__dict_key_index], v)
+                setattr(data, n[self._dict_key_index], v)
 
 #-------------------------------------------------------------------------------
 class MemoWidget(wx.Panel):
     def __init__(self, mainwindow, parent):
         wx.Panel.__init__(self, parent, -1)
-        self.__main_window=mainwindow
-        self.__data={}
-        self.__data_map={}
+        self._main_window=mainwindow
+        self._data={}
+        self._data_map={}
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
         # horizontal sizer for the listbox and tabs
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the list box
-        self.__item_list=wx.ListBox(self, wx.NewId(),
+        self._item_list=wx.ListBox(self, wx.NewId(),
                                     style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        hbs.Add(self.__item_list, 1, wx.EXPAND|wx.BOTTOM, border=5)
+        hbs.Add(self._item_list, 1, wx.EXPAND|wx.BOTTOM, border=5)
         # the detailed info pane
         vbs1=wx.BoxSizer(wx.VERTICAL)
-        self.__items=(
+        self._items=(
             (GeneralEditor, 0),
             (cal_editor.CategoryEditor, 1),
             (pb_editor.MemoEditor, 1)
             )
-        self.__w=[]
-        for n in self.__items:
+        self._w=[]
+        for n in self._items:
             w=n[0](self, -1)
             vbs1.Add(w, n[1], wx.EXPAND|wx.ALL, 5)
-            self.__w.append(w)
+            self._w.append(w)
         hbs.Add(vbs1, 3, wx.EXPAND|wx.ALL, border=5)
-        self.__general_editor_w=self.__w[0]
-        self.__cat_editor_w=self.__w[1]
-        self.__memo_editor_w=self.__w[2]
+        self._general_editor_w=self._w[0]
+        self._cat_editor_w=self._w[1]
+        self._memo_editor_w=self._w[2]
         # the bottom buttons
         hbs1=wx.BoxSizer(wx.HORIZONTAL)
-        self.__save_btn=wx.Button(self, wx.NewId(), "Save")
-        self.__revert_btn=wx.Button(self, wx.NewId(), "Revert")
+        self._save_btn=wx.Button(self, wx.NewId(), "Save")
+        self._revert_btn=wx.Button(self, wx.NewId(), "Revert")
         help_btn=wx.Button(self, wx.ID_HELP, "Help")
-        hbs1.Add(self.__save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs1.Add(self._save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs1.Add(help_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        hbs1.Add(self.__revert_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs1.Add(self._revert_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         # all done
         vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -289,57 +290,57 @@ class MemoWidget(wx.Panel):
         self.SetAutoLayout(True)
         vbs.Fit(self)
         # event handlers
-        wx.EVT_LISTBOX(self, self.__item_list.GetId(), self.__OnListBoxItem)
-        wx.EVT_BUTTON(self, self.__save_btn.GetId(), self.__OnSave)
-        wx.EVT_BUTTON(self, self.__revert_btn.GetId(), self.__OnRevert)
+        wx.EVT_LISTBOX(self, self._item_list.GetId(), self._OnListBoxItem)
+        wx.EVT_BUTTON(self, self._save_btn.GetId(), self._OnSave)
+        wx.EVT_BUTTON(self, self._revert_btn.GetId(), self._OnRevert)
         wx.EVT_BUTTON(self, wx.ID_HELP,
                       lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_MEMO))
         # DIRTY UI Event handlers
-        for w in self.__w:
+        for w in self._w:
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         # populate data
-        self.__populate()
+        self._populate()
         # turn on dirty flag
         self.ignoredirty=False
         self.setdirty(False)
 
-    def __clear(self):
-        self.__item_list.Clear()
-        self.__clear_each()
+    def _clear(self):
+        self._item_list.Clear()
+        self._clear_each()
 
-    def __clear_each(self):
-        for w in self.__w:
+    def _clear_each(self):
+        for w in self._w:
             w.Set(None)
             w.Enable(False)
 
-    def __populate(self):
+    def _populate(self):
         # populate new data
-        self.__clear()
-        self.__data_map={}
+        self._clear()
+        self._data_map={}
         # populate the list with data
-        keys=self.__data.keys()
+        keys=self._data.keys()
         keys.sort()
         for k in keys:
-            n=self.__data[k]
-            i=self.__item_list.Append(n.subject)
-            self.__item_list.SetClientData(i, k)
-            self.__data_map[k]=i
+            n=self._data[k]
+            i=self._item_list.Append(n.subject)
+            self._item_list.SetClientData(i, k)
+            self._data_map[k]=i
 
-    def __populate_each(self, k):
+    def _populate_each(self, k):
         # populate the detailed info of the item keyed k
         if k is None:
             # clear out all the subfields
-            self.__clear_each()
+            self._clear_each()
             return
         # there're data, first enable the widgets
         self.ignoredirty=True
-        for w in self.__w:
+        for w in self._w:
             w.Enable(True)
-        entry=self.__data[k]
+        entry=self._data[k]
         # set the general detail
-        self.__general_editor_w.Set(entry)
-        self.__cat_editor_w.Set(entry.categories)
-        self.__memo_editor_w.Set({ 'memo': entry.text })
+        self._general_editor_w.Set(entry)
+        self._cat_editor_w.Set(entry.categories)
+        self._memo_editor_w.Set({ 'memo': entry.text })
         self.ignoredirty=False
         self.setdirty(False)
         
@@ -356,9 +357,9 @@ class MemoWidget(wx.Panel):
         if self.ignoredirty:
             return
         self.dirty=val
-        self.__item_list.Enable(not self.dirty)
-        self.__save_btn.Enable(self.dirty)
-        self.__revert_btn.Enable(self.dirty)
+        self._item_list.Enable(not self.dirty)
+        self._save_btn.Enable(self.dirty)
+        self._revert_btn.Enable(self.dirty)
 
     def OnAdd(self, _):
         # add a new memo item
@@ -367,49 +368,49 @@ class MemoWidget(wx.Panel):
             return
         m=MemoEntry()
         m.subject='New Memo'
-        self.__data[m.id]=m
-        self.__populate()
-        self.__save_to_db(self.__data)
-        self.__item_list.Select(self.__data_map[m.id])
-        self.__populate_each(m.id)
+        self._data[m.id]=m
+        self._populate()
+        self._save_to_db(self._data)
+        self._item_list.Select(self._data_map[m.id])
+        self._populate_each(m.id)
 
     def OnDelete(self, _):
         # delete the current selected item
-        sel_idx=self.__item_list.GetSelection()
+        sel_idx=self._item_list.GetSelection()
         if sel_idx is None or sel_idx==-1:
             # none selected
             return
         self.ignoredirty=True
-        k=self.__item_list.GetClientData(sel_idx)
-        self.__item_list.Delete(sel_idx)
-        self.__clear_each()
-        del self.__data[k]
-        del self.__data_map[k]
-        self.__save_to_db(self.__data)
+        k=self._item_list.GetClientData(sel_idx)
+        self._item_list.Delete(sel_idx)
+        self._clear_each()
+        del self._data[k]
+        del self._data_map[k]
+        self._save_to_db(self._data)
         self.ignoredirty=False
         self.setdirty(False)
 
     def getdata(self,dict,want=None):
-        dict['memo']=copy.deepcopy(self.__data)
+        dict['memo']=copy.deepcopy(self._data)
 
     def populate(self, dict):
-        self.__data=dict.get('memo', {})
-        self.__populate()
+        self._data=dict.get('memo', {})
+        self._populate()
 
-    def __save_to_db(self, memo_dict):
+    def _save_to_db(self, memo_dict):
         db_rr={}
         for k, e in memo_dict.items():
             db_rr[k]=MemoDataObject(e)
         database.ensurerecordtype(db_rr, memoobjectfactory)
-        self.__main_window.database.savemajordict('memo', db_rr)
+        self._main_window.database.savemajordict('memo', db_rr)
         
     def populatefs(self, dict):
-        self.__save_to_db(dict.get('memo', {}))
+        self._save_to_db(dict.get('memo', {}))
         return dict
 
     def getfromfs(self, result):
         # read data from the database
-        memo_dict=self.__main_window.database.getmajordictvalues('memo',
+        memo_dict=self._main_window.database.getmajordictvalues('memo',
                                                                 memoobjectfactory)
         r={}
         for k,e in memo_dict.items():
@@ -421,30 +422,30 @@ class MemoWidget(wx.Panel):
         result.update({ 'memo': r })
         return result
 
-    def __OnListBoxItem(self, evt):
+    def _OnListBoxItem(self, evt):
         # an item was clicked on/selected
-        self.__populate_each(self.__item_list.GetClientData(evt.GetInt()))
+        self._populate_each(self._item_list.GetClientData(evt.GetInt()))
 
-    def __OnSave(self, evt):
+    def _OnSave(self, evt):
         # save the current changes
         self.ignoredirty=True
-        sel_idx=self.__item_list.GetSelection()
-        k=self.__item_list.GetClientData(sel_idx)
-        entry=self.__data[k]
-        self.__general_editor_w.Get(entry)
-        entry.text=self.__memo_editor_w.Get().get('memo', None)
-        entry.categories=self.__cat_editor_w.Get()
+        sel_idx=self._item_list.GetSelection()
+        k=self._item_list.GetClientData(sel_idx)
+        entry=self._data[k]
+        self._general_editor_w.Get(entry)
+        entry.text=self._memo_editor_w.Get().get('memo', None)
+        entry.categories=self._cat_editor_w.Get()
         entry.set_date_now()
-        self.__general_editor_w.Set(entry)
-        self.__item_list.SetString(sel_idx, entry.subject)
-        self.__save_to_db(self.__data)
+        self._general_editor_w.Set(entry)
+        self._item_list.SetString(sel_idx, entry.subject)
+        self._save_to_db(self._data)
         self.ignoredirty=False
         self.setdirty(False)
 
-    def __OnRevert(self, evt):
+    def _OnRevert(self, evt):
         self.ignoredirty=True
-        sel_idx=self.__item_list.GetSelection()
-        k=self.__item_list.GetClientData(sel_idx)
-        self.__populate_each(k)
+        sel_idx=self._item_list.GetSelection()
+        k=self._item_list.GetClientData(sel_idx)
+        self._populate_each(k)
         self.ignoredirty=False
         self.setdirty(False)

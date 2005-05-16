@@ -27,8 +27,8 @@ The format for the Canned SMS Message item is standard.  It is an object with
 the following attributes:
 
 user_list: ['msg1', 'msg2', ...] list of user canned messages.
-           This attribute is Read-Only.
 builtin_list: ['msg1', 'msg2', ...] list of built-in canned messages.
+           This attribute is Read-Only.
 
 
 To implement SMS read for a phone module:
@@ -90,152 +90,152 @@ class SMSEntry(object):
     Folder_Saved='Saved'
     Valid_Folders=(Folder_Inbox, Folder_Sent, Folder_Saved)
     def __init__(self):
-        self.__data={ 'serials': [] }
-        self.__create_id()
+        self._data={ 'serials': [] }
+        self._create_id()
 
     def get(self):
-        return copy.deepcopy(self.__data, {})
+        return copy.deepcopy(self._data, {})
     def set(self, d):
-        self.__data={}
-        self.__data.update(d)
+        self._data={}
+        self._data.update(d)
 
     def get_db_dict(self):
         return self.get()
     def set_db_dict(self, d):
         self.set(d)
 
-    def __create_id(self):
+    def _create_id(self):
         "Create a BitPim serial for this entry"
-        self.__data.setdefault("serials", []).append(\
+        self._data.setdefault("serials", []).append(\
             {"sourcetype": "bitpim", "id": str(time.time())})
-    def __get_id(self):
-        s=self.__data.get('serials', [])
+    def _get_id(self):
+        s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 return n.get('id', None)
         return None
-    id=property(fget=__get_id)
+    id=property(fget=_get_id)
 
-    def __set_or_del(self, key, v, v_list=[]):
+    def _set_or_del(self, key, v, v_list=[]):
         if v is None or v in v_list:
-            if self.__data.has_key(key):
-                del self.__data[key]
+            if self._data.has_key(key):
+                del self._data[key]
         else:
-            self.__data[key]=v
+            self._data[key]=v
 
-    def __get_from(self):
-        return self.__data.get('_from', '')
-    def __set_from(self, v):
-        self.__set_or_del('_from', v, [''])
-    _from=property(fget=__get_from, fset=__set_from)
-    def __get_to(self):
-        return self.__data.get('_to', '')
-    def __set_to(self, v):
-        self.__set_or_del('_to', v, [''])
-    _to=property(fget=__get_to, fset=__set_to)
-    def __get_subject(self):
-        return self.__data.get('subject', '<None>')
-    def __set_subject(self, v):
-        self.__set_or_del('subject', v, [''])
-    subject=property(fget=__get_subject, fset=__set_subject)
-    def __get_text(self):
-        return self.__data.get('text', '')
-    def __set_text(self, v):
-        self.__set_or_del('text', v, [''])
-        self.__check_and_create_msg_id()
-    text=property(fget=__get_text, fset=__set_text)
-    def __get_datetime(self):
-        return self.__data.get('datetime', '')
-    def __set_datetime(self, v):
-        self.__set_or_del('datetime', v, [''])
-        self.__check_and_create_msg_id()
-    datetime=property(fget=__get_datetime, fset=__set_datetime)
-    def __check_and_create_msg_id(self):
+    def _get_from(self):
+        return self._data.get('_from', '')
+    def _set_from(self, v):
+        self._set_or_del('_from', v, [''])
+    _from=property(fget=_get_from, fset=_set_from)
+    def _get_to(self):
+        return self._data.get('_to', '')
+    def _set_to(self, v):
+        self._set_or_del('_to', v, [''])
+    _to=property(fget=_get_to, fset=_set_to)
+    def _get_subject(self):
+        return self._data.get('subject', '<None>')
+    def _set_subject(self, v):
+        self._set_or_del('subject', v, [''])
+    subject=property(fget=_get_subject, fset=_set_subject)
+    def _get_text(self):
+        return self._data.get('text', '')
+    def _set_text(self, v):
+        self._set_or_del('text', v, [''])
+        self._check_and_create_msg_id()
+    text=property(fget=_get_text, fset=_set_text)
+    def _get_datetime(self):
+        return self._data.get('datetime', '')
+    def _set_datetime(self, v):
+        self._set_or_del('datetime', v, [''])
+        self._check_and_create_msg_id()
+    datetime=property(fget=_get_datetime, fset=_set_datetime)
+    def _check_and_create_msg_id(self):
         if not len(self.msg_id) and len(self.text) and len(self.datetime):
-            self.__data['msg_id']=sha.new(self.datetime+self.text).hexdigest()
-    def __get_callback(self):
-        return self.__data.get('callback', '')
-    def __set_callback(self, v):
-        self.__set_or_del('callback', v, [''])
-    callback=property(fget=__get_callback, fset=__set_callback)
-    def __get_folder(self):
-        return self.__data.get('folder', '')
-    def __set_folder(self, v):
+            self._data['msg_id']=sha.new(self.datetime+self.text).hexdigest()
+    def _get_callback(self):
+        return self._data.get('callback', '')
+    def _set_callback(self, v):
+        self._set_or_del('callback', v, [''])
+    callback=property(fget=_get_callback, fset=_set_callback)
+    def _get_folder(self):
+        return self._data.get('folder', '')
+    def _set_folder(self, v):
         if v not in self.Valid_Folders:
             raise ValueError
-        self.__set_or_del('folder', v, [''])
-    folder=property(fget=__get_folder, fset=__set_folder)
-    def __get_locked(self):
-        f=self.__data.get('flags', [])
+        self._set_or_del('folder', v, [''])
+    folder=property(fget=_get_folder, fset=_set_folder)
+    def _get_locked(self):
+        f=self._data.get('flags', [])
         for n in f:
             if n.has_key('locked'):
                 return n['locked']
         return False
-    def __set_locked(self, v):
-        f=self.__data.get('flags', [])
+    def _set_locked(self, v):
+        f=self._data.get('flags', [])
         for i, n in enumerate(f):
             if n.has_key('locked'):
                 if v is None or not v:
                     del f[i]
-                    if not len(self.__data['flags']):
-                        del self.__data['flags']
+                    if not len(self._data['flags']):
+                        del self._data['flags']
                 else:
                     n['locked']=v
                 return
         if v is not None and v:
-            self.__data.setdefault('flags', []).append({'locked': v})
-    locked=property(fget=__get_locked, fset=__set_locked)
-    def __get_msg_id(self):
-        return self.__data.get('msg_id', '')
-    msg_id=property(fget=__get_msg_id)
+            self._data.setdefault('flags', []).append({'locked': v})
+    locked=property(fget=_get_locked, fset=_set_locked)
+    def _get_msg_id(self):
+        return self._data.get('msg_id', '')
+    msg_id=property(fget=_get_msg_id)
 
 #-------------------------------------------------------------------------------
 class CannedMsgEntry(object):
-    __data_key='canned_msg'
+    _data_key='canned_msg'
     builtin_type='builtin'
     user_type='user'
     def __init__(self):
-        self.__data={ 'serials': [] }
-        self.__create_id()
+        self._data={ 'serials': [] }
+        self._create_id()
 
     def get(self):
-        return copy.deepcopy(self.__data, {})
+        return copy.deepcopy(self._data, {})
     def set(self, d):
-        self.__data={}
-        self.__data.update(d)
+        self._data={}
+        self._data.update(d)
 
     def get_db_dict(self):
         return self.get()
     def set_db_dict(self, d):
         self.set(d)
 
-    def __create_id(self):
+    def _create_id(self):
         "Create a BitPim serial for this entry"
-        self.__data.setdefault("serials", []).append(\
+        self._data.setdefault("serials", []).append(\
             {"sourcetype": "bitpim", "id": str(time.time())})
-    def __get_id(self):
-        s=self.__data.get('serials', [])
+    def _get_id(self):
+        s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 return n.get('id', None)
         return None
-    id=property(fget=__get_id)
+    id=property(fget=_get_id)
 
-    def get_builtin_list(self):
-        return [x['text'] for x in self.__data.get(self.__data_key, []) \
+    def _get_builtin_list(self):
+        return [x['text'] for x in self._data.get(self._data_key, []) \
                 if x.get('type', None)==self.builtin_type]
-    builtin_list=property(fget=get_builtin_list)
+    builtin_list=property(fget=_get_builtin_list)
 
-    def get_user_list(self):
-        return [x['text'] for x in self.__data.get(self.__data_key, []) \
+    def _get_user_list(self):
+        return [x['text'] for x in self._data.get(self._data_key, []) \
                 if x.get('type', None)==self.user_type]
-    def set_user_list(self, v):
+    def _set_user_list(self, v):
         # first get all the builtin ones
-        l=[x for x in self.__data.get(self.__data_key, []) \
+        l=[x for x in self._data.get(self._data_key, []) \
            if x.get('type', None)==self.builtin_type]
         # then add the user ones
         l+=[ { 'text': x, 'type': self.user_type } for x in v]
-        self.__data[self.__data_key]=l
-    msg_list=user_list=property(fget=get_user_list, fset=set_user_list)
+        self._data[self._data_key]=l
+    msg_list=user_list=property(fget=_get_user_list, fset=_set_user_list)
 
 #-------------------------------------------------------------------------------
