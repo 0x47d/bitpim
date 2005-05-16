@@ -19,14 +19,17 @@ subject: string
 text: string
 datetime: string "YYYYMMDDThhmmss"
 callback: string (optional callback phone #)
-folder: string (where this item belongs: inbox, sent, draft, etc)
+folder: string (where this item belongs: 'Inbox', 'Sent', 'Saved')
 flags: [{"locked": True/<False|None>}]
 msg_id: unique message id (hexstring sha encoded (datetime+text))
 
 The format for the Canned SMS Message item is standard.  It is an object with
 the following attributes:
 
-msg_list: ['msg1', 'msg2', ...] list of canned messages
+user_list: ['msg1', 'msg2', ...] list of user canned messages.
+           This attribute is Read-Only.
+builtin_list: ['msg1', 'msg2', ...] list of built-in canned messages.
+
 
 To implement SMS read for a phone module:
  Add an entry into Profile._supportedsyncs:
@@ -38,12 +41,13 @@ To implement SMS read for a phone module:
         ...
         return result
 
-The result dict key for the SMS messages is 'sms'.  The dict key for the
-canned messages is 'canned_msg'.  If there are any canned messages, it should
-be stored as result['canned_msg']={ 'canned_msg': CannedMsgEntry() }: in other
-words, there should be only one object in the dict, and this object stores the
-list of canned messages.
+The result dict key for the SMS messages is 'sms', which is a dict of SMSEntry
+objetcs.
+The result dict key for the canned messages is 'canned_msg', which has the
+following format:
 
+result['canned_msg']=[{ 'text': 'Yes', 'type': 'builtin' },
+                      { 'text': 'No', 'type': 'user' }, ... ]
 """
 
 # standard modules
@@ -72,7 +76,7 @@ smsobjectfactory=database.dataobjectfactory(SMSDataObject)
 class CannedMsgDataObject(database.basedataobject):
     _knownproperties=[]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
-    _knownlistproperties.update( { 'canned_msg': ['text'] })
+    _knownlistproperties.update( { 'canned_msg': ['text', 'type'] })
     def __init__(self, data=None):
         if data is None or not isinstance(data, CannedMsgEntry):
             return;
@@ -188,6 +192,8 @@ class SMSEntry(object):
 #-------------------------------------------------------------------------------
 class CannedMsgEntry(object):
     __data_key='canned_msg'
+    builtin_type='builtin'
+    user_type='user'
     def __init__(self):
         self.__data={ 'serials': [] }
         self.__create_id()
@@ -215,17 +221,21 @@ class CannedMsgEntry(object):
         return None
     id=property(fget=__get_id)
 
-    def __get_msg_list(self):
-        return [x['text'] for x in self.__data.get(self.__data_key, [])]
-    def __set_msg_list(self, v):
-        if v is None or not len(v):
-            if self.__data.has_key(self.__data_key):
-                del self.__data[self.__data_key]
-            return
-        if not isinstance(v, (list, tuple)) or\
-           not isinstance(v[0], (str, unicode)):
-            raise TypeError, 'not a list of strings'
-        self.__data[self.__data_key]=[{'text': x } for x in v]
-    msg_list=property(fget=__get_msg_list, fset=__set_msg_list)
+    def get_builtin_list(self):
+        return [x['text'] for x in self.__data.get(self.__data_key, []) \
+                if x.get('type', None)==self.builtin_type]
+    builtin_list=property(fget=get_builtin_list)
+
+    def get_user_list(self):
+        return [x['text'] for x in self.__data.get(self.__data_key, []) \
+                if x.get('type', None)==self.user_type]
+    def set_user_list(self, v):
+        # first get all the builtin ones
+        l=[x for x in self.__data.get(self.__data_key, []) \
+           if x.get('type', None)==self.builtin_type]
+        # then add the user ones
+        l+=[ { 'text': x, 'type': self.user_type } for x in v]
+        self.__data[self.__data_key]=l
+    msg_list=user_list=property(fget=get_user_list, fset=set_user_list)
 
 #-------------------------------------------------------------------------------

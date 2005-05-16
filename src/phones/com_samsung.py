@@ -1149,25 +1149,21 @@ class CannedMsgList(SMS_Generic_List):
                                  'Reading SMS Canned Msg '+str(i))
             s=self._phone.get_canned_msg(i)
             if len(s)==self.__field_num:
-                msg_list.append(s[self.__text_index])
-        e=sms.CannedMsgEntry()
-        e.msg_list=msg_list
-        self._data[self.__data_key]=e
+                msg_list.append({'text': s[self.__text_index],
+                                 'type': sms.CannedMsgEntry.user_type })
+        self._data=msg_list
+    def get(self):
+        return copy.deepcopy(self._data, _nil=[])
     def validate(self):
-        for k,n in self._data.items():
-            msg_lst=n.msg_list
-            for k1,n1 in enumerate(msg_lst):
-                msg_lst[k1]=n1.replace('"', '')
-            self._data[k].msg_list=msg_lst
+        pass
     def write(self):
-        self.validate()
-        for k,n in self._data.items():
-            msg_lst=n.msg_list
+        msg_lst=[x['text'] for x in self._data if x['type']==sms.CannedMsgEntry.user_type]
         k=None
         for k,n in enumerate(msg_lst):
             if k>=self.__max_entries:
                 # enough of that
                 break
+            n=n.replace('"', '')
             self._phone.progress(k, self.__max_entries,
                                  'Writing SMS Canned Msg '+str(k))
             s=`k`+','+self._phone.get_time_stamp()+',"'+n+'"'

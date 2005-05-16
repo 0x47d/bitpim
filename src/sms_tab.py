@@ -97,7 +97,7 @@ class FolderPage(wx.Panel):
     def __init__(self, parent):
         super(FolderPage, self).__init__(parent, -1)
         self.__data=self.__data_map=self.__name_map={}
-        self.canned_data={}
+        self.canned_data=sms.CannedMsgEntry()
         # main box sizer
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the tree
@@ -110,7 +110,9 @@ class FolderPage(wx.Panel):
         for s in sms.SMSEntry.Valid_Folders:
             self.__nodes[s]=self.__item_list.AppendItem(self.__root, s)
         # and the canned message
-        self.__nodes['Canned']=self.__item_list.AppendItem(self.__root, 'Canned')
+        canned_node=self.__item_list.AppendItem(self.__root, 'Canned')
+        self.__item_list.AppendItem(canned_node, 'Built-In')
+        self.__item_list.AppendItem(canned_node, 'User')
         scrolled_panel.SetSizer(vbs0)
         scrolled_panel.SetAutoLayout(True)
         vbs0.Fit(scrolled_panel)
@@ -125,6 +127,9 @@ class FolderPage(wx.Panel):
         self.canned_list=gizmos.EditableListBox(self, -1, 'Canned Messages')
         vbs1.Add(self.canned_list, 1, wx.EXPAND|wx.ALL, 5)
         vbs1.Show(self.canned_list, False)
+        self.builtin_canned_list=wx.ListBox(self, -1)
+        vbs1.Add(self.builtin_canned_list, 1, wx.EXPAND|wx.ALL, 5)
+        vbs1.Show(self.builtin_canned_list, False)
         self.save_btn=wx.Button(self, wx.NewId(), 'Save')
         vbs1.Add(self.save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         vbs1.Show(self.save_btn, False)
@@ -177,16 +182,26 @@ class FolderPage(wx.Panel):
         # an item was clicked on/selected
         item=evt.GetItem()
         if item.IsOk():
-            if self.__item_list.GetItemText(item)=='Canned':
+            item_text=self.__item_list.GetItemText(item)
+            if item_text=='Built-In':
+                self.info_bs.Show(self.__item_info, False)
+                self.info_bs.Show(self.__item_text, False)
+                self.info_bs.Show(self.canned_list, False)
+                self.info_bs.Show(self.builtin_canned_list, True)
+                self.info_bs.Show(self.save_btn, False)
+                self.info_bs.Layout()
+            elif item_text=='User':
                 self.info_bs.Show(self.__item_info, False)
                 self.info_bs.Show(self.__item_text, False)
                 self.info_bs.Show(self.canned_list, True)
+                self.info_bs.Show(self.builtin_canned_list, False)
                 self.info_bs.Show(self.save_btn, True)
                 self.info_bs.Layout()
             else:
                 self.info_bs.Show(self.__item_info, True)
                 self.info_bs.Show(self.__item_text, True)
                 self.info_bs.Show(self.canned_list, False)
+                self.info_bs.Show(self.builtin_canned_list, False)
                 self.info_bs.Show(self.save_btn, False)
                 self.info_bs.Layout()
                 k=self.__item_list.GetPyData(evt.GetItem())
@@ -232,8 +247,8 @@ class FolderPage(wx.Panel):
                                { 'item': n.callback } )
         # populate the canned data
         self.canned_list.SetStrings(
-            self.canned_data.get(
-                self.canned_msg_key, sms.CannedMsgEntry()).msg_list)
+            self.canned_data.user_list)
+        self.builtin_canned_list.Set(self.canned_data.builtin_list)
 
     def __populate_each(self, k):
         # populate the detailed info of the item keyed k
@@ -273,7 +288,7 @@ class FolderPage(wx.Panel):
         self.canned_data=canned_data
         self.__populate()
     def Get(self):
-        self.canned_data[self.canned_msg_key].msg_list=self.canned_list.GetStrings()
+        self.canned_data.user_list=self.canned_list.GetStrings()
         return self.__data, self.canned_data
 
     def delete_selection(self, data):
@@ -328,11 +343,13 @@ class SMSWidget(wx.Panel):
 
     def getdata(self,dict,want=None):
         dict[self.__data_key]=copy.deepcopy(self.__data, {})
-        dict[self.__canned_data_key]=copy.deepcopy(self.__canned_data, {})
+        dict[self.__canned_data_key]=self.__canned_data.get().get(
+            self.__canned_data_key, {})
 
     def populate(self, dict):
         self.__data=dict.get(self.__data_key, {})
-        self.__canned_data=dict.get(self.__canned_data_key, {})
+        self.__canned_data=sms.CannedMsgEntry()
+        self.__canned_data.set({ self.__canned_data_key: dict.get(self.__canned_data_key, [])})
         self.__populate()
 
     def __save_to_db(self, sms_dict=None, canned_msg_dict=None):
@@ -344,15 +361,16 @@ class SMSWidget(wx.Panel):
             self.__main_window.database.savemajordict(self.__data_key, db_rr)
         if canned_msg_dict is not None:
             db_rr={}
-            for k,e in canned_msg_dict.items():
-                # there should only be 1 item!
-                db_rr[k]=sms.CannedMsgDataObject(e)
+            db_rr[self.__canned_data_key]=sms.CannedMsgDataObject(
+                canned_msg_dict)
             database.ensurerecordtype(db_rr, sms.cannedmsgobjectfactory)
             self.__main_window.database.savemajordict(self.__canned_data_key,
                                                       db_rr)
     def populatefs(self, dict):
-        self.__save_to_db(sms_dict=dict.get(self.__data_key, {}),
-                          canned_msg_dict=dict.get(self.__canned_data_key, {}))
+        canned_msg=sms.CannedMsgEntry()
+        canned_msg.set({ self.__canned_data_key: dict.get(self.__canned_data_key, [])})
+        self.__save_to_db(sms_dict=dict.get(self.__data_key, []),
+                          canned_msg_dict=canned_msg)
         return dict
 
     def getfromfs(self, result):
@@ -369,12 +387,10 @@ class SMSWidget(wx.Panel):
         canned_msg_dict=self.__main_window.database.\
                          getmajordictvalues(self.__canned_data_key,
                                             sms.cannedmsgobjectfactory)
-        r={}
         for k,e in canned_msg_dict.items():
             ce=sms.CannedMsgEntry()
             ce.set_db_dict(e)
-            r[self.__canned_data_key]=ce
-        result.update({ self.__canned_data_key: r })
+        result.update(ce.get())
         return result
 
     def merge(self, dict):
@@ -386,7 +402,8 @@ class SMSWidget(wx.Panel):
             if e.msg_id not in existing_id:
                 self.__data[e.id]=e
         # save the canned data
-        self.__canned_data=dict.get(self.__canned_data_key, {})
+        self.__canned_data=sms.CannedMsgEntry()
+        self.__canned_data.set({ self.__canned_data_key: dict.get(self.__canned_data_key, []) } )
         # populate the display and save the data
         self.__populate()
         self.__save_to_db(sms_dict=self.__data,
