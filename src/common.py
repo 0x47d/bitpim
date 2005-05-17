@@ -587,7 +587,7 @@ def decodecharacterbits(bytes, bitsperchar, charconv=chr, terminator=None):
      bits="".join([tobinary(ord(c)) for c in bytes])
      value=[]
      while len(bits):
-            c=charconv(frombinary(bits[:bitperchar]))
+            c=charconv(frombinary(bits[:bitsperchar]))
             if c==terminator:
                 break
             value.append(c)
