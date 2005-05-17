@@ -390,7 +390,7 @@ class SMSWidget(wx.Panel):
         for k,e in canned_msg_dict.items():
             ce=sms.CannedMsgEntry()
             ce.set_db_dict(e)
-        result.update(ce.get())
+            result.update(ce.get())
         return result
 
     def merge(self, dict):
