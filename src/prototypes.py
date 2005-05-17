@@ -438,7 +438,7 @@ class SEVENBITSTRING(BaseProtogenClass):
 
     def readfrombuffer(self, buf):
         self._bufferstartoffset=buf.getcurrentoffset()
-        bytes=[ord(c) for c in buf.getnextbytes(self._sizeinbytes)]
+        bytes=buf.getnextbytes(self._sizeinbytes)
         self._value=common.decodecharacterbits(bytes, bitsperchar=7, charconv=chr, terminator=self._terminator)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -448,6 +448,48 @@ class SEVENBITSTRING(BaseProtogenClass):
             raise ValueNotSetException()
         return self._value        
         
+class SMSDATE(BaseProtogenClass):
+    """A date as used in SMS messages.  It is six bytes long with the
+    bytes being year month day hour minute second.  From stuff on the
+    web, it appears GSM phones swap each nybble."""
+    def __init__(self, *args, **kwargs):
+        """@keyword sizeinbytes: (optional) Must be six"""
+        super(SMSDATE, self).__init__(*args, **kwargs)
+        self._values=None
+        self._sizeinbytes=6
+        if self._ismostderived(SMSDATE):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(SMSDATE, self)._update(args, kwargs)
+        self._consumekw(kwargs, ("sizeinbytes",))
+        self._complainaboutunusedargs(SMSDATE, kwargs)
+        if len(args):
+            raise TypeError("Unexpected arguments "+`args`)
+        if self._sizeinbytes != 6:
+            raise ValueNotSetException("You can only specify 6 as the size in bytes")
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        year=buf.getnextbyte()
+        if year<0:
+            year+=1900
+        else:
+            year+=2000
+        month=buf.getnextbyte()
+        day=buf.getnextbyte()
+        hour=buf.getnextbyte()
+        minute=buf.getnextbyte()
+        second=buf.getnextbyte()
+        self._value=year,month,day, hour,minute,second
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def getvalue(self):
+         """Returns the  ISO date time string we are"""
+         if self._value is None:
+             raise ValueNotSetException()
+         return "%d%02d%02dT%02d%02d%02d" % self._value
+
 
 class SAMSTRING(BaseProtogenClass):
     """A text string enclosed in quotes, with a way to escape quotes that a supposed
