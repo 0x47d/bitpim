@@ -34,10 +34,10 @@ builtin_list: ['msg1', 'msg2', ...] list of built-in canned messages.
 To implement SMS read for a phone module:
  Add an entry into Profile._supportedsyncs:
         ...
-        ('sms', 'read', None),     # all todo reading
+        ('sms', 'read', None),     # sms reading
 
  Implement the following method in your Phone class: 
-    def getsms(self, result, merge):
+    def getsms(self, result):
         ...
         return result
 
