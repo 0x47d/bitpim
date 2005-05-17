@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -18,6 +18,24 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 %}
+
+PACKET SMSFile:
+    14 UNKNOWN unknown
+    6  SMSDATE sent
+    4  UNKNOWN unknown2
+    38 STRING  phonenumber
+    54 UNKNOWN unknown3
+    20 UNKNOWN unknown4
+    22 STRING  subject
+    17 UNKNOWN unknown5
+    2280 SEVENBITSTRING body
+    59 STRING  sender
+    13 UNKNOWN unknown6
+    59 STRING  callback
+    6 UNKNOWN  unknown7
+    
+    
+
 
 PACKET pbheader:
     1 UINT {'constant': 0xff} +pbmode

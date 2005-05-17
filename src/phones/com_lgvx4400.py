@@ -690,6 +690,30 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 
         return e
 
+    smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
+                 'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
+                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
+                 }
+
+    def getsms(self, results):
+        for item in self.getfilesystem("sms").values():
+            if item['type']=='file':
+                folder=None
+                for f,pat in self.smspatterns.items():
+                    print item['name']
+                    if pat.match(item['name']):
+                        folder=f
+                        break
+                if folder is None: continue
+                buf=prototypes.buffer(self.getfilecontents(item['name']))
+                sf=self.protocolclass.SMSFile()
+                sf.readfrombuffer(buf)
+                self.logdata("SMS message in file "+item['name'], buf.getdata(), sf)
+
+        return results
+                                      
+        
+
 
 def phonize(str):
     """Convert the phone number into something the phone understands
@@ -914,6 +938,7 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
+        ('sms', 'read', None),
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
