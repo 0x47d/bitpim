@@ -53,6 +53,7 @@ import phoneinfo
 import call_history
 import phone_detect
 import phone_media_codec
+import hexeditor
 
 if guihelper.IsMSWindows():
     import win32api
@@ -1977,8 +1978,9 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         # ::TODO:: make this use HexEditor
-        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
-                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
+##        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
+##                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
+        dlg=hexeditor.HexEditorDialog(self, result, path+" Contents")
         dlg.Show()
 
     def OnFileDelete(self, _):

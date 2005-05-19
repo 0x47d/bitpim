@@ -10,29 +10,67 @@
 
 """A hex editor widget"""
 
-import wx
 import string
+import struct
+
+import wx
 
 class HexEditor(wx.ScrolledWindow):
 
+    _addr_range=xrange(8)
+    _hex_range_start=10
+    _hex_range_start2=33
+    _hex_range=xrange(_hex_range_start, 58)
+    _ascii_range_start=60
+    _ascii_range=xrange(60, 76)
+
     def __init__(self, parent, id=-1, style=wx.WANTS_CHARS):
         wx.ScrolledWindow.__init__(self, parent, id, style=style)
+        self.parent=parent
         self.data=""
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
         self.sethighlight(wx.NamedColour("BLACK"), wx.NamedColour("YELLOW"))
         self.setnormal(wx.NamedColour("BLACK"), wx.NamedColour("WHITE"))
         self.setfont(wx.TheFontList.FindOrCreateFont(10, wx.MODERN, wx.NORMAL, wx.NORMAL))
+        set_sel_menu=wx.Menu()
+        id=wx.NewId()
+        set_sel_menu.Append(id, 'Start')
+        wx.EVT_MENU(self, id, self.OnStartSelMenu)
+        id=wx.NewId()
+        set_sel_menu.Append(id, 'End')
+        wx.EVT_MENU(self, id, self.OnEndSelMenu)
+        self._bgmenu=wx.Menu()
+        self._bgmenu.AppendMenu(wx.NewId(), 'Set Selection', set_sel_menu)
+        id=wx.NewId()
+        self._bgmenu.Append(id, 'Value')
+        wx.EVT_MENU(self, id, self.OnViewValue)
+        id=wx.NewId()
+        self._bgmenu.Append(id, 'Import Python Module')
+        wx.EVT_MENU(self, id, self.OnImportModule)
+        self._reload_menu_id=wx.NewId()
+        self._bgmenu.Append(self._reload_menu_id, 'Reload Python Module')
+        wx.EVT_MENU(self, self._reload_menu_id, self.OnReloadModule)
+        self._apply_menu_id=wx.NewId()
+        self._bgmenu.Append(self._apply_menu_id, 'Apply Python Func')
+        wx.EVT_MENU(self, self._apply_menu_id, self.OnApplyFunc)
         wx.EVT_SCROLLWIN(self, self.OnScrollWin)
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         wx.EVT_SET_FOCUS(self, self.OnGainFocus)
         wx.EVT_KILL_FOCUS(self, self.OnLoseFocus)
+        wx.EVT_LEFT_DOWN(self, self.OnStartSelection)
+        wx.EVT_LEFT_UP(self, self.OnEndSelection)
+        wx.EVT_MOTION(self, self.OnMakeSelection)
+        wx.EVT_RIGHT_UP(self, self.OnRightClick)
         self.OnSize(None)
         self.buffer=None
         self.hasfocus=False
         self.highlightrange(-1,-1)
+        self.dragging=False
+        self.current_ofs=None
+        self._module=None
 
     def SetData(self, data):
         self.data=data
@@ -43,11 +81,187 @@ class HexEditor(wx.ScrolledWindow):
     def OnEraseBackground(self, _):
         pass
 
-    def OnSize(self, _):
-        self.width,self.height=self.GetClientSizeTuple()
+    def _to_char_line(self, x, y):
+        """Convert an x,y point to (char, line)
+        """
+        return x/self.charwidth, y/self.charheight
+    def _to_xy(self, char, line):
+        return char*self.charwidth, line*self.charheight
+    def _to_buffer_offset(self, char, line):
+        if char in self._hex_range:
+            if char>self._hex_range_start2:
+                char-=1
+            if ((char-self._hex_range_start)%3)<2:
+                return line*16+(char-self._hex_range_start)/3
+        elif char in self._ascii_range:
+            return line*16+char-self._ascii_range_start
+    def _set_and_move(self, evt):
+        c,l=self._to_char_line(evt.GetX(), evt.GetY())
+        self.GetCaret().Move(self._to_xy(c, l))
+        x0, y0=self.GetViewStart()
+        char_x=c+x0
+        line_y=l+y0
+        return self._to_buffer_offset(char_x, line_y)
+    _value_formats=(
+        ('unsigned char', 'B', struct.calcsize('B')),
+        ('signed char', 'b', struct.calcsize('b')),
+        ('LE unsigned short', '<H', struct.calcsize('<H')),
+        ('LE signed short', '<h', struct.calcsize('<h')),
+        ('BE unsigned short', '>H', struct.calcsize('>H')),
+        ('BE signed short', '>h', struct.calcsize('>h')),
+        ('LE unsigned int', '<I', struct.calcsize('<I')),
+        ('LE signed int', '<i', struct.calcsize('<i')),
+        ('BE unsigned int', '>I', struct.calcsize('>I')),
+        ('BE signed int', '>i', struct.calcsize('>i')),
+        )
+    def _gen_values(self, _data, _ofs):
+        """ Generate the values of various number formats starting at the
+        current offset.
+        """
+        n=_data[_ofs:]
+        len_n=len(n)
+        s='0x%X=%d'%(_ofs, _ofs)
+        res=[{ 'Data Offset': s}, {'':''} ]
+        for i,e in enumerate(self._value_formats):
+            if len_n<e[2]:
+                continue
+            v=struct.unpack(e[1], n[:e[2]])[0]
+            if i%2:
+                s='%d'%v
+            else:
+                fmt='0x%0'+str(e[2]*2)+'X=%d'
+                s=fmt%(v,v)
+            res.append({ e[0]: s })
+        return res
+
+    def _display_result(self, result):
+        """ Display the results from applying a Python routine over the data
+        """
+        s=''
+        for d in result:
+            for k,e in d.items():
+                s+=k+':\t'+e+'\n'
+        dlg=wx.MessageDialog(self, s, 'Results', style=wx.OK)
+        dlg.ShowModal()
+
+    def OnReloadModule(self, _):
+        try:
+            reload(self._module)
+        except:
+            self._module=None
+            w=wx.MessageDialog(self, 'Failed to reload module',
+                               'Reload Module Error',
+                               style=wx.OK|wx.ICON_ERROR)
+            w.ShowModal()
+            w.Destroy()
+    def OnApplyFunc(self, _):
+        choices=[x for x in dir(self._module) \
+                 if callable(getattr(self._module, x))]
+        dlg=wx.SingleChoiceDialog(self, 'Select a function to apply:',
+                            'Apply Python Func',
+                            choices)
+        if dlg.ShowModal()==wx.ID_OK:
+            try:
+                res=getattr(self._module, dlg.GetStringSelection())(
+                    self, self.data, self.current_ofs)
+                self._display_result(res)
+            except:
+                raise
+                w=wx.MessageDialog(self, 'Apply Func raised an exception',
+                                   'Apply Func Error',
+                                   style=wx.OK|wx.ICON_ERROR)
+                w.ShowModal()
+                w.Destroy()
+        dlg.Destroy()
+    def OnImportModule(self, _):
+        dlg=wx.TextEntryDialog(self, 'Enter the name of a Python Module:',
+                               'Module Import')
+        if dlg.ShowModal()==wx.ID_OK:
+            try:
+                self._module=__import__(dlg.GetValue())
+            except ImportError:
+                self._module=None
+                w=wx.MessageDialog(self, 'Failed to import module: '+dlg.GetValue(),
+                                 'Module Import Error',
+                                 style=wx.OK|wx.ICON_ERROR)
+                w.ShowModal()
+                w.Destroy()
+        dlg.Destroy()
+
+    def OnStartSelMenu(self, evt):
+        ofs=self.current_ofs
+        if ofs is not None:
+            self.highlightstart=ofs
+            self.needsupdate=True
+            self.Refresh()
+        self.parent.set_sel(self.highlightstart, self.highlightend)
+            
+    def OnEndSelMenu(self, _):
+        ofs=self.current_ofs
+        if ofs is not None:
+            self.highlightend=ofs+1
+            self.needsupdate=True
+            self.Refresh()
+        self.parent.set_sel(self.highlightstart, self.highlightend)
+
+    def OnViewValue(self, _):
+        ofs=self.current_ofs
+        if ofs is not None:
+            self._display_result(self._gen_values(self.data, ofs))
+
+    def OnStartSelection(self, evt):
+        self.highlightstart=self.highlightend=None
+        ofs=self._set_and_move(evt)
+        if ofs is not None:
+            self.highlightstart=ofs
+            self.dragging=True
+            self.parent.set_val(self.data[ofs:])
+        else:
+            self.parent.set_val(None)
+        self.needsupdate=True
+        self.Refresh()
+        self.parent.set_pos(ofs)
+        self.parent.set_sel(self.highlightstart, self.highlightend)
+        
+    def OnMakeSelection(self, evt):
+        if not self.dragging:
+            return
+        ofs=self._set_and_move(evt)
+        if ofs is not None:
+            self.highlightend=ofs+1
+            self.needsupdate=True
+            self.Refresh()
+        self.parent.set_pos(ofs)
+        self.parent.set_sel(self.highlightstart, self.highlightend)
+    def OnEndSelection(self, evt):
+        self.dragging=False
+        ofs=self._set_and_move(evt)
+        self.parent.set_pos(ofs)
+        self.parent.set_sel(self.highlightstart, self.highlightend)
+
+    def OnRightClick(self, evt):
+        self.current_ofs=self._set_and_move(evt)
+        if self.current_ofs is None:
+            self.parent.set_val(None)
+        else:
+            self.parent.set_val(self.data[self.current_ofs:])
+        self.parent.set_pos(self.current_ofs)
+        self._bgmenu.Enable(self._apply_menu_id, self._module is not None)
+        self._bgmenu.Enable(self._reload_menu_id, self._module is not None)
+        self.PopupMenu(self._bgmenu, evt.GetPosition())
+
+    def OnSize(self, evt):
         # uncomment these lines to prevent going wider than is needed
         # if self.width>self.widthinchars*self.charwidth:
         #    self.SetClientSize( (self.widthinchars*self.charwidth, self.height) )
+        if evt is None:
+            self.width=(self.widthinchars+3)*self.charwidth
+            self.height=self.charheight*20
+            self.SetClientSize((self.width, self.height))
+            self.SetCaret(wx.Caret(self, (self.charwidth, self.charheight)))
+            self.GetCaret().Show(True)
+        else:
+            self.width,self.height=self.GetClientSizeTuple()
         self.needsupdate=True
 
     def OnGainFocus(self,_):
@@ -88,7 +302,7 @@ class HexEditor(wx.ScrolledWindow):
         if lines==0 or len(self.data)%16:
             lines+=1
         self.datalines=lines
-        lines+=1 # status line
+##        lines+=1 # status line
         # fixed width
         self.widthinchars=8+2+3*16+1+2+16
         self.SetScrollbars(self.charwidth, self.charheight, self.widthinchars, lines, self.GetViewStart()[0], self.GetViewStart()[1])
@@ -146,11 +360,11 @@ class HexEditor(wx.ScrolledWindow):
                     c='.'
                 dc.DrawText(c, (10+(3*16)+2+i)*self.charwidth, line*self.charheight)
 
-        if self.hasfocus:
-            self._setstatus(dc)
-            w,h=self.GetClientSizeTuple()
-            dc.DrawRectangle(0,h-self.charheight+yd*self.charheight,self.widthinchars*self.charwidth,self.charheight)
-            dc.DrawText("A test of stuff "+`yd`, 0, h-self.charheight+yd*self.charheight)
+##        if self.hasfocus:
+##            self._setstatus(dc)
+##            w,h=self.GetClientSizeTuple()
+##            dc.DrawRectangle(0,h-self.charheight+yd*self.charheight,self.widthinchars*self.charwidth,self.charheight)
+##            dc.DrawText("A test of stuff "+`yd`, 0, h-self.charheight+yd*self.charheight)
                 
         dc.EndDrawing()
 
@@ -185,10 +399,80 @@ class HexEditor(wx.ScrolledWindow):
         self.Refresh() # clear whole widget
         event.Skip() # default event handlers now do scrolling etc
 
+class HexEditorDialog(wx.Dialog):
+    _pane_widths=[-2, -3, -4]
+    _pos_pane_index=0
+    _sel_pane_index=1
+    _val_pane_index=2
+    def __init__(self, parent, data='', title='BitPim Hex Editor', helpd_id=-1):
+        super(HexEditorDialog, self).__init__(parent, -1, title,
+                                              size=(500, 500),
+                                              style=wx.DEFAULT_DIALOG_STYLE|\
+                                              wx.RESIZE_BORDER)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        self._hex_editor=HexEditor(self)
+        self._hex_editor.SetData(data)
+        vbs.Add(self._hex_editor, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+        ok_btn=wx.Button(self, wx.ID_OK, 'OK')
+        vbs.Add(ok_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._status_bar=wx.StatusBar(self, -1)
+        self._status_bar.SetFieldsCount(len(self._pane_widths))
+        self._status_bar.SetStatusWidths(self._pane_widths)
+        vbs.Add(self._status_bar, 0, wx.EXPAND|wx.ALL, 0)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+    def set_pos(self, pos):
+        """Display the current buffer offset in the format of
+        Pos: 0x12=18
+        """
+        if pos is None:
+            s=''
+        else:
+            s='Pos: 0x%X=%d'%(pos, pos)
+        self._status_bar.SetStatusText(s, self._pos_pane_index)
+    def set_sel(self, sel_start, sel_end):
+        if sel_start is None or sel_end is None:
+            s=''
+        else:
+            sel_len=sel_end-sel_start
+            sel_end-=1
+            s='Sel: 0x%X=%d to 0x%X=%d (0x%X=%d bytes)'%(
+                sel_start, sel_start, sel_end, sel_end,
+                sel_len, sel_len)
+        self._status_bar.SetStatusText(s, self._sel_pane_index)
+    def set_val(self, v):
+        if v:
+            # char
+            s='Val: 0x%02X=%d'%(ord(v[0]), ord(v[0]))
+            if len(v)>1:
+                # short
+                u_s=struct.unpack('<H', v[:struct.calcsize('<H')])[0]
+                s+=' 0x%04X=%d'%(u_s,  u_s)
+            if len(v)>3:
+                # int/long
+                u_i=struct.unpack('<I', v[:struct.calcsize('<I')])[0]
+                s+=' 0x%08X=%d'%(u_i, u_i)
+        else:
+            s=''
+        self._status_bar.SetStatusText(s, self._val_pane_index)
+
+    def set(self, data):
+        self._hex_editor.SetData(data)
+
+        
 if __name__=='__main__':
     import sys
 
     app=wx.PySimpleApp()
+    if len(sys.argv)!=2:
+        sys.exit(1)
+    dlg=HexEditorDialog(None, file(sys.argv[1], 'rb').read(),
+                        sys.argv[1])
+    dlg.ShowModal()
+    dlg.Destroy()
+    sys.exit(0)
     class MainWindow(wx.Frame):
         def __init__(self, parent, id, title):
             wx.Frame.__init__(self, parent, id, title, size=(800,600),
