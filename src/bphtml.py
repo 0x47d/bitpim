@@ -141,10 +141,13 @@ class TreeParser(HTMLParser.HTMLParser):
 
 
     def handle_entityref(self, name):
-        data=htmlentitydefs.entitydefs[name]
-        if data=="\xa0": # hard space
-            return 
-        self.handle_data("&%s;" % (name,))
+        data=htmlentitydefs.entitydefs.get(name, None)
+        if data is None:
+            self.handle_data('&%s'%name)
+        elif data=="\xa0": # hard space
+            return
+        else:
+            self.handle_data("&%s;" % (name,))
             
     def handle_data(self, data):
         if len(data.strip())==0:
