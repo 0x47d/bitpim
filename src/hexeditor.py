@@ -28,11 +28,46 @@ class HexEditor(wx.ScrolledWindow):
         wx.ScrolledWindow.__init__(self, parent, id, style=style)
         self.parent=parent
         self.data=""
+        self.buffer=None
+        self.hasfocus=False
+        self.dragging=False
+        self.current_ofs=None
+        self._module=None
+        # some GUI setup
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
         self.sethighlight(wx.NamedColour("BLACK"), wx.NamedColour("YELLOW"))
         self.setnormal(wx.NamedColour("BLACK"), wx.NamedColour("WHITE"))
         self.setfont(wx.TheFontList.FindOrCreateFont(10, wx.MODERN, wx.NORMAL, wx.NORMAL))
+        self.OnSize(None)
+        self.highlightrange(-1,-1)
+        # other stuff
+        self._create_context_menu()
+        self._map_events()
+
+    def _map_events(self):
+        wx.EVT_SCROLLWIN(self, self.OnScrollWin)
+        wx.EVT_PAINT(self, self.OnPaint)
+        wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
+        wx.EVT_SET_FOCUS(self, self.OnGainFocus)
+        wx.EVT_KILL_FOCUS(self, self.OnLoseFocus)
+        wx.EVT_LEFT_DOWN(self, self.OnStartSelection)
+        wx.EVT_LEFT_UP(self, self.OnEndSelection)
+        wx.EVT_MOTION(self, self.OnMakeSelection)
+        wx.EVT_RIGHT_UP(self, self.OnRightClick)
+
+    def _create_context_menu(self):
+        file_menu=wx.Menu()
+        id=wx.NewId()
+        file_menu.Append(id, 'Load')
+        wx.EVT_MENU(self, id, self.OnLoadFile)
+        id=wx.NewId()
+        file_menu.Append(id, 'Save As')
+        wx.EVT_MENU(self, id, self.OnSaveAs)
+        id=wx.NewId()
+        file_menu.Append(id, 'Save Selection As')
+        wx.EVT_MENU(self, id, self.OnSaveSelection)
         set_sel_menu=wx.Menu()
         id=wx.NewId()
         set_sel_menu.Append(id, 'Start')
@@ -41,6 +76,7 @@ class HexEditor(wx.ScrolledWindow):
         set_sel_menu.Append(id, 'End')
         wx.EVT_MENU(self, id, self.OnEndSelMenu)
         self._bgmenu=wx.Menu()
+        self._bgmenu.AppendMenu(wx.NewId(), 'File', file_menu)
         self._bgmenu.AppendMenu(wx.NewId(), 'Set Selection', set_sel_menu)
         id=wx.NewId()
         self._bgmenu.Append(id, 'Value')
@@ -54,23 +90,6 @@ class HexEditor(wx.ScrolledWindow):
         self._apply_menu_id=wx.NewId()
         self._bgmenu.Append(self._apply_menu_id, 'Apply Python Func')
         wx.EVT_MENU(self, self._apply_menu_id, self.OnApplyFunc)
-        wx.EVT_SCROLLWIN(self, self.OnScrollWin)
-        wx.EVT_PAINT(self, self.OnPaint)
-        wx.EVT_SIZE(self, self.OnSize)
-        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
-        wx.EVT_SET_FOCUS(self, self.OnGainFocus)
-        wx.EVT_KILL_FOCUS(self, self.OnLoseFocus)
-        wx.EVT_LEFT_DOWN(self, self.OnStartSelection)
-        wx.EVT_LEFT_UP(self, self.OnEndSelection)
-        wx.EVT_MOTION(self, self.OnMakeSelection)
-        wx.EVT_RIGHT_UP(self, self.OnRightClick)
-        self.OnSize(None)
-        self.buffer=None
-        self.hasfocus=False
-        self.highlightrange(-1,-1)
-        self.dragging=False
-        self.current_ofs=None
-        self._module=None
 
     def SetData(self, data):
         self.data=data
@@ -143,6 +162,31 @@ class HexEditor(wx.ScrolledWindow):
                 s+=k+':\t'+e+'\n'
         dlg=wx.MessageDialog(self, s, 'Results', style=wx.OK)
         dlg.ShowModal()
+        dlg.Destroy()
+
+    def OnLoadFile(self, _):
+        dlg=wx.FileDialog(self, 'Select a file to load',
+                          style=wx.OPEN|wx.FILE_MUST_EXIST)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.SetData(file(dlg.GetPath(), 'rb').read())
+        dlg.Destroy()
+    def OnSaveAs(self, _):
+        dlg=wx.FileDialog(self, 'Select a file to save',
+                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dlg.ShowModal()==wx.ID_OK:
+            file(dlg.GetPath(), 'wb').write(self.data)
+        dlg.Destroy()
+    def OnSaveSelection(self, _):
+        if self.highlightstart is None or self.highlightstart==-1 or \
+           self.highlightend is None or self.highlightend==-1:
+            # no selection
+            return
+        dlg=wx.FileDialog(self, 'Select a file to save',
+                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dlg.ShowModal()==wx.ID_OK:
+            file(dlg.GetPath(), 'wb').write(
+                self.data[self.highlightstart:self.highlightend])
+        dlg.Destroy()
 
     def OnReloadModule(self, _):
         try:
