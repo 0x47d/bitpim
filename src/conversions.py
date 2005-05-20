@@ -269,7 +269,8 @@ def converttowav(mp3filename, wavfilename, samplerate=None,
 
     run(*cmd)
 
-def convertwavtoqcp(wavfile, qcpfile):
+_qcp_optimization_params=('ffr', 'vfr', 'fhr', 'vhr')
+def convertwavtoqcp(wavfile, qcpfile, optimization=None):
     pvconv=shortfilename(gethelperbinary('pvconv'))
     w_name=shortfilename(wavfile)
     q_name=common.stripext(w_name)+'.qcp'
@@ -278,7 +279,10 @@ def convertwavtoqcp(wavfile, qcpfile):
     except:
         pass
     # Have not figured out how to specify output file for pvconv
-    run(pvconv, w_name)
+    if optimization is None:
+        run(pvconv, w_name)
+    else:
+        run(pvconv, '-r', _qcp_optimization_params[optimization], w_name)
     # mv output file to qcpfile
     try:
         os.remove(qcpfile)

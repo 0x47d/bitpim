@@ -330,6 +330,7 @@ class ConvertDialog(wx.Dialog):
         'samplerates': ["8000"],
         'channels': ["1"],
         'bitrates': ["13000"],
+        'optimization': ['0-Best Sound Quality', '1', '2', '3-Smallest File Size'],
         'setup': 'qcpsetup',
         'convert': 'qcpconvert',
         'filelength': 'qcpfilelength',
@@ -403,6 +404,14 @@ class ConvertDialog(wx.Dialog):
         gs.Add(wx.StaticText(self, -1, "Bitrate (kbits per second)"), 0, wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
         self.bitrate=wx.ComboBox(self, style=wx.CB_DROPDOWN|wx.CB_READONLY, choices=params['bitrates'])
         gs.Add(self.bitrate, 0, wx.ALL|wx.EXPAND, 5)
+        if params.has_key('optimization'):
+            gs.Add(wx.StaticText(self, -1, 'Optimization'), 0,
+                   wx.ALL|wx.ALIGN_CENTRE_VERTICAL, 5)
+            self.optimization=wx.ComboBox(self,
+                                          style=wx.CB_DROPDOWN|wx.CB_READONLY,
+                                          choices=params['optimization'])
+            self.optimization.SetSelection(1)
+            gs.Add(self.optimization, 0, wx.ALL|wx.EXPAND, 5)
         gs.AddGrowableCol(1, 1)
         gs.AddGrowableCol(3, 1)
         bs.Add(gs, 0, wx.EXPAND)
@@ -655,7 +664,8 @@ class ConvertDialog(wx.Dialog):
         # convert to wav first
         conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1)
         # then to qcp
-        conversions.convertwavtoqcp(self.wavfile, self.qcpfile)
+        conversions.convertwavtoqcp(self.wavfile, self.qcpfile,
+                                    self.optimization.GetSelection())
         # and finally the wav from the qcp so we can accurately hear what it sounds like
         conversions.convertqcptowav(self.qcpfile, self.wavfile)
 
@@ -671,6 +681,6 @@ class ConvertDialog(wx.Dialog):
         conversions.converttowav(self.file, self.wavfile, samplerate=8000, channels=1, start=start, duration=duration)
         if volume is not None:
             conversions.adjustwavfilevolume(self.wavfile, volume)
-        conversions.convertwavtoqcp(self.wavfile, self.qcpfile)
+        conversions.convertwavtoqcp(self.wavfile, self.qcpfile,
+                                    self.optimization.GetSelection())
         return open(self.qcpfile, "rb").read()
-        
