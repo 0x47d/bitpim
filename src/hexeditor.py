@@ -28,6 +28,7 @@ class HexEditor(wx.ScrolledWindow):
         wx.ScrolledWindow.__init__(self, parent, id, style=style)
         self.parent=parent
         self.data=""
+        self.title=""
         self.buffer=None
         self.hasfocus=False
         self.dragging=False
@@ -68,6 +69,9 @@ class HexEditor(wx.ScrolledWindow):
         id=wx.NewId()
         file_menu.Append(id, 'Save Selection As')
         wx.EVT_MENU(self, id, self.OnSaveSelection)
+        id=wx.NewId()
+        file_menu.Append(id, 'Save Hexdump As')
+        wx.EVT_MENU(self, id, self.OnSaveHexdumpAs)
         set_sel_menu=wx.Menu()
         id=wx.NewId()
         set_sel_menu.Append(id, 'Start')
@@ -97,6 +101,9 @@ class HexEditor(wx.ScrolledWindow):
         self.updatescrollbars()
         self.Refresh()
 
+    def SetTitle(self, title):
+        self.title=title
+        
     def OnEraseBackground(self, _):
         pass
 
@@ -175,6 +182,36 @@ class HexEditor(wx.ScrolledWindow):
                           style=wx.SAVE|wx.OVERWRITE_PROMPT)
         if dlg.ShowModal()==wx.ID_OK:
             file(dlg.GetPath(), 'wb').write(self.data)
+        dlg.Destroy()
+    def hexdumpdata(self):
+        res=""
+        l=len(self.data)
+        if self.title:
+            res += self.title+": "+`l`+" bytes\n"
+        res += "<#! !#>\n"
+        pos=0
+        while pos<l:
+            text="%08X "%(pos)
+            line=self.data[pos:pos+16]
+            for i in range(len(line)):
+                text+="%02X "%(ord(line[i]))
+            text+="   "*(16-len(line))
+            text+="    "
+            for i in range(len(line)):
+                c=line[i]
+                if (ord(c)>=32 and string.printable.find(c)>=0):
+                    text+=c
+                else:
+                    text+='.'
+            res+=text+"\n"
+            pos+=16
+        return res
+        
+    def OnSaveHexdumpAs(self, _):
+        dlg=wx.FileDialog(self, 'Select a file to save',
+                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dlg.ShowModal()==wx.ID_OK:
+            file(dlg.GetPath(), 'wb').write(self.hexdumpdata())
         dlg.Destroy()
     def OnSaveSelection(self, _):
         if self.highlightstart is None or self.highlightstart==-1 or \
@@ -456,6 +493,7 @@ class HexEditorDialog(wx.Dialog):
         vbs=wx.BoxSizer(wx.VERTICAL)
         self._hex_editor=HexEditor(self)
         self._hex_editor.SetData(data)
+        self._hex_editor.SetTitle(title)
         vbs.Add(self._hex_editor, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
         ok_btn=wx.Button(self, wx.ID_OK, 'OK')
