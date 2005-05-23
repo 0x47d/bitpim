@@ -1423,8 +1423,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.GetView().ProcessTableMessage(msg)
         self.GetView().ClearSelection()
         self.main.OnCellSelect()
-        workaroundyetanotherwxpythonbug(self.GetView().AutoSize)
-        wx.CallAfter(workaroundyetanotherwxpythonbug,self.GetView().Fit)
+        self.GetView().Refresh()
 
     OnDataUpdated=guihelper.BusyWrapper(OnDataUpdated)
 
