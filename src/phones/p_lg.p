@@ -19,7 +19,7 @@ BOOL=BOOLlsb
 
 %}
 
-PACKET SMSFile:
+PACKET SMSInboxFile:
     14 UNKNOWN unknown
     6  SMSDATE sent
     4  UNKNOWN unknown2
@@ -30,7 +30,7 @@ PACKET SMSFile:
     17 UNKNOWN unknown5
     2280 SEVENBITSTRING body
     59 STRING  sender
-    13 UNKNOWN unknown6
+    45 UNKNOWN unknown6
     59 STRING  callback
     6 UNKNOWN  unknown7
     
