@@ -19,7 +19,6 @@ import commport
 import time
 import re
 import todo
-from DSV import DSV
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
@@ -386,46 +385,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             setattr(e, k, entry[k])
         return e
 
-    def get_time_stamp(self):
-
-        now = time.localtime(time.time())
-        return "%04d%02d%02dT%02d%02d%02d" % now[0:6]
-
-    def extract_timedate(self, td):
-        # extract samsung timedate 'YYYYMMDDTHHMMSS' to (y, m, d, h, m)
-        return (int(td[:4]), int(td[4:6]), int(td[6:8]), int(td[9:11]), int(td[11:13]))
-
-    def encode_timedate(self, td):
-        # reverse if extract_timedate
-        return "%04d%02d%02dT%02d%02d00" % tuple(td)
-
-    def splitandunescape(self, line):
-        """Split fields and unescape double quote and right brace"""
-        # Should unescaping be done on fields that are not surrounded by
-        # double quotes?  DSV strips these quotes, so we have to do it to
-        # all fields.
-        col=line.find(": ")
-        e=DSV.importDSV([line[col+2:]])[0]
-        i=0
-        while i<len(e):
-            item=e[i]
-            item=item.replace("}\002",'"')
-            item=item.replace("}]","}")
-            e[i]=item
-            i+=1
-            
-        return e
-
-    def samsungescape(self, s):
-        """Escape double quotes and }'s in a string"""
-        #s=s.replace("}","}]")
-        #s=s.replace('"','}\002')
-        return s
-        
-    def addcommas(self, s, nfields):
-        "Add commas so that a line has a desired number of fields"
-        return s
-    
     def getcalendar(self, result):
         entries = {}
         self.log("Getting calendar entries")
