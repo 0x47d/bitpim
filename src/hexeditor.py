@@ -24,7 +24,8 @@ class HexEditor(wx.ScrolledWindow):
     _ascii_range_start=60
     _ascii_range=xrange(60, 76)
 
-    def __init__(self, parent, id=-1, style=wx.WANTS_CHARS):
+    def __init__(self, parent, id=-1, style=wx.WANTS_CHARS,
+                 _set_pos=None, _set_sel=None, _set_val=None):
         wx.ScrolledWindow.__init__(self, parent, id, style=style)
         self.parent=parent
         self.data=""
@@ -34,6 +35,10 @@ class HexEditor(wx.ScrolledWindow):
         self.dragging=False
         self.current_ofs=None
         self._module=None
+        # ways of displaying status
+        self.set_pos=_set_pos or self._set_pos
+        self.set_val=_set_val or self._set_val
+        self.set_sel=_set_sel or self._set_sel
         # some GUI setup
         self.SetBackgroundColour("WHITE")
         self.SetCursor(wx.StockCursor(wx.CURSOR_IBEAM))
@@ -41,7 +46,7 @@ class HexEditor(wx.ScrolledWindow):
         self.setnormal(wx.NamedColour("BLACK"), wx.NamedColour("WHITE"))
         self.setfont(wx.TheFontList.FindOrCreateFont(10, wx.MODERN, wx.NORMAL, wx.NORMAL))
         self.OnSize(None)
-        self.highlightrange(-1,-1)
+        self.highlightrange(None, None)
         # other stuff
         self._create_context_menu()
         self._map_events()
@@ -103,8 +108,19 @@ class HexEditor(wx.ScrolledWindow):
 
     def SetTitle(self, title):
         self.title=title
-        
+
+    def SetStatusDisplay(self, _set_pos=None, _set_sel=None, _set_val=None):
+        self.set_pos=_set_pos or self._set_pos
+        self.set_sel=_set_sel or self._set_sel
+        self.set_val=_set_val or self._set_val
+
     def OnEraseBackground(self, _):
+        pass
+    def _set_pos(self, pos):
+        pass
+    def _set_sel(self, sel_start, sel_end):
+        pass
+    def _set_val(self, v):
         pass
 
     def _to_char_line(self, x, y):
@@ -275,7 +291,7 @@ class HexEditor(wx.ScrolledWindow):
             self.highlightstart=ofs
             self.needsupdate=True
             self.Refresh()
-        self.parent.set_sel(self.highlightstart, self.highlightend)
+        self.set_sel(self.highlightstart, self.highlightend)
             
     def OnEndSelMenu(self, _):
         ofs=self.current_ofs
@@ -283,7 +299,7 @@ class HexEditor(wx.ScrolledWindow):
             self.highlightend=ofs+1
             self.needsupdate=True
             self.Refresh()
-        self.parent.set_sel(self.highlightstart, self.highlightend)
+        self.set_sel(self.highlightstart, self.highlightend)
 
     def OnViewValue(self, _):
         ofs=self.current_ofs
@@ -296,13 +312,13 @@ class HexEditor(wx.ScrolledWindow):
         if ofs is not None:
             self.highlightstart=ofs
             self.dragging=True
-            self.parent.set_val(self.data[ofs:])
+            self.set_val(self.data[ofs:])
         else:
-            self.parent.set_val(None)
+            self.set_val(None)
         self.needsupdate=True
         self.Refresh()
-        self.parent.set_pos(ofs)
-        self.parent.set_sel(self.highlightstart, self.highlightend)
+        self.set_pos(ofs)
+        self.set_sel(self.highlightstart, self.highlightend)
         
     def OnMakeSelection(self, evt):
         if not self.dragging:
@@ -312,21 +328,21 @@ class HexEditor(wx.ScrolledWindow):
             self.highlightend=ofs+1
             self.needsupdate=True
             self.Refresh()
-        self.parent.set_pos(ofs)
-        self.parent.set_sel(self.highlightstart, self.highlightend)
+        self.set_pos(ofs)
+        self.set_sel(self.highlightstart, self.highlightend)
     def OnEndSelection(self, evt):
         self.dragging=False
         ofs=self._set_and_move(evt)
-        self.parent.set_pos(ofs)
-        self.parent.set_sel(self.highlightstart, self.highlightend)
+        self.set_pos(ofs)
+        self.set_sel(self.highlightstart, self.highlightend)
 
     def OnRightClick(self, evt):
         self.current_ofs=self._set_and_move(evt)
         if self.current_ofs is None:
-            self.parent.set_val(None)
+            self.set_val(None)
         else:
-            self.parent.set_val(self.data[self.current_ofs:])
-        self.parent.set_pos(self.current_ofs)
+            self.set_val(self.data[self.current_ofs:])
+        self.set_pos(self.current_ofs)
         self._bgmenu.Enable(self._apply_menu_id, self._module is not None)
         self._bgmenu.Enable(self._reload_menu_id, self._module is not None)
         self.PopupMenu(self._bgmenu, evt.GetPosition())
@@ -360,6 +376,9 @@ class HexEditor(wx.ScrolledWindow):
         self.highlightstart=start
         self.highlightend=end
         self.Refresh()
+        self.set_pos(None)
+        self.set_sel(self.highlightstart, self.highlightend)
+        self.set_val(None)
 
     def _ishighlighted(self, pos):
         return pos>=self.highlightstart and pos<self.highlightend
@@ -490,17 +509,19 @@ class HexEditorDialog(wx.Dialog):
                                               size=(500, 500),
                                               style=wx.DEFAULT_DIALOG_STYLE|\
                                               wx.RESIZE_BORDER)
+        self._status_bar=wx.StatusBar(self, -1)
+        self._status_bar.SetFieldsCount(len(self._pane_widths))
+        self._status_bar.SetStatusWidths(self._pane_widths)
         vbs=wx.BoxSizer(wx.VERTICAL)
-        self._hex_editor=HexEditor(self)
+        self._hex_editor=HexEditor(self, _set_pos=self.set_pos,
+                                   _set_val=self.set_val,
+                                   _set_sel=self.set_sel)
         self._hex_editor.SetData(data)
         self._hex_editor.SetTitle(title)
         vbs.Add(self._hex_editor, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
         ok_btn=wx.Button(self, wx.ID_OK, 'OK')
         vbs.Add(ok_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self._status_bar=wx.StatusBar(self, -1)
-        self._status_bar.SetFieldsCount(len(self._pane_widths))
-        self._status_bar.SetStatusWidths(self._pane_widths)
         vbs.Add(self._status_bar, 0, wx.EXPAND|wx.ALL, 0)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
@@ -515,7 +536,8 @@ class HexEditorDialog(wx.Dialog):
             s='Pos: 0x%X=%d'%(pos, pos)
         self._status_bar.SetStatusText(s, self._pos_pane_index)
     def set_sel(self, sel_start, sel_end):
-        if sel_start is None or sel_end is None:
+        if sel_start is None or sel_start==-1 or\
+           sel_end is None or sel_end ==-1:
             s=''
         else:
             sel_len=sel_end-sel_start
@@ -547,32 +569,18 @@ class HexEditorDialog(wx.Dialog):
 if __name__=='__main__':
     import sys
 
-    app=wx.PySimpleApp()
     if len(sys.argv)!=2:
+        print 'Usage:',sys.argv[0],'<File Name>'
         sys.exit(1)
+    app=wx.PySimpleApp()
     dlg=HexEditorDialog(None, file(sys.argv[1], 'rb').read(),
                         sys.argv[1])
-    dlg.ShowModal()
-    dlg.Destroy()
-    sys.exit(0)
-    class MainWindow(wx.Frame):
-        def __init__(self, parent, id, title):
-            wx.Frame.__init__(self, parent, id, title, size=(800,600),
-                             style=wx.DEFAULT_FRAME_STYLE)
-            self.control=HexEditor(self)
-            self.Show(True)
-
-    frame=MainWindow(None, -1, "HexEditor Test")
-    if len(sys.argv)==2:
-        frame.control.SetData(open(sys.argv[1], "rb").read())
+    if True:
+        dlg.ShowModal()
     else:
-        frame.control.SetData("this is a test of this \x03\xf7code to see \thow well it draws stuff"*70)
-        frame.control.highlightrange(70, 123)
-
-    if False:
         import hotshot
         f=hotshot.Profile("hexeprof",1)
-        f.runcall(app.MainLoop)
+        f.runcall(dlg.ShowModal)
         f.close()
         import hotshot.stats
         stats=hotshot.stats.load("hexeprof")
@@ -580,7 +588,6 @@ if __name__=='__main__':
         # stats.sort_stats("cumulative")
         stats.sort_stats("time", "calls")
         stats.print_stats(30)
-        
-    else:
-        app.MainLoop()
 
+    dlg.Destroy()
+    sys.exit(0)

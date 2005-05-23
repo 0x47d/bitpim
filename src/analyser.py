@@ -16,6 +16,7 @@ import re
 import traceback
 import wx
 import StringIO
+import struct
 
 import common
 import prototypes
@@ -66,6 +67,10 @@ class Eventlist(wx.ListCtrl):
 
 class Analyser(wx.Frame):
     """A top level frame for analysing protocol data"""
+    _pane_widths=[-2, -3, -4]
+    _pos_pane_index=0
+    _sel_pane_index=1
+    _val_pane_index=2
 
     def __init__(self, parent=None, id=-1, title="BitPim Protocol Analyser", data=None):
         """Start the show
@@ -74,7 +79,9 @@ class Analyser(wx.Frame):
         """
         wx.Frame.__init__(self, parent, id, title, size=(800,750),
                          style=wx.DEFAULT_FRAME_STYLE)
-
+        # add a status bar to display various status items
+        self.CreateStatusBar(len(self._pane_widths))
+        self.SetStatusWidths(self._pane_widths)
 
         topsplit=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
 
@@ -84,7 +91,10 @@ class Analyser(wx.Frame):
         topsplit.SplitHorizontally(self.list, botsplit, 300)
 
         self.tree=wx.TreeCtrl(botsplit, 23, style=wx.TR_DEFAULT_STYLE)
-        self.hex=hexeditor.HexEditor(botsplit)
+        self.hex=hexeditor.HexEditor(botsplit,
+                                     _set_pos=self.set_pos,
+                                     _set_sel=self.set_sel,
+                                     _set_val=self.set_val)
         botsplit.SplitHorizontally(self.tree, self.hex, 200)
         
         if data is None:
@@ -303,8 +313,41 @@ class Analyser(wx.Frame):
         # filter, reduce, map and lambda all in one go!
         self.packets=filter(lambda item: reduce(lambda x,y: x+y, map(len, item)), self.packets)
                     
-
-
+    def set_pos(self, pos):
+        """Display the current buffer offset in the format of
+        Pos: 0x12=18
+        """
+        if pos is None:
+            s=''
+        else:
+            s='Pos: 0x%X=%d'%(pos, pos)
+        self.SetStatusText(s, self._pos_pane_index)
+    def set_sel(self, sel_start, sel_end):
+        if sel_start is None or sel_start==-1 or\
+           sel_end is None or sel_end==-1:
+            s=''
+        else:
+            sel_len=sel_end-sel_start
+            sel_end-=1
+            s='Sel: 0x%X=%d to 0x%X=%d (0x%X=%d bytes)'%(
+                sel_start, sel_start, sel_end, sel_end,
+                sel_len, sel_len)
+        self.SetStatusText(s, self._sel_pane_index)
+    def set_val(self, v):
+        if v:
+            # char
+            s='Val: 0x%02X=%d'%(ord(v[0]), ord(v[0]))
+            if len(v)>1:
+                # short
+                u_s=struct.unpack('<H', v[:struct.calcsize('<H')])[0]
+                s+=' 0x%04X=%d'%(u_s,  u_s)
+            if len(v)>3:
+                # int/long
+                u_i=struct.unpack('<I', v[:struct.calcsize('<I')])[0]
+                s+=' 0x%08X=%d'%(u_i, u_i)
+        else:
+            s=''
+        self.SetStatusText(s, self._val_pane_index)
 
 if __name__=='__main__':
     app=wx.PySimpleApp()
