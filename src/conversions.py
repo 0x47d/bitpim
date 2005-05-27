@@ -436,6 +436,80 @@ def convertavitobmp(avi_file_name, frame_num=0):
         pass
     return img
 
+def convertlgbittobmp(bit_data):
+    """Takes a BIT image file (LG proprietary) and returns BMP
+
+    Note that this routine is hardwired for only working on 128x128
+    BIT files. This is the only format encountered on the LG-VX3200.
+    @param bit_data: 128x128 16BPP BIT image file data
+    @return: 128x128 24BPP BMP image file data
+    """
+    img='BM'
+    img+=common.LSBstr32(128*128*3+54)       # file size
+    img+=common.LSBstr16(0)                  # unused
+    img+=common.LSBstr16(0)                  # unused
+    img+=common.LSBstr32(54)                 # offset to pixel data (from byte 0)
+    img+=common.LSBstr32(40)                 # info section size
+    img+=common.LSBstr32(128)                # image width
+    img+=common.LSBstr32(128)                # image height
+    img+=common.LSBstr16(1)                  # image planes
+    img+=common.LSBstr16(24)                 # bits-per-pixel
+    img+=common.LSBstr32(0)                  # compression type (0=uncompressed)
+    img+=common.LSBstr32(0)                  # image size (may be 0 for uncompressed images)
+    img+=common.LSBstr32(0)                  # (ignored)
+    img+=common.LSBstr32(0)                  # (ignored)
+    img+=common.LSBstr32(0)                  # (ignored)
+    img+=common.LSBstr32(0)                  # (ignored)
+    # Now on to the char data
+    for h in range(128):
+        for w in range(128):
+            # images can be zero len on phone
+            if len(bit_data)==0:
+                bitdata = 0xffff
+            else:
+                bitind=(127-h)*128*2+(w*2)+4
+                bitdata=common.LSBUint16(bit_data[bitind:bitind+2])
+            red=(bitdata & 0xf800) >> 8
+            green=(bitdata & 0x07e0) >> 3
+            blue=(bitdata & 0x001f) << 3
+            if (red & 0x8) != 0:
+                red=red | 0x7
+            if (green & 0x4) != 0:
+                green=green | 0x3
+            if (blue & 0x8) != 0:
+                blue=blue | 0x7
+            img+=chr(blue)
+            img+=chr(green)
+            img+=chr(red)
+    return img
+
+def convertbmptolgbit(bmp_data):
+    """Takes a BMP image file and returns BIT image file (LG proprietary)
+
+    Note that this routine is hardwired for only createing 128x128
+    BIT files. This is the only format encountered on the LG-VX3200.
+    @param bit_data: 128x128 24BPP BMP image file data
+    @return: 128x128 16BPP BIT image file data
+    """
+    # This function only exists for the LG proprietary images (wallpaper, etc.)
+    # on the LG-VX3200. These images are hardwired at 128x128 so I will complain
+    # if the bmp does not conform (or does not appear to be a BMP file).
+    if bmp_data[0:2]!='BM' or common.LSBUint32(bmp_data[18:22])!=128 or common.LSBUint32(bmp_data[22:26])!=128:
+        return None
+    offset=common.LSBUint32(bmp_data[10:14])
+    img=common.LSBstr16(128)
+    img+=common.LSBstr16(128)
+    # Now on to the char data
+    for h in range(128):
+        for w in range(128):
+            bitind=(127-h)*128*3+(w*3)+offset
+            blue=ord(bmp_data[bitind:bitind+1])
+            green=ord(bmp_data[bitind+1:bitind+2])
+            red=ord(bmp_data[bitind+2:bitind+3])
+            bitval=((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3)
+            img+=common.LSBstr16(bitval)
+    return img
+
 def helperavailable(helper_name):
     try:
         f=gethelperbinary(helper_name)
