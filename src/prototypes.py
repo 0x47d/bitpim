@@ -491,11 +491,9 @@ class SMSDATE(BaseProtogenClass):
          return "%d%02d%02dT%02d%02d%02d" % self._value
 
 
-class SAMSTRING(BaseProtogenClass):
+class CSVSTRING(BaseProtogenClass):
     """A text string enclosed in quotes, with a way to escape quotes that a supposed
     to be part of the string.  Typical of Samsung phones."""
-    # Is there a better name for this than SAMSTRING?  Perhaps QUOTEDSTRING,
-    # ASCIISTRING, CSVSTRING...?
     def __init__(self, *args, **kwargs):
         """
         A string value can be specified to this constructor, or in the value keyword arg.
@@ -518,7 +516,7 @@ class SAMSTRING(BaseProtogenClass):
              not have quote characters around it
         @keyword value: (Optional) Value
         """
-        super(SAMSTRING, self).__init__(*args, **kwargs)
+        super(CSVSTRING, self).__init__(*args, **kwargs)
         
         self._constant=None
         self._terminator=ord(',')
@@ -532,16 +530,16 @@ class SAMSTRING(BaseProtogenClass):
         self._raiseonmissingquotes=True
         self._value=None
 
-        if self._ismostderived(SAMSTRING):
+        if self._ismostderived(CSVSTRING):
             self._update(args,kwargs)
 
     def _update(self, args, kwargs):
-        super(SAMSTRING,self)._update(args, kwargs)
+        super(CSVSTRING,self)._update(args, kwargs)
 
         self._consumekw(kwargs, ("constant", "terminator", "quotechar", "readescape",
         "writeescape", "maxsizeinbytes", "default",
         "raiseonunterminatedread", "value", "raiseontruncate","raiseonmissingquotes"))
-        self._complainaboutunusedargs(SAMSTRING,kwargs)
+        self._complainaboutunusedargs(CSVSTRING,kwargs)
 
         # Set our value if one was specified
         if len(args)==0:
@@ -653,14 +651,14 @@ class SAMSTRING(BaseProtogenClass):
             raise ValueNotSetException()
         return self._value
 
-class SAMINT(SAMSTRING):
+class CSVINT(CSVSTRING):
     """Integers in CSV lines"""
     def __init__(self, *args, **kwargs):
-        super(SAMINT,self).__init__(*args, **kwargs)
+        super(CSVINT,self).__init__(*args, **kwargs)
 
         self._quotechar=None
 
-        if self._ismostderived(SAMINT):
+        if self._ismostderived(CSVINT):
             self._update(args,kwargs)
 
     def _update(self, args, kwargs):
@@ -674,8 +672,8 @@ class SAMINT(SAMSTRING):
         else:
             raise TypeError("expected integer as arg")
             
-        super(SAMINT,self)._update(args,kwargs)
-        self._complainaboutunusedargs(SAMINT,kwargs)
+        super(CSVINT,self)._update(args,kwargs)
+        self._complainaboutunusedargs(CSVINT,kwargs)
         
     def getvalue(self):
         """Convert the string into an integer
@@ -686,7 +684,7 @@ class SAMINT(SAMSTRING):
         # Will probably want an flag to allow null strings, converting
         # them to a default value
         
-        val=super(SAMINT,self).getvalue()
+        val=super(CSVINT,self).getvalue()
         try:
             ival=int(val)
         except:
@@ -696,16 +694,16 @@ class SAMINT(SAMSTRING):
                 raise ValueException("The field '%s' is not an integer" % (val))
         return ival
 
-class SAMDATE(SAMSTRING):
+class CSVDATE(CSVSTRING):
     """Dates in CSV lines"""
     def __init__(self, *args, **kwargs):
-        super(SAMDATE,self).__init__(*args, **kwargs)
+        super(CSVDATE,self).__init__(*args, **kwargs)
 
         self._valuedate=(0,0,0) # Year month day
 
         self._quotechar=None
         
-        if self._ismostderived(SAMDATE):
+        if self._ismostderived(CSVDATE):
             self._update(args,kwargs)
 
     def _update(self, args, kwargs):
@@ -719,8 +717,8 @@ class SAMDATE(SAMSTRING):
         else:
             raise TypeError("expected (year,month,day) as arg")
 
-        super(SAMDATE,self)._update(args, kwargs) # we want the args
-        self._complainaboutunusedargs(SAMDATE,kwargs)
+        super(CSVDATE,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(CSVDATE,kwargs)
 
     def getvalue(self):
         """Unpack the string into the date
@@ -729,7 +727,7 @@ class SAMDATE(SAMSTRING):
         @return: (year, month, day)
         """
 
-        s=super(SAMDATE,self).getvalue()
+        s=super(CSVDATE,self).getvalue()
         val=s.split("/") # List of of Month, day, year
         if len(val)<2:
             year = 0
@@ -750,16 +748,16 @@ class SAMDATE(SAMSTRING):
         return s
         
 
-class SAMTIME(SAMSTRING):
+class CSVTIME(CSVSTRING):
     """Timestamp in CSV lines"""
     def __init__(self, *args, **kwargs):
-        super(SAMTIME,self).__init__(*args, **kwargs)
+        super(CSVTIME,self).__init__(*args, **kwargs)
 
         self._valuetime=(0,0,0,0,0,0) # Year month day, hour, minute, second
 
         self._quotechar=None
         
-        if self._ismostderived(SAMTIME):
+        if self._ismostderived(CSVTIME):
             self._update(args,kwargs)
 
     def _update(self, args, kwargs):
@@ -773,8 +771,8 @@ class SAMTIME(SAMSTRING):
         else:
             raise TypeError("expected (year,month,day) as arg")
 
-        super(SAMTIME,self)._update(args, kwargs) # we want the args
-        self._complainaboutunusedargs(SAMTIME,kwargs)
+        super(CSVTIME,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(CSVTIME,kwargs)
 
     def getvalue(self):
         """Unpack the string into the date
@@ -783,7 +781,7 @@ class SAMTIME(SAMSTRING):
         @return: (year, month, day)
         """
 
-        s=super(SAMTIME,self).getvalue()
+        s=super(CSVTIME,self).getvalue()
         year=int(s[0:4])
         month=int(s[4:6])
         day=int(s[6:8])

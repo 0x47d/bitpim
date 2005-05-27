@@ -34,60 +34,60 @@ NUMGROUPS=4
 
 PACKET pbentry:
     P STRING {'default': ""} +url
-    P SAMDATE {'default': ""} +birthday
-    * SAMINT slot "Internal Slot"
-    * SAMINT uslot "User Slot, Speed dial"
-    * SAMINT group
-    * SAMINT {'default': 20} +ringtone
-    * SAMSTRING name
-    * SAMINT speeddial "Which phone number assigned to speed dial uslot"
-    * SAMINT {'default': 0} +dunno1
+    P CSVDATE {'default': ""} +birthday
+    * CSVINT slot "Internal Slot"
+    * CSVINT uslot "User Slot, Speed dial"
+    * CSVINT group
+    * CSVINT {'default': 20} +ringtone
+    * CSVSTRING name
+    * CSVINT speeddial "Which phone number assigned to speed dial uslot"
+    * CSVINT {'default': 0} +dunno1
     * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
-    * SAMSTRING {'quotechar': None, 'default': ""} +dunno3
-    * SAMSTRING {'quotechar': None, 'default': ""} +dunno4
-    * SAMSTRING email
-    * SAMTIME {'terminator': None, 'default': (1980,1,1,12,0,0)} +timestamp "Use terminator None for last item"
+    * CSVSTRING {'quotechar': None, 'default': ""} +dunno3
+    * CSVSTRING {'quotechar': None, 'default': ""} +dunno4
+    * CSVSTRING email
+    * CSVTIME {'terminator': None, 'default': (1980,1,1,12,0,0)} +timestamp "Use terminator None for last item"
 
 PACKET phonebookslotresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
     * pbentry entry
 
 PACKET phonebookslotupdaterequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
     * pbentry entry
     
 PACKET groupnameresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBGRR:'} command
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBGRR:'} command
     * groupnameentry entry
 
 PACKET groupnameentry:
-    * SAMINT gid
-    * SAMSTRING {'terminator': None} groupname
+    * CSVINT gid
+    * CSVSTRING {'terminator': None} groupname
 
 PACKET unparsedresponse:
     * UNKNOWN pad
     
 PACKET eventrequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '#PISHR='} +command
-    * SAMINT {'terminator': None} +slot
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PISHR='} +command
+    * CSVINT {'terminator': None} +slot
 
 PACKET eventresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PISHR:'} command
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PISHR:'} command
     * evententry entry
     
 PACKET evententry:
-    * SAMINT slot
-    * SAMTIME start
-    * SAMTIME end
-    * SAMTIME timestamp
-    * SAMINT alarm "0: No Alarm, 1: On Time, 2: 10 minutes, 3: 30 minutes, 4: 60 minutes"
-    * SAMSTRING {'quotechar': None} dunno
-    * SAMSTRING {'terminator': None} eventname
+    * CSVINT slot
+    * CSVTIME start
+    * CSVTIME end
+    * CSVTIME timestamp
+    * CSVINT alarm "0: No Alarm, 1: On Time, 2: 10 minutes, 3: 30 minutes, 4: 60 minutes"
+    * CSVSTRING {'quotechar': None} dunno
+    * CSVSTRING {'terminator': None} eventname
 
 PACKET esnrequest:
-    * SAMSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
 
 PACKET esnresponse:
-    * SAMSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
-    * SAMSTRING {'quotechar': None, 'terminator': None} esn
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
+    * CSVSTRING {'quotechar': None, 'terminator': None} esn
 
