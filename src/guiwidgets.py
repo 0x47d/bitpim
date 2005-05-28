@@ -335,7 +335,8 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wx.Dialog):
-    phonemodels={ 'LG-VX4400': 'com_lgvx4400',
+    phonemodels={ 'LG-VX3200': 'com_lgvx3200',
+                  'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
                   'LG-VX6000': 'com_lgvx6000',
@@ -366,7 +367,6 @@ class ConfigDialog(wx.Dialog):
 
     if __debug__:
         phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile for normal use
-                             'LG-VX3200': 'com_lgvx3200',
                               })
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')
     setme="<setme>"
