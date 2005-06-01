@@ -295,16 +295,27 @@ class BrewProtocol:
             node=self._getdirectory(brewdirname(filename), ensure=True)
             return node.get(brewbasename(filename), None)
 
+        def readfile(self, filename):
+            node=self._getdirectory(brewdirname(filename), ensure=True)
+            file=node.get(brewbasename(filename), None)
+            if file is None:
+                return False
+            # This class only populates the 'data' portion of the file obj when needed
+            data=file.get('data', None)
+            if data is None:
+                data=self.__target.getfilecontents(filename)
+                file['data']=data
+            return data
+
         def writefile(self, filename, contents):
             res=self.__target.writefile(filename, contents)
-            node=self._getdirectory(brewdirname(filename))
-            if node is None:
-                return
+            node=self._getdirectory(brewdirname(filename), ensure=True)
             # we can't put the right date in since we have no idea
             # what the timezone (or the time for that matter) on the
             # phone is
             stat=node.get(brewbasename(filename), {'name': filename, 'type': 'file', 'date': (0, "")})
             stat['size']=len(contents)
+            stat['data']=contents
             node[brewbasename(filename)]=stat
             return res
 
