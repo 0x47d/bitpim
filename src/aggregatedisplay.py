@@ -502,6 +502,8 @@ if __name__=="__main__":
         import os
         import brewcompressedimage
         import wallpaper
+        import fileinfo
+        import conversions
 
 
         # find bitpim wallpaper directory
@@ -513,7 +515,7 @@ if __name__=="__main__":
             p=pn
 
         imagespath=p
-        images=[name for name in os.listdir(imagespath) if name[-4:] in (".bci", ".bmp", ".jpg", ".png")]
+        images=[name for name in os.listdir(imagespath) if name[-4:] in (".bci", ".bit", ".bmp", ".jpg", ".png")]
         images.sort()
         #images=images[:9]
 
@@ -527,11 +529,15 @@ if __name__=="__main__":
 
             def GetImageConstructionInformation(self,file):
                 file=os.path.join(imagespath, file)
-
+                
                 if file.endswith(".mp4") or not os.path.isfile(file):
                     return guihelper.getresourcefile('wallpaper.png'), wx.Image
                 if self.isBCI(file):
                     return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+                # LG phones may return a proprietary wallpaper media file, LGBIT
+                fi=fileinfo.identify_imagefile(file)
+                if fi is not None and fi.format=='LGBIT':
+                    return file, conversions.convertfilelgbittobmp
                 return file, wx.Image
 
             def isBCI(self, filename):

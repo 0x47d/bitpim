@@ -355,16 +355,18 @@ def fmts_AVI(ifi):
     return ' '.join(res)
 
 def idimg_LGBIT(f):
-    "Identify a BIT image (LG phone proprietary image format)"
+    "Identify a LGBIT image (LG phone proprietary image format)"
     # Profoundly lean and mean image format
     # width/height/image-data
-    # This is for the LG-VX3200. The wallpaper.bit, poweron.bit and poweroff.bit files
-    # are hardwired at 128x128. Image data is 16 bit, R5G6B5.
-    # We call it a BMP below so that we do not confuse the user in the wallpaper panel
-    if f.GetBytes(0,4)=="\x80\x00\x80\x00":
+    # This is for the LG-VX3200. Image data is 16 bit, R5G6B5.
+    width=f.GetLSBUint16(0x00)
+    height=f.GetLSBUint16(0x02)
+    if width is None or height is None:
+        return None
+    if f.size==(width*height*2+4):
         d={'format': "LGBIT"}
-        d['width']=128
-        d['height']=128
+        d['width']=width
+        d['height']=height
         d['bpp']=16
         d['_shortdescription']=fmts_LGBIT
         for i in d.itervalues():

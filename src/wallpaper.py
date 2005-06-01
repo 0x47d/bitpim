@@ -73,7 +73,7 @@ class WallpaperView(guiwidgets.FileView):
         self.organizemenu=wx.Menu()
         guiwidgets.FileView.__init__(self, mainwindow, parent, "wallpaper-watermark")
 
-        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci"
+        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci;*.bit"
 
 
 ##        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
@@ -297,6 +297,9 @@ class WallpaperView(guiwidgets.FileView):
         if fi is not None and fi.format=='AVI':
             # return the 1st frame of the AVI file
             return file, conversions.convertavitobmp
+        # LG phones may return a proprietary wallpaper media file, LGBIT
+        if fi is not None and fi.format=='LGBIT':
+            return file, conversions.convertfilelgbittobmp
         return file, wx.Image
 
     def GetFileInfo(self, filename):
@@ -365,7 +368,14 @@ class WallpaperView(guiwidgets.FileView):
                                 'images')
             else:
                 # :::TODO:: do i need to handle bci specially here?
-                img=wx.Image(file)
+                # The proper way to handle custom image types, e.g. BCI and LGBIT,
+                # is to add a wx.ImageHandler for it. Unfortunately wx.Image_AddHandler
+                # is broken in the current wxPython, so . . .
+                fi=self.GetFileInfo(file)
+                if fi is not None and fi.format=='LGBIT':
+                    img=conversions.convertfilelgbittobmp(file)
+                else:
+                    img=wx.Image(file)
                 if not img.Ok():
                     dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
                                         "Image not understood", style=wx.OK|wx.ICON_ERROR)
