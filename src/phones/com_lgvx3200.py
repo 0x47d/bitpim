@@ -34,68 +34,8 @@ import conversions
 
 media_codec=phone_media_codec.codec_name
 
-class SimpleFileCache(com_brew.BrewProtocol,com_lgvx4400.Phone):
-    "Trivial phone file cache"
 
-    def __init__(self, logtarget, commport):
-        com_brew.BrewProtocol.__init__(self)
-        com_lgvx4400.Phone.__init__(self,logtarget,commport)
-        self.cache={}
-
-    def flush(self):
-        self.cache={}
-
-    def _readfile(self,filename):
-        try:
-            tempfile=self.getfilecontents(filename)
-        except com_brew.BrewNoSuchFileException:
-            # file may not exist - dummy as a zero len file
-            tempfile=''
-        # special case for zero len files - these can only be .bit files
-        if len(tempfile)==0:
-            self.cache[filename]=("bit",tempfile)
-            self.log("SimpleFileCache: encountered zero len file: "+filename)
-            return
-        # quicky test for file
-        if tempfile[0:4]!='MThd':
-            self.cache[filename]=("mp3",tempfile)
-        elif tempfile[0:4]=="\x80\x00\x80\x00":
-            self.cache[filename]=("bit",tempfile)
-        else:
-            self.cache[filename]=("mid",tempfile)
-
-    def getdata(self,filename):
-        if not self.cache.has_key(filename):
-            self._readfile(filename)
-        return self.cache[filename][1]
-
-    def gettype(self,filename):
-        if not self.cache.has_key(filename):
-            self._readfile(filename)
-        return self.cache[filename][0]
-
-    def rmentry(self,filename):
-        if self.cache.has_key(filename):
-            del self.cache[filename]
-
-    def writeentry(self,filename,data):
-        if self.cache.has_key(filename):
-            self.cache[filename]=(self.cache[filename][0],data)
-        else:
-            if len(data)==0:
-                self.cache[filename]=("bit",data)
-                self.log("SimpleFileCache: encountered zero len file: "+filename)
-                return
-            if data[0:4]!='MThd':
-                self.cache[filename]=("mp3",data)
-            elif data[0:4]=="\x80\x00\x80\x00":
-                self.cache[filename]=("bit",data)
-            else:
-                self.cache[filename]=("mid",data)
-            
-        
-
-class Phone(com_lgvx4400.Phone,SimpleFileCache):
+class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX3200 cell phone"
 
     desc="LG-VX3200"
@@ -135,9 +75,8 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
                        
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
-        #SimpleFileCache.__init__(self,logtarget,commport)
         self.mode=self.MODENONE
-        self.mediacache=SimpleFileCache(logtarget,commport)
+        self.mediacache=self.DirCache(self)
 
     def makeentry(self, counter, entry, dict):
         e=com_lgvx4400.Phone.makeentry(self, counter, entry, dict)
@@ -149,15 +88,18 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
         index={}
         # Hack for LG-VX3200 - wallpaper index file is not real
         if re.search("ImageIndex", indexfile) is not None:
+            # A little special treatment for wallpaper related media files
+            # Sneek a peek at the file because if it is zero len we do not index it
             ind=0
             for ifile in 'wallpaper', 'poweron', 'poweroff':
                 ifilefull="download/"+ifile+".bit"
-                mediafiledata=self.mediacache.getdata(ifilefull)
+                mediafiledata=self.mediacache.readfile(ifilefull)
                 if len(mediafiledata)!=0:
-                    index[ind]=ifile+".bmp"
+                    index[ind]=ifile
                     ind = ind + 1
-                    self.log("Index file "+indexfile+" entry added: "+ifile+".bmp")
+                    self.log("Index file "+indexfile+" entry added: "+ifile)
         else:
+            # A little special treatment for ringer related media files
             try:
                 buf=prototypes.buffer(self.getfilecontents(indexfile))
             except com_brew.BrewNoSuchFileException:
@@ -168,15 +110,9 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
             self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
             for i in g.items:
                 if i.index!=0xffff:
-                    # Horribly tedious but I need to sneek a peek at the actual
-                    # ringer files so I can determine if the file suffix needs to
-                    # be twiddled.
-                    mediafiledata=self.mediacache.getdata(self.ringtonelocations[0][2]+"/"+i.name)
-                    mediafiletype=self.mediacache.gettype(self.ringtonelocations[0][2]+"/"+i.name)
-                    if mediafiletype=="mp3":
-                        i.name=re.sub("\.mid|\.MID", ".mp3", i.name)
-                        self.log("getindex() mapped a mid file to mp3, "+i.name+", "+mediafiledata[0:4])
-                    index[i.index]=i.name
+                    ifile=re.sub("\.mid|\.MID", "", i.name)
+                    self.log("Index file "+indexfile+" entry added: "+ifile)
+                    index[i.index]=ifile
         return index
         
     def getmedia(self, maps, result, key):
@@ -186,21 +122,15 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
         # the maps
         type=None
         for offset,indexfile,location,type,maxentries in maps:
-            if type=="images":
-                # Long story short - wallpaper is actually hardwired to the single file wallpaper.bit
-                index=self.getindex(indexfile)
-                for i in index:
-                    # undo the hack that can from getindex() for wallpaper
-                    mediafilename=re.sub("\.bmp|\.BMP", ".bit", index[i])
-                    mediafiledata=self.mediacache.getdata(location+"/"+mediafilename)
-                    media[index[i]]=conversions.convertlgbittobmp(mediafiledata)
-                self.log("Spoofed the VX3200 wallpaper related files")
-            else:
-                index=self.getindex(indexfile)
-                for i in index:
-                    # undo the hack that can from getindex() for ringers
-                    mediafilename=re.sub("\.mp3|\.MP3", ".mid", index[i])
-                    media[index[i]]=self.mediacache.getdata(location+"/"+mediafilename)
+            index=self.getindex(indexfile)
+            for i in index:
+                if type=="images":
+                    # Wallpaper media files are all BIT type
+                    mediafilename=index[i]+".bit"
+                else:
+                    # Ringer media files are all MID suffixed
+                    mediafilename=index[i]+".mid"
+                media[index[i]]=self.mediacache.readfile(location+"/"+mediafilename)
         result[key]=media
         return result
 
@@ -225,15 +155,22 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
         # ways. In addition to that the media for the wallpapers is
         # currently in BMP format inside the program and must be
         # converted to BIT (LG proprietary) on the way out.
+        #
+        # In the following:
+        #   wp has file references that nave no suffixes
+        #   wpi has file references that are mixed, i.e. some have file suffixes (comes from UI that way)
         wp=results[mediakey].copy()
         wpi=results[mediaindexkey].copy()
+        
+        # Walk through wp and remove any suffixes that make their way in via the UI
+        for k in wp.keys():
+            wp[k]['name']=re.sub("\....$", "", wp[k]['name'])
+            
         # remove builtins
         for k in wpi.keys():
             if wpi[k]['origin']=='builtin':
                 del wpi[k]
-
-        # sort results['mediakey'+'-index'] into origin buckets
-
+                
         # build up list into init
         init={}
         for offset,indexfile,location,type,maxentries in maps:
@@ -295,11 +232,11 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
                                 delit=False
                                 break
                         if delit:
-                            # More VX3200 chicanery
+                            # Add the media file suffixes back to match real filenames on phone
                             if type=="ringers":
-                                entryname=re.sub("\.mp3|\.MP3", ".mid", entry['name'])
+                                entryname=entry['name']+".mid"
                             else:
-                                entryname=entry['name']
+                                entryname=entry['name']+".bit"
                             if entryname in dirlisting:
                                 dellist.append(entryname)
                             else:
@@ -307,9 +244,7 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
             # go ahead and delete unwanted files
             print "deleting",dellist
             for f in dellist:
-                self.rmfile(location+"/"+f)
-                # Keep our mediacache up-to-date
-                self.mediacache.rmentry(location+"/"+f)
+                self.mediacache.rmfile(location+"/"+f)
             # LG-VX3200 special case:
             # We only keep (upload) wallpaper images if there was a legit
             # one on the phone to begin with. This code will weed out any
@@ -352,6 +287,15 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
                         idx-=1
                     wp[idx]=index[k]
                     del index[k]
+
+            # Now add the proper media file suffixes back to the internal index
+            # prior to the finish up steps coming
+            for k in index.keys():
+                if type=="ringers":
+                    index[k]['name']=index[k]['name']+".mid"
+                else:
+                    index[k]['name']=index[k]['name']+".bit"
+                    
             # write out the new index
             keys=index.keys()
             keys.sort()
@@ -360,11 +304,7 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
             for k in keys:
                 entry=self.protocolclass.indexentry()
                 entry.index=k
-                # Now we need to undo some of the index mutations from earlier
-                if type=="ringers":
-                    entry.name=re.sub("\.mp3|\.MP3", ".mid", index[k]['name'])
-                else:
-                    entry.name=index[k]['name']
+                entry.name=index[k]['name']
                 ifile.items.append(entry)
             while len(ifile.items)<maxentries:
                 ifile.items.append(self.protocolclass.indexentry())
@@ -374,54 +314,39 @@ class Phone(com_lgvx4400.Phone,SimpleFileCache):
                 # The images index file on the LG-VX3200 is a noop - don't write
                 self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
                 self.writefile(indexfile, buffer.getvalue())
+                
             # Write out files - we compare against existing dir listing and don't rewrite if they
             # are the same size
             for k in keys:
                 entry=index[k]
+                entryname=entry['name']
                 data=entry.get("data", None)
-                # Now we need to undo some of the index mutations from earlier
-                if type=="ringers":
-                    entryname=re.sub("\.mp3|\.MP3", ".mid", entry['name'])
-                elif type=="images":
-                    entryname=re.sub("\.bmp|\.BMP", ".bit", entry['name'])
-                    # Special test for wallpaper files - LG-VX3200 will ONLY accpet these files
+                # Special test for wallpaper files - LG-VX3200 will ONLY accept these files
+                if type=="images":
                     if entryname!="wallpaper.bit" and entryname!="poweron.bit" and entryname!="poweroff.bit":
                         self.log("The wallpaper files can only be wallpaper.bmp, poweron.bmp or poweroff.bmp. "+entry['name']+" does not conform - skipping upload.")
                         continue
-                else:
-                    entryname=entry['name']
-                # wallpaper files are currently in the program as BMP files
-                # these must be translated to BIT files before going anywhere with them
-                if type=="images":
-                    data=conversions.convertbmptolgbit(data)
-                    if data is None:
-                        self.log("The wallpaper images must be 128x128 24bpp BMP files, "+entry['name']+", does not comply - skipping upload.")
-                        continue
-                    # Now determine if this wallpaper image is actually a blank.
-                    bit_is_blank=True
-                    for i in range(128*128):
-                        ind=i*2+2
-                        if common.LSBUint16(data[ind:ind+2])!=0xffff:
-                            bit_is_blank=False
-                            continue
                 if data is None:
                     if entryname not in dirlisting:
                         self.log("Index error.  I have no data for "+entryname+" and it isn't already in the filesystem - skipping upload.")
                     continue
+                # Some of the wallpaper media files came here from the UI as BMP files.
+                # These need to be converted to LGBIT files on the way out.
+                if type=="images" and data[0:2]=="BM":
+                    data=conversions.convertbmptolgbit(data)
+                    if data is None:
+                        self.log("The wallpaper BMP images must be 8BPP or 24BPP, "+entry['name']+", does not comply - skipping upload.")
+                        continue
+                # Can only upload 128x128 images
+                if type=="images" and (common.LSBUint16(data[0:2])!=128 or common.LSBUint16(data[2:4])!=128):
+                        self.log("The wallpaper must be 128x128, "+entry['name']+", does not comply - skipping upload.")
+                        continue
                 # This following test does not apply to wallpaper - it is always the same size on the LG-VX3200!
                 if type!="images":
                     if entryname in dirlisting and len(data)==dirlisting[entryname]['size']:
                         self.log("Skipping writing %s/%s as there is already a file of the same length" % (location,entryname))
                         continue
-                else:
-                    # If the file on the phone was zero length then I substituted a blank picture.
-                    # I do NOT want to create a blank image on the phone if nothing has changed.
-                    if ((entryname not in dirlisting) or (dirlisting[entryname]['size']==0)) and bit_is_blank:
-                        self.log("Skipping the blank image, "+entry['name'])
-                        continue
-                self.writefile(location+"/"+entryname, data)
-                # Keep our mediacache up-to-date
-                self.mediacache.writeentry(location+"/"+entryname, data)
+                self.mediacache.writefile(location+"/"+entryname, data)
                 self.log("Wrote media file: "+location+"/"+entryname)
         # did we have too many
         if len(wp):
