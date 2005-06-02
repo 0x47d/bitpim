@@ -824,7 +824,6 @@ def getpcmfileinfo(filename):
     return idaudio_PCM(f)
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
-print audioids
 def identify_audiofile(filename):
     v=thefileinfocache.get(filename)
     if v is not None: return v
