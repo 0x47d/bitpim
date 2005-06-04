@@ -94,9 +94,9 @@ class WallpaperView(guiwidgets.FileView):
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_WALLPAPERS)
         pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
-        self.__raw_image=self.__shift_down=False
-        wx.EVT_KEY_DOWN(self.aggdisp, self.__OnKey)
-        wx.EVT_KEY_UP(self.aggdisp, self.__OnKey)
+        self._raw_image=self._shift_down=False
+        wx.EVT_KEY_DOWN(self.aggdisp, self._OnKey)
+        wx.EVT_KEY_UP(self.aggdisp, self._OnKey)
 
     def OnPhoneModelChanged(self, msg):
         phonemodule=msg.data
@@ -132,13 +132,15 @@ class WallpaperView(guiwidgets.FileView):
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes
 
-    def __OnKey(self, evt):
-        self.__shift_down=evt.ShiftDown()
+    def _OnKey(self, evt):
+        self._shift_down=evt.ShiftDown()
         evt.Skip()
 
     def OnAdd(self, evt=None):
-        self.__raw_image=self.__shift_down
+        self._raw_image=self._shift_down
         super(WallpaperView, self).OnAdd(evt)
+        # reset the fla
+        self._shift_down=False
 
     def OrganizeChange(self, evt):
         self.mainwindow.config.Write('imageorganizedby',
@@ -360,7 +362,7 @@ class WallpaperView(guiwidgets.FileView):
 
     def OnAddFiles(self, filenames):
         for file in filenames:
-            if self.__raw_image:
+            if self._raw_image:
                 decoded_file=str(file).decode(guiwidgets.media_codec)
                 targetfilename=self.getshortenedbasename(decoded_file)
                 open(targetfilename, 'wb').write(open(file, 'rb').read())

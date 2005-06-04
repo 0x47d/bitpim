@@ -1289,6 +1289,8 @@ class MainWindow(wx.Frame):
             self.config.Write("viewnotebookpage", text)
         # does the page have editable properties?
         widget=self.nb.GetPage(self.nb.GetSelection())
+        # force focus to its child
+        widget.SetFocus()
         enable_add=hasattr(widget, "OnAdd")
         enable_del=hasattr(widget, "OnDelete")
         enable_print=hasattr(widget, "OnPrintDialog")
