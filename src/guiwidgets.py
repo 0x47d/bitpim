@@ -1155,6 +1155,7 @@ class FileView(wx.Panel):
     if guihelper.IsMSWindows():
         # drag-and-drop files only works in Windows
         def OnStartDrag(self, evt):
+            evt.Skip()
             if not evt.LeftIsDown():
                 return
             items=self.GetSelectedItems()
