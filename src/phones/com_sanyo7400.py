@@ -62,6 +62,9 @@ class Profile(com_sanyonewer.Profile):
     serialsname=Phone.serialsname
     phone_manufacturer='SANYO'
     phone_model='SCP-7400/US'
+    
+    WALLPAPER_WIDTH=176
+    WALLPAPER_HEIGHT=220
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
