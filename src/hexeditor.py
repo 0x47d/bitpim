@@ -10,11 +10,524 @@
 
 """A hex editor widget"""
 
+# system modules
 import string
 import struct
 
+# wx modules
 import wx
+from wx.lib import masked
+from wx.lib import scrolledpanel as scrolled
 
+# bitpim modules
+import common
+
+#-------------------------------------------------------------------------------
+class DataStruct(object):
+    def __init__(self, _name):
+        self.name=_name
+        self.fields=[]
+    def set(self, dict):
+        self.name=dict.keys()[0]
+        self.fields=[]
+        for f in dict[self.name]:
+            if f['type']==DataItem.numeric_type:
+                item=NumericDataItem(f['name'])
+            elif f['type']==DataItem.string_type:
+                item=StringDataItem(f['name'])
+            else:
+                item=DataItem(f['name'], DataItem.struct_type)
+            item.set(f)
+            self.fields.append(item)
+    def get(self):
+        l=[]
+        for f in self.fields:
+            l.append(f.get())
+        return { self.name: l }
+    def encode(self, data, buffer_offset=0):
+        # encode data to each & every fields and return the results
+        l=[]
+        start=0
+        data_len=len(data)
+        for f in self.fields:
+            s=f.encode(data, start)
+            start=f.start+f.len
+            l.append( { '[0x%04X=%d]%s'%(f.start+buffer_offset,
+                                         f.start+buffer_offset, f.name): `s` })
+            if start>=data_len:
+                break
+        return l
+
+#-------------------------------------------------------------------------------
+class DataItem(object):
+    """Represent a data item/component with in a record, which is a list of
+    these things.
+    """
+    offset_from_start='From Start'
+    offset_from_prev='From Last Field'
+    string_type='string'
+    numeric_type='numeric'
+    struct_type='struct'
+    def __init__(self, _name, _type=numeric_type):
+        self.name=_name
+        self.offset_type=self.offset_from_start
+        self.offset=0
+        self.size=1
+        self.start=self.len=None   # start & length/size of actual data encoded
+        # numeric fields
+        self.unsigned=True
+        self.LE=True
+        # string fields
+        self.fixed=True
+        self.null_terminated=False
+        self.type=_type
+    def _get_type(self):
+        return self._type
+    def _set_type(self, _type):
+        if _type not in (self.numeric_type, self.string_type, self.struct_type):
+            raise TypeError
+        self._type=_type
+        if _type==self.numeric_type:
+            self.__class__=NumericDataItem
+        elif _type==self.string_type:
+            self.__class__=StringDataItem
+    type=property(fget=_get_type, fset=_set_type)
+    def get(self):
+        return { 'name': self.name, 'offset_type': self.offset_type,
+                 'offset': self.offset, 'type': self.type }
+    def set(self, d):
+        self.name=d.get('name', '<None>')
+        self.offset_type=d.get('offset_type', None)
+        self.offset=d.get('offset', None)
+        self.type=d.get('type', None)
+    def encode(self, s, start=None):
+        """Encode the value of this item based on the string s"""
+        raise NotImplementedError
+
+#-------------------------------------------------------------------------------
+class NumericDataItem(DataItem):
+    _fmts={ # struct pack/unpack formats
+        True: { # unsigned
+            True: { # little endian
+                1: 'B', 2: '<H', 4: '<I' }, # size
+            False: { # big endian
+                1: 'B', 2: '>H', 4: '>I' } }, # size
+        False: { # signed
+            True: { # little endian
+                1: 'b', 2: '<h', 4: '<i' }, # size
+            False: { # big endian
+                1: 'b', 2: '>h', 4: '>i' } } } # size
+            
+    def __init__(self, name):
+        super(NumericDataItem, self).__init__(name, self.numeric_type)
+    def get(self):
+        r=super(NumericDataItem, self).get()
+        r.update(
+            { 'unsigned': self.unsigned,
+              'little_endian': self.LE,
+              'size': self.size })
+        return r
+    def set(self, d):
+        super(NumericDataItem, self).set(d)
+        if d.get('type', None)!=self.numeric_type:
+            raise TypeError
+        self.unsigned=d.get('unsigned', True)
+        self.LE=d.get('little_endian', True)
+        self.size=d.get('size', 1)
+    def encode(self, s, start=None):
+        fmt=self._fmts[self.unsigned][self.LE][self.size]
+        self.len=struct.calcsize(fmt)
+        if self.offset_type==self.offset_from_start:
+            self.start=self.offset
+        else:
+            if start is None:
+                raise ValueError
+            self.start=start+self.offset
+        return struct.unpack(fmt, s[self.start:self.start+self.len])[0]
+
+#-------------------------------------------------------------------------------
+class StringDataItem(DataItem):
+    def __init__(self, name):
+        super(StringDataItem, self).__init__(name, self.string_type)
+    def get(self):
+        r=super(StringDataItem, self).get()
+        r.update({ 'fixed': self.fixed, 'size': self.size,
+                   'null_terminated': self.null_terminated })
+        return r
+    def set(self, d):
+        super(StringDataItem, self).set(d)
+        if d.get('type', None)!=self.string_type:
+            raise TypeError
+        self.fixed=d.get('fixed', True)
+        self.size=d.get('size', 0)
+        self.null_terminated=d.get('null_terminated', False)
+    def encode(self, s, start=None):
+        if self.offset_type==self.offset_from_start:
+            self.start=self.offset
+        else:
+            if start is None:
+                raise ValueError
+            self.start=start+self.offset
+        if self.fixed:
+            # fixed length string
+            if self.size==-1:
+                # take all available space
+                self.len=len(s)-self.offset
+                s0=s[self.start:]
+            else:
+                # fixed size
+                s0=s[self.start:self.start+self.size]
+                self.len=self.size
+        else:
+            # pascal style variable string
+            self.len=ord(s[self.start])
+            s0=s[self.start+1:self.start+1+self.len]
+        if self.null_terminated:
+            i=s0.find('\x00')
+            if i==-1:
+                return s0
+            else:
+                self.len=i
+                return s0[:i]
+        else:
+            return s0
+
+#-------------------------------------------------------------------------------
+class GeneralInfoSizer(wx.FlexGridSizer):
+    def __init__(self, parent):
+        super(GeneralInfoSizer, self).__init__(-1, 2, 5, 5)
+        self.AddGrowableCol(1)
+        self.Add(wx.StaticText(parent, -1, 'Struct Name:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._struct_name=wx.TextCtrl(parent, -1, '')
+        self.Add(self._struct_name, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Field Name:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._name=wx.TextCtrl(parent, -1, '')
+        self.Add(self._name, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Type:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._type=wx.ComboBox(parent, wx.NewId(),
+                                choices=[DataItem.numeric_type,
+                                         DataItem.string_type],
+                                value=DataItem.numeric_type,
+                                style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._type, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Offset Type:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._offset_type=wx.ComboBox(parent, -1,
+                                       value=DataItem.offset_from_start,
+                                       choices=[DataItem.offset_from_start,
+                                                DataItem.offset_from_prev],
+                                       style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._offset_type, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Offset Value:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._offset=masked.NumCtrl(parent, wx.NewId(),
+                                    allowNegative=False,
+                                    min=0)
+        self.Add(self._offset, 0, wx.ALL, 5)
+        self._fields_group=(self._name, self._type, self._offset_type,
+                            self._offset)
+    def set(self, data):
+        if isinstance(data, DataStruct):
+            self._struct_name.SetValue(data.name)
+        elif isinstance(data, DataItem):
+            self._name.SetValue(data.name)
+            self._type.SetValue(data.type)
+            self._offset_type.SetValue(data.offset_type)
+            self._offset.SetValue(data.offset)
+    def get(self, data):
+        data.name=self._name.GetValue()
+        data.type=self._type.GetValue()
+        data.offset_type=self._offset_type.GetValue()
+        data.offset=int(self._offset.GetValue())
+        return data
+    def show(self, show_struct=False, show_field=False):
+        self._struct_name.Enable(show_struct)
+        for w in self._fields_group:
+            w.Enable(show_field)
+    def _get_struct_name(self):
+        return self._struct_name.GetValue()
+    struct_name=property(fget=_get_struct_name)
+    def _get_type(self):
+        return self._type.GetValue()
+    type=property(fget=_get_type)
+    def _get_type_id(self):
+        return self._type.GetId()
+    type_id=property(fget=_get_type_id)
+        
+#-------------------------------------------------------------------------------
+class NumericInfoSizer(wx.FlexGridSizer):
+    _sign_choices=['Unsigned', 'Signed']
+    _endian_choices=['Little Endian', 'Big Endian']
+    _size_choices=['1', '2', '4']
+    def __init__(self, parent):
+        super(NumericInfoSizer, self).__init__(-1, 2, 5, 5)
+        self.AddGrowableCol(1)
+        self.Add(wx.StaticText(parent, -1, 'Signed:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._sign=wx.ComboBox(parent, -1, value=self._sign_choices[0],
+                               choices=self._sign_choices,
+                               style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._sign, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Endian:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._endian=wx.ComboBox(parent, -1, value=self._endian_choices[0],
+                                 choices=self._endian_choices,
+                                 style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._endian, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Size:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._size=wx.ComboBox(parent, -1, value=self._size_choices[0],
+                               choices=self._size_choices,
+                               style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._size, 0, wx.EXPAND|wx.ALL, 5)
+    def set(self, data):
+        if data.unsigned:
+            self._sign.SetValue(self._sign_choices[0])
+        else:
+            self._sign.SetValue(self._sign_choices[1])
+        if data.LE:
+            self._endian.SetValue(self._endian_choices[0])
+        else:
+            self._endian.SetValue(self._endian_choices[1])
+        self._size.SetValue(`data.size`)
+    def get(self, data):
+        data.unsigned=self._sign.GetValue()==self._sign_choices[0]
+        data.LE=self._endian.GetValue()==self._endian_choices[0]
+        data.size=int(self._size.GetValue())
+        return data
+
+#-------------------------------------------------------------------------------
+class StringInfoSizer(wx.FlexGridSizer):
+    _fixed_choices=['Fixed', 'Pascal']
+    def __init__(self, parent):
+        super(StringInfoSizer, self).__init__(-1, 2, 5, 5)
+        self.AddGrowableCol(1)
+        self.Add(wx.StaticText(parent, -1, 'Fixed/Pascal:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._fixed=wx.ComboBox(parent, -1, value=self._fixed_choices[0],
+                                 choices=self._fixed_choices,
+                                 style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Add(self._fixed, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Max Length:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._max_len=masked.NumCtrl(parent, -1, value=1, min=-1)
+        self.Add(self._max_len, 0, wx.EXPAND|wx.ALL, 5)
+        self.Add(wx.StaticText(parent, -1, 'Null Terminated:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._null_terminated=wx.CheckBox(parent, -1)
+        self.Add(self._null_terminated, 0, wx.EXPAND|wx.ALL, 5)
+    def set(self, data):
+        if data.fixed:
+            self._fixed.SetValue(self._fixed_choices[0])
+        else:
+            self._fixed.SetValue(self._fixed_choices[1])
+        self._max_len.SetValue(`data.size`)
+        self._null_terminated.SetValue(data.null_terminated)
+    def get(self, data):
+        data.fixed=self._fixed.GetValue()==self._fixed_choices[0]
+        data.size=int(self._max_len.GetValue())
+        data.null_terminated=self._null_terminated.GetValue()
+        return data
+        
+#-------------------------------------------------------------------------------
+class TemplateDialog(wx.Dialog):
+    _type_choices=['Numeric', 'String']
+    _struct_type='struct'
+    _field_type='field'
+    def __init__(self, parent):
+        super(TemplateDialog, self).__init__(parent, -1,
+                                             'Hex Template Editor',
+                                             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self._data=[]
+        self._item_tree=self._numeric_bs=self._string_bs=None
+        self._general_bs=None
+        self._tree_root=None
+        self._field_info=self._field_info_hbs=None
+        self._info_sizer={ NumericDataItem.numeric_type: self._numeric_bs,
+                           StringDataItem.string_type: self._string_bs }
+        main_vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs1=wx.BoxSizer(wx.HORIZONTAL)
+        hbs1.Add(self._create_tree_pane(), 1, wx.EXPAND|wx.ALL, 5)
+        hbs1.Add(self._create_info_pane(), 2, wx.EXPAND|wx.ALL, 5)
+        main_vbs.Add(hbs1, 1, wx.EXPAND|wx.ALL, 5)
+        main_vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        main_vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.SetSizer(main_vbs)
+        self.SetAutoLayout(True)
+        main_vbs.Fit(self)
+
+    def _create_tree_pane(self):
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        sw=scrolled.ScrolledPanel(self, -1)
+        self._item_tree=wx.TreeCtrl(sw, wx.NewId(),
+                                    style=wx.TR_DEFAULT_STYLE|wx.TR_HAS_BUTTONS)
+        wx.EVT_TREE_SEL_CHANGED(self, self._item_tree.GetId(),
+                                self._OnTreeSel)
+        self._tree_root=self._item_tree.AddRoot('Data Templates')
+        sw_bs=wx.BoxSizer(wx.VERTICAL)
+        sw_bs.Add(self._item_tree, 1, wx.EXPAND|wx.ALL, 0)
+        sw.SetSizer(sw_bs)
+        sw.SetAutoLayout(True)
+        sw_bs.Fit(sw)
+        sw.SetupScrolling()
+        vbs.Add(sw, 1, wx.EXPAND|wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.Button(self, wx.ID_ADD, 'Add'), 0, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_DELETE, 'Delete'), 0, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, wx.ID_ADD, self._OnAdd)
+        wx.EVT_BUTTON(self, wx.ID_DELETE, self._OnDelete)
+        vbs.Add(hbs, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        return vbs
+    def _create_info_pane(self):
+        # main boxsize
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        # Type & offset
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Field Type'),
+                                    wx.VERTICAL)
+        self._general_bs=GeneralInfoSizer(self)
+        wx.EVT_COMBOBOX(self, self._general_bs.type_id, self._OnTypeChanged)
+        static_bs.Add(self._general_bs, 0, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 0, wx.ALL, 5)
+        # all info
+        self._field_info=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Field Info'),
+                                    wx.VERTICAL)
+        # numeric info box
+        self._numeric_bs=NumericInfoSizer(self)
+        self._field_info.Add(self._numeric_bs, 0, wx.EXPAND|wx.ALL, 5)
+        self._string_bs=StringInfoSizer(self)
+        self._field_info.Add(self._string_bs, 0, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(self._field_info, 0, wx.ALL, 5)
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
+        hbs1=wx.BoxSizer(wx.HORIZONTAL)
+        hbs1.Add(wx.Button(self, wx.ID_SAVE, 'Set'), 0, wx.EXPAND|wx.ALL, 5)
+        hbs1.Add(wx.Button(self, wx.ID_REVERT, 'Revert'), 0, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, wx.ID_SAVE, self._OnSave)
+        wx.EVT_BUTTON(self, wx.ID_REVERT, self._OnRevert)
+        vbs.Add(hbs1, 0, wx.ALIGN_CENTER_HORIZONTAL, 0)
+        self._field_info_hbs=hbs
+        return vbs
+    def _show_field_info(self, _struct=False, field=False,
+                         numeric_field=False, string_field=False):
+        # show/hide individual fields
+        self._general_bs.show(_struct, field)
+        self._field_info.Show(self._numeric_bs, numeric_field)
+        self._field_info.Show(self._string_bs, string_field)
+        self._field_info.Layout()
+        self._field_info_hbs.Layout()
+    def _populate(self):
+        # clear the tree and repopulate
+        self._item_tree.DeleteChildren(self._tree_root)
+        for i,e in enumerate(self._data):
+            item=self._item_tree.AppendItem(self._tree_root, e.name)
+            self._item_tree.SetPyData(item, { 'type': self._struct_type,
+                                              'index': i })
+            for i1,e1 in enumerate(e.fields):
+                field_item=self._item_tree.AppendItem(item, e1.name)
+                self._item_tree.SetPyData(field_item, { 'type': self._field_type,
+                                                        'index': i,
+                                                        'field_index': i1 })
+        self.expand()
+    def _populate_struct(self, _item_index):
+        self._general_bs.set(self._data[_item_index])
+        self._show_field_info(True)
+    def _populate_each(self, _struct_index, _item_index):
+        _struct=self._data[_struct_index]
+        _item=_struct.fields[_item_index]
+        self._general_bs.set(_item)
+        if _item.type==DataItem.numeric_type:
+            self._show_field_info(True, True, True)
+            self._numeric_bs.set(_item)
+        else:
+            self._show_field_info(True, True, False, True)
+            self._string_bs.set(_item)
+    def _OnTypeChanged(self, _):
+        new_type=self._general_bs.type
+        self._show_field_info(True, True, new_type==DataItem.numeric_type,
+                              new_type==DataItem.string_type)
+    def _OnAdd(self, _):
+        sel_idx=self._item_tree.GetSelection()
+        if not sel_idx.IsOk():
+            return
+        if sel_idx==self._tree_root:
+            # add a new structure
+            struct_item=DataStruct('New Struct')
+            self._data.append(struct_item)
+        else:
+            # add a new field to the existing structure
+            data_item=self._item_tree.GetPyData(sel_idx)
+            item=NumericDataItem('New Field')
+            self._data[data_item['index']].fields.append(item)
+        self._populate()
+    def _OnDelete(self, _):
+        sel_idx=self._item_tree.GetSelection()
+        if not sel_idx.IsOk():
+            return
+        node_data=self._item_tree.GetPyData(sel_idx)
+        if node_data is None:
+            return
+        if node_data['type']==self._field_type:
+            # del this field
+            del self._data[node_data['index']].fields[node_data['field_index']]
+        else:
+            # del this struct and its fields
+            del self._data[node_data['index']]
+        # and re-populate the tree
+        self._populate()
+    def _OnSave(self, _):
+        sel_idx=self._item_tree.GetSelection()
+        if not sel_idx.IsOk():
+            return
+        node_data=self._item_tree.GetPyData(sel_idx)
+        if node_data is None:
+            return
+        # update the struct name
+        self._data[node_data['index']].name=self._general_bs.struct_name
+        if node_data['type']==self._field_type:
+            data_item=self._data[node_data['index']].\
+                       fields[node_data['field_index']]
+            data_item=self._general_bs.get(data_item)
+            if data_item.type==DataItem.numeric_type:
+                data_item=self._numeric_bs.get(data_item)
+            else:
+                data_item=self._string_bs.get(data_item)
+            self._data[node_data['index']].fields[node_data['field_index']]=data_item
+            self._item_tree.SetItemText(self._item_tree.GetItemParent(sel_idx),
+                                        self._data[node_data['index']].name)
+            self._item_tree.SetItemText(sel_idx, data_item.name)
+        else:
+            self._item_tree.SetItemText(sel_idx, self._data[node_data['index']].name)
+            
+    def _OnRevert(self, _):
+        sel_idx=self._item_tree.GetSelection()
+        if not sel_idx.IsOk():
+            return
+        node_data=self._item_tree.GetPyData(sel_idx)
+        if node_data is None:
+            self._show_field_info()
+        else:
+            self._populate_struct(node_data['index'])
+            if node_data['type']==self._field_type:
+                self._populate_each(node_data['index'], node_data['field_index'])
+
+    def _OnTreeSel(self, evt):
+        sel_idx=evt.GetItem()
+        if not sel_idx.IsOk():
+            # invalid selection
+            return
+        item_data=self._item_tree.GetPyData(sel_idx)
+        if item_data is None:
+            self._show_field_info()
+        else:
+            self._populate_struct(item_data['index'])
+            if item_data['type']==self._field_type:
+                self._populate_each(item_data['index'], item_data['field_index'])
+    def expand(self):
+        # expand the tree
+        self._item_tree.Expand(self._tree_root)
+        (id, cookie)=self._item_tree.GetFirstChild(self._tree_root)
+        while id.IsOk():
+            self._item_tree.Expand(id)
+            (id, cookie)=self._item_tree.GetNextChild(self._tree_root, cookie)
+    def set(self, l):
+        self._data=l
+        self._populate()
+    def get(self):
+        return self._data
+        
+#-------------------------------------------------------------------------------
 class HexEditor(wx.ScrolledWindow):
 
     _addr_range=xrange(8)
@@ -35,6 +548,7 @@ class HexEditor(wx.ScrolledWindow):
         self.dragging=False
         self.current_ofs=None
         self._module=None
+        self._templates=[]
         # ways of displaying status
         self.set_pos=_set_pos or self._set_pos
         self.set_val=_set_val or self._set_val
@@ -99,6 +613,20 @@ class HexEditor(wx.ScrolledWindow):
         self._apply_menu_id=wx.NewId()
         self._bgmenu.Append(self._apply_menu_id, 'Apply Python Func')
         wx.EVT_MENU(self, self._apply_menu_id, self.OnApplyFunc)
+        template_menu=wx.Menu()
+        id=wx.NewId()
+        template_menu.Append(id, 'Load')
+        wx.EVT_MENU(self, id, self.OnTemplateLoad)
+        id=wx.NewId()
+        template_menu.Append(id, 'Save As')
+        wx.EVT_MENU(self, id, self.OnTemplateSaveAs)
+        id=wx.NewId()
+        template_menu.Append(id, 'Edit')
+        wx.EVT_MENU(self, id, self.OnTemplateEdit)
+        id=wx.NewId()
+        template_menu.Append(id, 'Apply')
+        wx.EVT_MENU(self, id, self.OnTemplateApply)
+        self._bgmenu.AppendMenu(wx.NewId(), 'Template', template_menu)
 
     def SetData(self, data):
         self.data=data
@@ -175,6 +703,23 @@ class HexEditor(wx.ScrolledWindow):
                 s=fmt%(v,v)
             res.append({ e[0]: s })
         return res
+
+    def _apply_template(self, template_name):
+        # if user specifies a block, encode that,
+        if self.highlightstart is None or self.highlightstart==-1 or \
+           self.highlightend is None or self.highlightend==-1:
+            # no selection
+            _data=self.data[self.current_ofs:]
+            _ofs=self.current_ofs
+        else:
+            _data=self.data[self.highlightstart:self.highlightend]
+            _ofs=self.highlightstart
+        for f in self._templates:
+            if f.name==template_name:
+                l=[{ 'Template': f.name },
+                   { 'Data Offset': '0x%04X=%d'%(_ofs, _ofs) }]
+                return l+f.encode(_data, _ofs)
+        return []
 
     def _display_result(self, result):
         """ Display the results from applying a Python routine over the data
@@ -263,7 +808,6 @@ class HexEditor(wx.ScrolledWindow):
                     self, self.data, self.current_ofs)
                 self._display_result(res)
             except:
-                raise
                 w=wx.MessageDialog(self, 'Apply Func raised an exception',
                                    'Apply Func Error',
                                    style=wx.OK|wx.ICON_ERROR)
@@ -346,6 +890,60 @@ class HexEditor(wx.ScrolledWindow):
         self._bgmenu.Enable(self._apply_menu_id, self._module is not None)
         self._bgmenu.Enable(self._reload_menu_id, self._module is not None)
         self.PopupMenu(self._bgmenu, evt.GetPosition())
+
+    def OnTemplateLoad(self, _):
+        dlg=wx.FileDialog(self, 'Select a file to load',
+                          wildcard='*.tmpl',
+                          style=wx.OPEN|wx.FILE_MUST_EXIST)
+        if dlg.ShowModal()==wx.ID_OK:
+            result={}
+            execfile(dlg.GetPath())
+            exist_keys={}
+            for i,e in enumerate(self._templates):
+                exist_keys[e.name]=i
+            for d in result['templates']:
+                data_struct=DataStruct('new struct')
+                data_struct.set(d)
+                if exist_keys.has_key(data_struct.name):
+                    self._templates[exist_keys[data_struct.name]]=data_struct
+                else:
+                    self._templates.append(data_struct)
+        dlg.Destroy()
+    def OnTemplateSaveAs(self, _):
+        dlg=wx.FileDialog(self, 'Select a file to save',
+                          wildcard='*.tmpl',
+                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dlg.ShowModal()==wx.ID_OK:
+            r=[x.get() for x in self._templates]
+            common.writeversionindexfile(dlg.GetPath(),
+                                         { 'templates': r }, 1)
+        dlg.Destroy()
+    def OnTemplateApply(self, _):
+        if not self._templates:
+            # no templates to apply
+            return
+        choices=[x.name for x in self._templates]
+        dlg=wx.SingleChoiceDialog(self, 'Select a template to apply:',
+                            'Apply Data Template',
+                            choices)
+        if dlg.ShowModal()==wx.ID_OK:
+            try:
+                res=self._apply_template(dlg.GetStringSelection())
+                self._display_result(res)
+            except:
+                raise
+                w=wx.MessageDialog(self, 'Apply Template raised an exception',
+                                   'Apply Template Error',
+                                   style=wx.OK|wx.ICON_ERROR)
+                w.ShowModal()
+                w.Destroy()
+        dlg.Destroy()
+    def OnTemplateEdit(self, _):
+        dlg=TemplateDialog(self)
+        dlg.set(self._templates)
+        if dlg.ShowModal()==wx.ID_OK:
+            self._templates=dlg.get()
+        dlg.Destroy()
 
     def OnSize(self, evt):
         # uncomment these lines to prevent going wider than is needed
