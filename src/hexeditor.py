@@ -549,6 +549,7 @@ class HexEditor(wx.ScrolledWindow):
         self.current_ofs=None
         self._module=None
         self._templates=[]
+        self._search_string=None
         # ways of displaying status
         self.set_pos=_set_pos or self._set_pos
         self.set_val=_set_val or self._set_val
@@ -578,55 +579,43 @@ class HexEditor(wx.ScrolledWindow):
         wx.EVT_RIGHT_UP(self, self.OnRightClick)
 
     def _create_context_menu(self):
-        file_menu=wx.Menu()
-        id=wx.NewId()
-        file_menu.Append(id, 'Load')
-        wx.EVT_MENU(self, id, self.OnLoadFile)
-        id=wx.NewId()
-        file_menu.Append(id, 'Save As')
-        wx.EVT_MENU(self, id, self.OnSaveAs)
-        id=wx.NewId()
-        file_menu.Append(id, 'Save Selection As')
-        wx.EVT_MENU(self, id, self.OnSaveSelection)
-        id=wx.NewId()
-        file_menu.Append(id, 'Save Hexdump As')
-        wx.EVT_MENU(self, id, self.OnSaveHexdumpAs)
-        set_sel_menu=wx.Menu()
-        id=wx.NewId()
-        set_sel_menu.Append(id, 'Start')
-        wx.EVT_MENU(self, id, self.OnStartSelMenu)
-        id=wx.NewId()
-        set_sel_menu.Append(id, 'End')
-        wx.EVT_MENU(self, id, self.OnEndSelMenu)
+        self._reload_menu_id=self._apply_menu_id=None
+        menu_items=(
+            ('File', (('Load', self.OnLoadFile),
+                      ('Save As', self.OnSaveAs),
+                      ('Save Selection As', self.OnSaveSelection),
+                      ('Save Hexdump As', self.OnSaveHexdumpAs))),
+            ('Set Selection', (('Start', self.OnStartSelMenu),
+                               ('End', self.OnEndSelMenu))),
+            ('Value', self.OnViewValue),
+            ('Search', (('Search', self.OnSearch),
+                        ('Search Again', self.OnSearchAgain))),
+            ('Import Python Module', self.OnImportModule),
+            ('Reload Python Module', self.OnReloadModule, '_reload_menu_id'),
+            ('Apply Python Func', self.OnApplyFunc, '_apply_menu_id'),
+            ('Template', (('Load', self.OnTemplateLoad),
+                          ('Save As', self.OnTemplateSaveAs),
+                          ('Edit', self.OnTemplateEdit),
+                          ('Apply', self.OnTemplateApply)))
+            )
         self._bgmenu=wx.Menu()
-        self._bgmenu.AppendMenu(wx.NewId(), 'File', file_menu)
-        self._bgmenu.AppendMenu(wx.NewId(), 'Set Selection', set_sel_menu)
-        id=wx.NewId()
-        self._bgmenu.Append(id, 'Value')
-        wx.EVT_MENU(self, id, self.OnViewValue)
-        id=wx.NewId()
-        self._bgmenu.Append(id, 'Import Python Module')
-        wx.EVT_MENU(self, id, self.OnImportModule)
-        self._reload_menu_id=wx.NewId()
-        self._bgmenu.Append(self._reload_menu_id, 'Reload Python Module')
-        wx.EVT_MENU(self, self._reload_menu_id, self.OnReloadModule)
-        self._apply_menu_id=wx.NewId()
-        self._bgmenu.Append(self._apply_menu_id, 'Apply Python Func')
-        wx.EVT_MENU(self, self._apply_menu_id, self.OnApplyFunc)
-        template_menu=wx.Menu()
-        id=wx.NewId()
-        template_menu.Append(id, 'Load')
-        wx.EVT_MENU(self, id, self.OnTemplateLoad)
-        id=wx.NewId()
-        template_menu.Append(id, 'Save As')
-        wx.EVT_MENU(self, id, self.OnTemplateSaveAs)
-        id=wx.NewId()
-        template_menu.Append(id, 'Edit')
-        wx.EVT_MENU(self, id, self.OnTemplateEdit)
-        id=wx.NewId()
-        template_menu.Append(id, 'Apply')
-        wx.EVT_MENU(self, id, self.OnTemplateApply)
-        self._bgmenu.AppendMenu(wx.NewId(), 'Template', template_menu)
+        for menu_item in menu_items:
+            if isinstance(menu_item[1], tuple):
+                # submenu
+                sub_menu=wx.Menu()
+                for submenu_item in menu_item[1]:
+                    id=wx.NewId()
+                    sub_menu.Append(id, submenu_item[0])
+                    wx.EVT_MENU(self, id, submenu_item[1])
+                self._bgmenu.AppendMenu(wx.NewId(), menu_item[0], sub_menu)
+            else:
+                # regular menu item
+                id=wx.NewId()
+                self._bgmenu.Append(id, menu_item[0])
+                wx.EVT_MENU(self, id, menu_item[1])
+                if len(menu_item)>2:
+                    # need to save menu ID
+                    setattr(self, menu_item[2], id)
 
     def SetData(self, data):
         self.data=data
@@ -944,6 +933,40 @@ class HexEditor(wx.ScrolledWindow):
         if dlg.ShowModal()==wx.ID_OK:
             self._templates=dlg.get()
         dlg.Destroy()
+
+    def OnSearch(self, evt):
+        dlg=wx.TextEntryDialog(self, 'Enter data to search (1 0x23 045 ...):',
+                               'Search Data')
+        if dlg.ShowModal()==wx.ID_OK:
+            l=dlg.GetValue().split(' ')
+            s=''
+            for e in l:
+                if e[0:2]=='0x':
+                    s+=chr(int(e, 16))
+                elif e[0]=='0':
+                    s+=chr(int(e, 8))
+                else:
+                    s+=chr(int(e))
+            i=self.data[self.current_ofs:].find(s)
+            if i!=-1:
+                self._search_string=s
+                self.highlightstart=i+self.current_ofs
+                self.highlightend=self.highlightstart+len(s)
+                self.needsupdate=True
+                self.Refresh()
+                self.set_sel(self.highlightstart, self.highlightend)
+            else:
+                self._search_string=None
+    def OnSearchAgain(self, evt):
+        if self._search_string is not None:
+            i=self.data[self.current_ofs:].find(self._search_string)
+            if i==-1:
+                return
+            self.highlightstart=i+self.current_ofs
+            self.highlightend=self.highlightstart+len(self._search_string)
+            self.needsupdate=True
+            self.Refresh()
+            self.set_sel(self.highlightstart, self.highlightend)
 
     def OnSize(self, evt):
         # uncomment these lines to prevent going wider than is needed
