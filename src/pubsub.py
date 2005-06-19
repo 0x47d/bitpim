@@ -44,6 +44,13 @@ REQUEST_RINGTONE_INDEX=('request', 'ringtone-index') # no data
 ALL_RINGTONE_INDEX=('response', 'ringtone-index') # data is the ringtone-index dict
 REQUEST_PB_LOOKUP=('request', 'phonebook') # Request to lookup a number
 RESPONSE_PB_LOOKUP=('response', 'phonebook') # Response to the request
+MEDIA_NAME_CHANGED=('notificaion', 'medianamechanged') # notify if name changed
+# MEDIA_NAME_CHANGED keys & types
+media_change_type='type'
+wallpaper_type='wallpaper'
+ringtone_type='ringtone'
+media_old_name='old_name'
+media_new_name='new_name'
 
 def subscribe(listener, topic):
     Publisher.subscribe(listener, topic)

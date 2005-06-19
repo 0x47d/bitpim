@@ -45,6 +45,7 @@ import bphtml
 import bitflingscan
 import aggregatedisplay
 import phone_media_codec
+import pubsub
 
 ###
 ### BitFling cert stuff
@@ -1361,6 +1362,8 @@ class FileView(wx.Panel):
 
     def CanRename(self):
         return len(self.GetSelectedItems())==1
+    # subclass needs to define this
+    media_notification_type=None
     def OnRename(self, _=None):
         items=self.GetSelectedItems()
         if len(items)!=1:
@@ -1378,6 +1381,10 @@ class FileView(wx.Panel):
                     os.rename(old_file_name, new_file_name)
                     items[0].RenameInIndex(os.path.basename(
                         str(new_file_name).decode(media_codec)))
+                    pubsub.publish(pubsub.MEDIA_NAME_CHANGED,
+                                   data={ pubsub.media_change_type: self.media_notification_type,
+                                          pubsub.media_old_name: old_file_name,
+                                          pubsub.media_new_name: new_file_name })
                 except:
                     pass
         dlg.Destroy()

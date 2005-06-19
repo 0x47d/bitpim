@@ -575,6 +575,7 @@ class PhoneWidget(wx.Panel):
         wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
         pubsub.subscribe(self.OnCategoriesUpdate, pubsub.ALL_CATEGORIES)
         pubsub.subscribe(self.OnPBLookup, pubsub.REQUEST_PB_LOOKUP)
+        pubsub.subscribe(self.OnMediaNameChanged, pubsub.MEDIA_NAME_CHANGED)
         # we draw the column headers
         # code based on original implementation by Paul Mcnett
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
@@ -670,6 +671,32 @@ class PhoneWidget(wx.Panel):
         # done and reply
         pubsub.publish(pubsub.RESPONSE_PB_LOOKUP, d)
 
+    def OnMediaNameChanged(self, msg):
+        d=msg.data
+        _type=d.get(pubsub.media_change_type, None)
+        _old_name=d.get(pubsub.media_old_name, None)
+        _new_name=d.get(pubsub.media_new_name, None)
+        if _type is None or _old_name is None or _new_name is None:
+            # invalid/incomplete data
+            return
+        if _type!=pubsub.wallpaper_type and \
+           _type!=pubsub.ringtone_type:
+            # neither wallpaper nor ringtone
+            return
+        _old_name=common.basename(_old_name)
+        _new_name=common.basename(_new_name)
+        if _type==pubsub.wallpaper_type:
+            main_key='wallpapers'
+            element_key='wallpaper'
+        else:
+            main_key='ringtones'
+            element_key='ringtone'
+        for k,e in self._data.items():
+            for i,n in enumerate(e.get(main_key, [])):
+                if _old_name==n.get(element_key, None):
+                    # found it, update the name
+                    self._data[k][main_key][i][element_key]=_new_name
+                    self.modified=True
     def OnIdle(self, _):
         "We save out changed data"
         if self.modified:

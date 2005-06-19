@@ -126,6 +126,7 @@ import common
 import database
 import guihelper
 import helpids
+import pubsub
 import xyaptu
 
 #-------------------------------------------------------------------------------
@@ -643,11 +644,39 @@ class Calendar(calendarcontrol.Calendar):
         self._data={} # the underlying data
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
         self.dialog=calendarentryeditor.Editor(self)
+        pubsub.subscribe(self.OnMediaNameChanged, pubsub.MEDIA_NAME_CHANGED)
 
     def OnPrintDialog(self, mainwindow, config):
         dlg=CalendarPrintDialog(self, mainwindow, config)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def OnMediaNameChanged(self, msg):
+        d=msg.data
+        _type=d.get(pubsub.media_change_type, None)
+        _old_name=d.get(pubsub.media_old_name, None)
+        _new_name=d.get(pubsub.media_new_name, None)
+        if _type is None or _old_name is None or _new_name is None:
+            # invalid/incomplete data
+            return
+        if _type!=pubsub.wallpaper_type and \
+           _type!=pubsub.ringtone_type:
+            # neither wallpaper nor ringtone
+            return
+        _old_name=common.basename(_old_name)
+        _new_name=common.basename(_new_name)
+        if _type==pubsub.wallpaper_type:
+            attr_name='wallpaper'
+        else:
+            attr_name='ringtone'
+        modified=False
+        for k,e in self._data.items():
+            if getattr(e, attr_name, None)==_old_name:
+                setattr(e, attr_name, _new_name)
+                modified=True
+        if modified:
+            # changes were made, update everything
+            self.updateonchange()
 
     def getdata(self, dict):
         """Return underlying calendar data in bitpim format

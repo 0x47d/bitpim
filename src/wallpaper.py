@@ -58,7 +58,7 @@ class WallpaperView(guiwidgets.FileView):
         }
 
     organizetypes=("Origin", "Image Type", "File Size") # Image Size
-    
+    media_notification_type=pubsub.wallpaper_type
 
     def __init__(self, mainwindow, parent):
         global thewallpapermanager
