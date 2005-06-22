@@ -26,107 +26,145 @@ import guihelper
 import guiwidgets
 
 class RepeatEditor(pb_editor.DirtyUIBase):
-    __repeat_type= {
+    _repeat_type= {
         'daily': 1,
         'weekly': 2,
         'monthly': 3,
         'yearly': 4 }
-    __repeat_options=('None', 'Daily', 'Weekly', 'Monthly', 'Yearly')
-    __dow=('Sun', 'Mon', 'Tues', 'Wed',' Thu', 'Fri', 'Sat')
-    __daily_option_index=0
-    __weekly_option_index=1
+    _repeat_options=('None', 'Daily', 'Weekly', 'Monthly', 'Yearly')
+    _dow=('Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat')
+    _monthly_nth_day=('First', 'Second', 'Third', 'Fourth', 'Last')
+    _daily_option_index=0
+    _weekly_option_index=1
+    _monthly_option_index=2
     
     def __init__(self, parent, _):
         pb_editor.DirtyUIBase.__init__(self, parent)
         # overall container
-        self.__main_bs=wx.BoxSizer(wx.VERTICAL)
+        self._main_bs=wx.BoxSizer(wx.VERTICAL)
         # vertical sizebox & checkboxes for different repreat options
         hbs_1=wx.BoxSizer(wx.HORIZONTAL)
-        self.__repeat_option_rb = wx.RadioBox(
+        self._repeat_option_rb = wx.RadioBox(
                 self, -1, "Repeat Types:", wx.DefaultPosition, wx.DefaultSize,
-                self.__repeat_options, 1, wx.RA_SPECIFY_COLS)
-        wx.EVT_RADIOBOX(self, self.__repeat_option_rb.GetId(), self.OnRepeatType)
-        hbs_1.Add(self.__repeat_option_rb, 0, wx.LEFT, 5)
+                self._repeat_options, 1, wx.RA_SPECIFY_COLS)
+        wx.EVT_RADIOBOX(self, self._repeat_option_rb.GetId(), self.OnRepeatType)
+        hbs_1.Add(self._repeat_option_rb, 0, wx.LEFT, 5)
         # daily options widgets
-        self.__option_bs=wx.BoxSizer(wx.VERTICAL)
+        self._option_bs=wx.BoxSizer(wx.VERTICAL)
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Daily Options:'), wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self.__dl_every_nday=wx.RadioButton(self, -1, 'Every ', style=wx.RB_GROUP)
-        self.__dl_every_nday.SetValue(True)
-        self.__dl_every_wday=wx.RadioButton(self, -1, 'Every Weekday')
-        wx.EVT_RADIOBUTTON(self, self.__dl_every_nday.GetId(), self.OnDirtyUI)
-        wx.EVT_RADIOBUTTON(self, self.__dl_every_wday.GetId(), self.OnDirtyUI)
-        hbs.Add(self.__dl_every_nday, 0, wx.LEFT, 0)
-        self.__dl_interval=wx.TextCtrl(self, -1, '1')
-        wx.EVT_TEXT(self, self.__dl_interval.GetId(), self.OnDirtyUI)
-        hbs.Add(self.__dl_interval, 0, wx.LEFT, 0)
+        self._dl_every_nday=wx.RadioButton(self, -1, 'Every ', style=wx.RB_GROUP)
+        self._dl_every_nday.SetValue(True)
+        self._dl_every_wday=wx.RadioButton(self, -1, 'Every Weekday')
+        wx.EVT_RADIOBUTTON(self, self._dl_every_nday.GetId(), self.OnDirtyUI)
+        wx.EVT_RADIOBUTTON(self, self._dl_every_wday.GetId(), self.OnDirtyUI)
+        hbs.Add(self._dl_every_nday, 0, wx.LEFT, 0)
+        self._dl_interval=wx.TextCtrl(self, -1, '1')
+        wx.EVT_TEXT(self, self._dl_interval.GetId(), self.OnDirtyUI)
+        hbs.Add(self._dl_interval, 0, wx.LEFT, 0)
         hbs.Add(wx.StaticText(self, -1, ' day(s)'), 0, wx.LEFT, 0)
         vbs.Add(hbs, 0, wx.LEFT|wx.TOP, 10)
-        vbs.Add(self.__dl_every_wday, 0, wx.LEFT, 10)
-        self.__option_bs.Add(vbs, 0, wx.LEFT, 5)
-        self.__daily_option_bs=vbs
+        vbs.Add(self._dl_every_wday, 0, wx.LEFT, 10)
+        self._option_bs.Add(vbs, 0, wx.LEFT, 5)
+        self._daily_option_bs=vbs
         # weekly options widgets
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Weekly Options:'), wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, 'Every '),0, wx.LEFT, 0)
-        self.__wl_interval=wx.TextCtrl(self, -1, '1')
-        wx.EVT_TEXT(self, self.__wl_interval.GetId(), self.OnDirtyUI)
-        hbs.Add(self.__wl_interval, 0, wx.LEFT, 0)
+        self._wl_interval=wx.TextCtrl(self, -1, '1')
+        wx.EVT_TEXT(self, self._wl_interval.GetId(), self.OnDirtyUI)
+        hbs.Add(self._wl_interval, 0, wx.LEFT, 0)
         hbs.Add(wx.StaticText(self, -1, ' week(s)'), 0, wx.LEFT, 0)
         vbs.Add(hbs, 0, wx.LEFT|wx.TOP, 10)
         vbs.Add(wx.StaticText(self, -1, 'On:'), 0, wx.LEFT, 10)
         hbs=wx.GridSizer(2, 4)
-        self.__wl_dow={}
-        for i, n in enumerate(self.__dow):
-            self.__wl_dow[i]=wx.CheckBox(self, -1, n)
-            wx.EVT_CHECKBOX(self, self.__wl_dow[i].GetId(), self.OnDirtyUI)
-            hbs.Add(self.__wl_dow[i], 0, wx.LEFT|wx.TOP, 5)
+        self._wl_dow={}
+        for i, n in enumerate(self._dow):
+            self._wl_dow[i]=wx.CheckBox(self, -1, n)
+            wx.EVT_CHECKBOX(self, self._wl_dow[i].GetId(), self.OnDirtyUI)
+            hbs.Add(self._wl_dow[i], 0, wx.LEFT|wx.TOP, 5)
         vbs.Add(hbs, 0, wx.LEFT, 5)
-        self.__option_bs.Add(vbs, 0, wx.LEFT, 5)
-        self.__weekly_option_bs=vbs
-        hbs_1.Add(self.__option_bs, 0, wx.LEFT, 5)
-        self.__main_bs.Add(hbs_1, 0, wx.LEFT|wx.TOP, 5)
+        self._option_bs.Add(vbs, 0, wx.LEFT, 5)
+        self._weekly_option_bs=vbs
+        # monthly option widgets
+        vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Monthly Options:'), wx.VERTICAL)
+        self._ml_every_nday=wx.RadioButton(self, -1, 'Every nth day', style=wx.RB_GROUP)
+        self._ml_every_nday.SetValue(True)
+        self._ml_every_wday=wx.RadioButton(self, -1, 'Every ')
+        wx.EVT_RADIOBUTTON(self, self._ml_every_nday.GetId(), self.OnDirtyUI)
+        wx.EVT_RADIOBUTTON(self, self._ml_every_wday.GetId(), self.OnDirtyUI)
+        vbs.Add(self._ml_every_nday, 0, wx.LEFT|wx.TOP, 10)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(self._ml_every_wday, 0, wx.LEFT, 0)
+        self._ml_nth_day=wx.ComboBox(self, -1, value=self._monthly_nth_day[0],
+                                     choices=self._monthly_nth_day,
+                                     style=wx.CB_READONLY)
+        self._ml_wday=wx.ComboBox(self, -1, value=self._dow[0],
+                                  choices=self._dow, style=wx.CB_READONLY)
+        wx.EVT_COMBOBOX(self, self._ml_nth_day.GetId(), self.OnDirtyUI)
+        wx.EVT_COMBOBOX(self, self._ml_wday.GetId(), self.OnDirtyUI)
+        hbs.Add(self._ml_nth_day, 0, wx.LEFT, 5)
+        hbs.Add(self._ml_wday, 0, wx.LEFT, 5)
+        vbs.Add(hbs, 0, wx.LEFT|wx.TOP, 10)
+        
+        self._option_bs.Add(vbs, 0, wx.LEFT, 5)
+        self._monthly_option_bs=vbs
+        
+        hbs_1.Add(self._option_bs, 0, wx.LEFT, 5)
+        self._main_bs.Add(hbs_1, 0, wx.LEFT|wx.TOP, 5)
         # the exceptions list
         hbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Excluded Dates:'), wx.HORIZONTAL)
-        self.__exception_list=wx.ListBox(self, -1)
-        hbs.Add(self.__exception_list, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
+        self._exception_list=wx.ListBox(self, -1)
+        hbs.Add(self._exception_list, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
         exception_del=wx.Button(self, -1, 'Include')
         wx.EVT_BUTTON(self, exception_del.GetId(), self.OnIncludeException)
         hbs.Add(exception_del, 0, wx.LEFT|wx.TOP, 5)
-        self.__main_bs.Add(hbs, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
+        self._main_bs.Add(hbs, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
         # all done
-        self.SetSizer(self.__main_bs)
+        self.SetSizer(self._main_bs)
         self.SetAutoLayout(True)
-        self.__main_bs.Fit(self)
+        self._main_bs.Fit(self)
         self.OnRepeatType(None)
 
     def populate(self, data):
         if data is None:
-            self.__repeat_option_rb.SetSelection(0)
-            self.__exception_list.Clear()
+            self._repeat_option_rb.SetSelection(0)
+            self._exception_list.Clear()
             self.OnRepeatType(None)
             return
         rt=data.repeat_type
         if rt==data.daily:
-            self.__repeat_option_rb.SetSelection(1)
+            self._repeat_option_rb.SetSelection(1)
             if data.interval:
-                self.__dl_every_nday.SetValue(True)
-                self.__dl_interval.SetValue(`data.interval`)
+                self._dl_every_nday.SetValue(True)
+                self._dl_interval.SetValue(`data.interval`)
             else:
-                self.__dl_every_wday.SetValue(True)
-                self.__dl_interval.SetValue('')
+                self._dl_every_wday.SetValue(True)
+                self._dl_interval.SetValue('')
         elif rt==data.weekly:
-            self.__repeat_option_rb.SetSelection(2)
-            self.__wl_interval.SetValue(`data.interval`)
+            self._repeat_option_rb.SetSelection(2)
+            self._wl_interval.SetValue(`data.interval`)
             dow_mask=data.dow
-            for i in range(len(self.__wl_dow)):
+            for i in range(len(self._wl_dow)):
                 b=((1<<i)&dow_mask)!=0
-                self.__wl_dow[i].SetValue(b)
+                self._wl_dow[i].SetValue(b)
         elif rt==data.monthly:
-            self.__repeat_option_rb.SetSelection(3)
+            self._repeat_option_rb.SetSelection(3)
+            if data.dow:
+                # every 1st *day of the month
+                self._ml_every_wday.SetValue(True)
+                self._ml_nth_day.SetSelection(data.interval-1)
+                dow_mask=data.dow
+                for i,e in enumerate(self._dow):
+                    if (1<<i)&dow_mask:
+                        self._ml_wday.SetValue(e)
+                        break
+            else:
+                # every nth day of the month
+                self._ml_every_nday.SetValue(True)
         else:
-            self.__repeat_option_rb.SetSelection(4)
-        self.__exception_list.Set(data.get_suppressed_list())
+            self._repeat_option_rb.SetSelection(4)
+        self._exception_list.Set(data.get_suppressed_list())
         self.OnRepeatType(None)
 
     def Set(self, data):
@@ -134,102 +172,121 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self.populate(data)
         self.dirty=self.ignore_dirty=False
 
+    def _get_daily_options(self, r):
+        r.repeat_type=r.daily
+        try:
+            b=self._dl_every_nday.GetValue()
+        except:
+            b=False
+            self._dl_every_nday.SetValue(False)
+        if b:
+            try:
+                r.interval=int(self._dl_interval.GetValue())
+            except:
+                # default to 1
+                r.interval=1
+        else:
+            r.interval=0
+    def _get_weekly_options(self, r):
+        r.repeat_type=r.weekly
+        try:
+            r.interval=int(self._wl_interval.GetValue())
+        except:
+            # default to 1
+            r.interval=1
+        m=0
+        for i in range(len(self._wl_dow)):
+            if self._wl_dow[i].GetValue():
+                m=m|(1<<i)
+        r.dow=m
+    def _get_monthly_options(self, r):
+        r.repeat_type=r.monthly
+        try:
+            b=self._ml_every_wday.GetValue()
+        except:
+            b=False
+            self._ml_every_wday.SetValue(False)
+        if b:
+            # every 1st Monday etc.
+            r.interval=self._ml_nth_day.GetSelection()+1
+            r.dow=1<<self._ml_wday.GetSelection()
+
     def Get(self):
         self.dirty=self.ignore_dirty=False
-        rt=self.__repeat_option_rb.GetSelection()
+        rt=self._repeat_option_rb.GetSelection()
         if rt==0:
             # No repeat
             return None
         r=bpcalendar.RepeatEntry()
         if rt==1:
             # daily
-            r.repeat_type=r.daily
-            try:
-                b=self.__dl_every_nday.GetValue()
-            except:
-                b=False
-                self.__dl_every_nday.SetValue(False)
-            if b:
-                try:
-                    r.interval=int(self.__dl_interval.GetValue())
-                except:
-                    # default to 1
-                    r.interval=1
-            else:
-                r.interval=0
+            self._get_daily_options(r)
         elif rt==2:
             # weekly
-            r.repeat_type=r.weekly
-            try:
-                r.interval=int(self.__wl_interval.GetValue())
-            except:
-                # default to 1
-                r.interval=1
-            m=0
-            for i in range(len(self.__wl_dow)):
-                if self.__wl_dow[i].GetValue():
-                    m=m|(1<<i)
-            r.dow=m
+            self._get_weekly_options(r)
         elif rt==3:
             # monthly
-            r.repeat_type=r.monthly
+            self._get_monthly_options(r)
         else:
             r.repeat_type=r.yearly
         # get the list of exceptions
-        r.suppressed=[str(self.__exception_list.GetString(i)) \
-           for i in range(self.__exception_list.GetCount())]
+        r.suppressed=[str(self._exception_list.GetString(i)) \
+           for i in range(self._exception_list.GetCount())]
         # and return the result
         return r
 
     def OnRepeatType(self, evt):
-        s=self.__repeat_option_rb.GetSelection()
-        self.__option_bs.Hide(self.__weekly_option_index)
-        self.__option_bs.Hide(self.__daily_option_index)
+        s=self._repeat_option_rb.GetSelection()
+        self._option_bs.Hide(self._weekly_option_index)
+        self._option_bs.Hide(self._daily_option_index)
+        self._option_bs.Hide(self._monthly_option_index)
         if s==1:
-            self.__option_bs.Show(self.__daily_option_index)
+            self._option_bs.Show(self._daily_option_index)
         elif s==2:
-            self.__option_bs.Show(self.__weekly_option_index)
-        self.__option_bs.Layout()
+            self._option_bs.Show(self._weekly_option_index)
+        elif s==3:
+            self._option_bs.Show(self._monthly_option_index)
+        self._option_bs.Layout()
         self.OnDirtyUI(evt)
 
     def OnIncludeException(self, evt):
         print 'OnIncludeException'
-        s=self.__exception_list.GetSelections()
+        s=self._exception_list.GetSelections()
         if not len(s):
             # nothing selected
             return
-        self.__exception_list.Delete(s[0])
+        self._exception_list.Delete(s[0])
         self.OnDirtyUI(evt)
         
 #------------------------------------------------------------------------------
 class GeneralEditor(pb_editor.DirtyUIBase):
-    __dict_key_index=0
-    __label_index=1
-    __class_index=2
-    __get_index=3
-    __set_index=4
-    __w_index=5
+    _dict_key_index=0
+    _label_index=1
+    _class_index=2
+    _get_index=3
+    _set_index=4
+    _w_index=5
     def __init__(self, parent, _):
         # base clase
         pb_editor.DirtyUIBase.__init__(self, parent)
         # structure to hold all the widgets of this panel
-        self.__fields=[
+        self._fields=[
             ['description', 'Summary:', DVTextControl, None, None, None],
             ['location', 'Location:', DVTextControl, None, None, None],
             ['allday', 'All-Day:', wx.CheckBox, None, None, None],
-            ['start', 'From:', DVDateTimeControl, None, self.__set_start_datetime, None],
-            ['end', 'To:', DVDateTimeControl, None, self.__set_end_datetime, None],
-            ['priority', 'Priority:', None, self.__get_priority, self.__set_priority, None],
+            ['start', 'From:', DVDateTimeControl, None, self._set_start_datetime, None],
+            ['end', 'To:', DVDateTimeControl, None, self._set_end_datetime, None],
+            ['priority', 'Priority:', None, self._get_priority, self._set_priority, None],
             ['alarm', 'Alarm:', DVIntControl, None, None, None]
             ]
         # overall container
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1), wx.VERTICAL)
         # instantiate the widgets
-        self.__w={}
+        self._w={}
         gs=wx.FlexGridSizer(-1,2,5,5)
         gs.AddGrowableCol(1)
-        for n in self.__fields:
-            desc=n[self.__label_index]
+        for n in self._fields:
+            desc=n[self._label_index]
             t=wx.StaticText(self, -1, desc, style=wx.ALIGN_LEFT)
             gs.Add(t)
             if desc=='Priority:':
@@ -237,13 +294,13 @@ class GeneralEditor(pb_editor.DirtyUIBase):
                               ['<None>', '1 - Highest', '2', '3', '4', '5 - Normal',
                                '6', '7' ,'8', '9', '10 - Lowest'], wx.CB_DROPDOWN)
             else:
-                c=n[self.__class_index](self, -1)
+                c=n[self._class_index](self, -1)
             gs.Add(c, 0, wx.EXPAND, 0)
-            n[self.__w_index]=self.__w[n[self.__dict_key_index]]=c
+            n[self._w_index]=self._w[n[self._dict_key_index]]=c
         vbs.Add(gs, 0, wx.EXPAND|wx.ALL, 5)
         # event handlers
-        wx.EVT_CHECKBOX(self, self.__w['allday'].GetId(), self.OnAllday)
-        wx.EVT_COMBOBOX(self, self.__w['priority'].GetId(), self.OnDirtyUI)
+        wx.EVT_CHECKBOX(self, self._w['allday'].GetId(), self.OnAllday)
+        wx.EVT_COMBOBOX(self, self._w['priority'].GetId(), self.OnDirtyUI)
         # all done
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
@@ -254,21 +311,21 @@ class GeneralEditor(pb_editor.DirtyUIBase):
 
     def OnAllday(self, evt):
         v=evt.IsChecked()
-        self.__w['start'].SetAllday(v)
-        self.__w['end'].SetAllday(v)
+        self._w['start'].SetAllday(v)
+        self._w['end'].SetAllday(v)
         self.OnDirtyUI(evt)
 
     def IsValid(self):
         # validate and return T if so or F otherwise
         # check for valid date/time entries
-        for w in (self.__w['start'], self.__w['end']):
+        for w in (self._w['start'], self._w['end']):
             if not w.IsValid() or w.IsEmpty():
                 w.SetFocus()
                 wx.Bell()
                 return False
         # whine if end is before start
-        start=datetime.datetime(*self.__w['start'].GetValue())
-        end=datetime.datetime(*self.__w['end'].GetValue())
+        start=datetime.datetime(*self._w['start'].GetValue())
+        end=datetime.datetime(*self._w['end'].GetValue())
         if start>end:
             # scold the user
             dlg=wx.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
@@ -276,54 +333,54 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             dlg.ShowModal()
             dlg.Destroy()
             # move focus
-            self.__w['end'].SetFocus()
+            self._w['end'].SetFocus()
             return False
         return True
 
     def Set(self, data):
         self.ignore_dirty=True
         if data is None:
-            for n in self.__fields:
-                n[self.__w_index].Enable(False)
+            for n in self._fields:
+                n[self._w_index].Enable(False)
         else:
-            for n in self.__fields:
-                w=n[self.__w_index]
+            for n in self._fields:
+                w=n[self._w_index]
                 w.Enable(True)
-                if n[self.__set_index] is None:
-                    w.SetValue(getattr(data, n[self.__dict_key_index]))
+                if n[self._set_index] is None:
+                    w.SetValue(getattr(data, n[self._dict_key_index]))
                 else:
-                    n[self.__set_index](w, data)
+                    n[self._set_index](w, data)
         self.ignore_dirty=self.dirty=False
 
     def Get(self, data):
         self.ignore_dirty=self.dirty=False
         if data is None:
             return
-        for n in self.__fields:
-            w=n[self.__w_index]
-            if n[self.__get_index] is None:
+        for n in self._fields:
+            w=n[self._w_index]
+            if n[self._get_index] is None:
                 v=w.GetValue()
             else:
-                v=n[self.__get_index](w, None)
-            setattr(data, n[self.__dict_key_index], v)
+                v=n[self._get_index](w, None)
+            setattr(data, n[self._dict_key_index], v)
         
-    def __set_priority(self, w, entry):
+    def _set_priority(self, w, entry):
         p=entry.priority
         if p is None:
             w.SetSelection(0)
         else:
             w.SetSelection(p)
-    def __get_priority(self, w, _):
+    def _get_priority(self, w, _):
         s=w.GetSelection()
         if s:
             return s
         else:
             return None
 
-    def __set_start_datetime(self, w, entry):
+    def _set_start_datetime(self, w, entry):
         w.SetAllday(entry.allday, entry.start)
 
-    def __set_end_datetime(self, w, entry):
+    def _set_end_datetime(self, w, entry):
         w.SetAllday(entry.allday, entry.end)
 
 #------------------------------------------------------------------------------
@@ -362,8 +419,8 @@ class CategoryEditor(pb_editor.DirtyUIBase):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, 'Selected Category:'), 0,
                 wx.TOP|wx.LEFT, 5)
-        self.__my_category=wx.ListBox(self, -1)
-        vbs.Add(self.__my_category, 1, wx.EXPAND|wx.ALL, 5)
+        self._my_category=wx.ListBox(self, -1)
+        vbs.Add(self._my_category, 1, wx.EXPAND|wx.ALL, 5)
         hs.Add(vbs, 1, wx.EXPAND|wx.ALL, 5)
         wx.EVT_BUTTON(self, self.but.GetId(), self.OnManageCategories)
 
@@ -391,23 +448,23 @@ class CategoryEditor(pb_editor.DirtyUIBase):
     def Get(self):
         self.ignore_dirty=self.dirty=False
         r=[]
-        count=self.__my_category.GetCount()
+        count=self._my_category.GetCount()
         if count==0:
             return r
         for i in range(count):
-            r.append({ 'category': self.__my_category.GetString(i) })
+            r.append({ 'category': self._my_category.GetString(i) })
         return r
 
     def Set(self, data):
         self.ignore_dirty=True
-        self.__my_category.Clear()
+        self._my_category.Clear()
         if data is None or len(data)==0:
             # none or empty list, do nothing
             return
         for n in data:
             v=n.get('category', None)
             if v is not None:
-                self.__my_category.Append(v)
+                self._my_category.Append(v)
         self.ignore_dirty=self.dirty=False
 
     def OnAddCategory(self, evt):
@@ -416,18 +473,18 @@ class CategoryEditor(pb_editor.DirtyUIBase):
             # no selection made, do nothing
             return
         self.ignore_dirty=True
-        self.__my_category.Append(v)
-        self.__my_category.SetStringSelection(v)
+        self._my_category.Append(v)
+        self._my_category.SetStringSelection(v)
         self.ignore_dirty=False
         self.OnDirtyUI(evt)
 
     def OnDelCategory(self, evt):
-        v=self.__my_category.GetSelection()
+        v=self._my_category.GetSelection()
         if v==wx.NOT_FOUND:
             # no selection, do nothing
             return
         self.ignore_dirty=True
-        self.__my_category.Delete(v)
+        self._my_category.Delete(v)
         self.ignore_dirty=False
         self.OnDirtyUI(evt)
 
@@ -450,20 +507,20 @@ class Editor(wx.Dialog):
     ANSWER_ORIGINAL=1
     ANSWER_THIS=2
     ANSWER_CANCEL=3
-    __dict_key_index=0
-    __label_index=1
-    __get_index=2
-    __set_index=3
-    __w_index=4
+    _dict_key_index=0
+    _label_index=1
+    _get_index=2
+    _set_index=3
+    _w_index=4
     # notebook items
-    __general_page=0
-    __repeat_page=1
-    __notes_page=2
-    __categories_page=3
-    __wallpapers_page=4
-    __ringtones_page=5
-    __last_page=6
-    __items=[
+    _general_page=0
+    _repeat_page=1
+    _notes_page=2
+    _categories_page=3
+    _wallpapers_page=4
+    _ringtones_page=5
+    _last_page=6
+    _items=[
         ("General", None, GeneralEditor),
         ("Repeat", 'repeat', RepeatEditor),
         ("Notes", "notes", pb_editor.MemoEditor),
@@ -483,7 +540,7 @@ class Editor(wx.Dialog):
         # specific entry
         self.entries=[]
         self.entrymap=[]
-        self.__current_entry=None
+        self._current_entry=None
 
         # Dirty tracking.  We restrict what the user can do while editting an
         # entry to only be able to edit that entry.  'dirty' gets fired when
@@ -496,22 +553,22 @@ class Editor(wx.Dialog):
         # overall container
         vbs=wx.BoxSizer(wx.VERTICAL)
         
-        self.__prev_btn=wx.BitmapButton(self, self.ID_PREV, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Previous Day")
-        self.__next_btn=wx.BitmapButton(self, self.ID_NEXT, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Day")
+        self._prev_btn=wx.BitmapButton(self, self.ID_PREV, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Previous Day")
+        self._next_btn=wx.BitmapButton(self, self.ID_NEXT, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Day")
         self.title=wx.StaticText(self, -1, "Date here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
 
         # top row container 
         hbs1=wx.BoxSizer(wx.HORIZONTAL)
-        hbs1.Add(self.__prev_btn, 0, wx.EXPAND)
+        hbs1.Add(self._prev_btn, 0, wx.EXPAND)
         hbs1.Add(self.title, 1, wx.EXPAND)
-        hbs1.Add(self.__next_btn, 0, wx.EXPAND)
+        hbs1.Add(self._next_btn, 0, wx.EXPAND)
         vbs.Add(hbs1, 0, wx.TOP|wx.EXPAND, 10)
 
         # list box and two buttons below
         self.listbox=wx.ListBox(self, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        self.__add_btn=wx.Button(self, self.ID_ADD, "New")
+        self._add_btn=wx.Button(self, self.ID_ADD, "New")
         hbs2=wx.BoxSizer(wx.HORIZONTAL)
-        hbs2.Add(self.__add_btn, 1, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, border=5)
+        hbs2.Add(self._add_btn, 1, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, border=5)
         
         # sizer for listbox
         lbs=wx.BoxSizer(wx.VERTICAL)
@@ -519,28 +576,28 @@ class Editor(wx.Dialog):
         lbs.Add(hbs2, 0, wx.EXPAND)
 
         # right hand bit with all fields
-        self.__nb=wx.Notebook(self, -1)
-        self.__widgets=[]
-        for i, (name, key, klass) in enumerate(self.__items):
+        self._nb=wx.Notebook(self, -1)
+        self._widgets=[]
+        for i, (name, key, klass) in enumerate(self._items):
             if name in ('Ringtones', 'Wallpapers'):
-                self.__widgets.append(klass(self.__nb, parent, False))
+                self._widgets.append(klass(self._nb, parent, False))
             else:
-                self.__widgets.append(klass(self.__nb, parent))
-            self.__nb.AddPage(self.__widgets[i], name)
+                self._widgets.append(klass(self._nb, parent))
+            self._nb.AddPage(self._widgets[i], name)
             
         # buttons below fields
-        self.__delete_btn=wx.Button(self, self.ID_DELETE, "Delete")
-        self.__revert_btn=wx.Button(self, self.ID_REVERT, "Revert")
-        self.__save_btn=wx.Button(self, self.ID_SAVE, "Save")
+        self._delete_btn=wx.Button(self, self.ID_DELETE, "Delete")
+        self._revert_btn=wx.Button(self, self.ID_REVERT, "Revert")
+        self._save_btn=wx.Button(self, self.ID_SAVE, "Save")
 
         hbs4=wx.BoxSizer(wx.HORIZONTAL)
-        hbs4.Add(self.__delete_btn, 1, wx.ALIGN_CENTRE|wx.LEFT, border=10)
-        hbs4.Add(self.__revert_btn, 1, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, border=10)
-        hbs4.Add(self.__save_btn, 1, wx.ALIGN_CENTRE|wx.RIGHT, border=10)
+        hbs4.Add(self._delete_btn, 1, wx.ALIGN_CENTRE|wx.LEFT, border=10)
+        hbs4.Add(self._revert_btn, 1, wx.ALIGN_CENTRE|wx.LEFT|wx.RIGHT, border=10)
+        hbs4.Add(self._save_btn, 1, wx.ALIGN_CENTRE|wx.RIGHT, border=10)
 
         # fields and buttons together
         vbs2=wx.BoxSizer(wx.VERTICAL)
-        vbs2.Add(self.__nb, 1, wx.EXPAND|wx.BOTTOM, border=5)
+        vbs2.Add(self._nb, 1, wx.EXPAND|wx.BOTTOM, border=5)
         vbs2.Add(hbs4, 0, wx.EXPAND|wx.ALIGN_CENTRE)
 
         # container for everything below title row
@@ -556,7 +613,7 @@ class Editor(wx.Dialog):
         self.SetAutoLayout(True)
         vbs.Fit(self)
         # delete is disabled until an item is selected
-        self.__delete_btn.Enable(False)
+        self._delete_btn.Enable(False)
 
         wx.EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
@@ -571,7 +628,7 @@ class Editor(wx.Dialog):
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_EDITING_CALENDAR_EVENTS))
         # DIRTY UI Event handlers
-        for w in self.__widgets:
+        for w in self._widgets:
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         self.ignoredirty=False
         self.setdirty(False)
@@ -579,10 +636,10 @@ class Editor(wx.Dialog):
 
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
-        self.__current_entry=self.getcurrententry()
-        self.updatefields(self.__current_entry)
+        self._current_entry=self.getcurrententry()
+        self.updatefields(self._current_entry)
         self.setdirty(False)
-        self.__delete_btn.Enable(True)
+        self._delete_btn.Enable(True)
 
     def getcurrententry(self):
         """Returns the entry currently being viewed
@@ -604,12 +661,12 @@ class Editor(wx.Dialog):
         """Callback for when user presses save"""
 
         # check if the dates are ok
-        if not self.__widgets[self.__general_page].IsValid():
+        if not self._widgets[self._general_page].IsValid():
             return
 
         # lets roll ..
 ##        entry=self.getcurrententry()
-        entry=self.__current_entry
+        entry=self._current_entry
 
         # is it a repeat?
         res=self.ANSWER_ORIGINAL
@@ -625,7 +682,7 @@ class Editor(wx.Dialog):
             newentry=self.cw.newentryfactory(*self.date)
 
         # update the fields from the general tab
-        self.__widgets[self.__general_page].Get(newentry)
+        self._widgets[self._general_page].Get(newentry)
         if res==self.ANSWER_THIS:
             # change this event only, change the start & end date to this date
             newentry.start=list(self.date)+list(newentry.start[3:])
@@ -634,12 +691,12 @@ class Editor(wx.Dialog):
             newentry.repeat=None
         else:
             # get data from the repeat tab
-            newentry.repeat=self.__widgets[self.__repeat_page].Get()
+            newentry.repeat=self._widgets[self._repeat_page].Get()
         # and other tabs as well
-        newentry.notes=self.__widgets[self.__notes_page].Get().get('memo', None)
-        newentry.categories=self.__widgets[self.__categories_page].Get()
-        newentry.wallpaper=self.__widgets[self.__wallpapers_page].Get().get('wallpaper', None)
-        newentry.ringtone=self.__widgets[self.__ringtones_page].Get().get('ringtone', None)
+        newentry.notes=self._widgets[self._notes_page].Get().get('memo', None)
+        newentry.categories=self._widgets[self._categories_page].Get()
+        newentry.wallpaper=self._widgets[self._wallpapers_page].Get().get('wallpaper', None)
+        newentry.ringtone=self._widgets[self._ringtones_page].Get().get('ringtone', None)
         # got the data
         # update calendar widget
         if res==self.ANSWER_ORIGINAL:
@@ -691,7 +748,7 @@ class Editor(wx.Dialog):
         self.updatelistbox(entry.id)
 
     def OnDeleteButton(self, evt):
-        entry=self.__current_entry
+        entry=self._current_entry
         if entry is None:
             return
         # is it a repeat?
@@ -753,7 +810,7 @@ class Editor(wx.Dialog):
         self.listbox.Clear()
         selectitem=-1
         self.entrymap=[]
-        self.__current_entry=None
+        self._current_entry=None
         # decorate
         for index, entry in enumerate(self.entries):
             if entry.allday:
@@ -796,27 +853,27 @@ class Editor(wx.Dialog):
             
         # disable delete if there are no entries!
         if len(self.entries)==0:
-            self.__delete_btn.Enable(False)
+            self._delete_btn.Enable(False)
 
     def updatefields(self, entry):
         self.ignoredirty=True
-        self.__widgets[self.__general_page].Set(entry)
+        self._widgets[self._general_page].Set(entry)
         # populate the other tabs with current entry data
         if entry is None:
             # clear everything out
-            for i in range(self.__repeat_page, self.__last_page):
-                self.__widgets[i].Set(None)
-                self.__widgets[i].Enable(False)
+            for i in range(self._repeat_page, self._last_page):
+                self._widgets[i].Set(None)
+                self._widgets[i].Enable(False)
             return
         # there's data, setting each page accordingly
-        for i in range(self.__repeat_page, self.__last_page):
-            self.__widgets[i].Enable(True)
-        self.__widgets[self.__repeat_page].Set(entry.repeat)
-        self.__widgets[self.__notes_page].Set({ 'memo': entry.notes })
-        self.__widgets[self.__categories_page].Set(entry.categories)
-        self.__widgets[self.__wallpapers_page].Set( \
+        for i in range(self._repeat_page, self._last_page):
+            self._widgets[i].Enable(True)
+        self._widgets[self._repeat_page].Set(entry.repeat)
+        self._widgets[self._notes_page].Set({ 'memo': entry.notes })
+        self._widgets[self._categories_page].Set(entry.categories)
+        self._widgets[self._wallpapers_page].Set( \
             { 'wallpaper': entry.wallpaper, 'type': 'calendar' })
-        self.__widgets[self.__ringtones_page].Set( \
+        self._widgets[self._ringtones_page].Set( \
             { 'ringtone': entry.ringtone, 'type': 'calendar' })
         self.ignoredirty=False
 
@@ -848,26 +905,26 @@ class Editor(wx.Dialog):
             # with this data
             
             # enable save, revert, delete
-            self.__save_btn.Enable(True)
-            self.__revert_btn.Enable(True)
+            self._save_btn.Enable(True)
+            self._revert_btn.Enable(True)
             # disable close, left, right, new
-            self.__prev_btn.Enable(False)
-            self.__next_btn.Enable(False)
-            self.__add_btn.Enable(False)
+            self._prev_btn.Enable(False)
+            self._next_btn.Enable(False)
+            self._add_btn.Enable(False)
             # can't play with listbox now
             self.listbox.Enable(False)
         else:
             # The data is now clean and saved/reverted or deleted
             
             # disable save, revert,
-            self.__save_btn.Enable(False)
-            self.__revert_btn.Enable(False)
+            self._save_btn.Enable(False)
+            self._revert_btn.Enable(False)
 
             # enable delete, close, left, right, new
-            self.__delete_btn.Enable(len(self.entries)>0) # only enable if there are entries
-            self.__prev_btn.Enable(True)
-            self.__next_btn.Enable(True)
-            self.__add_btn.Enable(True)
+            self._delete_btn.Enable(len(self.entries)>0) # only enable if there are entries
+            self._prev_btn.Enable(True)
+            self._next_btn.Enable(True)
+            self._add_btn.Enable(True)
 
             # can choose another item in listbox
             self.listbox.Enable(True)
@@ -904,12 +961,12 @@ class Editor(wx.Dialog):
 class DVDateTimeControl(wx.Panel):
     """A datetime control customised to work in the dayview editor"""
     def __init__(self,parent,id):
-        self.__allday=False
-        self.__datetime_format="EUDATETIMEYYYYMMDD.HHMM"
-        self.__date_format='EUDATEYYYYMMDD.'
+        self._allday=False
+        self._datetime_format="EUDATETIMEYYYYMMDD.HHMM"
+        self._date_format='EUDATEYYYYMMDD.'
         wx.Panel.__init__(self, parent, -1)
         self.c=wx.lib.masked.textctrl.TextCtrl(\
-            self, id, "", autoformat=self.__datetime_format,
+            self, id, "", autoformat=self._datetime_format,
             emptyInvalid=True,
             emptyBackgroundColour='Red',
             invalidBackgroundColour='Red')
@@ -924,7 +981,7 @@ class DVDateTimeControl(wx.Panel):
         if v is None:
             self.c.SetValue("")
             return
-        if self.__allday:
+        if self._allday:
             str="%04d%02d%02d" % tuple(v[:3])
         else:
             ap="AM"
@@ -981,16 +1038,16 @@ class DVDateTimeControl(wx.Panel):
         return self.c.IsEmpty()
 
     def SetAllday(self, allday, v=None):
-        if allday==self.__allday and v is None:
+        if allday==self._allday and v is None:
             return
         if v is None:
             v=self.GetValue()
-        if allday != self.__allday:
-            self.__allday=allday
-            if self.__allday:
-                self.c.SetCtrlParameters(autoformat=self.__date_format)
+        if allday != self._allday:
+            self._allday=allday
+            if self._allday:
+                self.c.SetCtrlParameters(autoformat=self._date_format)
             else:
-                self.c.SetCtrlParameters(autoformat=self.__datetime_format)
+                self.c.SetCtrlParameters(autoformat=self._datetime_format)
         self.SetValue(v)
 
 #------------------------------------------------------------------------------    

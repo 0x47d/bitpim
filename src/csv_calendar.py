@@ -295,17 +295,15 @@ class CSVCalendarImportData(object):
         rp_interval=e.get('repeat_interval', 1)
         rp_dow=e.get('repeat_dow', 0)
 
-        if rp_type=='daily':
+        if rp_type==rp.daily:
             # daily event
             rp.repeat_type=rp.daily
             rp.interval=rp_interval
-        elif rp_type=='weekly':
-            rp.repeat_type=rp.weekly
+        elif rp_type==rp.weekly or rp_type==rp.monthly:
+            rp.repeat_type=rp_type
             rp.interval=rp_interval
             rp.dow=rp_dow
-        elif rp_type=='monthly':
-            rp.repeat_type=rp.monthly
-        elif rp_type=='yearly':
+        elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly
         else:
             # not yet supported

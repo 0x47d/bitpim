@@ -126,17 +126,15 @@ class VCalendarImportData(object):
         rp_end=e.get('repeat_end', None)
         rp_num=e.get('repeat_num', None)
         rp_dow=e.get('repeat_dow', 0)
-        if rp_type=='daily':
+        if rp_type==rp.daily:
             # daily event
             rp.repeat_type=rp.daily
             rp.interval=rp_interval
-        elif rp_type=='weekly':
-            rp.repeat_type=rp.weekly
+        elif rp_type==rp.weekly or rp_type==rp.monthly:
+            rp.repeat_type=rp_type
             rp.interval=rp_interval
             rp.dow=rp_dow
-        elif rp_type=='monthly':
-            rp.repeat_type=rp.monthly
-        elif rp_type=='yearly':
+        elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly
         else:
             # not yet supported
@@ -314,16 +312,30 @@ class VCalendarImportData(object):
     def __process_monthly_rule(self, v, dd):
         try:
             # acceptable format: MD1 <day number> <end date | #duration>
+            # or MP1 <[1-4]+ | 1-> <SU-SA> <end date | #duration>
             s=v['value'].split(' ')
-            if s[0]!='MD1':
+            if s[0]!='MD1' and s[0]!='MP1':
                 return False
+            if s[0]=='MP1':
+                # every nth *day of every month
+                n=s[1]
+                if n in ['1+', '2+', '3+', '4+', '1-']:
+                    if n[1]=='-':
+                        dd['repeat_interval']=5
+                    else:
+                        dd['repeat_interval']=int(n[0])
+                else:
+                    return False
+                dd['repeat_dow']=self.__rrule_dow.get(s[2], 0)
+            else:
+                dd['repeat_interval']=dd['repeat_dow']=0
+            dd['repeat_type']='monthly'
             n=s[-1]
             if len(n)>7 and n[:8].isdigit():
                 # end date/time specified
                 dd['repeat_end']=bptime.BPTime(n).get()
             elif n[0]=='#':
                 dd['repeat_num']=int(n[1:])
-            dd['repeat_type']='monthly'
             return True
         except:
             if module_debug: raise

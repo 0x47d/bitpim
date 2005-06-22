@@ -158,35 +158,44 @@ class RepeatEntry(object):
     weekly='weekly'
     monthly='monthly'
     yearly='yearly'
-    __interval=0
-    __dow=1
-    __dom=0
-    __moy=1
-    __dow_names=(
+    _interval=0
+    _dow=1
+    _dom=0
+    _moy=1
+    _dow_names=(
         {1: 'Sun'}, {2: 'Mon'}, {4: 'Tue'}, {8: 'Wed'},
         {16: 'Thu'}, {32: 'Fri'}, {64: 'Sat'})
+    # this faster than log2(x)
+    _dow_num={ 1: wx.DateTime.Sun,
+               2: wx.DateTime.Mon,
+               4: wx.DateTime.Tue,
+               8: wx.DateTime.Wed,
+               16: wx.DateTime.Thu,
+               32: wx.DateTime.Fri,
+               64: wx.DateTime.Sat }
     dow_names={ 'Sun': 1, 'Mon': 2, 'Tue': 4, 'Wed': 8,
                 'Thu': 16, 'Fri': 32, 'Sat': 64 }
     def __init__(self, repeat_type=daily):
-        self.__type=repeat_type
-        self.__data=[0,0]
-        self.__suppressed=[]
+        self._type=repeat_type
+        self._data=[0,0]
+        self._suppressed=[]
 
     def get(self):
         # return a dict representing internal data
         # mainly used for populatefs
         r={}
-        if self.__type==self.daily:
-            r[self.daily]= { 'interval': self.__data[self.__interval] }
-        elif self.__type==self.weekly:
-            r[self.weekly]= { 'interval': self.__data[self.__interval],
-                                    'dow': self.__data[self.__dow] }
-        elif self.__type==self.monthly:
-            r[self.monthly]=None
+        if self._type==self.daily:
+            r[self.daily]= { 'interval': self._data[self._interval] }
+        elif self._type==self.weekly:
+            r[self.weekly]= { 'interval': self._data[self._interval],
+                              'dow': self._data[self._dow] }
+        elif self._type==self.monthly:
+            r[self.monthly]={ 'interval': self._data[self._interval],
+                              'dow': self._data[self._dow] }
         else:
             r[self.yearly]=None
         s=[]
-        for n in self.__suppressed:
+        for n in self._suppressed:
             s.append(n.get())
         r['suppressed']=s
         return r
@@ -195,15 +204,15 @@ class RepeatEntry(object):
         # return a copy of the dict compatible with the database stuff
         db_r={}
         r={}
-        r['type']=self.__type
-        if self.__type==self.daily:
-            r['interval']=self.__data[self.__interval]
-        elif self.__type==self.weekly:
-            r['interval']=self.__data[self.__interval]
-            r['dow']=self.__data[self.__dow]
+        r['type']=self._type
+        if self._type==self.daily:
+            r['interval']=self._data[self._interval]
+        elif self._type==self.weekly or self._type==self.monthly:
+            r['interval']=self._data[self._interval]
+            r['dow']=self._data[self._dow]
         # and the suppressed stuff
         s=[]
-        for n in self.__suppressed:
+        for n in self._suppressed:
             s.append({ 'date': n.iso_str(True) })
         db_r['repeat']=[r]
         if len(s):
@@ -223,6 +232,8 @@ class RepeatEntry(object):
             self.dow=data[self.weekly]['dow']
         elif data.has_key(self.monthly):
             self.repeat_type=self.monthly
+            self.dow=data[self.monthly].get('dow', 0)
+            self.interval=data[self.monthly].get('interval', 0)
         else:
             self.repeat_type=self.yearly
         s=[]
@@ -235,7 +246,7 @@ class RepeatEntry(object):
         self.repeat_type=r['type']
         if self.repeat_type==self.daily:
             self.interval=r['interval']
-        elif self.repeat_type==self.weekly:
+        elif self.repeat_type==self.weekly or self.repeat_type==self.monthly:
             self.interval=r['interval']
             self.dow=r['dow']
         # now the suppressed stuff
@@ -244,7 +255,7 @@ class RepeatEntry(object):
             s.append(bptime.BPTime(n['date']))
         self.suppressed=s
 
-    def __check_daily(self, s, d):
+    def _check_daily(self, s, d):
         if self.interval:
             # every nth day
             return (int((d-s).days)%self.interval)==0
@@ -252,7 +263,7 @@ class RepeatEntry(object):
             # every weekday
             return d.weekday()<5
 
-    def __check_weekly(self, s, d):
+    def _check_weekly(self, s, d):
         # check if at least one day-of-week is specified, if not default to the
         # start date
         if self.dow==0:
@@ -267,94 +278,106 @@ class RepeatEntry(object):
         # check for the right weekday
         return ((1<<day_of_week)&self.dow) != 0
 
-    def __check_monthly(self, s, d):
-        return d.day==s.day
+    def _check_monthly(self, s, d):
+        if self.dow==0:
+            # no weekday specified, implied nth day of the month
+            return d.day==s.day
+        else:
+            # every interval-th dow-day (ie 1st Mon) of the month
+            dt=wx.DateTime.Now()
+            if self.interval<5:
+                # nth *day of the month
+                _nth=self.interval
+            else:
+                # last *day of the month
+                _nth=-1
+            return dt.SetToWeekDay(self._dow_num[self.dow], _nth,
+                                   month=d.month-1, year=d.year) and \
+                                   dt.GetDay()==d.day
 
-    def __check_yearly(self, s, d):
+    def _check_yearly(self, s, d):
         return d.month==s.month and d.day==s.day
 
     def is_active(self, s, d):
         # check in the suppressed list
-        if bptime.BPTime(d) in self.__suppressed:
+        if bptime.BPTime(d) in self._suppressed:
             # in the list, not part of this repeat
             return False
         # determine if the date is active
         if self.repeat_type==self.daily:
-            return self.__check_daily(s, d)
+            return self._check_daily(s, d)
         elif self.repeat_type==self.weekly:
-            return self.__check_weekly(s, d)
+            return self._check_weekly(s, d)
         elif self.repeat_type==self.monthly:
-            return self.__check_monthly(s, d)
+            return self._check_monthly(s, d)
         elif self.repeat_type==self.yearly:
-            return self.__check_yearly(s, d)
+            return self._check_yearly(s, d)
         else:
             return False
 
-    def __get_type(self):
-        return self.__type
-    def __set_type(self, repeat_type):
+    def _get_type(self):
+        return self._type
+    def _set_type(self, repeat_type):
         if repeat_type in (self.daily, self.weekly,
                     self.monthly, self.yearly):
-            self.__type = repeat_type
+            self._type = repeat_type
         else:
             raise AttributeError, 'type'
-    repeat_type=property(fget=__get_type, fset=__set_type)
+    repeat_type=property(fget=_get_type, fset=_set_type)
     
-    def __get_interval(self):
-        if self.__type in (self.daily, self.weekly):
-            return self.__data[self.__interval]
-        raise AttributeError, 'interval'
-    def __set_interval(self, interval):
-        if self.__type in (self.daily, self.weekly):
-            self.__data[self.__interval]=interval
-        else:
-            raise AttributeError, 'interval'
-    interval=property(fget=__get_interval, fset=__set_interval)
+    def _get_interval(self):
+        if self._type==self.yearly:
+            raise AttributeError
+        return self._data[self._interval]
+    def _set_interval(self, interval):
+        if self._type==self.yearly:
+            raise AttributeError
+        self._data[self._interval]=interval
+    interval=property(fget=_get_interval, fset=_set_interval)
 
-    def __get_dow(self):
-        if self.__type in (self.daily, self.weekly):
-            return self.__data[self.__dow]
-        raise AttributeError, 'dow'
-    def __set_dow(self, dow):
-        if self.__type in (self.daily, self.weekly):
-            self.__data[self.__dow]=dow
-        else:
-            raise AttributeError, 'dow'
-    dow=property(fget=__get_dow, fset=__set_dow)
-    def __get_dow_str(self):
+    def _get_dow(self):
+        if self._type==self.yearly:
+            raise AttributeError
+        return self._data[self._dow]
+    def _set_dow(self, dow):
+        if self._type==self.yearly:
+            raise AttributeError
+        self._data[self._dow]=dow
+    dow=property(fget=_get_dow, fset=_set_dow)
+    def _get_dow_str(self):
         try:
             _dow=self.dow
         except AttributeError:
             return ''
         names=[]
-        for l in self.__dow_names:
+        for l in self._dow_names:
             for k,e in l.items():
                 if k&_dow:
                     names.append(e)
         return ';'.join(names)
-    dow_str=property(fget=__get_dow_str)
+    dow_str=property(fget=_get_dow_str)
 
-    def __get_suppressed(self):
-        return self.__suppressed
-    def __set_suppressed(self, d):
+    def _get_suppressed(self):
+        return self._suppressed
+    def _set_suppressed(self, d):
         if not isinstance(d, list):
             raise TypeError, 'must be a list of string or BPTime'
         if not len(d) or isinstance(d[0], bptime.BPTime):
             # empty list or already a list of BPTime
-            self.__suppressed=d
+            self._suppressed=d
         elif isinstance(d[0], str):
             # list of 'yyyy-mm-dd'
-            self.__suppressed=[]
+            self._suppressed=[]
             for n in d:
-                self.__suppressed.append(bptime.BPTime(n.replace('-', '')))
+                self._suppressed.append(bptime.BPTime(n.replace('-', '')))
     def add_suppressed(self, y, m, d):
-        self.__suppressed.append(bptime.BPTime((y, m, d)))
+        self._suppressed.append(bptime.BPTime((y, m, d)))
     def get_suppressed_list(self):
-        return [x.date_str() for x in self.__suppressed]
-    suppressed=property(fget=__get_suppressed, fset=__set_suppressed)
-    def __get_suppressed_str(self):
+        return [x.date_str() for x in self._suppressed]
+    suppressed=property(fget=_get_suppressed, fset=_set_suppressed)
+    def _get_suppressed_str(self):
         return ';'.join(self.get_suppressed_list())
-    suppressed_str=property(fget=__get_suppressed_str)
+    suppressed_str=property(fget=_get_suppressed_str)
 
 #-------------------------------------------------------------------------------
 class CalendarEntry(object):
@@ -364,31 +387,31 @@ class CalendarEntry(object):
     priority_low=10
 
     def __init__(self, year=None, month=None, day=None):
-        self.__data={}
+        self._data={}
         # setting default values
         if day is not None:
-            self.__data['start']=bptime.BPTime((year, month, day))
-            self.__data['end']=bptime.BPTime((year, month, day))
+            self._data['start']=bptime.BPTime((year, month, day))
+            self._data['end']=bptime.BPTime((year, month, day))
         else:
-            self.__data['start']=bptime.BPTime()
-            self.__data['end']=bptime.BPTime()
-        self.__data['serials']=[]
-        self.__create_id()
+            self._data['start']=bptime.BPTime()
+            self._data['end']=bptime.BPTime()
+        self._data['serials']=[]
+        self._create_id()
 
     def get(self):
-        r=copy.deepcopy(self.__data, _nil={})
+        r=copy.deepcopy(self._data, _nil={})
         if self.repeat is not None:
             r['repeat']=self.repeat.get()
-        r['start']=self.__data['start'].iso_str()
-        r['end']=self.__data['end'].iso_str()
+        r['start']=self._data['start'].iso_str()
+        r['end']=self._data['end'].iso_str()
         return r
 
     def get_db_dict(self):
         # return a dict compatible with the database stuff
-        r=copy.deepcopy(self.__data, _nil={})
+        r=copy.deepcopy(self._data, _nil={})
         # adjust for start & end
-        r['start']=self.__data['start'].iso_str(self.allday)
-        r['end']=self.__data['end'].iso_str(self.allday)
+        r['start']=self._data['start'].iso_str(self.allday)
+        r['end']=self._data['end'].iso_str(self.allday)
         # adjust for repeat & suppressed
         if self.repeat is not None:
             r.update(self.repeat.get_db_dict())
@@ -398,28 +421,28 @@ class CalendarEntry(object):
         return r
 
     def set(self, data):
-        self.__data={}
-        self.__data.update(data)
-        self.__data['start']=bptime.BPTime(data['start'])
-        self.__data['end']=bptime.BPTime(data['end'])
+        self._data={}
+        self._data.update(data)
+        self._data['start']=bptime.BPTime(data['start'])
+        self._data['end']=bptime.BPTime(data['end'])
         if self.repeat is not None:
             r=RepeatEntry()
             r.set(self.repeat)
             self.repeat=r
         # try to clean up the dict
-        for k, e in self.__data.items():
+        for k, e in self._data.items():
             if e is None or e=='' or e==[]:
-                del self.__data[k]
+                del self._data[k]
 
     def set_db_dict(self, data):
         # update our data with dict return from database
-        self.__data={}
-        self.__data.update(data)
+        self._data={}
+        self._data.update(data)
         # adjust for allday
         self.allday=len(data['start'])==8
         # adjust for start and end
-        self.__data['start']=bptime.BPTime(data['start'])
-        self.__data['end']=bptime.BPTime(data['end'])
+        self._data['start']=bptime.BPTime(data['start'])
+        self._data['end']=bptime.BPTime(data['end'])
         # adjust for repeat
         if data.has_key('repeat'):
             rp=RepeatEntry()
@@ -429,8 +452,8 @@ class CalendarEntry(object):
     def is_active(self, y, m ,d):
         # return true if if this event is active on this date,
         # mainly used for repeating events.
-        s=self.__data['start'].date
-        e=self.__data['end'].date
+        s=self._data['start'].date
+        e=self._data['end'].date
         d=datetime.date(y, m, d)
         if d<s or d>e:
             # before start date, after end date
@@ -447,135 +470,135 @@ class CalendarEntry(object):
             return
         self.repeat.add_suppressed(y, m, d)
 
-    def __set_or_del(self, key, v, v_list=()):
+    def _set_or_del(self, key, v, v_list=()):
         if v is None or v in v_list:
-            if self.__data.has_key(key):
-                del self.__data[key]
+            if self._data.has_key(key):
+                del self._data[key]
         else:
-            self.__data[key]=v
+            self._data[key]=v
         
-    def __get_description(self):
-        return self.__data.get('description', '')
-    def __set_description(self, desc):
-        self.__set_or_del('description', desc, ('',))
-    description=property(fget=__get_description, fset=__set_description)
+    def _get_description(self):
+        return self._data.get('description', '')
+    def _set_description(self, desc):
+        self._set_or_del('description', desc, ('',))
+    description=property(fget=_get_description, fset=_set_description)
 
-    def __get_location(self):
-        return self.__data.get('location', '')
-    def __set_location(self, location):
-        self.__set_or_del('location', location, ('',))
-    location=property(fget=__get_location, fset=__set_location)
+    def _get_location(self):
+        return self._data.get('location', '')
+    def _set_location(self, location):
+        self._set_or_del('location', location, ('',))
+    location=property(fget=_get_location, fset=_set_location)
 
-    def __get_priority(self):
-        return self.__data.get('priority', None)
-    def __set_priority(self, priority):
-        self.__set_or_del('priority', priority)
-    priority=property(fget=__get_priority, fset=__set_priority)
+    def _get_priority(self):
+        return self._data.get('priority', None)
+    def _set_priority(self, priority):
+        self._set_or_del('priority', priority)
+    priority=property(fget=_get_priority, fset=_set_priority)
 
-    def __get_alarm(self):
-        return self.__data.get('alarm', -1)
-    def __set_alarm(self, alarm):
-        self.__set_or_del('alarm', alarm)
-    alarm=property(fget=__get_alarm, fset=__set_alarm)
+    def _get_alarm(self):
+        return self._data.get('alarm', -1)
+    def _set_alarm(self, alarm):
+        self._set_or_del('alarm', alarm)
+    alarm=property(fget=_get_alarm, fset=_set_alarm)
 
-    def __get_allday(self):
-        return self.__data.get('allday', False)
-    def __set_allday(self, allday):
-        self.__data['allday']=allday
-    allday=property(fget=__get_allday, fset=__set_allday)
+    def _get_allday(self):
+        return self._data.get('allday', False)
+    def _set_allday(self, allday):
+        self._data['allday']=allday
+    allday=property(fget=_get_allday, fset=_set_allday)
 
-    def __get_start(self):
-        return self.__data['start'].get()
-    def __set_start(self, datetime):
-        self.__data['start'].set(datetime)
-    start=property(fget=__get_start, fset=__set_start)
-    def __get_start_str(self):
-        return self.__data['start'].date_str()+' '+\
-               self.__data['start'].time_str(False, '00:00')
-    start_str=property(fget=__get_start_str)
+    def _get_start(self):
+        return self._data['start'].get()
+    def _set_start(self, datetime):
+        self._data['start'].set(datetime)
+    start=property(fget=_get_start, fset=_set_start)
+    def _get_start_str(self):
+        return self._data['start'].date_str()+' '+\
+               self._data['start'].time_str(False, '00:00')
+    start_str=property(fget=_get_start_str)
     
-    def __get_end(self):
-        return self.__data['end'].get()
-    def __set_end(self, datetime):
-        self.__data['end'].set(datetime)
-    end=property(fget=__get_end, fset=__set_end)
-    def __get_end_str(self):
-        return self.__data['end'].date_str()+' '+\
-               self.__data['end'].time_str(False, '00:00')
-    end_str=property(fget=__get_end_str)
+    def _get_end(self):
+        return self._data['end'].get()
+    def _set_end(self, datetime):
+        self._data['end'].set(datetime)
+    end=property(fget=_get_end, fset=_set_end)
+    def _get_end_str(self):
+        return self._data['end'].date_str()+' '+\
+               self._data['end'].time_str(False, '00:00')
+    end_str=property(fget=_get_end_str)
 
-    def __get_serials(self):
-        return self.__data.get('serials', None)
-    def __set_serials(self, serials):
-        self.__data['serials']=serials
-    serials=property(fget=__get_serials, fset=__set_serials)
+    def _get_serials(self):
+        return self._data.get('serials', None)
+    def _set_serials(self, serials):
+        self._data['serials']=serials
+    serials=property(fget=_get_serials, fset=_set_serials)
 
-    def __get_repeat(self):
-        return self.__data.get('repeat', None)
-    def __set_repeat(self, repeat):
-        self.__set_or_del('repeat', repeat)
-    repeat=property(fget=__get_repeat, fset=__set_repeat)
+    def _get_repeat(self):
+        return self._data.get('repeat', None)
+    def _set_repeat(self, repeat):
+        self._set_or_del('repeat', repeat)
+    repeat=property(fget=_get_repeat, fset=_set_repeat)
 
-    def __get_id(self):
-        s=self.__data.get('serials', [])
+    def _get_id(self):
+        s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 return n.get('id', None)
         return None
-    def __set_id(self, id):
-        s=self.__data.get('serials', [])
+    def _set_id(self, id):
+        s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 n['id']=id
                 return
-        self.__data['serials'].append({'sourcetype': 'bitpim', 'id': id } )
-    id=property(fget=__get_id, fset=__set_id)
+        self._data['serials'].append({'sourcetype': 'bitpim', 'id': id } )
+    id=property(fget=_get_id, fset=_set_id)
 
-    def __get_notes(self):
-        return self.__data.get('notes', '')
-    def __set_notes(self, s):
-        self.__set_or_del('notes', s, ('',))
-    notes=property(fget=__get_notes, fset=__set_notes)
+    def _get_notes(self):
+        return self._data.get('notes', '')
+    def _set_notes(self, s):
+        self._set_or_del('notes', s, ('',))
+    notes=property(fget=_get_notes, fset=_set_notes)
 
-    def __get_categories(self):
-        return self.__data.get('categories', [])
-    def __set_categories(self, s):
-        self.__set_or_del('categories', s,([],))
-        if s==[] and self.__data.has_key('categories'):
-            del self.__data['categories']
-    categories=property(fget=__get_categories, fset=__set_categories)
-    def __get_categories_str(self):
+    def _get_categories(self):
+        return self._data.get('categories', [])
+    def _set_categories(self, s):
+        self._set_or_del('categories', s,([],))
+        if s==[] and self._data.has_key('categories'):
+            del self._data['categories']
+    categories=property(fget=_get_categories, fset=_set_categories)
+    def _get_categories_str(self):
         c=self.categories
         if len(c):
             return ';'.join([x['category'] for x in c])
         else:
             return ''
-    categories_str=property(fget=__get_categories_str)
+    categories_str=property(fget=_get_categories_str)
 
-    def __get_ringtone(self):
-        return self.__data.get('ringtone', '')
-    def __set_ringtone(self, rt):
-        self.__set_or_del('ringtone', rt, ('',))
-    ringtone=property(fget=__get_ringtone, fset=__set_ringtone)
+    def _get_ringtone(self):
+        return self._data.get('ringtone', '')
+    def _set_ringtone(self, rt):
+        self._set_or_del('ringtone', rt, ('',))
+    ringtone=property(fget=_get_ringtone, fset=_set_ringtone)
 
-    def __get_wallpaper(self):
-        return self.__data.get('wallpaper', '',)
-    def __set_wallpaper(self, wp):
-        self.__set_or_del('wallpaper', wp, ('',))
-    wallpaper=property(fget=__get_wallpaper, fset=__set_wallpaper)
+    def _get_wallpaper(self):
+        return self._data.get('wallpaper', '',)
+    def _set_wallpaper(self, wp):
+        self._set_or_del('wallpaper', wp, ('',))
+    wallpaper=property(fget=_get_wallpaper, fset=_set_wallpaper)
 
     # we use two random numbers to generate the serials.  _persistrandom
     # is seeded at startup
     _persistrandom=random.Random()
-    def __create_id(self):
+    def _create_id(self):
         "Create a BitPim serial for this entry"
         rand2=random.Random() # this random is seeded when this function is called
         num=sha.new()
         num.update(`self._persistrandom.random()`)
         num.update(`rand2.random()`)
-        self.__data["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
+        self._data["serials"].append({"sourcetype": "bitpim", "id": num.hexdigest()})
 
-    def __get_print_data(self):
+    def _get_print_data(self):
         """ return a list of strings used for printing this event:
         [0]: start time, [1]: '', [2]: end time, [3]: Description
         [4]: Repeat Type, [5]: Alarm
@@ -584,8 +607,8 @@ class CalendarEntry(object):
             t0='All Day'
             t1=''
         else:
-            t0=self.__data['start'].time_str()
-            t1=self.__data['end'].time_str()
+            t0=self._data['start'].time_str()
+            t1=self._data['end'].time_str()
         rp=self.repeat
         if rp is None:
             rp_str=''
@@ -596,7 +619,7 @@ class CalendarEntry(object):
         else:
             alarm_str='%d:%02d'%(self.alarm/60, self.alarm%60)
         return [t0, '', t1, self.description, rp_str, alarm_str]
-    print_data=property(fget=__get_print_data)
+    print_data=property(fget=_get_print_data)
     def cmp_by_time(a, b):
         """ compare 2 objects by start times.
         -1 if a<b, 0 if a==b, and 1 if a>b
@@ -684,7 +707,7 @@ class Calendar(calendarcontrol.Calendar):
         @return:   The modified dict updated with at least C{dict['calendar']}"""
         if dict.get('calendar_version', None)==2:
             # return a version 2 dict
-            dict['calendar']=self.__convert3to2(self._data,
+            dict['calendar']=self._convert3to2(self._data,
                                                 dict.get('ringtone-index', None))
         else:
             dict['calendar']=copy.deepcopy(self._data, _nil={})
@@ -820,7 +843,7 @@ class Calendar(calendarcontrol.Calendar):
         """Updates the internal data with the contents of C{dict['calendar']}"""
         if dict.get('calendar_version', None)==2:
             # Cal dict version 2, need to convert to current ver(3)
-            self._data=self.__convert2to3(dict.get('calendar', {}),
+            self._data=self._convert2to3(dict.get('calendar', {}),
                                           dict.get('ringtone-index', {}))
         else:
             self._data=dict.get('calendar', {})
@@ -843,7 +866,7 @@ class Calendar(calendarcontrol.Calendar):
 
         if dict.get('calendar_version', None)==2:
             # Cal dict version 2, need to convert to current ver(3)
-            cal_dict=self.__convert2to3(dict.get('calendar', {}),
+            cal_dict=self._convert2to3(dict.get('calendar', {}),
                                         dict.get('ringtone-index', {}))
         else:
             cal_dict=dict.get('calendar', {})
@@ -938,13 +961,13 @@ class Calendar(calendarcontrol.Calendar):
         if dict is None:
             return None
         if from_version==2 and to_version==3:
-            return self.__convert2to3(dict, ringtone_index)
+            return self._convert2to3(dict, ringtone_index)
         elif from_version==3 and to_version==2:
-            return self.__convert3to2(dict, ringtone_index)
+            return self._convert3to2(dict, ringtone_index)
         else:
             raise 'Invalid conversion'
 
-    def __convert2to3(self, dict, ringtone_index):
+    def _convert2to3(self, dict, ringtone_index):
         """
         Convert calendar dict from version 2 to 3.
         """
@@ -984,7 +1007,7 @@ class Calendar(calendarcontrol.Calendar):
             r[ce.id]=ce
         return r
 
-    def __convert_daily_events(self, e, d):
+    def _convert_daily_events(self, e, d):
         """ Conver a daily event from v3 to v2 """
         rp=e.repeat
         if rp.interval==1:
@@ -1005,7 +1028,7 @@ class Calendar(calendarcontrol.Calendar):
                     d['exceptions'].append((t0.year, t0.month, t0.day))
                 t0+=delta_t
 
-    def __convert_weekly_events(self, e, d, idx):
+    def _convert_weekly_events(self, e, d, idx):
         """
         Convert a weekly event from v3 to v2
         """
@@ -1040,7 +1063,7 @@ class Calendar(calendarcontrol.Calendar):
             t0+=delta_t
         return idx, res
 
-    def __convert3to2(self, dict, ringtone_index):
+    def _convert3to2(self, dict, ringtone_index):
         """Convert calendar dict from version 3 to 2."""
         r={}
         idx=0
@@ -1069,9 +1092,9 @@ class Calendar(calendarcontrol.Calendar):
                     s.append(n.get()[:3])
                 d['exceptions']=s
                 if rp.repeat_type==rp.daily:
-                    self.__convert_daily_events(e, d)
+                    self._convert_daily_events(e, d)
                 elif rp.repeat_type==rp.weekly:
-                    idx, rr=self.__convert_weekly_events(e, d, idx)
+                    idx, rr=self._convert_weekly_events(e, d, idx)
                     r.update(rr)
                     continue
                 elif rp.repeat_type==rp.monthly:
@@ -1083,25 +1106,25 @@ class Calendar(calendarcontrol.Calendar):
             r[idx]=d
             idx+=1
         if __debug__:
-            print 'Calendar.__convert3to2: V2 dict:'
+            print 'Calendar._convert3to2: V2 dict:'
             print r
         return r
 
 #-------------------------------------------------------------------------------
 class CalendarPrintDialog(wx.Dialog):
 
-    __regular_template='cal_regular.xy'
-    __regular_style='cal_regular_style.xy'
-    __monthly_template='cal_monthly.xy'
-    __monthly_style='cal_monthly_style.xy'
+    _regular_template='cal_regular.xy'
+    _regular_style='cal_regular_style.xy'
+    _monthly_template='cal_monthly.xy'
+    _monthly_style='cal_monthly_style.xy'
         
     def __init__(self, calwidget, mainwindow, config):
         super(CalendarPrintDialog, self).__init__(mainwindow, -1, 'Print Calendar')
-        self.__cal_widget=calwidget
-        self.__xcp=self.__html=self.__dns=None
-        self.__dt__index=self.__dt_start=self.__dt_end=None
-        self.__date_changed=self.__style_changed=False
-        self.__tmp_file=common.gettempfilename("htm")
+        self._cal_widget=calwidget
+        self._xcp=self._html=self._dns=None
+        self._dt_index=self._dt_start=self._dt_end=None
+        self._date_changed=self._style_changed=False
+        self._tmp_file=common.gettempfilename("htm")
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -1111,23 +1134,23 @@ class CalendarPrintDialog(wx.Dialog):
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
         gs.Add(wx.StaticText(self, -1, 'Start:'), 0, wx.ALL, 0)
-        self.__start_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-        wx.EVT_DATE_CHANGED(self, self.__start_date.GetId(),
+        self._start_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        wx.EVT_DATE_CHANGED(self, self._start_date.GetId(),
                             self.OnDateChanged)
-        gs.Add(self.__start_date, 0, wx.ALL, 0)
+        gs.Add(self._start_date, 0, wx.ALL, 0)
         gs.Add(wx.StaticText(self, -1, 'End:'), 0, wx.ALL, 0)
-        self.__end_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-        wx.EVT_DATE_CHANGED(self, self.__end_date.GetId(),
+        self._end_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        wx.EVT_DATE_CHANGED(self, self._end_date.GetId(),
                             self.OnDateChanged)
-        gs.Add(self.__end_date, 0, wx.ALL, 0)
+        gs.Add(self._end_date, 0, wx.ALL, 0)
         sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(sbs, 0, wx.ALL, 5)
         # thye print style box
-        self.__print_style=wx.RadioBox(self, -1, 'Print Style',
+        self._print_style=wx.RadioBox(self, -1, 'Print Style',
                                        choices=['List View', 'Month View'],
                                        style=wx.RA_SPECIFY_ROWS)
-        wx.EVT_RADIOBOX(self, self.__print_style.GetId(), self.OnStyleChanged)
-        hbs.Add(self.__print_style, 0, wx.ALL, 5)
+        wx.EVT_RADIOBOX(self, self._print_style.GetId(), self.OnStyleChanged)
+        hbs.Add(self._print_style, 0, wx.ALL, 5)
         vbs.Add(hbs, 0, wx.ALL, 5)
         # and the bottom buttons
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -1148,19 +1171,19 @@ class CalendarPrintDialog(wx.Dialog):
         vbs.Fit(self)
 
     # constant class variables
-    __one_day=wx.DateSpan(days=1)
-    __empty_day=['', []]
-    def __one_day_data(self):
+    _one_day=wx.DateSpan(days=1)
+    _empty_day=['', []]
+    def _one_day_data(self):
         # generate data for 1 day
-        r=[str(self.__dt_index.GetDay())]
+        r=[str(self._dt_index.GetDay())]
         events=[]
-        if self.__dt_start<=self.__dt_index<=self.__dt_end:
-            entries=self.__cal_widget.getentrydata(self.__dt_index.GetYear(),
-                                                   self.__dt_index.GetMonth()+1,
-                                                   self.__dt_index.GetDay())
+        if self._dt_start<=self._dt_index<=self._dt_end:
+            entries=self._cal_widget.getentrydata(self._dt_index.GetYear(),
+                                                   self._dt_index.GetMonth()+1,
+                                                   self._dt_index.GetDay())
         else:
             entries=[]
-        self.__dt_index+=self.__one_day
+        self._dt_index+=self._one_day
         if len(entries):
             entries.sort(CalendarEntry.cmp_by_time)
             for e in entries:
@@ -1168,50 +1191,50 @@ class CalendarPrintDialog(wx.Dialog):
                 events.append('%s: %s'%(print_data[0], print_data[3]))
         r.append(events)
         return r
-    def __one_week_data(self):
+    def _one_week_data(self):
         # generate data for 1 week
-        dow=self.__dt_index.GetWeekDay()
+        dow=self._dt_index.GetWeekDay()
         if dow:
-            r=[self.__empty_day]*dow
+            r=[self._empty_day]*dow
         else:
             r=[]
         for d in range(dow, 7):
-            r.append(self.__one_day_data())
-            if self.__dt_index.GetDay()==1:
+            r.append(self._one_day_data())
+            if self._dt_index.GetDay()==1:
                 # new month
                 break
         return r
-    def __one_month_data(self):
+    def _one_month_data(self):
         # generate data for a month
-        m=self.__dt_index.GetMonth()
-        y=self.__dt_index.GetYear()
-        r=['%s %d'%(self.__dt_index.GetMonthName(m), y)]
-        while self.__dt_index.GetMonth()==m:
-            r.append(self.__one_week_data())
+        m=self._dt_index.GetMonth()
+        y=self._dt_index.GetYear()
+        r=['%s %d'%(self._dt_index.GetMonthName(m), y)]
+        while self._dt_index.GetMonth()==m:
+            r.append(self._one_week_data())
         return r
-    def __get_monthly_data(self):
+    def _get_monthly_data(self):
         """ generate a dict suitable to print monthly events
         """
         res=[]
-        self.__dt_index=wx.DateTimeFromDMY(1, self.__dt_start.GetMonth(),
-                                           self.__dt_start.GetYear())
-        while self.__dt_index<=self.__dt_end:
-            res.append(self.__one_month_data())
+        self._dt_index=wx.DateTimeFromDMY(1, self._dt_start.GetMonth(),
+                                           self._dt_start.GetYear())
+        while self._dt_index<=self._dt_end:
+            res.append(self._one_month_data())
         return res
 
-    def __get_list_data(self):
+    def _get_list_data(self):
         """ generate a dict suitable for printing"""
-        self.__dt_index=wx.DateTimeFromDMY(self.__dt_start.GetDay(),
-                                    self.__dt_start.GetMonth(),
-                                    self.__dt_start.GetYear())
+        self._dt_index=wx.DateTimeFromDMY(self._dt_start.GetDay(),
+                                    self._dt_start.GetMonth(),
+                                    self._dt_start.GetYear())
         current_month=None
         res=a_month=month_events=[]
-        while self.__dt_index<=self.__dt_end:
-            y=self.__dt_index.GetYear()
-            m=self.__dt_index.GetMonth()
-            d=self.__dt_index.GetDay()
-            entries=self.__cal_widget.getentrydata(y, m+1, d)
-            self.__dt_index+=self.__one_day
+        while self._dt_index<=self._dt_end:
+            y=self._dt_index.GetYear()
+            m=self._dt_index.GetMonth()
+            d=self._dt_index.GetDay()
+            entries=self._cal_widget.getentrydata(y, m+1, d)
+            self._dt_index+=self._one_day
             if not len(entries):
                 # no events on this day
                 continue
@@ -1223,7 +1246,7 @@ class CalendarPrintDialog(wx.Dialog):
                     res.append(a_month)
                 # start a new month
                 current_month=m
-                a_month=['%s %d'%(self.__dt_index.GetMonthName(m), y)]
+                a_month=['%s %d'%(self._dt_index.GetMonthName(m), y)]
                 month_events=[]
             # go through the entries and build a list of print data
             for i,e in enumerate(entries):
@@ -1231,8 +1254,8 @@ class CalendarPrintDialog(wx.Dialog):
                     date_str=day_str=''
                 else:
                     date_str=str(d)
-                    day_str=self.__dt_index.GetWeekDayName(
-                        self.__dt_index.GetWeekDay()-1, wx.DateTime.Name_Abbr)
+                    day_str=self._dt_index.GetWeekDayName(
+                        self._dt_index.GetWeekDay()-1, wx.DateTime.Name_Abbr)
                 month_events.append([date_str, day_str]+e.print_data)
         if len(month_events):
             # data left in the list
@@ -1240,75 +1263,75 @@ class CalendarPrintDialog(wx.Dialog):
             res.append(a_month)
         return res
 
-    def __gen_print_data(self):
-        if not self.__date_changed and \
-           not self.__style_changed and \
-           self.__html is not None:
+    def _gen_print_data(self):
+        if not self._date_changed and \
+           not self._style_changed and \
+           self._html is not None:
             # already generate the print data, no changes needed
             return
-        self.__dt_start=self.__start_date.GetValue()
-        self.__dt_end=self.__end_date.GetValue()
-        if not self.__dt_start.IsValid() or not self.__dt_end.IsValid():
+        self._dt_start=self._start_date.GetValue()
+        self._dt_end=self._end_date.GetValue()
+        if not self._dt_start.IsValid() or not self._dt_end.IsValid():
             # invalid print range
             return
         print_data=(
-            (self.__regular_template, self.__regular_style, self.__get_list_data),
-            (self.__monthly_template, self.__monthly_style, self.__get_monthly_data))
-        print_style=self.__print_style.GetSelection()
+            (self._regular_template, self._regular_style, self._get_list_data),
+            (self._monthly_template, self._monthly_style, self._get_monthly_data))
+        print_style=self._print_style.GetSelection()
         # tell the calendar widget to give me the dict I need
         print_dict=print_data[print_style][2]()
         # generate the html data
-        if self.__xcp is None:
+        if self._xcp is None:
             # build the whole document template
-            self.__xcp=xyaptu.xcopier(None)
+            self._xcp=xyaptu.xcopier(None)
             tmpl=file(guihelper.getresourcefile(print_data[print_style][0]),
                       'rt').read()
-            self.__xcp.setupxcopy(tmpl)
-        elif self.__style_changed:
+            self._xcp.setupxcopy(tmpl)
+        elif self._style_changed:
             # just update the template
             tmpl=file(guihelper.getresourcefile(print_data[print_style][0]),
                       'rt').read()
-            self.__xcp.setupxcopy(tmpl)
-        if self.__dns is None:
-            self.__dns={ 'common': __import__('common') }
-            self.__dns['guihelper']=__import__('guihelper')
-            self.__dns['events']=[]
-        self.__dns['events']=print_dict
-        self.__dns['date_range']='%s - %s'%\
-                                  (self.__dt_start.FormatDate(),
-                                   self.__dt_end.FormatDate())
-        html=self.__xcp.xcopywithdns(self.__dns.copy())
+            self._xcp.setupxcopy(tmpl)
+        if self._dns is None:
+            self._dns={ 'common': __import__('common') }
+            self._dns['guihelper']=__import__('guihelper')
+            self._dns['events']=[]
+        self._dns['events']=print_dict
+        self._dns['date_range']='%s - %s'%\
+                                  (self._dt_start.FormatDate(),
+                                   self._dt_end.FormatDate())
+        html=self._xcp.xcopywithdns(self._dns.copy())
         # apply styles
         sd={'styles': {}, '__builtins__': __builtins__ }
         execfile(guihelper.getresourcefile(print_data[print_style][1]), sd, sd)
         try:
-            self.__html=bphtml.applyhtmlstyles(html, sd['styles'])
+            self._html=bphtml.applyhtmlstyles(html, sd['styles'])
         except:
             if __debug__:
                 file('debug.html', 'wt').write(html)
             raise
-        self.__date_changed=self.__style_change=False
+        self._date_changed=self._style_change=False
 
     def OnDateChanged(self, _):
-        self.__date_changed=True
+        self._date_changed=True
     def OnStyleChanged(self, _):
-        self.__style_changed=True
+        self._style_changed=True
     def OnPrint(self, _):
-        self.__gen_print_data()
-        wx.GetApp().htmlprinter.PrintText(self.__html)
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PrintText(self._html)
     def OnPageSetup(self, _):
         wx.GetApp().htmlprinter.PageSetup()
     def OnPrintPreview(self, _):
-        self.__gen_print_data()
-        wx.GetApp().htmlprinter.PreviewText(self.__html)
-##        file(self.__tmp_file, 'wt').write(self.__html)
-##        webbrowser.open('file://localhost/'+self.__tmp_file)
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PreviewText(self._html)
+##        file(self._tmp_file, 'wt').write(self._html)
+##        webbrowser.open('file://localhost/'+self._tmp_file)
     def OnHelp(self, _):
         pass
     def OnClose(self, _):
         try:
             # remove the temp file, ignore exception if file does not exist
-            os.remove(self.__tmp_file)
+            os.remove(self._tmp_file)
         except:
             pass
         self.EndModal(wx.ID_CANCEL)

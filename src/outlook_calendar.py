@@ -46,7 +46,8 @@ def bp_repeat_str(dict, v):
         return 'Daily'
     elif v==OutlookCalendarImportData.olRecursWeekly:
         return 'Weekly'
-    elif v==OutlookCalendarImportData.olRecursMonthly:
+    elif v==OutlookCalendarImportData.olRecursMonthly or \
+         v==OutlookCalendarImportData.olRecursMonthNth:
         return 'Monthly'
     elif v==OutlookCalendarImportData.olRecursYearly:
         return 'Yearly'
@@ -67,7 +68,7 @@ def set_recurrence(item, dict, oc):
 
 #-------------------------------------------------------------------------------
 class OutlookCalendarImportData:
-    __calendar_keys=[
+    _calendar_keys=[
         # (Outlook field, BP Calendar field, convertor function)
         ('Subject', 'description', None),
         ('Location', 'location', None),
@@ -81,7 +82,7 @@ class OutlookCalendarImportData:
         ('Body', 'notes', None),
         ('AllDayEvent', 'allday', None)
         ]
-    __recurrence_keys=[
+    _recurrence_keys=[
         # (Outlook field, BP Calendar field, convertor function)
         ('NoEndDate', 'NoEndDate', None),
         ('PatternStartDate', 'PatternStartDate', to_bp_date),
@@ -92,12 +93,12 @@ class OutlookCalendarImportData:
         ('Occurrences', 'Occurrences', None),
         ('RecurrenceType', 'RecurrenceType', None)
         ]
-    __exception_keys=[
+    _exception_keys=[
         # (Outlook field, BP Calendar field, convertor function)
         ('OriginalDate', 'exception_date', to_bp_date),
         ('Deleted', 'deleted', None)
         ]
-    __default_filter={
+    _default_filter={
         'start': None,
         'end': None,
         'categories': None,
@@ -117,37 +118,37 @@ class OutlookCalendarImportData:
     olImportanceNormal = native.outlook.outlook_com.constants.olImportanceNormal
 
     def __init__(self, outlook):
-        self.__outlook=outlook
-        self.__data=[]
-        self.__single_data=[]
-        self.__folder=None
-        self.__filter=self.__default_filter
-        self.__total_count=0
-        self.__current_count=0
-        self.__update_dlg=None
-        self.__exception_list=[]
+        self._outlook=outlook
+        self._data=[]
+        self._single_data=[]
+        self._folder=None
+        self._filter=self._default_filter
+        self._total_count=0
+        self._current_count=0
+        self._update_dlg=None
+        self._exception_list=[]
 
-    def __accept(self, entry):
+    def _accept(self, entry):
         s_date=entry['start'][:3]
         e_date=entry['end'][:3]
         if entry.get('repeat', False):
             # repeat event, must not fall outside the range
-            if self.__filter['start'] is not None and \
-               e_date<self.__filter['start'][:3]:
+            if self._filter['start'] is not None and \
+               e_date<self._filter['start'][:3]:
                 return False
-            if self.__filter['end'] is not None and \
-               s_date>self.__filter['end'][:3]:
+            if self._filter['end'] is not None and \
+               s_date>self._filter['end'][:3]:
                 return False
         else:
             # non-repeat event, must fall within the range
-            if self.__filter['start'] is not None and \
-               e_date<self.__filter['start'][:3]:
+            if self._filter['start'] is not None and \
+               e_date<self._filter['start'][:3]:
                 return False
-            if self.__filter['end'] is not None and \
-               e_date>self.__filter['end'][:3]:
+            if self._filter['end'] is not None and \
+               e_date>self._filter['end'][:3]:
                 return False
         # check the catefory
-        c=self.__filter['categories']
+        c=self._filter['categories']
         if c is None or not len(c):
             # no categories specified => all catefories allowed.
             return True
@@ -155,7 +156,7 @@ class OutlookCalendarImportData:
             return True
         return False
 
-    def __populate_entry(self, e, ce):
+    def _populate_entry(self, e, ce):
         # populate an calendar entry with outlook data
         ce.description=e.get('description', None)
         ce.location=e.get('location', None)
@@ -167,7 +168,7 @@ class OutlookCalendarImportData:
                 ce.priority=ce.priority_low
             elif v==self.olImportanceHigh:
                 ce.priority=ce.priority_high
-        if not self.__filter.get('no_alarm', False) and e.get('alarm', False):
+        if not self._filter.get('no_alarm', False) and e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
         ce.allday=e.get('allday', False)
         ce.start=e['start']
@@ -194,13 +195,13 @@ class OutlookCalendarImportData:
             else:
                 # mon-fri event
                 rp.repeat_type=rp.daily
-        elif rt==self.olRecursMonthly:
+        elif rt==self.olRecursMonthly or rt==self.olRecursMonthNth:
             rp.repeat_type=rp.monthly
         else:
             rp.repeat_type=rp.yearly
         if rp.repeat_type==rp.daily:
             rp.interval=r_interval
-        elif rp.repeat_type==rp.weekly:
+        elif rp.repeat_type==rp.weekly or rp.repeat_type==rp.monthly:
             rp.interval=r_interval
             rp.dow=r_dow
         # add the list of exceptions
@@ -208,18 +209,18 @@ class OutlookCalendarImportData:
             rp.add_suppressed(*k[:3])
         ce.repeat=rp
 
-    def __generate_repeat_events(self, e):
+    def _generate_repeat_events(self, e):
         # generate multiple single events from this repeat event
         ce=bpcalendar.CalendarEntry()
-        self.__populate_entry(e, ce)
+        self._populate_entry(e, ce)
         l=[]
         new_e=e.copy()
         new_e['repeat']=False
         for k in ('repeat_type', 'repeat_interval', 'repeat_dow'):
             if new_e.has_key(k):
                 del new_e[k]
-        s_date=datetime.datetime(*self.__filter['start'])
-        e_date=datetime.datetime(*self.__filter['end'])
+        s_date=datetime.datetime(*self._filter['start'])
+        e_date=datetime.datetime(*self._filter['end'])
         one_day=datetime.timedelta(1)
         this_date=s_date
         while this_date<=e_date:
@@ -233,28 +234,28 @@ class OutlookCalendarImportData:
         
     def get(self):
         res={}
-        single_rpt=self.__filter.get('rpt_events', False)
-        for k in self.__data:
-            if self.__accept(k):
+        single_rpt=self._filter.get('rpt_events', False)
+        for k in self._data:
+            if self._accept(k):
                 if k.get('repeat', False) and single_rpt:
-                    d=self.__generate_repeat_events(k)
+                    d=self._generate_repeat_events(k)
                 else:
                     d=[k]
                 for n in d:
                     ce=bpcalendar.CalendarEntry()
-                    self.__populate_entry(n, ce)
+                    self._populate_entry(n, ce)
                     res[ce.id]=ce
         return res
 
     def get_display_data(self):
         cnt=0
         res={}
-        single_rpt=self.__filter.get('rpt_events', False)
-        no_alarm=self.__filter.get('no_alarm', False)
-        for k in self.__data:
-            if self.__accept(k):
+        single_rpt=self._filter.get('rpt_events', False)
+        no_alarm=self._filter.get('no_alarm', False)
+        for k in self._data:
+            if self._accept(k):
                 if k.get('repeat', False) and single_rpt:
-                    d=self.__generate_repeat_events(k)
+                    d=self._generate_repeat_events(k)
                 else:
                     d=[k.copy()]
                 for n in d:
@@ -266,105 +267,109 @@ class OutlookCalendarImportData:
 
     def get_category_list(self):
         l=[]
-        for e in self.__data:
+        for e in self._data:
             l+=[x for x in e.get('categories', []) if x not in l]
         return l
             
     def pick_folder(self):
-        return self.__outlook.pickfolder()
+        return self._outlook.pickfolder()
 
     def set_folder(self, f):
         if f is None:
             # default folder
-            self.__folder=self.__outlook.getfolderfromid('', True, 'calendar')
+            self._folder=self._outlook.getfolderfromid('', True, 'calendar')
         else:
-            self.__folder=f
+            self._folder=f
 
     def set_filter(self, filter):
-        self.__filter=filter
+        self._filter=filter
 
     def get_filter(self):
-        return self.__filter
+        return self._filter
 
     def get_folder_name(self):
-        if self.__folder is None:
+        if self._folder is None:
             return '<None>'
-        return self.__outlook.getfoldername(self.__folder)
+        return self._outlook.getfoldername(self._folder)
 
     def read(self, folder=None, update_dlg=None):
         # folder from which to read
         if folder is not None:
-            self.__folder=folder
-        if self.__folder is None:
-            self.__folder=self.__outlook.getfolderfromid('', True, 'calendar')
-        self.__update_dlg=update_dlg
-        self.__total_count=self.__folder.Items.Count
-        self.__current_count=0
-        self.__exception_list=[]
-        self.__data=self.__outlook.getdata(self.__folder,
-                                    self.__calendar_keys,
+            self._folder=folder
+        if self._folder is None:
+            self._folder=self._outlook.getfolderfromid('', True, 'calendar')
+        self._update_dlg=update_dlg
+        self._total_count=self._folder.Items.Count
+        self._current_count=0
+        self._exception_list=[]
+        self._data=self._outlook.getdata(self._folder,
+                                    self._calendar_keys,
                                     {}, self,
                                     set_recurrence)
         # add in the exception list, .. or shoule we keep it separate ??
-        self.__data+=self.__exception_list
+        self._data+=self._exception_list
 
-    def __set_repeat_dates(self, dict, r):
+    def _set_repeat_dates(self, dict, r):
         dict['start']=r['PatternStartDate'][:3]+dict['start'][3:]
         dict['end']=r['PatternEndDate'][:3]+dict['end'][3:]
         dict['repeat_type']=r['RecurrenceType']
 
-    def __is_daily_or_weekly(self, dict, r):
+    def _is_daily_or_weekly(self, dict, r):
         if r['RecurrenceType']==self.olRecursDaily or \
            r['RecurrenceType']==self.olRecursWeekly:
-            self.__set_repeat_dates(dict, r)
+            self._set_repeat_dates(dict, r)
             dict['repeat_interval']=r['Interval']
             dict['repeat_dow']=r['DayOfWeekMask']
             return True
         return False
 
-    def __is_monthly(self, dict, r):
-        if r['RecurrenceType']==self.olRecursMonthly and \
+    def _is_monthly(self, dict, r):
+        if r['RecurrenceType']==self.olRecursMonthly or \
+           r['RecurrenceType']==self.olRecursMonthNth and \
            r['Interval']==1:
-            self.__set_repeat_dates(dict, r)
+            self._set_repeat_dates(dict, r)
+            if r['RecurrenceType']==self.olRecursMonthNth:
+                dict['repeat_interval']=r['Instance']
+                dict['repeat_dow']=r['DayOfWeekMask']
             return True
         return False
 
-    def __is_yearly(self, dict, r):
+    def _is_yearly(self, dict, r):
         if r['RecurrenceType']==self.olRecursYearly and \
            r['Interval']==12:
-            self.__set_repeat_dates(dict, r)
+            self._set_repeat_dates(dict, r)
             return True
         return False
 
-    def __process_exceptions(self, dict, r):
+    def _process_exceptions(self, dict, r):
         # check for and process exceptions for this event
         r_ex=r.Exceptions
         if not r_ex.Count:
             # no exception, bail
             return
         for i in range(1, r_ex.Count+1):
-            ex=self.__outlook.getitemdata(r_ex.Item(i), {},
-                                          self.__exception_keys, self)
+            ex=self._outlook.getitemdata(r_ex.Item(i), {},
+                                          self._exception_keys, self)
             dict.setdefault('exceptions', []).append(ex['exception_date'])
             if not ex['deleted']:
                 # if this instance has been changed, then need to get it
-                appt=self.__outlook.getitemdata(r_ex.Item(i).AppointmentItem,
-                                                {}, self.__calendar_keys, self)
+                appt=self._outlook.getitemdata(r_ex.Item(i).AppointmentItem,
+                                                {}, self._calendar_keys, self)
                 # by definition, this instance cannot be a repeat event
                 appt['repeat']=False
                 appt['end']=appt['start'][:3]+appt['end'][3:]
                 # and add it to the exception list
-                self.__exception_list.append(appt)
+                self._exception_list.append(appt)
                 
     def process_repeat(self, item, dict):
         # get the recurrence info that we need.
         rec_pat=item.GetRecurrencePattern()
-        r=self.__outlook.getitemdata(rec_pat, {},
-                                     self.__recurrence_keys, self)
-        if self.__is_daily_or_weekly(dict, r) or \
-           self.__is_monthly(dict, r) or \
-           self.__is_yearly(dict, r):
-            self.__process_exceptions(dict, rec_pat)
+        r=self._outlook.getitemdata(rec_pat, {},
+                                     self._recurrence_keys, self)
+        if self._is_daily_or_weekly(dict, r) or \
+           self._is_monthly(dict, r) or \
+           self._is_yearly(dict, r):
+            self._process_exceptions(dict, rec_pat)
             return True
         # invalide repeat type, turn this event into a regular event
         dict['repeat']=False
@@ -374,13 +379,13 @@ class OutlookCalendarImportData:
 
     def update_display(self):
         # update the progress dialog if specified
-        self.__current_count += 1
-        if self.__update_dlg is not None:
-            self.__update_dlg.Update(100*self.__current_count/self.__total_count)
+        self._current_count += 1
+        if self._update_dlg is not None:
+            self._update_dlg.Update(100*self._current_count/self._total_count)
         
 #-------------------------------------------------------------------------------
 class OutlookImportCalDialog(common_calendar.PreviewDialog):
-    __column_labels=[
+    _column_labels=[
         ('description', 'Description', 400, None),
         ('start', 'Start', 150, common_calendar.bp_date_str),
         ('end', 'End', 150, common_calendar.bp_date_str),
@@ -390,11 +395,11 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         ]
     ID_ADD=wx.NewId()
     def __init__(self, parent, id, title):
-        self.__oc=OutlookCalendarImportData(native.outlook)
-        self.__oc.set_folder(None)
+        self._oc=OutlookCalendarImportData(native.outlook)
+        self._oc.set_folder(None)
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
-                               self.__column_labels,
-                               self.__oc.get_display_data(),
+                               self._column_labels,
+                               self._oc.get_display_data(),
                                config_name='import/calendar/outlookdialog')
         
     def getcontrols(self, main_bs):
@@ -403,7 +408,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         hbs.Add(wx.StaticText(self, -1, "Outlook Calendar Folder:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
         self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-        self.folderctrl.SetValue(self.__oc.get_folder_name())
+        self.folderctrl.SetValue(self._oc.get_folder_name())
         hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
         # browse button
         id_browse=wx.NewId()
@@ -434,32 +439,32 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         dlg=wx.ProgressDialog('Outlook Calendar Import',
                               'Importing Outlook Data, please wait ...\n(Please also watch out for the Outlook Permission Request dialog)',
                               parent=self)
-        self.__oc.read(None, dlg)
-        self.populate(self.__oc.get_display_data())
+        self._oc.read(None, dlg)
+        self.populate(self._oc.get_display_data())
         dlg.Destroy()
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
-        f=self.__oc.pick_folder()
+        f=self._oc.pick_folder()
         if f is None:
             return # user hit cancel
-        self.__oc.set_folder(f)
-        self.folderctrl.SetValue(self.__oc.get_folder_name())
+        self._oc.set_folder(f)
+        self.folderctrl.SetValue(self._oc.get_folder_name())
 
     def OnFilter(self, evt):
-        cat_list=self.__oc.get_category_list()
+        cat_list=self._oc.get_category_list()
         dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self.__oc.get_filter())
+        dlg.set(self._oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
-            self.__oc.set_filter(dlg.get())
-            self.populate(self.__oc.get_display_data())
+            self._oc.set_filter(dlg.get())
+            self.populate(self._oc.get_display_data())
 
     def OnAdd(self, evt):
         self.EndModal(self.ID_ADD)
 
     def get(self):
-        return self.__oc.get()
+        return self._oc.get()
 
     def get_categories(self):
-        return self.__oc.get_category_list()
+        return self._oc.get_category_list()
             
