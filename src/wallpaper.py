@@ -374,8 +374,11 @@ class WallpaperView(guiwidgets.FileView):
                 # is to add a wx.ImageHandler for it. Unfortunately wx.Image_AddHandler
                 # is broken in the current wxPython, so . . .
                 fi=self.GetFileInfo(file)
-                if fi is not None and fi.format=='LGBIT':
-                    img=conversions.convertfilelgbittobmp(file)
+                if fi is not None and fi.format in ('LGBIT', 'BCI'):
+                    if fi.format=='LGBIT':
+                        img=conversions.convertfilelgbittobmp(file)
+                    else:
+                        img=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
                 else:
                     img=wx.Image(file)
                 if not img.Ok():
