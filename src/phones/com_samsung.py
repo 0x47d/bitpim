@@ -1040,13 +1040,17 @@ class SMS_Inbox_List(SMS_Generic_List):
             ss=l[0]
         _subj=[]
         if ss[0]=='(':
-            while True:
+            while l:
                 _subj.append(ss)
                 l=l[1:]
                 if ss[-1]==')':
                     break
-                ss=l[0]
-        return (_from, ' '.join(_subj), ' '.join(l))
+                if l:
+                    ss=l[0]
+        if l:
+            return (_from, ' '.join(_subj), ' '.join(l))
+        else:
+            return (_from, '', ' '.join(_subj))
 
 #-------------------------------------------------------------------------------
 class SMS_Saved_List(SMS_Generic_List):
@@ -1077,13 +1081,17 @@ class SMS_Saved_List(SMS_Generic_List):
         ss=l[0]
         _subj=[]
         if ss[0]=='(':
-            while True:
+            while l:
                 _subj.append(ss)
                 l=l[1:]
                 if ss[-1]==')':
                     break
-                ss=l[0]
-        return (' '.join(_subj), ' '.join(l))
+                if l:
+                    ss=l[0]
+        if l:
+            return (' '.join(_subj), ' '.join(l))
+        else:
+            return ('', ' '.join(_subj))
                 
 #-------------------------------------------------------------------------------
 class SMS_Sent_List(SMS_Generic_List):
