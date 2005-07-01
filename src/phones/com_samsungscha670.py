@@ -237,7 +237,8 @@ class Phone(com_samsung.Phone):
                           'serial1': entry[self.__pb_entry],
                           'serial2': entry[self.__pb_mem_loc] }]
         # only one name
-        res['names']=[ {'full': entry[self.__pb_name].replace('"', '') } ]
+        res['names']=[ {'full': unicode(entry[self.__pb_name].replace('"', ''),
+                                        errors='ignore') } ]
         if len(entry[self.__pb_alias]):
             res['urls']=[ {'url': entry[self.__pb_alias] } ]
 

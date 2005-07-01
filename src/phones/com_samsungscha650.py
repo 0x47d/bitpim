@@ -923,7 +923,7 @@ class PhoneBook:
                           'serial1': `pb_cnt`,
                           'serial2': `mem_index` }]
         # only one name
-        res['names']=[ {'full': e.name } ]
+        res['names']=[ {'full': unicode(e.name, errors='ignore') } ]
         if e.alias_num_index:
             res['names'][0]['nickname']=self.__numbers.get(e.alias_num_index, '')
 
