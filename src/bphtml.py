@@ -8,6 +8,7 @@
 ### $Id$
 
 # Standard modules
+import copy
 import webbrowser
 import re
 import htmlentitydefs
@@ -278,6 +279,25 @@ def _applystyle(node, style):
     for i in node.children:
         _applystyle(i, style)
 
+class PrintData(wx.PrintData):
+    """ Similar to wx.PrintData except this one includes copy ctor and
+    copy 'operator'
+    """
+    # the names of Get/Set attributes to copy from source to dest object
+    _attr_names=("Collate", "Colour", "Duplex", "NoCopies",
+                 "Orientation", "PaperId", "PrinterName")
+    def __init__(self, rhs=None):
+        super(PrintData, self).__init__()
+        if rhs is not None:
+            self._copy(rhs, self)
+
+    def _copy(self, src, dest):
+        for attr in self._attr_names:
+            getattr(dest, 'Set'+attr)(getattr(src, 'Get'+attr)())
+
+    def copy(self):
+        return PrintData(self)
+
 class HtmlEasyPrinting:
     """Similar to wxHtmlEasyPrinting, except this is actually useful.
 
@@ -292,7 +312,7 @@ class HtmlEasyPrinting:
         self.parent=parent
         self.config=config
         self.configstr=configstr
-        self.printData=wx.PrintData()
+        self.printData=PrintData()
         self._configtoprintdata(self.printData)
         # setup margins
         self._configtopagesetupdata()
@@ -302,20 +322,24 @@ class HtmlEasyPrinting:
 
     def PrinterSetup(self):
         printerDialog = wx.PrintDialog(self.parent)
-        printerDialog.GetPrintDialogData().SetPrintData(self.printData)
+        if self.printData.Ok():
+            printerDialog.GetPrintDialogData().SetPrintData(self.printData.copy())
         printerDialog.GetPrintDialogData().SetSetupDialog(True)
         if printerDialog.ShowModal()==wx.ID_OK:
-            self.printData = printerDialog.GetPrintDialogData().GetPrintData()
+            self.printData = PrintData(printerDialog.GetPrintDialogData().GetPrintData())
             self._printdatatoconfig(self.printData)
         printerDialog.Destroy()
 
     def PageSetup(self):
         psdd=wx.PageSetupDialogData()
-        psdd.SetPrintData(self.printData)
+        if self.printData.Ok():
+            psdd.SetPrintData(self.printData.copy())
         self._configtopagesetupdata(psdd)
         pageDialog=wx.PageSetupDialog(self.parent, psdd)
-        if pageDialog.ShowModal()==wx.ID_OK:
-            self.printData = pageDialog.GetPageSetupData().GetPrintData()
+        if pageDialog.ShowModal()==wx.ID_OK and \
+           pageDialog.GetPageSetupData().Ok() and \
+           pageDialog.GetPageSetupData().GetPrintData().Ok():
+            self.printData=PrintData(pageDialog.GetPageSetupData().GetPrintData())
             self._printdatatoconfig(self.printData)
             self._pagesetupdatatoconfig(pageDialog.GetPageSetupData())
         pageDialog.Destroy()
@@ -323,7 +347,12 @@ class HtmlEasyPrinting:
     def PreviewText(self, htmltext, basepath="", scale=1.0):
         printout1=self._getprintout(htmltext, basepath, scale)
         printout2=self._getprintout(htmltext, basepath, scale)
-        preview=wx.PrintPreview(printout1, printout2, self.printData)
+        if self.printData.Ok():
+            pd=self.printData.copy()
+        else:
+            pd=PrintData()
+        pd.SetOrientation(wx.PORTRAIT)
+        preview=wx.PrintPreview(printout1, printout2, pd)
         if not preview.Ok():
             print "preview problem"
             assert False, "preview problem"
@@ -338,16 +367,16 @@ class HtmlEasyPrinting:
 
     def PrintText(self, htmltext, basepath="", scale=1.0):
         pdd=wx.PrintDialogData()
-        pdd.SetPrintData(self.printData)
+        if self.printData.Ok():
+            pdd.SetPrintData(self.printData.copy())
+            pdd.GetPrintData().SetOrientation(wx.PORTRAIT)
         printer=wx.Printer(pdd)
         printout=self._getprintout(htmltext, basepath, scale)
-        if printer.Print(self.parent, printout):
-            self.printData=printer.GetPrintDialogData().GetPrintData()
-            self._printdatatoconfig(self.printData)
+        printer.Print(self.parent, printout)
         printout.Destroy()
 
     def _getprintout(self, htmltext, basepath, scale):
-        print "scale is",scale," margins are", self.margins
+##        print "scale is",scale," margins are", self.margins
         printout=wx.html.HtmlPrintout()
         basesizes=[7,8,10,12,16,22,30]
         printout.SetFonts("", "", [int(sz*scale) for sz in basesizes])
@@ -356,7 +385,9 @@ class HtmlEasyPrinting:
         return printout
 
     def _printdatatoconfig(self, pd):
-        if self.config is None: return
+        if self.config is None or self.configstr is None or not pd.Ok():
+            print '_printdatatoconfig: bad printData'
+            return
         c=self.config
         cstr=self.configstr
 
@@ -372,9 +403,13 @@ class HtmlEasyPrinting:
         c.Flush()
         
     def _configtoprintdata(self, pd):
-        if self.config is None: return
+        if self.config is None or self.configstr is None:
+            return
         c=self.config
         cstr=self.configstr
+        if not pd.Ok():
+            print '_configtoprintdata: bad printData'
+            return
         for key,func in [ ("collate", pd.SetCollate),
                           ("colour", pd.SetColour),
                           ("duplex", pd.SetDuplex),
@@ -382,7 +417,8 @@ class HtmlEasyPrinting:
                           ("orientation", pd.SetOrientation),
                           ("paperid", pd.SetPaperId),
                           ]:
-            if c.HasEntry(cstr+"/"+key): func(c.ReadInt(cstr+"/"+key))
+            if c.HasEntry(cstr+"/"+key):
+                func(c.ReadInt(cstr+"/"+key))
         # special case - set paper to letter if not explicitly set (wx defaults to A4)
         if not c.HasEntry(cstr+"/paperid"):
             pd.SetPaperId(wx.PAPER_LETTER)
@@ -396,16 +432,16 @@ class HtmlEasyPrinting:
         else:
             l=[15,15,15,15]
         if psdd is not None:
-            psdd.SetMarginTopLeft( (l[0], l[1]) )
-            psdd.SetMarginBottomRight( (l[2], l[3]) )
+            psdd.SetMarginTopLeft( (l[2], l[0]) )
+            psdd.SetMarginBottomRight( (l[3], l[1]) )
         self.margins=l
 
     def _pagesetupdatatoconfig(self, psdd):
         tl=psdd.GetMarginTopLeft()
         br=psdd.GetMarginBottomRight()
-        v="%d,%d,%d,%d" % (tl[0], tl[1], br[0], br[1])
+        v="%d,%d,%d,%d" % (tl[1], br[1], tl[0], br[0])
         self.config.Write(self.configstr+"/margins", v)
-        self.margins=[tl[0],tl[1],br[0],br[1]]
+        self.margins=[tl[1],br[1],tl[0],br[0]]
 
     def OnPreviewClose(self, event):
         guiwidgets.save_size("PrintPreview", self.frame.GetRect())
