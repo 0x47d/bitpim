@@ -1849,6 +1849,11 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
         self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
         self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
+        # generic (neither file nor directory) menu
+        self.genericmenu=wx.Menu()
+        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
+        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
+        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
 
         wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
         wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
@@ -1864,13 +1869,16 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, self.OnModemMode)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, self.OnModemMode)
         wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
         wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
 
     def OnRightUp(self, event):
         pt = event.GetPosition();
         item, flags,unknown = self.HitTest(pt)
-        if flags:
+        if item.IsOk():
             self.SelectItem(item)
             # is it a file or a directory
             path=self.itemtopath(item)
@@ -1879,6 +1887,8 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
                     self.PopupMenu(self.dirmenu, pt)
                     return
             self.PopupMenu(self.filemenu, pt)
+        else:
+            self.PopupMenu(self.genericmenu, pt)
                     
     def OnRightDown(self,event):
         # You have to capture right down otherwise it doesn't feed you right up
