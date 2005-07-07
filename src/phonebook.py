@@ -563,6 +563,7 @@ class PhoneWidget(wx.Panel):
         self.preview=PhoneEntryDetailsView(split, -1, "styles.xy", "pblayout.xy")
         # for some reason, preview doesn't show initial background
         wx.CallAfter(self.preview.ShowEntry, {})
+        self.sash_pos=None
         split.SplitVertically(self.table, self.preview, -300)
         self.split=split
         bs=wx.BoxSizer(wx.VERTICAL)
@@ -697,6 +698,18 @@ class PhoneWidget(wx.Panel):
                     # found it, update the name
                     self._data[k][main_key][i][element_key]=_new_name
                     self.modified=True
+
+    def OnViewPreview(self, preview_on):
+        if preview_on:
+            self.split.SplitVertically(self.table, self.preview,
+                                       self.sash_pos)
+        else:
+            if self.sash_pos is None:
+                self.sash_pos=-300
+            else:
+                self.sash_pos=self.split.GetSashPosition()
+            self.split.Unsplit(self.preview)
+
     def OnIdle(self, _):
         "We save out changed data"
         if self.modified:

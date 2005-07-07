@@ -592,6 +592,7 @@ class MainWindow(wx.Frame):
 
         menu=wx.Menu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
+        menu.AppendCheckItem(guihelper.ID_VIEWPREVIEW, "Phonebook Preview", "Toggle Phonebook Preview Pane")
         menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWLOGDATA, "View protocol logging", "View protocol logging information")
         menu.Append(guihelper.ID_VIEWCLEARLOGS, "Clear logs", "Clears the contents of the log panes")
@@ -649,6 +650,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         wx.EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
         wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
+        wx.EVT_MENU(self, guihelper.ID_VIEWPREVIEW, self.OnViewPreview)
         wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
         wx.EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
         wx.EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
@@ -722,6 +724,11 @@ class MainWindow(wx.Frame):
             menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
             self.OnViewFilesystem(None)
             wx.Yield()
+        # whether or not to turn on phonebook preview pane
+        if self.config.ReadInt("viewpreview", 1):
+            menuBar.Check(guihelper.ID_VIEWPREVIEW, 1)
+        else:
+            self.phonewidget.OnViewPreview(False)
         # update the the status bar info
         self.SetPhoneModelStatus()
         self.SetVersionsStatus()
@@ -998,6 +1005,16 @@ class MainWindow(wx.Frame):
         dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def OnViewPreview(self, evt):
+        if evt.IsChecked():
+            config=1
+            preview_on=True
+        else:
+            config=0
+            preview_on=False
+        self.config.WriteInt('viewpreview', config)
+        self.phonewidget.OnViewPreview(preview_on)
 
     def OnViewLogData(self, _):
         # toggle state of the log data
@@ -1327,7 +1344,9 @@ class MainWindow(wx.Frame):
         menu_bar.Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
 
         # View Columns .. is only in Phonebook
-        menu_bar.Enable(guihelper.ID_VIEWCOLUMNS, widget is self.phonewidget)
+        is_phone_widget=widget is self.phonewidget
+        menu_bar.Enable(guihelper.ID_VIEWCOLUMNS, is_phone_widget)
+        menu_bar.Enable(guihelper.ID_VIEWPREVIEW, is_phone_widget)
         # as is File Print
         menu_bar.Enable(guihelper.ID_FILEPRINT, enable_print)
 
