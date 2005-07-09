@@ -578,10 +578,13 @@ class Database:
             indirects[r]=res
                         
 
-    def getmajordictvalues(self, tablename, factory=dictdataobjectfactory):
+    def getmajordictvalues(self, tablename, factory=dictdataobjectfactory,
+                           at_time=None):
         if not self.doestableexist(tablename):
             return {}
 
+        if at_time is None:
+            at_time=time.time()
         res={}
         uids=[u[0] for u in self.sql("select distinct __uid__ from %s" % (idquote(tablename),))]
         schema=self.getcolumns(tablename)
@@ -592,7 +595,9 @@ class Database:
                 uid=colnum
         # get all relevant rows
         indirects={}
-        for row in self.sqlmany("select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),), [(u,) for u in uids]):
+        for row in self.sqlmany(
+            "select * from %s where __uid__=? and __timestamp__<=? order by __rowid__ desc limit 1" % (idquote(tablename),),
+            [(u, at_time) for u in uids]):
             if row[deleted]:
                 continue
             record=factory.newdataobject()

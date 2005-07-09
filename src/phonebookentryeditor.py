@@ -980,7 +980,9 @@ class Editor(wx.Dialog):
         ("Ringtones", "ringtones", RingtoneEditor),
         ]
 
-    def __init__(self, parent, data, title="Edit PhoneBook Entry", keytoopenon=None, dataindex=None, factory=database.dictdataobjectfactory):
+    def __init__(self, parent, data, title="Edit PhoneBook Entry",
+                 keytoopenon=None, dataindex=None,
+                 factory=database.dictdataobjectfactory, readonly=False):
         """Constructor for phonebookentryeditor dialog
 
         @param parent: parent window
@@ -988,6 +990,7 @@ class Editor(wx.Dialog):
         @param title: window title
         @param keytoopenon: The key to open on. This is the key as stored in the data such as "names", "numbers"
         @param dataindex: Which value within the tab specified by keytoopenon to set focus to
+        @param readonly: Indicates read-only data.
         """
         
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -1028,7 +1031,11 @@ class Editor(wx.Dialog):
                     widget.SetFocusOnValue(dataindex)
 
         vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
-        vs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        if readonly:
+            _buttons_flag=wx.CANCEL|wx.HELP
+        else:
+            _buttons_flag=wx.OK|wx.CANCEL|wx.HELP
+        vs.Add(self.CreateButtonSizer(_buttons_flag), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.SetSizer(vs)
 

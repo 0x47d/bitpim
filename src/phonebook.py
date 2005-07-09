@@ -526,20 +526,25 @@ thephonewidget=None  # track the instance
 class PhoneWidget(wx.Panel):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
+    # Data selector const
+    _Current_Data=0
+    _Historic_Data=1
+
     def __init__(self, mainwindow, parent, config):
         global thephonewidget
         thephonewidget=self
         wx.Panel.__init__(self, parent,-1)
         # keep this around while we exist
         self.categorymanager=CategoryManager
-        self.SetBackgroundColour("ORANGE")
+##        self.SetBackgroundColour("ORANGE")
         split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         split.SetMinimumPaneSize(20)
         self.mainwindow=mainwindow
         self._data={}
         self.categories=[]
         self.modified=False
-        self.table=wx.grid.Grid(split, wx.NewId())
+        self.table_panel=wx.Panel(split)
+        self.table=wx.grid.Grid(self.table_panel, wx.NewId())
         self.table.EnableGridLines(False)
         # which columns?
         cur=config.Read("phonebookcolumns", "")
@@ -560,11 +565,36 @@ class PhoneWidget(wx.Panel):
         self.table.EnableEditing(False)
         self.table.EnableDragRowSize(False)
         self.table.SetMargins(1,0)
+        # data date adjuster
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        data_selector=wx.RadioBox(self.table_panel, wx.NewId(),
+                                  'Data Selection:',
+                                  choices=('Current', 'Historical'),
+                                  style=wx.RA_SPECIFY_COLS)
+        data_selector.SetSelection(self._Current_Data)
+        self.read_only=False
+        wx.EVT_RADIOBOX(self, data_selector.GetId(), self.OnSelectData)
+        hbs.Add(data_selector, 0, wx.ALL, 5)
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self.table_panel, -1,
+                                                 'Historical Date:'),
+                                    wx.VERTICAL)
+        self.data_date=wx.DatePickerCtrl(self.table_panel,
+                                         style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        wx.EVT_DATE_CHANGED(self, self.data_date.GetId(),
+                            self.OnDataDateChange)
+        static_bs.Add(self.data_date, 1, wx.EXPAND, 0)
+        hbs.Add(static_bs, 0, wx.ALL, 5)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        vbs.Add(hbs, 0, wx.ALL, 5)
+        vbs.Add(self.table, 1, wx.EXPAND, 0)
+        self.table_panel.SetSizer(vbs)
+        self.table_panel.SetAutoLayout(True)
+        vbs.Fit(self.table_panel)
         self.preview=PhoneEntryDetailsView(split, -1, "styles.xy", "pblayout.xy")
         # for some reason, preview doesn't show initial background
         wx.CallAfter(self.preview.ShowEntry, {})
         self.sash_pos=None
-        split.SplitVertically(self.table, self.preview, -300)
+        split.SplitVertically(self.table_panel, self.preview, -300)
         self.split=split
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(split, 1, wx.EXPAND)
@@ -573,6 +603,7 @@ class PhoneWidget(wx.Panel):
         wx.EVT_IDLE(self, self.OnIdle)
         wx.grid.EVT_GRID_SELECT_CELL(self, self.OnCellSelect)
         wx.grid.EVT_GRID_CELL_LEFT_DCLICK(self, self.OnCellDClick)
+        wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self, self.OnCellRightClick)
         wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
         pubsub.subscribe(self.OnCategoriesUpdate, pubsub.ALL_CATEGORIES)
         pubsub.subscribe(self.OnPBLookup, pubsub.REQUEST_PB_LOOKUP)
@@ -582,6 +613,12 @@ class PhoneWidget(wx.Panel):
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
         wx.grid.EVT_GRID_LABEL_LEFT_CLICK(self.table, self.OnGridLabelLeftClick)
         wx.grid.EVT_GRID_LABEL_LEFT_DCLICK(self.table, self.OnGridLabelLeftClick)
+        # context menu
+        self.context_menu=wx.Menu()
+        id=wx.NewId()
+        self.context_menu.Append(id, 'Set to current',
+                                 'Set the selected item to current data')
+        wx.EVT_MENU(self, id, self.OnSetToCurrent)
 
     def OnColumnHeaderPaint(self, evt):
         w = self.table.GetGridColLabelWindow()
@@ -701,7 +738,7 @@ class PhoneWidget(wx.Panel):
 
     def OnViewPreview(self, preview_on):
         if preview_on:
-            self.split.SplitVertically(self.table, self.preview,
+            self.split.SplitVertically(self.table_panel, self.preview,
                                        self.sash_pos)
         else:
             if self.sash_pos is None:
@@ -709,6 +746,33 @@ class PhoneWidget(wx.Panel):
             else:
                 self.sash_pos=self.split.GetSashPosition()
             self.split.Unsplit(self.preview)
+
+    def OnSelectData(self, evt):
+        self.mainwindow.OnBusyStart()
+        r={}
+        if evt.GetInt()==self._Current_Data:
+            self.read_only=False
+            self.getfromfs(r)
+        else:
+            self.read_only=True
+            dt=self.data_date.GetValue()
+            dt.SetHour(23)
+            dt.SetMinute(59)
+            self.getfromfs(r, dt.GetTicks())
+        self.populate(r, False)
+        self.mainwindow.OnBusyEnd()
+
+    def OnDataDateChange(self, _):
+        if not self.read_only:
+            return
+        self.mainwindow.OnBusyStart()
+        dt=self.data_date.GetValue()
+        dt.SetHour(23)
+        dt.SetMinute(59)
+        r={}
+        self.getfromfs(r, dt.GetTicks())
+        self.populate(r, False)
+        self.mainwindow.OnBusyEnd()
 
     def OnIdle(self, _):
         "We save out changed data"
@@ -774,12 +838,33 @@ class PhoneWidget(wx.Panel):
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
 
+    def OnCellRightClick(self, evt):
+        if not self.read_only or not self.GetSelectedRowKeys():
+            return
+        self.table.PopupMenu(self.context_menu, evt.GetPosition())
+
+    def OnSetToCurrent(self, _):
+        r={}
+        for k in self.GetSelectedRowKeys():
+            r[k]=self._data[k]
+        if r:
+            dict={}
+            self.getfromfs(dict)
+            dict['phonebook'].update(r)
+            c=[e for e in self.categories if e not in dict['categories']]
+            dict['categories']+=c
+            self._save_db(dict)
+
     def EditEntry(self, row, column):
         key=self.dt.rowkeys[row]
         data=self._data[key]
         # can we get it to open on the correct field?
         datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
-        dlg=phonebookentryeditor.Editor(self, data, factory=phonebookobjectfactory, keytoopenon=datakey, dataindex=dataindex)
+        dlg=phonebookentryeditor.Editor(self, data,
+                                        factory=phonebookobjectfactory,
+                                        keytoopenon=datakey,
+                                        dataindex=dataindex,
+                                        readonly=self.read_only)
         if dlg.ShowModal()==wx.ID_OK:
             data=dlg.GetData()
             self._data[key]=data
@@ -789,6 +874,8 @@ class PhoneWidget(wx.Panel):
         dlg.Destroy()
 
     def OnAdd(self, _):
+        if self.read_only:
+            return
         dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]}, keytoopenon="names", dataindex=0)
         if dlg.ShowModal()==wx.ID_OK:
             data=phonebookobjectfactory.newdataobject(dlg.GetData())
@@ -828,6 +915,8 @@ class PhoneWidget(wx.Panel):
         return [self.dt.rowkeys[r] for r in self.GetSelectedRows()]
 
     def OnDelete(self,_):
+        if self.read_only:
+            return
         for r in self.GetSelectedRowKeys():
             del self._data[r]
         self.table.ClearSelection()
@@ -904,7 +993,7 @@ class PhoneWidget(wx.Panel):
         self._data={}
         self.dt.OnDataUpdated()
 
-    def getfromfs(self, dict):
+    def getfromfs(self, dict, timestamp=None):
         self.thedir=self.mainwindow.phonebookpath
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
             d={'result': {'phonebook': {}, 'categories': []}}
@@ -917,11 +1006,17 @@ class PhoneWidget(wx.Panel):
             # now that save is succesful, move file out of the way
             os.rename(os.path.join(self.thedir, "index.idx"), os.path.join(self.thedir, "index-is-now-in-database.bak"))
         # read info from the database
-        dict['phonebook']=self.mainwindow.database.getmajordictvalues("phonebook", phonebookobjectfactory)
+        dict['phonebook']=self.mainwindow.database.getmajordictvalues(
+            "phonebook", phonebookobjectfactory, at_time=timestamp)
         dict['categories']=self.mainwindow.database.loadlist("categories")
             
 
-    def populate(self, dict):
+    def populate(self, dict, savetodb=True):
+        if self.read_only and savetodb:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Phonebook Data',
+                             style=wx.OK|wx.ICON_ERROR)
+            return            
         self.clear()
         pubsub.publish(pubsub.MERGE_CATEGORIES, dict['categories'])
         pb=dict['phonebook']
@@ -935,14 +1030,27 @@ class PhoneWidget(wx.Panel):
         self.clear()
         self._data=pb.copy()
         self.dt.OnDataUpdated()
-        self.modified=True
+        self.modified=savetodb
 
-    def populatefs(self, dict):
+    def _save_db(self, dict):
         self.mainwindow.database.savemajordict("phonebook", database.extractbitpimserials(dict["phonebook"]))
         self.mainwindow.database.savelist("categories", dict["categories"])
+        
+    def populatefs(self, dict):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Phonebook Data',
+                             style=wx.OK|wx.ICON_ERROR)
+        else:
+            self._save_db(dict)
         return dict
 
     def importdata(self, importdata, categoriesinfo=[], merge=True):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Phonebook Data',
+                             style=wx.OK|wx.ICON_ERROR)
+            return
         if merge:
             d=self._data
         else:
@@ -961,7 +1069,7 @@ class PhoneWidget(wx.Panel):
             d['phonebook']=result
             d['categories']=categoriesinfo
             self.populatefs(d)
-            self.populate(d)
+            self.populate(d, False)
     
     def converttophone(self, data):
         self.mainwindow.phoneprofile.convertphonebooktophone(self, data)
