@@ -583,8 +583,6 @@ class Database:
         if not self.doestableexist(tablename):
             return {}
 
-        if at_time is None:
-            at_time=time.time()
         res={}
         uids=[u[0] for u in self.sql("select distinct __uid__ from %s" % (idquote(tablename),))]
         schema=self.getcolumns(tablename)
@@ -594,10 +592,12 @@ class Database:
             elif name=='__uid__':
                 uid=colnum
         # get all relevant rows
+        if isinstance(at_time, (int, float)):
+            sql_string="select * from %s where __uid__=? and __timestamp__<=%d order by __rowid__ desc limit 1" % (idquote(tablename), int(at_time))
+        else:
+            sql_string="select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),)
         indirects={}
-        for row in self.sqlmany(
-            "select * from %s where __uid__=? and __timestamp__<=? order by __rowid__ desc limit 1" % (idquote(tablename),),
-            [(u, at_time) for u in uids]):
+        for row in self.sqlmany(sql_string, [(u,) for u in uids]):
             if row[deleted]:
                 continue
             record=factory.newdataobject()
