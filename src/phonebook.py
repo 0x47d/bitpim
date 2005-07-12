@@ -567,25 +567,16 @@ class PhoneWidget(wx.Panel):
         self.table.SetMargins(1,0)
         # data date adjuster
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        data_selector=wx.RadioBox(self.table_panel, wx.NewId(),
-                                  'Data Selection:',
-                                  choices=('Current', 'Historical'),
-                                  style=wx.RA_SPECIFY_COLS)
-        data_selector.SetSelection(self._Current_Data)
         self.read_only=False
-        wx.EVT_RADIOBOX(self, data_selector.GetId(), self.OnSelectData)
-        hbs.Add(data_selector, 0, wx.ALL, 5)
+        self.historical_date=None
         static_bs=wx.StaticBoxSizer(wx.StaticBox(self.table_panel, -1,
-                                                 'Historical Date:'),
+                                                 'Historical Data Status:'),
                                     wx.VERTICAL)
-        self.data_date=wx.DatePickerCtrl(self.table_panel,
-                                         style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-        wx.EVT_DATE_CHANGED(self, self.data_date.GetId(),
-                            self.OnDataDateChange)
-        static_bs.Add(self.data_date, 1, wx.EXPAND, 0)
-        hbs.Add(static_bs, 0, wx.ALL, 5)
+        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
-        vbs.Add(hbs, 0, wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         vbs.Add(self.table, 1, wx.EXPAND, 0)
         self.table_panel.SetSizer(vbs)
         self.table_panel.SetAutoLayout(True)
@@ -747,32 +738,32 @@ class PhoneWidget(wx.Panel):
                 self.sash_pos=self.split.GetSashPosition()
             self.split.Unsplit(self.preview)
 
-    def OnSelectData(self, evt):
-        self.mainwindow.OnBusyStart()
-        r={}
-        if evt.GetInt()==self._Current_Data:
-            self.read_only=False
-            self.getfromfs(r)
+    def OnHistoricalData(self):
+        """Display current or historical data"""
+        if self.read_only:
+            current_choice=guiwidgets.HistoricalDataDialog.Historical_Data
         else:
-            self.read_only=True
-            dt=self.data_date.GetValue()
-            dt.SetHour(23)
-            dt.SetMinute(59)
-            self.getfromfs(r, dt.GetTicks())
-        self.populate(r, False)
-        self.mainwindow.OnBusyEnd()
-
-    def OnDataDateChange(self, _):
-        if not self.read_only:
-            return
-        self.mainwindow.OnBusyStart()
-        dt=self.data_date.GetValue()
-        dt.SetHour(23)
-        dt.SetMinute(59)
-        r={}
-        self.getfromfs(r, dt.GetTicks())
-        self.populate(r, False)
-        self.mainwindow.OnBusyEnd()
+            current_choice=guiwidgets.HistoricalDataDialog.Current_Data
+        dlg=guiwidgets.HistoricalDataDialog(self,
+                                            current_choice=current_choice,
+                                            historical_date=self.historical_date)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.mainwindow.OnBusyStart()
+            current_choice, self.historical_date=dlg.GetValue()
+            r={}
+            if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                self.read_only=False
+                msg_str='Current Data'
+                self.getfromfs(r)
+            else:
+                self.read_only=True
+                msg_str='Historical Data as of %s'%\
+                         str(wx.DateTimeFromTimeT(self.historical_date))
+                self.getfromfs(r, self.historical_date)
+            self.populate(r, False)
+            self.historical_data_label.SetLabel(msg_str)
+            self.mainwindow.OnBusyEnd()
+        dlg.Destroy()
 
     def OnIdle(self, _):
         "We save out changed data"

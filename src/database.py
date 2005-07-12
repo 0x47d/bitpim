@@ -593,7 +593,7 @@ class Database:
                 uid=colnum
         # get all relevant rows
         if isinstance(at_time, (int, float)):
-            sql_string="select * from %s where __uid__=? and __timestamp__<=%d order by __rowid__ desc limit 1" % (idquote(tablename), int(at_time))
+            sql_string="select * from %s where __uid__=? and __timestamp__<=%f order by __rowid__ desc limit 1" % (idquote(tablename), float(at_time))
         else:
             sql_string="select * from %s where __uid__=? order by __rowid__ desc limit 1" % (idquote(tablename),)
         indirects={}
@@ -812,10 +812,39 @@ class Database:
     savelist=ExclusiveWrapper(savelist)
     loadlist=ExclusiveWrapper(loadlist)
 
-                    
-            
-
-
+    def getchangescount(self, tablename):
+        """Return the number of additions, deletions, and modifications
+        made to this table over time.
+        Expected fields containted in this table: __timestamp__,__deleted__,
+        __uid__
+        """
+        if not self.doestableexist(tablename):
+            return {}
+        tn=idquote(tablename)
+        # get the unique dates of changes
+        sql_cmd='select distinct __timestamp__ from %s' % tn
+        time_list=[t[0] for t in self.sql(sql_cmd)]
+        # setting up the return dict
+        res={}
+        for t in time_list:
+            res[t]={ 'add': 0, 'del': 0, 'mod': 0 }
+        # go through the table and count the changes
+        existing_uid={}
+        sql_cmd='select __timestamp__,__uid__,__deleted__ from %s' % tn
+        for e in self.sql(sql_cmd):
+            tt=e[0]
+            uid=e[1]
+            del_flg=e[2]
+            if existing_uid.has_key(uid):
+                if del_flg:
+                    res[tt]['del']+=1
+                    del existing_uid[uid]
+                else:
+                    res[tt]['mod']+=1
+            else:
+                existing_uid[uid]=None
+                res[tt]['add']+=1
+        return res
 
 if __name__=='__main__':
     import common

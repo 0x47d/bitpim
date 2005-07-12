@@ -588,6 +588,7 @@ class MainWindow(wx.Frame):
         menu=wx.Menu()
         menu.Append(guihelper.ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
+        menu.Append(guihelper.ID_DATAHISTORICAL, "Historical Data", "View Current & Historical Data")
         menuBar.Append(menu, "&Data")
 
         menu=wx.Menu()
@@ -649,6 +650,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
         wx.EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         wx.EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
+        wx.EVT_MENU(self, guihelper.ID_DATAHISTORICAL, self.OnDataHistorical)
         wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
         wx.EVT_MENU(self, guihelper.ID_VIEWPREVIEW, self.OnViewPreview)
         wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
@@ -1060,6 +1062,10 @@ class MainWindow(wx.Frame):
     ### 
     ### Main bit for getting stuff from phone
     ###
+
+    def OnDataHistorical(self, _):
+        self.nb.GetPage(self.nb.GetSelection()).OnHistoricalData()
+
     def OnDataGetPhone(self,_):
         todo=[]
         dlg=self.dlggetphone
@@ -1312,6 +1318,7 @@ class MainWindow(wx.Frame):
         enable_del=hasattr(widget, "OnDelete")
         enable_print=hasattr(widget, "OnPrintDialog")
         enable_select_all=hasattr(widget, "OnSelectAll")
+        enable_historical_data=hasattr(widget, 'OnHistoricalData')
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
@@ -1342,6 +1349,7 @@ class MainWindow(wx.Frame):
         menu_bar=self.GetMenuBar()
         menu_bar.Enable(guihelper.ID_EDITADDENTRY, enable_add)
         menu_bar.Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
+        menu_bar.Enable(guihelper.ID_DATAHISTORICAL, enable_historical_data)
 
         # View Columns .. is only in Phonebook
         is_phone_widget=widget is self.phonewidget

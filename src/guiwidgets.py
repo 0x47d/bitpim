@@ -1983,3 +1983,46 @@ class AskPhoneNameDialog(wx.Dialog):
     def __OnTextEnter(self, _):
         self.EndModal(wx.ID_OK)
 
+class HistoricalDataDialog(wx.Dialog):
+    Current_Data=0
+    Historical_Data=1
+    def __init__(self, parent, caption='Historical Data Selection',
+                 current_choice=Current_Data,
+                 historical_date=None):
+        super(HistoricalDataDialog, self).__init__(parent, -1, caption)
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.data_selector=wx.RadioBox(self, wx.NewId(),
+                                       'Data Selection:',
+                                       choices=('Current', 'Historical'),
+                                       style=wx.RA_SPECIFY_ROWS)
+        self.data_selector.SetSelection(current_choice)
+        wx.EVT_RADIOBOX(self, self.data_selector.GetId(), self.OnSelectData)
+        hbs.Add(self.data_selector, 0, wx.ALL, 5)
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
+                                                 'Historical Date:'),
+                                    wx.VERTICAL)
+        self.data_date=wx.DatePickerCtrl(self,
+                                         style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        if historical_date is not None:
+            self.data_date.SetValue(wx.DateTimeFromTimeT(historical_date))
+        self.data_date.Enable(current_choice==self.Historical_Data)
+        static_bs.Add(self.data_date, 1, wx.EXPAND, 0)
+        hbs.Add(static_bs, 0, wx.ALL, 5)
+        vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0,
+                wx.ALIGN_CENTER|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnSelectData(self, evt):
+        self.data_date.Enable(evt.GetInt()==self.Historical_Data)
+        
+    def GetValue(self):
+        dt=self.data_date.GetValue()
+        dt.SetHour(23)
+        dt.SetMinute(59)
+        dt.SetSecond(59)
+        return (self.data_selector.GetSelection(), dt.GetTicks())
