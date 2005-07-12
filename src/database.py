@@ -817,20 +817,20 @@ class Database:
         made to this table over time.
         Expected fields containted in this table: __timestamp__,__deleted__,
         __uid__
+        Assuming that both __rowid__ and __timestamp__ values are both ascending
         """
         if not self.doestableexist(tablename):
             return {}
         tn=idquote(tablename)
         # get the unique dates of changes
         sql_cmd='select distinct __timestamp__ from %s' % tn
-        time_list=[t[0] for t in self.sql(sql_cmd)]
         # setting up the return dict
         res={}
-        for t in time_list:
-            res[t]={ 'add': 0, 'del': 0, 'mod': 0 }
+        for t in self.sql(sql_cmd):
+            res[t[0]]={ 'add': 0, 'del': 0, 'mod': 0 }
         # go through the table and count the changes
         existing_uid={}
-        sql_cmd='select __timestamp__,__uid__,__deleted__ from %s' % tn
+        sql_cmd='select __timestamp__,__uid__,__deleted__ from %s order by __timestamp__ asc' % tn
         for e in self.sql(sql_cmd):
             tt=e[0]
             uid=e[1]

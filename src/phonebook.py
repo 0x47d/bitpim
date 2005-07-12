@@ -746,7 +746,9 @@ class PhoneWidget(wx.Panel):
             current_choice=guiwidgets.HistoricalDataDialog.Current_Data
         dlg=guiwidgets.HistoricalDataDialog(self,
                                             current_choice=current_choice,
-                                            historical_date=self.historical_date)
+                                            historical_date=self.historical_date,
+                                            historical_events=\
+                                            self.mainwindow.database.getchangescount('phonebook'))
         if dlg.ShowModal()==wx.ID_OK:
             self.mainwindow.OnBusyStart()
             current_choice, self.historical_date=dlg.GetValue()

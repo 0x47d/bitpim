@@ -24,6 +24,7 @@ import base64
 import thread
 import Queue
 import shutil
+import time
 
 # wx. modules
 import wx
@@ -1986,15 +1987,19 @@ class AskPhoneNameDialog(wx.Dialog):
 class HistoricalDataDialog(wx.Dialog):
     Current_Data=0
     Historical_Data=1
+    _Historical_Date=1
+    _Historical_Event=2
     def __init__(self, parent, caption='Historical Data Selection',
                  current_choice=Current_Data,
-                 historical_date=None):
+                 historical_date=None,
+                 historical_events=None):
         super(HistoricalDataDialog, self).__init__(parent, -1, caption)
         vbs=wx.BoxSizer(wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         self.data_selector=wx.RadioBox(self, wx.NewId(),
                                        'Data Selection:',
-                                       choices=('Current', 'Historical'),
+                                       choices=('Current', 'Historical Date',
+                                                'Historical Event'),
                                        style=wx.RA_SPECIFY_ROWS)
         self.data_selector.SetSelection(current_choice)
         wx.EVT_RADIOBOX(self, self.data_selector.GetId(), self.OnSelectData)
@@ -2006,9 +2011,19 @@ class HistoricalDataDialog(wx.Dialog):
                                          style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
         if historical_date is not None:
             self.data_date.SetValue(wx.DateTimeFromTimeT(historical_date))
-        self.data_date.Enable(current_choice==self.Historical_Data)
+        self.data_date.Enable(current_choice==self._Historical_Date)
         static_bs.Add(self.data_date, 1, wx.EXPAND, 0)
         hbs.Add(static_bs, 0, wx.ALL, 5)
+        # historical events
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Historical Events:'),
+                                    wx.VERTICAL)
+        self.hist_events=wx.ListBox(self, -1, style=wx.LB_SINGLE)
+        if historical_events:
+            self._populate_historical_events(historical_events)
+        self.hist_events.Enable(current_choice==self._Historical_Event)
+        static_bs.Add(self.hist_events, 1, wx.EXPAND, 0)
+        hbs.Add(static_bs, 0, wx.ALL, 5)
+
         vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
         vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0,
@@ -2018,11 +2033,42 @@ class HistoricalDataDialog(wx.Dialog):
         vbs.Fit(self)
 
     def OnSelectData(self, evt):
-        self.data_date.Enable(evt.GetInt()==self.Historical_Data)
+        self.data_date.Enable(evt.GetInt()==self._Historical_Date)
+        self.hist_events.Enable(evt.GetInt()==self._Historical_Event)
         
     def GetValue(self):
-        dt=self.data_date.GetValue()
-        dt.SetHour(23)
-        dt.SetMinute(59)
-        dt.SetSecond(59)
-        return (self.data_selector.GetSelection(), dt.GetTicks())
+        choice=self.data_selector.GetSelection()
+        if choice==self.Current_Data:
+            mode=self.Current_Data
+            time_t=None
+        elif choice==self._Historical_Date:
+            dt=self.data_date.GetValue()
+            dt.SetHour(23)
+            dt.SetMinute(59)
+            dt.SetSecond(59)
+            mode=self.Historical_Data
+            time_t=dt.GetTicks()
+        else:
+            sel=self.hist_events.GetSelection()
+            if sel==wx.NOT_FOUND:
+                mode=self.Current_Data
+                time_t=None
+            else:
+                mode=self.Historical_Data
+                time_t=self.hist_events.GetClientData(sel)
+        return mode, time_t
+
+    def _populate_historical_events(self, historical_events):
+        keys=historical_events.keys()
+        keys.sort()
+        keys.reverse()
+        for k in keys:
+            # build the string
+            self.hist_events.Append('%s  %02d-Adds  %02d-Dels  %02d-Mods'%\
+                                    (time.strftime('%b %d, %y %H:%M:%S',
+                                                   time.localtime(k)),
+                                     historical_events[k]['add'],
+                                     historical_events[k]['del'],
+                                     historical_events[k]['mod']),
+                                    k)
+
