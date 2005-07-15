@@ -43,7 +43,7 @@ numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
 %}
 
 PACKET speeddial:
-    1 UINT {'default': 0xff} +entry
+    2 UINT {'default': 0xffff} +entry
     1 UINT {'default': 0xff} +number
 
 PACKET speeddials:

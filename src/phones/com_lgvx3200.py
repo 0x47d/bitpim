@@ -54,7 +54,7 @@ class Phone(com_lgvx4400.Phone):
 
     ringtonelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 37, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
+        ( 27, "download/dloadindex/brewRingerIndex.map", "user/sound/ringer", "ringers", 30),
         )
 
 
@@ -62,6 +62,8 @@ class Phone(com_lgvx4400.Phone):
                     'Animal', 'Martini', 'Goldfish', 'Umbrellas',
                     'Mountain climb', 'Country road')
 
+    # There are a few more builtins but they cannot be sent to the phone in phonebook
+    # entries so I am leaving them out.
     builtinringtones= ('Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5', 'Ring 6',
                        'Ring 7', 'Ring 8', 'Annen Polka', 'Pachelbel Canon', 
                        'Hallelujah', 'La Traviata', 'Leichte Kavallerie Overture', 
@@ -69,9 +71,7 @@ class Phone(com_lgvx4400.Phone):
                        'Mozart Piano Sonata', 'Sting', 'O solemio', 
                        'Pizzicata Polka', 'Stars and Stripes Forever', 
                        'Pineapple Rag', 'When the Saints Go Marching In', 'Latin', 
-                       'Carol 1', 'Carol 2', 'Chimes high', 'Chimes low', 'Ding', 
-                       'TaDa', 'Notify', 'Drum', 'Claps', 'Fanfare', 'Chord high', 
-                       'Chord low') 
+                       'Carol 1', 'Carol 2') 
                        
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
@@ -93,11 +93,14 @@ class Phone(com_lgvx4400.Phone):
             ind=0
             for ifile in 'wallpaper', 'poweron', 'poweroff':
                 ifilefull="download/"+ifile+".bit"
-                mediafiledata=self.mediacache.readfile(ifilefull)
-                if len(mediafiledata)!=0:
-                    index[ind]=ifile
-                    ind = ind + 1
-                    self.log("Index file "+indexfile+" entry added: "+ifile)
+                try:
+                    mediafiledata=self.mediacache.readfile(ifilefull)
+                    if len(mediafiledata)!=0:
+                        index[ind]=ifile
+                        ind = ind + 1
+                        self.log("Index file "+indexfile+" entry added: "+ifile)
+                except:
+                    pass
         else:
             # A little special treatment for ringer related media files
             try:
@@ -130,7 +133,10 @@ class Phone(com_lgvx4400.Phone):
                 else:
                     # Ringer media files are all MID suffixed
                     mediafilename=index[i]+".mid"
-                media[index[i]]=self.mediacache.readfile(location+"/"+mediafilename)
+                try:
+                    media[index[i]]=self.mediacache.readfile(location+"/"+mediafilename)
+                except com_brew.BrewNoSuchFileException:
+                    self.log("Missing index file: "+location+"/"+mediafilename)
         result[key]=media
         return result
 
@@ -377,12 +383,151 @@ class Profile(parentprofile):
     # no direct usb interface
     usbids=com_lgvx4400.Profile.usbids_usbtoserial
 
+    def convertphonebooktophone(self, helper, data):
+        """Converts the data to what will be used by the phone
+
+        @param data: contains the dict returned by getfundamentals
+                     as well as where the results go"""
+        results={}
+
+        speeds={}
+
+        self.normalisegroups(helper, data)
+
+        for pbentry in data['phonebook']:
+            if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
+                break
+            e={} # entry out
+            entry=data['phonebook'][pbentry] # entry in
+            try:
+                # serials
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
+
+                e['serial1']=serial1
+                e['serial2']=serial2
+                for ss in entry["serials"]:
+                    if ss["sourcetype"]=="bitpim":
+                        e['bitpimserial']=ss
+                assert e['bitpimserial']
+
+                # name
+                e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
+
+                # categories/groups
+                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
+                if cat is None:
+                    e['group']=0
+                else:
+                    key,value=self._getgroup(cat, data['groups'])
+                    if key is not None:
+                        # lgvx3200 fix
+                        if key>5:
+                            e['group']=0
+                            #self.log("Custom Groups in PB not supported - setting to No Group for "+e['name'])
+                            print "Custom Groups in PB not supported - setting to No Group for "+e['name']
+                        else:
+                            e['group']=key
+                    else:
+                        # sorry no space for this category
+                        e['group']=0
+
+                # email addresses
+                emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass.NUMEMAILS,48)
+                e['emails']=helper.filllist(emails, self.protocolclass.NUMEMAILS, "")
+
+                # url
+                e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,48), "")
+
+                # memo (-1 is to leave space for null terminator - not all software puts it in, but we do)
+                e['memo']=helper.makeone(helper.getmemos(entry.get('memos', []), 0, 1, self.protocolclass.MEMOLENGTH-1), "")
+
+                # phone numbers
+                # there must be at least one email address or phonenumber
+                minnumbers=1
+                if len(emails): minnumbers=0
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                for numindex in range(len(numbers)):
+                    num=numbers[numindex]
+                    # deal with type
+                    b4=len(e['numbertypes'])
+                    type=num['type']
+                    for i,t in enumerate(self.protocolclass.numbertypetab):
+                        if type==t:
+                            # some voodoo to ensure the second home becomes home2
+                            if i in e['numbertypes'] and t[-1]!='2':
+                                type+='2'
+                                continue
+                            e['numbertypes'].append(i)
+                            break
+                        if t=='none': # conveniently last entry
+                            e['numbertypes'].append(i)
+                            break
+                    if len(e['numbertypes'])==b4:
+                        # we couldn't find a type for the number
+                        continue 
+                    # deal with number
+                    number=com_lgvx4400.phonize(num['number'])
+                    if len(number)==0:
+                        # no actual digits in the number
+                        continue
+                    if len(number)>48: # get this number from somewhere sensible
+                        # ::TODO:: number is too long and we have to either truncate it or ignore it?
+                        number=number[:48] # truncate for moment
+                    e['numbers'].append(number)
+                    # deal with speed dial
+                    sd=num.get("speeddial", -1)
+                    if self.protocolclass.NUMSPEEDDIALS:
+                        if sd>=self.protocolclass.FIRSTSPEEDDIAL and sd<=self.protocolclass.LASTSPEEDDIAL:
+                            speeds[sd]=(e['bitpimserial'], numindex)
+
+                e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
+                e['numbers']=helper.filllist(e['numbers'], 5, "")
+
+                # ringtones, wallpaper
+                # LG VX3200 only supports writing the first 26 builtin ringers in pb
+                ecring=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                if ecring is not None:
+                    if ecring not in Phone.builtinringtones:
+                        #self.log("Ringers past Carol 2 in PB not supported - setting to Default Ringer for "+e['name'])
+                        print "Ringers past Carol 2 in PB not supported - setting to Default Ringer for "+e['name']+" id was: "+ecring
+                        ecring=None
+                e['ringtone']=ecring
+                emring=helper.getringtone(entry.get('ringtones', []), 'message', None)
+                if emring is not None:
+                    if emring not in Phone.builtinringtones:
+                        #self.log("Ringers past Carol 2 in PB not supported - setting to Default MsgRinger for "+e['name'])
+                        print "Ringers past Carol 2 in PB not supported - setting to Default MsgRinger for "+e['name']+" id was: "+emring
+                        emring=None
+                e['msgringtone']=emring
+                # LG VX3200 does not support writing wallpaper in pb
+                ewall=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
+                if ewall is not None:
+                    #self.log("Custom Wallpapers in PB not supported - setting to Default Wallpaper for "+e['name'])
+                    print "Custom Wallpapers in PB not supported - setting to Default Wallpaper for "+e['name']
+                e['wallpaper']=None
+
+                # flags
+                e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
+
+                results[pbentry]=e
+                
+            except helper.ConversionFailed:
+                continue
+
+        if self.protocolclass.NUMSPEEDDIALS:
+            data['speeddials']=speeds
+        data['phonebook']=results
+        return data
+
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-     #   ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-     #   ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
      #   ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
      #   ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),   # merge and overwrite wallpaper
@@ -415,3 +560,5 @@ class Profile(parentprofile):
     
     def __init__(self):
         parentprofile.__init__(self)
+
+

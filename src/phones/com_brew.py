@@ -299,7 +299,7 @@ class BrewProtocol:
             node=self._getdirectory(brewdirname(filename), ensure=True)
             file=node.get(brewbasename(filename), None)
             if file is None:
-                return False
+                raise BrewNoSuchFileException()
             # This class only populates the 'data' portion of the file obj when needed
             data=file.get('data', None)
             if data is None:

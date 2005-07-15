@@ -109,7 +109,7 @@ class RingtoneEditor(DirtyUIBase):
             type='call'
         else:
             wp=data.get("ringtone", self.unnamed)
-            type=data.get("type", "call")
+            type=data.get("use", "call")
 
         self.SetPreview(wp)
         if type=='calendar':
@@ -229,7 +229,7 @@ class WallpaperEditor(DirtyUIBase):
             type='call'
         else:
             wp=data.get("wallpaper", self.unnamed)
-            type=data.get("type", "call")
+            type=data.get("use", "call")
 
         self.SetPreview(wp)
         if type=="message":
