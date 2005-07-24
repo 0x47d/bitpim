@@ -15,6 +15,12 @@ import guihelper
 
 ActivateEvent, EVT_ACTIVATE = wx.lib.newevent.NewCommandEvent()
 
+class BufferedPaintDC(wx.BufferedPaintDC):
+    def __init__(self, *arg, **karg):
+        super(BufferedPaintDC, self).__init__(*arg, **karg)
+        self.view_start=(0,0)
+        self.pos=(0,0)
+
 class Display(wx.ScrolledWindow):
     "This is the view"
 
@@ -134,7 +140,7 @@ class Display(wx.ScrolledWindow):
 
         if self._bufbmp is None or self._bufbmp.GetWidth()<self._w or self._bufbmp.GetHeight()<self.maxheight:
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
-        dc=wx.BufferedPaintDC(self, self._bufbmp, style=wx.BUFFER_VIRTUAL_AREA)
+        dc=BufferedPaintDC(self, self._bufbmp, style=wx.BUFFER_VIRTUAL_AREA)
         try:
             self.DoPaint(dc)
         except:
@@ -146,7 +152,9 @@ class Display(wx.ScrolledWindow):
 
     def DoPaint(self, dc):
         # we redraw everything that is in the visible area of the screen
-        origin=self.GetViewStart()[1]*self.VSCROLLPIXELS
+        vs=self.GetViewStart()
+        dc.view_start=(vs[0], vs[1]*self.VSCROLLPIXELS)
+        origin=dc.view_start[1]
         firstvisible=origin
         lastvisible=origin+self._h
 
@@ -169,6 +177,7 @@ class Display(wx.ScrolledWindow):
                 dc.SetDeviceOrigin(0, cury )
                 section.Draw(dc, self._w)
             cury+=self.sectionheights[i]
+            self.itemsize[i]=self.datasource.GetItemSize(i,section)
             extrawidth=(self._w-6)-(self.itemsize[i][0]+self.ITEMPADDING)*self.itemsperrow[i]
             extrawidth/=self.itemsperrow[i]
             if extrawidth<0: extrawidth=0
@@ -183,7 +192,8 @@ class Display(wx.ScrolledWindow):
                     num+=self.itemsperrow[i]
                     continue
                 item=self.items[i][num]
-                dc.SetDeviceOrigin(3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth), posy)
+                dc.pos=(3+x*(self.itemsize[i][0]+self.ITEMPADDING+extrawidth), posy)
+                dc.SetDeviceOrigin(*dc.pos)
                 dc.ResetBoundingBox()
                 bb=item.Draw(dc, self.itemsize[i][0]+extrawidth, self.itemsize[i][1], self.selected[i][num])
                 if bb is None:

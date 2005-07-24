@@ -127,6 +127,7 @@ import database
 import guihelper
 import helpids
 import pubsub
+import today
 import xyaptu
 
 #-------------------------------------------------------------------------------
@@ -645,6 +646,23 @@ class CalendarEntry(object):
             return 1
     cmp_by_time=staticmethod(cmp_by_time)
 
+    def _summary(self):
+        # provide a one-liner summary string for this event
+        if self.allday:
+            str=self.description
+        else:
+            hr=self.start[3]
+            ap="am"
+            if hr>=12:
+                ap="pm"
+                hr-=12
+            if hr==0: hr=12
+            str="%2d:%02d %s" % (hr, self.start[4], ap)
+            str+=" "+self.description
+        return str
+    summary=property(fget=_summary)
+
+
 #-------------------------------------------------------------------------------
 class Calendar(calendarcontrol.Calendar):
     """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
@@ -838,6 +856,32 @@ class Calendar(calendarcontrol.Calendar):
         if self.dialog.IsShown():
             # editor dialog is up, update it
             self.OnEdit(*self.selecteddate)
+
+    def _publish_today_events(self):
+        now=datetime.datetime.now()
+        l=self.getentrydata(now.year, now.month, now.day)
+        l.sort(CalendarEntry.cmp_by_time)
+        today_event=today.TodayCalendarEvent()
+        today_event.names=[x.summary for x in l]
+        today_event.broadcast()
+
+    def _publish_thisweek_events(self):
+        now=datetime.datetime.now()
+        one_day=datetime.timedelta(1)
+        d1=now
+        _days=6-(now.isoweekday()%7)
+        res=[]
+        for i in range(_days):
+            d1+=one_day
+            l=self.getentrydata(d1.year, d1.month, d1.day)
+            if l:
+                _dow=today.dow_initials[d1.isoweekday()%7]
+                l.sort(CalendarEntry.cmp_by_time)
+                res+=[i and today.dow_initials[-1]+'   '+x.summary or _dow+' - '+x.summary \
+                      for i,x in enumerate(l)]
+        today_event=today.ThisWeekCalendarEvent()
+        today_event.names=res
+        today_event.broadcast()
             
     def populate(self, dict):
         """Updates the internal data with the contents of C{dict['calendar']}"""
@@ -858,7 +902,10 @@ class Calendar(calendarcontrol.Calendar):
                 self.entries.setdefault((y,m,d), []).append(entry)
             else:
                 self.repeating.append(entry)
+        # tell everyone that i've changed
 
+        self._publish_today_events()
+        self._publish_thisweek_events()
         self.RefreshAllEntries()
 
     def populatefs(self, dict):

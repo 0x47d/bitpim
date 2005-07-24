@@ -827,21 +827,7 @@ class Editor(wx.Dialog):
             e=self.entries[index]
             if e.id==entrytoselect:
                 selectitem=curpos
-##            if 0: # ampm/miltime config here ::TODO::
-##                str="%2d:%02d" % (e['start'][3], e['start'][4])
-##            else:
-            if e.allday:
-                str=e.description
-            else:
-                hr=e.start[3]
-                ap="am"
-                if hr>=12:
-                    ap="pm"
-                    hr-=12
-                if hr==0: hr=12
-                str="%2d:%02d %s" % (hr, e.start[4], ap)
-                str+=" "+e.description
-            self.listbox.Append(str)
+            self.listbox.Append(e.summary)
 
         # Select an item if requested
         if selectitem>=0:

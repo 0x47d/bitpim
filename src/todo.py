@@ -66,6 +66,8 @@ import calendarentryeditor as cal_editor
 import database
 import helpids
 import phonebookentryeditor as pb_editor
+import pubsub
+import today
 
 #-------------------------------------------------------------------------------
 class TodoDataObject(database.basedataobject):
@@ -492,6 +494,41 @@ class TodoWidget(wx.Panel):
             w.Set(None)
             w.Enable(False)
 
+    def _publish_today_events(self):
+        now=datetime.datetime.now()
+        _today='%04d%02d%02d'%(now.year, now.month, now.day)
+        keys=self._data.keys()
+        keys.sort()
+        res=[self._data[k].summary for k in keys \
+             if not self._data[k].due_date or \
+                self._data[k].due_date==_today]
+        today_event=today.TodayTodoEvent()
+        today_event.names=res
+        today_event.broadcast()
+
+    def _publish_thisweek_events(self):
+        now=datetime.datetime.now()
+        _today='%04d%02d%02d'%(now.year, now.month, now.day)
+        s=now+datetime.timedelta(7-now.isoweekday()%7)
+        _sun='%04d%02d%02d'%(s.year, s.month, s.day)
+        keys=self._data.keys()
+        keys.sort()
+        today_event=today.ThisWeekTodoEvent()
+        dow_flg=[False]*7
+        for k in keys:
+            due_date=self._data[k].due_date
+            if due_date>_today and due_date<_sun:
+                dt=datetime.datetime(int(due_date[:4]), int(due_date[4:6]),
+                                         int(due_date[6:8]))
+                _dow=dt.isoweekday()%7
+                if dow_flg[_dow]:
+                    _name=today.dow_initials[-1]+'   '+self._data[k].summary
+                else:
+                    dow_flg[_dow]=True
+                    _name=today.dow_initials[_dow]+' - '+self._data[k].summary
+                today_event.append(_name)
+        today_event.broadcast()
+
     def _populate(self):
         # populate new data
         self._clear()
@@ -504,6 +541,8 @@ class TodoWidget(wx.Panel):
             i=self._item_list.Append(n.summary)
             self._item_list.SetClientData(i, k)
             self._data_map[k]=i
+        self._publish_today_events()
+        self._publish_thisweek_events()
 
     def _populate_each(self, k):
         # populate the detailed info of the item keyed k
@@ -582,6 +621,8 @@ class TodoWidget(wx.Panel):
             db_rr[k]=TodoDataObject(e)
         database.ensurerecordtype(db_rr, todoobjectfactory)
         self._main_window.database.savemajordict('todo', db_rr)
+        self._publish_today_events()
+        self._publish_thisweek_events()
         
     def populatefs(self, dict):
         self._save_to_db(dict.get('todo', {}))

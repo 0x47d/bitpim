@@ -54,6 +54,8 @@ import call_history
 import phone_detect
 import phone_media_codec
 import hexeditor
+import today
+import pubsub
 
 if guihelper.IsMSWindows():
     import win32api
@@ -694,6 +696,8 @@ class MainWindow(wx.Frame):
         if self.config.ReadInt("console", 0):
             import developer
             self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self, 'db': self.database} ), "Console")
+        self.todaywidget=today.TodayWidget(self, self.nb)
+        self.nb.AddPage(self.todaywidget, "Today")
         self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
         self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
@@ -774,6 +778,8 @@ class MainWindow(wx.Frame):
             self.oldwndproc = win32gui.SetWindowLong(self.GetHandle(),
                                                      win32con.GWL_WNDPROC,
                                                      self.MyWndProc)
+        # response to pubsub request
+        pubsub.subscribe(self.OnReqChangeTab, pubsub.REQUEST_TAB_CHANGED)
 
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
@@ -936,7 +942,6 @@ class MainWindow(wx.Frame):
             wx.MessageBox('No phone detected/recognized',
                           'Phone Detection Failed', wx.OK)
         else:
-            import pubsub
             self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
             if self.__owner_name is None:
                 self.__owner_name=''
@@ -1303,6 +1308,17 @@ class MainWindow(wx.Frame):
             # clear the ower's name for manual setting
             self.__owner_name=''
             self.configdlg.ShowModal()
+
+    def OnReqChangeTab(self, msg=None):
+        if msg is None:
+            return
+        data=msg.data
+        if not isinstance(data, int):
+            # wrong data type
+            if __debug__:
+                raise TypeError
+            return
+        self.nb.SetSelection(data)
 
     # deal with graying out/in menu items on notebook page changing
     def OnNotebookPageChanged(self, _=None):

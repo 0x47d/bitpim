@@ -60,6 +60,7 @@ import calendarentryeditor as cal_editor
 import database
 import helpids
 import phonebookentryeditor as pb_editor
+import today
 
 #-------------------------------------------------------------------------------
 class MemoDataObject(database.basedataobject):
@@ -304,6 +305,14 @@ class MemoWidget(wx.Panel):
         self.ignoredirty=False
         self.setdirty(False)
 
+    def _send_today_data(self):
+        keys=self._data.keys()
+        keys.sort()
+        keys.reverse()
+        today_event=today.TodayMemoEvent()
+        today_event.names=[self._data[k].subject for k in keys]
+        today_event.broadcast()
+
     def _clear(self):
         self._item_list.Clear()
         self._clear_each()
@@ -325,6 +334,7 @@ class MemoWidget(wx.Panel):
             i=self._item_list.Append(n.subject)
             self._item_list.SetClientData(i, k)
             self._data_map[k]=i
+        self._send_today_data()
 
     def _populate_each(self, k):
         # populate the detailed info of the item keyed k
@@ -439,6 +449,7 @@ class MemoWidget(wx.Panel):
         self._general_editor_w.Set(entry)
         self._item_list.SetString(sel_idx, entry.subject)
         self._save_to_db(self._data)
+        self._send_today_data()
         self.ignoredirty=False
         self.setdirty(False)
 

@@ -45,6 +45,12 @@ ALL_RINGTONE_INDEX=('response', 'ringtone-index') # data is the ringtone-index d
 REQUEST_PB_LOOKUP=('request', 'phonebook') # Request to lookup a number
 RESPONSE_PB_LOOKUP=('response', 'phonebook') # Response to the request
 MEDIA_NAME_CHANGED=('notificaion', 'medianamechanged') # notify if name changed
+REQUEST_TAB_CHANGED=('notification', 'tabchanges') # request to change the main tab
+TODAY_ITEM_SELECTED=('notification', 'todayitemselected') # a Today item was selected
+REQUEST_TODAY_DATA=('request', 'todaydata') # request data for Today page
+RESPONSE_TODAY_DATA=('response', 'todaydata') # reponse data for Today page
+NEW_DATA_AVAILABLE=('notification', 'dataavailable') # new data available
+
 # MEDIA_NAME_CHANGED keys & types
 media_change_type='type'
 wallpaper_type='wallpaper'
