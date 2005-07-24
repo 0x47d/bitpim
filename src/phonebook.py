@@ -737,6 +737,8 @@ class PhoneWidget(wx.Panel):
             else:
                 self.sash_pos=self.split.GetSashPosition()
             self.split.Unsplit(self.preview)
+        # refresh the table view
+        self.dt.GetView().AutoSizeColumns()
 
     def OnHistoricalData(self):
         """Display current or historical data"""
