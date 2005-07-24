@@ -743,7 +743,10 @@ class MainWindow(wx.Frame):
 
 
         # show the last page we were on
-        pg=self.config.Read("viewnotebookpage", "")
+        if self.config.ReadInt('startwithtoday', 0):
+            pg='Today'
+        else:
+            pg=self.config.Read("viewnotebookpage", "")
         sel=0
         if len(pg):
             for i in range(self.nb.GetPageCount()):

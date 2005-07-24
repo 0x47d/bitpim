@@ -417,13 +417,18 @@ class ConfigDialog(wx.Dialog):
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY,
                                    choices=self.update_choices)
         gs.Add(self.updatebox, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        # always start with the 'Today' tab
+        gs.Add(wx.StaticText(self, -1, 'Startup'), pos=(5,0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self.startup=wx.CheckBox(self, wx.NewId(), 'Always start with the Today tab')
+        gs.Add(self.startup, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(6,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(5,2), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add(self.bitflingenabled, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(6,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -601,6 +606,7 @@ class ConfigDialog(wx.Dialog):
         self.safemode.SetValue(self.mw.config.ReadInt("Safemode", 0))
         self.updatebox.SetValue(self.mw.config.Read("updaterate",
                                                     self.update_choices[0]))
+        self.startup.SetValue(self.mw.config.ReadInt("startwithtoday", 0))
 
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
@@ -653,6 +659,8 @@ class ConfigDialog(wx.Dialog):
         wx.GetApp().ApplySafeMode()
         # check for update rate
         self.mw.config.Write('updaterate', self.updatebox.GetValue())
+        # startup option
+        self.mw.config.WriteInt('startwithtoday', self.startup.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
