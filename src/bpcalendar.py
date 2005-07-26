@@ -245,11 +245,13 @@ class RepeatEntry(object):
     def set_db_dict(self, data):
         r=data.get('repeat', [{}])[0]
         self.repeat_type=r['type']
+        _dow=r.get('dow', 0)
+        _interval=r.get('interval', 0)
         if self.repeat_type==self.daily:
-            self.interval=r['interval']
+            self.interval=_interval
         elif self.repeat_type==self.weekly or self.repeat_type==self.monthly:
-            self.interval=r['interval']
-            self.dow=r['dow']
+            self.interval=_interval
+            self.dow=_dow
         # now the suppressed stuff
         s=[]
         for n in data.get('suppressed', []):
