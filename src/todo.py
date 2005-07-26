@@ -172,6 +172,9 @@ class TodoEntry(object):
         if v==self.ST_Completed:
             self.complete()
     status=property(fget=_get_status, fset=_set_status)
+    def is_active(self):
+        _status=self.status
+        return _status!=self.ST_Completed and _status!=self.ST_Cancelled
 
     def _get_percent_complete(self):
         return self._data.get('percent_complete', None)
@@ -500,8 +503,9 @@ class TodoWidget(wx.Panel):
         keys=self._data.keys()
         keys.sort()
         res=[self._data[k].summary for k in keys \
-             if not self._data[k].due_date or \
-                self._data[k].due_date==_today]
+             if self._data[k].is_active() and \
+             (not self._data[k].due_date or \
+             self._data[k].due_date<=_today)]
         today_event=today.TodayTodoEvent()
         today_event.names=res
         today_event.broadcast()

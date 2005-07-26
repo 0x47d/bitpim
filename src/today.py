@@ -146,6 +146,7 @@ class GroupWidget(wx.Panel):
             if self._item_font.Ok():
                 w.SetFont(self._item_font)
             vbs.Add(w, 0, wx.RIGHT|wx.LEFT, 5)
+            vbs.Hide(i)
             self._widgets.append(w)
         bs.Add(vbs, 1, wx.LEFT, 10)
         self._vbs=vbs
