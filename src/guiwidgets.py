@@ -1827,6 +1827,9 @@ def DrawTextWithLimit(dc, x, y, text, widthavailable, guardspace, term="..."):
     for i,offset in enumerate(extents):
         if offset>limit:
             break
+    # back off 1 in case the new text's a tad long
+    if i:
+        i-=1
     text=text[:i]+term
     w,h=dc.GetTextExtent(text)
     assert w<=widthavailable
