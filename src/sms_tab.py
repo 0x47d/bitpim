@@ -24,6 +24,7 @@ import phonebookentryeditor as pb_editor
 import phonenumber
 import pubsub
 import sms
+import today
 
 #-------------------------------------------------------------------------------
 class StaticText(wx.StaticText):
@@ -310,6 +311,15 @@ class FolderPage(wx.Panel):
             self._populate_each(self._item_list.GetPyData(sel_idx))
         return True
 
+    def publish_today_data(self):
+        keys=self._data.keys()
+        keys.sort()
+        keys.reverse()
+        today_event=today.TodaySMSEvent()
+        today_event.names=[self._data[k].text for k in keys \
+                           if self._data[k].folder==sms.SMSEntry.Folder_Inbox]
+        today_event.broadcast()
+
 #-------------------------------------------------------------------------------
 class SMSWidget(wx.Panel):
     _data_key='sms'
@@ -332,6 +342,7 @@ class SMSWidget(wx.Panel):
 
     def _populate(self):
         self._sms.Set(self._data, self._canned_data)
+        self._sms.publish_today_data()
 
     def OnSaveCannedMsg(self, _):
         self._data, self._canned_data=self._sms.Get()

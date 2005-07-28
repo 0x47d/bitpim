@@ -47,7 +47,7 @@ Today_Section_ThisWeek='This Week'
 Today_Group_Calendar='Calendar:'
 Today_Group_Todo='Todo List:'
 Today_Group_Memo='Memo:'
-Today_Group_IncomingSMS='Incoming SMS:'
+Today_Group_IncomingSMS='SMS Inbox:'
 Today_Group_IncomingCalls='Incoming Calls:'
 Today_Group_MissedCalls='Missed Calls:'
 
@@ -104,6 +104,10 @@ class TodayMemoEvent(BaseEvent):
     def __init__(self):
         super(TodayMemoEvent, self).__init__(Today_Section_Today,
                                              Today_Group_Memo)
+class TodaySMSEvent(BaseEvent):
+    def __init__(self):
+        super(TodaySMSEvent, self).__init__(Today_Section_Today,
+                                            Today_Group_IncomingSMS)
 
 #-------------------------------------------------------------------------------
 class HyperLinkCtrl(hl.HyperLinkCtrl):
@@ -112,6 +116,18 @@ class HyperLinkCtrl(hl.HyperLinkCtrl):
         self.AutoBrowse(False)
         self.DoPopup(False)
         self.client_data=None
+
+#-------------------------------------------------------------------------------
+class StaticText(wx.StaticText):
+    _max_item_len=30
+    _postfix='...'
+    _max_client_len=_max_item_len-len(_postfix)
+    def __init__(self, *args, **kargs):
+        super(StaticText, self).__init__(*args, **kargs)
+    def SetLabel(self, label):
+        if len(label)>self._max_item_len:
+            label=label[:self._max_client_len]+self._postfix
+        super(StaticText, self).SetLabel(label)
 
 #-------------------------------------------------------------------------------
 class GroupWidget(wx.Panel):
@@ -142,7 +158,7 @@ class GroupWidget(wx.Panel):
         bs.Add(title, 0, wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
         for i in range(self.max_total_items):
-            w=wx.StaticText(self, -1,  '')
+            w=StaticText(self, -1,  '')
             if self._item_font.Ok():
                 w.SetFont(self._item_font)
             vbs.Add(w, 0, wx.RIGHT|wx.LEFT, 5)
