@@ -785,7 +785,7 @@ class Editor(wx.Dialog):
         self.setdate(d.year, d.month, d.day)
         self.cw.setday(d.year, d.month, d.day)
     
-    def setdate(self, year, month, day):
+    def setdate(self, year, month, day, entry=None):
         """Sets the date we are editing entries for
 
         @Note: The list of entries is updated"""
@@ -793,8 +793,8 @@ class Editor(wx.Dialog):
         self.date=year,month,day
         self.title.SetLabel(d)
         self.refreshentries()
-        self.updatelistbox()
-        self.updatefields(None)
+        self.updatelistbox(entry and entry.id or None)
+        self.updatefields(entry)
 
     def refreshentries(self):
         """re-requests the list of entries for the currently visible date from the main calendar"""

@@ -487,6 +487,9 @@ class TodoWidget(wx.Panel):
         # turn on dirty flag
         self.ignoredirty=False
         self.setdirty(False)
+        # register for Today selection
+        today.bind_notification_event(self.OnTodaySelection,
+                                      today.Today_Group_Todo)
 
     def _clear(self):
         self._item_list.Clear()
@@ -502,12 +505,14 @@ class TodoWidget(wx.Panel):
         _today='%04d%02d%02d'%(now.year, now.month, now.day)
         keys=self._data.keys()
         keys.sort()
-        res=[self._data[k].summary for k in keys \
-             if self._data[k].is_active() and \
-             (not self._data[k].due_date or \
-             self._data[k].due_date<=_today)]
         today_event=today.TodayTodoEvent()
-        today_event.names=res
+        for k in keys:
+            if self._data[k].is_active() and \
+               (not self._data[k].due_date or \
+                self._data[k].due_date<=_today):
+                today_event.append(self._data[k].summary,
+                                   { 'key': k,
+                                     'index': self._data_map[k] })
         today_event.broadcast()
 
     def _publish_thisweek_events(self):
@@ -530,8 +535,14 @@ class TodoWidget(wx.Panel):
                 else:
                     dow_flg[_dow]=True
                     _name=today.dow_initials[_dow]+' - '+self._data[k].summary
-                today_event.append(_name)
+                today_event.append(_name, { 'key': k,
+                                            'index': self._data_map[k] })
         today_event.broadcast()
+
+    def OnTodaySelection(self, evt):
+        if evt.data:
+            self._item_list.SetSelection(evt.data.get('index', wx.NOT_FOUND))
+            self._populate_each(evt.data.get('key', None))
 
     def _populate(self):
         # populate new data

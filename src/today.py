@@ -53,6 +53,39 @@ Today_Group_MissedCalls='Missed Calls:'
 
 dow_initials=('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', '   ')
 
+EVT_TODAY_ITEM_SELECTED=wx.NewEventType()
+
+#-------------------------------------------------------------------------------
+class NotificationEvent(object):
+    def __init__(self, evt_handler, client_data=None):
+        self._evt_handler=evt_handler
+        self.client_data=client_data
+        self.data=None
+    def send(self):
+        self._evt_handler(self)
+
+#-------------------------------------------------------------------------------
+class NotificationEventHandler(object):
+    def __init__(self):
+        self._evt_table={}
+
+    def append(self, evt_handler, group, client_data=None):
+        evt=NotificationEvent(evt_handler, client_data)
+        self._evt_table.setdefault(group, []).append(evt)
+
+    def process(self, group, evt):
+        for e in self._evt_table.get(group, []):
+            e.data=evt
+            e.send()
+        
+#-------------------------------------------------------------------------------
+evt_handler=None
+def bind_notification_event(_evt_handler, group, client_data=None):
+    global evt_handler
+    if evt_handler is None:
+        evt_handler=NotificationEventHandler()
+    evt_handler.append(_evt_handler, group, client_data)
+
 #-------------------------------------------------------------------------------
 class BaseEvent(object):
     def __init__(self, section, group):
@@ -108,6 +141,15 @@ class TodaySMSEvent(BaseEvent):
     def __init__(self):
         super(TodaySMSEvent, self).__init__(Today_Section_Today,
                                             Today_Group_IncomingSMS)
+class TodayIncomingCallsEvent(BaseEvent):
+    def __init__(self):
+        super(TodayIncomingCallsEvent, self).__init__(Today_Section_Today,
+                                                      Today_Group_IncomingCalls)
+class TodayMissedCallsEvent(BaseEvent):
+    def __init__(self):
+        super(TodayMissedCallsEvent, self).__init__(Today_Section_Today,
+                                              Today_Group_MissedCalls)
+
 
 #-------------------------------------------------------------------------------
 class HyperLinkCtrl(hl.HyperLinkCtrl):
@@ -129,6 +171,20 @@ class StaticText(wx.StaticText):
             label=label[:self._max_client_len]+self._postfix
         super(StaticText, self).SetLabel(label)
 
+#-------------------------------------------------------------------------------
+class ItemHyperLink(HyperLinkCtrl):
+    _max_item_len=30
+    _postfix='...'
+    _max_client_len=_max_item_len-len(_postfix)
+    def __init__(self, *args, **kargs):
+        super(ItemHyperLink, self).__init__(*args, **kargs)
+        self.client_data=None
+    def SetLabel(self, label, client_data=None):
+        if len(label)>self._max_item_len:
+            label=label[:self._max_client_len]+self._postfix
+        super(ItemHyperLink, self).SetLabel(label)
+        self.client_data=client_data
+    
 #-------------------------------------------------------------------------------
 class GroupWidget(wx.Panel):
     max_total_items=10
@@ -158,9 +214,11 @@ class GroupWidget(wx.Panel):
         bs.Add(title, 0, wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
         for i in range(self.max_total_items):
-            w=StaticText(self, -1,  '')
+##            w=StaticText(self, -1,  '')
+            w=ItemHyperLink(self, -1,  '')
             if self._item_font.Ok():
                 w.SetFont(self._item_font)
+            hl.EVT_HYPERLINK_LEFT(self, w.GetId(), self.OnItemSelected)
             vbs.Add(w, 0, wx.RIGHT|wx.LEFT, 5)
             vbs.Hide(i)
             self._widgets.append(w)
@@ -180,6 +238,11 @@ class GroupWidget(wx.Panel):
             pubsub.publish(pubsub.REQUEST_TAB_CHANGED,
                            data=self.tab_index)
 
+    def OnItemSelected(self, evt):
+        if evt_handler:
+            self.OnHyperlinkLeft(evt)
+            evt_handler.process(self.name, evt.GetEventObject().client_data)
+
     def Set(self, data):
         data_len=len(data)
         if data_len>self.max_total_items:
@@ -189,8 +252,8 @@ class GroupWidget(wx.Panel):
         else:
             self._data=data
         for i in range(data_len):
-            self._widgets[i].SetLabel(self._data[i].get(Today_Item_Name,
-                                                        ''))
+            self._widgets[i].SetLabel(self._data[i].get(Today_Item_Name, ''),
+                                      self._data[i].get(Today_Item_Data, None))
             self._vbs.Show(i)
         for i in range(data_len, self.max_total_items):
             self._vbs.Hide(i)
@@ -200,7 +263,6 @@ class GroupWidget(wx.Panel):
 
     def not_empty(self):
         return self._data
-
 
 #-------------------------------------------------------------------------------
 class SectionHeader(aggr.SectionHeader):

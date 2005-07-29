@@ -304,14 +304,24 @@ class MemoWidget(wx.Panel):
         # turn on dirty flag
         self.ignoredirty=False
         self.setdirty(False)
+        # register for Today selection
+        today.bind_notification_event(self.OnTodaySelection,
+                                      today.Today_Group_Memo)
 
     def _send_today_data(self):
         keys=self._data.keys()
         keys.sort()
         keys.reverse()
         today_event=today.TodayMemoEvent()
-        today_event.names=[self._data[k].subject for k in keys]
+        for k in keys:
+            today_event.append(self._data[k].subject,
+                               { 'key': k, 'index': self._data_map[k] })
         today_event.broadcast()
+
+    def OnTodaySelection(self, evt):
+        if evt.data:
+            self._item_list.SetSelection(evt.data.get('index', wx.NOT_FOUND))
+            self._populate_each(evt.data.get('key', None))
 
     def _clear(self):
         self._item_list.Clear()

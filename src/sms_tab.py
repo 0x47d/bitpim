@@ -316,9 +316,15 @@ class FolderPage(wx.Panel):
         keys.sort()
         keys.reverse()
         today_event=today.TodaySMSEvent()
-        today_event.names=[self._data[k].text for k in keys \
-                           if self._data[k].folder==sms.SMSEntry.Folder_Inbox]
+        for k in keys:
+            if self._data[k].folder==sms.SMSEntry.Folder_Inbox:
+                today_event.append(self._data[k].text,
+                                   { 'id': self._data_map[k] } )
         today_event.broadcast()
+
+    def OnTodaySelection(self, evt):
+        if evt.data:
+            self._item_list.SelectItem(evt.data['id'])
 
 #-------------------------------------------------------------------------------
 class SMSWidget(wx.Panel):
@@ -339,6 +345,9 @@ class SMSWidget(wx.Panel):
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
+        # register for Today selection
+        today.bind_notification_event(self._sms.OnTodaySelection,
+                                      today.Today_Group_IncomingSMS)
 
     def _populate(self):
         self._sms.Set(self._data, self._canned_data)

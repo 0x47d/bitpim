@@ -688,6 +688,8 @@ class Calendar(calendarcontrol.Calendar):
         calendarcontrol.Calendar.__init__(self, parent, rows=5, id=id)
         self.dialog=calendarentryeditor.Editor(self)
         pubsub.subscribe(self.OnMediaNameChanged, pubsub.MEDIA_NAME_CHANGED)
+        today.bind_notification_event(self.OnTodayItem,
+                                      today.Today_Group_Calendar)
 
     def OnPrintDialog(self, mainwindow, config):
         dlg=CalendarPrintDialog(self, mainwindow, config)
@@ -843,14 +845,19 @@ class Calendar(calendarcontrol.Calendar):
         res.sort()
         return res
 
-    def OnEdit(self, year, month, day):
+    def OnEdit(self, year, month, day, entry=None):
         """Called when the user wants to edit entries for a particular day"""
         if self.dialog.dirty:
             # user is editing a field so we don't allow edit
             wx.Bell()
         else:
-            self.dialog.setdate(year, month, day)
+            self.dialog.setdate(year, month, day, entry)
             self.dialog.Show(True)
+
+    def OnTodayItem(self, evt):
+        if evt.data:
+            args=evt.data['datetime']+(evt.data['entry'],)
+            self.OnEdit(*args)
 
     def OnTodayButton(self, evt):
         """ Called when the user goes to today cell"""
@@ -864,7 +871,9 @@ class Calendar(calendarcontrol.Calendar):
         l=self.getentrydata(now.year, now.month, now.day)
         l.sort(CalendarEntry.cmp_by_time)
         today_event=today.TodayCalendarEvent()
-        today_event.names=[x.summary for x in l]
+        for e in l:
+            today_event.append(e.summary, { 'datetime': (now.year, now.month, now.day),
+                                            'entry': e })
         today_event.broadcast()
 
     def _publish_thisweek_events(self):
@@ -873,16 +882,21 @@ class Calendar(calendarcontrol.Calendar):
         d1=now
         _days=6-(now.isoweekday()%7)
         res=[]
+        today_event=today.ThisWeekCalendarEvent()
         for i in range(_days):
             d1+=one_day
             l=self.getentrydata(d1.year, d1.month, d1.day)
             if l:
                 _dow=today.dow_initials[d1.isoweekday()%7]
                 l.sort(CalendarEntry.cmp_by_time)
-                res+=[i and today.dow_initials[-1]+'   '+x.summary or _dow+' - '+x.summary \
-                      for i,x in enumerate(l)]
-        today_event=today.ThisWeekCalendarEvent()
-        today_event.names=res
+                for i,x in enumerate(l):
+                    if i:
+                        _name=today.dow_initials[-1]+'   '
+                    else:
+                        _name=_dow+' - '
+                    _name+=x.summary
+                    today_event.append(_name, { 'datetime': (d1.year, d1.month, d1.day),
+                                                'entry': x })
         today_event.broadcast()
             
     def populate(self, dict):

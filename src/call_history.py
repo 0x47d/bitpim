@@ -44,6 +44,7 @@ import wx.lib.scrolledpanel as scrolled
 import database
 import phonenumber
 import pubsub
+import today
 
 #-------------------------------------------------------------------------------
 class CallHistoryDataobject(database.basedataobject):
@@ -161,6 +162,20 @@ class CallHistoryEntry(object):
         else:
             s+=phonenumber.format(self.number)
         return s
+    def summary(self, name=None):
+        # return a short summary for this entry in the format of
+        # MM/DD hh:mm <Number/Name>
+        s=self.datetime
+        if s:
+            s=s[4:6]+'/'+s[6:8]+' '+s[9:11]+':'+s[11:13]+' '
+        else:
+            s='**/** **:** '
+        if name:
+            s+=name
+        else:
+            s+=phonenumber.format(self.number)
+        return s
+
     def _get_date_str(self):
         s=self.datetime
         if not len(s):
@@ -326,7 +341,22 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
             n=self._data[data_key]
             i=self._item_list.AppendItem(self._nodes[n.folder], k)
             self._item_list.SetItemPyData(i, data_key)
-            
+
+    def _publish_today_data(self):
+        keys=self._data.keys()
+        keys.sort()
+        keys.reverse()
+        today_event=today.TodayIncomingCallsEvent()
+        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
+                                    for k in keys \
+                                    if self._data[k].folder==CallHistoryEntry.Folder_Incoming]
+        today_event.broadcast()
+        today_event=today.TodayMissedCallsEvent()
+        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
+                                    for k in keys \
+                                    if self._data[k].folder==CallHistoryEntry.Folder_Missed]
+        today_event.broadcast()
+
     def _populate(self):
         self._clear()
         self._node_dict={}
@@ -336,6 +366,7 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
                 pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
                                { 'item': e.number } )
         self._display_func[self._by_mode]()
+        self._publish_today_data()
             
     def OnDelete(self, _):
         sel_idx=self._item_list.GetSelection()
