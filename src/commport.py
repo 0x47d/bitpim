@@ -186,6 +186,32 @@ class CommConnection:
             self.log("Port speed "+`rate`+" not supported")
             return False
 
+    def setdtr(self, dtr):
+        """Set or Clear DTR
+
+        @rtype: Boolean
+        @returns: True on success, False on failure
+        """
+        try:
+            self.ser.setDTR(dtr)
+            self.log("DTR set to "+`dtr`)
+            return True
+        except SilentException:
+            return False
+        
+    def setrts(self, rts):
+        """Set or Clear RTS
+
+        @rtype: Boolean
+        @returns: True on success, False on failure
+        """
+        try:
+            self.ser.setRTS(rts)
+            self.log("RTS set to "+`rts`)
+            return True
+        except SilentException:
+            return False
+
     def write(self, data, log=True):
         self.writerequests+=1
         if log:
