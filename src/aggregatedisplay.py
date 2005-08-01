@@ -131,8 +131,10 @@ class Display(wx.ScrolledWindow):
         #   VSCROLLPIXELS
 
         sz=self.GetClientSize()
+        _relayout=False
         if sz != (self._w,self._h):
             self._w,self._h=sz
+            _relayout=True
             self.ReLayout()
             # relayout may change size (scrollbar appearing/going away) so repeat in that case
             if self.GetClientSize()!=sz:
@@ -142,7 +144,7 @@ class Display(wx.ScrolledWindow):
             self._bufbmp=wx.EmptyBitmap((self._w+64)&~8, (self.maxheight+64)&~8)
         dc=BufferedPaintDC(self, self._bufbmp, style=wx.BUFFER_VIRTUAL_AREA)
         try:
-            self.DoPaint(dc)
+            self.DoPaint(dc, _relayout)
         except:
             # only raise one exception - swallow any more
             self.exceptioncount+=1
@@ -150,7 +152,7 @@ class Display(wx.ScrolledWindow):
                 print "raise"
                 raise
 
-    def DoPaint(self, dc):
+    def DoPaint(self, dc, relayout=False):
         # we redraw everything that is in the visible area of the screen
         vs=self.GetViewStart()
         dc.view_start=(vs[0], vs[1]*self.VSCROLLPIXELS)
@@ -173,11 +175,10 @@ class Display(wx.ScrolledWindow):
         # draw each section
         cury=0
         for i, section in enumerate(self.sections):
-            if _isvisible(cury, cury+self.sectionheights[i], firstvisible, lastvisible):
+            if relayout or _isvisible(cury, cury+self.sectionheights[i], firstvisible, lastvisible):
                 dc.SetDeviceOrigin(0, cury )
                 section.Draw(dc, self._w)
             cury+=self.sectionheights[i]
-            self.itemsize[i]=self.datasource.GetItemSize(i,section)
             extrawidth=(self._w-6)-(self.itemsize[i][0]+self.ITEMPADDING)*self.itemsperrow[i]
             extrawidth/=self.itemsperrow[i]
             if extrawidth<0: extrawidth=0
@@ -188,7 +189,9 @@ class Display(wx.ScrolledWindow):
                 y=(num/self.itemsperrow[i])
                 posy=cury+y*(self.itemsize[i][1]+self.ITEMPADDING)
                 # skip the entire row if it isn't visible
-                if x==0 and not _isvisible(posy, posy+self.itemsize[i][1], firstvisible, lastvisible):
+                if not relayout and \
+                   x==0 and \
+                   not _isvisible(posy, posy+self.itemsize[i][1], firstvisible, lastvisible):
                     num+=self.itemsperrow[i]
                     continue
                 item=self.items[i][num]

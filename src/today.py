@@ -214,7 +214,6 @@ class GroupWidget(wx.Panel):
         bs.Add(title, 0, wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
         for i in range(self.max_total_items):
-##            w=StaticText(self, -1,  '')
             w=ItemHyperLink(self, -1,  '')
             if self._item_font.Ok():
                 w.SetFont(self._item_font)

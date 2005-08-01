@@ -315,12 +315,12 @@ def adjustwavfilevolume(wavfilename, gain):
     headers+=f.read(subchunk1size)
     headers+=f.read(8)  # 4 byte ID and 4 byte length
     subchunk2size=common.LSBUint32(headers[-4:])
-    blockalign=common.LSBUint16(headers[32:34])
-    if blockalign!=2:
-        print 'Only works with 16-bit wave file'
+    bitspersample=common.LSBUint16(headers[34:36])
+    if bitspersample!=16:
+        print 'Volume adjustment only works with 16-bit wav file',bitspersample
         f.close()
         return
-    sample_num=subchunk2size/blockalign
+    sample_num=subchunk2size/2  # always 16-bit per channel per sample
     temp_name=common.gettempfilename("wav")
     f_temp=file(temp_name, 'wb')
     f_temp.write(headers)

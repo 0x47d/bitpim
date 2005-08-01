@@ -501,12 +501,12 @@ class ConvertDialog(wx.Dialog):
         self.FindWindowById(wx.ID_OK).Enable(False)
         getattr(self, self.PARAMETERS[self.convertinfo.format]['convert'])()
         self.wfi=fileinfo.getpcmfileinfo(self.wavfile)
-        self.clip_start.SetParameters(min=0.0, max=self.wfi.duration, limited=True)
-        self.clip_duration.SetParameters(min=0.0, max=self.wfi.duration, limited=True)
+        max_duration=round(self.wfi.duration, 2)
+        self.clip_start.SetParameters(min=0.0, max=max_duration, limited=True)
+        self.clip_duration.SetParameters(min=0.0, max=max_duration, limited=True)
         self.UpdateCrop()
         for i in self.cropids:
             self.FindWindowById(i).Enable(True)
-        self.clip_volume.Enable(self.convertinfo.format=='QCP')
         self.FindWindowById(wx.ID_OK).Enable(True)
 
     OnConvert=guihelper.BusyWrapper(OnConvert)
@@ -619,7 +619,9 @@ class ConvertDialog(wx.Dialog):
 
     def mp3setup(self):
         self.mp3file=common.gettempfilename("mp3")
+        self.tmp_mp3file=common.gettempfilename('mp3')
         self.temporaryfiles.append(self.mp3file)
+        self.temporaryfiles.append(self.tmp_mp3file)
 
     def mp3convert(self):
         # make mp3 to work with
@@ -637,7 +639,7 @@ class ConvertDialog(wx.Dialog):
         length=sum([frames[frame].nextoffset-frames[frame].offset for frame in range(self.beginframe, self.endframe)])
         return length
 
-    def mp3final(self, start, duration, volume=None):
+    def _trim_mp3(self, start, duration):
         # mp3 writing out
         f=None
         try:
@@ -650,6 +652,26 @@ class ConvertDialog(wx.Dialog):
         finally:
             if f is not None:
                 f.close()
+
+    def _trim_and_adjust_vol_mp3(self, start, duration, volume):
+        # trim, adjust volume, and write mp3 out
+        # use the original to make a new wav, not the one that went through foo -> mp3 -> wav
+        conversions.converttowav(self.file, self.wavfile,
+                                 start=start, duration=duration)
+        # adjust the volume
+        conversions.adjustwavfilevolume(self.wavfile, volume)
+        # convert to mp3
+        return conversions.converttomp3(self.wavfile,
+                                        int(self.bitrate.GetStringSelection()),
+                                        int(self.samplerate.GetStringSelection()),
+                                        int(self.channels.GetStringSelection()))
+
+    def mp3final(self, start, duration, volume=None):
+        if volume:
+            # need to adjust volume
+            return self._trim_and_adjust_vol_mp3(start, duration, volume)
+        else:
+            return self._trim_mp3(start, duration)
 
     ###
     ###  QCP/PureVoice functions
