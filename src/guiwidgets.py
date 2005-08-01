@@ -368,7 +368,8 @@ class ConfigDialog(wx.Dialog):
                   }
 
     if __debug__:
-        phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900', # phone is too fragile for normal use
+        phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
+                             'LG-VX8100 (Verizon Wireless)': 'com_lgvx8100', # code still being shaken out
                               })
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')
     setme="<setme>"
