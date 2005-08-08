@@ -9,6 +9,7 @@
 
 """Implements the "Brew" filesystem protocol"""
 
+import os
 import p_brew
 import time
 import cStringIO
@@ -135,6 +136,7 @@ class BrewProtocol:
 	req=p_brew.rmfilerequest()
 	req.filename=name
         self.sendbrewcommand(req, p_brew.rmfileresponse)
+        file_cache.clear(name)
 
     def rmdirs(self, path):
         self.progress(0,1, "Listing child files and directories")
@@ -198,6 +200,30 @@ class BrewProtocol:
                 results.update(self.getfilesystem(subdir, recurse-1))
         return results
 
+    def statfile(self, name):
+        # return the status of the file
+        try:
+            self.log('stat file '+name)
+            req=p_brew.statfilerequest()
+            req.filename=name
+            res=self.sendbrewcommand(req, p_brew.statfileresponse)
+            results={ 'name': name, 'type': 'file', 'size': res.size }
+            if res.date==0:
+                results['date']=(0, '')
+            else:
+                try:
+                    date=res.date+self._brewepochtounix
+                    results['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                except:
+                    # invalid date - see SF bug #833517
+                    results['date']=(0, '')
+            return results
+        except:
+            # something happened, we don't have any info on this file
+            if __debug__:
+                raise
+            return None
+
     def writefile(self, name, contents):
         start=time.time()
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
@@ -228,7 +254,16 @@ class BrewProtocol:
             self.log("Wrote "+`len(contents)`+" bytes at "+`int(len(contents)/(end-start))`+" bytes/second")
 
 
-    def getfilecontents(self, file):
+    def getfilecontents(self, file, use_cache=False):
+        if use_cache:
+            node=self.statfile(file)
+            if node and file_cache.hit(file, node['date'][0], node['size']):
+                self.log('Reading from cache: '+file)
+                _data=file_cache.data(file)
+                if _data:
+                    return _data
+                self.log('Cache file corrupted and discarded')
+
         start=time.time()
         self.log("Getting file contents '"+file+"'")
         desc="Reading "+file
@@ -267,6 +302,8 @@ class BrewProtocol:
         if filesize!=len(data):
             self.log("expected size "+`filesize`+"  actual "+`len(data)`)
             self.raisecommsexception("Brew file read is incorrect size", common.CommsDataCorruption)
+        if use_cache and node:
+            file_cache.add(file, node.get('date', [0])[0], data)
         return data
 
     class DirCache:
@@ -598,3 +635,112 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
         if self._value is None:
             raise prototypes.ValueNotSetException()
         return self._value
+
+file_cache=None
+
+class FileCache(object):
+    _cache_index_file_name='index.idx'
+    current_version=1
+    def __init__(self, bitpim_path):
+        self._path=os.path.join(bitpim_path, 'cache')
+        self._cache_file_name=os.path.join(self._path,
+                                           self._cache_index_file_name)
+        self._data={ 'file_index': 0 }
+        self.esn=None
+        self._read_index()
+        self._write_index()
+
+    def _check_path(self):
+        try:
+            os.makedirs(self._path)
+        except:
+            pass
+        if not os.path.isdir(self._path):
+            raise Exception("Bad cache directory: '"+self._path+"'")
+
+    def _read_index(self):
+        self._check_path()
+        d={ 'result': {} }
+        try:
+            common.readversionedindexfile(self._cache_file_name, d, None,
+                                          self.current_version)
+            self._data.update(d['result'])
+        except:
+            print 'failed to read cache index file'
+
+    def _write_index(self):
+        self._check_path()
+        common.writeversionindexfile(self._cache_file_name, self._data,
+                                     self.current_version)
+
+    def _entry(self, file_name):
+        k=self._data.get(self.esn, None)
+        if k:
+            return k.get(file_name, None)
+
+    def hit(self, file_name, datetime, data_len):
+        try:
+            e=self._entry(file_name)
+            if e:
+                return e['datetime'] and e['datetime']==datetime and \
+                       e['size']==data_len
+            return False
+        except:
+            if __debug__:
+                raise
+            return False
+
+    def data(self, file_name):
+        try:
+            e=self._entry(file_name)
+            if e:
+                _data=file(os.path.join(self._path, e['cache']), 'rb').read()
+                if len(_data)==e['size']:
+                    return _data
+        except IOError:
+            return None
+        except:
+            if __debug__:
+                raise
+            return None
+
+    def add(self, file_name, datetime, data):
+        try:
+            if self.esn:
+                e=self._entry(file_name)
+                if not e:
+                    # entry does not exist, create a new one
+                    self._data.setdefault(self.esn, {})[file_name]={}
+                    e=self._data[self.esn][file_name]
+                    e['cache']='F%05d'%self._data['file_index']
+                    self._data['file_index']+=1
+                # entry exists, just update the data
+                e['datetime']=datetime
+                e['size']=len(data)
+                _cache_file_name=os.path.join(self._path, e['cache'])
+                try:
+                    file(_cache_file_name, 'wb').write(data)
+                    self._write_index()
+                except IOError:
+                    # failed to write to cache file, drop this entry
+                    self._read_index()
+        except:
+            if __debug__:
+                raise
+
+    def clear(self, file_name):
+        try:
+            # clear this entry if it exists
+            e=self._entry(file_name)
+            if e:
+                try:
+                    # remove the cache file
+                    os.remove(os.path.join(self._path, e['cache']))
+                except:
+                    pass
+                # and remove the entry
+                del self._data[self.esn][file_name]
+                self._write_index()
+        except:
+            if __debug__:
+                raise

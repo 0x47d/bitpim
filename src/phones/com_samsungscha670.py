@@ -833,7 +833,7 @@ class FileEntries:
                 try:
                     index=k[path_len:]
                     # print k, index
-                    media[index]=self.__phone.getfilecontents(k)
+                    media[index]=self.__phone.getfilecontents(k, True)
                     idx[idx_k]={ 'name': index, 'origin': self.__origin }
                     idx_k+=1
                     file_cnt += 1
@@ -859,7 +859,7 @@ class FileEntries:
             file_name=rt_info.get(file_key, None)
             if file_key is not None and file_name is not None:
                 try :
-                    contents=self.__phone.getfilecontents(file_name)
+                    contents=self.__phone.getfilecontents(file_name, True)
                     img_origin=m.get('origin', None)
                     if img_origin=='images':
                         if file_name[:mms_img_len]==mms_img_path:
@@ -907,7 +907,7 @@ class FileEntries:
         file_keys.sort();
         for k in file_keys:
             try:
-                conversions.convertjpgtoavi(self.__phone.getfilecontents(k)[96:],
+                conversions.convertjpgtoavi(self.__phone.getfilecontents(k, True)[96:],
                                             tmp_avi_name)
             except:
                 self.__phone.log('Failed to read video files')

@@ -661,7 +661,7 @@ class FileEntries:
                 try:
                     index=k[path_len:]
                     # print k, index
-                    media[index]=self.__phone.getfilecontents(k)
+                    media[index]=self.__phone.getfilecontents(k, True)
                     idx[idx_k]={ 'name': index, 'origin': self.__origin }
                     idx_k+=1
                     file_cnt += 1
@@ -685,7 +685,7 @@ class FileEntries:
             file_name=rt_info.get(file_key, None)
             if file_key is not None and file_name is not None:
                 try :
-                    media[file_key]=self.__phone.getfilecontents(file_name)
+                    media[file_key]=self.__phone.getfilecontents(file_name, True)
                 except:
                     self.__phone.log('Failed to read file '+file_name)
         result[self.__file_type]=media

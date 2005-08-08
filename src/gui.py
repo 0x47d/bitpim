@@ -56,6 +56,7 @@ import phone_media_codec
 import hexeditor
 import today
 import pubsub
+import com_brew
 
 if guihelper.IsMSWindows():
     import win32api
@@ -317,6 +318,9 @@ class MainApp(wx.App):
 
         global EVT_CALLBACK
         EVT_CALLBACK=wx.NewEventType()
+
+        # initialize the Brew file cache
+        com_brew.file_cache=com_brew.FileCache(self.config.Read('path', ''))
 
         # get the splash screen up
         MySplashScreen(self, self.config)
@@ -1626,6 +1630,7 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         results=self.getfundamentals()
+        com_brew.file_cache.esn=results.get('uniqueserial', None)
         willcall=[]
         sync={}
         for i in (
