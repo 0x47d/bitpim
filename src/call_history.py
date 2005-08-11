@@ -67,6 +67,8 @@ class CallHistoryEntry(object):
     _datetime_key='datetime'
     _number_key='number'
     _unknown_datetime='YYYY-MM-DD hh:mm:ss'
+    _id_index=0
+    _max_id_index=999
     def __init__(self):
         self._data={ 'serials': [] }
         self._create_id()
@@ -91,14 +93,26 @@ class CallHistoryEntry(object):
     def _create_id(self):
         "Create a BitPim serial for this entry"
         self._data.setdefault("serials", []).append(\
-            {"sourcetype": "bitpim", "id": str(time.time())})
+            {"sourcetype": "bitpim",
+             "id": '%.3f%03d'%(time.time(), CallHistoryEntry._id_index) })
+        if CallHistoryEntry._id_index<CallHistoryEntry._max_id_index:
+            CallHistoryEntry._id_index+=1
+        else:
+            CallHistoryEntry._id_index=0
     def _get_id(self):
         s=self._data.get('serials', [])
         for n in s:
             if n.get('sourcetype', None)=='bitpim':
                 return n.get('id', None)
         return None
-    id=property(fget=_get_id)
+    def _set_id(self, id):
+        s=self._data.get('serials', [])
+        for n in s:
+            if n.get('sourcetype', None)=='bitpim':
+                n['id']=id
+                return
+        self._data['serials'].append({'sourcetype': 'bitpim', 'id': id } )
+    id=property(fget=_get_id, fset=_set_id)
 
     def _set_or_del(self, key, v, v_list=[]):
         if v is None or v in v_list:
