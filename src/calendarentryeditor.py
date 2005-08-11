@@ -277,7 +277,8 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             ['start', 'From:', DVDateTimeControl, None, self._set_start_datetime, None],
             ['end', 'To:', DVDateTimeControl, None, self._set_end_datetime, None],
             ['priority', 'Priority:', None, self._get_priority, self._set_priority, None],
-            ['alarm', 'Alarm:', DVIntControl, None, None, None]
+            ['alarm', 'Alarm:', DVIntControl, None, None, None],
+            ['vibrate', 'Vibrate:', wx.CheckBox, None, None, None],
             ]
         # overall container
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1), wx.VERTICAL)
@@ -300,6 +301,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         vbs.Add(gs, 0, wx.EXPAND|wx.ALL, 5)
         # event handlers
         wx.EVT_CHECKBOX(self, self._w['allday'].GetId(), self.OnAllday)
+        wx.EVT_CHECKBOX(self, self._w['vibrate'].GetId(), self.OnDirtyUI)
         wx.EVT_COMBOBOX(self, self._w['priority'].GetId(), self.OnDirtyUI)
         # all done
         self.SetSizer(vbs)

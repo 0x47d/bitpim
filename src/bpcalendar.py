@@ -34,6 +34,7 @@ notes - string notes
 categories - [ { 'category': string category }, ... ]
 ringtone - string ringtone assignment
 wallpaper - string wallpaper assignment.
+vibrate - True if the alarm is set to vibrate, False otherwise
 
 CalendarEntry methods:
 get() - return a copy of the internal dict
@@ -139,7 +140,7 @@ class CalendarDataObject(database.basedataobject):
     """
     _knownproperties=['description', 'location', 'priority', 'alarm',
                       'notes', 'ringtone', 'wallpaper',
-                      'start', 'end']
+                      'start', 'end', 'vibrate' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     _knownlistproperties.update( {
                                   'repeat': ['type', 'interval', 'dow'],
@@ -529,6 +530,12 @@ class CalendarEntry(object):
         return self._data['end'].date_str()+' '+\
                self._data['end'].time_str(False, '00:00')
     end_str=property(fget=_get_end_str)
+
+    def _get_vibrate(self):
+        return self._data.get('vibrate', 0)
+    def _set_vibrate(self, v):
+        self._set_or_del('vibrate', v, (None, 0, False))
+    vibrate=property(fget=_get_vibrate, fset=_set_vibrate)
 
     def _get_serials(self):
         return self._data.get('serials', None)
