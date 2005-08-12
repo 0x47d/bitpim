@@ -214,7 +214,7 @@ class LGIndexedMedia:
             index=self.getindex(indexfile)
             for i in index:
                 try:
-                    media[index[i]]=self.getfilecontents(location+"/"+index[i])
+                    media[index[i]]=self.getfilecontents(location+"/"+index[i], True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
                     
@@ -223,7 +223,7 @@ class LGIndexedMedia:
             index=self.getcameraindex()
             for i in index:
                 try:
-                    media[index[i]['name']]=self.getfilecontents("cam/pic%02d.jpg" % (i,))
+                    media[index[i]['name']]=self.getfilecontents("cam/pic%02d.jpg" % (i,), True)
                 except com_brew.BrewNoSuchFileException:
                     self.log("It was in the index, but not on the filesystem")
                     
