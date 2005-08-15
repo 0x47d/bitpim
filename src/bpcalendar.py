@@ -35,6 +35,7 @@ categories - [ { 'category': string category }, ... ]
 ringtone - string ringtone assignment
 wallpaper - string wallpaper assignment.
 vibrate - True if the alarm is set to vibrate, False otherwise
+voice - ID of voice alarm
 
 CalendarEntry methods:
 get() - return a copy of the internal dict
@@ -140,7 +141,7 @@ class CalendarDataObject(database.basedataobject):
     """
     _knownproperties=['description', 'location', 'priority', 'alarm',
                       'notes', 'ringtone', 'wallpaper',
-                      'start', 'end', 'vibrate' ]
+                      'start', 'end', 'vibrate', 'voice' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     _knownlistproperties.update( {
                                   'repeat': ['type', 'interval', 'dow'],
@@ -389,6 +390,8 @@ class CalendarEntry(object):
     priority_high=1
     priority_normal=5
     priority_low=10
+    # no end date
+    no_end_date=(4000, 1, 1)
 
     def __init__(self, year=None, month=None, day=None):
         self._data={}
@@ -536,6 +539,12 @@ class CalendarEntry(object):
     def _set_vibrate(self, v):
         self._set_or_del('vibrate', v, (None, 0, False))
     vibrate=property(fget=_get_vibrate, fset=_set_vibrate)
+
+    def _get_voice(self):
+        return self._data.get('voice', None)
+    def _set_voice(self, v):
+        self._set_or_del('voice', v, (None,))
+    voice=property(fget=_get_voice, fset=_set_voice)
 
     def _get_serials(self):
         return self._data.get('serials', None)

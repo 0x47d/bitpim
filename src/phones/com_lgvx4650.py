@@ -14,11 +14,13 @@ The VX4600 is substantially similar to the VX4400.
 """
 
 # standard modules
+import datetime
 import time
 import cStringIO
 import sha
 
 # my modules
+import bpcalendar
 import common
 import copy
 import p_lgvx4650
@@ -96,6 +98,109 @@ class Phone(com_lgvx4400.Phone):
 
         return media
 
+    def savephonebook(self, data):
+        "Saves out the phonebook"
+        res=com_lgvx4400.Phone.savephonebook(self, data)
+        # build a dict to manually update the wp index
+        pbook=res.get('phonebook', {})
+        wallpaper_index=res.get('wallpaper-index', {})
+        r1={}
+        for k,e in pbook.items():
+            r1[e['bitpimserial']['id']]=self._findmediainindex(wallpaper_index,
+                                                         e['wallpaper'],
+                                                         e['name'],
+                                                         'wallpaper')
+        serialupdates=data.get("serialupdates", [])
+        r2={}
+        for bps, serials in serialupdates:
+            r2[serials['serial1']]=r1[bps['id']]
+        self._update_wallpaper_index(r2)
+        return res
+
+    def _update_wallpaper_index(self, wpi):
+        # manually update wallpaper indices since the normal update process
+        # does not seem to work
+        buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.pb_file_name))
+        pb=self.protocolclass.pbfile()
+        pb.readfrombuffer(buf)
+        update_flg=False
+        for e in pb.items:
+            wp=wpi.get(e.serial1, None)
+            if wp is not None and wp!=e.wallpaper:
+                update_flg=True
+                e.wallpaper=wp
+        if update_flg:
+            self.log('Updating wallpaper index')
+            buf=prototypes.buffer()
+            pb.writetobuffer(buf)
+            self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
+
+    def getcalendar(self,result):
+        # Read exceptions file first
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.cal_exception_file_name))
+            ex=self.protocolclass.scheduleexceptionfile()
+            ex.readfrombuffer(buf)
+            self.logdata("Calendar exceptions", buf.getdata(), ex)
+            exceptions={}
+            for i in ex.items:
+                exceptions.setdefault(i.pos, []).append( (i.year,i.month,i.day) )
+        except com_brew.BrewNoSuchFileException:
+            exceptions={}
+
+        # Now read schedule
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.cal_data_file_name))
+            if len(buf.getdata())<2:
+                # file is empty, and hence same as non-existent
+                raise com_brew.BrewNoSuchFileException()
+            sc=schedulefile()
+            self.logdata("Calendar", buf.getdata(), sc)
+            sc.readfrombuffer(buf)
+            res=sc.get_cal(exceptions, result.get('ringtone-index', {}))
+        except com_brew.BrewNoSuchFileException:
+            res={}
+        result['calendar']=res
+        return result
+
+    def savecalendar(self, dict, merge):
+        # ::TODO:: obey merge param
+        # get the list of available voice alarm files
+        file_list=self.getfilesystem(self.protocolclass.cal_dir)
+        voice_files={}
+        for k in file_list.keys():
+            if k.endswith(self.protocolclass.cal_voice_ext):
+                voice_files[int(k[8:11])]=k
+        # build the schedule file
+        sc=schedulefile()
+        sc_ex=sc.set_cal(dict.get('calendar', {}), dict.get('ringtone-index', {}),
+                         voice_files)
+        buf=prototypes.buffer()
+        sc.writetobuffer(buf)
+        self.writefile(self.protocolclass.cal_data_file_name,
+                         buf.getvalue())
+        # build the exceptions
+        exceptions_file=self.protocolclass.scheduleexceptionfile()
+        for k,l in sc_ex.items():
+            for x in l:
+                _ex=self.protocolclass.scheduleexception()
+                _ex.pos=k
+                _ex.year, _ex.month, _ex.day=x
+                exceptions_file.items.append(_ex)
+        buf=prototypes.buffer()
+        exceptions_file.writetobuffer(buf)
+        self.writefile(self.protocolclass.cal_exception_file_name,
+                         buf.getvalue())
+        # clear out any alarm voice files that may have been deleted
+        for k,e in voice_files.items():
+            try:
+                self.rmfile(e)
+            except:
+                self.log('Failed to delete file '+e)
+        return dict
 
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
@@ -110,6 +215,8 @@ class Profile(parentprofile):
 
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+
+    BP_Calendar_Version=3
 
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
@@ -128,11 +235,11 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-##        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-##       #  ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
@@ -141,3 +248,177 @@ class Profile(parentprofile):
 
     def __init__(self):
         parentprofile.__init__(self)
+
+#------------------------------------------------------------------------------
+class schedulefile(p_lgvx4650.schedulefile):
+
+    _repeat_values={
+        p_lgvx4650.CAL_REP_DAILY: bpcalendar.RepeatEntry.daily,
+        p_lgvx4650.CAL_REP_MONFRI: bpcalendar.RepeatEntry.daily,
+        p_lgvx4650.CAL_REP_WEEKLY: bpcalendar.RepeatEntry.weekly,
+        p_lgvx4650.CAL_REP_MONTHLY: bpcalendar.RepeatEntry.monthly,
+        p_lgvx4650.CAL_REP_YEARLY: bpcalendar.RepeatEntry.yearly
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(schedulefile, self).__init__(*args, **kwargs)
+
+    def _build_cal_repeat(self, event, exceptions):
+        rep_val=schedulefile._repeat_values.get(event.repeat, None)
+        if not rep_val:
+            return None
+        rep=bpcalendar.RepeatEntry(rep_val)
+        if event.repeat==p_lgvx4650.CAL_REP_MONFRI:
+            rep.interval=rep.dow=0
+        elif event.repeat!=p_lgvx4650.CAL_REP_YEARLY:
+            rep.interval=1
+            rep.dow=0
+        # do exceptions
+        cal_ex=exceptions.get(event.pos, [])
+        for e in cal_ex:
+            rep.add_suppressed(*e)
+        return rep
+
+    def _build_cal_entry(self, event, exceptions, ringtone_index):
+        # return a copy of bpcalendar object based on my values
+        # general fields
+        entry=bpcalendar.CalendarEntry()
+        entry.start=event.start
+        entry.end=event.end
+        entry.description=event.description
+        # check for allday event
+        if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
+            entry.allday=True
+        # alarm
+        if event.alarmtype:
+            entry.alarm=event.alarmhours*60+event.alarmminutes
+        # ringtone
+        rt_idx=event.ringtone
+        # hack to account for the VX4650 weird ringtone setup
+        if rt_idx<50:
+            # 1st part of builtin ringtones, need offset by 1
+            rt_idx+=1
+        entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
+        # voice ID
+        if event.hasvoice:
+            entry.voice=event.voiceid
+        # repeat info
+        entry.repeat=self._build_cal_repeat(event, exceptions)
+        return entry
+
+    def get_cal(self, exceptions, ringtone_index):
+        res={}
+        for event in self.events:
+            if event.pos==-1:   # blank entry
+                continue
+            cal_event=self._build_cal_entry(event, exceptions, ringtone_index)
+            res[cal_event.id]=cal_event
+        return res
+
+    _alarm_info={
+        -1: (p_lgvx4650.CAL_REMINDER_NONE, 100, 100),
+        0: (p_lgvx4650.CAL_REMINDER_ONTIME, 0, 0),
+        5: (p_lgvx4650.CAL_REMINDER_5MIN, 5, 0),
+        10: (p_lgvx4650.CAL_REMINDER_10MIN, 10, 0),
+        60: (p_lgvx4650.CAL_REMINDER_1HOUR, 0, 1),
+        1440: (p_lgvx4650.CAL_REMINDER_1DAY, 0, 24),
+        2880: (p_lgvx4650.CAL_REMINDER_2DAYS, 0, 48) }
+    _default_alarm=(p_lgvx4650.CAL_REMINDER_NONE, 100, 100)    # default alarm is off
+    _phone_dow={
+        1: p_lgvx4650.CAL_DOW_SUN,
+        2: p_lgvx4650.CAL_DOW_MON,
+        4: p_lgvx4650.CAL_DOW_TUE,
+        8: p_lgvx4650.CAL_DOW_WED,
+        16: p_lgvx4650.CAL_DOW_THU,
+        32: p_lgvx4650.CAL_DOW_FRI,
+        64: p_lgvx4650.CAL_DOW_SAT
+        }
+
+    def _set_repeat_event(self, event, entry, exceptions):
+        rep_val=p_lgvx4650.CAL_REP_NONE
+        day_bitmap=0
+        rep=entry.repeat
+        if rep:
+            rep_type=rep.repeat_type
+            rep_interval=rep.interval
+            rep_dow=rep.dow
+            if rep_type==bpcalendar.RepeatEntry.daily:
+                if rep_interval==0:
+                    rep_val=p_lgvx4650.CAL_REP_MONFRI
+                elif rep_interval==1:
+                    rep_val=p_lgvx4650.CAL_REP_DAILY
+            elif rep_type==bpcalendar.RepeatEntry.weekly:
+                start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
+                if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
+                    rep_val=p_lgvx4650.CAL_REP_WEEKLY
+                    day_bitmap=self._phone_dow.get(start_dow, 0)
+            elif rep_type==bpcalendar.RepeatEntry.monthly:
+                if rep_dow==0:
+                    rep_val=p_lgvx4650.CAL_REP_MONTHLY
+            else:
+                rep_val=p_lgvx4650.CAL_REP_YEARLY
+            if rep_val!=p_lgvx4650.CAL_REP_NONE:
+                # build exception list
+                if rep.suppressed:
+                    day_bitmap|=p_lgvx4650.CAL_DOW_EXCEPTIONS
+                for x in rep.suppressed:
+                    exceptions.setdefault(event.pos, []).append(x.get()[:3])
+                # this is a repeat event, set the end date appropriately
+                event.end=p_lgvx4650.CAL_REPEAT_DATE+event.end[3:]
+        event.repeat=rep_val
+        event.daybitmap=day_bitmap
+            
+    def _set_cal_event(self, event, entry, exceptions, ringtone_index,
+                       voice_files):
+        # desc
+        event.description=entry.description
+        # start & end times
+        if entry.allday:
+            event.start=entry.start[:3]+(0,0)
+            event.end=entry.start[:3]+(23,59)
+        else:
+            event.start=entry.start
+            event.end=entry.start[:3]+entry.end[3:]
+        # make sure the event lasts in 1 calendar day
+        if event.end<event.start:
+            event.end=event.start[:3]+(23,59)
+        # alarm
+        event.alarmtype, event.alarmminutes, event.alarmhours=self._alarm_info.get(
+            entry.alarm, self._default_alarm)
+        # voice ID
+        if entry.voice and \
+           voice_files.has_key(entry.voice-p_lgvx4650.cal_voice_id_ofs):
+            event.hasvoice=1
+            event.voiceid=entry.voice
+            del voice_files[entry.voice-p_lgvx4650.cal_voice_id_ofs]
+        else:
+            event.hasvoice=0
+            event.voiceid=p_lgvx4650.CAL_NO_VOICE
+        # ringtone
+        rt=0    # always default to the first bultin ringtone
+        if entry.ringtone:
+            for k,e in ringtone_index.items():
+                if e['name']==entry.ringtone:
+                    rt=k
+                    break
+            if rt and rt<50:
+                rt-=1
+        event.ringtone=rt
+        # repeat
+        self._set_repeat_event(event, entry, exceptions)
+            
+    def set_cal(self, cal_dict, ringtone_index, voice_files):
+        self.numactiveitems=len(cal_dict)
+        exceptions={}
+        _pos=2
+##        _today=datetime.date.today().timetuple()[:5]
+        for k, e in cal_dict.items():
+##            # only send either repeat events or present&future single events
+##            if e.repeat or (e.start>=_today):
+            event=p_lgvx4650.scheduleevent()
+            event.pos=_pos
+            self._set_cal_event(event, e, exceptions, ringtone_index,
+                                voice_files)
+            self.events.append(event)
+            _pos+=event.packet_size
+        return exceptions

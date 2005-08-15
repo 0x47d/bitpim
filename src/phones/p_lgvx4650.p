@@ -25,6 +25,39 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 NUMPHONEBOOKENTRIES=500
+pb_file_name='pim/pbentry.dat'
+
+# Calendar parameters
+NUMCALENDARENTRIES=300
+CAL_REP_NONE=0x10
+CAL_REP_DAILY=0x11
+CAL_REP_MONFRI=0x12
+CAL_REP_WEEKLY=0x13
+CAL_REP_MONTHLY=0x14
+CAL_REP_YEARLY=0x15
+CAL_DOW_SUN=0x0800
+CAL_DOW_MON=0x0400
+CAL_DOW_TUE=0x0200
+CAL_DOW_WED=0x0100
+CAL_DOW_THU=0x0080
+CAL_DOW_FRI=0x0040
+CAL_DOW_SAT=0x0020
+CAL_DOW_EXCEPTIONS=0x0010
+CAL_REMINDER_NONE=0
+CAL_REMINDER_ONTIME=1
+CAL_REMINDER_5MIN=2
+CAL_REMINDER_10MIN=3
+CAL_REMINDER_1HOUR=4
+CAL_REMINDER_1DAY=5
+CAL_REMINDER_2DAYS=6
+CAL_NO_VOICE=0xffff
+CAL_REPEAT_DATE=(2100, 12, 31)
+
+cal_dir='sch'
+cal_voice_ext='.qcp'      # full name='sche000.qcp'
+cal_data_file_name='sch/schedule.dat'
+cal_exception_file_name='sch/schexception.dat'
+cal_voice_id_ofs=0x0f
 
 %}
 
@@ -67,12 +100,21 @@ PACKET pbentry:
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
     * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
-    1  UINT wallpaper
+    1 UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
         49 STRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
+
+PACKET pbfileentry:
+    4   UINT    serial1
+    259 UNKNOWN data1
+    1   UINT    wallpaper
+    15  UNKNOWN data2
+
+PACKET pbfile:
+    * LIST { 'elementclass': pbfileentry } items
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
@@ -87,3 +129,50 @@ PACKET indexfile:
     P UINT {'constant': 30} maxitems
     2 UINT numactiveitems
     * LIST {'length': self.maxitems, 'elementclass': indexentry, 'createdefault': True} +items
+
+###
+### The calendar
+###
+#
+#   The calendar consists of one file listing events and an exception
+#   file that lists exceptions.  These exceptions suppress a particular
+#   instance of a repeated event.  For example, if you setup something
+#   to happen monthly, but changed the 1st february event, then the
+#   schedule will contain the repeating event, and the 1st feb one,
+#   and the suppresions/exceptions file will point to the repeating
+#   event and suppress the 1st feb.
+#   The phone uses the position within the file to give an event an id
+
+PACKET scheduleexception:
+    4 UINT pos "Refers to event id (position in schedule file) that this suppresses"
+    1 UINT day
+    1 UINT month
+    2 UINT year
+
+PACKET scheduleexceptionfile:
+    * LIST {'elementclass': scheduleexception} +items
+
+
+## The VX4650 has the 4 bytes (unknown) below
+PACKET scheduleevent:
+    P UINT { 'constant': 64 } packet_size "Faster than packetsize()"
+    4 UINT pos "position within file, used as an event id"
+    4 UINT { 'default': 0 } +pad1
+    4 LGCALDATE start
+    4 LGCALDATE end
+    1 UINT repeat
+    2 UINT daybitmap  "which days a weekly repeat event happens on"
+    1 UINT { 'default': 0 } +pad2
+    1 UINT alarmminutes  "a value of 100 indicates not set"
+    1 UINT alarmhours    "a value of 100 indicates not set"
+    1 UINT alarmtype    "preset alarm reminder type"
+    1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
+    1 UINT ringtone
+    36 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    1 UINT hasvoice
+    2 UINT voiceid
+
+
+PACKET schedulefile:
+    2 UINT numactiveitems
+    * LIST {'elementclass': scheduleevent} +events
