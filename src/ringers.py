@@ -501,7 +501,7 @@ class ConvertDialog(wx.Dialog):
         self.FindWindowById(wx.ID_OK).Enable(False)
         getattr(self, self.PARAMETERS[self.convertinfo.format]['convert'])()
         self.wfi=fileinfo.getpcmfileinfo(self.wavfile)
-        max_duration=round(self.wfi.duration, 2)
+        max_duration=round(self.wfi.duration, 2)+0.01
         self.clip_start.SetParameters(min=0.0, max=max_duration, limited=True)
         self.clip_duration.SetParameters(min=0.0, max=max_duration, limited=True)
         self.UpdateCrop()
