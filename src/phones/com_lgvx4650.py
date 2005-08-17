@@ -21,6 +21,7 @@ import sha
 
 # my modules
 import bpcalendar
+import call_history
 import common
 import copy
 import p_lgvx4650
@@ -28,6 +29,7 @@ import com_lgvx4400
 import com_brew
 import com_phone
 import com_lg
+import memo
 import prototypes
 
 class Phone(com_lgvx4400.Phone):
@@ -202,6 +204,64 @@ class Phone(com_lgvx4400.Phone):
                 self.log('Failed to delete file '+e)
         return dict
 
+    def getmemo(self, result):
+        # read the memo file
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.text_memo_file))
+            text_memo=self.protocolclass.textmemofile()
+            text_memo.readfrombuffer(buf)
+            res={}
+            for m in text_memo.items:
+                entry=memo.MemoEntry()
+                entry.text=m.text
+                res[entry.id]=entry
+        except com_brew.BrewNoSuchFileException:
+            res={}
+        result['memo']=res
+        return result
+
+    def savememo(self, result, merge):
+        text_memo=self.protocolclass.textmemofile()
+        memo_dict=result.get('memo', {})
+        keys=memo_dict.keys()
+        keys.sort()
+        text_memo.itemcount=len(keys)
+        for k in keys:
+            entry=self.protocolclass.textmemo()
+            entry.text=memo_dict[k].text
+            text_memo.items.append(entry)
+        buf=prototypes.buffer()
+        text_memo.writetobuffer(buf)
+        self.writefile(self.protocolclass.text_memo_file, buf.getvalue())
+        return result
+
+    _call_history_info={
+        call_history.CallHistoryEntry.Folder_Incoming: protocolclass.incoming_call_file,
+        call_history.CallHistoryEntry.Folder_Outgoing: protocolclass.outgoing_call_file,
+        call_history.CallHistoryEntry.Folder_Missed: protocolclass.missed_call_file
+        }
+    def getcallhistory(self, result):
+        # read the call history files
+        res={}
+        for _folder, _file_name in Phone._call_history_info.items():
+            try:
+                buf=prototypes.buffer(self.getfilecontents(_file_name))
+                hist_file=self.protocolclass.callhistoryfile()
+                hist_file.readfrombuffer(buf)
+                for i in range(hist_file.itemcount):
+                    hist_call=hist_file.items[i]
+                    entry=call_history.CallHistoryEntry()
+                    entry.folder=_folder
+                    entry.datetime=hist_call.datetime
+                    entry.number=hist_call.number
+                    entry.name=hist_call.name
+                    res[entry.id]=entry
+            except com_brew.BrewNoSuchFileException:
+                pass
+        result['call_history']=res
+        return result
+        
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
@@ -244,20 +304,23 @@ class Profile(parentprofile):
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
-        )
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('call_history', 'read', None),
+       )
 
     def __init__(self):
         parentprofile.__init__(self)
 
 #------------------------------------------------------------------------------
-class schedulefile(p_lgvx4650.schedulefile):
+class schedulefile(Phone.protocolclass.schedulefile):
 
     _repeat_values={
-        p_lgvx4650.CAL_REP_DAILY: bpcalendar.RepeatEntry.daily,
-        p_lgvx4650.CAL_REP_MONFRI: bpcalendar.RepeatEntry.daily,
-        p_lgvx4650.CAL_REP_WEEKLY: bpcalendar.RepeatEntry.weekly,
-        p_lgvx4650.CAL_REP_MONTHLY: bpcalendar.RepeatEntry.monthly,
-        p_lgvx4650.CAL_REP_YEARLY: bpcalendar.RepeatEntry.yearly
+        Phone.protocolclass.CAL_REP_DAILY: bpcalendar.RepeatEntry.daily,
+        Phone.protocolclass.CAL_REP_MONFRI: bpcalendar.RepeatEntry.daily,
+        Phone.protocolclass.CAL_REP_WEEKLY: bpcalendar.RepeatEntry.weekly,
+        Phone.protocolclass.CAL_REP_MONTHLY: bpcalendar.RepeatEntry.monthly,
+        Phone.protocolclass.CAL_REP_YEARLY: bpcalendar.RepeatEntry.yearly
         }
 
     def __init__(self, *args, **kwargs):
@@ -268,9 +331,9 @@ class schedulefile(p_lgvx4650.schedulefile):
         if not rep_val:
             return None
         rep=bpcalendar.RepeatEntry(rep_val)
-        if event.repeat==p_lgvx4650.CAL_REP_MONFRI:
+        if event.repeat==Phone.protocolclass.CAL_REP_MONFRI:
             rep.interval=rep.dow=0
-        elif event.repeat!=p_lgvx4650.CAL_REP_YEARLY:
+        elif event.repeat!=Phone.protocolclass.CAL_REP_YEARLY:
             rep.interval=1
             rep.dow=0
         # do exceptions
@@ -316,26 +379,26 @@ class schedulefile(p_lgvx4650.schedulefile):
         return res
 
     _alarm_info={
-        -1: (p_lgvx4650.CAL_REMINDER_NONE, 100, 100),
-        0: (p_lgvx4650.CAL_REMINDER_ONTIME, 0, 0),
-        5: (p_lgvx4650.CAL_REMINDER_5MIN, 5, 0),
-        10: (p_lgvx4650.CAL_REMINDER_10MIN, 10, 0),
-        60: (p_lgvx4650.CAL_REMINDER_1HOUR, 0, 1),
-        1440: (p_lgvx4650.CAL_REMINDER_1DAY, 0, 24),
-        2880: (p_lgvx4650.CAL_REMINDER_2DAYS, 0, 48) }
-    _default_alarm=(p_lgvx4650.CAL_REMINDER_NONE, 100, 100)    # default alarm is off
+        -1: (Phone.protocolclass.CAL_REMINDER_NONE, 100, 100),
+        0: (Phone.protocolclass.CAL_REMINDER_ONTIME, 0, 0),
+        5: (Phone.protocolclass.CAL_REMINDER_5MIN, 5, 0),
+        10: (Phone.protocolclass.CAL_REMINDER_10MIN, 10, 0),
+        60: (Phone.protocolclass.CAL_REMINDER_1HOUR, 0, 1),
+        1440: (Phone.protocolclass.CAL_REMINDER_1DAY, 0, 24),
+        2880: (Phone.protocolclass.CAL_REMINDER_2DAYS, 0, 48) }
+    _default_alarm=(Phone.protocolclass.CAL_REMINDER_NONE, 100, 100)    # default alarm is off
     _phone_dow={
-        1: p_lgvx4650.CAL_DOW_SUN,
-        2: p_lgvx4650.CAL_DOW_MON,
-        4: p_lgvx4650.CAL_DOW_TUE,
-        8: p_lgvx4650.CAL_DOW_WED,
-        16: p_lgvx4650.CAL_DOW_THU,
-        32: p_lgvx4650.CAL_DOW_FRI,
-        64: p_lgvx4650.CAL_DOW_SAT
+        1: Phone.protocolclass.CAL_DOW_SUN,
+        2: Phone.protocolclass.CAL_DOW_MON,
+        4: Phone.protocolclass.CAL_DOW_TUE,
+        8: Phone.protocolclass.CAL_DOW_WED,
+        16: Phone.protocolclass.CAL_DOW_THU,
+        32: Phone.protocolclass.CAL_DOW_FRI,
+        64: Phone.protocolclass.CAL_DOW_SAT
         }
 
     def _set_repeat_event(self, event, entry, exceptions):
-        rep_val=p_lgvx4650.CAL_REP_NONE
+        rep_val=Phone.protocolclass.CAL_REP_NONE
         day_bitmap=0
         rep=entry.repeat
         if rep:
@@ -344,27 +407,27 @@ class schedulefile(p_lgvx4650.schedulefile):
             rep_dow=rep.dow
             if rep_type==bpcalendar.RepeatEntry.daily:
                 if rep_interval==0:
-                    rep_val=p_lgvx4650.CAL_REP_MONFRI
+                    rep_val=Phone.protocolclass.CAL_REP_MONFRI
                 elif rep_interval==1:
-                    rep_val=p_lgvx4650.CAL_REP_DAILY
+                    rep_val=Phone.protocolclass.CAL_REP_DAILY
             elif rep_type==bpcalendar.RepeatEntry.weekly:
                 start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
                 if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
-                    rep_val=p_lgvx4650.CAL_REP_WEEKLY
+                    rep_val=Phone.protocolclass.CAL_REP_WEEKLY
                     day_bitmap=self._phone_dow.get(start_dow, 0)
             elif rep_type==bpcalendar.RepeatEntry.monthly:
                 if rep_dow==0:
-                    rep_val=p_lgvx4650.CAL_REP_MONTHLY
+                    rep_val=Phone.protocolclass.CAL_REP_MONTHLY
             else:
-                rep_val=p_lgvx4650.CAL_REP_YEARLY
-            if rep_val!=p_lgvx4650.CAL_REP_NONE:
+                rep_val=Phone.protocolclass.CAL_REP_YEARLY
+            if rep_val!=Phone.protocolclass.CAL_REP_NONE:
                 # build exception list
                 if rep.suppressed:
-                    day_bitmap|=p_lgvx4650.CAL_DOW_EXCEPTIONS
+                    day_bitmap|=Phone.protocolclass.CAL_DOW_EXCEPTIONS
                 for x in rep.suppressed:
                     exceptions.setdefault(event.pos, []).append(x.get()[:3])
                 # this is a repeat event, set the end date appropriately
-                event.end=p_lgvx4650.CAL_REPEAT_DATE+event.end[3:]
+                event.end=Phone.protocolclass.CAL_REPEAT_DATE+event.end[3:]
         event.repeat=rep_val
         event.daybitmap=day_bitmap
             
@@ -387,13 +450,13 @@ class schedulefile(p_lgvx4650.schedulefile):
             entry.alarm, self._default_alarm)
         # voice ID
         if entry.voice and \
-           voice_files.has_key(entry.voice-p_lgvx4650.cal_voice_id_ofs):
+           voice_files.has_key(entry.voice-Phone.protocolclass.cal_voice_id_ofs):
             event.hasvoice=1
             event.voiceid=entry.voice
-            del voice_files[entry.voice-p_lgvx4650.cal_voice_id_ofs]
+            del voice_files[entry.voice-Phone.protocolclass.cal_voice_id_ofs]
         else:
             event.hasvoice=0
-            event.voiceid=p_lgvx4650.CAL_NO_VOICE
+            event.voiceid=Phone.protocolclass.CAL_NO_VOICE
         # ringtone
         rt=0    # always default to the first bultin ringtone
         if entry.ringtone:
@@ -415,7 +478,7 @@ class schedulefile(p_lgvx4650.schedulefile):
         for k, e in cal_dict.items():
 ##            # only send either repeat events or present&future single events
 ##            if e.repeat or (e.start>=_today):
-            event=p_lgvx4650.scheduleevent()
+            event=Phone.protocolclass.scheduleevent()
             event.pos=_pos
             self._set_cal_event(event, e, exceptions, ringtone_index,
                                 voice_files)

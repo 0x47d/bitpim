@@ -59,6 +59,14 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_voice_id_ofs=0x0f
 
+# Text Memo const
+text_memo_file='sch/memo.dat'
+
+# Call History const
+incoming_call_file='pim/incoming_log.dat'
+outgoing_call_file='pim/outgoing_log.dat'
+missed_call_file='pim/missed_log.dat'
+
 %}
 
 PACKET speeddial:
@@ -176,3 +184,24 @@ PACKET scheduleevent:
 PACKET schedulefile:
     2 UINT numactiveitems
     * LIST {'elementclass': scheduleevent} +events
+
+# Text Memos
+PACKET textmemo:
+    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items
+
+# calling history file
+PACKET callentry:
+    4 GPSDATE datetime
+    8 UNKNOWN pad1
+    49 STRING { 'raiseonunterminatedread': False } number
+    36 STRING { 'raiseonunterminatedread': False } name
+    60 UNKNOWN pad2
+
+PACKET callhistoryfile:
+    4 UINT itemcount
+    1 UNKNOWN pad1
+    * LIST { 'elementclass': callentry } +items

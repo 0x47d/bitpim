@@ -79,6 +79,8 @@ memoobjectfactory=database.dataobjectfactory(MemoDataObject)
 #-------------------------------------------------------------------------------
 class MemoEntry(object):
     _body_subject_len=12   # the # of chars from body to fill in for subj + ...
+    _id_index=0
+    _max_id_index=999
     def __init__(self):
         self._data={ 'body': [], 'serials': [] }
         self.set_date_now()
@@ -169,7 +171,12 @@ class MemoEntry(object):
     def _create_id(self):
         "Create a BitPim serial for this entry"
         self._data.setdefault("serials", []).append(\
-            {"sourcetype": "bitpim", "id": str(time.time())})
+            {"sourcetype": "bitpim",
+             "id": '%.3f%03d'%(time.time(), MemoEntry._id_index) })
+        if MemoEntry._id_index<MemoEntry._max_id_index:
+            MemoEntry._id_index+=1
+        else:
+            MemoEntry._id_index=0
     def _get_id(self):
         s=self._data.get('serials', [])
         for n in s:

@@ -16,6 +16,7 @@ following attributes:
 folder: string (where this item belongs)
 datetime: string 'YYYYMMDDThhmmss' or (y,m,d,h,m,s)
 number: string (the phone number of this call)
+name: string (optional name associated with this number)
 
 To implement Call History feature for a phone module:
 
@@ -48,7 +49,7 @@ import today
 
 #-------------------------------------------------------------------------------
 class CallHistoryDataobject(database.basedataobject):
-    _knownproperties=['folder', 'datetime', 'number' ]
+    _knownproperties=['folder', 'datetime', 'number', 'name' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     def __init__(self, data=None):
         if data is None or not isinstance(data, CallHistoryEntry):
@@ -66,6 +67,7 @@ class CallHistoryEntry(object):
     _folder_key='folder'
     _datetime_key='datetime'
     _number_key='number'
+    _name_key='name'
     _unknown_datetime='YYYY-MM-DD hh:mm:ss'
     _id_index=0
     _max_id_index=999
@@ -134,11 +136,19 @@ class CallHistoryEntry(object):
             raise ValueError,'not a valid folder'
         self._data[self._folder_key]=v
     folder=property(fget=_get_folder, fset=_set_folder)
+
     def _get_number(self):
         return self._data.get(self._number_key, '')
     def _set_number(self, v):
         self._set_or_del(self._number_key, v, [''])
     number=property(fget=_get_number, fset=_set_number)
+
+    def _get_name(self):
+        return self._data.get(self._name_key, '')
+    def _set_name(self, v):
+        self._set_or_del(self._name_key, v, ('',))
+    name=property(fget=_get_name, fset=_set_name)
+
     def _get_datetime(self):
         return self._data.get(self._datetime_key, '')
     def _set_datetime(self, v):
@@ -171,8 +181,10 @@ class CallHistoryEntry(object):
             s=f+'['+self._unknown_datetime+']'
         else:
             s=f+'['+s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+':'+s[13:]+']  -  '
-        if name is not None:
+        if name:
             s+=name
+        elif self.name:
+            s+=self.name
         else:
             s+=phonenumber.format(self.number)
         return s
@@ -186,6 +198,8 @@ class CallHistoryEntry(object):
             s='**/** **:** '
         if name:
             s+=name
+        elif self.name:
+            s+=self.name
         else:
             s+=phonenumber.format(self.number)
         return s
@@ -376,9 +390,13 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         self._node_dict={}
         # lookup phone book for names
         for k,e in self._data.items():
-            if not self._name_map.has_key(e.number):
-                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
-                               { 'item': e.number } )
+            if e.name:
+                if not self._name_map.has_key(e.number):
+                    self._name_map[e.number]=e.name
+            else:
+                if not self._name_map.has_key(e.number):
+                    pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                                   { 'item': e.number } )
         self._display_func[self._by_mode]()
         self._publish_today_data()
             
