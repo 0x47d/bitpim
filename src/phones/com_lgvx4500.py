@@ -69,6 +69,7 @@ class Phone(com_lgvx4400.Phone):
     def makeentry(self, counter, entry, dict):
         e=com_lgvx4400.Phone.makeentry(self, counter, entry, dict)
         e.entrysize=0x202
+        #e.unknown20c="\x00\x00\x00\x00\x00\x31\x02"
         return e
 
 parentprofile=com_lgvx4400.Profile
