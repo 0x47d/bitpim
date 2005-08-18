@@ -12,6 +12,7 @@
 """Various descriptions of data specific to LG VX4650"""
 
 from prototypes import *
+from prototypeslg import *
 
 # Make all lg stuff available in this module as well
 from p_lg import *
@@ -67,6 +68,17 @@ incoming_call_file='pim/incoming_log.dat'
 outgoing_call_file='pim/outgoing_log.dat'
 missed_call_file='pim/missed_log.dat'
 
+# SMS const
+sms_dir='sms'
+sms_ext='.dat'
+sms_inbox_prefix='sms/inbox'
+sms_inbox_name_len=len(sms_inbox_prefix)+3+len(sms_ext)
+sms_saved_prefix='sms/sf'
+sms_saved_name_len=len(sms_saved_prefix)+2+len(sms_ext)
+sms_outbox_prefix='sms/outbox'
+sms_outbox_name_len=len(sms_outbox_prefix)+3+len(sms_ext)
+sms_canned_file='sms/mediacan000.dat'
+SMS_CANNED_MAX_ITEMS=18
 %}
 
 PACKET speeddial:
@@ -205,3 +217,40 @@ PACKET callhistoryfile:
     4 UINT itemcount
     1 UNKNOWN pad1
     * LIST { 'elementclass': callentry } +items
+
+# SMS stuff
+PACKET SMSInboxFile:
+    113 UNKNOWN pad1
+    4 LGCALDATE datetime
+    10 UNKNOWN pad2
+    1 UINT locked
+    9 UNKNOWN pad3
+    3770 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _from
+    47 UNKNOWN pad4
+    57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
+    * UNKNOWN pad5
+
+PACKET SMSSavedFile:
+    1 UINT outboxmsg
+    7 UNKNOWN pad
+    if self.outboxmsg:
+        * SMSOutboxFile outbox
+    if not self.outboxmsg:
+        * SMSInboxFile inbox
+
+PACKET SMSOutboxFile:
+    4 UNKNOWN pad1
+    1 UINT locked
+    4 LGCALDATE datetime
+    1610 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    4 UNKNOWN pad2
+    35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
+    35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _to
+    * UNKNOWN pad3
+
+PACKET SMSCannedMsg:
+    101 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +text
+
+PACKET SMSCannedFile:
+    * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'elementclass': SMSCannedMsg } +items

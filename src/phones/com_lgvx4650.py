@@ -24,13 +24,16 @@ import bpcalendar
 import call_history
 import common
 import copy
+import p_brew
 import p_lgvx4650
 import com_lgvx4400
 import com_brew
 import com_phone
 import com_lg
+import commport
 import memo
 import prototypes
+import sms
 
 class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX4650 cell phone"
@@ -261,7 +264,118 @@ class Phone(com_lgvx4400.Phone):
                 pass
         result['call_history']=res
         return result
+
+    _sms_info=None
+    def getsms(self, result):
+        if Phone._sms_info is None:
+            Phone._sms_info={
+                SMSInboxFile: (self.protocolclass.sms_inbox_prefix,
+                               self.protocolclass.sms_ext,
+                               self.protocolclass.sms_inbox_name_len),
+                SMSOutboxFile: (self.protocolclass.sms_outbox_prefix,
+                                self.protocolclass.sms_ext,
+                                self.protocolclass.sms_outbox_name_len),
+                SMSSavedFile: (self.protocolclass.sms_saved_prefix,
+                               self.protocolclass.sms_ext,
+                               self.protocolclass.sms_saved_name_len)
+                }
+        res={}
+        file_list=self.getfilesystem(self.protocolclass.sms_dir)
+        for f in file_list.keys():
+            for file_class, info in Phone._sms_info.items():
+                if f.startswith(info[0]) and \
+                   f.endswith(info[1]) and \
+                   len(f)==info[2]:
+                    buf=prototypes.buffer(self.getfilecontents(f, True))
+                    sms_file=file_class()
+                    sms_file.readfrombuffer(buf)
+                    entry=sms_file.get_sms()
+                    res[entry.id]=entry
+                    break
+        result['sms']=res
+        # get SMS canned messages
+        buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.sms_canned_file))
+        canned_file=SMSCannedFile()
+        canned_file.readfrombuffer(buf)
+        result['canned_msg']=canned_file.get_sms_canned_data()
+        return result
+
+    def savesms(self, result, merge):
+        canned_file=SMSCannedFile()
+        canned_file.set_sms_canned_data(result.get('canned_msg', []))
+        buf=prototypes.buffer()
+        canned_file.writetobuffer(buf)
+        self.writefile(self.protocolclass.sms_canned_file, buf.getvalue())
+        result['rebootphone']=True
+        return result
+
+    def _setmodebrew(self):
+        req=p_brew.memoryconfigrequest()
+        respc=p_brew.memoryconfigresponse
         
+        for baud in 0, 38400,115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            for i in range(3):
+                try:
+                    self.sendbrewcommand(req, respc, callsetmode=False)
+                    return True
+                except com_phone.modeignoreerrortypes:
+                    pass
+        return False
+
+    is_mode_brew=_setmodebrew
+
+    def get_detect_data(self, res):
+        # try to gather detect data for this phone
+        # try to check for our model (VX4650)
+        try:
+            s=self.getfilecontents('brew/version.txt')
+        except:
+            # failed to read, abort!
+            return
+        if s[:6]=='VX4650':
+            # found it !!
+            res['model']='VX4650'
+            res['manufacturer']='LG Electronics Inc'
+            # attempt the get the ESN
+            try:
+                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+                res['esn']='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
+                                               ord(s[1]), ord(s[0]))
+            except:
+                res['esn']=None
+        print 'res',res
+        
+    def detectphone(coms, likely_ports, res):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                if res[port]['mode_brew']==False or \
+                   res[port]['model']:
+                    # either phone is not in BREW, or a model has already
+                    # been found, not much we can do now
+                    continue
+                p=Phone(None, commport.CommConnection(None, port, timeout=1))
+                if p.is_mode_brew():
+                    res[port]['mode_brew']=True
+                    p.get_detect_data(res[port])
+                else:
+                    res[port]['mode_brew']=False
+            except:
+                pass
+    
+    detectphone=staticmethod(detectphone)
+
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
@@ -277,6 +391,8 @@ class Profile(parentprofile):
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
 
     BP_Calendar_Version=3
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX4650'
 
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
@@ -307,6 +423,8 @@ class Profile(parentprofile):
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('call_history', 'read', None),
+        ('sms', 'read', None),
+        ('sms', 'write', 'OVERWRITE'),
        )
 
     def __init__(self):
@@ -485,3 +603,73 @@ class schedulefile(Phone.protocolclass.schedulefile):
             self.events.append(event)
             _pos+=event.packet_size
         return exceptions
+
+#------------------------------------------------------------------------------
+class SMSFile(object):
+    _folder=None
+    _attrs=None
+    def get_sms(self, obj=None):
+        if self._folder is None or self._attrs is None:
+            raise NotImplementedError
+        if not obj:
+            obj=self
+        entry=sms.SMSEntry()
+        entry.folder=self._folder
+        for attr in self._attrs:
+            setattr(entry, attr, getattr(obj, attr))
+        return entry
+
+#------------------------------------------------------------------------------
+class SMSInboxFile(Phone.protocolclass.SMSInboxFile, SMSFile):
+    _folder=sms.SMSEntry.Folder_Inbox
+    _attrs=('datetime', 'locked', 'text', '_from', 'callback')
+    def __init__(self, *args, **kwargs):
+        Phone.protocolclass.SMSInboxFile.__init__(self, *args, **kwargs)
+
+#------------------------------------------------------------------------------
+class SMSOutboxFile(Phone.protocolclass.SMSOutboxFile, SMSFile):
+    _folder=sms.SMSEntry.Folder_Sent
+    _attrs=('locked', 'datetime', 'text', 'callback', '_to')
+    def __init__(self, *args, **kwargs):
+        Phone.protocolclass.SMSOutboxFile.__init__(self, *args, **kwargs)
+
+#------------------------------------------------------------------------------
+class SMSSavedFile(Phone.protocolclass.SMSSavedFile, SMSFile):
+    _folder=sms.SMSEntry.Folder_Saved
+    def __init__(self, *args, **kwargs):
+        Phone.protocolclass.SMSSavedFile.__init__(self, *args, **kwargs)
+
+    def get_sms(self):
+        if self.outboxmsg:
+            self._attrs=SMSOutboxFile._attrs
+            return SMSFile.get_sms(self, self.outbox)
+        else:
+            self._attrs=SMSInboxFile._attrs
+            return SMSFile.get_sms(self, self.inbox)
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+class SMSCannedFile(Phone.protocolclass.SMSCannedFile):
+    def __init__(self, *args, **kwargs):
+        super(SMSCannedFile, self).__init__(*args, **kwargs)
+
+    def get_sms_canned_data(self):
+        res=[]
+        for i,e in enumerate(self.items):
+            res.append({ 'text': e.text,
+                         'type': sms.CannedMsgEntry.user_type })
+        return res
+
+    def set_sms_canned_data(self, canned_list):
+        msg_lst=[x['text'] for x in canned_list \
+                 if x['type']==sms.CannedMsgEntry.user_type]
+        item_count=min(Phone.protocolclass.SMS_CANNED_MAX_ITEMS, len(msg_lst))
+        print 'item count',item_count
+        for i in range(item_count):
+            entry=Phone.protocolclass.SMSCannedMsg()
+            entry.text=msg_lst[i]
+            self.items.append(entry)
+        entry=Phone.protocolclass.SMSCannedMsg()
+        entry.text=''
+        for i in range(item_count, Phone.protocolclass.SMS_CANNED_MAX_ITEMS):
+            self.items.append(entry)

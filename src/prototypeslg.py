@@ -7,6 +7,9 @@
 ###
 ### $Id$
 
+import calendar
+from prototypes import UINTlsb
+import time
 
 class LGCALDATE(UINTlsb):
     def __init__(self, *args, **kwargs):
@@ -173,3 +176,43 @@ class LGCALREPEAT(UINTlsb):
         val<<=4
         val|=type
         return val
+
+class GPSDATE(UINTlsb):
+    _time_t_ofs=calendar.timegm((1980, 1, 6, 0, 0, 0))
+    def __init__(self, *args, **kwargs):
+        """A date/time as used in the LG call history files,
+        """
+        super(GPSDATE, self).__init__(*args, **kwargs)
+
+        dict={'sizeinbytes': 4}
+        dict.update(kwargs)
+
+        if self._ismostderived(GPSDATE):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._converttoint(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(self._converttoint(args[0]),)
+        else:
+            raise TypeError("expected (year,month,day,hour,minute,sec) as arg")
+
+        super(GPSDATE, self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(GPSDATE,kwargs)
+        assert self._sizeinbytes==4
+
+    def getvalue(self):
+        """Convert 32 bit value into date/time
+
+        @rtype: tuple
+        @return: (year, month, day, hour, minute, sec)
+        """
+        return time.gmtime(self._time_t_ofs+super(GPSDATE, self).getvalue())[:6]
+
+    def _converttoint(self, date):
+        assert len(date)==6
+        return calendar.timegm(date)-self._time_t_ofs

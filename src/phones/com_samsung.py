@@ -705,39 +705,46 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         phone_info.append('Analog/Digital:', self.get_analog_digital())
         self.setmode(self.MODEMODEM)
 
-    def get_detect_data(self):
-        # get detection data
-        def _send_at_and_get(cmd):
-            try:
-                resp=self.comm.sendatcommand(cmd)
-                return ': '.join(resp[0].split(': ')[1:])
-            except:
-                return None
-        r={ 'mode_modem': False, 'mode_brew': False,
-            'manufacturer': None, 'model': None, 'firmware_version': None,
-            'esn': None, 'firmwareresponse': None }
+    def _send_at_and_get(cmd):
         try:
-            resp=self.comm.sendatcommand('E0V1')
-            r['mode_modem']=True
+            resp=self.comm.sendatcommand(cmd)
+            return ': '.join(resp[0].split(': ')[1:])
         except:
             return None
+
+    def is_mode_modem(self):
+        try:
+            resp=self.comm.sendatcommand('E0V1')
+            return True
+        except:
+            return False
+
+    def get_detect_data(self, r):
+        # get detection data
         r['manufacturer']=_send_at_and_get('+GMI')
         r['model']=_send_at_and_get('+GMM')
         r['firmware_version']=_send_at_and_get('+GMR')
         r['esn']=_send_at_and_get('+GSN')
-        return r
 
     def _detectphone(coms, likely_ports, res):
         if not len(likely_ports):
             return None
         for port in likely_ports:
-            if res.has_key(port):
-                # port already read, skip it
-                continue
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
             try:
-                r=Phone(None, commport.CommConnection(None, port, timeout=1)).get_detect_data()
-                if r is not None:
-                    res[port]=r
+                if res[port]['mode_modem']==False or \
+                   res[port]['model']:
+                    continue
+                p=Phone(None, commport.CommConnection(None, port, timeout=1))
+                if p.is_mode_modem():
+                    res[port]['mode_modem']=True
+                    p.get_detect_data(res[port])
+                else:
+                    res[port]['mode_modem']=False
             except:
                 # this port is not available
                 pass

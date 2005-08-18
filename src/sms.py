@@ -17,7 +17,7 @@ _from: string (email addr or phone #)
 _to: string (email addr or phone #)
 subject: string
 text: string
-datetime: string "YYYYMMDDThhmmss"
+datetime: string "YYYYMMDDThhmmss" or (y,m,d,h,m)
 callback: string (optional callback phone #)
 folder: string (where this item belongs: 'Inbox', 'Sent', 'Saved')
 flags: [{"locked": True/<False|None>}]
@@ -89,6 +89,8 @@ class SMSEntry(object):
     Folder_Sent='Sent'
     Folder_Saved='Saved'
     Valid_Folders=(Folder_Inbox, Folder_Sent, Folder_Saved)
+    _id_index=0
+    _max_id_index=999
     def __init__(self):
         self._data={ 'serials': [] }
         self._create_id()
@@ -107,7 +109,12 @@ class SMSEntry(object):
     def _create_id(self):
         "Create a BitPim serial for this entry"
         self._data.setdefault("serials", []).append(\
-            {"sourcetype": "bitpim", "id": str(time.time())})
+            {"sourcetype": "bitpim",
+             "id": '%.3f%03d'%(time.time(), SMSEntry._id_index) })
+        if SMSEntry._id_index<SMSEntry._max_id_index:
+            SMSEntry._id_index+=1
+        else:
+            SMSEntry._id_index=0
     def _get_id(self):
         s=self._data.get('serials', [])
         for n in s:
@@ -147,6 +154,10 @@ class SMSEntry(object):
     def _get_datetime(self):
         return self._data.get('datetime', '')
     def _set_datetime(self, v):
+        if isinstance(v, (list, tuple)) and len(v)==5:
+            v='%04d%02d%02dT%02d%02d00'%v
+        elif not isinstance(v, (str, unicode)):
+            raise TypeError('must be YYYYMMDDThhmmss or (y,m,d,h,m)')
         self._set_or_del('datetime', v, [''])
         self._check_and_create_msg_id()
     datetime=property(fget=_get_datetime, fset=_set_datetime)
