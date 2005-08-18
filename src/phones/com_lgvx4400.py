@@ -370,7 +370,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                                 xx=data['speeddials'][sd]
                                 if xx[0]==bps:
                                     found=True
-                                    newspeeds[sd]=(res.entry.entrynumber, xx[1])
+                                    if(getattr(self.protocolclass, 'SPEEDDIALINDEX', 0)==0):
+                                        newspeeds[sd]=(res.entry.entrynumber, xx[1])
+                                    else:
+                                        newspeeds[sd]=(res.entry.entrynumber, res.entry.numbertypes[xx[1]].numbertype)
                                     nt=self.protocolclass.numbertypetab[res.entry.numbertypes[xx[1]].numbertype]
                                     self.log("Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
                                     self.progress(progresscur, progressmax, "Speed dial #%d = %s (%s/%d)" % (sd, res.entry.name, nt, xx[1]))
@@ -625,7 +628,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 print "can't find ringtone for index",entry.msgringtone
         if len(res['ringtones'])==0:
             del res['ringtones']
+        if(getattr(self.protocolclass, 'SPEEDDIALINDEX', 0)==0):
+            res=self._assignpbtypeandspeeddialsbyposition(entry, speeds, res)
+        else:
+            res=self._assignpbtypeandspeeddialsbytype(entry, speeds, res)
+        return res
                     
+    def _assignpbtypeandspeeddialsbyposition(self, entry, speeds, res):
         # numbers
         res['numbers']=[]
         for i in range(self.protocolclass.NUMPHONENUMBERS):
@@ -643,6 +652,22 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     res['numbers'][numberindex]['speeddial']=speeddial
                 except IndexError:
                     print "speed dial refers to non-existent number\n",res['numbers'],"\n",numberindex,speeddial
+        return res
+
+    def _assignpbtypeandspeeddialsbytype(self, entry, speeds, res):
+        # for some phones (e.g. vx8100) the speeddial numberindex is really the numbertype (now why would LG want to change this!)
+        res['numbers']=[]
+        for i in range(self.protocolclass.NUMPHONENUMBERS):
+            num=entry.numbers[i].number
+            type=entry.numbertypes[i].numbertype
+            if len(num):
+                t=self.protocolclass.numbertypetab[type]
+                if t[-1]=='2':
+                    t=t[:-1]
+                res['numbers'].append({'number': num, 'type': t})
+                # if this is a speeddial number set it
+                if entry.entrynumber in speeds and speeds[entry.entrynumber][0][1]==entry.numbertypes[i].numbertype:
+                    res['numbers'][i]['speeddial']=speeds[entry.entrynumber][0][0]
         return res
 
     def _findmediainindex(self, index, name, pbentryname, type):
