@@ -14,14 +14,28 @@ The format for the SMS item is standardized.  It is an object with the following
 attributes:
 
 _from: string (email addr or phone #)
-_to: string (email addr or phone #)
+_to: string (email addr or phone #) Deprecated, should use add_recipient()
 subject: string
 text: string
 datetime: string "YYYYMMDDThhmmss" or (y,m,d,h,m)
 callback: string (optional callback phone #)
 folder: string (where this item belongs: 'Inbox', 'Sent', 'Saved')
-flags: [{"locked": True/<False|None>}]
+locked: True/False
 msg_id: unique message id (hexstring sha encoded (datetime+text))
+priority: (normal/high)
+read: (T/F)
+
+available methods:
+
+add_recipient(name, confirmed=None, confirmed_datetime=None)
+  - name: email addr or phone # of the recipient
+  - confirmed: True/False/None
+  - confirmed_datetime: "YYYYMMDDThhmmss" or (y,m,d,h,m)
+
+confirm_recipient(name, confirmed_datetime)
+  - name: email addr or phone # of the recipient
+  - confirmed_datetime: "YYYYMMDDThhmmss" or (y,m,d,h,m)
+
 
 The format for the Canned SMS Message item is standard.  It is an object with
 the following attributes:
@@ -63,9 +77,10 @@ import database
 #-------------------------------------------------------------------------------
 class SMSDataObject(database.basedataobject):
     _knownproperties=['_from', '_to', 'subject', 'text', 'datetime',
-                      'callback', 'folder', 'msg_id' ]
+                      'callback', 'folder', 'msg_id', 'read', 'priority' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
-    _knownlistproperties.update( { 'flags': ['locked'] })
+    _knownlistproperties.update( { 'flags': ['locked', 'read'],
+                                   'receivers': ['name', 'confirmed_datetime'] })
     def __init__(self, data=None):
         if data is None or not isinstance(data, SMSEntry):
             return;
@@ -91,6 +106,11 @@ class SMSEntry(object):
     Valid_Folders=(Folder_Inbox, Folder_Sent, Folder_Saved)
     _id_index=0
     _max_id_index=999
+    Priority_Normal=1
+    Priority_High=2
+    _priority_name={
+        Priority_Normal: 'Normal',
+        Priority_High: 'High' }
     def __init__(self):
         self._data={ 'serials': [] }
         self._create_id()
@@ -136,6 +156,9 @@ class SMSEntry(object):
         self._set_or_del('_from', v, [''])
     _from=property(fget=_get_from, fset=_set_from)
     def _get_to(self):
+        l=self._data.get('receivers', [])
+        if l:
+            return ';'.join([x['name'] for x in l])
         return self._data.get('_to', '')
     def _set_to(self, v):
         self._set_or_del('_to', v, [''])
@@ -176,29 +199,86 @@ class SMSEntry(object):
             raise ValueError
         self._set_or_del('folder', v, [''])
     folder=property(fget=_get_folder, fset=_set_folder)
-    def _get_locked(self):
+
+    def _get_flag_value(self, flag_key, default=None):
         f=self._data.get('flags', [])
         for n in f:
-            if n.has_key('locked'):
-                return n['locked']
-        return False
-    def _set_locked(self, v):
+            if n.has_key(flag_key):
+                return n[flag_key]
+        return default
+    def _set_flag_value(self, flag_key, v):
         f=self._data.get('flags', [])
         for i, n in enumerate(f):
-            if n.has_key('locked'):
+            if n.has_key(flag_key):
                 if v is None or not v:
                     del f[i]
                     if not len(self._data['flags']):
                         del self._data['flags']
                 else:
-                    n['locked']=v
+                    n[flag_key]=v
                 return
         if v is not None and v:
-            self._data.setdefault('flags', []).append({'locked': v})
+            self._data.setdefault('flags', []).append({flag_key: v})
+
+    def _get_locked(self):
+        return self._get_flag_value('locked', False)
+    def _set_locked(self, v):
+        self._set_flag_value('locked', v)
     locked=property(fget=_get_locked, fset=_set_locked)
+    def _get_read(self):
+        return self._get_flag_value('read', False)
+    def _set_read(self, v):
+        self._set_flag_value('read', v)
+    read=property(fget=_get_read, fset=_set_read)
+
     def _get_msg_id(self):
         return self._data.get('msg_id', '')
     msg_id=property(fget=_get_msg_id)
+
+    def _get_priority(self):
+        return self._data.get('priority', SMSEntry.Priority_Normal)
+    def _set_priority(self, v):
+        if v not in (SMSEntry.Priority_Normal, SMSEntry.Priority_High):
+            raise ValueError('must be SMSEntry.Priority_Normal or SMSEntry.Priority_High')
+        self._set_or_del('priority', v, [])
+    def _get_priority_str(self):
+        return self._priority_name[self.priority]
+    priority=property(fget=_get_priority, fset=_set_priority)
+    priority_str=property(fget=_get_priority_str)
+
+    def add_recipient(self, name, confirmed=None, confirmed_datetime=None):
+        if isinstance(confirmed_datetime, (list, tuple)):
+            if len(confirmed_datetime)!=5:
+                raise ValueError('must be (y,m,d,h,m)')
+            confirmed_datetime='%04d%02d%02dT%02d%02d00'%confirmed_datetime
+        r={'name': name }
+        if confirmed_datetime:
+            r['confirmed_datetime']=confirmed_datetime
+        self._data.setdefault('receivers', []).append(r)
+    def confirm_recipient(self, name, confirmed_datetime):
+        if isinstance(confirmed_datetime, (list, tuple)):
+            if len(confirmed_datetime)!=5:
+                raise ValueError('must be (y,m,d,h,m)')
+            confirmed_datetime='%04d%02d%02dT%02d%02d00'%confirmed_datetime
+        for e in self._data.get('receivers', []):
+            if e['name']==name:
+                e['confirmed_datetime']=confirmed_datetime
+                return
+        raise Exception('Receiver %s not found'%name)
+    def _get_delivery_status(self):
+        # return a list of delivery status, one of each recipient
+        res=[]
+        l=self._data.get('receivers', [])
+        for e in l:
+            s=e.get('confirmed_datetime', None)
+            if s:
+                res.append('%s confirmed on %s-%s-%s %s:%s'%
+                           (e['name'], s[:4], s[4:6], s[6:8],
+                            s[9:11], s[11:13]))
+            else:
+                res.append('%s not confirmed'%e['name'])
+        return res
+    delivery_status=property(fget=_get_delivery_status)
 
 #-------------------------------------------------------------------------------
 class CannedMsgEntry(object):

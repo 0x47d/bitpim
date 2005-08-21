@@ -41,6 +41,15 @@ class TimeStamp(wx.StaticText):
         self.SetLabel('%04d-%02d-%2d %02d:%02d:%02d'%(
             int(v[:4]), int(v[4:6]), int(v[6:8]),
             int(v[9:11]), int(v[11:13]), int(v[13:])))
+
+#-------------------------------------------------------------------------------
+class DeliveryStatus(wx.TextCtrl):
+    def __init__(self, parent, _=None):
+        super(DeliveryStatus, self).__init__(parent, -1,
+                                             style=wx.TE_MULTILINE|wx.TE_READONLY)
+    def SetValue(self, v):
+        super(DeliveryStatus, self).SetValue('\n'.join(v))
+
 #-------------------------------------------------------------------------------
 class SMSInfo(pb_editor.DirtyUIBase):
     _dict_key_index=0
@@ -58,7 +67,11 @@ class SMSInfo(pb_editor.DirtyUIBase):
             ['callback', 'Callback #:', StaticText, None, None, None, 0],
             ['subject', 'Subj:', StaticText, None, None, None, 0],
             ['datetime', 'Date:', TimeStamp, None, None, None, 0],
-            ['locked', 'Locked:', wx.CheckBox, None, None, None, 0]
+            ['priority_str', 'Priority:', StaticText, None, None, None, 0],
+            ['read', 'Read?:', wx.CheckBox, None, None, None, 0],
+            ['locked', 'Locked:', wx.CheckBox, None, None, None, 0],
+            ['delivery_status', 'Delivery Status:', DeliveryStatus, None, None,
+             None, wx.EXPAND],
             ]
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
