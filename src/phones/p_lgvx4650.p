@@ -129,9 +129,11 @@ PACKET pbentry:
 
 PACKET pbfileentry:
     4   UINT    serial1
-    259 UNKNOWN data1
+    25  UNKNOWN data1
+    2   UINT group
+    232 UNKNOWN data2
     1   UINT    wallpaper
-    15  UNKNOWN data2
+    15  UNKNOWN data3
 
 PACKET pbfile:
     * LIST { 'elementclass': pbfileentry } items

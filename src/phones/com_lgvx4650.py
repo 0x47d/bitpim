@@ -111,15 +111,18 @@ class Phone(com_lgvx4400.Phone):
         wallpaper_index=res.get('wallpaper-index', {})
         r1={}
         for k,e in pbook.items():
-            r1[e['bitpimserial']['id']]=self._findmediainindex(wallpaper_index,
-                                                         e['wallpaper'],
-                                                         e['name'],
-                                                         'wallpaper')
+            r1[e['bitpimserial']['id']]={ 'wallpaper': \
+                                          self._findmediainindex(wallpaper_index,
+                                                                 e['wallpaper'],
+                                                                 e['name'],
+                                                                 'wallpaper'),
+                                          'group': e['group'] }
         serialupdates=data.get("serialupdates", [])
         r2={}
         for bps, serials in serialupdates:
             r2[serials['serial1']]=r1[bps['id']]
-        self._update_wallpaper_index(r2)
+        if self._update_wallpaper_index(r2):
+            data["rebootphone"]=True
         return res
 
     def _update_wallpaper_index(self, wpi):
@@ -131,15 +134,22 @@ class Phone(com_lgvx4400.Phone):
         pb.readfrombuffer(buf)
         update_flg=False
         for e in pb.items:
-            wp=wpi.get(e.serial1, None)
-            if wp is not None and wp!=e.wallpaper:
-                update_flg=True
-                e.wallpaper=wp
+            _info=wpi.get(e.serial1, None)
+            if _info:
+                wp=_info.get('wallpaper', None)
+                if wp is not None and wp!=e.wallpaper:
+                    update_flg=True
+                    e.wallpaper=wp
+                gr=_info.get('group', None)
+                if gr is not None and gr!=e.group:
+                    update_flg=True
+                    e.group=gr
         if update_flg:
             self.log('Updating wallpaper index')
             buf=prototypes.buffer()
             pb.writetobuffer(buf)
             self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
+        return update_flg
 
     def getcalendar(self,result):
         # Read exceptions file first
@@ -376,6 +386,7 @@ class Phone(com_lgvx4400.Phone):
     
     detectphone=staticmethod(detectphone)
 
+#------------------------------------------------------------------------------
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
@@ -429,7 +440,7 @@ class Profile(parentprofile):
 
     def __init__(self):
         parentprofile.__init__(self)
-
+            
 #------------------------------------------------------------------------------
 class schedulefile(Phone.protocolclass.schedulefile):
 
@@ -647,7 +658,6 @@ class SMSSavedFile(Phone.protocolclass.SMSSavedFile, SMSFile):
             self._attrs=SMSInboxFile._attrs
             return SMSFile.get_sms(self, self.inbox)
 
-#------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 class SMSCannedFile(Phone.protocolclass.SMSCannedFile):
     def __init__(self, *args, **kwargs):
