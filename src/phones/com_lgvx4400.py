@@ -765,6 +765,7 @@ class Profile(parentprofile):
     usbids_usbtoserial=(
         ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
         ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
+        ( 0x0731, 0x2003, None), # VID=Susteen, PID=Universal USB to serial
         )
     usbids=usbids_straight+usbids_usbtoserial
     
