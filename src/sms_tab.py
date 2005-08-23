@@ -9,6 +9,10 @@
 
 """
 Code to handle the SMS Tab of the BitPim main display.
+The read flag is not required for outbox and saved message, delivery
+status is not needed for saved and inbox message, from is not required for
+save and outbox, to is not required for inbox etc.
+
 """
 # standard modules
 import copy
@@ -43,12 +47,11 @@ class TimeStamp(wx.StaticText):
             int(v[9:11]), int(v[11:13]), int(v[13:])))
 
 #-------------------------------------------------------------------------------
-class DeliveryStatus(wx.TextCtrl):
+class DeliveryStatus(wx.StaticText):
     def __init__(self, parent, _=None):
-        super(DeliveryStatus, self).__init__(parent, -1,
-                                             style=wx.TE_MULTILINE|wx.TE_READONLY)
+        super(DeliveryStatus, self).__init__(parent, -1)
     def SetValue(self, v):
-        super(DeliveryStatus, self).SetValue('\n'.join(v))
+        self.SetLabel('\n'.join(v))
 
 #-------------------------------------------------------------------------------
 class SMSInfo(pb_editor.DirtyUIBase):
@@ -59,6 +62,10 @@ class SMSInfo(pb_editor.DirtyUIBase):
     _set_index=4
     _w_index=5
     _flg_index=6
+    _not_used_fields={
+        sms.SMSEntry.Folder_Inbox: ('delivery_status', '_to'),
+        sms.SMSEntry.Folder_Sent: ('read', '_from'),
+        sms.SMSEntry.Folder_Saved: ('delivery_status',) }
     def __init__(self, parent, _=None):
         super(SMSInfo, self).__init__(parent)
         self._fields=[
@@ -85,6 +92,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
         self.SetSizer(gs)
         self.SetAutoLayout(True)
         gs.Fit(self)
+        self._gs=gs
 
     def OnMakeDirty(self, evt):
         self.OnDirtyUI(evt)
@@ -95,10 +103,17 @@ class SMSInfo(pb_editor.DirtyUIBase):
             for n in self._fields:
                 n[self._w_index].Enable(False)
         else:
-            for n in self._fields:
+            _bad_fields=self._not_used_fields.get(data.folder, ())
+            for i,n in enumerate(self._fields):
                 w=n[self._w_index]
-                w.Enable(True)
-                w.SetValue(getattr(data, n[self._dict_key_index]))
+                if n[self._dict_key_index] in _bad_fields:
+                    self._gs.Show(i*2, False)
+                    self._gs.Show(i*2+1, False)
+                else:
+                    self._gs.Show(i*2, True)
+                    self._gs.Show(i*2+1, True)
+                    w.Enable(True)
+                    w.SetValue(getattr(data, n[self._dict_key_index]))
         self.ignore_dirty=self.dirty=False
 
     def Clear(self):
@@ -217,9 +232,9 @@ class FolderPage(wx.Panel):
                 self.info_bs.Show(self.canned_list, False)
                 self.info_bs.Show(self.builtin_canned_list, False)
                 self.info_bs.Show(self.save_btn, False)
-                self.info_bs.Layout()
                 k=self._item_list.GetPyData(evt.GetItem())
                 self._populate_each(k)
+                self.info_bs.Layout()
 
     def _OnPBLookup(self, msg):
         d=msg.data
