@@ -46,6 +46,7 @@ class Phone(com_samsung_packet.Phone):
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI."""
+        #self.amsanalyze()
 
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
@@ -70,6 +71,31 @@ class Phone(com_samsung_packet.Phone):
         # offset, index file, files location, type, maximumentries
         (100, "", "digital_cam/jpeg", "camera", 100)
         )
+        
+    def amsanalyze(self):
+        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.AMSREGISTRY))
+        ams=self.protocolclass.amsregistry()
+        ams.readfrombuffer(buf)
+        for i in range(ams.nfiles):
+            filetype=ams.info[i].filetype
+            if filetype:
+                dir_ptr=ams.info[i].dir_ptr
+                name_ptr=ams.info[i].name_ptr
+                mimetype_ptr=ams.info[i].mimetype_ptr
+                version_ptr=ams.info[i].version_ptr
+                vendor_ptr=ams.info[i].vendor_ptr
+                dir=self.getstring(ams.strings,dir_ptr)
+                name=self.getstring(ams.strings,name_ptr)
+                mimetype=self.getstring(ams.strings,mimetype_ptr)
+                version=self.getstring(ams.strings,version_ptr)
+                vendor=self.getstring(ams.strings,vendor_ptr)
+
+                downloaddomain_ptr=ams.info[i].downloaddomain_ptr
+                print i, filetype, version, dir, vendor, name, mimetype
+                if downloaddomainptr_ptr:
+                    print self.getstring(ams.strings,misc_ptr)
+                print ams.info[i].num2,ams.info[i].num6, ams.info[i].num7, ams.info[i].num8, ams.info[i].num9, ams.info[i].num12, ams.info[i].num13, ams.info[i].num14, ams.info[i].num15, ams.info[i].num16, ams.info[i].num17
+                print " "
         
     def pblinerepair(self, line):
         "Extend incomplete lines"
@@ -205,6 +231,13 @@ class Phone(com_samsung_packet.Phone):
         results['ringtone-index']=rt
         return
 
+    def getstring(self, contents, start):
+        "Get a null terminated string from contents"
+        i=start
+        while contents[i:i+1]!='\0':
+            i+=1
+        return contents[start:i]
+        
     def getamstext(self, offset,location,contents): #this reads from the amsregistry file until it hits the spacer which is '00'
         length=1 
         i=0
@@ -214,7 +247,7 @@ class Phone(com_samsung_packet.Phone):
             else:
                 length+=1
         amstext=contents[offset+location:offset+location+length]       
-        return amstext    
+        return amstext
 
     def getringtones(self, results):
         self.setmode(self.MODEBREW)
@@ -244,5 +277,7 @@ class Profile(com_samsung_packet.Profile):
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('todo', 'read', None),     # all todo list reading
         ('todo', 'write', 'OVERWRITE'),  # all todo list writing
+        ('memo', 'read', None),     # all memo list reading
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing
         )
 
