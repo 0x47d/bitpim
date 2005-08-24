@@ -20,6 +20,7 @@ BOOL=BOOLlsb
 
 NUMCALENDAREVENTS=70
 NUMTODOENTRIES=9
+NUMMEMOENTRIES=9
 
  %}
 
@@ -40,7 +41,7 @@ PACKET phonebooksloterase:
 #    * pbentry entry
     
 PACKET phonebookslotupdateresponse:
-    * UKNOWN pad
+    * UNKNOWN pad
     
 PACKET groupnamerequest:
     * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBGRR='} +command
@@ -86,7 +87,7 @@ PACKET eventsloterase:
     * CSVINT {'terminator': None} +slot
 
 PACKET eventupdateresponse:
-    * UKNOWN pad
+    * UNKNOWN pad
 
 PACKET todorequest:
     * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PITDR='} +command
@@ -114,4 +115,47 @@ PACKET todoerase:
     * CSVINT {'terminator': None} slot
 
 PACKET todoupdateresponse:
-    * UKNOWN pad
+    * UNKNOWN pad
+
+PACKET memorequest:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PIMMR='} +command
+    * CSVINT {'terminator': None} +slot
+
+PACKET memoresponse:
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '#PIMMR:'} command
+    * CSVINT slot
+    * CSVTIME timestamp
+    * CSVSTRING {'quotechar': None} status
+    * CSVSTRING {'terminator': None} text
+    
+PACKET memoupdaterequest:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PIMMW='} +command
+    * CSVINT slot
+    * CSVTIME timestamp
+    * CSVSTRING {'terminator': None} text
+
+PACKET memoerase:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PIMMW='} +command
+    * CSVINT {'terminator': None} slot
+
+PACKET memoupdateresponse:
+    * UNKNOWN pad
+
+PACKET esnrequest:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
+
+PACKET esnresponse:
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
+    * CSVSTRING {'quotechar': None, 'terminator': None} esn
+
+#at#psrmr=?
+#PSRMR: (0-93)
+ 
+#OK
+#at#psrmr=0
+#PSRMR: 0,0,1,20031214T214934,"shortmail@oneboxmail.bulk.sprint: Short Mail: New Short Mail. Select }Go} to read it}-}*http://smwl.uc.sprintpcs.com/sml/wap.do?alert=true",
+ 
+#OK
+#at#psrmr=1
+#PSRMR: 1,0,1,20031205T091836,"To avoid service interruption, please call Sprint PCS at 800-808-1336.",
+ 
