@@ -17,13 +17,17 @@ import sha
 
 # my modules
 import common
+import commport
 import copy
 import p_lgvx4400
+import p_brew
 import com_brew
 import com_phone
 import com_lg
 import prototypes
 import fileinfo
+import call_history
+import sms
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIndexedMedia):
     "Talk to the LG VX4400 cell phone"
@@ -99,7 +103,235 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.log("Fundamentals retrieved")
         return results
 
+    def savesms(self, result, merge):
+        self._setquicktext(result)
+        result['rebootphone']=True
+        return result
 
+    def _setquicktext(self, result):
+        sf=self.protocolclass.sms_quick_text()
+        quicktext=result.get('canned_msg', [])
+        count=0
+        for entry in quicktext:
+            if count < self.protocolclass.SMS_CANNED_MAX_ITEMS:
+                sf.msgs.append(entry['text'][:self.protocolclass.SMS_CANNED_MAX_LENGTH-1])
+                count+=1
+            else:
+                break
+        if count!=0:
+            # don't create the file if there are no entries 
+            buf=prototypes.buffer()
+            sf.writetobuffer(buf)
+            self.logdata("Writing calendar", buf.getvalue(), sf)
+            self.writefile("sms/mediacan000.dat", buf.getvalue())
+        return
+
+    _smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
+                 'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
+                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
+                 }
+
+    def getsms(self, result):
+        res={}
+        # get the quicktext (LG name for canned messages)
+        result['canned_msg']=self._getquicktext()
+        # go through the sms directory looking for messages
+        for item in self.getfilesystem("sms").values():
+            if item['type']=='file':
+                folder=None
+                for f,pat in self._smspatterns.items():
+                    if pat.match(item['name']):
+                        folder=f
+                        break
+                if folder=='Inbox':
+                    self._getinboxmessage(item['name'], res)
+                elif folder=='Sent':
+                    self._getoutboxmessage(item['name'], res)
+                elif folder=='Saved':
+                    self._getsavedmessage(item['name'], res)
+        result['sms']=res
+        return result
+
+    def _getquicktext(self):
+        quicks=[]
+        try:
+            buf=prototypes.buffer(self.getfilecontents("sms/mediacan000.dat"))
+            sf=self.protocolclass.sms_quick_text()
+            sf.readfrombuffer(buf)
+            self.logdata("SMS quicktext file sms/mediacan000.dat", buf.getdata(), sf)
+            for rec in sf.msgs:
+                if rec.msg!="":
+                    quicks.append({ 'text': rec.msg, 'type': sms.CannedMsgEntry.user_type })
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
+        return quicks
+
+    def _getinboxmessage(self, file, res):
+        buf=prototypes.buffer(self.getfilecontents(file))
+        sf=self.protocolclass.sms_in()
+        sf.readfrombuffer(buf)
+        self.logdata("SMS message in file "+file, buf.getdata(), sf)
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Inbox
+        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
+        entry._from=self._getsender(sf.sender, sf.sender_length)
+        entry.subject=sf.subject
+        entry.locked=sf.locked
+        if sf.priority==0:
+            entry.priority=sms.SMSEntry.Priority_Normal
+        else:
+            entry.priority=sms.SMSEntry.Priority_High
+        entry.read=sf.read
+        txt=""
+        if sf.num_msg_elements==1 and sf.bin_header1==0:
+            txt=self._get_text_from_sms_msg_without_header(sf.msgs[0].msg, sf.msglengths[0].msglength)
+        else:
+            for i in range(sf.num_msg_elements):
+                txt+=self._get_text_from_sms_msg_with_header(sf.msgs[i].msg, sf.msglengths[i].msglength)
+        entry.text=unicode(txt, errors='ignore')
+        entry.callback=sf.callback
+        res[entry.id]=entry
+        return
+
+    def _getoutboxmessage(self, file, res):
+        buf=prototypes.buffer(self.getfilecontents(file))
+        sf=self.protocolclass.sms_out()
+        sf.readfrombuffer(buf)
+        self.logdata("SMS message in file "+file, buf.getdata(), sf)
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Sent
+        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
+        # add all the recipients
+        for i in range(10):
+            if sf.recipients[i].number!="":
+                confirmed=(sf.recipients[i].status==5)
+                confirmed_date=""
+                if confirmed:
+                    confirmed_date="%d%02d%02dT%02d%02d00" % ((sf.recipients[i].timereceived))
+                entry.add_recipient(sf.recipients[i].number, confirmed, confirmed_date)
+        entry.subject=sf.subject
+        txt=""
+        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
+            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
+        else:
+            for i in range(sf.num_msg_elements):
+                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
+        entry.text=unicode(txt, errors='ignore')
+        if sf.priority==0:
+            entry.priority=sms.SMSEntry.Priority_Normal
+        else:
+            entry.priority=sms.SMSEntry.Priority_High
+        entry.locked=sf.locked
+        entry.callback=sf.callback
+        res[entry.id]=entry
+        return
+
+    def _getsavedmessage(self, file, res):
+        buf=prototypes.buffer(self.getfilecontents(file))
+        sf=self.protocolclass.sms_saved()
+        sf.readfrombuffer(buf)
+        self.logdata("SMS message in file "+file, buf.getdata(), sf)
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Saved
+        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
+        # add all the recipients, unlike the outbox all 10 are the same format
+        for i in range(10):
+            if sf.recipients[i].number!="":
+                confirmed=(sf.recipients[i].status==5)
+                confirmed_date=""
+                if confirmed:
+                    confirmed_date="%d%02d%02dT%02d%02d00" % ((sf.recipients[i].timereceived))
+                entry.add_recipient(sf.recipients[i].number, confirmed, confirmed_date)
+        entry.subject=sf.subject
+        txt=""
+        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
+            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
+        else:
+            for i in range(sf.num_msg_elements):
+                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
+        entry.text=unicode(txt, errors='ignore')
+        if sf.priority==0:
+            entry.priority=sms.SMSEntry.Priority_Normal
+        else:
+            entry.priority=sms.SMSEntry.Priority_High
+        entry.locked=sf.locked
+        entry.callback=sf.callback
+        res[entry.id]=entry
+        return
+
+    def _get_text_from_sms_msg_without_header(self, msg, num_septets):
+        out=""
+        for i in range(num_septets):
+            tmp = (msg[(i*7)/8].byte<<8) | msg[((i*7)/8) + 1].byte
+            bit_index = 9 - ((i*7) % 8)
+            out += chr((tmp >> bit_index) & 0x7f)
+        return out
+
+    def _get_text_from_sms_msg_with_header(self, msg, num_septets):
+        data_len = ((msg[0].byte+1)*8+6)/7
+        seven_bits={}
+        raw={}
+        out={}
+        # re-order the text into the correct order for separating into
+        # 7-bit characters
+        for i in range(0, (num_septets*7)/8+7, 7):
+            for k in range(7):
+                raw[i+6-k]=msg[i+k].byte
+        # extract the 7-bit chars
+        for i in range(num_septets+7):
+            tmp = (raw[(i*7)/8]<<8) | raw[((i*7)/8) + 1]
+            bit_index = 9 - ((i*7) % 8)
+            seven_bits[i] = (tmp >> bit_index) & 0x7f
+        # correct the byte order and remove the data portion of the message
+        i=0
+        for i in range(0, num_septets+7, 8):
+            for k in range(8):
+                if(i+7-k-data_len>=0):
+                    if i+k<num_septets+7:
+                        out[i+7-k-data_len]=seven_bits[i+k]
+        res=""
+        for i in range(num_septets-data_len):
+            res+=chr(out[i])
+        return res
+
+    def _getsender(self, raw, len):
+        result=""
+        for i in range(len):
+            if(raw[i].byte==10):
+                result+="0"
+            else:
+                result+="%d" % raw[i].byte
+        return result
+
+    def getcallhistory(self, result):
+        res={}
+        # read the incoming call history file
+        self._readhistoryfile("pim/missed_log.dat", 'Missed', res)
+        self._readhistoryfile("pim/outgoing_log.dat", 'Outgoing', res)
+        self._readhistoryfile("pim/incoming_log.dat", 'Incoming', res)
+        result['call_history']=res
+        return result
+
+    def _readhistoryfile(self, fname, folder, res):
+        try:
+            buf=prototypes.buffer(self.getfilecontents(fname))
+            ch=self.protocolclass.callhistory()
+            ch.readfrombuffer(buf)
+            self.logdata("Call History", buf.getdata(), ch)
+            for call in ch.calls:
+                if call.number=='' and call.name=='':
+                        continue
+                entry=call_history.CallHistoryEntry()
+                entry.folder=folder
+                entry.datetime=((call.GPStime))
+                if call.number=='': # restricted calls have no number
+                    entry.number=call.name
+                else:
+                    entry.number=call.number
+                res[entry.id]=entry
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
+        return
 
     def getwallpaperindices(self, results):
         return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
@@ -715,30 +947,102 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 
         return e
 
-    smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
-                 'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
-                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
-                 }
-
-    def getsms(self, results):
-        for item in self.getfilesystem("sms").values():
-            if item['type']=='file':
-                folder=None
-                for f,pat in self.smspatterns.items():
-                    print item['name']
-                    if pat.match(item['name']):
-                        folder=f
-                        break
-                if folder is None: continue
-                buf=prototypes.buffer(self.getfilecontents(item['name']))
-                sf=self.protocolclass.SMSFile()
-                sf.readfrombuffer(buf)
-                self.logdata("SMS message in file "+item['name'], buf.getdata(), sf)
-
-        return results
-                                      
+    def _setmodebrew(self):
+        req=p_brew.memoryconfigrequest()
+        respc=p_brew.memoryconfigresponse
         
+        for baud in 0, 115200, 38400:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
+    is_mode_brew=_setmodebrew
 
+    brew_version_txt_key='brew_version.txt'
+    brew_version_file='brew/version.txt'
+    lgpbinfo_key='lgpbinfo'
+    esn_file_key='esn_file'
+    esn_file='nvm/$SYS.ESN'
+    my_model='VX4400'
+    def get_detect_data(self, res):
+        # get the data needed for detection
+        if not res.has_key(self.brew_version_txt_key):
+            # read the BREW version.txt file, which may contain phone model info
+            print 'reading BREW version.txt'
+            try:
+                # read this file
+                s=self.getfilecontents(self.brew_version_file)
+                res[self.brew_version_txt_key]=s
+            except com_brew.BrewNoSuchFileException:
+                res[self.brew_version_txt_key]=None
+            except:
+                if __debug__:
+                    raise
+                res[self.brew_version_txt_key]=None
+        # get pbinfo data, which also may include phone model
+        if not res.has_key(self.lgpbinfo_key):
+            print 'getting pbinfo'
+            try:
+                req=self.protocolclass.pbinforequest()
+                resp=self.sendpbcommand(req, self.protocolclass.pbstartsyncresponse)
+                res[self.lgpbinfo_key]=resp.unknown
+            except:
+                if __debug__:
+                    raise
+                res[self.lgpbinfo_key]=None
+        # attempt the get the ESN
+        if not res.has_key(self.esn_file_key):
+            print 'reading ESN file'
+            try:
+                s=self.getfilecontents(self.esn_file)
+                res[self.esn_file_key]=s
+            except:
+                res[self.esn_file_key]=None
+
+    def eval_detect_data(self, res):
+        if res.get(self.brew_version_txt_key, '')[:len(self.my_model)]==self.my_model or \
+           res.get(self.lgpbinfo_key, '').find(self.my_model)!=-1:
+            res['model']=self.my_model
+            res['manufacturer']='LG Electronics Inc'
+            s=res.get(self.esn_file_key, None)
+            if s:
+                s=s[85:89]
+                res['esn']='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
+                                               ord(s[1]), ord(s[0]))
+
+    def detectphone(coms, likely_ports, res, _module):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                if res[port]['mode_brew']==False or \
+                   res[port]['model']:
+                    # either phone is not in BREW, or a model has already
+                    # been found, not much we can do now
+                    continue
+                p=_module.Phone(None, commport.CommConnection(None, port, timeout=1))
+                if res[port]['mode_brew'] is None:
+                    res[port]['mode_brew']=p.is_mode_brew()
+                if res[port]['mode_brew']:
+                    p.get_detect_data(res[port])
+                p.eval_detect_data(res[port])
+                p.comm.close()
+            except:
+                if __debug__:
+                    raise
+    
+    detectphone=staticmethod(detectphone)
 
 def phonize(str):
     """Convert the phone number into something the phone understands
@@ -750,6 +1054,8 @@ parentprofile=com_phone.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX4400'
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
@@ -964,13 +1270,15 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-        #('sms', 'read', None),
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),         # all SMS list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
+        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         )
 
     def QueryAudio(self, origin, currentextension, afi):

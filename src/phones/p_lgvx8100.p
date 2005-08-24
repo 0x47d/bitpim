@@ -30,6 +30,9 @@ BOOL=BOOLlsb
 SPEEDDIALINDEX=1 
 MAXCALENDARDESCRIPTION=32
 
+SMS_CANNED_MAX_ITEMS=18
+SMS_CANNED_MAX_LENGTH=101
+
 %}
     
 PACKET indexentry:
@@ -151,17 +154,19 @@ PACKET msg_record:
         1 UINT byte "individual byte of message"
 
 PACKET recipient_record:
+    45 DATA unknown1
     49 STRING number
     1 UINT status   # 1 when sent, 5 when received
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
-    1 UINT unknown1 # 0 when not received, set to 1 when received
-    85 DATA unknown2
+    1 UINT unknown2 # 0 when not received, set to 1 when received
+    40 DATA unknown3
 
 PACKET sms_saved:
     4 UINT unknown1  # set to 1
     4 GPSDATE GPStime   # num seconds since 0h 1-6-80, time message received by phone
-    6 DATA unknown2
+    5 DATA unknown2
+    1 UINT locked
     4 LGCALDATE timesent # time the message was sent
     6 DATA unknown3
     21 STRING subject
@@ -172,13 +177,14 @@ PACKET sms_saved:
     1 UINT priority # 0=normal, 1=high
     12 DATA unknown7
     3 DATA unknown8 # set to 01,00,01 
-    68 STRING callback 
+    23 STRING callback 
     * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
-    937 DATA unknown9 # all zeros
+    982 DATA unknown9 # all zeros
 
 PACKET sms_out:
     4 UINT index # starting from 1, unique
-    2 UINT unknown1 # zero
+    1 UINT unknown1 # zero
+    1 UINT locked # zero
     4 LGCALDATE timesent # time the message was sent
     2 UINT unknown2 # zero
     4 GPSDATE GPStime  # num seconds since 0h 1-6-80, time message received by phone
@@ -190,14 +196,8 @@ PACKET sms_out:
     1 UINT priority # 0=normal, 1=high
     12 DATA unknown7
     3 DATA unknown8 # set to 01,00,01 
-    68 STRING callback 
-    * LIST {'elementclass': recipient_record,'length': 9} +recipients 
-    49 STRING recipient10number
-    1 UINT recipient10status # 1 when sent, 5 when received
-    4 LGCALDATE recipient10sent
-    4 LGCALDATE recipient10received
-    1 UINT recipient10unknown1 # 0, set to 1 when received
-    42 DATA unknown9
+    23 STRING callback
+    * LIST {'elementclass': recipient_record,'length': 10} +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
     * LIST {'length': 181} +msg:
@@ -244,3 +244,26 @@ PACKET sms_in:
     60 DATA unknown12
     33 STRING senders_name
     169 DATA unknown9   # ?? inlcudes senders phone number in ascii
+
+PACKET sms_quick_text:
+    * LIST {'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
+        101 STRING {'default': ""} +msg # include terminating NULL
+
+# Text Memos. LG memo support is weak, it only supports the raw text and none of 
+# the features that other phones support, when you run bitpim you see loads of
+# options that do not work in the vx8100 on the memo page
+PACKET textmemo:
+    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    4 LGCALDATE memotime # time the memo was writen
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items
+
+PACKET firmwareresponse:
+    1 UINT command
+    11 STRING {'terminator': None}  date1
+    8 STRING {'terminator': None}  time1
+    11 STRING {'terminator': None}  date2
+    8 STRING {'terminator': None}  time2
+    8 STRING {'terminator': None}  firmware

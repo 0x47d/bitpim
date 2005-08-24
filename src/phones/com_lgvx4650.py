@@ -320,71 +320,22 @@ class Phone(com_lgvx4400.Phone):
         result['rebootphone']=True
         return result
 
-    def _setmodebrew(self):
-        req=p_brew.memoryconfigrequest()
-        respc=p_brew.memoryconfigresponse
-        
-        for baud in 0, 38400,115200:
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-            for i in range(3):
-                try:
-                    self.sendbrewcommand(req, respc, callsetmode=False)
-                    return True
-                except com_phone.modeignoreerrortypes:
-                    pass
-        return False
-
-    is_mode_brew=_setmodebrew
-
-    def get_detect_data(self, res):
-        # try to gather detect data for this phone
-        # try to check for our model (VX4650)
-        try:
-            s=self.getfilecontents('brew/version.txt')
-        except:
-            # failed to read, abort!
-            return
-        if s[:6]=='VX4650':
-            # found it !!
-            res['model']='VX4650'
-            res['manufacturer']='LG Electronics Inc'
-            # attempt the get the ESN
-            try:
-                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
-                res['esn']='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
-                                               ord(s[1]), ord(s[0]))
-            except:
-                res['esn']=None
-        print 'res',res
-        
-    def detectphone(coms, likely_ports, res):
-        if not likely_ports:
-            # cannot detect any likely ports
-            return None
-        for port in likely_ports:
-            if not res.has_key(port):
-                res[port]={ 'mode_modem': None, 'mode_brew': None,
-                            'manufacturer': None, 'model': None,
-                            'firmware_version': None, 'esn': None,
-                            'firmwareresponse': None }
-            try:
-                if res[port]['mode_brew']==False or \
-                   res[port]['model']:
-                    # either phone is not in BREW, or a model has already
-                    # been found, not much we can do now
-                    continue
-                p=Phone(None, commport.CommConnection(None, port, timeout=1))
-                if p.is_mode_brew():
-                    res[port]['mode_brew']=True
-                    p.get_detect_data(res[port])
-                else:
-                    res[port]['mode_brew']=False
-            except:
-                pass
-    
-    detectphone=staticmethod(detectphone)
+    my_model='VX4650'
+##    def eval_detect_data(self, res):
+##        # try to check for our model (VX4650)
+##        s=res.get(self.brew_version_txt_key, '')
+##        if s[:6]=='VX4650':
+##            # found it !!
+##            res['model']='VX4650'
+##            res['manufacturer']='LG Electronics Inc'
+##            # attempt the get the ESN
+##            try:
+##                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+##                res['esn']='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
+##                                               ord(s[1]), ord(s[0]))
+##            except:
+##                res['esn']=None
+##            print 'res',res
 
 #------------------------------------------------------------------------------
 parentprofile=com_lgvx4400.Profile

@@ -21,7 +21,10 @@ import sha
 
 # my modules
 import common
+import commport
 import copy
+import com_lgvx4400
+import p_brew
 import p_lgvx8100
 import com_lgvx7000
 import com_brew
@@ -31,6 +34,7 @@ import prototypes
 import bpcalendar
 import call_history
 import sms
+import memo
 
 
 from prototypes import *
@@ -51,7 +55,7 @@ class Phone(com_lgvx7000.Phone):
 
     ringtonelocations= (
         # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major
-        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/ms', 100, 50, 1),
+        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 1),
         )
 
     builtinwallpapers = () # none
@@ -60,6 +64,10 @@ class Phone(com_lgvx7000.Phone):
         ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0),
         )
         
+    def __init__(self, logtarget, commport):
+        com_lgvx4400.Phone.__init__(self, logtarget, commport)
+        self.mode=self.MODENONE
+
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
 
@@ -108,184 +116,39 @@ class Phone(com_lgvx7000.Phone):
         self.logdata("New group file", buffer.getvalue(), g)
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
-    _smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
-                 'Outbox': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
-                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
-                 }
-
-    def getsms(self, result):
-        res={}
-        # go through the sms directory looking for messages
-        for item in self.getfilesystem("sms").values():
-            if item['type']=='file':
-                folder=None
-                for f,pat in self.smspatterns.items():
-                    if pat.match(item['name']):
-                        folder=f
-                        break
-                if folder=='Inbox':
-                    self._getinboxmessage(item['name'], res)
-                elif folder=='Sent':
-                    self._getoutboxmessage(item['name'], res)
-                elif folder=='Saved':
-                    self._getsavedmessage(item['name'], res)
-        result['sms']=res
-        return result
-
-    def _getinboxmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_in()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Inbox
-        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
-        entry._from=self._getsender(sf.sender, sf.sender_length)
-        entry.subject=sf.subject
-        entry.locked=sf.locked
-        txt=""
-        if sf.num_msg_elements==1 and sf.bin_header1==0:
-            txt=self._get_text_from_sms_msg_without_header(sf.msgs[0].msg, sf.msglengths[0].msglength)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.msgs[i].msg, sf.msglengths[i].msglength)
-        entry.text=unicode(txt, errors='ignore')
-        entry.callback=sf.callback
-        res[entry.id]=entry
-        return
-
-    def _getoutboxmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_out()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Sent
-        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
-        entry._to=""
-        first=1
-        # add all the recipients to the _to field, separated with a :
-        for i in range(9):
-            if sf.recipients[i].number!="":
-                if first:
-                    first=0
-                else:
-                    entry._to+=": "
-                entry._to+=sf.recipients[i].number
-        entry.subject=sf.subject
-        txt=""
-        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
-            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
-        entry.text=unicode(txt, errors='ignore')
-        entry.callback=sf.callback
-        res[entry.id]=entry
-        return
-
-    def _getsavedmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_saved()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Saved
-        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
-        first=1
-        # add all the recipients to the _to field, separated with a :
-        for i in range(10):
-            if sf.recipients[i].number!="":
-                if first:
-                    first=0
-                else:
-                    entry._to+=": "
-                entry._to+=sf.recipients[i].number
-        entry.subject=sf.subject
-        txt=""
-        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
-            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
-        entry.text=unicode(txt, errors='ignore')
-        entry.callback=sf.callback
-        res[entry.id]=entry
-        return
-
-    def _get_text_from_sms_msg_without_header(self, msg, num_septets):
-        out=""
-        for i in range(num_septets):
-            tmp = (msg[(i*7)/8].byte<<8) | msg[((i*7)/8) + 1].byte
-            bit_index = 9 - ((i*7) % 8)
-            out += chr((tmp >> bit_index) & 0x7f)
-        return out
-
-    def _get_text_from_sms_msg_with_header(self, msg, num_septets):
-        data_len = ((msg[0].byte+1)*8+6)/7
-        seven_bits={}
-        raw={}
-        out={}
-        # re-order the text into the correct order for separating into
-        # 7-bit characters
-        for i in range((num_septets*7)/8+7):
-            if(i%7==0):
-                for k in range(7):
-                    raw[i+6-k]=msg[i+k].byte
-        # extract the 7-bit chars
-        for i in range(num_septets+7):
-            tmp = (raw[(i*7)/8]<<8) | raw[((i*7)/8) + 1]
-            bit_index = 9 - ((i*7) % 8)
-            seven_bits[i] = (tmp >> bit_index) & 0x7f
-        # correct the byte order and remove the data portion of the message
-        i=0
-        for i in range(num_septets+7):
-            if(i%8==0):
-                for k in range(8):
-                    if(i+7-k-data_len>=0):
-                        if i+k<num_septets+7:
-                            out[i+7-k-data_len]=seven_bits[i+k]
-        res=""
-        for i in range(num_septets-data_len):
-            res+=chr(out[i])
-        return res
-
-    def _getsender(self, raw, len):
-        result=""
-        for i in range(len):
-            if(raw[i].byte==10):
-                result+="0"
-            else:
-                result+="%d" % raw[i].byte
-        return result
-
-    def getcallhistory(self, result):
-        res={}
-        # read the incoming call history file
-        self._readhistoryfile("pim/missed_log.dat", 'Missed', res)
-        self._readhistoryfile("pim/outgoing_log.dat", 'Outgoing', res)
-        self._readhistoryfile("pim/incoming_log.dat", 'Incoming', res)
-        result['call_history']=res
-        return result
-
-    def _readhistoryfile(self, fname, folder, res):
+    def getmemo(self, result):
+        # read the memo file
         try:
-            buf=prototypes.buffer(self.getfilecontents(fname))
-            ch=self.protocolclass.callhistory()
-            ch.readfrombuffer(buf)
-            self.logdata("Call History", buf.getdata(), ch)
-            for call in ch.calls:
-                if call.number=='': #empty record
-                    break
-                entry=call_history.CallHistoryEntry()
-                entry.folder=folder
-                entry.datetime=((call.GPStime))
-                entry.number=call.number
+            buf=prototypes.buffer(self.getfilecontents("sch/neomemo.dat"))
+            text_memo=self.protocolclass.textmemofile()
+            text_memo.readfrombuffer(buf)
+            res={}
+            for m in text_memo.items:
+                entry=memo.MemoEntry()
+                entry.text=m.text
+                entry.set_date_isostr("%d%02d%02dT%02d%02d00" % ((m.memotime)))
                 res[entry.id]=entry
         except com_brew.BrewNoSuchFileException:
-            pass # do nothing if file doesn't exist
-        return
+            res={}
+        result['memo']=res
+        return result
 
+    def savememo(self, result, merge):
+        text_memo=self.protocolclass.textmemofile()
+        memo_dict=result.get('memo', {})
+        keys=memo_dict.keys()
+        keys.sort()
+        text_memo.itemcount=len(keys)
+        for k in keys:
+            entry=self.protocolclass.textmemo()
+            entry.text=memo_dict[k].text
+            t=time.strptime(memo_dict[k].date, '%b %d, %Y %H:%M')
+            entry.memotime=(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min)
+            text_memo.items.append(entry)
+        buf=prototypes.buffer()
+        text_memo.writetobuffer(buf)
+        self.writefile("sch/neomemo.dat", buf.getvalue())
+        return result
 
     def getcalendar(self,result):
         res={}
@@ -476,7 +339,6 @@ class Phone(com_lgvx7000.Phone):
 
     def setalarm(self, entry, data):
         # vx8100 only allows certain repeat intervals, adjust to fit, it also stores an index to the interval
-        # bitpim does not support vibrate so turn it off for all alarms
         if entry.alarm>=2880:
             entry.alarm=2880
             data.alarmminutes=0
@@ -527,12 +389,35 @@ class Phone(com_lgvx7000.Phone):
             data.alarmindex_vibrate+=1
         return
 
+    my_model='VX8100'
+
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        try:
+            s=self.getfilecontents('brew/version.txt')
+            if s[:6]=='VX8100':
+                phone_info.append('Model:', "VX8100")
+                req=p_brew.firmwarerequest()
+                res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+                phone_info.append('Firmware Version:', res.firmware)
+                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+                txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
+                phone_info.append('ESN:', txt)
+                txt=self.getfilecontents("nvm/nvm/nvm_cdma")[180:190]
+                phone_info.append('Phone Number:', txt)
+        except:
+            pass
+        return
+
+
 parentprofile=com_lgvx7000.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
 
     BP_Calendar_Version=3
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX8100'
 
     WALLPAPER_WIDTH=176
     WALLPAPER_HEIGHT=184
@@ -546,7 +431,7 @@ class Profile(parentprofile):
     # there is an origin named 'aod' - no idea what it is for except maybe
     # 'all other downloads'
 
-    # the 8010 doesn't have seperate origins - they are all dumped in "images"
+    # the 8100 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     def GetImageOrigins(self):
@@ -571,16 +456,19 @@ class Profile(parentprofile):
         parentprofile.__init__(self)
 
     _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('wallpaper', 'read', None),  # all wallpaper reading
-        ('ringtone', 'read', None),   # all ringtone reading
-        ('sms', 'read', None),        # all SMS list reading
+        ('phonebook', 'read', None),   # all phonebook reading
+        ('calendar', 'read', None),    # all calendar reading
+        ('wallpaper', 'read', None),   # all wallpaper reading
+        ('ringtone', 'read', None),    # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),         # all SMS list reading
+        ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
-        ('call_history', 'read', None),
+        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
+        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         )

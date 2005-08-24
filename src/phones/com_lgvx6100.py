@@ -26,13 +26,16 @@ import sha
 
 # my modules
 import common
+import commport
 import copy
+import p_brew
 import p_lgvx6100
 import com_lgvx4400
 import com_brew
 import com_phone
 import com_lg
 import prototypes
+import call_history
 
 class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX6100 cell phone"
@@ -95,10 +98,33 @@ class Phone(com_lgvx4400.Phone):
                 index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
 
+    my_model='VX6100'
+
+    def getphoneinfo(self, phone_info):
+        print "in phone info"
+        self.log('Getting Phone Info')
+        #try:
+        s=self.getfilecontents('brew/version.txt')
+        if s[:6]=='VX6100':
+            phone_info.append('Model:', "VX6100")
+            req=p_brew.firmwarerequest()
+            res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+            phone_info.append('Firmware Version:', res.firmware)
+            s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+            txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
+            phone_info.append('ESN:', txt)
+            txt=self.getfilecontents("nvm/nvm/nvm_0000")[577:587]
+            phone_info.append('Phone Number:', txt)
+        #except:
+        #    pass
+        return
+
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX6100'
 
     WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=148
@@ -136,6 +162,7 @@ class Profile(parentprofile):
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('call_history', 'read', None),# all call history list reading
         # ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),

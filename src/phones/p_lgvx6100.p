@@ -13,6 +13,7 @@
 """Various descriptions of data specific to LG VX6100"""
 
 from prototypes import *
+from prototypeslg import *
 
 # Make all lg stuff available in this module as well
 from p_lg import *
@@ -150,3 +151,28 @@ PACKET camindexentry:
 PACKET campicsdat:
     "the cam/pics.dat file"
     * LIST {'length': 60, 'elementclass': camindexentry, 'createdefault': True} +items
+
+PACKET call:
+    4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
+    4 UINT unknown1 # different for each call
+    4 UINT duration #seconds, not certain about length of this field
+    49 STRING {'raiseonunterminatedread': False} number
+    36 STRING {'raiseonunterminatedread': False} name
+    1 UINT numberlength # length of phone number
+    1 UINT unknown2 # set to 1 on some calls
+    1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
+    2 UINT unknown3 # always seems to be 0
+    2 UINT pbentrynum #entry number in phonebook
+
+PACKET callhistory:
+    4 UINT numcalls
+    1 UINT unknown1
+    * LIST {'elementclass': call} +calls
+
+PACKET firmwareresponse:
+    1 UINT command
+    11 STRING {'terminator': None}  date1
+    8 STRING {'terminator': None}  time1
+    11 STRING {'terminator': None}  date2
+    8 STRING {'terminator': None}  time2
+    8 STRING {'terminator': None}  firmware

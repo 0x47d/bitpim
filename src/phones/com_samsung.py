@@ -726,7 +726,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         r['firmware_version']=_send_at_and_get('+GMR')
         r['esn']=_send_at_and_get('+GSN')
 
-    def _detectphone(coms, likely_ports, res):
+    def _detectphone(coms, likely_ports, res, _module):
         if not len(likely_ports):
             return None
         for port in likely_ports:

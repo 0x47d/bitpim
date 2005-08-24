@@ -213,7 +213,8 @@ class DetectPhone(object):
                 self.log('Likely ports:'+str(likely_ports))
                 found_port=getattr(module.Phone, 'detectphone')(coms,
                                                                 likely_ports,
-                                                                self.__data)
+                                                                self.__data,
+                                                                module)
                 if found_port is not None:
                     # found it
                     found_model=model
