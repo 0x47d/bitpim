@@ -24,8 +24,11 @@ NUMEMAILS=3
 NUMPHONENUMBERS=6
 MAXNUMBERLEN=32
 NUMTODOENTRIES=9
+NUMSMSENTRIES=94
 
 NUMGROUPS=4
+
+AMSREGISTRY="ams/AmsRegistry"
 
 %}
 
@@ -71,13 +74,6 @@ PACKET groupnameentry:
 PACKET unparsedresponse:
     * UNKNOWN pad
     
-PACKET esnrequest:
-    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
-
-PACKET esnresponse:
-    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
-    * CSVSTRING {'quotechar': None, 'terminator': None} esn
-
 PACKET filepbentry:
     1 UINT  dunno1
     1 UINT  dunno2
@@ -129,3 +125,42 @@ PACKET ringer:
 # 0x51-0x5a Ringtone 1-10
 # 0x5b-0x64 Fuer Elise - Boardwalk
 
+# 
+PACKET amsregistry:
+    * LIST {'length': 150} items:
+        4 UINT zeros
+        2 UINT sixtyfour
+    * LIST {'length': 320} info:
+        2 UINT dir_ptr
+        2 UINT num2
+        2 UINT name_ptr
+        2 UINT version_ptr
+        2 UINT vendor_ptr
+        2 UINT downloaddomain_ptr
+        2 UINT num7
+        2 UINT num8
+        4 UINT num9
+        2 UINT filetype "12: Ringer, 13 Screen Saver, 15 Apps"
+        2 UINT mimetype_ptr
+        2 UINT num12
+        2 UINT num13
+        2 UINT num14
+        2 UINT num15
+        2 UINT num16
+        2 UINT num17
+    * LIST {'length': 100} info2:
+        2 UINT val1
+        2 UINT val2
+        2 UINT val3
+        2 UINT val4
+        2 UINT val5
+        2 UINT val6
+        2 UINT val7
+        2 UINT val8
+        2 UINT val9
+        2 UINT val10
+    23000 DATA strings
+    2 UINT num1
+    2 UINT num2
+    2 UINT nfiles
+    2 UINT num4
