@@ -84,10 +84,3 @@ PACKET evententry:
     * CSVSTRING {'quotechar': None} dunno
     * CSVSTRING {'terminator': None} eventname
 
-PACKET esnrequest:
-    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '+GSN'} +command
-
-PACKET esnresponse:
-    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
-    * CSVSTRING {'quotechar': None, 'terminator': None} esn
-
