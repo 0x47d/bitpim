@@ -65,11 +65,14 @@ class Phone(com_lg.LGDirectoryMedia,com_lgvx4400.Phone):
         com_lg.LGDirectoryMedia.__init__(self)
         self.mode=self.MODENONE
 
+    my_model='VX4600'
 
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX4600'
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131

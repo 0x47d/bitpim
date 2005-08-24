@@ -50,13 +50,15 @@ class Phone(com_lgvx7000.Phone):
     wallpaperlocations= (
         ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'dload/img', 100, 50, 0),
         )
-        
-    
+
+    my_model='VX8000'
 
 parentprofile=com_lgvx7000.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX8000'
 
     WALLPAPER_WIDTH=176
     WALLPAPER_HEIGHT=184

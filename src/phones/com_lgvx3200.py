@@ -369,12 +369,14 @@ class Phone(com_lgvx4400.Phone):
         reindexfunction(results)
         return results
 
-                   
+    my_model='VX3200'
 
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX3200'
 
     # use for auto-detection
     phone_manufacturer='LG Electronics Inc.'

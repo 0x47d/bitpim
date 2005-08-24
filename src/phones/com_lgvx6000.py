@@ -86,10 +86,14 @@ class Phone(com_lgvx4400.Phone):
                 index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
         return index
 
+    my_model='VX6000'
+
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX6000'
 
     # use for auto-detection
     if __debug__:

@@ -72,10 +72,14 @@ class Phone(com_lgvx4400.Phone):
         #e.unknown20c="\x00\x00\x00\x00\x00\x31\x02"
         return e
 
+    my_model='VX4500'
+
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='VX4500'
 
     # no direct usb interface
     usbids=com_lgvx4400.Profile.usbids_usbtoserial
