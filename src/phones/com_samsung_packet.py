@@ -19,6 +19,7 @@ import commport
 import time
 import re
 import todo
+import memo
 
 class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
@@ -578,6 +579,52 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         for slot in range(todo_cnt, self.protocolclass.NUMTODOENTRIES):
             req.slot=slot
             self.sendpbcommand(req,self.protocolclass.todoupdateresponse)
+
+    def getmemo(self, result):
+        memos = {}
+        self.log("Getting memo entries")
+        self.setmode(self.MODEPHONEBOOK)
+        req=self.protocolclass.memorequest()
+        for slot in range(self.protocolclass.NUMMEMOENTRIES):
+            req.slot=slot
+            res=self.sendpbcommand(req,self.protocolclass.memoresponse)
+            if len(res) > 0:
+                entry=memo.MemoEntry()
+                entry.text=res[0].text
+                entry.set_date_isostr='%4.4d%2.2d%2.2dT%2.2d%2.2d%2.2d'%(res[0].timestamp[0],res[0].timestamp[1],res[0].timestamp[2],res[0].timestamp[3],res[0].timestamp[4],res[0].timestamp[5])
+                memos[entry.id]=entry
+
+        result['memo']=memos
+        return result
+
+    def savememo(self, dict, merge):
+        self.setmode(self.MODEPHONEBOOK)
+        memos=dict.get('memo', {})
+        memos_len=len(memos)
+        l=self.protocolclass.NUMMEMOENTRIES
+        if memos_len > l:
+            self.log("The number of Memo entries (%d) exceeded the mamximum (%d)" % (cal_len, l))
+        self.setmode(self.MODEPHONEBOOK)
+        self.log("Saving memo entries")
+        memo_cnt=0
+        req=self.protocolclass.memoupdaterequest()
+        for k in memos:
+            memo=memos[k]
+            if memo_cnt >= l:
+                break
+            
+            dd=memo.set_date_isostr
+            req.timestamp=list(time.localtime(time.time())[0:6])
+            req.text=memo.text
+            self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
+            memo_cnt += 1
+
+        req=self.protocolclass.memoerase()
+        for slot in range(memo_cnt, self.protocolclass.NUMMEMOENTRIES):
+            req.slot=slot
+            self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
+    
+        
         
 class Profile(com_phone.Profile):
 
