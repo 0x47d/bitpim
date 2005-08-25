@@ -114,6 +114,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
                     self._gs.Show(i*2+1, True)
                     w.Enable(True)
                     w.SetValue(getattr(data, n[self._dict_key_index]))
+        self._gs.Layout()
         self.ignore_dirty=self.dirty=False
 
     def Clear(self):

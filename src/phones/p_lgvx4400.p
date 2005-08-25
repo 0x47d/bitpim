@@ -297,4 +297,4 @@ PACKET sms_quick_text:
 # the vx4400 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
-        * STRING {} msg # 
+        * STRING {} msg #
