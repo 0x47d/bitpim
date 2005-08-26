@@ -46,7 +46,7 @@ class Phone(com_samsung_packet.Phone):
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI."""
-        #self.amsanalyze()
+        self.amsanalyze(results)
 
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
@@ -72,10 +72,12 @@ class Phone(com_samsung_packet.Phone):
         (100, "", "digital_cam/jpeg", "camera", 100)
         )
         
-    def amsanalyze(self):
+    def amsanalyze(self,results):
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.AMSREGISTRY))
         ams=self.protocolclass.amsregistry()
         ams.readfrombuffer(buf)
+        rt={}   #Todd added for ringtone index
+        j=0     #Todd added for ringtone index
         for i in range(ams.nfiles):
             filetype=ams.info[i].filetype
             if filetype:
@@ -90,12 +92,26 @@ class Phone(com_samsung_packet.Phone):
                 version=self.getstring(ams.strings,version_ptr)
                 vendor=self.getstring(ams.strings,vendor_ptr)
 
-                downloaddomain_ptr=ams.info[i].downloaddomain_ptr
+                #downloaddomain_ptr=ams.info[i].downloaddomain_ptr
                 print i, filetype, version, dir, vendor, name, mimetype
-                if downloaddomainptr_ptr:
-                    print self.getstring(ams.strings,misc_ptr)
-                print ams.info[i].num2,ams.info[i].num6, ams.info[i].num7, ams.info[i].num8, ams.info[i].num9, ams.info[i].num12, ams.info[i].num13, ams.info[i].num14, ams.info[i].num15, ams.info[i].num16, ams.info[i].num17
+                #if downloaddomainptr_ptr:
+                # print self.getstring(ams.strings,misc_ptr)
+                print j,ams.info[i].num2, ams.info[i].num7, ams.info[i].num8, ams.info[i].num9, ams.info[i].num12, ams.info[i].num13, ams.info[i].num14, ams.info[i].num15, ams.info[i].num16, ams.info[i].num17
                 print " "
+
+        # Todd's added info
+                if filetype==12:     #this will add the file extension
+                    if mimetype=="audio/vnd.qcelp":
+                        filetype='.qcp'
+                    elif mimetype=="audio/midi":
+                        filetype='.mid'
+                    elif mimetype=="application/x-pmd":
+                        filetype='.pmd'
+                    else:
+                        filetype=''
+                    rt[j]={'name':name+filetype,'location':'ams/'+dir,'origin':'ringers'}
+                    j+=1
+        results['ringtone-index']=rt
         
     def pblinerepair(self, line):
         "Extend incomplete lines"
@@ -202,35 +218,6 @@ class Phone(com_samsung_packet.Phone):
         
         return 0
         
-    def getamsindices(self, results):
-        info_offset=900
-        label_offset=14420
-        contents=self.getfilecontents(self.__ams_index_file)
-        records=ord(contents[37424]) #this tells how many records there are in the ams file
-        offset=0
-        rt={}
-        j=0
-        for i in range(records):
-            info=struct.unpack('8hl8h',contents[info_offset+offset:info_offset+offset+36])
-            if info[9]==12: #ringtone file
-                rt_name=self.getamstext(label_offset,info[2],contents)
-                rt_dir='ams/'+self.getamstext(label_offset,info[0],contents)
-                rt_type=self.getamstext(label_offset,info[10],contents)
-                if rt_type=="audio/vnd.qcelp":
-                    rt_filetype='.qcp'
-                elif rt_type=="audio/midi":
-                    rt_filetype='.mid'
-                elif rt_type=="application/x-pmd":
-                    rt_filetype='.pmd'
-                else:
-                    rt_filetype=''
-                rt_file=rt_name+rt_filetype
-                rt[j]={'name':rt_file,'location':rt_dir,'origin':'ringers'}
-                j+=1
-            offset+=36
-        results['ringtone-index']=rt
-        return
-
     def getstring(self, contents, start):
         "Get a null terminated string from contents"
         i=start
@@ -238,22 +225,11 @@ class Phone(com_samsung_packet.Phone):
             i+=1
         return contents[start:i]
         
-    def getamstext(self, offset,location,contents): #this reads from the amsregistry file until it hits the spacer which is '00'
-        length=1 
-        i=0
-        while i==0:
-            if common.hexify(contents[offset+location+length])=='00':
-                i=1
-            else:
-                length+=1
-        amstext=contents[offset+location:offset+location+length]       
-        return amstext
-
     def getringtones(self, results):
         self.setmode(self.MODEBREW)
-        self.getamsindices(results)
         tones={}
         for i in range(len(results['ringtone-index'])):
+            print i,results['ringtone-index'][i]['location']
             tones[results['ringtone-index'][i]['name']]=self.getfilecontents(results['ringtone-index'][i]['location'])
             i+=1
         results['ringtone']=tones
