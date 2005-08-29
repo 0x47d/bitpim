@@ -1005,8 +1005,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 res[self.esn_file_key]=None
 
     def eval_detect_data(self, res):
-        if res.get(self.brew_version_txt_key, '')[:len(self.my_model)]==self.my_model or \
-           res.get(self.lgpbinfo_key, '').find(self.my_model)!=-1:
+        if res.get(self.brew_version_txt_key, None) is not None:
+            found=res[self.brew_version_txt_key][:len(self.my_model)]==self.my_model
+        else:
+            found=res.get(self.lgpbinfo_key, '').find(self.my_model)!=-1
+        if found:
             res['model']=self.my_model
             res['manufacturer']='LG Electronics Inc'
             s=res.get(self.esn_file_key, None)
