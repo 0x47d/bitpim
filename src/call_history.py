@@ -17,6 +17,7 @@ folder: string (where this item belongs)
 datetime: string 'YYYYMMDDThhmmss' or (y,m,d,h,m,s)
 number: string (the phone number of this call)
 name: string (optional name associated with this number)
+duration: int (optional duration of the call in minutes)
 
 To implement Call History feature for a phone module:
 
@@ -49,7 +50,7 @@ import today
 
 #-------------------------------------------------------------------------------
 class CallHistoryDataobject(database.basedataobject):
-    _knownproperties=['folder', 'datetime', 'number', 'name' ]
+    _knownproperties=['folder', 'datetime', 'number', 'name', 'duration' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     def __init__(self, data=None):
         if data is None or not isinstance(data, CallHistoryEntry):
@@ -68,6 +69,7 @@ class CallHistoryEntry(object):
     _datetime_key='datetime'
     _number_key='number'
     _name_key='name'
+    _duration_key='duration'
     _unknown_datetime='YYYY-MM-DD hh:mm:ss'
     _id_index=0
     _max_id_index=999
@@ -149,6 +151,14 @@ class CallHistoryEntry(object):
         self._set_or_del(self._name_key, v, ('',))
     name=property(fget=_get_name, fset=_set_name)
 
+    def _get_duration(self):
+        return self._data.get(self._duration_key, None)
+    def _set_duration(self, v):
+        if v is not None and not isinstance(v, int):
+            raise TypeError('duration property is an int arg')
+        self._set_or_del(self._duration_key, v)
+    duration=property(fget=_get_duration, fset=_set_duration)
+
     def _get_datetime(self):
         return self._data.get(self._datetime_key, '')
     def _set_datetime(self, v):
@@ -174,13 +184,18 @@ class CallHistoryEntry(object):
     datetime=property(fget=_get_datetime, fset=_set_datetime)
     def get_repr(self, name=None):
         # return a string representing this item in the format of
-        # YYYY-MM-DD hh:mm:ss <Number/Name>
+        # [YYYY-MM-DD hh:mm:ss<ddm>] - <Number/Name>
         f=self.folder[0].upper()
         s=self.datetime
-        if not len(s):
-            s=f+'['+self._unknown_datetime+']'
+        if self.duration is None:
+            _duration=''
         else:
-            s=f+'['+s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+':'+s[13:]+']  -  '
+            _duration='<%dm%ds>'%(self.duration/60, self.duration%60)
+        if not len(s):
+            s=f+'['+self._unknown_datetime+_duration+']'
+        else:
+            s=f+'['+s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+\
+               ':'+s[13:]+_duration+']  -  '
         if name:
             s+=name
         elif self.name:
@@ -188,6 +203,7 @@ class CallHistoryEntry(object):
         else:
             s+=phonenumber.format(self.number)
         return s
+
     def summary(self, name=None):
         # return a short summary for this entry in the format of
         # MM/DD hh:mm <Number/Name>
