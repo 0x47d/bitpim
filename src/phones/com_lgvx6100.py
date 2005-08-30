@@ -49,7 +49,7 @@ class Phone(com_lgvx4400.Phone):
     imagelocations=(
         # offset, index file, files location, type, maximumentries
         ( 16, "download/dloadindex/brewImageIndex.map", "brew/shared", "images", 60) ,
-        ( 202, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 30),
+        ( 200, "download/dloadindex/mmsImageIndex.map", "brew/shared/mms", "mms", 30),
         ( 240, "download/dloadindex/mmsDrmImageIndex.map", "brew/shared/mms/d", "drm", 20), 
         ( 130, None, None, "camera", 60) # nb camera must be last
         )
@@ -101,22 +101,21 @@ class Phone(com_lgvx4400.Phone):
     my_model='VX6100'
 
     def getphoneinfo(self, phone_info):
-        print "in phone info"
         self.log('Getting Phone Info')
-        #try:
-        s=self.getfilecontents('brew/version.txt')
-        if s[:6]=='VX6100':
-            phone_info.append('Model:', "VX6100")
-            req=p_brew.firmwarerequest()
-            res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
-            phone_info.append('Firmware Version:', res.firmware)
-            s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
-            txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
-            phone_info.append('ESN:', txt)
-            txt=self.getfilecontents("nvm/nvm/nvm_0000")[577:587]
-            phone_info.append('Phone Number:', txt)
-        #except:
-        #    pass
+        try:
+            s=self.getfilecontents('brew/version.txt')
+            if s[:6]=='VX6100':
+                phone_info.append('Model:', "VX6100")
+                req=p_brew.firmwarerequest()
+                res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+                phone_info.append('Firmware Version:', res.firmware)
+                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+                txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
+                phone_info.append('ESN:', txt)
+                txt=self.getfilecontents("nvm/nvm/nvm_0000")[577:587]
+                phone_info.append('Phone Number:', txt)
+        except:
+            pass
         return
 
 parentprofile=com_lgvx4400.Profile
@@ -163,11 +162,13 @@ class Profile(parentprofile):
         ('ringtone', 'read', None),   # all ringtone reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('call_history', 'read', None),# all call history list reading
-        # ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        ('sms', 'read', None),         # all SMS list reading
+        # ('calendar', 'write', 'OVERWRITE'),  # only overwriting calendar
+        ('wallpaper', 'write', 'MERGE'),     # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
+        ('sms', 'write', 'OVERWRITE'),       # all SMS list writing
         )
  
     def __init__(self):

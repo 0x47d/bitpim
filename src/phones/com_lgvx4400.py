@@ -123,34 +123,48 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             buf=prototypes.buffer()
             sf.writetobuffer(buf)
             self.logdata("Writing calendar", buf.getvalue(), sf)
-            self.writefile("sms/mediacan000.dat", buf.getvalue())
+            self.writefile(self.protocolclass.SMS_CANNED_FILENAME, buf.getvalue())
         return
 
-    _smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
-                 'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
-                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
-                 }
-
     def getsms(self, result):
-        res={}
         # get the quicktext (LG name for canned messages)
         result['canned_msg']=self._getquicktext()
+        result['sms']=self._readsms()
+        return result
+
+    def _readsms(self):
+        res={}
         # go through the sms directory looking for messages
         for item in self.getfilesystem("sms").values():
             if item['type']=='file':
                 folder=None
-                for f,pat in self._smspatterns.items():
+                for f,pat in self.protocolclass.SMS_PATTERNS.items():
                     if pat.match(item['name']):
                         folder=f
                         break
+                if folder:
+                    buf=prototypes.buffer(self.getfilecontents(item['name'], True))
+                    self.logdata("SMS message file " +item['name'], buf.getdata())
                 if folder=='Inbox':
-                    self._getinboxmessage(item['name'], res)
+                    sf=self.protocolclass.sms_in()
+                    sf.readfrombuffer(buf)
+                    entry=self._getinboxmessage(sf)
+                    res[entry.id]=entry
                 elif folder=='Sent':
-                    self._getoutboxmessage(item['name'], res)
+                    sf=self.protocolclass.sms_out()
+                    sf.readfrombuffer(buf)
+                    entry=self._getoutboxmessage(sf)
+                    res[entry.id]=entry
                 elif folder=='Saved':
-                    self._getsavedmessage(item['name'], res)
-        result['sms']=res
-        return result
+                    sf=self.protocolclass.sms_saved()
+                    sf.readfrombuffer(buf)
+                    if sf.outboxmsg:
+                        entry=self._getoutboxmessage(sf.outbox)
+                    else:
+                        entry=self._getinboxmessage(sf.inbox)
+                    entry.folder=entry.Folder_Saved
+                    res[entry.id]=entry
+        return res 
 
     def _getquicktext(self):
         quicks=[]
@@ -166,11 +180,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             pass # do nothing if file doesn't exist
         return quicks
 
-    def _getinboxmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_in()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
+    def _getinboxmessage(self, sf):
         entry=sms.SMSEntry()
         entry.folder=entry.Folder_Inbox
         entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
@@ -190,28 +200,23 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 txt+=self._get_text_from_sms_msg_with_header(sf.msgs[i].msg, sf.msglengths[i].msglength)
         entry.text=unicode(txt, errors='ignore')
         entry.callback=sf.callback
-        res[entry.id]=entry
-        return
+        return entry
 
-    def _getoutboxmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_out()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
+    def _getoutboxmessage(self, sf):
         entry=sms.SMSEntry()
         entry.folder=entry.Folder_Sent
         entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
         # add all the recipients
-        for i in range(10):
-            if sf.recipients[i].number!="":
-                confirmed=(sf.recipients[i].status==5)
-                confirmed_date=""
+        for r in sf.recipients:
+            if r.number:
+                confirmed=(r.status==5)
+                confirmed_date=None
                 if confirmed:
-                    confirmed_date="%d%02d%02dT%02d%02d00" % ((sf.recipients[i].timereceived))
-                entry.add_recipient(sf.recipients[i].number, confirmed, confirmed_date)
+                    confirmed_date="%d%02d%02dT%02d%02d00" % r.timereceived
+                entry.add_recipient(r.number, confirmed, confirmed_date)
         entry.subject=sf.subject
         txt=""
-        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
+        if sf.num_msg_elements==1 and not sf.messages[0].binary:
             txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
         else:
             for i in range(sf.num_msg_elements):
@@ -223,41 +228,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             entry.priority=sms.SMSEntry.Priority_High
         entry.locked=sf.locked
         entry.callback=sf.callback
-        res[entry.id]=entry
-        return
-
-    def _getsavedmessage(self, file, res):
-        buf=prototypes.buffer(self.getfilecontents(file))
-        sf=self.protocolclass.sms_saved()
-        sf.readfrombuffer(buf)
-        self.logdata("SMS message in file "+file, buf.getdata(), sf)
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Saved
-        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
-        # add all the recipients, unlike the outbox all 10 are the same format
-        for i in range(10):
-            if sf.recipients[i].number!="":
-                confirmed=(sf.recipients[i].status==5)
-                confirmed_date=""
-                if confirmed:
-                    confirmed_date="%d%02d%02dT%02d%02d00" % ((sf.recipients[i].timereceived))
-                entry.add_recipient(sf.recipients[i].number, confirmed, confirmed_date)
-        entry.subject=sf.subject
-        txt=""
-        if sf.num_msg_elements==1 and sf.messages[0].unknown2==0:
-            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
-        entry.text=unicode(txt, errors='ignore')
-        if sf.priority==0:
-            entry.priority=sms.SMSEntry.Priority_Normal
-        else:
-            entry.priority=sms.SMSEntry.Priority_High
-        entry.locked=sf.locked
-        entry.callback=sf.callback
-        res[entry.id]=entry
-        return
+        return entry
 
     def _get_text_from_sms_msg_without_header(self, msg, num_septets):
         out=""
@@ -323,6 +294,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                         continue
                 entry=call_history.CallHistoryEntry()
                 entry.folder=folder
+                if call.duration:
+                    entry.duration=call.duration
                 entry.datetime=((call.GPStime))
                 if call.number=='': # restricted calls have no number
                     entry.number=call.name
@@ -951,7 +924,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         req=p_brew.memoryconfigrequest()
         respc=p_brew.memoryconfigresponse
         
-        for baud in 0, 115200, 38400:
+        for baud in 0, 38400, 115200:
             if baud:
                 if not self.comm.setbaudrate(baud):
                     continue

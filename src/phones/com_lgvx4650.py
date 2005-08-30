@@ -85,6 +85,11 @@ class Phone(com_lgvx4400.Phone):
         com_lgvx4400.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
 
+    def getfirmwareinformation(self):
+        self.log("Getting firmware information")
+        req=Phone.protocolclass.firmwarerequest()
+        res=self.sendbrewcommand(req, Phone.protocolclass.firmwareresponse)
+
     def getmediaindex(self, builtins, maps, results, key):
         """Gets the media (wallpaper/ringtone) index
 
@@ -278,110 +283,26 @@ class Phone(com_lgvx4400.Phone):
         result['call_history']=res
         return result
 
-    def savesms(self, result, merge):
+    def _setquicktext(self, result):
         canned_file=Phone.SMSCannedFile()
         canned_file.set_sms_canned_data(result.get('canned_msg', []))
         buf=prototypes.buffer()
         canned_file.writetobuffer(buf)
         self.writefile(Phone.protocolclass.sms_canned_file, buf.getvalue())
-        result['rebootphone']=True
-        return result
+
+    def _getquicktext(self):
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                Phone.protocolclass.sms_canned_file))
+            canned_file=Phone.SMSCannedFile()
+            canned_file.readfrombuffer(buf)
+            return canned_file.get_sms_canned_data()
+        except:
+            if __debug__:
+                raise
+            return []
 
     my_model='VX4650'
-
-    _smspatterns={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
-                 'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
-                 'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
-                 }
-    def getsms(self, result):
-        res={}
-        # get SMS canned messages
-        buf=prototypes.buffer(self.getfilecontents(
-            Phone.protocolclass.sms_canned_file))
-        canned_file=Phone.SMSCannedFile()
-        canned_file.readfrombuffer(buf)
-        result['canned_msg']=canned_file.get_sms_canned_data()
-        # go through the sms directory looking for messages
-        for item in self.getfilesystem("sms").values():
-            if item['type']=='file':
-                folder=None
-                for f,pat in self._smspatterns.items():
-                    if pat.match(item['name']):
-                        folder=f
-                        break
-                if folder:
-                    buf=prototypes.buffer(self.getfilecontents(item['name'], True))
-                if folder=='Inbox':
-                    sf=self.protocolclass.sms_in()
-                    sf.readfrombuffer(buf)
-                    entry=self._getinboxmessage(sf)
-                    res[entry.id]=entry
-                elif folder=='Sent':
-                    sf=self.protocolclass.sms_out()
-                    sf.readfrombuffer(buf)
-                    entry=self._getoutboxmessage(sf)
-                    res[entry.id]=entry
-                elif folder=='Saved':
-                    sf=self.protocolclass.sms_saved()
-                    sf.readfrombuffer(buf)
-                    if sf.outboxmsg:
-                        entry=self._getoutboxmessage(sf.outbox)
-                    else:
-                        entry=self._getinboxmessage(sf.inbox)
-                    entry.folder=entry.Folder_Saved
-                    res[entry.id]=entry
-        result['sms']=res
-        return result
-
-    def _getinboxmessage(self, sf):
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Inbox
-        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
-        entry._from=self._getsender(sf.sender, sf.sender_length)
-        entry.subject=sf.subject
-        entry.locked=sf.locked
-        if sf.priority==0:
-            entry.priority=sms.SMSEntry.Priority_Normal
-        else:
-            entry.priority=sms.SMSEntry.Priority_High
-        entry.read=sf.read
-        txt=""
-        if sf.num_msg_elements==1 and sf.bin_header1==0:
-            txt=self._get_text_from_sms_msg_without_header(sf.msgs[0].msg, sf.msglengths[0].msglength)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.msgs[i].msg, sf.msglengths[i].msglength)
-        entry.text=unicode(txt, errors='ignore')
-        entry.callback=sf.callback
-        return entry
-
-    def _getoutboxmessage(self, sf):
-        entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Sent
-        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
-        # add all the recipients
-        for r in sf.recipients:
-            if r.number:
-                confirmed=(r.status==5)
-                confirmed_date=None
-                if confirmed:
-                    confirmed_date="%d%02d%02dT%02d%02d00" % r.timereceived
-                entry.add_recipient(r.number, confirmed, confirmed_date)
-        entry.subject=sf.subject
-        txt=""
-        if sf.num_msg_elements==1 and not sf.messages[0].binary:
-            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
-        else:
-            for i in range(sf.num_msg_elements):
-                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
-        entry.text=unicode(txt, errors='ignore')
-        if sf.priority==0:
-            entry.priority=sms.SMSEntry.Priority_Normal
-        else:
-            entry.priority=sms.SMSEntry.Priority_High
-        entry.locked=sf.locked
-        entry.callback=sf.callback
-        return entry
 
     class SMSCannedFile(protocolclass.SMSCannedFile):
         def __init__(self, *args, **kwargs):

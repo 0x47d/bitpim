@@ -11,11 +11,14 @@
 
 """Various descriptions of data specific to LG VX4400"""
 
+import re
+
 from prototypes import *
 from prototypeslg import *
 
 # Make all lg stuff available in this module as well
 from p_lg import *
+
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -37,6 +40,13 @@ NOWALLPAPER=0
 MEMOLENGTH=33
 SMS_CANNED_MAX_ITEMS=18
 SMS_CANNED_MAX_LENGTH=101
+SMS_CANNED_FILENAME="sms/mediacan000.dat"
+SMS_PATTERNS={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
+             'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
+             'Saved': re.compile(r"^.*/sf[0-9][0-9]\.dat$"),
+             }
+
+
 
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
@@ -200,7 +210,7 @@ PACKET msg_record:
     # message contained. EMS and concatinated text are coded differently than a
     # simple text message
     1 UINT unknown1 # 0
-    1 UINT unknown2 # 0=simple text, 1=binary/concatinated
+    1 UINT binary   # 0=simple text, 1=binary/concatinated
     1 UINT unknown3 # 0=simple text, 1=binary/concatinated
     1 UINT unknown4 # 0
     1 UINT unknown6 # 2=simple text, 9=binary/concatinated
@@ -217,21 +227,12 @@ PACKET recipient_record:
     8 DATA unknown2
 
 PACKET sms_saved:
-    4 UINT unknown1  # set to 1
-    4 LGCALDATE timesent # time the message was saved, identical to timesent2
-    4 DATA unknown2
-    1 UINT locked # 1=locked
-    3 UINT unknown1 # zero
-    4 LGCALDATE timesent2 # time the message was sent
-    21 STRING subject
-    151 UINT unknown4
-    1 UINT num_msg_elements # up to 10
-    * LIST {'elementclass': msg_record, 'length': 10} +messages
-    1 DATA unknown5
-    1 UINT priority # 0=normal, 1=high
-    14 DATA unknown7
-    49 STRING callback 
-    * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
+    4 UINT outboxmsg
+    4 UNKNOWN pad # used for GPStime on some phones
+    if self.outboxmsg:
+        * sms_out outbox
+    if not self.outboxmsg:
+        * sms_in inbox
 
 PACKET sms_out:
     4 UINT index # starting from 1, unique
@@ -298,3 +299,4 @@ PACKET sms_quick_text:
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
         * STRING {} msg #
+

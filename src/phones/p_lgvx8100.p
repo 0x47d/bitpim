@@ -143,16 +143,6 @@ PACKET callhistory:
 #   the 7-bit characters are just packed into memory in the order they appear in the
 #   message.
 
-PACKET msg_record:
-    1 UINT unknown1 # 0
-    1 UINT unknown2 # 0=simple text, 1=binary/concatinated
-    1 UINT unknown3 # 0=simple text, 1=binary/concatinated
-    1 UINT unknown4 # 0
-    1 UINT unknown6 # 2=simple text, 9=binary/concatinated
-    1 UINT length
-    * LIST {'length': 219} +msg:
-        1 UINT byte "individual byte of message"
-
 PACKET recipient_record:
     45 DATA unknown1
     49 STRING number
@@ -163,23 +153,12 @@ PACKET recipient_record:
     40 DATA unknown3
 
 PACKET sms_saved:
-    4 UINT unknown1  # set to 1
+    4 UINT outboxmsg
     4 GPSDATE GPStime   # num seconds since 0h 1-6-80, time message received by phone
-    5 DATA unknown2
-    1 UINT locked
-    4 LGCALDATE timesent # time the message was sent
-    6 DATA unknown3
-    21 STRING subject
-    1 UINT unknown4
-    1 UINT num_msg_elements # up to 7
-    * LIST {'elementclass': msg_record, 'length': 7} +messages
-    1 UINT unknown5
-    1 UINT priority # 0=normal, 1=high
-    12 DATA unknown7
-    3 DATA unknown8 # set to 01,00,01 
-    23 STRING callback 
-    * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
-    982 DATA unknown9 # all zeros
+    if self.outboxmsg:
+        * sms_out outbox
+    if not self.outboxmsg:
+        * sms_in inbox
 
 PACKET sms_out:
     4 UINT index # starting from 1, unique
@@ -267,3 +246,4 @@ PACKET firmwareresponse:
     11 STRING {'terminator': None}  date2
     8 STRING {'terminator': None}  time2
     8 STRING {'terminator': None}  firmware
+

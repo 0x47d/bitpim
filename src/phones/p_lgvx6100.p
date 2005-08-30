@@ -176,3 +176,108 @@ PACKET firmwareresponse:
     11 STRING {'terminator': None}  date2
     8 STRING {'terminator': None}  time2
     8 STRING {'terminator': None}  firmware
+
+###
+### SMS 
+###
+#
+#   There are 3 types of SMS records, The inbox, outbox and unsent (pending)
+#   Unlike other records in the phone each message is stored in a separate file
+#   All messages are in the 'sms' directory in the root of the phone
+#   Inbox messages are in files called 'inbox000.dat', the number 000 varies for
+#   each message, typically there are no gaps in the numbering, but gaps can appear
+#   if a message is deleted.
+#   Outbox message are named 'outbox000.dat', unsent messages are named 'sf00.dat',
+#   only two digit file name that suggests a max of 100 message for this type.
+#   Messages in the outbox get updated when the message is received by the recipient,
+#   they contain a delivery flag and a delivery time for all the possible 10 recipients.
+#   The vx8100 supports SMS contatination, this allows you to send text messages that are
+#   longer than 160 characters. The format is different for these type of messages, but
+#   it is supported by this implementation.
+#   The vx8100 also allows you to put small graphics, sounds and animations in a message.
+#   This implementation does not support these, if they are contained in a message they
+#   will be ignored and just the text will be shown when you view the message in bitpim.
+#   The text in the the messages is stored in 7-bit characters, so they have
+#   to be unpacked, in concatinated messages and messages with embeded graphics etc. the
+#   format uses the GSM 03.38 specified format, a good example of this can be found at
+#   "http://www.dreamfabric.com/sms/hello.html".
+#   For simple messages less than 161 characters with no graphics the format is simpler, 
+#   the 7-bit characters are just packed into memory in the order they appear in the
+#   message.
+
+PACKET recipient_record:
+    14 UINT unknown1
+    49 STRING number
+    1 UINT status   # 1 when sent, 5 when received, 2 failed to send
+    4 LGCALDATE timesent
+    4 LGCALDATE timereceived
+    40 DATA unknown2
+
+PACKET sms_saved:
+    4 UINT outboxmsg
+    4 GPSDATE GPStime   # num seconds since 0h 1-6-80
+    if self.outboxmsg:
+        * sms_out outbox
+    if not self.outboxmsg:
+        * sms_in inbox
+
+PACKET sms_out:
+    4 UINT index # starting from 1, unique
+    1 UINT locked # 1=locked
+    3 UINT unknown1 # zero
+    4 LGCALDATE timesent # time the message was sent
+    21 STRING subject
+    1 DATA unknown2
+    1 UINT num_msg_elements # up to 7
+    * LIST {'elementclass': msg_record, 'length': 7} +messages
+    2 UINT unknown6
+    1 UINT priority # 0=normal, 1=high
+    13 DATA unknown7
+    3 DATA unknown8 # set to 01,00,00 
+    23 STRING callback 
+    * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
+
+PACKET SMSINBOXMSGFRAGMENT:
+    * LIST {'length': 181} +msg: # this size could be wrong
+        1 UINT byte "individual byte of message"
+
+PACKET sms_in:
+    4 UINT msg_index1
+    4 UINT msg_index2 
+    2 UINT unknown2 # set to 0 
+    4 UINT unknown3 # set to 0
+    6 SMSDATE timesent
+    3 UINT unknown
+    1 UINT callback_length # 0 for no callback number
+    38 STRING callback
+    1 UINT sender_length
+    * LIST {'length': 38} +sender:
+        1 UINT byte "individual byte of senders phone number"
+    15 DATA unknown4 # set to zeros
+    4 LGCALDATE lg_time # time the message was sent
+    4 GPSDATE GPStime # num seconds since 0h 1-6-80, time message received by phone
+    2 UINT unknown5 # zero
+    1 UINT read # 1 if message has been read, 0 otherwise
+    1 UINT locked # 1 if the message is locked, 0 otherwise
+    2 UINT unknown8 
+    1 UINT priority # 1 if the message is high priority, 0 otherwise
+    6 DATA flags # message flags
+    21 STRING subject
+    1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
+    1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
+    1 UINT multipartID # multi-part message ID, used for concatinated messages only
+    3 UINT unknown6 # zeros
+    1 UINT bin_header3 # 0 in simple message 2 if the message contains a binary header
+    1 UINT num_msg_elements # max 20 elements (guessing on max here)
+    * LIST {'length': 20} +msglengths:
+        1 UINT msglength "lengths of individual messages in septets"
+    * LIST {'length': 20, 'elementclass': SMSINBOXMSGFRAGMENT} +msgs 
+                # 181 bytes per message, 
+                # 20 messages, 7-bit ascii for simple text. for binary header 
+                # first byte is header length not including the length byte
+                # rest depends on content of header, not known at this time.
+                # text alway follows the header although the format it different
+                # than a simple SMS
+    68 DATA unknown5
+    33 STRING senders_name
+    169 DATA unknown6   # ?? inlcudes senders phone number in ascii

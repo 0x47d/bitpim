@@ -82,6 +82,18 @@ SMS_CANNED_MAX_ITEMS=18
 
 %}
 
+PACKET firmwarerequest:
+    1 UINT {'constant': 0x00} +command
+
+PACKET firmwareresponse:
+    1 UINT command
+    11 STRING {'terminator': None}  date1
+    8 STRING {'terminator': None}  time1
+    11 STRING {'terminator': None}  date2
+    8 STRING {'terminator': None}  time2
+    8 STRING {'terminator': None}  firmwareversion
+    * DATA dunno
+
 PACKET speeddial:
     2 UINT {'default': 0xff} +entry
     1 UINT {'default': 0xff} +number
@@ -295,7 +307,7 @@ PACKET msg_record:
     1 UINT unknown4 # 0
     1 UINT unknown6 # 2=simple text, 9=binary/concatinated
     1 UINT length
-    * LIST {'length': 154} +msg:
+    * LIST {'length': 220} +msg:
         1 UINT byte "individual byte of message"
 
 PACKET recipient_record:
@@ -319,7 +331,8 @@ PACKET sms_out:
     4 LGCALDATE timesent # time the message was sent
     21 STRING subject
     2 UINT num_msg_elements # up to 10
-    * LIST {'elementclass': msg_record, 'length': 10} +messages
+    * LIST {'elementclass': msg_record, 'length': 7} +messages
+    15 UNKNOWN unknown1
     1 UINT priority # 0=normal, 1=high
     35 STRING callback 
     * LIST {'elementclass': recipient_record,'length': 9} +recipients
@@ -355,7 +368,8 @@ PACKET sms_in:
     1 UINT bin_header3 # 0 in simple message 2 if the message contains a binary header
     1 UINT num_msg_elements # max 10 elements (guessing on max here)
     * LIST {'length': 10} +msglengths:
-        2 UINT msglength "lengths of individual messages in septets"
+        1 UINT msglength "lengths of individual messages in septets"
+    10 UNKNOWN unknown8
     * LIST {'length': 10, 'elementclass': SMSINBOXMSGFRAGMENT} +msgs 
                 # 181 bytes per message, uncertain on this, no multipart message available
                 # 20 messages, 7-bit ascii for simple text. for binary header 
@@ -363,4 +377,4 @@ PACKET sms_in:
                 # rest depends on content of header, not known at this time.
                 # text alway follows the header although the format it different
                 # than a simple SMS
-    * UNKNOWN unknown8
+    * UNKNOWN unknown9
