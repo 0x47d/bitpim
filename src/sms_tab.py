@@ -259,9 +259,9 @@ class FolderPage(wx.Panel):
         self._clear()
         self._data_map={}
         # populate the list with data
-        keys=self._data.keys()
+        keys=[(x.datetime, k) for k,x in self._data.items()]
         keys.sort()
-        for k in keys:
+        for (_,k) in keys:
             n=self._data[k]
             i=self._item_list.AppendItem(self._nodes[n.folder], n.subject)
             self._item_list.SetItemPyData(i, k)
