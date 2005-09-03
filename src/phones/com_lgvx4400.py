@@ -10,12 +10,14 @@
 """Communicate with the LG VX4400 cell phone"""
 
 # standard modules
+import datetime
 import re
 import time
 import cStringIO
 import sha
 
 # my modules
+import bpcalendar
 import common
 import commport
 import copy
@@ -621,149 +623,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 return i
         return None
             
-    def getcalendar(self,result):
-        res={}
-        # Read exceptions file first
-        try:
-            buf=prototypes.buffer(self.getfilecontents("sch/schexception.dat"))
-            ex=self.protocolclass.scheduleexceptionfile()
-            ex.readfrombuffer(buf)
-            self.logdata("Calendar exceptions", buf.getdata(), ex)
-            exceptions={}
-            for i in ex.items:
-                try:
-                    exceptions[i.pos].append( (i.year,i.month,i.day) )
-                except KeyError:
-                    exceptions[i.pos]=[ (i.year,i.month,i.day) ]
-        except com_brew.BrewNoSuchFileException:
-            exceptions={}
-
-        # Now read schedule
-        try:
-            buf=prototypes.buffer(self.getfilecontents("sch/schedule.dat"))
-            if len(buf.getdata())<2:
-                # file is empty, and hence same as non-existent
-                raise com_brew.BrewNoSuchFileException()
-            sc=self.protocolclass.schedulefile()
-            self.logdata("Calendar", buf.getdata(), sc)
-            sc.readfrombuffer(buf)
-            for event in sc.events:
-                entry={}
-                entry['pos']=event.pos
-                if entry['pos']==-1: continue # blanked entry
-                # normal fields
-                for field in 'start','end','daybitmap','changeserial','snoozedelay','ringtone','description':
-                    entry[field]=getattr(event,field)
-                # calculated ones
-                try:
-                    entry['repeat']=self._calrepeatvalues[event.repeat]
-                except KeyError:
-                    entry['repeat']=None
-                min=event.alarmminutes
-                hour=event.alarmhours
-                if min==100 or hour==100:
-                    entry['alarm']=None # no alarm set
-                else:
-                    entry['alarm']=hour*60+min
-                # Exceptions
-                if exceptions.has_key(event.pos):
-                    entry['exceptions']=exceptions[event.pos]
-                res[event.pos]=entry
-
-            assert sc.numactiveitems==len(res)
-        except com_brew.BrewNoSuchFileException:
-            pass # do nothing if file doesn't exist
-        result['calendar']=res
-        return result
-
-    def savecalendar(self, dict, merge):
-        # ::TODO:: obey merge param
-        # what will be written to the files
-        eventsf=self.protocolclass.schedulefile()
-        exceptionsf=self.protocolclass.scheduleexceptionfile()
-
-        # what are we working with
-        cal=dict['calendar']
-        newcal={}
-        keys=cal.keys()
-        keys.sort()
-
-        # number of entries
-        eventsf.numactiveitems=len(keys)
-        
-        # play with each entry
-        for k in keys:
-            # entry is what we will return to user
-            entry=cal[k]
-            data=self.protocolclass.scheduleevent()
-            data.pos=eventsf.packetsize()
-            entry['pos']=data.pos
-            # simple copy of these fields
-            for field in 'start', 'end', 'daybitmap', 'changeserial', 'snoozedelay','ringtone','description':
-                v=entry[field]
-                if field == "description":
-                    v=v[:self.protocolclass.MAXCALENDARDESCRIPTION]
-                setattr(data,field,v)
-            # And now the special ones
-            repeat=None
-            for k,v in self._calrepeatvalues.items():
-                if entry['repeat']==v:
-                    repeat=k
-                    break
-            assert repeat is not None
-            data.repeat=repeat
-            # alarm 100 indicates not set
-            if entry['alarm'] is None or entry['alarm']<0:
-                hour=100
-                min=100
-            else:
-                assert entry['alarm']>=0
-                hour=entry['alarm']/60
-                min=entry['alarm']%60
-            data.alarmminutes=min
-            data.alarmhours=hour
-
-            # update exceptions if needbe
-            if entry.has_key('exceptions'):
-                for y,m,d in entry['exceptions']:
-                    de=self.protocolclass.scheduleexception()
-                    de.pos=data.pos
-                    de.day=d
-                    de.month=m
-                    de.year=y
-                    exceptionsf.items.append(de)
-
-            # put entry in nice shiny new dict we are building
-            entry=copy.copy(entry)
-            newcal[data.pos]=entry
-            eventsf.events.append(data)
-
-        # scribble everything out
-        buf=prototypes.buffer()
-        eventsf.writetobuffer(buf)
-        self.logdata("Writing calendar", buf.getvalue(), eventsf)
-        self.writefile("sch/schedule.dat", buf.getvalue())
-        buf=prototypes.buffer()
-        exceptionsf.writetobuffer(buf)
-        self.logdata("Writing calendar exceptions", buf.getvalue(), exceptionsf)
-        self.writefile("sch/schexception.dat", buf.getvalue())
-
-        # fix passed in dict
-        dict['calendar']=newcal
-
-        return dict
-        
-
-    _calrepeatvalues={
-        0x10: None,
-        0x11: 'daily',
-        0x12: 'monfri',
-        0x13: 'weekly',
-        0x14: 'monthly',
-        0x15: 'yearly'
-        }
-    
-
     def _normaliseindices(self, d):
         "turn all negative keys into positive ones for index"
         res={}
@@ -977,6 +836,21 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             except:
                 res[self.esn_file_key]=None
 
+    def get_esn(self, data=None):
+        # return the ESN for this phone
+        try:
+            if data is None:
+                s=self.getfilecontents(self.esn_file)
+            else:
+                s=data
+            if s:
+                s=s[85:89]
+                return '%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
+                                           ord(s[1]), ord(s[0]))
+        except:
+            if __debug__:
+                raise
+
     def eval_detect_data(self, res):
         if res.get(self.brew_version_txt_key, None) is not None:
             found=res[self.brew_version_txt_key][:len(self.my_model)]==self.my_model
@@ -987,9 +861,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             res['manufacturer']='LG Electronics Inc'
             s=res.get(self.esn_file_key, None)
             if s:
-                s=s[85:89]
-                res['esn']='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]),
-                                               ord(s[1]), ord(s[0]))
+                res['esn']=self.get_esn(s)
 
     def detectphone(coms, likely_ports, res, _module):
         if not likely_ports:
@@ -1019,6 +891,215 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     raise
     
     detectphone=staticmethod(detectphone)
+
+    # Calendar stuff------------------------------------------------------------
+    def getcalendar(self,result):
+        # Read exceptions file first
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.cal_exception_file_name))
+            ex=self.protocolclass.scheduleexceptionfile()
+            ex.readfrombuffer(buf)
+            self.logdata("Calendar exceptions", buf.getdata(), ex)
+            exceptions={}
+            for i in ex.items:
+                exceptions.setdefault(i.pos, []).append( (i.year,i.month,i.day) )
+        except com_brew.BrewNoSuchFileException:
+            exceptions={}
+
+        # Now read schedule
+        try:
+            buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.cal_data_file_name))
+            if len(buf.getdata())<2:
+                # file is empty, and hence same as non-existent
+                raise com_brew.BrewNoSuchFileException()
+            sc=self.protocolclass.schedulefile()
+            self.logdata("Calendar", buf.getdata(), sc)
+            sc.readfrombuffer(buf)
+            res=self.get_cal(sc, exceptions, result.get('ringtone-index', {}))
+        except com_brew.BrewNoSuchFileException:
+            res={}
+        result['calendar']=res
+        return result
+
+    def savecalendar(self, dict, merge):
+        # ::TODO:: obey merge param
+        # build the schedule file
+        sc=self.protocolclass.schedulefile()
+        sc_ex=self.set_cal(sc, dict.get('calendar', {}),
+                           dict.get('ringtone-index', {}),)
+        buf=prototypes.buffer()
+        sc.writetobuffer(buf)
+        self.writefile(self.protocolclass.cal_data_file_name,
+                         buf.getvalue())
+        # build the exceptions
+        exceptions_file=self.protocolclass.scheduleexceptionfile()
+        for k,l in sc_ex.items():
+            for x in l:
+                _ex=self.protocolclass.scheduleexception()
+                _ex.pos=k
+                _ex.year, _ex.month, _ex.day=x
+                exceptions_file.items.append(_ex)
+        buf=prototypes.buffer()
+        exceptions_file.writetobuffer(buf)
+        self.writefile(self.protocolclass.cal_exception_file_name,
+                         buf.getvalue())
+        return dict
+
+    _repeat_values={
+        protocolclass.CAL_REP_DAILY: bpcalendar.RepeatEntry.daily,
+        protocolclass.CAL_REP_MONFRI: bpcalendar.RepeatEntry.daily,
+        protocolclass.CAL_REP_WEEKLY: bpcalendar.RepeatEntry.weekly,
+        protocolclass.CAL_REP_MONTHLY: bpcalendar.RepeatEntry.monthly,
+        protocolclass.CAL_REP_YEARLY: bpcalendar.RepeatEntry.yearly
+        }
+
+    def _build_cal_repeat(self, event, exceptions):
+        rep_val=Phone._repeat_values.get(event.repeat, None)
+        if not rep_val:
+            return None
+        rep=bpcalendar.RepeatEntry(rep_val)
+        if event.repeat==self.protocolclass.CAL_REP_MONFRI:
+            rep.interval=rep.dow=0
+        elif event.repeat!=self.protocolclass.CAL_REP_YEARLY:
+            rep.interval=1
+            rep.dow=0
+        # do exceptions
+        cal_ex=exceptions.get(event.pos, [])
+        for e in cal_ex:
+            rep.add_suppressed(*e)
+        return rep
+
+    def _build_cal_entry(self, event, exceptions, ringtone_index):
+        # return a copy of bpcalendar object based on my values
+        # general fields
+        entry=bpcalendar.CalendarEntry()
+        entry.start=event.start
+        entry.end=event.end
+        entry.description=event.description
+        # check for allday event
+        if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
+            entry.allday=True
+        # alarm
+        if event.alarmtype:
+            entry.alarm=event.alarmhours*60+event.alarmminutes
+        # ringtone
+        rt_idx=event.ringtone
+        # hack to account for the VX4650 weird ringtone setup
+        if rt_idx<50:
+            # 1st part of builtin ringtones, need offset by 1
+            rt_idx+=1
+        entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
+        # repeat info
+        entry.repeat=self._build_cal_repeat(event, exceptions)
+        return entry
+
+    def get_cal(self, sch_file, exceptions, ringtone_index):
+        res={}
+        for event in sch_file.events:
+            if event.pos==-1:   # blank entry
+                continue
+            cal_event=self._build_cal_entry(event, exceptions, ringtone_index)
+            res[cal_event.id]=cal_event
+        return res
+
+    _alarm_info={
+        -1: (protocolclass.CAL_REMINDER_NONE, 100, 100),
+        0: (protocolclass.CAL_REMINDER_ONTIME, 0, 0),
+        5: (protocolclass.CAL_REMINDER_5MIN, 5, 0),
+        10: (protocolclass.CAL_REMINDER_10MIN, 10, 0),
+        60: (protocolclass.CAL_REMINDER_1HOUR, 0, 1),
+        1440: (protocolclass.CAL_REMINDER_1DAY, 0, 24),
+        2880: (protocolclass.CAL_REMINDER_2DAYS, 0, 48) }
+    _default_alarm=(protocolclass.CAL_REMINDER_NONE, 100, 100)    # default alarm is off
+    _phone_dow={
+        1: protocolclass.CAL_DOW_SUN,
+        2: protocolclass.CAL_DOW_MON,
+        4: protocolclass.CAL_DOW_TUE,
+        8: protocolclass.CAL_DOW_WED,
+        16: protocolclass.CAL_DOW_THU,
+        32: protocolclass.CAL_DOW_FRI,
+        64: protocolclass.CAL_DOW_SAT
+        }
+
+    def _set_repeat_event(self, event, entry, exceptions):
+        rep_val=self.protocolclass.CAL_REP_NONE
+        day_bitmap=0
+        rep=entry.repeat
+        if rep:
+            rep_type=rep.repeat_type
+            rep_interval=rep.interval
+            rep_dow=rep.dow
+            if rep_type==bpcalendar.RepeatEntry.daily:
+                if rep_interval==0:
+                    rep_val=self.protocolclass.CAL_REP_MONFRI
+                elif rep_interval==1:
+                    rep_val=self.protocolclass.CAL_REP_DAILY
+            elif rep_type==bpcalendar.RepeatEntry.weekly:
+                start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
+                if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
+                    rep_val=self.protocolclass.CAL_REP_WEEKLY
+                    day_bitmap=self._phone_dow.get(start_dow, 0)
+            elif rep_type==bpcalendar.RepeatEntry.monthly:
+                if rep_dow==0:
+                    rep_val=self.protocolclass.CAL_REP_MONTHLY
+            else:
+                rep_val=self.protocolclass.CAL_REP_YEARLY
+            if rep_val!=self.protocolclass.CAL_REP_NONE:
+                # build exception list
+                if rep.suppressed:
+                    day_bitmap|=self.protocolclass.CAL_DOW_EXCEPTIONS
+                for x in rep.suppressed:
+                    exceptions.setdefault(event.pos, []).append(x.get()[:3])
+                # this is a repeat event, set the end date appropriately
+                event.end=self.protocolclass.CAL_REPEAT_DATE+event.end[3:]
+        event.repeat=rep_val
+        event.daybitmap=day_bitmap
+            
+    def _set_cal_event(self, event, entry, exceptions, ringtone_index):
+        # desc
+        event.description=entry.description
+        # start & end times
+        if entry.allday:
+            event.start=entry.start[:3]+(0,0)
+            event.end=entry.start[:3]+(23,59)
+        else:
+            event.start=entry.start
+            event.end=entry.start[:3]+entry.end[3:]
+        # make sure the event lasts in 1 calendar day
+        if event.end<event.start:
+            event.end=event.start[:3]+(23,59)
+        # alarm
+        event.alarmtype, event.alarmminutes, event.alarmhours=Phone._alarm_info.get(
+            entry.alarm, self._default_alarm)
+        # ringtone
+        rt=0    # always default to the first bultin ringtone
+        if entry.ringtone:
+            for k,e in ringtone_index.items():
+                if e['name']==entry.ringtone:
+                    rt=k
+                    break
+            if rt and rt<50:
+                rt-=1
+        event.ringtone=rt
+        # repeat
+        self._set_repeat_event(event, entry, exceptions)
+            
+    def set_cal(self, sch_file, cal_dict, ringtone_index, **kwargs):
+        sch_file.numactiveitems=len(cal_dict)
+        exceptions={}
+        _pos=2
+##        _today=datetime.date.today().timetuple()[:5]
+        for k, e in cal_dict.items():
+##            # only send either repeat events or present&future single events
+##            if e.repeat or (e.start>=_today):
+            event=self.protocolclass.scheduleevent()
+            event.pos=_pos
+            self._set_cal_event(event, e, exceptions, ringtone_index)
+            sch_file.events.append(event)
+            _pos+=event.packet_size
+        return exceptions
 
 def phonize(str):
     """Convert the phone number into something the phone understands

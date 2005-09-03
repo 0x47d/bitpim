@@ -87,8 +87,9 @@ class Phone(com_lgvx4400.Phone):
 
     def getfirmwareinformation(self):
         self.log("Getting firmware information")
-        req=Phone.protocolclass.firmwarerequest()
-        res=self.sendbrewcommand(req, Phone.protocolclass.firmwareresponse)
+        req=self.protocolclass.firmwarerequest()
+        res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+        return res
 
     def getmediaindex(self, builtins, maps, results, key):
         """Gets the media (wallpaper/ringtone) index
@@ -109,6 +110,7 @@ class Phone(com_lgvx4400.Phone):
 
         return media
 
+    # Phonebook stuff-----------------------------------------------------------
     def savephonebook(self, data):
         "Saves out the phonebook"
         res=com_lgvx4400.Phone.savephonebook(self, data)
@@ -157,35 +159,14 @@ class Phone(com_lgvx4400.Phone):
             self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
         return update_flg
 
-    def getcalendar(self,result):
-        # Read exceptions file first
-        try:
-            buf=prototypes.buffer(self.getfilecontents(
-                self.protocolclass.cal_exception_file_name))
-            ex=self.protocolclass.scheduleexceptionfile()
-            ex.readfrombuffer(buf)
-            self.logdata("Calendar exceptions", buf.getdata(), ex)
-            exceptions={}
-            for i in ex.items:
-                exceptions.setdefault(i.pos, []).append( (i.year,i.month,i.day) )
-        except com_brew.BrewNoSuchFileException:
-            exceptions={}
-
-        # Now read schedule
-        try:
-            buf=prototypes.buffer(self.getfilecontents(
-                self.protocolclass.cal_data_file_name))
-            if len(buf.getdata())<2:
-                # file is empty, and hence same as non-existent
-                raise com_brew.BrewNoSuchFileException()
-            sc=schedulefile()
-            self.logdata("Calendar", buf.getdata(), sc)
-            sc.readfrombuffer(buf)
-            res=sc.get_cal(exceptions, result.get('ringtone-index', {}))
-        except com_brew.BrewNoSuchFileException:
-            res={}
-        result['calendar']=res
-        return result
+    # Calendar stuff------------------------------------------------------------
+    def _build_cal_entry(self, event, exceptions, ringtone_index):
+        entry=com_lgvx4400.Phone._build_cal_entry(self, event, exceptions,
+                                                  ringtone_index)
+        # voice ID
+        if event.hasvoice:
+            entry.voice=event.voiceid
+        return entry
 
     def savecalendar(self, dict, merge):
         # ::TODO:: obey merge param
@@ -196,9 +177,9 @@ class Phone(com_lgvx4400.Phone):
             if k.endswith(self.protocolclass.cal_voice_ext):
                 voice_files[int(k[8:11])]=k
         # build the schedule file
-        sc=schedulefile()
-        sc_ex=sc.set_cal(dict.get('calendar', {}), dict.get('ringtone-index', {}),
-                         voice_files)
+        sc=self.protocolclass.schedulefile()
+        sc_ex=self.set_cal(sc, dict.get('calendar', {}), dict.get('ringtone-index', {}),
+                           voice_files)
         buf=prototypes.buffer()
         sc.writetobuffer(buf)
         self.writefile(self.protocolclass.cal_data_file_name,
@@ -223,6 +204,37 @@ class Phone(com_lgvx4400.Phone):
                 self.log('Failed to delete file '+e)
         return dict
 
+    def _set_cal_event(self, event, entry, exceptions, ringtone_index,
+                       voice_files):
+        com_lgvx4400.Phone._set_cal_event(self, event, entry, exceptions,
+                                          ringtone_index)
+        # voice ID
+        if entry.voice and \
+           voice_files.has_key(entry.voice-self.protocolclass.cal_voice_id_ofs):
+            event.hasvoice=1
+            event.voiceid=entry.voice
+            del voice_files[entry.voice-self.protocolclass.cal_voice_id_ofs]
+        else:
+            event.hasvoice=0
+            event.voiceid=self.protocolclass.CAL_NO_VOICE
+            
+    def set_cal(self, sch_file, cal_dict, ringtone_index, voice_files):
+        sch_file.numactiveitems=len(cal_dict)
+        exceptions={}
+        _pos=2
+##        _today=datetime.date.today().timetuple()[:5]
+        for k, e in cal_dict.items():
+##            # only send either repeat events or present&future single events
+##            if e.repeat or (e.start>=_today):
+            event=self.protocolclass.scheduleevent()
+            event.pos=_pos
+            self._set_cal_event(event, e, exceptions, ringtone_index,
+                                voice_files)
+            sch_file.events.append(event)
+            _pos+=event.packet_size
+        return exceptions
+
+    # Text Memo stuff-----------------------------------------------------------
     def getmemo(self, result):
         # read the memo file
         try:
@@ -255,6 +267,7 @@ class Phone(com_lgvx4400.Phone):
         self.writefile(self.protocolclass.text_memo_file, buf.getvalue())
         return result
 
+    # Call History stuff--------------------------------------------------------
     _call_history_info={
         call_history.CallHistoryEntry.Folder_Incoming: protocolclass.incoming_call_file,
         call_history.CallHistoryEntry.Folder_Outgoing: protocolclass.outgoing_call_file,
@@ -283,17 +296,18 @@ class Phone(com_lgvx4400.Phone):
         result['call_history']=res
         return result
 
+    # SMS stuff-----------------------------------------------------------------
     def _setquicktext(self, result):
         canned_file=Phone.SMSCannedFile()
         canned_file.set_sms_canned_data(result.get('canned_msg', []))
         buf=prototypes.buffer()
         canned_file.writetobuffer(buf)
-        self.writefile(Phone.protocolclass.sms_canned_file, buf.getvalue())
+        self.writefile(self.protocolclass.sms_canned_file, buf.getvalue())
 
     def _getquicktext(self):
         try:
             buf=prototypes.buffer(self.getfilecontents(
-                Phone.protocolclass.sms_canned_file))
+                self.protocolclass.sms_canned_file))
             canned_file=Phone.SMSCannedFile()
             canned_file.readfrombuffer(buf)
             return canned_file.get_sms_canned_data()
@@ -309,17 +323,13 @@ class Phone(com_lgvx4400.Phone):
             Phone.protocolclass.SMSCannedFile.__init__(self, *args, **kwargs)
 
         def get_sms_canned_data(self):
-            res=[]
-            for i,e in enumerate(self.items):
-                res.append({ 'text': e.text,
-                             'type': sms.CannedMsgEntry.user_type })
-            return res
+            return [{ 'text': e.text,
+                      'type': sms.CannedMsgEntry.user_type } for e in self.items]
 
         def set_sms_canned_data(self, canned_list):
             msg_lst=[x['text'] for x in canned_list \
                      if x['type']==sms.CannedMsgEntry.user_type]
             item_count=min(Phone.protocolclass.SMS_CANNED_MAX_ITEMS, len(msg_lst))
-            print 'item count',item_count
             for i in range(item_count):
                 entry=Phone.protocolclass.SMSCannedMsg()
                 entry.text=msg_lst[i]
@@ -328,6 +338,36 @@ class Phone(com_lgvx4400.Phone):
             entry.text=''
             for i in range(item_count, Phone.protocolclass.SMS_CANNED_MAX_ITEMS):
                 self.items.append(entry)
+
+    # Phone Info stuff----------------------------------------------------------
+    def _get_phone_number(self):
+        # return the phone number of this phone
+        s=''
+        try:
+            buf=self.getfilecontents('nvm/nvm/nvm_0000')
+            ofs=0x240
+            if buf[ofs]=='\x01':
+                ofs+=1
+                while buf[ofs]!='\x01':
+                    s+=buf[ofs]
+                    ofs+=1
+        except:
+            if __debug__:
+                raise
+        return s
+    def getphoneinfo(self, phone_info):
+        # returning some basic phone info
+        # double check if this's the right phone.
+        try:
+            if self.getfilecontents(self.brew_version_file)[:len(self.my_model)]==self.my_model:
+                phone_info.model=self.my_model
+                phone_info.manufacturer=Profile.phone_manufacturer
+                phone_info.phone_number=self._get_phone_number()
+                phone_info.firmware_version=self.getfirmwareinformation().firmwareversion
+                phone_info.esn=self.get_esn()
+        except:
+            if __debug__:
+                raise
 
 #------------------------------------------------------------------------------
 parentprofile=com_lgvx4400.Profile
@@ -383,177 +423,3 @@ class Profile(parentprofile):
 
     def __init__(self):
         parentprofile.__init__(self)
-            
-#------------------------------------------------------------------------------
-class schedulefile(Phone.protocolclass.schedulefile):
-
-    _repeat_values={
-        Phone.protocolclass.CAL_REP_DAILY: bpcalendar.RepeatEntry.daily,
-        Phone.protocolclass.CAL_REP_MONFRI: bpcalendar.RepeatEntry.daily,
-        Phone.protocolclass.CAL_REP_WEEKLY: bpcalendar.RepeatEntry.weekly,
-        Phone.protocolclass.CAL_REP_MONTHLY: bpcalendar.RepeatEntry.monthly,
-        Phone.protocolclass.CAL_REP_YEARLY: bpcalendar.RepeatEntry.yearly
-        }
-
-    def __init__(self, *args, **kwargs):
-        super(schedulefile, self).__init__(*args, **kwargs)
-
-    def _build_cal_repeat(self, event, exceptions):
-        rep_val=schedulefile._repeat_values.get(event.repeat, None)
-        if not rep_val:
-            return None
-        rep=bpcalendar.RepeatEntry(rep_val)
-        if event.repeat==Phone.protocolclass.CAL_REP_MONFRI:
-            rep.interval=rep.dow=0
-        elif event.repeat!=Phone.protocolclass.CAL_REP_YEARLY:
-            rep.interval=1
-            rep.dow=0
-        # do exceptions
-        cal_ex=exceptions.get(event.pos, [])
-        for e in cal_ex:
-            rep.add_suppressed(*e)
-        return rep
-
-    def _build_cal_entry(self, event, exceptions, ringtone_index):
-        # return a copy of bpcalendar object based on my values
-        # general fields
-        entry=bpcalendar.CalendarEntry()
-        entry.start=event.start
-        entry.end=event.end
-        entry.description=event.description
-        # check for allday event
-        if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
-            entry.allday=True
-        # alarm
-        if event.alarmtype:
-            entry.alarm=event.alarmhours*60+event.alarmminutes
-        # ringtone
-        rt_idx=event.ringtone
-        # hack to account for the VX4650 weird ringtone setup
-        if rt_idx<50:
-            # 1st part of builtin ringtones, need offset by 1
-            rt_idx+=1
-        entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
-        # voice ID
-        if event.hasvoice:
-            entry.voice=event.voiceid
-        # repeat info
-        entry.repeat=self._build_cal_repeat(event, exceptions)
-        return entry
-
-    def get_cal(self, exceptions, ringtone_index):
-        res={}
-        for event in self.events:
-            if event.pos==-1:   # blank entry
-                continue
-            cal_event=self._build_cal_entry(event, exceptions, ringtone_index)
-            res[cal_event.id]=cal_event
-        return res
-
-    _alarm_info={
-        -1: (Phone.protocolclass.CAL_REMINDER_NONE, 100, 100),
-        0: (Phone.protocolclass.CAL_REMINDER_ONTIME, 0, 0),
-        5: (Phone.protocolclass.CAL_REMINDER_5MIN, 5, 0),
-        10: (Phone.protocolclass.CAL_REMINDER_10MIN, 10, 0),
-        60: (Phone.protocolclass.CAL_REMINDER_1HOUR, 0, 1),
-        1440: (Phone.protocolclass.CAL_REMINDER_1DAY, 0, 24),
-        2880: (Phone.protocolclass.CAL_REMINDER_2DAYS, 0, 48) }
-    _default_alarm=(Phone.protocolclass.CAL_REMINDER_NONE, 100, 100)    # default alarm is off
-    _phone_dow={
-        1: Phone.protocolclass.CAL_DOW_SUN,
-        2: Phone.protocolclass.CAL_DOW_MON,
-        4: Phone.protocolclass.CAL_DOW_TUE,
-        8: Phone.protocolclass.CAL_DOW_WED,
-        16: Phone.protocolclass.CAL_DOW_THU,
-        32: Phone.protocolclass.CAL_DOW_FRI,
-        64: Phone.protocolclass.CAL_DOW_SAT
-        }
-
-    def _set_repeat_event(self, event, entry, exceptions):
-        rep_val=Phone.protocolclass.CAL_REP_NONE
-        day_bitmap=0
-        rep=entry.repeat
-        if rep:
-            rep_type=rep.repeat_type
-            rep_interval=rep.interval
-            rep_dow=rep.dow
-            if rep_type==bpcalendar.RepeatEntry.daily:
-                if rep_interval==0:
-                    rep_val=Phone.protocolclass.CAL_REP_MONFRI
-                elif rep_interval==1:
-                    rep_val=Phone.protocolclass.CAL_REP_DAILY
-            elif rep_type==bpcalendar.RepeatEntry.weekly:
-                start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
-                if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
-                    rep_val=Phone.protocolclass.CAL_REP_WEEKLY
-                    day_bitmap=self._phone_dow.get(start_dow, 0)
-            elif rep_type==bpcalendar.RepeatEntry.monthly:
-                if rep_dow==0:
-                    rep_val=Phone.protocolclass.CAL_REP_MONTHLY
-            else:
-                rep_val=Phone.protocolclass.CAL_REP_YEARLY
-            if rep_val!=Phone.protocolclass.CAL_REP_NONE:
-                # build exception list
-                if rep.suppressed:
-                    day_bitmap|=Phone.protocolclass.CAL_DOW_EXCEPTIONS
-                for x in rep.suppressed:
-                    exceptions.setdefault(event.pos, []).append(x.get()[:3])
-                # this is a repeat event, set the end date appropriately
-                event.end=Phone.protocolclass.CAL_REPEAT_DATE+event.end[3:]
-        event.repeat=rep_val
-        event.daybitmap=day_bitmap
-            
-    def _set_cal_event(self, event, entry, exceptions, ringtone_index,
-                       voice_files):
-        # desc
-        event.description=entry.description
-        # start & end times
-        if entry.allday:
-            event.start=entry.start[:3]+(0,0)
-            event.end=entry.start[:3]+(23,59)
-        else:
-            event.start=entry.start
-            event.end=entry.start[:3]+entry.end[3:]
-        # make sure the event lasts in 1 calendar day
-        if event.end<event.start:
-            event.end=event.start[:3]+(23,59)
-        # alarm
-        event.alarmtype, event.alarmminutes, event.alarmhours=self._alarm_info.get(
-            entry.alarm, self._default_alarm)
-        # voice ID
-        if entry.voice and \
-           voice_files.has_key(entry.voice-Phone.protocolclass.cal_voice_id_ofs):
-            event.hasvoice=1
-            event.voiceid=entry.voice
-            del voice_files[entry.voice-Phone.protocolclass.cal_voice_id_ofs]
-        else:
-            event.hasvoice=0
-            event.voiceid=Phone.protocolclass.CAL_NO_VOICE
-        # ringtone
-        rt=0    # always default to the first bultin ringtone
-        if entry.ringtone:
-            for k,e in ringtone_index.items():
-                if e['name']==entry.ringtone:
-                    rt=k
-                    break
-            if rt and rt<50:
-                rt-=1
-        event.ringtone=rt
-        # repeat
-        self._set_repeat_event(event, entry, exceptions)
-            
-    def set_cal(self, cal_dict, ringtone_index, voice_files):
-        self.numactiveitems=len(cal_dict)
-        exceptions={}
-        _pos=2
-##        _today=datetime.date.today().timetuple()[:5]
-        for k, e in cal_dict.items():
-##            # only send either repeat events or present&future single events
-##            if e.repeat or (e.start>=_today):
-            event=Phone.protocolclass.scheduleevent()
-            event.pos=_pos
-            self._set_cal_event(event, e, exceptions, ringtone_index,
-                                voice_files)
-            self.events.append(event)
-            _pos+=event.packet_size
-        return exceptions

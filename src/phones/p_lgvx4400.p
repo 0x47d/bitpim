@@ -51,6 +51,36 @@ SMS_PATTERNS={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
 numbertypetab=( 'home', 'home2', 'office', 'office2', 'cell', 'cell2',
                     'pager', 'fax', 'fax2', 'none' )
 
+
+# Calendar parameters
+NUMCALENDARENTRIES=300  # ?? for VX4400
+CAL_REP_NONE=0x10
+CAL_REP_DAILY=0x11
+CAL_REP_MONFRI=0x12
+CAL_REP_WEEKLY=0x13
+CAL_REP_MONTHLY=0x14
+CAL_REP_YEARLY=0x15
+CAL_DOW_SUN=0x0800
+CAL_DOW_MON=0x0400
+CAL_DOW_TUE=0x0200
+CAL_DOW_WED=0x0100
+CAL_DOW_THU=0x0080
+CAL_DOW_FRI=0x0040
+CAL_DOW_SAT=0x0020
+CAL_DOW_EXCEPTIONS=0x0010
+CAL_REMINDER_NONE=0
+CAL_REMINDER_ONTIME=1
+CAL_REMINDER_5MIN=2
+CAL_REMINDER_10MIN=3
+CAL_REMINDER_1HOUR=4
+CAL_REMINDER_1DAY=5
+CAL_REMINDER_2DAYS=6
+CAL_REPEAT_DATE=(2100, 12, 31)
+
+cal_dir='sch'
+cal_data_file_name='sch/schedule.dat'
+cal_exception_file_name='sch/schexception.dat'
+
 %}
 
 PACKET speeddial:
@@ -144,17 +174,19 @@ PACKET scheduleexceptionfile:
     * LIST {'elementclass': scheduleexception} +items
 
 PACKET scheduleevent:
+    P UINT { 'constant': 57 } packet_size "Faster than packetsize()"
     4 UINT pos "position within file, used as an event id"
     4 LGCALDATE start
     4 LGCALDATE end
     1 UINT repeat
-    3 UINT daybitmap  "which days a weekly repeat event happens on"
+    2 UINT daybitmap  "which days a weekly repeat event happens on"
+    1 UINT { 'default': 0 } +pad2
     1 UINT alarmminutes  "a value of 100 indicates not set"
     1 UINT alarmhours    "a value of 100 indicates not set"
-    1 UINT changeserial
-    1 UINT snoozedelay   "in minutes"
+    1 UINT alarmtype    "preset alarm reminder type"
+    1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    39 STRING {'raiseonunterminatedread': False} description
+    36 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
 
 PACKET schedulefile:
     2 UINT numactiveitems
