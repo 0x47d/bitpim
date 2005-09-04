@@ -1111,6 +1111,7 @@ parentprofile=com_phone.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+    BP_Calendar_Version=3
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX4400'
 
@@ -1348,3 +1349,4 @@ class Profile(parentprofile):
                 return currentextension, afi
         # convert it
         return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 32, 'samplerate': 22050}))
+

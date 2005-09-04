@@ -174,7 +174,7 @@ PACKET scheduleexceptionfile:
     * LIST {'elementclass': scheduleexception} +items
 
 PACKET scheduleevent:
-    P UINT { 'constant': 57 } packet_size "Faster than packetsize()"
+    P UINT { 'constant': 60 } packet_size "Faster than packetsize()"
     4 UINT pos "position within file, used as an event id"
     4 LGCALDATE start
     4 LGCALDATE end
@@ -186,7 +186,7 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    36 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    39 STRING {'raiseontruncate': False } description
 
 PACKET schedulefile:
     2 UINT numactiveitems
