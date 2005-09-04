@@ -226,7 +226,14 @@ class RingerView(guiwidgets.FileView):
             if max_size is not None and len(filedata)>max_size:
                 # the data is too big
                 self.log('ringtone %s is too big!'%common.basename(file))
-                continue
+                dlg=wx.MessageDialog(self,
+                                     'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
+                                     'Warning',
+                                     style=wx.YES_NO|wx.ICON_ERROR)
+                dlg_resp=dlg.ShowModal()
+                dlg.Destroy()
+                if dlg_resp==wx.ID_NO:
+                    continue
             self.thedir=self.mainwindow.ringerpath
             decoded_file=str(file).decode(guiwidgets.media_codec)
             target=self.getshortenedbasename(decoded_file, newext)
