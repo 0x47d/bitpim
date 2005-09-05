@@ -1053,10 +1053,27 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 for x in rep.suppressed:
                     exceptions.setdefault(event.pos, []).append(x.get()[:3])
                 # this is a repeat event, set the end date appropriately
-                event.end=self.protocolclass.CAL_REPEAT_DATE+event.end[3:]
+                if event.end[:3]==entry.no_end_date:
+                    event.end=self.protocolclass.CAL_REPEAT_DATE+event.end[3:]
+                else:
+                    event.end=entry.end
         event.repeat=rep_val
         event.daybitmap=day_bitmap
             
+    def _set_alarm(self, event, entry):
+        # set alarm value based on entry's value, or its approximation
+        keys=Phone._alarm_info.keys()
+        keys.sort()
+        keys.reverse()
+        _alarm_val=entry.alarm
+        _alarm_key=None
+        for k in keys:
+            if _alarm_val>=k:
+                _alarm_key=k
+                break
+        event.alarmtype, event.alarmminutes, event.alarmhours=Phone._alarm_info.get(
+            _alarm_key, self._default_alarm)
+
     def _set_cal_event(self, event, entry, exceptions, ringtone_index):
         # desc
         event.description=entry.description
@@ -1071,8 +1088,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         if event.end<event.start:
             event.end=event.start[:3]+(23,59)
         # alarm
-        event.alarmtype, event.alarmminutes, event.alarmhours=Phone._alarm_info.get(
-            entry.alarm, self._default_alarm)
+        self._set_alarm(event, entry)
         # ringtone
         rt=0    # always default to the first bultin ringtone
         if entry.ringtone:
