@@ -1147,6 +1147,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         sch_file.numactiveitems=len(cal_dict)
         exceptions={}
         _pos=2
+        _packet_size=None
 ##        _today=datetime.date.today().timetuple()[:5]
         for k, e in cal_dict.items():
 ##            # only send either repeat events or present&future single events
@@ -1156,7 +1157,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             self._set_cal_event(event, e, exceptions, ringtone_index,
                                 voice_files)
             sch_file.events.append(event)
-            _pos+=event.packet_size
+            if not _packet_size:
+                _packet_size=event.packetsize()
+            _pos+=_packet_size
         return exceptions
 
 def phonize(str):

@@ -191,7 +191,7 @@ PACKET scheduleexceptionfile:
 
 ## The VX4650 has the 4 bytes (unknown) below
 PACKET scheduleevent:
-    P UINT { 'constant': 64 } packet_size "Faster than packetsize()"
+##    P UINT { 'constant': 64 } packet_size "Faster than packetsize()"
     4 UINT pos "position within file, used as an event id"
     4 UINT { 'default': 0 } +pad1
     4 LGCALDATE start

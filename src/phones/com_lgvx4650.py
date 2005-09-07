@@ -74,12 +74,12 @@ class Phone(com_lgvx4400.Phone):
                            'Bumble Bee', 'March', 'Circus Band',
                            'Sky Garden', 'Carmen Habanera', 'Hallelujah',
                            'Sting', 'Farewell', 'Pachelbel Canon', 'Carol 1',
-                           'Carol 2', 'Vibrate', 'Lamp' ),
+                           'Carol 2'), # 'Vibrate', 'Lamp' ),
                        100: ( 'Chimes high', 'Chimes low', 'Ding', 'TaDa',
                               'Notify', 'Drum', 'Claps', 'FanFare', 'Chord high',
                               'Chord low' )
                        }
-
+    VoiceMemoDir='VoiceDB/All/Memos'
 
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self, logtarget, commport)
@@ -107,7 +107,22 @@ class Phone(com_lgvx4400.Phone):
             for name in e:
                 media[c]={ 'name': name, 'origin': 'builtin' }
                 c+=1
-
+        # voice memos index
+        if key=='ringtone-index':
+            try:
+                vmemo_files=self.getfilesystem(self.VoiceMemoDir)
+                keys=vmemo_files.keys()
+                keys.sort()
+                _idx_cnt=210
+                for k in keys:
+                    if k.endswith('.qcp'):
+                        num_str=k[-8:-4]
+                        media[_idx_cnt]={ 'name': 'VoiceMemo'+num_str,
+                                                  'origin': 'ringers' }
+                        _idx_cnt+=1
+            except:
+                if __debug__:
+                    raise
         return media
 
     # Phonebook stuff-----------------------------------------------------------
