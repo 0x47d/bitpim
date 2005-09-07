@@ -80,6 +80,7 @@ CAL_REPEAT_DATE=(4095, 12, 31)
 cal_dir='sch'
 cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
+cal_has_voice_id=True
 
 %}
 

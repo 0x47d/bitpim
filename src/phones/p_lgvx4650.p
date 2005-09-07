@@ -59,6 +59,7 @@ cal_voice_ext='.qcp'      # full name='sche000.qcp'
 cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_voice_id_ofs=0x0f
+cal_has_voice_id=True
 
 # Text Memo const
 text_memo_file='sch/memo.dat'

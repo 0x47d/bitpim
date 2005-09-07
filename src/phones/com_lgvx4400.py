@@ -70,6 +70,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         com_lg.LGIndexedMedia.__init__(self)
         self.log("Attempting to contact phone")
         self.mode=self.MODENONE
+        self._cal_has_voice_id=hasattr(self.protocolclass, 'cal_has_voice_id') \
+                                and self.protocolclass.cal_has_voice_id
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -925,10 +927,21 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 
     def savecalendar(self, dict, merge):
         # ::TODO:: obey merge param
+        # get the list of available voice alarm files
+        voice_files={}
+        if self._cal_has_voice_id:
+            try:
+                file_list=self.getfilesystem(self.protocolclass.cal_dir)
+                for k in file_list.keys():
+                    if k.endswith(self.protocolclass.cal_voice_ext):
+                        voice_files[int(k[8:11])]=k
+            except:
+                self.log('Failed to list Calendar Voice Files')
         # build the schedule file
         sc=self.protocolclass.schedulefile()
         sc_ex=self.set_cal(sc, dict.get('calendar', {}),
-                           dict.get('ringtone-index', {}),)
+                           dict.get('ringtone-index', {}),
+                           voice_files)
         buf=prototypes.buffer()
         sc.writetobuffer(buf)
         self.writefile(self.protocolclass.cal_data_file_name,
@@ -945,6 +958,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         exceptions_file.writetobuffer(buf)
         self.writefile(self.protocolclass.cal_exception_file_name,
                          buf.getvalue())
+        # clear out any alarm voice files that may have been deleted
+        if self._cal_has_voice_id:
+            for k,e in voice_files.items():
+                try:
+                    self.rmfile(e)
+                except:
+                    self.log('Failed to delete file '+e)
         return dict
 
     _repeat_values={
@@ -971,6 +991,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             rep.add_suppressed(*e)
         return rep
 
+    def _get_voice_id(self, event, entry):
+        if event.hasvoice:
+            entry.voice=event.voiceid
+
     def _build_cal_entry(self, event, exceptions, ringtone_index):
         # return a copy of bpcalendar object based on my values
         # general fields
@@ -991,6 +1015,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             # 1st part of builtin ringtones, need offset by 1
             rt_idx+=1
         entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
+        # voice ID if applicable
+        if self._cal_has_voice_id:
+            self._get_voice_id(event, entry)
         # repeat info
         entry.repeat=self._build_cal_repeat(event, exceptions)
         return entry
@@ -1074,7 +1101,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         event.alarmtype, event.alarmminutes, event.alarmhours=Phone._alarm_info.get(
             _alarm_key, self._default_alarm)
 
-    def _set_cal_event(self, event, entry, exceptions, ringtone_index):
+    def _set_voice_id(self, event, entry, voice_files):
+        if entry.voice and \
+           voice_files.has_key(entry.voice-self.protocolclass.cal_voice_id_ofs):
+            event.hasvoice=1
+            event.voiceid=entry.voice
+            del voice_files[entry.voice-self.protocolclass.cal_voice_id_ofs]
+        else:
+            event.hasvoice=0
+            event.voiceid=self.protocolclass.CAL_NO_VOICE
+        
+    def _set_cal_event(self, event, entry, exceptions, ringtone_index,
+                       voice_files):
         # desc
         event.description=entry.description
         # start & end times
@@ -1099,10 +1137,13 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             if rt and rt<50:
                 rt-=1
         event.ringtone=rt
+        # voice ID
+        if self._cal_has_voice_id:
+            self._set_voice_id(event, entry, voice_files)
         # repeat
         self._set_repeat_event(event, entry, exceptions)
             
-    def set_cal(self, sch_file, cal_dict, ringtone_index, **kwargs):
+    def set_cal(self, sch_file, cal_dict, ringtone_index, voice_files):
         sch_file.numactiveitems=len(cal_dict)
         exceptions={}
         _pos=2
@@ -1112,7 +1153,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 ##            if e.repeat or (e.start>=_today):
             event=self.protocolclass.scheduleevent()
             event.pos=_pos
-            self._set_cal_event(event, e, exceptions, ringtone_index)
+            self._set_cal_event(event, e, exceptions, ringtone_index,
+                                voice_files)
             sch_file.events.append(event)
             _pos+=event.packet_size
         return exceptions
