@@ -85,17 +85,21 @@ class Phone(com_lgvx4400.Phone):
         return e
 
     def getcameraindex(self):
-        buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
         index={}
-        g=self.protocolclass.campicsdat()
-        g.readfrombuffer(buf)
-        for i in g.items:
-            if len(i.name):
-                # index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
-                # we currently use the filesystem name rather than rename in camera
-                # since the latter doesn't include the file extension which then makes
-                # life less pleasant once the file ends up on the computer
-                index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
+        try:
+            buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
+            g=self.protocolclass.campicsdat()
+            g.readfrombuffer(buf)
+            for i in g.items:
+                if len(i.name):
+                    # index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }
+                    # we currently use the filesystem name rather than rename in camera
+                    # since the latter doesn't include the file extension which then makes
+                    # life less pleasant once the file ends up on the computer
+                    index[i.index]={'name': "pic%02d.jpg"%(i.index,), 'date': i.taken, 'origin': 'camera' }
+        except com_brew.BrewNoSuchFileException:
+            # if the phone has no pictures it may not have a a cam/pics.dat file
+            pass
         return index
 
     my_model='VX6100'
@@ -163,7 +167,7 @@ class Profile(parentprofile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None),         # all SMS list reading
-        # ('calendar', 'write', 'OVERWRITE'),  # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),  # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),     # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
@@ -173,3 +177,4 @@ class Profile(parentprofile):
  
     def __init__(self):
         parentprofile.__init__(self)
+

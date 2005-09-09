@@ -37,6 +37,12 @@ NUMPHONENUMBERS=5
 
 MEMOLENGTH=65
 
+CAL_NO_VOICE=0xffff
+CAL_REPEAT_DATE=(2999, 12, 31)
+
+cal_has_voice_id=True
+cal_voice_id_ofs=0x11
+cal_voice_ext='.qcp'      # full name='sche000.qcp'
 %}
 
 PACKET speeddial:
@@ -129,14 +135,14 @@ PACKET scheduleevent:
     3 UINT daybitmap     "which days a weekly repeat event happens on?"
     1 UINT alarmminutes  "a value of 100 indicates not set"
     1 UINT alarmhours    "a value of 100 indicates not set"
-    1 UINT changeserial  "Changeserial?"
-    1 UINT snoozedelay   "in minutes?"
+    1 UINT alarmtype     "preset alarm reminder type"
+    1 UINT { 'default': 0 } +snoozedelay   "in minutes?"
     1 UINT ringtone
     35 STRING {'raiseonunterminatedread': False} description
-    2 UINT unknown1     "This seems to always be two zeros"
+    2 UINT { 'default': 0 } +unknown1     "This seems to always be two zeros"
     2 UINT hasvoice     "This event has an associated voice memo if 1"
-    2 UINT voiceindex   "sch/schexxx.qcp is the voice memo (xxx = voicindex - 0x0f)"
-    2 UINT unknown2     "This seems to always be yet two more zeros"
+    2 UINT voiceid   "sch/schexxx.qcp is the voice memo (xxx = voiceid - 0x0f)"
+    2 UINT { 'default': 0 } +unknown2     "This seems to always be yet two more zeros"
 
 PACKET schedulefile:
     2 UINT numactiveitems
