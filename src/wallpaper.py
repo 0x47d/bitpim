@@ -1058,6 +1058,8 @@ class ImagePreviewDialog(wx.Dialog):
         wx.EVT_LISTBOX(self, self.targetbox.GetId(), self.OnTargetSelect)
         wx.EVT_LISTBOX_DCLICK(self, self.targetbox.GetId(), self.OnTargetSelect)
 
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _:
+                      wx.GetApp().displayhelpid(helpids.ID_DLG_IMAGEPREVIEW))
         self.originbox.Set(phoneprofile.GetImageOrigins().keys())
         self.originbox.SetSelection(0)
         self.OnOriginSelect(None)
