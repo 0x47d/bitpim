@@ -705,7 +705,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         phone_info.append('Analog/Digital:', self.get_analog_digital())
         self.setmode(self.MODEMODEM)
 
-    def _send_at_and_get(cmd):
+    def _send_at_and_get(self, cmd):
         try:
             resp=self.comm.sendatcommand(cmd)
             return ': '.join(resp[0].split(': ')[1:])
@@ -721,10 +721,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
 
     def get_detect_data(self, r):
         # get detection data
-        r['manufacturer']=_send_at_and_get('+GMI')
-        r['model']=_send_at_and_get('+GMM')
-        r['firmware_version']=_send_at_and_get('+GMR')
-        r['esn']=_send_at_and_get('+GSN')
+        r['manufacturer']=self._send_at_and_get('+GMI')
+        r['model']=self._send_at_and_get('+GMM')
+        r['firmware_version']=self._send_at_and_get('+GMR')
+        r['esn']=self._send_at_and_get('+GSN')
 
     def _detectphone(coms, likely_ports, res, _module):
         if not len(likely_ports):
@@ -747,7 +747,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                     res[port]['mode_modem']=False
             except:
                 # this port is not available
-                pass
+                if __debug__:
+                    raise
     _detectphone=staticmethod(_detectphone)
 
 #------------------------------------------------------------------------------
@@ -784,10 +785,14 @@ class Samsung_Calendar:
         self._start=s
         self._end=cal_entry.end
         self._desc=cal_entry.description
+        # approximate the alarm value
         self._alarm='0'
         alarm=cal_entry.alarm
-        for k,n in self._cal_alarm_values.items():
-            if n==alarm:
+        _keys=self._cal_alarm_values.keys()
+        _keys.sort()
+        _keys.reverse()
+        for k in _keys:
+            if alarm>=self._cal_alarm_values[k]:
                 self._alarm=k
                 break
 
