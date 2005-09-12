@@ -39,7 +39,7 @@ PACKET indexentry:
     2 UINT index
     2 UINT type
     # they shortened this from 84 chars in the vx7000
-    68 STRING filename  "includes full pathname"
+    68 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "includes full pathname"
     4 UINT {'default': 0} +date "i think this is bitfield of the date"
     4 UINT dunno
 
@@ -49,7 +49,7 @@ PACKET indexfile:
 
 PACKET pbgroup:
     "A single group"
-    23 STRING name
+    23 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -79,7 +79,7 @@ PACKET scheduleexceptionfile:
 
 PACKET scheduleevent:
     4 UINT pos "position within file, used as an event id"
-    33 STRING {'raiseonunterminatedread': False} description
+    33 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
     4 LGCALDATE start
     4 LGCALDATE end
     4 LGCALREPEAT repeat # complicated bit mapped field
@@ -246,4 +246,7 @@ PACKET firmwareresponse:
     11 STRING {'terminator': None}  date2
     8 STRING {'terminator': None}  time2
     8 STRING {'terminator': None}  firmware
+
+
+
 

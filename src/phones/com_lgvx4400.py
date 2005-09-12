@@ -249,7 +249,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         out={}
         # re-order the text into the correct order for separating into
         # 7-bit characters
-        for i in range(0, (num_septets*7)/8+7, 7):
+        for i in range(0, (num_septets*7)/8+8, 7):
             for k in range(7):
                 raw[i+6-k]=msg[i+k].byte
         # extract the 7-bit chars
@@ -1410,4 +1410,5 @@ class Profile(parentprofile):
                 return currentextension, afi
         # convert it
         return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 32, 'samplerate': 22050}))
+
 
