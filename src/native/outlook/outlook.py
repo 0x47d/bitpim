@@ -219,6 +219,7 @@ def getitemdata(item, record, keys, client):
 def getdata(folder, keys=None, preset_dict={}, client=None, post_func=None):
     """Returns a list of dicts"""
     res=[]
+    import_errors=[]
     if not folder.Items.Count:
         # empty folder, just return
         return res
@@ -233,10 +234,13 @@ def getdata(folder, keys=None, preset_dict={}, client=None, post_func=None):
     for i in range(folder.Items.Count):
         item=folder.Items.Item(i+1)
         record=preset_dict.copy()
-        getitemdata(item, record, keys, client)
-        if post_func is None or post_func(item, record, client):
-            res.append(record)
-    return res
+        try:
+            getitemdata(item, record, keys, client)
+            if post_func is None or post_func(item, record, client):
+                res.append(record)
+        except:
+            import_errors.append(record)
+    return res, import_errors
 
 def getfolderfromid(id, default=False, default_type='contacts'):
     """Returns a folder object from the supplied id

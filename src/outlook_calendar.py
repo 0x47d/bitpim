@@ -120,6 +120,7 @@ class OutlookCalendarImportData:
     def __init__(self, outlook):
         self._outlook=outlook
         self._data=[]
+        self._error_list=[]
         self._single_data=[]
         self._folder=None
         self._filter=self._default_filter
@@ -302,10 +303,10 @@ class OutlookCalendarImportData:
         self._total_count=self._folder.Items.Count
         self._current_count=0
         self._exception_list=[]
-        self._data=self._outlook.getdata(self._folder,
-                                    self._calendar_keys,
-                                    {}, self,
-                                    set_recurrence)
+        self._data, self._error_list=self._outlook.getdata(self._folder,
+                                                           self._calendar_keys,
+                                                           {}, self,
+                                                           set_recurrence)
         # add in the exception list, .. or shoule we keep it separate ??
         self._data+=self._exception_list
 
@@ -382,7 +383,29 @@ class OutlookCalendarImportData:
         self._current_count += 1
         if self._update_dlg is not None:
             self._update_dlg.Update(100*self._current_count/self._total_count)
-        
+
+    def has_errors(self):
+        return bool(self._error_list)
+    def get_error_list(self):
+        # return a list of strings of failed items
+        res=[]
+        for d in self._error_list:
+            # the format is 'YY-MM-DD hh:mm Description' if available
+            _start=d.get('start', None)
+            s=''
+            if _start:
+                if len(_start)>4:
+                    s='%02d-%02d-%02d %02d:%02d '%_start[:5]
+                elif len(_start)>2:
+                    s='%02d-%02d-%02d '%_start[:3]
+            _desc=d.get('description', None)
+            if _desc:
+                s+=_desc
+            if not s:
+                s='<Unknown>'
+            res.append(s)
+        return res
+
 #-------------------------------------------------------------------------------
 class OutlookImportCalDialog(common_calendar.PreviewDialog):
     _column_labels=[
@@ -442,6 +465,14 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         self._oc.read(None, dlg)
         self.populate(self._oc.get_display_data())
         dlg.Destroy()
+        if self._oc.has_errors():
+            # display the list of failed items
+            error_dlg=wx.SingleChoiceDialog(self,
+                                            'Outlook Calendar Items that failed to import:',
+                                            'Outlook Calendar Import Error',
+                                            self._oc.get_error_list())
+            error_dlg.ShowModal()
+            error_dlg.Destroy()
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
@@ -467,4 +498,3 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
 
     def get_categories(self):
         return self._oc.get_category_list()
-            
