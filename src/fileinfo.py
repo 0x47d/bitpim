@@ -793,7 +793,9 @@ def idaudio_PCM(f):
         if f.GetBytes(0, 4)!='RIFF' or f.GetBytes(8, 4)!='WAVE' or \
            f.GetBytes(12, 4)!='fmt ' or f.GetLSBUint16(20)!=1:
             return None
-        d={ 'format': 'PCM' }
+        d={ 'format': 'PCM',
+            'mimetypes': ['audio/wav', 'audio/x-wav',
+                          'audio/wave', 'audio/x-pn-wav'] }
         d['numchannels']=f.GetLSBUint16(22)
         d['samplerate']=f.GetLSBUint32(24)
         d['byterate']=f.GetLSBUint32(28)
