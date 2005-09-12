@@ -259,6 +259,15 @@ def islikelyportscore(port, phonemodule):
         port['name'].lower().find('usb')>0 or port.get("driver","").lower().find('usb')>=0):
         return score
 
+    # if we are on windows check to see if this phone supports bluetooth as we may have a bluetooth comport 
+    # we check that the bluetooth device contains the manufacturers ID for the phone, this filters
+    # other bluetooth devices from the search, on windows the 'hardwareinstance' contains BTHENUM indicating 
+    # a bluetooth device and the manufacturer's ID
+    if sys.platform=='win32' and (getattr(phonemodule.Profile, 'bluetooth_mfg_id', 0) != 0) and \
+        port['hardwareinstance'].find('BTHENUM\\')==0 and \
+        port['hardwareinstance'].find(getattr(phonemodule.Profile, 'bluetooth_mfg_id', 'XXX'))>0:
+        return score
+
     # ok, not then
     return -1
             
@@ -278,3 +287,4 @@ def autoguessports(phonemodule):
 
 if __name__=='__main__':
     print autoguessports(__import__("com_lgvx4400"))
+

@@ -431,6 +431,15 @@ class Profile(parentprofile):
     # there is an origin named 'aod' - no idea what it is for except maybe
     # 'all other downloads'
 
+    # the vx8100 supports bluetooth for connectivity to the PC, define the "bluetooth_mgd_id"
+    # to enable bluetooth discovery during phone detection
+    # the bluetooth address starts with LG's the three-octet OUI, all LG phone
+    # addresses start with this, it provides a way to identify LG bluetooth devices
+    # during phone discovery
+    # OUI=Organizationally Unique Identifier
+    # see http://standards.ieee.org/regauth/oui/index.shtml for more info
+    bluetooth_mfg_id="001256"
+
     # the 8100 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
@@ -472,3 +481,4 @@ class Profile(parentprofile):
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         )
+
