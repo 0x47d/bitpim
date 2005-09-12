@@ -67,6 +67,8 @@ def _IsMac():
 
 if _IsWindows():
     import _winreg
+    import win32file
+    import win32con
 
     class RegistryAccess:
         """A class that is significantly easier to use to access the Registry"""
@@ -288,7 +290,11 @@ def _comscanwindows():
                             usename=name
                             if sys.platform=='win32' and name.lower().startswith("com"):
                                 usename="\\\\?\\"+name
-                            open(usename, "rw").close()
+                            print "scanning " +usename
+                            ComPort = win32file.CreateFile(usename,
+                                   win32con.GENERIC_READ | win32con.GENERIC_WRITE, 0, None,
+                                   win32con.OPEN_EXISTING, win32con.FILE_ATTRIBUTE_NORMAL, None)
+                            win32file.CloseHandle(ComPort)
                             res['available']=True
                         except Exception,e:
                             print usename,"is not available",e
@@ -549,3 +555,4 @@ if __name__=="__main__":
 
     print output
         
+
