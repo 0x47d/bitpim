@@ -1056,23 +1056,24 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         rep=entry.repeat
         if rep:
             rep_type=rep.repeat_type
-            rep_interval=rep.interval
-            rep_dow=rep.dow
-            if rep_type==bpcalendar.RepeatEntry.daily:
-                if rep_interval==0:
-                    rep_val=self.protocolclass.CAL_REP_MONFRI
-                elif rep_interval==1:
-                    rep_val=self.protocolclass.CAL_REP_DAILY
-            elif rep_type==bpcalendar.RepeatEntry.weekly:
-                start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
-                if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
-                    rep_val=self.protocolclass.CAL_REP_WEEKLY
-                    day_bitmap=self._phone_dow.get(start_dow, 0)
-            elif rep_type==bpcalendar.RepeatEntry.monthly:
-                if rep_dow==0:
-                    rep_val=self.protocolclass.CAL_REP_MONTHLY
-            else:
+            if rep_type==bpcalendar.RepeatEntry.yearly:
                 rep_val=self.protocolclass.CAL_REP_YEARLY
+            else:
+                rep_interval=rep.interval
+                rep_dow=rep.dow
+                if rep_type==bpcalendar.RepeatEntry.daily:
+                    if rep_interval==0:
+                        rep_val=self.protocolclass.CAL_REP_MONFRI
+                    elif rep_interval==1:
+                        rep_val=self.protocolclass.CAL_REP_DAILY
+                elif rep_type==bpcalendar.RepeatEntry.weekly:
+                    start_dow=1<<datetime.date(*event.start[:3]).isoweekday()%7
+                    if (rep_dow==0 or rep_dow==start_dow) and rep_interval==1:
+                        rep_val=self.protocolclass.CAL_REP_WEEKLY
+                        day_bitmap=self._phone_dow.get(start_dow, 0)
+                elif rep_type==bpcalendar.RepeatEntry.monthly:
+                    if rep_dow==0:
+                        rep_val=self.protocolclass.CAL_REP_MONTHLY
             if rep_val!=self.protocolclass.CAL_REP_NONE:
                 # build exception list
                 if rep.suppressed:
