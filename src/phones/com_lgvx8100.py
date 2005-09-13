@@ -371,7 +371,7 @@ class Phone(com_lgvx7000.Phone):
             data.alarmindex_vibrate=0x6
         elif entry.alarm>=5:
             entry.alarm=5
-            data.alarmminutes=10
+            data.alarmminutes=5
             data.alarmhours=0
             data.alarmindex_vibrate=0x4
         elif entry.alarm>=0:
@@ -481,4 +481,5 @@ class Profile(parentprofile):
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         )
+
 
