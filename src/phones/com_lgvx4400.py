@@ -781,22 +781,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 
         return e
 
-    def _setmodebrew(self):
-        req=p_brew.memoryconfigrequest()
-        respc=p_brew.memoryconfigresponse
-        
-        for baud in 0, 38400, 115200:
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-            try:
-                self.sendbrewcommand(req, respc, callsetmode=False)
-                return True
-            except com_phone.modeignoreerrortypes:
-                pass
-        return False
-    is_mode_brew=_setmodebrew
-
+    is_mode_brew=com_brew.BrewProtocol._setmodebrew
     brew_version_txt_key='brew_version.txt'
     brew_version_file='brew/version.txt'
     lgpbinfo_key='lgpbinfo'
