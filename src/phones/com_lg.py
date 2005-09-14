@@ -114,7 +114,8 @@ class LGPhonebook:
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
-        if common.crcs(data)!=crc:
+        calccrc=common.crcs(data)
+        if calccrc!=crc:
             self.logdata("Original LG data", origdata, None)
             self.logdata("Working on LG data", data, None)
             raise common.CommsDataCorruption("LG packet failed CRC check", self.desc)

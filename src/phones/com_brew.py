@@ -468,7 +468,8 @@ class BrewProtocol:
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
-        if common.crcs(data)!=crc:
+        calccrc=common.crcs(data)
+        if calccrc!=crc:
             self.logdata("Original data", origdata, None)
             self.logdata("Working on data", data, None)
             raise common.CommsDataCorruption("Brew packet failed CRC check", self.desc)
