@@ -24,6 +24,7 @@ import sha
 import bpcalendar
 import call_history
 import common
+import conversions
 import copy
 import p_brew
 import p_lgvx4650
@@ -118,12 +119,55 @@ class Phone(com_lgvx4400.Phone):
                     if k.endswith('.qcp'):
                         num_str=k[-8:-4]
                         media[_idx_cnt]={ 'name': 'VoiceMemo'+num_str,
-                                                  'origin': 'ringers' }
+                                                  'origin': 'voicememo' }
                         _idx_cnt+=1
             except:
                 if __debug__:
                     raise
         return media
+
+    # Ringtone stuff------------------------------------------------------------
+    def getringtones(self, result):
+        result=com_lgvx4400.Phone.getringtones(self, result)
+        if not conversions.helperavailable('pvconv'):
+            return result
+        media=result['ringtone']
+        # get& convert the voice memo files
+        _qcp_file=common.gettempfilename('qcp')
+        _wav_file=common.gettempfilename('wav')
+        try:
+            vmemo_files=self.getfilesystem(self.VoiceMemoDir)
+            keys=vmemo_files.keys()
+            for k in keys:
+                if k.endswith('.qcp'):
+                    key_name='VoiceMemo'+k[-8:-4]
+                    file(_qcp_file, 'wb').write(self.getfilecontents(k, True))
+                    conversions.convertqcptowav(_qcp_file, _wav_file)
+                    media[key_name]=file(_wav_file, 'rb').read()
+        except:
+            if __debug__:
+                raise
+        try:
+            os.remove(_qcp_file)
+            os.remove(_wav_file)
+        except:
+            pass
+        result['ringtone']=media
+        return result
+
+    def saveringtones(self, results, merge):
+        _new_ringtones=results.get('ringtone', {})
+        _rt_index=results.get('ringtone-index', {})
+        # list of voicememo names
+        _voice_memo_l=[x['name'] for k,x in _rt_index.items() \
+                       if x.get('origin', '')=='voicememo']
+        # list of media to delete
+        _del_keys=[k for k,x in _new_ringtones.items() \
+                   if x.get('name', None) in _voice_memo_l]
+        for k in _del_keys:
+            del _new_ringtones[k]
+        results['ringtone']=_new_ringtones
+        return com_lgvx4400.Phone.saveringtones(self, results, merge)
 
     # Phonebook stuff-----------------------------------------------------------
     def savephonebook(self, data):

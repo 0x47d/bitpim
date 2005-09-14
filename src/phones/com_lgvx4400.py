@@ -782,7 +782,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         return e
 
     def is_mode_brew(self):
-        print 'is_mode_brew'
         req=p_brew.memoryconfigrequest()
         respc=p_brew.memoryconfigresponse
         
