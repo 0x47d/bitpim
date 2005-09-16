@@ -26,7 +26,9 @@ class VFileException(Exception):
     pass
 
 class VFile:
-
+    _charset_aliases={
+        'MACINTOSH': 'MAC_ROMAN'
+        }
     def __init__(self, source):
         self.source=source    
         
@@ -124,7 +126,7 @@ class VFile:
         # charset frigging
         if charset is not None:
             try:
-                decoder=codecs.getdecoder(charset)
+                decoder=codecs.getdecoder(self._charset_aliases.get(charset, charset))
                 line,_=decoder(line)
             except LookupError:
                 raise VFileException("unknown character set '%s' in parameters %s" % (charset, b4))          
@@ -515,7 +517,11 @@ class VCard:
         values=self.splitandunquote(value, seperator=",")
         values=[v.replace(";", "").strip() for v in values]  # semi colon is used as seperator in bitpim text field
         values=[v for v in values if len(v)]
-        result[self._getfieldname("categories", result)]=";".join(values)
+        v=result.get('categories', None)
+        if v:
+            result['categories']=';'.join([v, ";".join(values)])
+        else:
+            result['categories']=';'.join(values)
 
     def _field_PHOTO(self, field, value, result):
         # comma seperated just for fun
@@ -578,9 +584,27 @@ class VCard:
             addr["type"]=type
             self._setvalue(result, "address", addr, preferred)
 
+    def _field_X_PALM(self, field, value, result):
+        # handle a few PALM custom fields
+        ff=field[0].split(".")
+        f0=ff[0]
+        f1=len(ff)>1 and ff[1] or ''
+        if f0.startswith('X-PALM-CATEGORY') or f1.startswith('X-PALM-CATEGORY'):
+            self._field_CATEGORIES(['CATEGORIES'], value, result)
+        elif f0=='X-PALM-NICKNAME' or f1=='X-PALM-NICKNAME':
+            self._field_NICKNAME(['NICKNAME'], value, result)
+        else:
+            if __debug__:
+                print 'ignoring PALM custom field',field
+        
     def _default_field(self, field, value, result):
         ff=field[0].split(".")
-        if ff[0].startswith("X-") or (len(ff)>1 and ff[1].startswith("X-")):
+        f0=ff[0]
+        f1=len(ff)>1 and ff[1] or ''
+        if f0.startswith('X-PALM-') or f1.startswith('X-PALM-'):
+            self._field_X_PALM(field, value, result)
+            return
+        elif f0.startswith("X-") or f1.startswith("X-"):
             if __debug__:
                 print "ignoring custom field",field
             return
