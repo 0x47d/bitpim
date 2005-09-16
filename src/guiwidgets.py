@@ -669,6 +669,8 @@ class ConfigDialog(wx.Dialog):
         self.mw.EnsureDatabase(path, oldpath)
         # update the status bar
         self.mw.SetPhoneModelStatus()
+        # update the cache path
+        self.mw.update_cache_path()
 
     def _fixup(self, path):
         # os.path.join screws up adding root directory of a drive to

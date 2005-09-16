@@ -1066,7 +1066,8 @@ class MainWindow(wx.Frame):
                 return
         assert False, "filesytem view page is missing!"
         
-
+    def update_cache_path(self):
+        com_brew.file_cache.set_path(self.configpath)
 
     def OnFilePrint(self,_):
         self.nb.GetPage(self.nb.GetSelection()).OnPrintDialog(self, self.config)

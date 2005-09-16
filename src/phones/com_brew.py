@@ -639,6 +639,36 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
 
 file_cache=None
 
+class EmptyFileCache(object):
+    def __init__(self, bitpim_path):
+        self._path=None
+        self._cache_file_name=None
+        self._data={ 'file_index': 0 }
+        self.esn=None
+    def hit(self, file_name, datetime, data_len):
+        return False
+    def data(self, file_name):
+        return None
+    def add(self, file_name, datetime, data):
+        pass
+    def clear(self, file_name):
+        pass
+    def set_path(self, bitpim_path):
+        try:
+            print 'setting path to',bitpim_path
+            if not bitpim_path:
+                raise ValueError
+            # set the paths
+            self.__class__=FileCache
+            self._path=os.path.join(bitpim_path, 'cache')
+            self._cache_file_name=os.path.join(self._path,
+                                               self._cache_index_file_name)
+            self._check_path()
+            self._read_index()
+            self._write_index()
+        except:
+            self.__class__=EmptyFileCache
+
 class FileCache(object):
     _cache_index_file_name='index.idx'
     current_version=1
@@ -648,8 +678,15 @@ class FileCache(object):
                                            self._cache_index_file_name)
         self._data={ 'file_index': 0 }
         self.esn=None
-        self._read_index()
-        self._write_index()
+        try:
+            if not bitpim_path:
+                raise ValueError
+            self._check_path()
+            self._read_index()
+            self._write_index()
+        except:
+            # something's wrong, disable caching
+            self.__class__=EmptyFileCache
 
     def _check_path(self):
         try:
@@ -745,3 +782,20 @@ class FileCache(object):
         except:
             if __debug__:
                 raise
+
+    def set_path(self, bitpim_path):
+        try:
+            print 'setting path to',bitpim_path
+            if not bitpim_path:
+                raise ValueError
+            # set the paths
+            self.__class__=FileCache
+            self._path=os.path.join(bitpim_path, 'cache')
+            self._cache_file_name=os.path.join(self._path,
+                                               self._cache_index_file_name)
+            self._check_path()
+            self._read_index()
+            self._write_index()
+        except:
+            raise
+            self.__class__=EmptyFileCache
