@@ -726,7 +726,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         r['firmware_version']=self._send_at_and_get('+GMR')
         r['esn']=self._send_at_and_get('+GSN')
 
-    def _detectphone(coms, likely_ports, res, _module):
+    def _detectphone(coms, likely_ports, res, _module, _log):
         if not len(likely_ports):
             return None
         for port in likely_ports:
@@ -739,7 +739,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 if res[port]['mode_modem']==False or \
                    res[port]['model']:
                     continue
-                p=Phone(None, commport.CommConnection(None, port, timeout=1))
+                p=Phone(_log, commport.CommConnection(_log, port, timeout=1))
                 if p.is_mode_modem():
                     res[port]['mode_modem']=True
                     p.get_detect_data(res[port])

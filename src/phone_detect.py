@@ -80,14 +80,18 @@ class DetectPhone(object):
                 self.__q_log.put_nowait(log_str)
             else:
                 self.__log.log(log_str)
-    def logdata(self, log_str, log_data):
+    def logdata(self, log_str, log_data, klass=None):
         if self.__log is None:
-            print log_str,log_data
+            print log_str,log_data, klass
         else:
             if self.__q_on:
-                self.__q_log.put_nowait((log_str, log_data))
+                self.__q_log.put_nowait((log_str, log_data, klass))
             else:
-                self.__log.logdata(log_str, log_data)
+                self.__log.logdata(log_str, log_data, klass)
+
+    def progress(self, pos, max, desc=""):
+        if self.__log:
+            self.__log.progress(pos, max, desc)
 
     def __get_mode_modem(self, comm):
         """ check if this port supports mode modem"""
@@ -214,7 +218,8 @@ class DetectPhone(object):
                 found_port=getattr(module.Phone, 'detectphone')(coms,
                                                                 likely_ports,
                                                                 self.__data,
-                                                                module)
+                                                                module,
+                                                                self)
                 if found_port is not None:
                     # found it
                     found_model=model

@@ -864,7 +864,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             if s:
                 res['esn']=self.get_esn(s)
 
-    def detectphone(coms, likely_ports, res, _module):
+    def detectphone(coms, likely_ports, res, _module, _log):
         if not likely_ports:
             # cannot detect any likely ports
             return None
@@ -880,7 +880,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     # either phone is not in BREW, or a model has already
                     # been found, not much we can do now
                     continue
-                p=_module.Phone(None, commport.CommConnection(None, port, timeout=1))
+                p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
                 if res[port]['mode_brew'] is None:
                     res[port]['mode_brew']=p.is_mode_brew()
                 if res[port]['mode_brew']:
