@@ -187,7 +187,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         req=self.protocolclass.groupnamerequest()
 	for i in range(self.protocolclass.NUMGROUPS+1):
             req.gid=i
-            res=self.sendpbcommand(req, self.protocolclass.groupnameresponse)
+            # Don't crash if phone doesn't support groups
+            try:
+                res=self.sendpbcommand(req, self.protocolclass.groupnameresponse)
+            except:
+                return g
             g[i]={'name': res[0].entry.groupname}
 	return g
 
@@ -197,6 +201,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         groups=data['groups']
 
         groups_onphone=self.read_groups() # Get groups on phone
+
+        # If groups read doesn't work, don't try to write groups
+        if not groups_onphone:
+            return
 
         keys=groups.keys()
         keys.sort()
