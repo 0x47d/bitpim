@@ -59,6 +59,107 @@ class BrewDirectoryExistsException(BrewCommandException):
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
+class DebugBrewProtocol:
+    """ Emulate a phone file system using a local file system.  This is used
+    when you may not have access to a physical phone, but have a copy of its
+    file system.
+    """
+    _fs_path=''
+    def __init__(self):
+        pass
+    def getfirmwareinformation(self):
+        self.log("Getting firmware information")
+    def explore0c(self):
+        self.log("Trying stuff with command 0x0c")
+    def offlinerequest(self, reset=False):
+        self.log("Taking phone offline")
+        if reset:
+            self.log("Resetting phone")
+    def modemmoderequest(self):
+        self.log("Attempting to put phone in modem mode")
+    def mkdir(self, name):
+        self.log("Making directory '"+name+"'")
+        os.mkdir(os.path.join(self._fs_path, name))
+    def mkdirs(self, directory):
+        if len(directory)<1:
+            return
+        dirs=directory.split('/')
+        for i in range(0,len(dirs)):
+            try:
+                self.mkdir("/".join(dirs[:i+1]))  # basically mkdir -p
+            except:
+                pass
+    def rmdir(self,name):
+        self.log("Deleting directory '"+name+"'")
+        os.rmdir(os.path.join(self._fs_path, name))
+    def rmfile(self,name):
+        self.log("Deleting file '"+name+"'")
+        os.remove(os.path.join(self._fs_path, name))
+    def rmdirs(self, path):
+        self.progress(0,1, "Listing child files and directories")
+        all=self.getfilesystem(path, 100)
+        keys=all.keys()
+        keys.sort()
+        keys.reverse()
+        count=0
+        for k in keys:
+            self.progress(count, len(keys), "Deleting "+k)
+            count+=1
+            if all[k]['type']=='directory':
+                self.rmdir(k)
+            else:
+                self.rmfile(k)
+        self.rmdir(path)
+
+    def getfilesystem(self, dir="", recurse=0):
+        results={}
+        self.log("Listing dir '"+dir+"'")
+        _pwd=os.path.join(self._fs_path, dir)
+        for _root,_dir,_file in os.walk(_pwd):
+            break
+        for f in _file:
+            _stat=os.stat(os.path.join(_pwd, f))
+            _date=_stat[8]
+            _name=dir+'/'+f
+            results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
+                             'date': (_date,
+                                      time.strftime("%x %X", time.gmtime(_date))) }
+        for d in _dir:
+            results[d]={ 'name': d, 'type': 'directory' }
+            if recurse>0:
+                results.update(self.getfilesystem(os.path.join(dir, d),
+                                                  recurse-1))
+        return results
+
+    def statfile(self, name):
+        _stat=os.stat(os.path.join(self._fs_path, name))
+        _date=_stat[8]
+        results={ 'name': name, 'type': 'file', 'size': _stat[6],
+                  'date': (_date,
+                           time.strftime("%x %X", time.gmtime(_date))) }
+        return results
+
+    def writefile(self, name, contents):
+        self.log("Writing file '"+name+"' bytes "+`len(contents)`)
+        file(os.path.join(self._fs_path, name), 'wb').write(contents)
+
+    def getfilecontents(self, name, use_cache=False):
+        self.log("Getting file contents '"+name+"'")
+        try:
+            return file(os.path.join(self._fs_path, name), 'rb').read()
+        except:
+            raise BrewNoSuchFileException
+
+    def _setmodebrew(self):
+        self.log('_setmodebrew: in mode BREW')
+        return True
+    def sendbrewcommand(self, request, responseclass, callsetmode=True):
+        raise NotImplemetedError
+    def log(self, s):
+        print s
+    def logdata(self, s, data, klass=None):
+        print s
+
 class BrewProtocol:
     "Talk to a phone using the 'brew' protocol"
 
@@ -70,7 +171,26 @@ class BrewProtocol:
     _brewepochtounix=315532800+406800
 
     def __init__(self):
-        pass
+        phone_path=os.environ.get('PHONE_FS', None)
+        if phone_path:
+            print 'Debug Phone File System:',phone_path
+            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
+            self._update_base_class(self.__class__)
+
+    def _update_base_class(self, klass):
+        _bases=[]
+        found=False
+        for e in klass.__bases__:
+            if e==BrewProtocol:
+                _bases.append(DebugBrewProtocol)
+                found=True
+            else:
+                _bases.append(e)
+        if found:
+            klass.__bases__=tuple(_bases)
+        else:
+            for e in _bases:
+                self._update_base_class(e)
 
     def getfirmwareinformation(self):
         self.log("Getting firmware information")
