@@ -43,7 +43,7 @@ class RingerView(guiwidgets.FileView):
     __publisher=pubsub.Publisher
 
 
-    organizetypes=("Audio Type", "Origin", "File Size")
+    organizetypes=("Origin", "Audio Type", "File Size")
     media_notification_type=pubsub.ringtone_type
     
     def __init__(self, mainwindow, parent, id=-1):
