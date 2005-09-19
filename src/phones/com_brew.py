@@ -160,7 +160,7 @@ class DebugBrewProtocol:
     def logdata(self, s, data, klass=None):
         print s
 
-class BrewProtocol:
+class RealBrewProtocol:
     "Talk to a phone using the 'brew' protocol"
 
     MODEBREW="modebrew"
@@ -171,26 +171,30 @@ class BrewProtocol:
     _brewepochtounix=315532800+406800
 
     def __init__(self):
-        phone_path=os.environ.get('PHONE_FS', None)
-        if phone_path:
-            print 'Debug Phone File System:',phone_path
-            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
-            self._update_base_class(self.__class__)
+        pass
+##        phone_path=os.environ.get('PHONE_FS', None)
+##        if phone_path:
+##            print 'Debug Phone File System:',phone_path
+##            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
+##            if self.__class__==BrewProtocol:
+##                self.__class__=DebugBrewProtocol
+##            else:
+##                self._update_base_class(self.__class__)
 
-    def _update_base_class(self, klass):
-        _bases=[]
-        found=False
-        for e in klass.__bases__:
-            if e==BrewProtocol:
-                _bases.append(DebugBrewProtocol)
-                found=True
-            else:
-                _bases.append(e)
-        if found:
-            klass.__bases__=tuple(_bases)
-        else:
-            for e in _bases:
-                self._update_base_class(e)
+##    def _update_base_class(self, klass):
+##        _bases=[]
+##        found=False
+##        for e in klass.__bases__:
+##            if e==BrewProtocol:
+##                _bases.append(DebugBrewProtocol)
+##                found=True
+##            else:
+##                _bases.append(e)
+##        if found:
+##            klass.__bases__=tuple(_bases)
+##        else:
+##            for e in _bases:
+##                self._update_base_class(e)
 
     def getfirmwareinformation(self):
         self.log("Getting firmware information")
@@ -631,6 +635,36 @@ class BrewProtocol:
             self.log(formatpacketerrorlog("Error decoding response", origdata, data, responseclass))
             raise
         return res
+
+class BrewProtocol(RealBrewProtocol):
+    """This is just a wrapper class that allows the manipulation between
+    RealBrewProtocol and DebugBrewProtocol classes.
+    """
+    def __init__(self):
+        # if the env var PHONE_FS is set, we're debugging!
+        phone_path=os.environ.get('PHONE_FS', None)
+        if __debug__ and phone_path:
+            print 'Debug Phone File System:',phone_path
+            # we probably need to do this only once for the whole class,
+            # but what the heck!
+            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
+            self._update_base_class(self.__class__)
+
+    def _update_base_class(self, klass):
+        # update the RealBrewProtocol class to DebugBrewProtocol one.
+        _bases=[]
+        found=False
+        for e in klass.__bases__:
+            if e==RealBrewProtocol:
+                _bases.append(DebugBrewProtocol)
+                found=True
+            else:
+                _bases.append(e)
+        if found:
+            klass.__bases__=tuple(_bases)
+        else:
+            for e in _bases:
+                self._update_base_class(e)
 
 def formatpacketerrorlog(str, origdata, data, klass):
     # copied from guiwidgets.LogWindow.logdata
