@@ -82,6 +82,9 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_has_voice_id=False
 
+# Text Memo const
+text_memo_file='sch/memo.dat'
+
 %}
 
 PACKET speeddial:
@@ -332,4 +335,12 @@ PACKET sms_quick_text:
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
         * STRING {} msg #
+###
+### Text Memos
+###
+PACKET textmemo:
+    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items

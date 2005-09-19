@@ -222,37 +222,7 @@ class Phone(com_lgvx4400.Phone):
     # all taken care by the VX4400
 
     # Text Memo stuff-----------------------------------------------------------
-    def getmemo(self, result):
-        # read the memo file
-        try:
-            buf=prototypes.buffer(self.getfilecontents(
-                self.protocolclass.text_memo_file))
-            text_memo=self.protocolclass.textmemofile()
-            text_memo.readfrombuffer(buf)
-            res={}
-            for m in text_memo.items:
-                entry=memo.MemoEntry()
-                entry.text=m.text
-                res[entry.id]=entry
-        except com_brew.BrewNoSuchFileException:
-            res={}
-        result['memo']=res
-        return result
-
-    def savememo(self, result, merge):
-        text_memo=self.protocolclass.textmemofile()
-        memo_dict=result.get('memo', {})
-        keys=memo_dict.keys()
-        keys.sort()
-        text_memo.itemcount=len(keys)
-        for k in keys:
-            entry=self.protocolclass.textmemo()
-            entry.text=memo_dict[k].text
-            text_memo.items.append(entry)
-        buf=prototypes.buffer()
-        text_memo.writetobuffer(buf)
-        self.writefile(self.protocolclass.text_memo_file, buf.getvalue())
-        return result
+    # all taken care by the VX4400
 
     # Call History stuff--------------------------------------------------------
     _call_history_info={

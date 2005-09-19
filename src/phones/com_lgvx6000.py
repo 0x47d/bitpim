@@ -61,8 +61,8 @@ class Phone(com_lgvx4400.Phone):
                     'Fish', 'Sea', 'Snowman')
 
     builtinringtones= ('Ring 1', 'Ring 2', 'Ring 3', 'Ring 4', 'Ring 5', 'Ring 6',
-                       'Annen Polka', 'Leichte Kavallerie Overture',
-                       'Beethoven Symphony No. 9', 'Paganini', 'Bubble', 'Fugue',
+                       'Annen Polka', 'Leichte Kavallerie Overture', 'CanCan',
+                       'Paganini', 'Bubble', 'Fugue',
                        'Polka', 'Mozart Symphony No. 40', 'Cuckoo Waltz', 'Rodetzky',
                        'Funicula', 'Hallelujah', 'Trumpets', 'Trepak', 'Prelude', 'Mozart Aria',
                        'William Tell overture', 'Spring', 'Slavonic', 'Fantasy')
@@ -96,9 +96,9 @@ class Profile(parentprofile):
     phone_model='VX6000'
 
     # use for auto-detection
-    if __debug__:
-        phone_manufacturer='LG Electronics Inc.'
-        phone_model='VX6000 102'
+##    if __debug__:
+##        phone_manufacturer='LG Electronics Inc.'
+##        phone_model='VX6000 102'
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=131
@@ -129,6 +129,23 @@ class Profile(parentprofile):
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
     
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('call_history', 'read', None),
+        ('sms', 'read', None),
+        ('sms', 'write', 'OVERWRITE'),
+       )
  
     def __init__(self):
         parentprofile.__init__(self)
