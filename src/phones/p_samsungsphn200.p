@@ -37,16 +37,16 @@ PACKET pbentry:
     P CSVDATE {'default': ""} +birthday
     * CSVINT slot "Internal Slot"
     * CSVSTRING name
-    * CSVINT dunno1
-    * LIST {'createdefault': True} +numbers:
-        * CSVINT +numbertype
-        * CSVSTRING {'quotechar': None, 'default': ""} +number
-        
-    #    * LIST {'createdefault': True, 'elementclass': phonenumber} +numbers
+    * CSVINT {'default': 255} +dunno1
+    * LIST {'elementclass': phonenumber} +numbers
 
 PACKET phonenumber:
+    P BOOL {'default': True} +last_number
     * CSVINT +numbertype
-    * CSVSTRING {'quotechar': None, 'default': ""} +number
+    if not self.last_number:
+        * CSVSTRING {'quotechar': None, 'default': ""} +number
+    if self.last_number:
+        * CSVSTRING {'quotechar': None, 'default': "", 'terminator': None} +number
 
 PACKET phonebookslotrequest:
     * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKR='} +command
@@ -55,3 +55,8 @@ PACKET phonebookslotrequest:
 PACKET phonebookslotresponse:
     * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
     * pbentry entry
+
+PACKET phonebookslotupdaterequest:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW='} +command
+    * pbentry entry
+    
