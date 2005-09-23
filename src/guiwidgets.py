@@ -363,6 +363,7 @@ class ConfigDialog(wx.Dialog):
                   'SCH-A310': 'com_samsungscha310',
                   'SPH-A460': 'com_samsungspha460',
                   'SPH-A620 (VGA1000)': 'com_samsungspha620',
+                  'SPH-N200': 'com_samsungsphn200',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
                   'SK6100 (Pelephone)' : 'com_sk6100', 
@@ -371,7 +372,6 @@ class ConfigDialog(wx.Dialog):
 
     if __debug__:
         phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
-                  'SPH-N200': 'com_samsungsphn200',
                               })
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')
     setme="<setme>"
