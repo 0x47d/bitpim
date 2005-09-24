@@ -589,6 +589,11 @@ class codegen:
                 print >>out, indent()+"def __delfield_%s(self): del self.__field_%s\n" % (f[1], f[1])
                 # Make it a property
                 print >>out, indent()+"%s=property(__getfield_%s, __setfield_%s, __delfield_%s, %s)\n" % (f[1], f[1], f[1], f[1], f[6])
+                if '++' in f[7]:
+                    # allow setting attributes
+                    print >>out, indent()+"def set_%s_attr(self, **kwargs):"%f[1]
+                    print >>out, indent(2)+"self.%s"%f[1]
+                    print >>out, indent(2)+"self.__field_%s.update(**kwargs)\n"%f[1]
 
         # we are a container
         print >>out, indent()+"def iscontainer(self):"
