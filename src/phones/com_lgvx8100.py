@@ -242,19 +242,18 @@ class Phone(com_lgvx7000.Phone):
         # what will be written to the files
         eventsf=self.protocolclass.schedulefile()
         exceptionsf=self.protocolclass.scheduleexceptionfile()
-
         # what are we working with
         cal=dict['calendar']
         newcal={}
-        keys=cal.keys()
+        #sort into start order, makes it possible to see if the calendar has changed        
+        keys=[(x.start, k) for k,x in cal.items()]
         keys.sort()
-        pos=1
-
         # number of entries
         eventsf.numactiveitems=len(keys)
-        
+        pos=1
+        contains_alarms=False        
         # play with each entry
-        for k in keys:
+        for (_,k) in keys:
             # entry is what we will return to user
             entry=cal[k]
             data=self.protocolclass.scheduleevent()
@@ -270,6 +269,8 @@ class Phone(com_lgvx7000.Phone):
             # check for exceptions and add them to the exceptions list
             exceptions=0
             if entry.repeat!=None:
+                if data.end[:3]==entry.no_end_date:
+                    data.end=(2100, 12, 31)+data.end[3:]
                 for i in entry.repeat.suppressed:
                     de=self.protocolclass.scheduleexception()
                     de.pos=data.pos
@@ -282,20 +283,28 @@ class Phone(com_lgvx7000.Phone):
                 data.repeat=(self.getrepeattype(entry, exceptions))
             else:
                 data.repeat=((0,0,0,0))
-
             data.unknown1=0
             data.unknown2=0
-
+            if data.alarmindex_vibrate!=1: # if alarm set
+                contains_alarms=True
             # put entry in nice shiny new dict we are building
             entry=copy.copy(entry)
             newcal[data.pos]=entry
             eventsf.events.append(data)
 
-        # scribble everything out
         buf=prototypes.buffer()
         eventsf.writetobuffer(buf)
-        self.logdata("Writing calendar", buf.getvalue(), eventsf)
-        self.writefile("sch/newschedule.dat", buf.getvalue())
+        # We check the existing calender as changes require a reboot for the alarms
+        # to work properly, also no point writing the file if it is not changing
+        if buf.getvalue()!=self.getfilecontents("sch/newschedule.dat"):
+            self.logdata("Writing calendar", buf.getvalue(), eventsf)
+            self.writefile("sch/newschedule.dat", buf.getvalue())
+            if contains_alarms:
+                self.log("Your phone has to be rebooted due to the calendar changing")
+                dict["rebootphone"]=True
+        else:
+            self.log("Phone calendar unchanged, no update required")
+
         buf=prototypes.buffer()
         exceptionsf.writetobuffer(buf)
         self.logdata("Writing calendar exceptions", buf.getvalue(), exceptionsf)
@@ -481,5 +490,6 @@ class Profile(parentprofile):
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         )
+
 
 
