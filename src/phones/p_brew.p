@@ -107,6 +107,18 @@ PACKET listfileresponse:
     1 UINT dirnamelen "which portion of the filename is the directory, including the last /"
     * STRING {'terminator': None, 'pascal': True} filename 
 
+PACKET listdirectoryrequest:
+    "This gets one directory entry (directory only) at a time"
+    * requestheader {'command': 0x0a} +header
+    4 UINT entrynumber
+    * STRING {'terminator': 0, 'pascal': True} dirname
+
+PACKET listdirectoryresponse:
+    * responseheader header
+    4 UINT entrynumber  
+    17 UNKNOWN unknown1  "probably the directory attributes"
+    * STRING {'terminator': None, 'pascal': True} subdir 
+
 PACKET statfilerequest:
     "Get the status of the file"
     * requestheader { 'command': 7 } +header
