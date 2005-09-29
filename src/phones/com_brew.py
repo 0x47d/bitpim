@@ -172,29 +172,6 @@ class RealBrewProtocol:
 
     def __init__(self):
         pass
-##        phone_path=os.environ.get('PHONE_FS', None)
-##        if phone_path:
-##            print 'Debug Phone File System:',phone_path
-##            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
-##            if self.__class__==BrewProtocol:
-##                self.__class__=DebugBrewProtocol
-##            else:
-##                self._update_base_class(self.__class__)
-
-##    def _update_base_class(self, klass):
-##        _bases=[]
-##        found=False
-##        for e in klass.__bases__:
-##            if e==BrewProtocol:
-##                _bases.append(DebugBrewProtocol)
-##                found=True
-##            else:
-##                _bases.append(e)
-##        if found:
-##            klass.__bases__=tuple(_bases)
-##        else:
-##            for e in _bases:
-##                self._update_base_class(e)
 
     def getfirmwareinformation(self):
         self.log("Getting firmware information")

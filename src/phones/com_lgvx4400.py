@@ -306,6 +306,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     entry.number=call.name
                 else:
                     entry.number=call.number
+                    if call.name:
+                        entry.name=call.name
                 res[entry.id]=entry
         except com_brew.BrewNoSuchFileException:
             pass # do nothing if file doesn't exist
