@@ -372,7 +372,8 @@ class ConfigDialog(wx.Dialog):
 
     if __debug__:
         phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
-                              })
+                             'LG-PM325 (Sprint)': 'com_lgpm325',
+                             })
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')
     setme="<setme>"
     ID_DIRBROWSE=wx.NewId()
