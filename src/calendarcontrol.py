@@ -180,14 +180,10 @@ class CalendarCell(wx.PyWindow):
 
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_SIZE(self, self.OnSize)
-        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.OnSize(None)
 
     def DoGetBestSize(self):
         return (10,10)
-
-    def OnEraseBackground(self, _):
-        pass
 
     def setdate(self, year, month, day):
         """Set the date we are"""
@@ -365,16 +361,12 @@ class CalendarLabel(wx.PyWindow):
         self.cells=cells
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_SIZE(self, self.OnSize)
-        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         self.setfont(wx.Font(20, wx.SWISS, wx.NORMAL, wx.BOLD ))
         self.settextcolour(wx.NamedColour("BLACK"))
         self.OnSize(None)
 
     def DoGetBestSize(self):
         return (10,10)
-
-    def OnEraseBackground(self, _):
-        pass
 
     def OnSize(self, _=None):
         self.width, self.height = self.GetClientSizeTuple()
@@ -532,9 +524,7 @@ class Calendar(wx.Panel):
         sizer.Add(self.downbutt, flag=wx.EXPAND, pos=(2+rows, 0), span=(1,8))
         self.label=CalendarLabel(self, map(lambda x: x[0], self.rows))
         sizer.Add(self.label, flag=wx.EXPAND, pos=(2,0), span=(self.numrows,1))
-        self.SetSizer(sizer)
         self.sizer=sizer
-        self.SetAutoLayout(True)
 
         self.popupcalendar=PopupCalendar(self, self)
 
@@ -542,7 +532,6 @@ class Calendar(wx.Panel):
         wx.EVT_BUTTON(self, self.ID_DOWN, self.OnScrollDown)
         wx.EVT_BUTTON(self, self.ID_YEARBUTTON, self.OnYearButton)
         wx.EVT_BUTTON(self, self.ID_TODAYBUTTON, self.OnTodayButton)
-        wx.EVT_ERASE_BACKGROUND(self, self.OnEraseBackground)
         # grab key down from all children
         map(lambda child: wx.EVT_KEY_DOWN(child, self.OnKeyDown), self.GetChildren())
         # and mousewheel
@@ -557,6 +546,10 @@ class Calendar(wx.Panel):
 
         self.showday(*time.localtime()[:3]+(self.showrow,))
         self.setday(*time.localtime()[:3])
+
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+        self.SetAutoLayout(True)
 
     def OnKeyDown(self, event):
         key=event.GetKeyCode()
@@ -600,9 +593,6 @@ class Calendar(wx.Panel):
 
     def OnTodayButton(self, _):
         self.setday(*time.localtime()[:3])
-
-    def OnEraseBackground(self, _):
-        pass
 
     def makerow(self, sizer, row):
         res=[]
