@@ -111,7 +111,7 @@ class Phone(com_lgvx4400.Phone):
         # voice memos index
         if key=='ringtone-index':
             try:
-                vmemo_files=self.getfilesystem(self.VoiceMemoDir)
+                vmemo_files=self.listfiles(self.VoiceMemoDir)
                 keys=vmemo_files.keys()
                 keys.sort()
                 _idx_cnt=210
@@ -136,7 +136,7 @@ class Phone(com_lgvx4400.Phone):
         _qcp_file=common.gettempfilename('qcp')
         _wav_file=common.gettempfilename('wav')
         try:
-            vmemo_files=self.getfilesystem(self.VoiceMemoDir)
+            vmemo_files=self.listfiles(self.VoiceMemoDir)
             keys=vmemo_files.keys()
             for k in keys:
                 if k.endswith('.qcp'):

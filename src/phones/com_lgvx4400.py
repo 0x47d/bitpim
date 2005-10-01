@@ -140,35 +140,34 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def _readsms(self):
         res={}
         # go through the sms directory looking for messages
-        for item in self.getfilesystem("sms").values():
-            if item['type']=='file':
-                folder=None
-                for f,pat in self.protocolclass.SMS_PATTERNS.items():
-                    if pat.match(item['name']):
-                        folder=f
-                        break
-                if folder:
-                    buf=prototypes.buffer(self.getfilecontents(item['name'], True))
-                    self.logdata("SMS message file " +item['name'], buf.getdata())
-                if folder=='Inbox':
-                    sf=self.protocolclass.sms_in()
-                    sf.readfrombuffer(buf)
-                    entry=self._getinboxmessage(sf)
-                    res[entry.id]=entry
-                elif folder=='Sent':
-                    sf=self.protocolclass.sms_out()
-                    sf.readfrombuffer(buf)
-                    entry=self._getoutboxmessage(sf)
-                    res[entry.id]=entry
-                elif folder=='Saved':
-                    sf=self.protocolclass.sms_saved()
-                    sf.readfrombuffer(buf)
-                    if sf.outboxmsg:
-                        entry=self._getoutboxmessage(sf.outbox)
-                    else:
-                        entry=self._getinboxmessage(sf.inbox)
-                    entry.folder=entry.Folder_Saved
-                    res[entry.id]=entry
+        for item in self.listfiles("sms").values():
+            folder=None
+            for f,pat in self.protocolclass.SMS_PATTERNS.items():
+                if pat.match(item['name']):
+                    folder=f
+                    break
+            if folder:
+                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
+                self.logdata("SMS message file " +item['name'], buf.getdata())
+            if folder=='Inbox':
+                sf=self.protocolclass.sms_in()
+                sf.readfrombuffer(buf)
+                entry=self._getinboxmessage(sf)
+                res[entry.id]=entry
+            elif folder=='Sent':
+                sf=self.protocolclass.sms_out()
+                sf.readfrombuffer(buf)
+                entry=self._getoutboxmessage(sf)
+                res[entry.id]=entry
+            elif folder=='Saved':
+                sf=self.protocolclass.sms_saved()
+                sf.readfrombuffer(buf)
+                if sf.outboxmsg:
+                    entry=self._getoutboxmessage(sf.outbox)
+                else:
+                    entry=self._getinboxmessage(sf.inbox)
+                entry.folder=entry.Folder_Saved
+                res[entry.id]=entry
         return res 
 
     def _getquicktext(self):
@@ -933,7 +932,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         voice_files={}
         if self._cal_has_voice_id:
             try:
-                file_list=self.getfilesystem(self.protocolclass.cal_dir)
+                file_list=self.listfiles(self.protocolclass.cal_dir)
                 for k in file_list.keys():
                     if k.endswith(self.protocolclass.cal_voice_ext):
                         voice_files[int(k[8:11])]=k

@@ -418,53 +418,6 @@ class Phone(com_lgvx7000.Phone):
             pass
         return
 
-    def getfilesystem(self, dir="", recurse=0):
-        results={}
-
-        self.log("(New) Listing dir '"+dir+"'")
-        
-        req=p_brew.listdirectoryrequest()
-        req.dirname=dir
-        for i in xrange(10000):
-            try:
-                req.entrynumber=i
-                res=self.sendbrewcommand(req,p_brew.listdirectoryresponse)
-                # sometimes subdir can already include the parent directory
-                f=res.subdir.rfind("/")
-                if f>=0: subdir=res.subdir[f+1:]
-                else: subdir=res.subdir
-                if len(dir):
-                    subdir=dir+"/"+subdir
-                results[subdir]={ 'name': subdir, 'type': 'directory' }
-                if recurse>0:
-                    results.update(self.getfilesystem(subdir, recurse-1))
-            except com_brew.BrewNoMoreEntriesException:
-                break
-
-        # self.log("file listing 0x0b command")
-        req=p_brew.listfilerequest()
-        req.dirname=dir
-        for i in xrange(10000):
-            try:
-                req.entrynumber=i
-                res=self.sendbrewcommand(req,p_brew.listfileresponse)
-                results[res.filename]={ 'name': res.filename, 'type': 'file',
-                                'size': res.size }
-                if res.date==0:
-                    results[res.filename]['date']=(0, "")
-                else:
-                    try:
-                        date=res.date+self._brewepochtounix
-                        results[res.filename]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
-                    except:
-                        # invalid date - see SF bug #833517
-                        results[res.filename]['date']=(0, "")
-                    
-            except com_brew.BrewNoMoreEntriesException:
-                break
-
-        return results
-
 parentprofile=com_lgvx7000.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass

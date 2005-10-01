@@ -255,21 +255,45 @@ class RealBrewProtocol:
                 self.rmfile(k)
         self.rmdir(path)
 
-
-    def getfilesystem(self, dir="", recurse=0):
+    def listsubdirs(self, dir='', recurse=0):
         results={}
+        self.log("Listing subdirs in dir: '"+dir+"'")
 
-        self.log("Listing dir '"+dir+"'")
-        
+        req=p_brew.listdirectoryrequest()
+        req.dirname=dir
+        for i in xrange(10000):
+            try:
+                req.entrynumber=i
+                res=self.sendbrewcommand(req,p_brew.listdirectoryresponse)
+                # sometimes subdir can already include the parent directory
+                f=res.subdir.rfind("/")
+                if f>=0:
+                    subdir=res.subdir[f+1:]
+                else:
+                    subdir=res.subdir
+                if len(dir):
+                    subdir=dir+"/"+subdir
+                results[subdir]={ 'name': subdir, 'type': 'directory' }
+            except BrewNoMoreEntriesException:
+                break
+        if recurse:
+            for k,_subdir in results.items():
+                results.update(self.listsubdirs(_subdir['name'], recurse-1))
+        return results
+
+    def listfiles(self, dir=''):
+        results={}
+        self.log("Listing files in dir: '"+dir+"'")
+
+        req=p_brew.listfilerequest()
+        req.dirname=dir
         # self.log("file listing 0x0b command")
         for i in xrange(10000):
             try:
-                req=p_brew.listfilerequest()
                 req.entrynumber=i
-                req.dirname=dir
                 res=self.sendbrewcommand(req,p_brew.listfileresponse)
                 results[res.filename]={ 'name': res.filename, 'type': 'file',
-                                'size': res.size }
+                                        'size': res.size }
                 if res.date==0:
                     results[res.filename]['date']=(0, "")
                 else:
@@ -279,26 +303,18 @@ class RealBrewProtocol:
                     except:
                         # invalid date - see SF bug #833517
                         results[res.filename]['date']=(0, "")
-                    
             except BrewNoMoreEntriesException:
                 break
+        return results
 
-        # i tried using 0x0a command to list subdirs but that fails when
-        # mingled with 0x0b commands
-        req=p_brew.listdirectoriesrequest()
-        req.dirname=dir
-
-        res=self.sendbrewcommand(req, p_brew.listdirectoriesresponse)
-        for i in range(res.numentries):
-            subdir=res.items[i].subdir
-            # sometimes subdir can already include the parent directory
-            f=subdir.rfind("/")
-            if f>=0: subdir=subdir[f+1:]
-            if len(dir):
-                subdir=dir+"/"+subdir
-            results[subdir]={ 'name': subdir, 'type': 'directory' }
-            if recurse>0:
-                results.update(self.getfilesystem(subdir, recurse-1))
+    def getfilesystem(self, dir="", recurse=0):
+        self.log("Getting file system in dir '"+dir+"'")
+        results=self.listsubdirs(dir)
+        subdir_list=[x['name'] for k,x in results.items()]
+        results.update(self.listfiles(dir))
+        if recurse:
+            for _subdir in subdir_list:
+                results.update(self.getfilesystem(_subdir, recurse-1))
         return results
 
     def statfile(self, name):

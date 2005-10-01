@@ -828,7 +828,7 @@ class FileEntries:
         file_cnt, idx_k=0, len(idx)
         path_len=len(self.__path)+1
         try:
-            file_list=self.__phone.getfilesystem(self.__path, 0)
+            file_list=self.__phone.listfiles(self.__path)
             for k in file_list:
                 try:
                     index=k[path_len:]
@@ -893,7 +893,7 @@ class FileEntries:
         idx=result.get(self.__index_type, {})
         tmp_avi_name=common.gettempfilename("avi")
         try:
-            file_list=self.__phone.getfilesystem(self.__path, 0)
+            file_list=self.__phone.listfiles(self.__path)
         except com_brew.BrewNoSuchDirectoryException:
             file_list={}
         except:
@@ -1113,7 +1113,7 @@ class ImageIndex:
             # starting index should be max_image_entries+1
             idx=self.__phone.protocolclass.max_image_entries+1
             try:
-                dir_l=self.__phone.getfilesystem(\
+                dir_l=self.__phone.listfiles(\
                     self.__phone.protocolclass.cam_pix_file_path)
             except com_brew.BrewNoSuchDirectoryException:
                 dir_l={}
@@ -1149,7 +1149,7 @@ class ImageIndex:
                     r[idx_name]=e.file_name[:e.file_name_len]
             # then 'Gallery' entries
             try:
-                dir_l=self.__phone.getfilesystem(\
+                dir_l=self.__phone.listfiles(\
                     self.__phone.protocolclass.cam_pix_file_path)
             except com_brew.BrewNoSuchDirectoryException:
                 dir_l={}
