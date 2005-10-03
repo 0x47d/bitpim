@@ -632,7 +632,7 @@ class MainWindow(wx.Frame):
             # nice and painful
             from win32com.shell import shell, shellcon
             path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
-            path=os.path.join(str(path), ".bitfling.key")
+            path=os.path.join(path, ".bitfling.key")
         else:
             path=os.path.expanduser("~/.bitfling.key")
         return self.config.Read("certificatefile", path)
