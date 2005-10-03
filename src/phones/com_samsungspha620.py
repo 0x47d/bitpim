@@ -34,10 +34,19 @@ class Phone(com_samsung_packet.Phone):
     serialsname='spha620'
     __groups_range=xrange(5)
 
-    imagelocations=()
-        # offset, index file, files location, type, maximumentries
-    
-    __ams_index_file="ams/AmsRegistry"
+    # digital_cam/jpeg Remove first 148 characters
+
+    imagelocations=(
+        # offset, index file, files location, origin, maximumentries, header offset
+        # Offset is arbitrary.  100 is reserved for amsRegistry indexed files
+        (400, "digital_cam/wallet", "camera", 100, 148),
+        (300, "digital_cam/jpeg", "camera", 100, 148),
+        )
+
+    ringtonelocations=(
+        # offset, index file, files location, type, maximumentries, header offset
+        )
+        
 
     def __init__(self, logtarget, commport):
         com_samsung_packet.Phone.__init__(self, logtarget, commport)
@@ -66,18 +75,14 @@ class Phone(com_samsung_packet.Phone):
         self.log("Fundamentals retrieved")
         return results
 
-    # digital_cam/jpeg Remove first 148 characters
-    imagelocations=(
-        # offset, index file, files location, type, maximumentries
-        (100, "", "digital_cam/jpeg", "camera", 100)
-        )
-        
     def amsanalyze(self,results):
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.AMSREGISTRY))
         ams=self.protocolclass.amsregistry()
         ams.readfrombuffer(buf)
         rt={}   #Todd added for ringtone index
-        j=0     #Todd added for ringtone index
+        nrt=0     #Todd added for ringtone index
+        wp={}
+        nwp=0
         for i in range(ams.nfiles):
             filetype=ams.info[i].filetype
             if filetype:
@@ -96,7 +101,7 @@ class Phone(com_samsung_packet.Phone):
                 print i, filetype, version, dir, vendor, name, mimetype
                 #if downloaddomainptr_ptr:
                 # print self.getstring(ams.strings,misc_ptr)
-                print j,ams.info[i].num2, ams.info[i].num7, ams.info[i].num8, ams.info[i].num9, ams.info[i].num12, ams.info[i].num13, ams.info[i].num14, ams.info[i].num15, ams.info[i].num16, ams.info[i].num17
+                print ams.info[i].num2, ams.info[i].num7, ams.info[i].num8, ams.info[i].num9, ams.info[i].num12, ams.info[i].num13, ams.info[i].num14, ams.info[i].num15, ams.info[i].num16, ams.info[i].num17
                 print " "
 
         # Todd's added info
@@ -107,11 +112,28 @@ class Phone(com_samsung_packet.Phone):
                         filetype='.mid'
                     elif mimetype=="application/x-pmd":
                         filetype='.pmd'
+                    elif mimetype=="audio/mp3":
+                        filetype='.mp3'
                     else:
                         filetype=''
-                    rt[j]={'name':name+filetype,'location':'ams/'+dir,'origin':'ringers'}
-                    j+=1
+                    rt[100+nrt]={'name':name+filetype,'location':'ams/'+dir,'origin':'ringers'}
+                    nrt+=1
+                elif filetype==13:
+                    if mimetype=="image/jpeg":
+                        filetype='.jpg'
+                    elif mimetype=="image/png":
+                        filetype='.png'
+                    elif mimetype=="image/gif":
+                        filetype='.gif'
+                    elif mimetype=="image/bmp":
+                        filetype='.bmp'
+                    else:
+                        filetype=''
+                    wp[100+nwp]={'name':name+filetype,'location':'ams/'+dir,'origin':'images'}
+                    nwp+=1
+                    
         results['ringtone-index']=rt
+        results['wallpaper-index']=wp
         
     def pblinerepair(self, line):
         "Extend incomplete lines"
@@ -140,9 +162,13 @@ class Phone(com_samsung_packet.Phone):
         
         return ncommas
         
-    def getwallpapers(self, result):
-        self.getwallpaperindices(result)
-        return self.getmedia(self.imagelocations, result, 'wallpapers')
+    def getringtones(self, results):
+        self.getmediaindex(self.ringtonelocations, results,'ringtone-index')
+        return self.getmedia(self.ringtonelocations, results, 'ringtone')
+    
+    def getwallpapers(self, results):
+        self.getmediaindex(self.imagelocations, results,'wallpaper-index')
+        return self.getmedia(self.imagelocations, results, 'wallpapers')
 
     
     def getmedia(self, maps, results, key):
@@ -150,12 +176,32 @@ class Phone(com_samsung_packet.Phone):
         returned by getindex, and the value is the contents of the media"""
         
         media={}
-        for i in range(10000):
-            try:
+        if key=="ringtone":
+            index_key="ringtone-index"
+            origin="ringers"
+        elif key=="wallpapers":
+            index_key="wallpaper-index"
+            origin="images"
+            
+        # Read the files indexed in ams Registry
+        for k in results[index_key].keys():
+            e=results[index_key][k]
+            if e['origin']==origin:
+                self.log("Reading "+e['name'])
+                contents=self.getfilecontents(e['location'])
+                media[e['name']]=contents
+
+        # Now read from the directories in the maps array
+        for offset,location,type,maxentries, headeroffset in maps:
+            for i in range(10000):
                 req=p_brew.listfilerequest()
                 req.entrynumber=i
-                req.dirname='digital_cam/jpeg'
-                res=self.sendbrewcommand(req, p_brew.listfileresponse)
+                req.dirname=location
+                try:
+                    res=self.sendbrewcommand(req, p_brew.listfileresponse)
+                except com_brew.BrewNoMoreEntriesException:
+                    break
+
                 filename=res.filename
                 p=filename.rfind("/")
                 basefilename=filename[p+1:]+".jpg"
@@ -164,27 +210,53 @@ class Phone(com_samsung_packet.Phone):
                 name_len=ord(contents[5])
                 new_basefilename=contents[6:6+name_len]+".jpg"
                 duplicate=False
-                for k in results['wallpaper-index'].keys():
-                    if results['wallpaper-index'][k]['name']==new_basefilename:
+                # Fix up duplicate filenames
+                for k in results[index_key].keys():
+                    if results[index_key][k]['name']==new_basefilename:
                         duplicate=True
                         break
-                    if results['wallpaper-index'][k]['name']==basefilename:
+                    if results[index_key][k]['name']==basefilename:
                         ksave=k
                 if duplicate:
                     new_basefilename=basefilename
                 else:
                     self.log("Renaming to "+new_basefilename)
-                    results['wallpaper-index'][ksave]['name']=new_basefilename                  
-                media[new_basefilename]=contents[148:]
-
-            except com_brew.BrewNoMoreEntriesException:
-                break
+                    results[index_key][ksave]['name']=new_basefilename                  
+                media[new_basefilename]=contents[headeroffset:]
 
         results[key]=media
 
-    def getwallpaperindices(self, results):
+    def getmediaindex(self, maps, results, key):
+        """Get the media (wallpaper/ringtone) index for stuff not in amsRegistry
+
+        @param results: places results in this dict
+        @param maps: the list of locations
+        @param key: key to place results in
+        """
+        self.log("Reading "+key)
+
+        media=results[key] # Get any existing indices
+        for offset,location,origin,maxentries, headeroffset in maps:
+            for i in range(10000):
+                req=p_brew.listfilerequest()
+                req.entrynumber=i
+                req.dirname=location
+                try:
+                    res=self.sendbrewcommand(req, p_brew.listfileresponse)
+                except com_brew.BrewNoMoreEntriesException:
+                    break
+                filename=res.filename
+                p=filename.rfind("/")
+                filename=filename[p+1:]+".jpg"
+                media[offset+i]={'name': filename, 'origin': origin}
+
+        results[key] = media
+        return
+                    
+        
+    def getcameraindices(self, results):
         """Get the index of camera pictures"""
-        imagemedia={}
+        imagemedia=results['wallpaper-index']
         for i in range(10000):
             try:
                 req=p_brew.listfilerequest()
@@ -225,15 +297,6 @@ class Phone(com_samsung_packet.Phone):
             i+=1
         return contents[start:i]
         
-    def getringtones(self, results):
-        self.setmode(self.MODEBREW)
-        tones={}
-        for i in range(len(results['ringtone-index'])):
-            print i,results['ringtone-index'][i]['location']
-            tones[results['ringtone-index'][i]['name']]=self.getfilecontents(results['ringtone-index'][i]['location'])
-            i+=1
-        results['ringtone']=tones
-    
 class Profile(com_samsung_packet.Profile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
