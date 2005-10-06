@@ -701,6 +701,9 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
     Fun and games ensue because files in the root directory have a zero length directory
     name, so we have some heuristics to try and distinguish if the first byte is the
     spurious zero or not
+
+    Also allow for zero length filenames.
+    
     """
     def __init__(self, *args, **kwargs):
         super(SPURIOUSZERO,self).__init__(*args, **kwargs)
@@ -741,6 +744,7 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
 
          while True:  # this is just used so we can break easily
 
+             print "Howmuchmore = ",buf.howmuchmore()
              # CASE C
              if buf.peeknextbyte()!=0:
                  self._value=-1
@@ -748,6 +752,9 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
 
              # CASE B
              if buf.peeknextbyte(1)==0:
+                 # If the filename is empty, we should see two zeros
+                 if buf.howmuchmore()==2:
+                     break
                  self._value=buf.getnextbyte() # consume sz
                  break
              
