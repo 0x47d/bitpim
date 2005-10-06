@@ -74,6 +74,26 @@ class Phone(com_lgvx4400.Phone):
 
     my_model='VX4500'
 
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        try:
+            s=self.getfilecontents('brew/version.txt')
+            if s[:6]=='VX4500':
+                phone_info.model=self.my_model
+                phone_info.manufacturer=Profile.phone_manufacturer
+                req=p_brew.firmwarerequest()
+                res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+                phone_info.append('Firmware Version:', res.firmware)
+                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
+                txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
+                phone_info.append('ESN:', txt)
+                txt=self.getfilecontents("nvm/nvm/nvm_0000")[457:467]
+                phone_info.append('Phone Number:', txt)
+        except:
+            if __debug__:
+                raise
+
+
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass

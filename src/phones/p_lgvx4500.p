@@ -189,6 +189,15 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unknown1
     * LIST {'elementclass': call} +calls
+    
+PACKET firmwareresponse:
+    1 UINT command
+    11 STRING {'terminator': None}  date1
+    8 STRING {'terminator': None}  time1
+    11 STRING {'terminator': None}  date2
+    8 STRING {'terminator': None}  time2
+    8 STRING {'terminator': None}  firmware
+
 ###
 ### SMS 
 ###
