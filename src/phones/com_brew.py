@@ -744,7 +744,6 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
 
          while True:  # this is just used so we can break easily
 
-             print "Howmuchmore = ",buf.howmuchmore()
              # CASE C
              if buf.peeknextbyte()!=0:
                  self._value=-1
