@@ -1198,12 +1198,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         return result
 
 
-def phonize(str):
-    """Convert the phone number into something the phone understands
-    
-    All digits, P, T, * and # are kept, everything else is removed"""
-    return re.sub("[^0-9PT#*]", "", str)
-
 parentprofile=com_phone.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
@@ -1220,6 +1214,7 @@ class Profile(parentprofile):
     
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
+    DIALSTRING_CHARS="[^0-9PT#*]"
     
     # which usb ids correspond to us
     usbids_straight=( ( 0x1004, 0x6000, 2), )# VID=LG Electronics, PID=LG VX4400/VX6000 -internal USB diagnostics interface
@@ -1385,7 +1380,7 @@ class Profile(parentprofile):
                         # we couldn't find a type for the number
                         continue 
                     # deal with number
-                    number=phonize(num['number'])
+                    number=self.phonize(num['number'])
                     if len(number)==0:
                         # no actual digits in the number
                         continue

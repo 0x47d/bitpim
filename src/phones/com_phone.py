@@ -156,6 +156,7 @@ class Profile:
 
     MAX_RINGTONE_BASENAME_LENGTH=64
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
+    DIALSTRING_CHARS="[^0-9PT#*]"
 
     # which usb ids correspond to us
     usbids=( 
@@ -246,6 +247,13 @@ class Profile:
         """
         # default implementation leaves file unaltered
         return (currentextension, audiofileinfo)
+
+    def phonize(self, str):
+        """Convert the phone number into something the phone understands
+        uses DIALSTRING_CHARS to compare phone number with and strips
+        all other characters from the string
+        """
+        return re.sub(self.DIALSTRING_CHARS, "", str)
 
 
 class NoFilesystem:
