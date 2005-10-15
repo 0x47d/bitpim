@@ -36,7 +36,7 @@ NUMPHONENUMBERS=5
 NORINGTONE=0
 NOWALLPAPER=0
 
-numbertypetab=( 'Mobile', 'Home', 'Office', 'fax', 'pager' )
+numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
 
 %}
 
