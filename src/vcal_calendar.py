@@ -492,7 +492,8 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a VCalendar File", wildcard='*.vcs')
+        dlg=wx.FileDialog(self, "Pick a VCalendar File",
+                          wildcard='*.vcs;*.ics')
         id=dlg.ShowModal()
         if id==wx.ID_CANCEL:
             dlg.Destroy()
