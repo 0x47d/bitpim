@@ -337,7 +337,8 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wx.Dialog):
-    phonemodels={ 'LG-VX3200': 'com_lgvx3200',
+    phonemodels={ 'LG-G4015 (AT&T)': 'com_lgg4015',
+                  'LG-VX3200': 'com_lgvx3200',
                   'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',

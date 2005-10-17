@@ -8,10 +8,10 @@
 ### $Id$
 
 import calendar
-from prototypes import UINTlsb
+import prototypes
 import time
 
-class LGCALDATE(UINTlsb):
+class LGCALDATE(prototypes.UINTlsb):
     def __init__(self, *args, **kwargs):
         """A date/time as used in the LG calendar"""
         super(LGCALDATE,self).__init__(*args, **kwargs)
@@ -72,7 +72,7 @@ class LGCALDATE(UINTlsb):
         val|=min
         return val
 
-class LGCALREPEAT(UINTlsb):
+class LGCALREPEAT(prototypes.UINTlsb):
     def __init__(self, *args, **kwargs):
         """A 32-bit bitmapped value used to store repeat info for events in the LG calendar"""
         super(LGCALREPEAT,self).__init__(*args, **kwargs)
@@ -177,7 +177,7 @@ class LGCALREPEAT(UINTlsb):
         val|=type
         return val
 
-class GPSDATE(UINTlsb):
+class GPSDATE(prototypes.UINTlsb):
     _time_t_ofs=calendar.timegm((1980, 1, 6, 0, 0, 0))
     def __init__(self, *args, **kwargs):
         """A date/time as used in the LG call history files,
@@ -216,3 +216,83 @@ class GPSDATE(UINTlsb):
     def _converttoint(self, date):
         assert len(date)==6
         return calendar.timegm(date)-self._time_t_ofs
+
+class GSMCALDATE(prototypes.CSVSTRING):
+    """ Represent date string with format "YYMMDD*"
+    This format is being used in LG GSM Calendar Evetns
+    """
+    def __init__(self, *args, **kwargs):
+        super(GSMCALDATE, self).__init__(*args, **kwargs)
+        self._data=None
+        self._readmode=True
+        if self._ismostderived(GSMCALDATE):
+            self._update(args, kwargs)
+
+    def _set_data(self, v=None):
+        if v:
+            self._data=v[:3]
+        else:
+            self._data=(2000+int(self._value[:2]), int(self._value[2:4]),
+                        int(self._value[4:6]))
+    def _set_value(self):
+        self._value='%02d%02d%02d'%(self._data[0]-2000, self._data[1],
+                                    self._data[2])
+
+    def _update(self, args, kwargs):
+        self._consumekw(kwargs, ('readmode',))
+        if len(args)==1:
+            if isinstance(args[0], (list, tuple)):
+                super(GSMCALDATE, self)._update((), kwargs)
+                self._set_data(args[0])
+                self._set_value()
+            elif isinstance(args[0], (str, unicode)):
+                super(GSMCALDATE, self)._update(args, kwargs)
+                self._set_data()
+            else:
+                raise TypeError
+        elif len(args)==0:
+            super(GSMCALDATE, self)._update(args, kwargs)
+        else:
+            raise TypeError
+        self._complainaboutunusedargs(GSMCALDATE, kwargs)
+
+    def readfrombuffer(self, buf):
+        super(GSMCALDATE, self).readfrombuffer(buf)
+        if self._value:
+            self._set_data()
+        else:
+            self._data=None
+
+    def getvalue(self):
+        """Returns the tuple of (year, month, day)"""
+        if self._data is None:
+            if self._value is None:
+                raise prototypes.ValueNotSetException()
+            self._set_data()
+        if self._readmode:
+            return self._data
+        else:
+            if self._quotechar:
+                _quote=chr(self._quotechar)
+            else:
+                _quote=''
+            return _quote+self._value+_quote
+
+class GSMCALTIME(GSMCALDATE):
+    """ Represent date time with format "hhm"
+    This format is being used in LG GSM Calendar Evetns
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(GSMCALTIME, self).__init__(*args, **kwargs)
+        if self._ismostderived(GSMCALTIME):
+            self._update(args, kwargs)
+
+    def _set_data(self, v=None):
+        if v:
+            self._data=v[:2]
+        else:
+            self._data=(int(self._value[:2]), int(self._value[2:4]))
+
+    def _set_value(self):
+        self._value='%02d%02d'%self._data

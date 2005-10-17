@@ -560,9 +560,9 @@ class CSVSTRING(BaseProtogenClass):
                 l=len(self._value)
                 if l>self._maxsizeinbytes:
                     if self._raiseontruncate:
-                        raise ValueLengthException(l, self._sizeinbytes)
+                        raise ValueLengthException(l, self._maxsizeinbytes)
                     
-                    self._value=self._value[:self._sizeinbytes]
+                    self._value=self._value[:self._maxsizeinbytes]
 
     def readfrombuffer(self, buf):
         self._bufferstartoffset=buf.getcurrentoffset()

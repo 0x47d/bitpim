@@ -61,6 +61,7 @@ wallpapers:
 flags:
 
   - secret     Boolean if record is private/secret (if not present - value is false)
+  - sim        Boolean if record should be stored on SIM card of GSM phones.
 
 memos:
 
@@ -122,7 +123,7 @@ class phonebookdataobject(database.basedataobject):
                                   'ringtones': ['ringtone', 'use'],
                                   'addresses': ['type', 'company', 'street', 'street2', 'city', 'state', 'postalcode', 'country'],
                                   'wallpapers': ['wallpaper', 'use'],
-                                  'flags': ['secret'],
+                                  'flags': ['secret', 'sim'],
                                   'memos': ['memo'],
                                   'numbers': ['number', 'type', 'speeddial'],
                                   # serials is in parent object
