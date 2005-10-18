@@ -86,6 +86,12 @@ PB_EMAIL_LEN=40
 PB_MEMO_LEN=50
 PB_SIM_NAME_LEN=16
 
+# Memo constants
+MEMO_MIN_INDEX=0
+MEMO_MAX_INDEX=19
+MEMO_READ_CMD='+CMDR'
+MEMO_WRITE_CMD='+CMDW'
+
 %}
 
 PACKET calendar_read_req:
@@ -260,3 +266,27 @@ PACKET write_media_req:
     * CSVINT { 'default': 0 } +dunno3    # #of colors?
     * CSVINT { 'default': 0, 'terminator': ord('\r') } +dunno4
 #    * STRING { 'terminator': None } +data
+
+# Memo stuff
+PACKET memo_read_req:
+    * STRING { 'terminator': None,
+               'default': MEMO_READ_CMD+'=' } +command
+    * CSVINT { 'default': MEMO_MIN_INDEX } +start_index
+    * CSVINT { 'terminator': None,
+               'default': MEMO_MAX_INDEX } +end_index
+
+PACKET memo_read_resp:
+    * STRING { 'terminator': ord(' '),
+               'constant': MEMO_READ_CMD+':' } command
+    * CSVINT index
+    * CSVSTRING { 'terminator': None } text
+
+PACKET memo_write_req:
+    * STRING { 'terminator': None,
+               'default': MEMO_WRITE_CMD+'=,' } +command
+    * CSVSTRING { 'terminator': None } +text
+
+PACKET memo_del_req:
+    * STRING { 'terminator': None,
+               'default': MEMO_WRITE_CMD+'=' } +command
+    * CSVINT { 'terminator': None } +index

@@ -21,6 +21,7 @@ import common
 import commport
 import com_gsm
 import guihelper
+import memo
 import nameparser
 import p_lgg4015
 import prototypes
@@ -624,6 +625,47 @@ class Phone(com_gsm.Phone):
         self._add_wallpapers(new_names, names_to_keys, media)
         return result
 
+    # Memo stuff----------------------------------------------------------------
+    def getmemo(self, result):
+        self.log('Reading Memo')
+        self.setmode(self.MODEMODEM)
+        self.charset_ascii()
+        _req=self.protocolclass.memo_read_req()
+        _res=self.sendATcommand(_req, self.protocolclass.memo_read_resp)
+        res={}
+        for e in _res:
+            _memo=memo.MemoEntry()
+            _memo.text=e.text
+            res[_memo.id]=_memo
+        result['memo']=res
+        return res
+
+    def savememo(self, result, merge):
+        self.log('Writing Memo')
+        self.setmode(self.MODEMODEM)
+        self.charset_ascii()
+        # first, delete all existing memos
+        _req=self.protocolclass.memo_del_req()
+        for i in range(self.protocolclass.MEMO_MIN_INDEX,
+                       self.protocolclass.MEMO_MAX_INDEX+1):
+            _req.index=i
+            try:
+                self.sendATcommand(_req, None)
+            except:
+                pass
+        # then update with new ones
+        _memo_dict=result.get('memo', {})
+        _keys=_memo_dict.keys()
+        _keys.sort()
+        _req=self.protocolclass.memo_write_req()
+        for k in _keys:
+            _req.text=_memo_dict[k].text
+            try:
+                self.sendATcommand(_req, None)
+            except:
+                self.log('Failed to write memo %s'%_req.text)
+        return _memo_dict
+
 #-------------------------------------------------------------------------------
 parent_profile=com_gsm.Profile
 class Profile(parent_profile):
@@ -676,8 +718,8 @@ class Profile(parent_profile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
-##        ('memo', 'read', None),     # all memo list reading DJP
-##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
 ##        ('todo', 'read', None),     # all todo list reading DJP
 ##        ('todo', 'write', 'OVERWRITE'),  # all todo list writing DJP
 ##        ('sms', 'read', None),     # all SMS list reading DJP
