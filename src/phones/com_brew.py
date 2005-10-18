@@ -211,8 +211,8 @@ class RealBrewProtocol:
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
-	req=p_brew.mkdirrequest()
-	req.dirname=name
+        req=p_brew.mkdirrequest()
+        req.dirname=name
         self.sendbrewcommand(req, p_brew.mkdirresponse)
 
     def mkdirs(self, directory):
@@ -228,14 +228,14 @@ class RealBrewProtocol:
 
     def rmdir(self,name):
         self.log("Deleting directory '"+name+"'")
-	req=p_brew.rmdirrequest()
-	req.dirname=name
+        req=p_brew.rmdirrequest()
+        req.dirname=name
         self.sendbrewcommand(req, p_brew.rmdirresponse)
 
     def rmfile(self,name):
         self.log("Deleting file '"+name+"'")
-	req=p_brew.rmfilerequest()
-	req.filename=name
+        req=p_brew.rmfilerequest()
+        req.filename=name
         self.sendbrewcommand(req, p_brew.rmfileresponse)
         file_cache.clear(name)
 
@@ -341,30 +341,39 @@ class RealBrewProtocol:
                 raise
             return None
 
+    def setfileattr(self, filename, date):
+        # sets the date and time of the file on the phone
+        self.log('set file date '+filename +`date`)
+        req=p_brew.setfileattrrequest()
+        # convert date to GPS time
+        req.date=date-self._brewepochtounix
+        req.filename=filename
+        self.sendbrewcommand(req, p_brew.setfileattrresponse)
+
     def writefile(self, name, contents):
         start=time.time()
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
         desc="Writing "+name
-	req=p_brew.writefilerequest()
-	req.filesize=len(contents)
-	req.data=contents[:0x100]
-	req.filename=name
+        req=p_brew.writefilerequest()
+        req.filesize=len(contents)
+        req.data=contents[:0x100]
+        req.filename=name
         self.sendbrewcommand(req, p_brew.writefileresponse)
         # do remaining blocks
         numblocks=len(contents)/0x100
         count=0
         for offset in range(0x100, len(contents), 0x100):
-	    req=p_brew.writefileblockrequest()
+            req=p_brew.writefileblockrequest()
             count+=1
             if count>=0x100: count=1
             if count % 5==0:
                 self.progress(offset>>8,numblocks,desc)
-	    req.blockcounter=count
-	    req.thereismore=offset+0x100<len(contents)
+            req.blockcounter=count
+            req.thereismore=offset+0x100<len(contents)
             block=contents[offset:]
             l=min(len(block), 0x100)
             block=block[:l]
-	    req.data=block
+            req.data=block
             self.sendbrewcommand(req, p_brew.writefileblockresponse)
         end=time.time()
         if end-start>3:
@@ -629,6 +638,240 @@ class RealBrewProtocol:
             raise
         return res
 
+class RealBrewProtocol2:
+    """Talk to a phone using the 'brew' protocol
+    This class uses the new filesystem commands which are supported
+    by newer qualcomm chipsets used in phones like the LG vx8100
+    """
+    def exists(self, name):
+        try:
+            self.statfile(name)
+        except BrewNoSuchFileException:
+            return False
+        return True
+
+    def reconfig_directory(self):
+        # not sure how important this is or even what it really does
+        # but the product that was reverse engineered from sent this after 
+        # rmdir and mkdir, although it seems to work without it on the 8100
+        req=p_brew.new_reconfigfilesystemrequest()
+        self.sendbrewcommand(req, p_brew.new_reconfigfilesystemresponse)
+
+    def rmfile(self,name):
+        self.log("Deleting file '"+name+"'")
+        if self.exists(name):
+            req=p_brew.new_rmfilerequest()
+            req.filename=name
+            self.sendbrewcommand(req, p_brew.new_rmfileresponse)
+        file_cache.clear(name)
+
+    def rmdir(self,name):
+        self.log("Deleting directory '"+name+"'")
+        if self.exists(name):
+            req=p_brew.new_rmdirrequest()
+            req.dirname=name
+            self.sendbrewcommand(req, p_brew.new_rmdirresponse)
+            self.reconfig_directory()
+
+    def mkdir(self, name):
+        self.log("Making directory '"+name+"'")
+        if self.exists(name):
+            raise BrewDirectoryExistsException
+        req=p_brew.new_mkdirrequest()
+        req.dirname=name
+        self.sendbrewcommand(req, p_brew.new_mkdirresponse)
+        self.reconfig_directory()
+
+    def openfile(self, name, mode, flags=p_brew.new_fileopen_flag_existing):
+        self.log("Open file '"+name+"'")
+        req=p_brew.new_openfilerequest()
+        req.filename=name
+        req.mode=mode
+        req.flags=flags
+        res=self.sendbrewcommand(req, p_brew.new_openfileresponse)
+        return res.handle
+
+    def closefile(self, handle):
+        self.log("Close file")
+        req=p_brew.new_closefilerequest()
+        req.handle=handle
+        self.sendbrewcommand(req, p_brew.new_closefileresponse)
+
+    def writefile(self, name, contents):
+        start=time.time()
+        self.log("Writing file '"+name+"' bytes "+`len(contents)`)
+        desc="Writing "+name
+        size=len(contents)       
+        exists=self.exists(name)
+        if exists:
+            info=self.statfile(name)
+            current_size=info['size']
+        else:
+            current_size=0
+        # if the current file is longer than the new one we have to 
+        # delete it because the write operation does not truncate it
+        if exists and size<current_size:
+            self.rmfile(name)
+            exists=False
+        if exists:
+            handle=self.openfile(name, p_brew.new_fileopen_mode_write, p_brew.new_fileopen_flag_existing)
+        else:
+            handle=self.openfile(name, p_brew.new_fileopen_mode_write, p_brew.new_fileopen_flag_create)
+        if not handle:
+            raise BrewNoSuchFileException
+        try:
+            remain=size
+            pos=0
+            count=0
+            while remain:
+                req=p_brew.new_writefilerequest()
+                req.handle=handle
+                if remain>243:
+                    req.bytes=243
+                else:
+                    req.bytes=remain
+                req.position=size-remain
+                req.data=contents[req.position:(req.position+req.bytes)]
+                count=(count&0xff)+1
+                if count % 5==0:
+                    self.progress(req.position,size,desc)
+                res=self.sendbrewcommand(req, p_brew.new_writefileresponse)
+                if res.bytes!=req.bytes:
+                    self.raisecommsexception("Brew file write error", common.CommsDataCorruption)
+                remain-=req.bytes
+        except Exception, e: # MUST close handle to file
+            self.closefile(handle)
+            raise Exception, e 
+        self.closefile(handle)
+        self.progress(1,1,desc)
+        end=time.time()
+        if end-start>3:
+            self.log("Wrote "+`len(contents)`+" bytes at "+`int(len(contents)/(end-start))`+" bytes/second")
+
+    def getfilecontents(self, file, use_cache=False):
+        node=self.statfile(file)
+        if use_cache:
+            if node and file_cache.hit(file, node['date'][0], node['size']):
+                self.log('Reading from cache: '+file)
+                _data=file_cache.data(file)
+                if _data:
+                    return _data
+                self.log('Cache file corrupted and discarded')
+        start=time.time()
+        self.log("Getting file contents '"+file+"'")
+        desc="Reading "+file
+        data=cStringIO.StringIO()
+        handle=self.openfile(file, p_brew.new_fileopen_mode_read)
+        if not handle:
+            raise BrewNoSuchFileException
+        try:
+            filesize=node['size']
+            read=0
+            counter=0
+            while True:
+                counter=(counter&0xff)+1
+                if counter%5==0:
+                    self.progress(data.tell(), filesize, desc)
+                req=p_brew.new_readfilerequest()
+                req.handle=handle
+                req.bytes=0xEB
+                req.position=read
+                res=self.sendbrewcommand(req, p_brew.new_readfileresponse)
+                if res.bytes:
+                    data.write(res.data)
+                    read+=res.bytes
+                else:
+                    break
+                if read==filesize:
+                    break
+        except Exception, e: # MUST close handle to file
+            self.closefile(handle)
+            raise Exception, e 
+        self.closefile(handle)
+        self.progress(1,1,desc)
+        data=data.getvalue()
+        # give the download speed if we got a non-trivial amount of data
+        end=time.time()
+        if end-start>3:
+            self.log("Read "+`filesize`+" bytes at "+`int(filesize/(end-start))`+" bytes/second")
+        if filesize!=len(data):
+            self.log("expected size "+`filesize`+"  actual "+`len(data)`)
+            self.raisecommsexception("Brew file read is incorrect size", common.CommsDataCorruption)
+        if use_cache and node:
+            file_cache.add(file, node.get('date', [0])[0], data)
+        return data
+
+    def getfilesystem(self, dir="", recurse=0):
+        results={}
+        self.log("Listing dir '"+dir+"'")
+        req=p_brew.new_opendirectoryrequest()
+        if dir=="":
+            req.dirname="/"
+        else:
+            req.dirname=dir
+        res=self.sendbrewcommand(req, p_brew.new_opendirectoryresponse)
+        handle=res.handle
+        if handle==0: # happens if the directory does not exist
+            raise BrewNoSuchDirectoryException
+        dirs={}
+        count=0
+        try:
+            # get all the directory entries from the phone
+            for i in xrange(1, 10000):
+                req=p_brew.new_listentryrequest()
+                req.entrynumber=i
+                req.handle=handle
+                res=self.sendbrewcommand(req, p_brew.new_listentryresponse)
+                if len(res.entryname) == 0: # signifies end of list
+                    break
+                if len(dir):
+                    direntry=dir+"/"+res.entryname
+                else:
+                    direntry=res.entryname
+                if res.type==0: # file
+                    results[direntry]={ 'name': direntry, 'type': 'file',
+                                    'size': res.size }
+                    if res.date==0:
+                        results[direntry]['date']=(0, "")
+                    else:
+                        results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
+                else: #==1 directory
+                    results[direntry]={ 'name': direntry, 'type': 'directory' }
+                    if recurse>0:
+                        dirs[count]=direntry
+                        count+=1
+        except Exception, e: # we MUST close the handle regardless or we wont be able to list the filesystem
+            # reliably again without rebooting it
+            req=p_brew.new_closedirectoryrequest()
+            req.handle=handle
+            res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
+            raise Exception, e
+        req=p_brew.new_closedirectoryrequest()
+        req.handle=handle
+        res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
+        # recurse the subdirectories
+        for i in range(count):
+            results.update(self.getfilesystem(dirs[i], recurse-1))
+        return results
+
+    def statfile(self, name):
+        # return the status of the file
+        self.log('stat file '+name)
+        req=p_brew.new_statfilerequest()
+        req.filename=name
+        res=self.sendbrewcommand(req, p_brew.new_statfileresponse)
+        if res.flags==2:
+            raise BrewNoSuchFileException
+        if res.type==1:
+            results={ 'name': name, 'type': 'file', 'size': res.size }
+            if res.created_date==0:
+                results['date']=(0, '')
+            else:
+                results['date']=(res.created_date, time.strftime("%x %X", time.localtime(res.created_date)))
+        else:
+            results={ 'name': name, 'type': 'directory' }
+        return results
+
 class BrewProtocol(RealBrewProtocol):
     """This is just a wrapper class that allows the manipulation between
     RealBrewProtocol and DebugBrewProtocol classes.
@@ -642,6 +885,8 @@ class BrewProtocol(RealBrewProtocol):
             # but what the heck!
             DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
             self._update_base_class(self.__class__)
+        elif __debug__ and getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
+            self._set_new_brew(self.__class__)
 
     def _update_base_class(self, klass):
         # update the RealBrewProtocol class to DebugBrewProtocol one.
@@ -658,6 +903,22 @@ class BrewProtocol(RealBrewProtocol):
         else:
             for e in _bases:
                 self._update_base_class(e)
+
+    def _set_new_brew(self, klass):
+        # update the class hierachy to include RealBrewProtocol2 so that 
+        # it's functions override RealBrewProtocol's ones.
+        _bases=[]
+        found=False
+        for e in klass.__bases__:
+            if e==RealBrewProtocol:
+                _bases.append(RealBrewProtocol2)
+                found=True
+            _bases.append(e)
+        if found:
+            klass.__bases__=tuple(_bases)
+        else:
+            for e in _bases:
+                self._set_new_brew(e)
 
 def formatpacketerrorlog(str, origdata, data, klass):
     # copied from guiwidgets.LogWindow.logdata
@@ -808,7 +1069,7 @@ class EmptyFileCache(object):
         pass
     def set_path(self, bitpim_path):
         try:
-            print 'setting path to',bitpim_path
+            print 'setting path to',`bitpim_path`
             if not bitpim_path:
                 raise ValueError
             # set the paths
@@ -938,7 +1199,7 @@ class FileCache(object):
 
     def set_path(self, bitpim_path):
         try:
-            print 'setting path to',bitpim_path
+            print 'setting path to',`bitpim_path`
             if not bitpim_path:
                 raise ValueError
             # set the paths

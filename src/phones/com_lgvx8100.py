@@ -404,8 +404,8 @@ class Phone(com_lgvx7000.Phone):
         self.log('Getting Phone Info')
         try:
             s=self.getfilecontents('brew/version.txt')
-            if s[:6]=='VX8100':
-                phone_info.append('Model:', "VX8100")
+            if s[:6]==self.my_model:
+                phone_info.append('Model:', self.my_model)
                 req=p_brew.firmwarerequest()
                 res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
                 phone_info.append('Firmware Version:', res.firmware)
@@ -432,6 +432,7 @@ class Profile(parentprofile):
     MAX_WALLPAPER_BASENAME_LENGTH=32
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="jpg"
+
     # the 8100 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
    

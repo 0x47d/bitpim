@@ -191,6 +191,162 @@ PACKET setmodemmoderequest:
     # phone back in modem mode without a reboot.
     1 UINT  {'constant': 0x44} +command
 
+PACKET setfileattrrequest:
+    "Set the attributes of the file"
+    * requestheader { 'command': 8 } +header
+    4 UINT {'constant': 0x000100ff} +unknown "probably file attributes"
+    4 UINT date  # in GPS time
+    * STRING {'terminator': 0, 'pascal': True} filename
+
+# these "new" commands are for the RealBrewProtocol2 class, they are an
+# alternative way to talk to newer phones such as the lg vx8100
+# all the date/time fields are in unix time, a change from GPS time
+# that the '59' commands use. The phone also knows what time zone it is 
+# in so the time needs to be localized for displaying
+
+PACKET new_requestheader:
+    "The bit in front on all Brew request packets"
+    2 UINT {'constant': 0x134B} +commandmode
+    1 UINT command
+    1 UINT {'constant': 0} +zero
+
+PACKET new_responseheader:
+    "The bit in front on all Brew response packets"
+    2 UINT {'constant': 0x134B} commandmode
+    1 UINT command
+    1 UINT zero
+
+PACKET new_openfilerequest:
+    * new_requestheader {'command': 0x02} +header
+    4 UINT mode # 0=read, 0x41=write
+    4 UINT flags # 0=open_existing, 1=create
+    * STRING {'terminator': 0} filename
+        
+PACKET new_openfileresponse:
+    * new_responseheader header
+    4 UINT handle
+    4 UINT pad # zeros
+
+PACKET new_closefilerequest:
+    * new_requestheader {'command': 0x03} +header
+    4 UINT handle
+
+PACKET new_closefileresponse:
+    * new_responseheader header
+    4 UINT pad # zeros
+
+PACKET new_readfilerequest:
+    * new_requestheader {'command': 0x04} +header
+    4 UINT handle
+    4 UINT bytes # max 0xEB observed
+    4 UINT position
+
+PACKET new_readfileresponse:
+    * new_responseheader header
+    4 UINT handle
+    4 UINT position # position the bytes were read from
+    4 UINT bytes # less than requested if EOF
+                 # there is no EOF flag in the packet
+    4 UINT pad # zeros
+    * DATA {'sizeinbytes': self.bytes} data 
+
+PACKET new_writefilerequest:
+    * new_requestheader {'command': 0x05} +header
+    4 UINT handle
+    4 UINT position
+    P UINT bytes
+    * DATA {'sizeinbytes': self.bytes} data # max 243 bytes
+
+PACKET new_writefileresponse:
+    * new_responseheader header
+    4 UINT handle
+    4 UINT position # position the bytes were written to
+    4 UINT bytes
+    4 UINT pad # zeros
+
+PACKET new_rmfilerequest:
+    """Remove file, full path should be provided, 
+    but the root character / is not required at the start of the name.
+    """
+    * new_requestheader {'command': 0x08} +header
+    * STRING {'terminator': 0} filename
+    1 UINT {'constant':1} +dunno
+
+PACKET new_mkdirrequest:
+    """Make a new directory, full path of the new directory should be
+    provided, but the root character / is not required at the start of the name
+    """
+    * new_requestheader {'command': 0x09} +header
+    2 UINT {'constant': 0x01ff} +unknown
+    * STRING {'terminator': 0} dirname
+
+PACKET new_rmdirrequest:
+    """Remove directory, full path should be provided, but the
+    root character / is not required at the start of the name.
+    """
+    * new_requestheader {'command': 0x0a} +header
+    * STRING {'terminator': 0} dirname
+
+PACKET new_opendirectoryrequest:
+    * new_requestheader {'command': 0x0b} +header
+    * STRING {'terminator': 0} dirname
+
+PACKET new_opendirectoryresponse:
+    * new_responseheader header
+    4 UINT handle
+    4 UINT pad # zeros
+
+PACKET new_listentryrequest:
+    * new_requestheader {'command': 0x0c} +header
+    4 UINT handle
+    4 UINT entrynumber
+
+PACKET new_listentryresponse:
+    * new_responseheader header
+    4 UINT handle
+    4 UINT entrynumber
+    4 UINT pad1 # zeros
+    4 UINT type # 0=file 1=directory
+    4 UINT mode 
+    4 UINT size # garbage for directories
+    8 UINT pad2 # zero
+    4 UINT date # LG date format, date file created
+    * STRING {'terminator': 0} entryname
+
+PACKET new_closedirectoryrequest:
+    * new_requestheader {'command': 0x0d} +header
+    4 UINT handle
+
+PACKET new_closedirectoryresponse:
+    * new_responseheader header
+    4 UINT pad # zeros
+
+PACKET new_statfilerequest:
+    "Get the status of the file"
+    * new_requestheader { 'command': 0x0f } +header
+    * STRING {'terminator': 0} filename
+
+PACKET new_statfileresponse:
+    * new_responseheader header
+    4 UINT flags # 0 for files, 2 for non-existant and rest of packet is invalid
+    4 UNKNOWN dunno # flags of some sort
+    4 UINT size # for directories this is the number of entries+2 (maybe '.' and'..' are counted internally)
+    4 UINT type # 1=file, 2+=directory (if 2+ this field is number of subdirectories + 2)
+    4 UINT accessed_date
+    4 UINT modified_date
+    4 UINT created_date
+             
+PACKET new_reconfigfilesystemrequest:
+    """Called after mkdir/rmdir and writing files,
+    possibly a filesystem status request with space used/free etc.
+    """
+    * new_requestheader {'command': 0x13} +header
+    2 UINT {'constant': 0x002f} +dirname # happens to be the same as / which is the root
+
+PACKET new_reconfigfilesystemresponse:
+    * new_responseheader header
+    44 UNKNOWN +unknown # some data in here unsure of meaning
+
 %{
 # Several responses are nothing
 mkdirresponse=responseheader
@@ -198,4 +354,13 @@ rmdirresponse=responseheader
 rmfileresponse=responseheader
 writefileresponse=responseheader
 writefileblockresponse=responseheader
+setfileattrresponse=responseheader
+new_mkdirresponse=new_responseheader
+new_rmdirresponse=new_responseheader
+new_rmfileresponse=new_responseheader
+
+new_fileopen_mode_read=0
+new_fileopen_mode_write=0x41
+new_fileopen_flag_existing=0
+new_fileopen_flag_create=1
 %}
