@@ -291,7 +291,7 @@ class Phone(com_gsm.Phone):
     detectphone=staticmethod(_detectphone)
 
     # Phonebook stuff-----------------------------------------------------------
-    def _build_bp_entry(self, entry, groups):
+    def _build_bp_entry(self, entry, groups, in_sim=False):
         res={ 'names': [ { 'full': entry.name } ] }
         _numbers=[]
         if entry.mobile:
@@ -313,7 +313,7 @@ class Phone(com_gsm.Phone):
         if _group and _group.get('name', None):
             res['categories']=[{ 'category': _group['name'] }]
         if entry.sim:
-            res['flags']=[{ 'sim': True }]
+            res['flags']=[{ 'sim': in_sim }]
         return res
         
     def _get_main_phonebook(self, groups):
@@ -345,7 +345,7 @@ class Phone(com_gsm.Phone):
         _res=self.sendATcommand(_req, self.protocolclass.read_sim_phonebook_resp)
         res={}
         for e in _res:
-            res[1000+e.index]=self._build_bp_entry(e, groups)
+            res[1000+e.index]=self._build_bp_entry(e, groups, in_sim=True)
         return res
 
     def getphonebook(self,result):
@@ -469,7 +469,7 @@ class Phone(com_gsm.Phone):
             time.sleep(0.1)
             _req=self._build_sim_entry(entries[l[1]], groups)
             self.progress(_index, self.protocolclass.PB_SIM_MAX_INDEX,
-                          'Writing SIM entry %d: %s'(_index, _req.name))
+                          'Writing SIM entry %d: %s'%(_index, _req.name))
             self.sendATcommand(_req, None)
             time.sleep(0.1)
         # clear out the rest of the phonebook

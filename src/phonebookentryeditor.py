@@ -737,6 +737,36 @@ class NameEditor(wx.Panel):
                 res[name]=widget.GetValue()
         return res
 
+class StorageEditor(wx.Panel):
+    def __init__(self, parent, _):
+        super(StorageEditor, self).__init__(parent, -1)
+        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Storage Details"),
+                             wx.VERTICAL)
+        hs=wx.BoxSizer(wx.HORIZONTAL)
+        hs.Add(wx.StaticText(self, -1, "Storage Option:"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._storage=wx.ComboBox(self, -1, 'Phone',
+                                  choices=["Phone", "SIM"],
+                                  style=wx.CB_READONLY)
+        hs.Add(self._storage, 0, wx.EXPAND|wx.LEFT, 5)
+        vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(vs)
+        vs.Fit(self)
+
+    def Set(self, data):
+        _value=False
+        for d in data.get('flags', []):
+            if d.has_key('sim'):
+                _value=d['sim']
+                break
+        if _value:
+            _choice='SIM'
+        else:
+            _choice='Phone'
+        self._storage.SetValue(_choice)
+
+    def Get(self):
+        return { 'flags': [{'sim': self._storage.GetValue()=='SIM' }]}
+        
 class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
     def __init__(self, parent, childclass):
@@ -978,6 +1008,7 @@ class Editor(wx.Dialog):
         ("Categories", "categories", CategoryEditor),
         ("Wallpapers", "wallpapers", WallpaperEditor),
         ("Ringtones", "ringtones", RingtoneEditor),
+        ("Storage", None, StorageEditor),
         ]
 
     def __init__(self, parent, data, title="Edit PhoneBook Entry",
