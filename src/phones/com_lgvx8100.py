@@ -58,6 +58,11 @@ class Phone(com_lgvx7000.Phone):
         ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 1),
         )
 
+    calendarlocation="sch/newschedule.dat"
+    calendarexceptionlocation="sch/newschexception.dat"
+    calenderrequiresreboot=0
+    memolocation="sch/neomemo.dat"
+
     builtinwallpapers = () # none
 
     wallpaperlocations= (
@@ -119,7 +124,7 @@ class Phone(com_lgvx7000.Phone):
     def getmemo(self, result):
         # read the memo file
         try:
-            buf=prototypes.buffer(self.getfilecontents("sch/neomemo.dat"))
+            buf=prototypes.buffer(self.getfilecontents(self.memolocation))
             text_memo=self.protocolclass.textmemofile()
             text_memo.readfrombuffer(buf)
             res={}
@@ -147,14 +152,14 @@ class Phone(com_lgvx7000.Phone):
             text_memo.items.append(entry)
         buf=prototypes.buffer()
         text_memo.writetobuffer(buf)
-        self.writefile("sch/neomemo.dat", buf.getvalue())
+        self.writefile(self.memolocation, buf.getvalue())
         return result
 
     def getcalendar(self,result):
         res={}
         # Read exceptions file first
         try:
-            buf=prototypes.buffer(self.getfilecontents("sch/newschexception.dat"))
+            buf=prototypes.buffer(self.getfilecontents(self.calendarexceptionlocation))
             ex=self.protocolclass.scheduleexceptionfile()
             ex.readfrombuffer(buf)
             self.logdata("Calendar exceptions", buf.getdata(), ex)
@@ -169,7 +174,7 @@ class Phone(com_lgvx7000.Phone):
 
         # Now read schedule
         try:
-            buf=prototypes.buffer(self.getfilecontents("sch/newschedule.dat"))
+            buf=prototypes.buffer(self.getfilecontents(self.calendarlocation))
             if len(buf.getdata())<3:
                 # file is empty, and hence same as non-existent
                 raise com_brew.BrewNoSuchFileException()
@@ -180,12 +185,18 @@ class Phone(com_lgvx7000.Phone):
                 # the vx8100 has a bad entry when the calender is empty
                 # stop processing the calender when we hit this record
                 if event.pos==0: #invalid entry
-                    break                   
+                    continue                   
                 entry=bpcalendar.CalendarEntry()
                 entry.description=event.description
-                entry.start=event.start
-                entry.end=event.end
-                entry.vibrate=~(event.alarmindex_vibrate&0x1) # vibarate bit is inverted in phone 0=on, 1=off
+                try: # delete events are still in the calender file but have garbage dates
+                    entry.start=event.start
+                    entry.end=event.end
+                except ValueError:
+                    continue
+                if event.alarmindex_vibrate&0x1:
+                    entry.vibrate=0 # vibarate bit is inverted in phone 0=on, 1=off
+                else:
+                    entry.vibrate=1
                 entry.repeat = self.makerepeat(event.repeat)
                 min=event.alarmminutes
                 hour=event.alarmhours
@@ -296,10 +307,10 @@ class Phone(com_lgvx7000.Phone):
         eventsf.writetobuffer(buf)
         # We check the existing calender as changes require a reboot for the alarms
         # to work properly, also no point writing the file if it is not changing
-        if buf.getvalue()!=self.getfilecontents("sch/newschedule.dat"):
+        if buf.getvalue()!=self.getfilecontents(self.calendarlocation):
             self.logdata("Writing calendar", buf.getvalue(), eventsf)
-            self.writefile("sch/newschedule.dat", buf.getvalue())
-            if contains_alarms:
+            self.writefile(self.calendarlocation, buf.getvalue())
+            if contains_alarms or self.calenderrequiresreboot:
                 self.log("Your phone has to be rebooted due to the calendar changing")
                 dict["rebootphone"]=True
         else:
@@ -308,7 +319,7 @@ class Phone(com_lgvx7000.Phone):
         buf=prototypes.buffer()
         exceptionsf.writetobuffer(buf)
         self.logdata("Writing calendar exceptions", buf.getvalue(), exceptionsf)
-        self.writefile("sch/newschexception.dat", buf.getvalue())
+        self.writefile(self.calendarexceptionlocation, buf.getvalue())
 
         # fix passed in dict
         dict['calendar']=newcal
