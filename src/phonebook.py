@@ -152,7 +152,10 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
             self.xcp.setupxcopy(template)
         if self.xcpstyles is None:
             self.xcpstyles={}
-            execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
+            try:
+                execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
+            except UnicodeError:
+                common.unicode_execfile(self.stylesfile,  self.xcpstyles, self.xcpstyles)
         self.xcpstyles['entry']=entry
         text=self.xcp.xcopywithdns(self.xcpstyles)
         try:

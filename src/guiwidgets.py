@@ -616,10 +616,10 @@ class ConfigDialog(wx.Dialog):
     def setdefaults(self):
         if self.diskbox.GetValue()==self.setme:
             if guihelper.IsMSWindows(): # we want subdir of my documents on windows
-                    # nice and painful
-                    from win32com.shell import shell, shellcon
-                    path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
-                    path=os.path.join(str(path), "bitpim")
+                # nice and painful
+                from win32com.shell import shell, shellcon
+                path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+                path=os.path.join(path, "bitpim")
             else:
                 path=os.path.expanduser("~/.bitpim-files")
             self.diskbox.SetValue(path)
@@ -1189,8 +1189,9 @@ class FileView(wx.Panel):
             # check of any of the files have been removed,
             # can't trust result returned by DoDragDrop
             for item in items:
-                if not os.access(item.filename, os.F_OK):
-                    # item has been moved, remove from index
+                # this used to use os.access function, but it does not
+                # support unicode filenames
+                if not os.path.isfile(item.filename):
                     item.RemoveFromIndex()
 
     def OnMouseEvent(self, evt):
@@ -1407,6 +1408,11 @@ class FileView(wx.Panel):
           
     def OnAddFiles(self,_):
         raise Exception("not implemented")
+
+    def decodefilename(self, filename):
+        path,filename=os.path.split(filename)
+        decoded_file=str(filename).decode(media_codec)
+        return os.path.join(path, filename)
 
     def getshortenedbasename(self, filename, newext=''):
         filename=basename(filename)

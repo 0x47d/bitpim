@@ -235,7 +235,7 @@ class RingerView(guiwidgets.FileView):
                 if dlg_resp==wx.ID_NO:
                     continue
             self.thedir=self.mainwindow.ringerpath
-            decoded_file=str(file).decode(guiwidgets.media_codec)
+            decoded_file=self.decodefilename(file)
             target=self.getshortenedbasename(decoded_file, newext)
             open(target, "wb").write(filedata)
             self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))

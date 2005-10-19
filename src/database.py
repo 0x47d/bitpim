@@ -17,6 +17,7 @@ import random
 
 import apsw
 
+import common
 ###
 ### The first section of this file deals with typical objects used to
 ### represent data items and various methods for wrapping them.
@@ -877,7 +878,10 @@ if __name__=='__main__':
     phonebookobjectfactory=dataobjectfactory(phonebookdataobject)
     
     # use the phonebook out of the examples directory
-    execfile(os.getenv("DBTESTFILE", "examples/phonebook-index.idx"))
+    try:
+        execfile(os.getenv("DBTESTFILE", "examples/phonebook-index.idx"))
+    except UnicodeError:
+        common.unicode_execfile(os.getenv("DBTESTFILE", "examples/phonebook-index.idx"))
 
     ensurerecordtype(phonebook, phonebookobjectfactory)
 

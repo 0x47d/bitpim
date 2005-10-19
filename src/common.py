@@ -202,9 +202,28 @@ class exceptionwrap:
                print formatexception()
                raise
 
+def unicode_execfile(filename, dict1=0, dict2=0):
+     # this version allows the path portion of the filename to 
+     # contain non-acsii characters, the filename itself cannot contain
+     # ascii characters, execfile does not work if the filename contains
+     # non-ascii characters
+     curdir=os.getcwdu()
+     filepath, file=os.path.split(filename)
+     os.chdir(filepath)
+     if dict1==0:
+        execfile(file)
+     elif dict2==0:
+        execfile(file, dict1)
+     else:
+        execfile(file, dict1, dict2)
+     os.chdir(curdir)
+
 def readversionedindexfile(filename, dict, versionhandlerfunc, currentversion):
      assert currentversion>0
-     execfile(filename, dict, dict)
+     try:
+         execfile(filename, dict, dict)
+     except UnicodeError:
+         unicode_execfile(filename, dict, dict)
      if not dict.has_key('FILEVERSION'):
           version=0
      else:

@@ -886,7 +886,10 @@ class HexEditor(wx.ScrolledWindow):
                           style=wx.OPEN|wx.FILE_MUST_EXIST)
         if dlg.ShowModal()==wx.ID_OK:
             result={}
-            execfile(dlg.GetPath())
+            try:
+                execfile(dlg.GetPath())
+            except UnicodeError:
+                common.unicode_execfile(dlg.GetPath())
             exist_keys={}
             for i,e in enumerate(self._templates):
                 exist_keys[e.name]=i

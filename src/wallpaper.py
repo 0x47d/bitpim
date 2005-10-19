@@ -363,7 +363,7 @@ class WallpaperView(guiwidgets.FileView):
     def OnAddFiles(self, filenames):
         for file in filenames:
             if self._raw_image:
-                decoded_file=str(file).decode(guiwidgets.media_codec)
+                decoded_file=self.decodefilename(file)
                 targetfilename=self.getshortenedbasename(decoded_file)
                 open(targetfilename, 'wb').write(open(file, 'rb').read())
                 self.AddToIndex(str(os.path.basename(targetfilename)).decode(guiwidgets.media_codec),
@@ -407,7 +407,7 @@ class WallpaperView(guiwidgets.FileView):
         extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
         # munge name
-        decoded_file=str(file).decode(guiwidgets.media_codec)
+        decoded_file=self.decodefilename(file)
         targetfilename=self.getshortenedbasename(decoded_file, extension)
 
         res=getattr(self, "saveimage_"+imgparams['format'])(

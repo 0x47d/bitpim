@@ -1382,7 +1382,10 @@ class CalendarPrintDialog(wx.Dialog):
         html=self._xcp.xcopywithdns(self._dns.copy())
         # apply styles
         sd={'styles': {}, '__builtins__': __builtins__ }
-        execfile(guihelper.getresourcefile(print_data[print_style][1]), sd, sd)
+        try:
+            execfile(guihelper.getresourcefile(print_data[print_style][1]), sd, sd)
+        except UnicodeError:
+            common.unicode_execfile(guihelper.getresourcefile(print_data[print_style][1]), sd, sd)
         try:
             self._html=bphtml.applyhtmlstyles(html, sd['styles'])
         except:

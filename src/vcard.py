@@ -968,8 +968,11 @@ if __name__=='__main__':
         profile=profiles[p]['profile']
 
         d={'result': {}}
-        execfile(sys.argv[1], d,d)
-        
+        try:
+            execfile(sys.argv[1], d,d)
+        except UnicodeError:
+            common.unicode_execfile(sys.argv[1], d,d)
+    
         f=open(sys.argv[2], "wt")
         for k in d['result']['phonebook']:
             print >>f, output_entry(d['result']['phonebook'][k], profile)
