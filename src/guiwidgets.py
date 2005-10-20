@@ -351,6 +351,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'MM-7400': 'com_sanyo7400',
+                  'MM-8300': 'com_sanyo8300',
                   'PM-8200': 'com_sanyo8200',
                   'RL-4920': 'com_sanyo4920',
                   'SCP-4900': 'com_sanyo4900',
