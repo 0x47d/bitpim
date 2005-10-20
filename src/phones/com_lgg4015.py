@@ -666,6 +666,47 @@ class Phone(com_gsm.Phone):
                 self.log('Failed to write memo %s'%_req.text)
         return _memo_dict
 
+    # SMS Stuff-----------------------------------------------------------------
+    def getsms(self, result):
+        self.log('Getting SMS Messages')
+        self.setmode(self.MODEMODEM)
+        self.charset_ascii()
+        # set format to text
+        _req=self.protocolclass.sms_format_req()
+        self.sendATcommand(_req, None)
+        self.log('Getting SMS messages from the phone')
+        _sms_mem=self.protocolclass.sms_memory_select_req()
+        _sms_mem.list_memory=self.protocolclass.SMS_MEMORY_PHONE
+        self.sendATcommand(_sms_mem, None)
+        _list_sms=self.protocolclass.sms_msg_list_req()
+        self.sendATcommand(_list_sms, None)
+        self.log('Getting SMS message from the SIM card')
+        _sms_mem.list_memory=self.protocolclass.SMS_MEMORY_SIM
+        self.sendATcommand(_sms_mem, None)
+        self.sendATcommand(_list_sms, None)
+        result['sms']={}
+        return result
+
+    # Call History stuff--------------------------------------------------------
+    def _get_history_calls(self, log_str, call_type, min_idx, max_idx):
+        self.log(log_str)
+        _sel_mem=self.protocolclass.select_storage_req()
+        _sel_mem.storage=call_type
+        self.sendATcommand(_sel_mem, None)
+        _list_pb=self.protocolclass.read_phonebook_req()
+        _list_pb.start_index=min_idx
+        _list_pb.end_index=max_idx
+        self.sendATcommand(_list_pb, None)
+        
+    def getcallhistory(self, result):
+        self.log('Getting Call History')
+        self.setmode(self.MODEMODEM)
+        self.charset_ascii()
+        for l in self.protocolclass.PB_CALL_HISTORY_INFO:
+            self._get_history_calls(*l)
+        result['call_history']={}
+        return result
+
 #-------------------------------------------------------------------------------
 parent_profile=com_gsm.Profile
 class Profile(parent_profile):
@@ -720,9 +761,8 @@ class Profile(parent_profile):
         ('wallpaper', 'write', 'OVERWRITE'),
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
-##        ('todo', 'read', None),     # all todo list reading DJP
-##        ('todo', 'write', 'OVERWRITE'),  # all todo list writing DJP
-##        ('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'read', None),     # all SMS list reading DJP
+        ('call_history', 'read', None),
         )
 
     def convertphonebooktophone(self, helper, data):

@@ -85,6 +85,19 @@ PB_NAME_LEN=20      # max size of a contact name
 PB_EMAIL_LEN=40
 PB_MEMO_LEN=50
 PB_SIM_NAME_LEN=16
+PB_LD_MIN_INDEX=1
+PB_LD_MAX_INDEX=10
+PB_LR_MIN_INDEX=1
+PB_LR_MAX_INDEX=20
+PB_LM_MIN_INDEX=1
+PB_LM_MAX_INDEX=10
+PB_CALL_HISTORY_INFO=(
+    ('Getting Last Dialed Calls', PB_MEMORY_LAST_DIALED,
+     PB_LD_MIN_INDEX, PB_LD_MAX_INDEX),
+    ('Getting Last Received Calls', PB_MEMORY_LAST_RECEIVED,
+     PB_LR_MIN_INDEX, PB_LR_MAX_INDEX),
+    ('Getting Missed Calls', PB_MEMORY_LAST_MISSED,
+     PB_LM_MIN_INDEX, PB_LM_MAX_INDEX))
 
 # Memo constants
 MEMO_MIN_INDEX=0
@@ -92,8 +105,23 @@ MEMO_MAX_INDEX=19
 MEMO_READ_CMD='+CMDR'
 MEMO_WRITE_CMD='+CMDW'
 
+# SMS Constants
+SMS_MEMORY_PHONE='ME'
+SMS_MEMORY_SIM='SM'
+SMS_MEMORY_SELECT_CMD='+CPMS'
+SMS_FORMAT_TEXT=1
+SMS_FORMAT_PDU=0
+SMS_FORMAT_CMD='+CMGF'
+SMS_MSG_REC_UNREAD='REC UNREAD'
+SMS_MSG_REC_READ='REC READ'
+SMS_MSG_STO_UNSENT='STO UNSENT'
+SMS_MSG_STO_SENT='STO SENT'
+SMS_MSG_ALL='ALL'
+SMS_MSG_LIST_CMD='+CMGL'
+
 %}
 
+# calendar packets
 PACKET calendar_read_req:
     * STRING { 'terminator': None, 'default': '+CXDR=' } +command
     * CSVINT +start_index
@@ -128,6 +156,7 @@ PACKET calendar_del_req:
     * STRING { 'terminator': None, 'default': '+CXDW=' } +command
     * CSVINT { 'terminator': None } +index
 
+# Media packets
 PACKET media_selector_req:
     * STRING { 'terminator': None, 'default': '+DDLS?' } +command
 PACKET media_selector_resp:
@@ -149,6 +178,24 @@ PACKET media_list_resp:
     * CSVSTRING file_name
     * CSVSTRING { 'terminator': None } media_name
 
+PACKET del_media_req:
+    * STRING { 'terminator': None, 'default': '+DDLD=0,' } +command
+    * CSVSTRING { 'terminator': None } +file_name
+
+PACKET write_media_req:
+    * STRING { 'terminator': None, 'default': '+DDLW=' } +command
+    * CSVINT +index
+    * CSVSTRING +file_name
+    * CSVSTRING +media_name
+    * CSVINT data_len
+    * CSVINT media_type
+    * CSVINT { 'default': 0 } +dunno1    # width?
+    * CSVINT { 'default': 0 } +dunno2    # height?
+    * CSVINT { 'default': 0 } +dunno3    # #of colors?
+    * CSVINT { 'default': 0, 'terminator': ord('\r') } +dunno4
+#    * STRING { 'terminator': None } +data
+
+# Phonebook packets
 PACKET list_group_req:
     * STRING { 'terminator': None, 'default': '+CPGR=' } +command
     * CSVINT +start_index
@@ -250,24 +297,7 @@ PACKET write_sim_phonebook_req:
                   'maxsizeinbytes': PB_SIM_NAME_LEN,
                   'raiseontruncate': False } +name
 
-PACKET del_media_req:
-    * STRING { 'terminator': None, 'default': '+DDLD=0,' } +command
-    * CSVSTRING { 'terminator': None } +file_name
-
-PACKET write_media_req:
-    * STRING { 'terminator': None, 'default': '+DDLW=' } +command
-    * CSVINT +index
-    * CSVSTRING +file_name
-    * CSVSTRING +media_name
-    * CSVINT data_len
-    * CSVINT media_type
-    * CSVINT { 'default': 0 } +dunno1    # width?
-    * CSVINT { 'default': 0 } +dunno2    # height?
-    * CSVINT { 'default': 0 } +dunno3    # #of colors?
-    * CSVINT { 'default': 0, 'terminator': ord('\r') } +dunno4
-#    * STRING { 'terminator': None } +data
-
-# Memo stuff
+# Memo packets
 PACKET memo_read_req:
     * STRING { 'terminator': None,
                'default': MEMO_READ_CMD+'=' } +command
@@ -290,3 +320,26 @@ PACKET memo_del_req:
     * STRING { 'terminator': None,
                'default': MEMO_WRITE_CMD+'=' } +command
     * CSVINT { 'terminator': None } +index
+
+# SMS packets
+PACKET sms_format_req:
+    * STRING { 'terminator': None,
+               'default': SMS_FORMAT_CMD+'=' } +command
+    * CSVINT { 'terminator': None,
+               'default': SMS_FORMAT_TEXT } +format
+
+PACKET sms_memory_select_req:
+    * STRING { 'terminator': None,
+               'default': SMS_MEMORY_SELECT_CMD+'=' } +command
+    * CSVSTRING { 'terminator': None } +list_memory
+
+PACKET sms_msg_list_req:
+    * STRING { 'terminator': None,
+               'default': SMS_MSG_LIST_CMD+'=' } +command
+    * CSVSTRING { 'terminator': None,
+                  'default': SMS_MSG_ALL } +msg_type
+
+PACKET sms_msg_list_resp:
+    * STRING { 'terminator': None,
+               'constant': SMS_MSG_LIST_CMD+':' } command
+
