@@ -1412,7 +1412,7 @@ class FileView(wx.Panel):
     def decodefilename(self, filename):
         path,filename=os.path.split(filename)
         decoded_file=str(filename).decode(media_codec)
-        return os.path.join(path, filename)
+        return os.path.join(path, decoded_file)
 
     def getshortenedbasename(self, filename, newext=''):
         filename=basename(filename)
