@@ -144,13 +144,20 @@ class DetectPhone(object):
         c.close()
         return r
 
-    def __check_profile(self, profile):
-        if not hasattr(profile, 'phone_manufacturer') or \
-           not hasattr(profile, 'phone_model'):
+    def __check_profile(self, module):
+        if not hasattr(module.Profile, 'phone_manufacturer') or \
+           not hasattr(module.Profile, 'phone_model'):
             return None
-        phone_model=profile.phone_model
-        phone_manufacturer=profile.phone_manufacturer
+        res=None
+        phone_model=module.Profile.phone_model
+        phone_manufacturer=module.Profile.phone_manufacturer
+        deviceclasses=module.Profile.deviceclasses
+        phone_needsbrew=getattr(module.Phone, 'MODEBREW', 0)
         for k,e in self.__data.items():
+            match=False
+            # check to see if the port supports brew if it is required by phone
+            if phone_needsbrew and not e['mode_brew']:
+                continue
             if e['manufacturer'] is None or\
                e['model'] is None:
                 continue
@@ -158,6 +165,13 @@ class DetectPhone(object):
                phone_model==e['model'][:len(phone_model)]:
                 return k
 
+    def __check_for_other_cdma(self):
+        "If no phone is detected see if any of the scanned ports contain a Brew device"
+        for k,e in self.__data.items():
+            if e['mode_brew']:
+                return k, 'Other CDMA phone'
+        return None, None
+                    
     def do_get_data(self, port):
         self.log('Gathering data on port: '+port)
         r=self.__get_data(port)
@@ -220,15 +234,20 @@ class DetectPhone(object):
                                                                 self.__data,
                                                                 module,
                                                                 self)
+                self.log('Detect Phone result: '+`self.__data`)
                 if found_port is not None:
+                    self.log('Phone '+model+' returned port:'+`found_port`)
                     # found it
                     found_model=model
                     break
-            found_port=self.__check_profile(module.Profile)
+            found_port=self.__check_profile(module)
             if found_port is not None:
                 found_model=model
                 break
+        if found_port is None:
+            found_port, found_model=self.__check_for_other_cdma()
         if found_port is not None and found_model is not None:
+            self.log('Found phone:'+found_model+' port:'+`found_port`)
             return { 'port': found_port, 'phone_name': found_model,
                      'phone_module': pm[found_model],
                      'phone_esn': self.__data[found_port]['esn'] }
