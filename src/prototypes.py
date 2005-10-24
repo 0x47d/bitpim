@@ -602,7 +602,7 @@ class CSVSTRING(BaseProtogenClass):
                 else:
                     self._value=self._value[:-1]
 
-        if self._quotechar is not None:
+        if self._quotechar is not None and self._value:
             if self._value[0]==chr(self._quotechar) and self._value[-1]==chr(self._quotechar):
                 self._value=self._value[1:-1]
             else:

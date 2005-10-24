@@ -9,6 +9,7 @@
 
 import calendar
 import prototypes
+import re
 import time
 
 class LGCALDATE(prototypes.UINTlsb):
@@ -296,3 +297,30 @@ class GSMCALTIME(GSMCALDATE):
 
     def _set_value(self):
         self._value='%02d%02d'%self._data
+
+class SMSDATETIME(prototypes.CSVSTRING):
+    """ Represent date time with the format 'yy/MM/dd,hh:mm:ss±zz' used
+    by GSM SMS messages.
+    Currently works only 1 way: SMS Date Time -> ISO String
+    """
+    _re_pattern='^\d\d/\d\d/\d\d,\d\d:\d\d:\d\d[+\-]\d\d$'
+    _re_compiled_pattern=None
+    def __init__(self, *args, **kwargs):
+        if SMSDATETIME._re_compiled_pattern is None:
+            SMSDATETIME._re_compiled_pattern=re.compile(SMSDATETIME._re_pattern)
+        super(SMSDATETIME, self).__init__(*args, **kwargs)
+        if self._ismostderived(SMSDATETIME):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(SMSDATETIME, self)._update(args, kwargs)
+        if self._value and \
+           not re.match(SMSDATETIME._re_compiled_pattern, self._value):
+            raise ValueError('COrrect Format: yy/MM/dd,hh:mm:ss±zz')
+
+    def getvalue(self):
+        """Returns the ISO Format 'YYYMMDDTHHMMSS±mmss'"""
+        if self._value:
+            _s=self._value.split(',')
+            return '20%sT%s00'%(_s[0].replace('/', ''),
+                                _s[1].replace(':', ''))

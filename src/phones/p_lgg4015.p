@@ -339,7 +339,13 @@ PACKET sms_msg_list_req:
     * CSVSTRING { 'terminator': None,
                   'default': SMS_MSG_ALL } +msg_type
 
-PACKET sms_msg_list_resp:
-    * STRING { 'terminator': None,
+PACKET sms_msg_list_header:
+    * STRING { 'terminator': ord(' '),
                'constant': SMS_MSG_LIST_CMD+':' } command
-
+    * CSVINT index
+    * CSVSTRING msg_type
+    * CSVSTRING address
+    * CSVSTRING address_name
+    * SMSDATETIME timestamp
+    * CSVINT address_type
+    * CSVINT { 'terminator': None } data_len

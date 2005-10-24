@@ -42,9 +42,12 @@ class TimeStamp(wx.StaticText):
     def __init__(self, parent, _=None):
         super(TimeStamp, self).__init__(parent, -1)
     def SetValue(self, v):
-        self.SetLabel('%04d-%02d-%2d %02d:%02d:%02d'%(
-            int(v[:4]), int(v[4:6]), int(v[6:8]),
-            int(v[9:11]), int(v[11:13]), int(v[13:])))
+        if v:
+            self.SetLabel('%04d-%02d-%2d %02d:%02d:%02d'%(
+                int(v[:4]), int(v[4:6]), int(v[6:8]),
+                int(v[9:11]), int(v[11:13]), int(v[13:])))
+        else:
+            self.SetLabel('')
 
 #-------------------------------------------------------------------------------
 class DeliveryStatus(wx.StaticText):

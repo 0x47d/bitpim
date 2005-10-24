@@ -25,6 +25,7 @@ import memo
 import nameparser
 import p_lgg4015
 import prototypes
+import sms
 
 class Phone(com_gsm.Phone):
     """ Talk to the LG G4015 Phone"""
@@ -667,24 +668,65 @@ class Phone(com_gsm.Phone):
         return _memo_dict
 
     # SMS Stuff-----------------------------------------------------------------
+    def _process_sms(self, _resp, res):
+        # extract the SMS messages from the respons string & update the dict
+        for i in range(0, len(_resp), 2):
+            _entry=self.protocolclass.sms_msg_list_header()
+            _buf=prototypes.buffer(_resp[i])
+            _entry.readfrombuffer(_buf)
+            _sms=sms.SMSEntry()
+            if _entry.msg_type==self.protocolclass.SMS_MSG_REC_UNREAD or \
+               _entry.msg_type==self.protocolclass.SMS_MSG_REC_READ:
+                # unread/read inbox
+                _sms._from=_entry.address
+                _sms.folder=sms.SMSEntry.Folder_Inbox
+                _sms.read=_entry.msg_type==self.protocolclass.SMS_MSG_REC_READ
+            elif _entry.msg_type==self.protocolclass.SMS_MSG_STO_SENT:
+                # outbox
+                _sms.add_recipient(_entry.address)
+                _sms.folder=sms.SMSEntry.Folder_Sent
+            elif _entry.msg_type==self.protocolclass.SMS_MSG_STO_UNSENT:
+                # saved
+                _sms.folder=sms.SMSEntry.Folder_Saved
+                _sms.add_recipient(_entry.address)
+            else:
+                self.log('Unknown message type: %s'%_entry.msg_type)
+                _sms=None
+            if _sms:
+                if _entry.timestamp:
+                    _sms.datetime=_entry.timestamp
+                _sms.text=_resp[i+1]
+                res[_sms.id]=_sms
+        return res
+
     def getsms(self, result):
         self.log('Getting SMS Messages')
         self.setmode(self.MODEMODEM)
         self.charset_ascii()
+        res={}
         # set format to text
         _req=self.protocolclass.sms_format_req()
         self.sendATcommand(_req, None)
-        self.log('Getting SMS messages from the phone')
+        self.log('Getting SMS messages from the phone memory')
         _sms_mem=self.protocolclass.sms_memory_select_req()
         _sms_mem.list_memory=self.protocolclass.SMS_MEMORY_PHONE
         self.sendATcommand(_sms_mem, None)
         _list_sms=self.protocolclass.sms_msg_list_req()
-        self.sendATcommand(_list_sms, None)
+        _resp=self.sendATcommand(_list_sms, None)
+        self.log('\n'.join(_resp))
+        self._process_sms(_resp, res)
         self.log('Getting SMS message from the SIM card')
         _sms_mem.list_memory=self.protocolclass.SMS_MEMORY_SIM
         self.sendATcommand(_sms_mem, None)
-        self.sendATcommand(_list_sms, None)
-        result['sms']={}
+        _resp=self.sendATcommand(_list_sms, None)
+        self.log('\n'.join(_resp))
+        self._process_sms(_resp, res)
+        try:
+            # this is to clear the next error
+            self.sendATcommand(_sms_mem, None)
+        except commport.ATError:
+            pass
+        result['sms']=res
         return result
 
     # Call History stuff--------------------------------------------------------
@@ -702,9 +744,10 @@ class Phone(com_gsm.Phone):
         self.log('Getting Call History')
         self.setmode(self.MODEMODEM)
         self.charset_ascii()
+        res={}
         for l in self.protocolclass.PB_CALL_HISTORY_INFO:
             self._get_history_calls(*l)
-        result['call_history']={}
+        result['call_history']=res
         return result
 
 #-------------------------------------------------------------------------------
