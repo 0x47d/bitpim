@@ -111,6 +111,35 @@ class DebugBrewProtocol:
                 self.rmfile(k)
         self.rmdir(path)
 
+    def listfiles(self, dir=''):
+        results={}
+        self.log("Listing files in dir: '"+dir+"'")
+        results={}
+        _pwd=os.path.join(self._fs_path, dir)
+        for _root,_dir,_file in os.walk(_pwd):
+            break
+        for f in _file:
+            _stat=os.stat(os.path.join(_pwd, f))
+            _date=_stat[8]
+            _name=dir+'/'+f
+            results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
+                             'date': (_date,
+                                      time.strftime("%x %X", time.gmtime(_date))) }
+        return results
+        
+    def listsubdirs(self, dir='', recurse=0):
+        results={}
+        self.log("Listing subdirs in dir: '"+dir+"'")
+        _pwd=os.path.join(self._fs_path, dir)
+        for _root,_dir,_file in os.walk(_pwd):
+            break
+        for d in _dir:
+            results[d]={ 'name': d, 'type': 'directory' }
+            if recurse>0:
+                results.update(self.listsubdirs(os.path.join(dir, d),
+                                                  recurse-1))
+        return results
+
     def getfilesystem(self, dir="", recurse=0):
         results={}
         self.log("Listing dir '"+dir+"'")
