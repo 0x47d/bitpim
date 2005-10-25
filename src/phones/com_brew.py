@@ -914,6 +914,8 @@ class BrewProtocol(RealBrewProtocol):
             # but what the heck!
             DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
             self._update_base_class(self.__class__)
+            # define BREW_FILE_SYSTEM=2 in protocol class to enable 
+            # new brew filesystem support. Debug mode only
         elif __debug__ and getattr(self, "protocolclass", 0) and \
                 getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
             self._set_new_brew(self.__class__)
