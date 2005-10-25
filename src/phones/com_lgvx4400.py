@@ -1173,9 +1173,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             text_memo=self.protocolclass.textmemofile()
             text_memo.readfrombuffer(buf)
             res={}
-            for m in text_memo.items:
+            for i in range(text_memo.itemcount):
                 entry=memo.MemoEntry()
-                entry.text=m.text
+                entry.text=text_memo.items[i].text
                 res[entry.id]=entry
         except com_brew.BrewNoSuchFileException:
             res={}
