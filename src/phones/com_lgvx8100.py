@@ -9,7 +9,7 @@
 
 """Communicate with the LG VX8100 cell phone
 
-The VX8100 is substantially similar to the VX7000 but also supports video.
+The VX8100 is similar to the VX7000 but also supports video.
 
 """
 
@@ -41,7 +41,7 @@ from prototypes import *
 
 
 
-class Phone(com_lgvx7000.Phone):
+class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
     "Talk to the LG VX8100 cell phone"
 
     desc="LG-VX8100"
@@ -54,8 +54,10 @@ class Phone(com_lgvx7000.Phone):
                       ('No Ring',)
 
     ringtonelocations= (
-        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major
-        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 1),
+        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon
+        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 0x201, 1),
+        # the sound index file uses the same index as the ringers, bitpim does not support this (yet)
+        #( 'sounds', 'dload/mysound.dat', 'dload/mysoundsize.dat', 'brew/16452/ms', 100, 150, 2, 0),
         )
 
     calendarlocation="sch/newschedule.dat"
@@ -66,7 +68,7 @@ class Phone(com_lgvx7000.Phone):
     builtinwallpapers = () # none
 
     wallpaperlocations= (
-        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0),
+        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0),
         )
         
     def __init__(self, logtarget, commport):
@@ -438,8 +440,8 @@ class Profile(parentprofile):
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX8100'
 
-    WALLPAPER_WIDTH=176
-    WALLPAPER_HEIGHT=184
+    WALLPAPER_WIDTH=160
+    WALLPAPER_HEIGHT=120
     MAX_WALLPAPER_BASENAME_LENGTH=32
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
     WALLPAPER_CONVERT_FORMAT="jpg"
@@ -471,13 +473,7 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
-                                      {'width': 96, 'height': 80, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 176, 'height': 220, 'format': "JPEG"}))
+                                      {'width': 320, 'height': 240, 'format': "JPEG"}))
 
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
