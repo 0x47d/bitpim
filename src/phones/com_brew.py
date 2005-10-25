@@ -914,7 +914,8 @@ class BrewProtocol(RealBrewProtocol):
             # but what the heck!
             DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
             self._update_base_class(self.__class__)
-        elif __debug__ and getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
+        elif __debug__ and getattr(self, "protocolclass", 0) and \
+                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
             self._set_new_brew(self.__class__)
 
     def _update_base_class(self, klass):
