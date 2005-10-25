@@ -144,15 +144,15 @@ class DetectPhone(object):
         c.close()
         return r
 
-    def __check_profile(self, module):
-        if not hasattr(module.Profile, 'phone_manufacturer') or \
-           not hasattr(module.Profile, 'phone_model'):
+    def __check_profile(self, profile):
+        if not hasattr(profile, 'phone_manufacturer') or \
+           not hasattr(profile, 'phone_model'):
             return None
         res=None
-        phone_model=module.Profile.phone_model
-        phone_manufacturer=module.Profile.phone_manufacturer
-        deviceclasses=module.Profile.deviceclasses
-        phone_needsbrew=getattr(module.Phone, 'MODEBREW', 0)
+        phone_model=profile.phone_model
+        phone_manufacturer=profile.phone_manufacturer
+        deviceclasses=profile.deviceclasses
+        phone_needsbrew=getattr(profile, 'brew_required', 0)
         for k,e in self.__data.items():
             match=False
             # check to see if the port supports brew if it is required by phone
@@ -240,7 +240,7 @@ class DetectPhone(object):
                     # found it
                     found_model=model
                     break
-            found_port=self.__check_profile(module)
+            found_port=self.__check_profile(module.Profile)
             if found_port is not None:
                 found_model=model
                 break

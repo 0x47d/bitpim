@@ -1205,6 +1205,7 @@ class Profile(parentprofile):
     BP_Calendar_Version=3
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX4400'
+    brew_required=True
 
     WALLPAPER_WIDTH=120
     WALLPAPER_HEIGHT=98
