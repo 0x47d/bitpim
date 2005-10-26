@@ -299,7 +299,7 @@ class GSMCALTIME(GSMCALDATE):
         self._value='%02d%02d'%self._data
 
 class SMSDATETIME(prototypes.CSVSTRING):
-    """ Represent date time with the format 'yy/MM/dd,hh:mm:ss±zz' used
+    """ Represent date time with the format 'yy/MM/dd,hh:mm:ss+-zz' used
     by GSM SMS messages.
     Currently works only 1 way: SMS Date Time -> ISO String
     """
@@ -316,10 +316,10 @@ class SMSDATETIME(prototypes.CSVSTRING):
         super(SMSDATETIME, self)._update(args, kwargs)
         if self._value and \
            not re.match(SMSDATETIME._re_compiled_pattern, self._value):
-            raise ValueError('COrrect Format: yy/MM/dd,hh:mm:ss±zz')
+            raise ValueError('COrrect Format: yy/MM/dd,hh:mm:ss+-zz')
 
     def getvalue(self):
-        """Returns the ISO Format 'YYYMMDDTHHMMSS±mmss'"""
+        """Returns the ISO Format 'YYYMMDDTHHMMSS+-mmss'"""
         if self._value:
             _s=self._value.split(',')
             return '20%sT%s00'%(_s[0].replace('/', ''),
