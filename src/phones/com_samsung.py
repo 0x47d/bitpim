@@ -1041,28 +1041,32 @@ class SMS_Inbox_List(SMS_Generic_List):
                 self._data[e.id]=e
 
     def _extract_body(self, s):
-        # extract different components from the main text body
-        _from=None
-        l=s.split(' ')
-        ss=l[0]
-        if ss.find('@') != -1:
-            # this the 'from' email address
-            _from=ss
-            l=l[1:]
+        try:
+            # extract different components from the main text body
+            _from=None
+            l=s.split(' ')
             ss=l[0]
-        _subj=[]
-        if ss[0]=='(':
-            while l:
-                _subj.append(ss)
+            if ss.find('@') != -1:
+                # this the 'from' email address
+                _from=ss
                 l=l[1:]
-                if ss[-1]==')':
-                    break
-                if l:
-                    ss=l[0]
-        if l:
-            return (_from, ' '.join(_subj), ' '.join(l))
-        else:
-            return (_from, '', ' '.join(_subj))
+                ss=l[0]
+            _subj=[]
+            if ss[0]=='(':
+                while l:
+                    _subj.append(ss)
+                    l=l[1:]
+                    if ss[-1]==')':
+                        break
+                    if l:
+                        ss=l[0]
+            if l:
+                return (_from, ' '.join(_subj), ' '.join(l))
+            else:
+                return (_from, '', ' '.join(_subj))
+        except:
+            # something happend, just return the original text
+            return (None, '', s)
 
 #-------------------------------------------------------------------------------
 class SMS_Saved_List(SMS_Generic_List):
@@ -1089,21 +1093,24 @@ class SMS_Saved_List(SMS_Generic_List):
                 self._data[e.id]=e
     def _extract_body(self, s):
         # extract different components from the main text body
-        l=s.split(' ')
-        ss=l[0]
-        _subj=[]
-        if ss[0]=='(':
-            while l:
-                _subj.append(ss)
-                l=l[1:]
-                if ss[-1]==')':
-                    break
-                if l:
-                    ss=l[0]
-        if l:
-            return (' '.join(_subj), ' '.join(l))
-        else:
-            return ('', ' '.join(_subj))
+        try:
+            l=s.split(' ')
+            ss=l[0]
+            _subj=[]
+            if ss[0]=='(':
+                while l:
+                    _subj.append(ss)
+                    l=l[1:]
+                    if ss[-1]==')':
+                        break
+                    if l:
+                        ss=l[0]
+            if l:
+                return (' '.join(_subj), ' '.join(l))
+            else:
+                return ('', ' '.join(_subj))
+        except:
+            return ('', s)
                 
 #-------------------------------------------------------------------------------
 class SMS_Sent_List(SMS_Generic_List):
