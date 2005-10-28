@@ -42,6 +42,7 @@ containerelements method:
 """
 import calendar
 import cStringIO
+import re
 import time
 
 import common
@@ -516,6 +517,8 @@ class CSVSTRING(BaseProtogenClass):
         @keyword raiseonmissingquotes: (Default True) raise L{MissingQuotesException} if the string does
              not have quote characters around it
         @keyword value: (Optional) Value
+        @keyword invalidchars: (Default=quotechar) A string containing invalid
+             characters which would be removed before writing to buffer.
         """
         super(CSVSTRING, self).__init__(*args, **kwargs)
         
@@ -529,6 +532,7 @@ class CSVSTRING(BaseProtogenClass):
         self._raiseonunterminatedread=True
         self._raiseontruncate=True
         self._raiseonmissingquotes=True
+        self._invalidchars=chr(self._quotechar)
         self._value=None
 
         if self._ismostderived(CSVSTRING):
@@ -538,8 +542,10 @@ class CSVSTRING(BaseProtogenClass):
         super(CSVSTRING,self)._update(args, kwargs)
 
         self._consumekw(kwargs, ("constant", "terminator", "quotechar", "readescape",
-        "writeescape", "maxsizeinbytes", "default",
-        "raiseonunterminatedread", "value", "raiseontruncate","raiseonmissingquotes"))
+                                 "writeescape", "maxsizeinbytes", "default",
+                                 "raiseonunterminatedread", "value",
+                                 "raiseontruncate", "raiseonmissingquotes",
+                                 "invalidchars"))
         self._complainaboutunusedargs(CSVSTRING,kwargs)
 
         # Set our value if one was specified
@@ -556,6 +562,8 @@ class CSVSTRING(BaseProtogenClass):
 
         if self._value is not None:
             self._value=str(self._value) # no unicode here!
+            if self._invalidchars:
+                self._value=re.sub(r'[%s]'%self._invalidchars, r'', self._value)
             if self._maxsizeinbytes is not None:
                 l=len(self._value)
                 if l>self._maxsizeinbytes:
