@@ -160,17 +160,17 @@ PACKET textmemofile:
 
 # calling history file
 PACKET callentry:
-   4 GPSDATE datetime
+   4 GPSDATE GPStime
    4 UNKNOWN pad1
    4 UINT duration
    49 STRING { 'raiseonunterminatedread': False } number
    36 STRING { 'raiseonunterminatedread': False } name
    8 UNKNOWN pad2
 
-PACKET callhistoryfile:
-   4 UINT itemcount
+PACKET callhistory:
+   4 UINT numcalls
    1 UNKNOWN pad1
-   * LIST { 'elementclass': callentry } +items
+   * LIST { 'elementclass': callentry } +calls
 
 # SMS stuff
 PACKET SMSInboxFile:
