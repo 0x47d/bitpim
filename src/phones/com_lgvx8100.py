@@ -422,9 +422,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 req=p_brew.firmwarerequest()
                 res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
                 phone_info.append('Firmware Version:', res.firmware)
-                s=self.getfilecontents("nvm/$SYS.ESN")[85:89]
-                txt='%02X%02X%02X%02X'%(ord(s[3]), ord(s[2]), ord(s[1]), ord(s[0]))
-                phone_info.append('ESN:', txt)
+                req=self.protocolclass.esn_request()
+                res=self.sendbrewcommand(req, self.protocolclass.esn_response)
+                phone_info.append('ESN:', '%X' % res.esn)
                 txt=self.getfilecontents("nvm/nvm/nvm_cdma")[180:190]
                 phone_info.append('Phone Number:', txt)
         except:
@@ -443,14 +443,14 @@ class Profile(parentprofile):
     WALLPAPER_WIDTH=160
     WALLPAPER_HEIGHT=120
     MAX_WALLPAPER_BASENAME_LENGTH=32
-    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ ."
     WALLPAPER_CONVERT_FORMAT="jpg"
 
     # the 8100 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
    
     MAX_RINGTONE_BASENAME_LENGTH=32
-    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ ."
 
     # there is an origin named 'aod' - no idea what it is for except maybe
     # 'all other downloads'

@@ -26,6 +26,8 @@ from p_lgvx8100 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+BREW_FILE_SYSTEM=0
+
 %}
 
 PACKET indexentry:

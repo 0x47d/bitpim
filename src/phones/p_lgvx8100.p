@@ -249,6 +249,13 @@ PACKET firmwareresponse:
     8 STRING {'terminator': None}  time2
     8 STRING {'terminator': None}  firmware
 
+PACKET esn_request:
+    1 UINT {'constant': 0x01} +command
+
+PACKET esn_response:
+    1 UINT command
+    4 UINT esn
+
 
 
 
