@@ -461,7 +461,7 @@ class LGNewIndexedMedia:
         for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor  in maps:
             for item in self.getindex(indexfile):
                 try:
-                    media[basename(item.filename)]=self.getfilecontents(item.filename)
+                    media[basename(item.filename)]=self.getfilecontents(item.filename, True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
 
@@ -690,8 +690,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
         # maps
         for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
             for item in self.getindex(indexfile):
-                if (item.type&0xff!=typemajor and typemajor < 0x100) or \
-                   (item.type!=typemajor and typemajor > 0xff):
+                if item.type&0xff!=typemajor&0xff:
                     self.log("Entry "+item.filename+" has wrong type for this index.  It is %d and should be %d" % (item.type&0xff, typemajor))
                     self.log("This is going to cause you all sorts of problems.")
                 media[item.index]={
@@ -713,7 +712,8 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
         for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
             for item in self.getindex(indexfile):
                 try:
-                    media[basename(item.filename)]=self.getfilecontents(item.filename)
+                    media[basename(item.filename)]=self.getfilecontents(item.filename,
+                                                                        True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
 

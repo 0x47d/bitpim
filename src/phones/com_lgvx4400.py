@@ -293,7 +293,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             ch=self.protocolclass.callhistory()
             ch.readfrombuffer(buf)
             self.logdata("Call History", buf.getdata(), ch)
-            for call in ch.calls:
+            for call_idx in range(ch.numcalls):
+                call=ch.calls[call_idx]
                 if call.number=='' and call.name=='':
                         continue
                 entry=call_history.CallHistoryEntry()
