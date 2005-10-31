@@ -30,7 +30,7 @@ NUMPHONEBOOKENTRIES=1000
 NUMEMAILS=2
 NUMPHONENUMBERS=5
 pb_file_name='pim/pbentry.dat'
-wallpaper_id_file='pim/pbPictureIdSetAsPath.dat'
+wallpaper_id_file_name='pim/pbPictureIdSetAsPath.dat'
 WALLPAPER_ID_PATH_MAX_LEN=80
 EMPTY_WALLPAPER_ID_PATH='\xff'*WALLPAPER_ID_PATH_MAX_LEN
 
@@ -103,9 +103,9 @@ PACKET pbentry:
    2  UINT { 'default': 0 } +group
    *  LIST {'length': NUMEMAILS} +emails:
        49 STRING {'raiseonunterminatedread': False} email
-   2  UINT { 'default': 0 } +ringtone           "ringtone index for a call"
+   2  UINT { 'default': 0xffff } +ringtone           "ringtone index for a call"
    2  UINT { 'default': 0xffff } +msgringtone   "ringtone index for a text message"
-   2  UINT { 'default': 0xffff } +wallpaper
+   2  UINT { 'default': 0 } +wallpaper
    * LIST {'length': NUMPHONENUMBERS} +numbertypes:
        1 UINT numbertype
    * LIST {'length': NUMPHONENUMBERS} +numbers:

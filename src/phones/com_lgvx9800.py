@@ -5,6 +5,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
+### $Id$
 
 """Communicate with the LG VX9800 cell phone
 """
@@ -111,6 +112,40 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         return results
 
     # Phonebook stuff-----------------------------------------------------------
+    def savephonebook(self, data):
+        "Saves out the phonebook"
+        res=com_lgvx8100.Phone.savephonebook(self, data)
+        # fix up the Wallpaper ID issue
+        _wp_paths=self.protocolclass.wallpaper_id_file()
+        _path_entry=self.protocolclass.wallpaper_id()
+        # clear out all entries
+        for i in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            _wp_paths.items.append(_path_entry)
+        # go through each entry and update the wallpaper path
+        _buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.pb_file_name))
+        _pb_entries=self.protocolclass.pbfile()
+        _pb_entries.readfrombuffer(_buf)
+        _wp_index=res.get('wallpaper-index', {})
+        for _entry in _pb_entries.items:
+            try:
+                if _entry.wallpaper==0 or _entry.wallpaper==0xffff:
+                    # no picture ID assigned
+                    continue
+                _filename=_wp_index[_entry.wallpaper]['filename']
+                if _filename:
+                    _path_str=_filename+'\x00'+'\xff'*\
+                               (self.protocolclass.WALLPAPER_ID_PATH_MAX_LEN-len(_filename)-1)
+                    _path=self.protocolclass.wallpaper_id()
+                    _path.path=_path_str
+                    _wp_paths.items[_entry.entrynumber]=_path
+            except:
+                if __debug__:
+                    raise
+        _buf=prototypes.buffer()
+        _wp_paths.writetobuffer(_buf)
+        self.writefile(self.protocolclass.wallpaper_id_file_name,
+                       _buf.getvalue())
 
     # SMS Stuff-----------------------------------------------------------------
     def _readsms(self):
