@@ -1739,7 +1739,11 @@ class WorkerThread(WorkerThreadFramework):
     def dirlisting(self, path, recurse=0):
         if __debug__: self.checkthread()
         self.setupcomm()
-        return self.commphone.getfilesystem(path, recurse)
+        try:
+            return self.commphone.getfilesystem(path, recurse)
+        except:
+            self.log('Failed to read dir: '+path)
+            return {}
 
     def getfile(self, path):
         if __debug__: self.checkthread()
