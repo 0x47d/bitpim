@@ -66,6 +66,9 @@ class RingerView(guiwidgets.FileView):
         wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
         pubsub.subscribe(self.OnDictRequest, pubsub.REQUEST_RINGTONE_INDEX)
+        self._raw_media=self._shift_down=False
+        wx.EVT_KEY_DOWN(self.aggdisp, self._OnKey)
+        wx.EVT_KEY_UP(self.aggdisp, self._OnKey)
 
     def updateprofilevariables(self, profile):
         self.maxlen=profile.MAX_RINGTONE_BASENAME_LENGTH
@@ -85,6 +88,16 @@ class RingerView(guiwidgets.FileView):
             self.modified=False
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes
+
+    def _OnKey(self, evt):
+        self._shift_down=evt.ShiftDown()
+        evt.Skip()
+
+    def OnAdd(self, evt=None):
+        self._raw_media=self._shift_down
+        super(RingerView, self).OnAdd(evt)
+        # reset the fla
+        self._shift_down=False
 
     def getdata(self,dict,want=guiwidgets.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.ringerpath, 'ringtone', 'ringtone-index')
@@ -203,42 +216,48 @@ class RingerView(guiwidgets.FileView):
                     self.modified=True
             
     def OnAddFiles(self, filenames):
+        self.thedir=self.mainwindow.ringerpath
         for file in filenames:
             if file is None: continue  # failed dragdrop?
-            # do we want to convert file?
-            afi=fileinfo.identify_audiofile(file)
-            if afi.size<=0: continue # zero length file or other issues
-            newext,convertinfo=self.mainwindow.phoneprofile.QueryAudio(None, common.getext(file), afi)
-            if convertinfo is not afi:
-                filedata=None
-                wx.EndBusyCursor()
-                try:
-                    filedata=self.ConvertFormat(file, convertinfo)
-                finally:
-                    # ensure they match up
-                    wx.BeginBusyCursor()
-                if filedata is None:
-                    continue
+            if self._raw_media:
+                decoded_file=self.decodefilename(file)
+                target=self.getshortenedbasename(decoded_file)
+                open(target, 'wb').write(open(file, 'rb').read())
+                self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
             else:
-                filedata=open(file, "rb").read()
-            # check for the size limit on the file, if specified
-            max_size=getattr(convertinfo, 'MAXSIZE', None)
-            if max_size is not None and len(filedata)>max_size:
-                # the data is too big
-                self.log('ringtone %s is too big!'%common.basename(file))
-                dlg=wx.MessageDialog(self,
-                                     'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
-                                     'Warning',
-                                     style=wx.YES_NO|wx.ICON_ERROR)
-                dlg_resp=dlg.ShowModal()
-                dlg.Destroy()
-                if dlg_resp==wx.ID_NO:
-                    continue
-            self.thedir=self.mainwindow.ringerpath
-            decoded_file=self.decodefilename(file)
-            target=self.getshortenedbasename(decoded_file, newext)
-            open(target, "wb").write(filedata)
-            self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
+                # do we want to convert file?
+                afi=fileinfo.identify_audiofile(file)
+                if afi.size<=0: continue # zero length file or other issues
+                newext,convertinfo=self.mainwindow.phoneprofile.QueryAudio(None, common.getext(file), afi)
+                if convertinfo is not afi:
+                    filedata=None
+                    wx.EndBusyCursor()
+                    try:
+                        filedata=self.ConvertFormat(file, convertinfo)
+                    finally:
+                        # ensure they match up
+                        wx.BeginBusyCursor()
+                    if filedata is None:
+                        continue
+                else:
+                    filedata=open(file, "rb").read()
+                # check for the size limit on the file, if specified
+                max_size=getattr(convertinfo, 'MAXSIZE', None)
+                if max_size is not None and len(filedata)>max_size:
+                    # the data is too big
+                    self.log('ringtone %s is too big!'%common.basename(file))
+                    dlg=wx.MessageDialog(self,
+                                         'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
+                                         'Warning',
+                                         style=wx.YES_NO|wx.ICON_ERROR)
+                    dlg_resp=dlg.ShowModal()
+                    dlg.Destroy()
+                    if dlg_resp==wx.ID_NO:
+                        continue
+                decoded_file=self.decodefilename(file)
+                target=self.getshortenedbasename(decoded_file, newext)
+                open(target, "wb").write(filedata)
+                self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
         self.OnRefresh()
 
     OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
