@@ -369,7 +369,7 @@ class Phone(com_lgvx4400.Phone):
         reindexfunction(results)
         return results
 
-    my_model='VX3200'
+    my_model='AX3200'
 
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
@@ -530,11 +530,12 @@ class Profile(parentprofile):
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-     #   ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
      #   ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),   # merge and overwrite wallpaper
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
+        ('call_history', 'read', None),
         )
 
     WALLPAPER_WIDTH=128
