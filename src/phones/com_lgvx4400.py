@@ -218,7 +218,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 if confirmed:
                     confirmed_date="%d%02d%02dT%02d%02d00" % r.timereceived
                 entry.add_recipient(r.number, confirmed, confirmed_date)
-        entry.subject=sf.subject
+        entry.subject=unicode(sf.subject, errors='ignore')
         txt=""
         if sf.num_msg_elements==1 and not sf.messages[0].binary:
             txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)

@@ -145,6 +145,19 @@ PACKET callhistory:
 #   the 7-bit characters are just packed into memory in the order they appear in the
 #   message.
 
+PACKET msg_record:
+    # the first few fields in this packet have something to do with the type of SMS
+    # message contained. EMS and concatinated text are coded differently than a
+    # simple text message
+    1 UINT unknown1 # 0
+    1 UINT binary   # 0=simple text, 1=binary/concatinated
+    1 UINT unknown3 # 0=simple text, 1=binary/concatinated
+    1 UINT unknown4 # 0
+    1 UINT unknown6 # 2=simple text, 9=binary/concatinated
+    1 UINT length
+    * LIST {'length': 219} +msg:
+        1 UINT byte "individual byte of message"
+
 PACKET recipient_record:
     45 DATA unknown1
     49 STRING number
