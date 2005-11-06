@@ -241,11 +241,14 @@ class DebugBrewProtocol:
         except:
             raise BrewNoSuchFileException
 
+    def get_brew_esn(self):
+        # fake an ESN for debug mode
+        return "DEBUGESN"
     def _setmodebrew(self):
         self.log('_setmodebrew: in mode BREW')
         return True
     def sendbrewcommand(self, request, responseclass, callsetmode=True):
-        raise NotImplemetedError
+        return NotImplementedError
     def log(self, s):
         print s
     def logdata(self, s, data, klass=None):
@@ -270,6 +273,11 @@ class RealBrewProtocol:
         self.log("Getting firmware information")
         req=p_brew.firmwarerequest()
         res=self.sendbrewcommand(req, p_brew.firmwareresponse)
+
+    def get_brew_esn(self):
+        # return the ESN of this phone
+        return '%0X'%self.sendbrewcommand(p_brew.ESN_req(),
+                                          p_brew.ESN_resp).esn
 
     def explore0c(self):
         self.log("Trying stuff with command 0x0c")

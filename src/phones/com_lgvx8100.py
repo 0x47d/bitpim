@@ -133,7 +133,11 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             for m in text_memo.items:
                 entry=memo.MemoEntry()
                 entry.text=m.text
-                entry.set_date_isostr("%d%02d%02dT%02d%02d00" % ((m.memotime)))
+                try:
+                    entry.set_date_isostr("%d%02d%02dT%02d%02d00" % ((m.memotime)))
+                except ValueError:
+                    # deleted memos can remain in file but have a bogus date
+                    continue
                 res[entry.id]=entry
         except com_brew.BrewNoSuchFileException:
             res={}
@@ -419,12 +423,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             s=self.getfilecontents('brew/version.txt')
             if s[:6]==self.my_model:
                 phone_info.append('Model:', self.my_model)
+                phone_info.append('ESN:', self.get_brew_esn())
                 req=p_brew.firmwarerequest()
                 res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
                 phone_info.append('Firmware Version:', res.firmware)
-                req=self.protocolclass.esn_request()
-                res=self.sendbrewcommand(req, self.protocolclass.esn_response)
-                phone_info.append('ESN:', '%X' % res.esn)
                 txt=self.getfilecontents("nvm/nvm/nvm_cdma")[180:190]
                 phone_info.append('Phone Number:', txt)
         except:

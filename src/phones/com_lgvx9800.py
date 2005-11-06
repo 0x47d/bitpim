@@ -70,8 +70,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
 
     def get_esn(self, data=None):
         # return the ESN of this phone
-        return '%0X'%self.sendbrewcommand(self.protocolclass.ESN_req(),
-                                          self.protocolclass.ESN_resp).esn
+        return self.get_brew_esn()
 
     def get_detect_data(self, res):
         com_lgvx8100.Phone.get_detect_data(self, res)

@@ -170,6 +170,13 @@ PACKET firmwareresponse:
     # 16 STRING {'terminator': None}  phonemodel
     # 5 STRING {'terminator': None}  prl
 
+PACKET ESN_req:
+    1 UINT { 'default': 1, 'constant': 1 } +command
+
+PACKET ESN_resp:
+    1 UINT { 'constant': 1 } command
+    4 UINT esn
+
 PACKET testing0crequest:
     1 UINT {'constant': 0x0c} +command
 

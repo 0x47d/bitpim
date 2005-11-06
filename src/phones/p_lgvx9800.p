@@ -55,12 +55,6 @@ SMS_CANNED_MAX_LENGTH=101
 BREW_FILE_SYSTEM=1
 %}
 
-PACKET ESN_req:
-    1 UINT { 'default': 1, 'constant': 1 } +command
-PACKET ESN_resp:
-    1 UINT { 'constant': 1 } command
-    4 UINT esn
-
 PACKET indexentry:
     2 UINT index
     2 UINT type
