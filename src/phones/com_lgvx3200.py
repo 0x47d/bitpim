@@ -536,6 +536,10 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
         ('call_history', 'read', None),
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('sms', 'read', None),
+        ('sms', 'write', 'OVERWRITE'),
         )
 
     WALLPAPER_WIDTH=128

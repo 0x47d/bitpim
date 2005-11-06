@@ -213,12 +213,11 @@ PACKET msg_record:
         1 UINT byte "individual byte of message"
 
 PACKET recipient_record:
-    1 UINT unknown1
-    49 STRING number
     1 UINT status   # 1 when sent, 5 when received, 2 failed to send
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
-    8 DATA unknown2
+    12 UNKNOWN unknown
+    49 STRING number
 
 PACKET sms_saved:
     4 UINT outboxmsg
@@ -238,7 +237,7 @@ PACKET sms_out:
     39 UNKNOWN unknown
     1 UINT priority # 0=normal, 1=high
     49 STRING callback 
-    * LIST {'elementclass': recipient_record,'length': 10} +recipients 
+    * LIST {'elementclass': recipient_record,'length': 9 } +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
     * LIST {'length': 181} +msg: # this size could be wrong
@@ -274,9 +273,9 @@ PACKET sms_in:
     1 UINT bin_header3 # 0 in simple message 2 if the message contains a binary header
     1 UNKNOWN unknown2
     1 UINT num_msg_elements # max 10 elements (guessing on max here)
-    * LIST {'length': 10} +msglengths:
+    * LIST {'length': 1 }  +msglengths:
         1 UINT msglength "lengths of individual messages in septets"
-    * LIST {'length': 10, 'elementclass': SMSINBOXMSGFRAGMENT} +msgs 
+    * LIST {'length': 1, 'elementclass': SMSINBOXMSGFRAGMENT} +msgs 
                 # 181 bytes per message, uncertain on this, no multipart message available
                 # 20 messages, 7-bit ascii for simple text. for binary header 
                 # first byte is header length not including the length byte
