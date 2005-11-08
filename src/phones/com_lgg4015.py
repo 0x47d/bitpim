@@ -429,12 +429,21 @@ class Phone(com_gsm.Phone):
             _del_entry.index=_index
             _index+=1
             self.sendATcommand(_del_entry, None)
-            time.sleep(0.1)
+            time.sleep(0.2)
             _req=self._build_main_entry(entries[l[1]], groups)
             self.progress(_index, self.protocolclass.PB_MAIN_MAX_INDEX,
                           'Writing entry %d: %s'%(_index, _req.name))
-            self.sendATcommand(_req, None)
-            time.sleep(0.1)
+            try:
+                self.sendATcommand(_req, None)
+                _retry=False
+            except:
+                _retry=True
+            if _retry:
+                try:
+                    self.sendATcommand(_req, None)
+                except:
+                    self.log('Failed to write entry %d: %s'%(_index, _req.name))
+            time.sleep(0.2)
         # clear out the rest of the phonebook
         for i in range(_index, self.protocolclass.PB_MAIN_MAX_INDEX+1):
             self.progress(i, self.protocolclass.PB_MAIN_MAX_INDEX,
@@ -468,12 +477,21 @@ class Phone(com_gsm.Phone):
             _del_entry.index=_index
             _index+=1
             self.sendATcommand(_del_entry, None)
-            time.sleep(0.1)
+            time.sleep(0.2)
             _req=self._build_sim_entry(entries[l[1]], groups)
             self.progress(_index, self.protocolclass.PB_SIM_MAX_INDEX,
                           'Writing SIM entry %d: %s'%(_index, _req.name))
-            self.sendATcommand(_req, None)
-            time.sleep(0.1)
+            try:
+                self.sendATcommand(_req, None)
+                _retry=False
+            except:
+                _retry=True
+            if _retry:
+                try:
+                    self.sendATcommand(_req, None)
+                except:
+                    self.log('Failed to write SIM entry %d: %s'%(_index, _req.name))
+            time.sleep(0.2)
         # clear out the rest of the phonebook
         for i in range(_index, self.protocolclass.PB_SIM_MAX_INDEX+1):
             self.progress(i, self.protocolclass.PB_SIM_MAX_INDEX,
