@@ -245,6 +245,18 @@ PACKET sms_saved:
     if self.inboxmsg:
         * sms_in inbox
 
+PACKET msg_record:
+    # the first few fields in this packet have something to do with the type of SMS
+    # message contained. EMS and concatinated text are coded differently than a
+    # simple text message
+    1 UINT binary   # 0=simple text, 1=binary/concatinated
+    1 UINT unknown3 # 0=simple text, 1=binary/concatinated
+    1 UINT unknown4 # 0
+    1 UINT unknown6 # 2=simple text, 9=binary/concatinated
+    1 UINT length
+    * LIST {'length': 219} +msg:
+        1 UINT byte "individual byte of message"
+
 PACKET sms_out:
     4 UINT index # starting from 1, unique
     1 UINT unknown1 # zero
@@ -258,7 +270,7 @@ PACKET sms_out:
     1 UINT unknown6
     * LIST {'elementclass': msg_record, 'length': 7} +messages
     1 UINT priority # 0=normal, 1=high
-    12 DATA unknown7
+    19 DATA unknown7
     3 DATA unknown8 # set to 01,00,01 
     23 STRING callback
     * LIST {'elementclass': recipient_record,'length': 10} +recipients

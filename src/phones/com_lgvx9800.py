@@ -283,7 +283,6 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 del wp[w]
 
         # time to write the files out
-        dircache=self.DirCache(self)
         for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon  in maps:
             # get the index file so we can work out what to delete
             names=[init[type][x]['name'] for x in init[type]]
@@ -291,7 +290,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 if common.basename(item.filename) not in names and \
                    not self._is_rs_file(item.filename):
                     self.log(item.filename+" is being deleted")
-                    dircache.rmfile(item.filename)
+                    self.rmfile(item.filename)
             # fixup the indices
             fixups=[k for k in init[type].keys() if k<lowestindex]
             fixups.sort()
@@ -312,7 +311,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 entry=init[type][idx]
                 filename=entry.get('filename', directory+"/"+entry['name'])
                 entry['filename']=filename
-                fstat=dircache.stat(filename)
+                fstat=self.statfile(filename)
                 if 'data' not in entry:
                     # must be in the filesystem already
                     if fstat is None:
@@ -327,7 +326,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 if fstat is not None and len(data)==fstat['size']:
                     self.log("Not writing "+filename+" as a file of the same name and length already exists.")
                 else:
-                    dircache.writefile(filename, data)
+                    self.writefile(filename, data)
             # write out index
             self._write_index_file(type)
         return reindexfunction(results)

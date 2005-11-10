@@ -436,6 +436,9 @@ class RealBrewProtocol:
                     # invalid date - see SF bug #833517
                     results['date']=(0, '')
             return results
+        except BrewNoSuchFileException:
+            # File does not exist, bail
+            return None
         except:
             # something happened, we don't have any info on this file
             if __debug__:
