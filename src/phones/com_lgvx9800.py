@@ -169,11 +169,13 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         sizefile=_info['sizefile']
         try:
             _files=self.listfiles(_local_dir)
-        except com_brew.BrewNoSuchDirectoryException:
+        except (com_brew.BrewNoSuchDirectoryException,
+                com_brew.BrewBadPathnameException):
             pass
         try:
             _files.update(self.listfiles(_rs_dir))
-        except com_brew.BrewNoSuchDirectoryException:
+        except (com_brew.BrewNoSuchDirectoryException,
+                com_brew.BrewBadPathnameException):
             # dir does not exist, no media files available
             pass
         idxlist=_files.keys()
