@@ -33,18 +33,27 @@ _MAXEMAILLEN=96
 
 %}
 
-PACKET eventresponse:
-    * sanyoheader header
-    * evententry entry
-    436 UNKNOWN pad
+PACKET {'readwrite': 0x26} qcpheader:
+    1 UINT readwrite
+    1 UINT command
+    1 UINT packettype
 
-PACKET eventupdaterequest:
-    * sanyowriteheader {'packettype': 0x0c, 'command':0x23} +header
-    * evententry entry
-    436 UNKNOWN +pad
+PACKET {'readwrite': 0x27} qcpwriteheader:
+    1 UINT readwrite
+    1 UINT command
+    1 UINT packettype
 
+PACKET eventrequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x23} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET eventslotinuserequest:
+    * qcpheader {'readwrite': 0x26, 'packettype': 0x0d, 'command': 0x74} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+    
 PACKET evententry:
-    P UINT {'default': 0x74} +flag
     1 UINT slot
     14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
@@ -58,26 +67,62 @@ PACKET evententry:
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT alarm
-    1 UNKNOWN +pad3
+    1 UNKNOWN +pad2
     1 UINT {'default': 0} +serial "Some kind of serial number"
-    1 UNKNOWN +pad4 "0: Not used, Other Used"
-    2 UNKNOWN +pad5
-    1 UINT ringtone
+    3 UNKNOWN +pad3
+    2 UINT ringtone
+    
+PACKET eventresponse:
+    * qcpheader header
+    * evententry entry
+    * UNKNOWN pad
+
+PACKET eventslotinuseresponse:
+    * qcpheader header
+    1 UINT slot
+    1 UINT flag
+    * UNKNOWN pad
+
+PACKET eventslotinuseupdaterequest:
+    * qcpwriteheader {'packettype': 0x0d, 'command': 0x74} +header
+    1 UINT slot
+    1 UINT flag
+    124 UNKNOWN +pad
+    
+PACKET eventupdaterequest:
+    * qcpwriteheader {'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    56 UNKNOWN +pad
+
+PACKET callalarmrequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x24} +header
+    1 UINT slot
+    129 UNKNOWN +pad
 
 PACKET callalarmresponse:
-    * sanyoheader header
+    * qcpheader header
     * callalarmentry entry
-    417 UNKNOWN pad
+    * UNKNOWN pad
 
 PACKET callalarmupdaterequest:
-    * sanyowriteheader {'packettype': 0x0c, 'command':0x24} +header
+    * qcpwriteheader {'packettype': 0x0c, 'command':0x24} +header
     * callalarmentry entry
-    417 UNKNOWN +pad
+    40 UNKNOWN +pad
+
+PACKET callalarmslotinuserequest:
+    * qcpheader {'packettype': 0x0d, 'command': 0x76} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET callalarmslotinuseresponse:
+    * qcpheader header
+    1 UINT slot
+    1 UINT flag
+    * UNKNOWN pad
 
 PACKET callalarmentry:
-    P UINT {'default': 0x74} +flag
     1 UINT slot
-    1 UINT {'default': 0} +dunno1 "Related to Snooze?"
+    1 UNKNOWN +pad0 "Not the flag?"
     49 STRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
@@ -91,8 +136,30 @@ PACKET callalarmentry:
     2 UINT phonenumberslot
     1 UNKNOWN +pad2
     1 UINT {'default': 0} +serial
-    3 UNKNOWN +pad3
-    1 UINT ringtone
+    2 UNKNOWN +pad3
+    1 UINT {'default': 0xfc} +ringtone
+    1 UNKNOWN +pad4 " This may be the ringtone.  Need to understand "
+    1 UINT +flag
+
+PACKET todorequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x25} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET todoentry:
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Used"
+    14 STRING {'raiseonunterminatedread': False} todo
+    7 UNKNOWN +pad1
+    1 UINT todo_len
+    1 UINT priority "0: Normal, 1: Urgent, 2: Done"
+    1 UINT +dunno "Maybe always zero"
+    1 UINT order "Gets sorted on screen in this order"
+
+PACKET todoresponse:
+    * qcpheader header
+    * todoentry entry
+    * UNKNOWN pad
 
 PACKET sanyomediafilenameresponse:
     * sanyomediaheader header
