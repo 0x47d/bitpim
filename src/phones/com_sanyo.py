@@ -891,37 +891,48 @@ class SanyoPhonebook:
         progressmax=self.protocolclass._NUMEVENTSLOTS+self.protocolclass._NUMCALLALARMSLOTS
         req=self.protocolclass.eventrequest()
         count=0
+
+        try:
+            reqflag=self.protocolclass.eventslotinuserequest()
+        except:
+            reqflag=0
+
         for i in range(0, self.protocolclass._NUMEVENTSLOTS):
             self.progress(i,progressmax,"Events")
+            if reqflag:
+                reqflag.slot=i
+                resflag=self.sendpbcommand(reqflag, self.protocolclass.eventslotinuseresponse)
+                if not resflag.flag:
+                    continue
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
-            if res.entry.flag and res.entry.start:
-                self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
-                entry=bpcalendar.CalendarEntry()
-                #entry.pos=i
-                entry.changeserial=res.entry.serial
-                entry.description=res.entry.eventname
-                entry.location=res.entry.location
-                starttime=res.entry.start
-                entry.start=self.decodedate(starttime)
-                entry.end=self.decodedate(res.entry.end)
-                repeat=self._calrepeatvalues[res.entry.period]
-                entry.repeat = self.makerepeat(repeat,entry.start)
+            self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
+            entry=bpcalendar.CalendarEntry()
+            #entry.pos=i
+            entry.changeserial=res.entry.serial
+            entry.description=res.entry.eventname
+            entry.location=res.entry.location
+            starttime=res.entry.start
+            entry.start=self.decodedate(starttime)
+            entry.end=self.decodedate(res.entry.end)
+            repeat=self._calrepeatvalues[res.entry.period]
+            entry.repeat = self.makerepeat(repeat,entry.start)
 
-                if res.entry.alarm==0xffffffff:
-                    entry.alarm=res.entry.alarmdiff/60
-                else:
-                    alarmtime=res.entry.alarm
-                    entry.alarm=(starttime-alarmtime)/60
-                ringtone=res.entry.ringtone
-                if ringtone in self.calendar_tonerange:
-                    ringtone-=self.calendar_toneoffset
-                if ringtone!=self.calendar_defaultringtone:
-                    if result['ringtone-index'].has_key(ringtone):
-                        entry.ringtone=result['ringtone-index'][ringtone]['name']
-                entry.snoozedelay=0
-                calres[entry.id]=entry
-                count+=1
+            if res.entry.alarm==0xffffffff:
+                entry.alarm=res.entry.alarmdiff/60
+            else:
+                alarmtime=res.entry.alarm
+                entry.alarm=(starttime-alarmtime)/60
+            ringtone=res.entry.ringtone
+            if ringtone in self.calendar_tonerange:
+                ringtone-=self.calendar_toneoffset
+            if ringtone!=self.calendar_defaultringtone:
+                if result['ringtone-index'].has_key(ringtone):
+                    entry.ringtone=result['ringtone-index'][ringtone]['name']
+
+            entry.snoozedelay=0
+            calres[entry.id]=entry
+            count+=1
 
         req=self.protocolclass.callalarmrequest()
         for i in range(0, self.protocolclass._NUMCALLALARMSLOTS):
@@ -988,6 +999,11 @@ class SanyoPhonebook:
         # Value to subtract from mktime results since there is no inverse
         # of gmtime
         zonedif=time.mktime(time.gmtime(0))-time.mktime(time.localtime(0))
+
+        try:
+            reqflag=self.protocolclass.eventslotinuseupdaterequest()
+        except:
+            reqflag=0
 
         eventslot=0
         callslot=0
@@ -1073,11 +1089,34 @@ class SanyoPhonebook:
 
                 timearray=list(entry.start)+[0,0,0,0]
                 starttimelocal=time.mktime(timearray)-zonedif
-                if(starttimelocal<now and repeat==0):
-                    e.flag=2 # In the past
-                else:
-                    e.flag=1 # In the future
                 e.start=starttimelocal-self._sanyoepochtounix
+
+                try:
+                    timearray=list(entry.end)+[0,0,0,0]
+                    endtimelocal=time.mktime(timearray)-zonedif
+                    e.end=endtimelocal-self._sanyoepochtounix
+                except: # If no valid end date, make end
+                    e.end=e.start+60 #  one minute later
+                
+                alarmdiff=entry.alarm
+                if alarmdiff<0:
+                    alarmdiff=0
+                alarmdiff=max(alarmdiff,0)*60
+                e.alarmdiff=alarmdiff
+                e.alarm=starttimelocal-self._sanyoepochtounix-alarmdiff
+
+                if reqflag:
+                    reqflag.slot=eventslot
+                    if(e.alarm+self._sanyoepochtounix<now and repeat==0):
+                        reqflag.flag=4 # In the past
+                    else:
+                        reqflag.flag=1 # In the future
+                    res=self.sendpbcommand(reqflag, self.protocolclass.eventslotinuseresponse)
+                else:
+                    if(starttimelocal<now and repeat==0):
+                        e.flag=2 # In the past
+                    else:
+                        e.flag=1 # In the future
 
                 #timearray=list(entry.get('end', entry['start']))+[0,0,0,0]
                 #e.end=time.mktime(timearray)-self._sanyoepochtounix-zonedif
@@ -1087,13 +1126,6 @@ class SanyoPhonebook:
                     e.end=endtimelocal-self._sanyoepochtounix
                 except: # If no valid end date, make end
                     e.end=e.start+60 #  one minute later 
-
-                alarmdiff=entry.alarm
-                if alarmdiff<0:
-                    alarmdiff=0
-                alarmdiff=max(alarmdiff,0)*60
-                e.alarmdiff=alarmdiff
-                e.alarm=starttimelocal-self._sanyoepochtounix-alarmdiff
 
                 #if entry['ringtone']==0:
                 #    e.ringtone=self.calendar_defaultringtone
@@ -1119,26 +1151,35 @@ class SanyoPhonebook:
             res=self.sendpbcommand(req, respc, writemode=True)
 
 
-# Blank out unused slots
-        e=self.protocolclass.evententry()
-        e.flag=0 # Unused slot
-        e.eventname=""
-        e.eventname_len=0
-        e.location=""
-        e.location_len=0
-        e.start=0
-        e.end=0
-        e.period=0
-        e.dom=0
-        e.ringtone=0
-        e.alarm=0
-        e.alarmdiff=0
-        req=self.protocolclass.eventupdaterequest()
-        req.entry=e
+            # Blank out unused slots
+
+        if reqflag:
+            req=reqflag
+            req.flag=0
+        else:
+            e=self.protocolclass.evententry()
+            e.flag=0 # Unused slot
+            e.eventname=""
+            e.eventname_len=0
+            e.location=""
+            e.location_len=0
+            e.start=0
+            e.end=0
+            e.period=0
+            e.dom=0
+            e.ringtone=0
+            e.alarm=0
+            e.alarmdiff=0
+            req=self.protocolclass.eventupdaterequest()
+            req.entry=e
+            
         for eventslot in range(eventslot,self.protocolclass._NUMEVENTSLOTS):
             self.progress(eventslot+callslot, progressmax, "Writing unused")
             self.log("Write calendar event slot "+`eventslot`+ " - Unused")
-            req.entry.slot=eventslot
+            if reqflag:
+                req.slot=eventslot
+            else:
+                req.entry.slot=eventslot
             res=self.sendpbcommand(req, self.protocolclass.eventresponse, writemode=True)
 
         e=self.protocolclass.callalarmentry()
