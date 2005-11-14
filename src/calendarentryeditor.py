@@ -88,6 +88,14 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self._weekly_option_bs=vbs
         # monthly option widgets
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Monthly Options:'), wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, 'Every '),0, wx.LEFT, 0)
+        self._ml_interval=wx.TextCtrl(self, -1, '1')
+        wx.EVT_TEXT(self, self._ml_interval.GetId(), self.OnDirtyUI)
+        hbs.Add(self._ml_interval, 0, wx.LEFT, 0)
+        hbs.Add(wx.StaticText(self, -1, ' month(s)'), 0, wx.LEFT, 0)
+        vbs.Add(hbs, 0, wx.LEFT|wx.TOP, 10)
+        vbs.Add(wx.StaticText(self, -1, 'On:'), 0, wx.LEFT, 10)
         self._ml_every_nday=wx.RadioButton(self, -1, 'Every nth day', style=wx.RB_GROUP)
         self._ml_every_nday.SetValue(True)
         self._ml_every_wday=wx.RadioButton(self, -1, 'Every ')
@@ -150,6 +158,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
                 self._wl_dow[i].SetValue(b)
         elif rt==data.monthly:
             self._repeat_option_rb.SetSelection(3)
+            self._ml_interval.SetValue(`data.interval2`)
             if data.dow:
                 # every 1st *day of the month
                 self._ml_every_wday.SetValue(True)
@@ -201,6 +210,10 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         r.dow=m
     def _get_monthly_options(self, r):
         r.repeat_type=r.monthly
+        try:
+            r.interval2=int(self._ml_interval.GetValue())
+        except:
+            r.interval2=1
         try:
             b=self._ml_every_wday.GetValue()
         except:

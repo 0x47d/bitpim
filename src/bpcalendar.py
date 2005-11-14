@@ -48,6 +48,7 @@ suppress_repeat_entry(y,m,d) - exclude (y,m,d) from this repeat event.
 RepeatEntry properties:
 repeat_type - one of daily, weekly, monthly, or yearly.
 interval - for daily: repeat every nth day.  For weekly, for every nth week.
+interval2 - for monhtly: repeat every nth month.
 dow - bitmap of which day of week are being repeated.
 suppressed - list of (y,m,d) being excluded from this series.
 
@@ -144,7 +145,8 @@ class CalendarDataObject(database.basedataobject):
                       'start', 'end', 'vibrate', 'voice' ]
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     _knownlistproperties.update( {
-                                  'repeat': ['type', 'interval', 'dow'],
+                                  'repeat': ['type', 'interval',
+                                             'interval2', 'dow'],
                                   'suppressed': ['date'],
                                   'categories': ['category'] })
     def __init__(self, data=None):
@@ -165,6 +167,7 @@ class RepeatEntry(object):
     _dow=1
     _dom=0
     _moy=1
+    _interval2=2
     _dow_names=(
         {1: 'Sun'}, {2: 'Mon'}, {4: 'Tue'}, {8: 'Wed'},
         {16: 'Thu'}, {32: 'Fri'}, {64: 'Sat'})
@@ -180,7 +183,7 @@ class RepeatEntry(object):
                 'Thu': 16, 'Fri': 32, 'Sat': 64 }
     def __init__(self, repeat_type=daily):
         self._type=repeat_type
-        self._data=[0,0]
+        self._data=[0,0,0]
         self._suppressed=[]
 
     def get(self):
@@ -194,6 +197,7 @@ class RepeatEntry(object):
                               'dow': self._data[self._dow] }
         elif self._type==self.monthly:
             r[self.monthly]={ 'interval': self._data[self._interval],
+                              'interval2': self._data[self._interval2],
                               'dow': self._data[self._dow] }
         else:
             r[self.yearly]=None
@@ -213,6 +217,8 @@ class RepeatEntry(object):
         elif self._type==self.weekly or self._type==self.monthly:
             r['interval']=self._data[self._interval]
             r['dow']=self._data[self._dow]
+            if self._type==self.monthly:
+                r['interval2']=self._data[self._interval2]
         # and the suppressed stuff
         s=[]
         for n in self._suppressed:
@@ -237,6 +243,7 @@ class RepeatEntry(object):
             self.repeat_type=self.monthly
             self.dow=data[self.monthly].get('dow', 0)
             self.interval=data[self.monthly].get('interval', 0)
+            self.interval2=data[self.monthly].get('interval2', 1)
         else:
             self.repeat_type=self.yearly
         s=[]
@@ -254,6 +261,8 @@ class RepeatEntry(object):
         elif self.repeat_type==self.weekly or self.repeat_type==self.monthly:
             self.interval=_interval
             self.dow=_dow
+            if self.repeat_type==self.monthly:
+                self.interval2=r.get('interval2', 1)
         # now the suppressed stuff
         s=[]
         for n in data.get('suppressed', []):
@@ -284,6 +293,12 @@ class RepeatEntry(object):
         return ((1<<day_of_week)&self.dow) != 0
 
     def _check_monthly(self, s, d):
+        if not self.interval2:
+            # default to every month
+            self.interval2=1
+        if (d.month-s.month)%self.interval2:
+            # wrong month
+            return False
         if self.dow==0:
             # no weekday specified, implied nth day of the month
             return d.day==s.day
@@ -339,6 +354,16 @@ class RepeatEntry(object):
             raise AttributeError
         self._data[self._interval]=interval
     interval=property(fget=_get_interval, fset=_set_interval)
+
+    def _get_interval2(self):
+        if self._type==self.yearly:
+            raise AttributeError
+        return self._data[self._interval2]
+    def _set_interval2(self, interval):
+        if self._type==self.yearly:
+            raise AttributeError
+        self._data[self._interval2]=interval
+    interval2=property(fget=_get_interval2, fset=_set_interval2)
 
     def _get_dow(self):
         if self._type==self.yearly:

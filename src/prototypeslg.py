@@ -7,6 +7,8 @@
 ###
 ### $Id$
 
+import bpcalendar
+
 import calendar
 import prototypes
 import re
@@ -122,15 +124,15 @@ class LGCALREPEAT(prototypes.UINTlsb):
 
     def getvalue(self):
         val=super(LGCALREPEAT,self).getvalue()
-        # get repeat type
         type=val&0x7 # 3 bits
         val>>=4
         exceptions=val&0x1
         val>>=1
         #get day of week, only valid for some repeat types
         #format of data is also different for different repeat types
+        interval2=(val>>9)&0x3f
         if type==6: # for monthly repeats
-            dow=1<<(val&3) #day of month, valid for monthly repeat types, need to convert to bitpim format
+            dow=self._to_bp_dow[val&7] #day of month, valid for monthly repeat types, need to convert to bitpim format
         elif type==2: #weekly 
             dow=val&0x7f # 7 bits, already matched bpcalender format
         else:
@@ -142,7 +144,7 @@ class LGCALREPEAT(prototypes.UINTlsb):
         else:
             val>>=9
             interval=val&0x3f
-        return (type, dow, interval, exceptions)
+        return (type, dow, interval, interval2, exceptions)
 
     _caldomvalues={
         0x01: 0x0, #sun
@@ -153,17 +155,35 @@ class LGCALREPEAT(prototypes.UINTlsb):
         0x20: 0x5, #fri
         0x40: 0x6  #sat
         }
+    _to_bp_dow={
+        0: 0x01,    # Sun
+        1: 0x02,    # Mon
+        2: 0x04,    # Tue
+        3: 0x08,    # Wed
+        4: 0x10,    # Thu
+        5: 0x20,    # Fri
+        6: 0x40,    # Sat
+        }
         
     def _converttoint(self, repeat):
-        assert len(repeat)==4
-        type,dow,interval,exceptions=repeat
+        if not isinstance(repeat, (tuple, list)):
+            if __debug__:
+                raise TypeError
+            else:
+                return 0
+        if len(repeat)!=5:
+            if __debug__:
+                raise ValueError
+            else:
+                return 0
+        type,dow,interval,interval2,exceptions=repeat
         val=0
         # construct bitmapped value for repeat
         # look for weekday type
         val=interval
         if type==6 or type==3:
             val<<=11
-            val|=1 # force monthly interval to 1
+            val|=interval2
         if type==4: #yearly
             val<<=11
             val|=dow

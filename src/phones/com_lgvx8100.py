@@ -227,7 +227,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
     def makerepeat(self, repeat):
         # get all the variables out of the repeat tuple
         # and convert into a bpcalender RepeatEntry
-        type,dow,interval,exceptions=repeat
+        type,dow,interval,interval2,exceptions=repeat
         if type==0:
             repeat_entry=None
         else:
@@ -244,12 +244,13 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 repeat_entry.interval=interval
             elif type==3: #'monthly'
                 repeat_entry.repeat_type=repeat_entry.monthly
-                repeat_entry.interval=interval
+                repeat_entry.interval2=interval2
                 repeat_entry.dow=0
             elif type==6: #'monthly' #Xth Y day (e.g. 2nd friday each month)
                 repeat_entry.repeat_type=repeat_entry.monthly
                 repeat_entry.interval=interval #X
                 repeat_entry.dow=dow #Y
+                repeat_entry.interval2=interval2
             else: # =4 'yearly'
                 repeat_entry.repeat_type=repeat_entry.yearly
         return repeat_entry
@@ -299,7 +300,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             if entry.repeat != None:
                 data.repeat=(self.getrepeattype(entry, exceptions))
             else:
-                data.repeat=((0,0,0,0))
+                data.repeat=((0,0,0,0,0))
             data.unknown1=0
             data.unknown2=0
             if data.alarmindex_vibrate!=1: # if alarm set
@@ -335,8 +336,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
     def getrepeattype(self, entry, exceptions):
         #convert the bpcalender type into vx8100 type
         repeat_entry=bpcalendar.RepeatEntry()
+        interval2=0
         if entry.repeat.repeat_type==repeat_entry.monthly:
             dow=entry.repeat.dow
+            interval2=entry.repeat.interval2
             if entry.repeat.dow==0:
                 # set interval for month type 4 to start day of month, (required by vx8100)
                 interval=entry.start[2]
@@ -361,7 +364,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             # set dow to start month, (required by vx8100)
             dow=entry.start[1]
             type=4
-        return (type, dow, interval, exceptions)
+        return (type, dow, interval, interval2, exceptions)
 
     def setalarm(self, entry, data):
         # vx8100 only allows certain repeat intervals, adjust to fit, it also stores an index to the interval
