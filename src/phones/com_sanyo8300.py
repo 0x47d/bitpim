@@ -37,7 +37,7 @@ class Phone(com_sanyonewer.Phone):
     LAST_MEDIA_DIRECTORY=3
 
     wallpaperexts=(".jpg", ".png", ".mp4", "3g2")
-    ringerexts=(".mid", ".qcp", ".mp3", ".m4a",".pmd")
+    ringerexts=(".mid", ".qcp", ".mp3", ".m4a",".pmd",".bin")
 
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
