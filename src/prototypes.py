@@ -751,7 +751,10 @@ class CSVDATE(CSVSTRING):
     def _converttostring(self, date):
         if len(date)>=3:
             year,month,day=date[:3]
-            s='%2.2d/%2.2d/%4.4d'%(month, day, year)
+            if month>0 or day>0 or year>0:
+                s='%2.2d/%2.2d/%4.4d'%(month, day, year)
+            else:
+                s=""
         else:
             s=""
         return s
