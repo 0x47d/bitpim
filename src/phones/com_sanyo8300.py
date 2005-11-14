@@ -37,7 +37,7 @@ class Phone(com_sanyonewer.Phone):
     LAST_MEDIA_DIRECTORY=3
 
     wallpaperexts=(".jpg", ".png", ".mp4", "3g2")
-    ringerexts=(".mid", ".qcp", ".mp3", ".m4a")
+    ringerexts=(".mid", ".qcp", ".mp3", ".m4a",".pmd")
 
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
@@ -56,8 +56,12 @@ class Phone(com_sanyonewer.Phone):
                        'Disco')
 
     # Calendar ringer info
-    # e8 02 Tone 1
-    # f9 02 Melody 1
+    # e8 02 Tone 1  744
+    # f9 02 Melody 1  761
+    # fe 02 Melody 6  766
+    # ff 02 Melody 7  767
+    # 00 03 Melody 8  768
+    # 01 03 Melody 9  769
     # 00 00 Normal
     # f1 ff None
     # f2 ff Vibrate
