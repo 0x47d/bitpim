@@ -190,7 +190,8 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    39 STRING {'raiseontruncate': False } description
+    39 STRING {'raiseontruncate': False,
+               'raiseonunterminatedread': False } description
 
 PACKET schedulefile:
     2 UINT numactiveitems

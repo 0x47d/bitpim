@@ -164,7 +164,8 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    37 STRING {'raiseontruncate': False } description
+    37 STRING {'raiseontruncate': False,
+               'raiseonunterminatedread': False } description
     2 UINT hasvoice
     2 UINT voiceid
     2 UINT { 'default': 0 } +pad3

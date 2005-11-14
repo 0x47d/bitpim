@@ -148,7 +148,8 @@ PACKET scheduleevent:
     1 UINT alarmtype
     1 UINT { 'default': 0 } +snoozedelay
     1 UINT ringtone
-    39 STRING {'raiseonunterminatedread': False} description
+    39 STRING {'raiseonunterminatedread',
+               'raiseonunterminatedread': False: False} description
 
 
 PACKET schedulefile:
