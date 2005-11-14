@@ -6,6 +6,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
+### $Id$
 
 """Communicate with the LG VX8100 cell phone
 
@@ -70,6 +71,31 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
     wallpaperlocations= (
         ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0),
         )
+        
+    # for removable media (miniSD cards)
+    _rs_path='mmc1/'
+    _rs_ringers_path=_rs_path+'ringers'
+    _rs_images_path=_rs_path+'images'
+    media_info={ 'ringers': {
+            'localpath': 'brew/16452/lk/mr',
+            'rspath': _rs_ringers_path,
+            'vtype': protocolclass.MEDIA_TYPE_RINGTONE,
+            'icon': protocolclass.MEDIA_RINGTONE_DEFAULT_ICON,
+            'index': 100,  # starting index
+            'maxsize': 155,
+            'indexfile': 'dload/my_ringtone.dat',
+            'sizefile': 'dload/my_ringtonesize.dat',
+        },
+         'images': {
+             'localpath': 'brew/16452/mp',
+             'rspath': _rs_images_path,
+             'vtype': protocolclass.MEDIA_TYPE_IMAGE,
+             'icon': protocolclass.MEDIA_IMAGE_DEFAULT_ICON,
+             'index': 100,
+             'maxsize': 155,
+             'indexfile': 'dload/image.dat',
+             'sizefile': 'dload/imagesize.dat' }
+         }
         
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self, logtarget, commport)
@@ -435,6 +461,204 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         except:
             pass
         return
+
+    # Media stuff---------------------------------------------------------------
+    def _is_rs_file(self, filename):
+        return filename.startswith(self._rs_path)
+
+    def getmedia(self, maps, results, key):
+        media={}
+
+        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
+            for item in self.getindex(indexfile):
+                try:
+                    if not self._is_rs_file(item.filename):
+                        media[common.basename(item.filename)]=self.getfilecontents(
+                            item.filename, True)
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+                    self.log("It was in the index, but not on the filesystem")
+
+        results[key]=media
+        return results
+
+    def _write_index_file(self, type):
+        _info=self.media_info.get(type, None)
+        if not _info:
+            return
+        _files={}
+        _local_dir=_info['localpath']
+        _rs_dir=_info['rspath']
+        _vtype=_info['vtype']
+        _icon=_info['icon']
+        _index=_info['index']
+        _maxsize=_info['maxsize']
+        indexfile=_info['indexfile']
+        sizefile=_info['sizefile']
+        try:
+            _files=self.listfiles(_local_dir)
+        except (com_brew.BrewNoSuchDirectoryException,
+                com_brew.BrewBadPathnameException):
+            pass
+        try:
+            _files.update(self.listfiles(_rs_dir))
+        except (com_brew.BrewNoSuchDirectoryException,
+                com_brew.BrewBadPathnameException):
+            # dir does not exist, no media files available
+            pass
+        idxlist=_files.keys()
+        if len(idxlist)>_maxsize:
+            idxlist=idxlist[:_maxsize]
+        idxlist.sort()
+        idxlist.reverse()
+        ifile=self.protocolclass.indexfile()
+        _idx_cnt=_index+len(idxlist)-1
+        _file_size=0
+        for idx in idxlist:
+            ie=self.protocolclass.indexentry()
+            ie.index=_idx_cnt
+            ie.type=_vtype
+            ie.filename=idx
+            # ie.date left as zero
+            ie.dunno=0 # mmmm
+            ie.icon=_icon
+            ifile.items.append(ie)
+            _idx_cnt-=1
+            if not self._is_rs_file(idx):
+                _file_size+=_files[idx]['size']
+        buf=prototypes.buffer()
+        ifile.writetobuffer(buf)
+        self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+        self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
+        self.writefile(_info['indexfile'], buf.getvalue())
+        # writing the size file
+        szfile=self.protocolclass.sizefile()
+        szfile.size=_file_size
+        buf=prototypes.buffer()
+        szfile.writetobuffer(buf)
+        self.log("You are using a total of "+`_file_size`+" bytes for "+type)
+        self.writefile(sizefile, buf.getvalue())
+
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+        """Actually saves out the media
+
+        @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
+        @param mediaindexkey:  index key (eg 'wallpaper-index')
+        @param maps: list index files and locations
+        @param results: results dict
+        @param merge: are we merging or overwriting what is there?
+        @param reindexfunction: the media is re-indexed at the end.  this function is called to do it
+        """
+
+        # take copies of the lists as we modify them
+        wp=results[mediakey].copy()  # the media we want to save
+        wpi=results[mediaindexkey].copy() # what is already in the index files
+
+        # remove builtins
+        for k in wpi.keys():
+            if wpi[k].get('origin', "")=='builtin':
+                del wpi[k]
+
+        # build up list into init
+        init={}
+        for type,_,_,_,lowestindex,_,typemajor,_ in maps:
+            init[type]={}
+            for k in wpi.keys():
+                if wpi[k]['origin']==type:
+                    index=k
+                    name=wpi[k]['name']
+                    fullname=wpi[k]['filename']
+                    vtype=wpi[k]['vtype']
+                    icon=wpi[k]['icon']
+                    data=None
+                    del wpi[k]
+                    for w in wp.keys():
+                        # does wp contain a reference to this same item?
+                        if wp[w]['name']==name:
+                            data=wp[w]['data']
+                            del wp[w]
+                    if not merge and data is None:
+                        # delete the entry
+                        continue
+                    assert index>=lowestindex
+                    init[type][index]={'name': name, 'data': data, 'filename': fullname, 'vtype': vtype, 'icon': icon}
+
+        # init now contains everything from wallpaper-index
+        # wp contains items that we still need to add, and weren't in the existing index
+        assert len(wpi)==0
+        print init.keys()
+        
+        # now look through wallpapers and see if anything was assigned a particular
+        # origin
+        for w in wp.keys():
+            o=wp[w].get("origin", "")
+            if o is not None and len(o) and o in init:
+                idx=-1
+                while idx in init[o]:
+                    idx-=1
+                init[o][idx]=wp[w]
+                del wp[w]
+
+        # wp will now consist of items that weren't assigned any particular place
+        # so put them in the first available space
+        for type,_,_,_,lowestindex,maxentries,typemajor,def_icon in maps:
+            # fill it up
+            for w in wp.keys():
+                if len(init[type])>=maxentries:
+                    break
+                idx=-1
+                while idx in init[type]:
+                    idx-=1
+                init[type][idx]=wp[w]
+                del wp[w]
+
+        # time to write the files out
+        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon  in maps:
+            # get the index file so we can work out what to delete
+            names=[init[type][x]['name'] for x in init[type]]
+            for item in self.getindex(indexfile):
+                if common.basename(item.filename) not in names and \
+                   not self._is_rs_file(item.filename):
+                    self.log(item.filename+" is being deleted")
+                    self.rmfile(item.filename)
+            # fixup the indices
+            fixups=[k for k in init[type].keys() if k<lowestindex]
+            fixups.sort()
+            for f in fixups:
+                for ii in xrange(lowestindex, lowestindex+maxentries):
+                    # allocate an index
+                    if ii not in init[type]:
+                        init[type][ii]=init[type][f]
+                        del init[type][f]
+                        break
+            # any left over?
+            fixups=[k for k in init[type].keys() if k<lowestindex]
+            for f in fixups:
+                self.log("There is no space in the index for "+type+" for "+init[type][f]['name'])
+                del init[type][f]
+            # write each entry out
+            for idx in init[type].keys():
+                entry=init[type][idx]
+                filename=entry.get('filename', directory+"/"+entry['name'])
+                entry['filename']=filename
+                fstat=self.statfile(filename)
+                if 'data' not in entry:
+                    # must be in the filesystem already
+                    if fstat is None:
+                        self.log("Entry "+entry['name']+" is in index "+indexfile+" but there is no data for it and it isn't in the filesystem.  The index entry will be removed.")
+                        del init[type][idx]
+                        continue
+                # check len(data) against fstat->length
+                data=entry['data']
+                if data is None:
+                    assert merge 
+                    continue # we are doing an add and don't have data for this existing entry
+                if fstat is not None and len(data)==fstat['size']:
+                    self.log("Not writing "+filename+" as a file of the same name and length already exists.")
+                else:
+                    self.writefile(filename, data)
+            # write out index
+            self._write_index_file(type)
+        return reindexfunction(results)
 
 parentprofile=com_lgvx7000.Profile
 class Profile(parentprofile):
