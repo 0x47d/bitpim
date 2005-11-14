@@ -186,6 +186,7 @@ class OutlookCalendarImportData:
         rp=bpcalendar.RepeatEntry()
         rt=e['repeat_type']
         r_interval=e.get('repeat_interval', 0)
+        r_interval2=e.get('repeat_interval2', 1)
         r_dow=e.get('repeat_dow', 0)
         if rt==self.olRecursDaily:
             rp.repeat_type=rp.daily
@@ -204,6 +205,7 @@ class OutlookCalendarImportData:
             rp.interval=r_interval
         elif rp.repeat_type==rp.weekly or rp.repeat_type==rp.monthly:
             rp.interval=r_interval
+            rp.interval2=r_interval2
             rp.dow=r_dow
         # add the list of exceptions
         for k in e.get('exceptions', []):
@@ -326,9 +328,9 @@ class OutlookCalendarImportData:
 
     def _is_monthly(self, dict, r):
         if r['RecurrenceType']==self.olRecursMonthly or \
-           r['RecurrenceType']==self.olRecursMonthNth and \
-           r['Interval']==1:
+           r['RecurrenceType']==self.olRecursMonthNth:
             self._set_repeat_dates(dict, r)
+            dict['repeat_interval2']=r['Interval']
             if r['RecurrenceType']==self.olRecursMonthNth:
                 dict['repeat_interval']=r['Instance']
                 dict['repeat_dow']=r['DayOfWeekMask']

@@ -100,6 +100,7 @@ class ExportCSVDialog(wx.Dialog):
         csv_repeat_template=(
             ('Repeat Type', 'repeat_type', None),
             ('Repeat Interval', 'interval', None),
+            ('Repeat Interval2', 'interval2', None),
             ('Day-of-Week', 'dow_str', None),
             ('Excluded Dates', 'suppressed_str', None))
         try:
@@ -174,6 +175,7 @@ class CSVCalendarImportData(object):
             ('Wallpaper', 'wallpaper', self.__set_str),
             ('Repeat Type', 'repeat_type', self.__set_repeat_type),
             ('Repeat Interval', 'repeat_interval', self.__set_int),
+            ('Repeat Interval2', 'repeat_interval2', self.__set_int),
             ('Day-of-Week', 'repeat_dow', self.__set_dow),
             ('Excluded Dates', 'exceptions', self.__set_exceptions)
             )
@@ -293,6 +295,7 @@ class CSVCalendarImportData(object):
         rp=bpcalendar.RepeatEntry()
         rp_type=e['repeat_type']
         rp_interval=e.get('repeat_interval', 1)
+        rp_interval2=e.get('repeat_interval2', 1)
         rp_dow=e.get('repeat_dow', 0)
 
         if rp_type==rp.daily:
@@ -302,6 +305,7 @@ class CSVCalendarImportData(object):
         elif rp_type==rp.weekly or rp_type==rp.monthly:
             rp.repeat_type=rp_type
             rp.interval=rp_interval
+            rp.interval2=rp_interval2
             rp.dow=rp_dow
         elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly

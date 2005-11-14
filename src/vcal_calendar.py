@@ -123,6 +123,7 @@ class VCalendarImportData(object):
         rp=bpcalendar.RepeatEntry()
         rp_type=e['repeat_type']
         rp_interval=e.get('repeat_interval', 1)
+        rp_interval2=e.get('repeat_interval2', 1)
         rp_end=e.get('repeat_end', None)
         rp_num=e.get('repeat_num', None)
         rp_dow=e.get('repeat_dow', 0)
@@ -133,6 +134,7 @@ class VCalendarImportData(object):
         elif rp_type==rp.weekly or rp_type==rp.monthly:
             rp.repeat_type=rp_type
             rp.interval=rp_interval
+            rp.interval2=rp_interval2
             rp.dow=rp_dow
         elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly
@@ -314,9 +316,10 @@ class VCalendarImportData(object):
             # acceptable format: MD1 <day number> <end date | #duration>
             # or MP1 <[1-4]+ | 1-> <SU-SA> <end date | #duration>
             s=v['value'].split(' ')
-            if s[0]!='MD1' and s[0]!='MP1':
+            if s[0][:2]!='MD' and s[0][:2]!='MP':
                 return False
-            if s[0]=='MP1':
+            dd['repeat_interval2']=int(s[0][2:])
+            if s[0][:2]=='MP':
                 # every nth *day of every month
                 n=s[1]
                 if n in ['1+', '2+', '3+', '4+', '1-']:
