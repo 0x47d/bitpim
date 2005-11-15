@@ -29,6 +29,7 @@ import wx
 import wx.lib.colourdb
 import wx.gizmos
 import wx.html
+import wx.lib.mixins.listctrl  as  listmix
 
 # my modules
 import guiwidgets
@@ -1735,6 +1736,7 @@ class WorkerThread(WorkerThreadFramework):
         self.clearcomm()
         return phone_detect.DetectPhone(self).detect(using_port)
 
+
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):
         if __debug__: self.checkthread()
@@ -1857,281 +1859,21 @@ class WorkerThread(WorkerThreadFramework):
         return results
 
 
-class FileSystemView(wx.gizmos.TreeListCtrl):
-
-    # we have to add None objects to all nodes otherwise the tree control refuses
-    # sort (somewhat lame imho)
+class FileSystemView(wx.SplitterWindow):
     def __init__(self, mainwindow, parent, id=-1):
-        self.datacolumn=False # used for debugging and inspection of values
-        wx.gizmos.TreeListCtrl.__init__(self, parent, id, style=wx.WANTS_CHARS|wx.TR_DEFAULT_STYLE)
-        self.AddColumn("Name")
-        self.AddColumn("Size")
-        self.AddColumn("Date")
-        self.SetMainColumn(0)
-        self.SetColumnWidth(0, 300)
-        self.SetColumnWidth(2, 200)
-        if self.datacolumn:
-            self.AddColumn("Extra Stuff")
-            self.SetColumnWidth(3, 400)
-        self.SetColumnAlignment(1, wx.LIST_FORMAT_RIGHT)
+        # the listbox and textbox in a splitter
         self.mainwindow=mainwindow
-        self.root=self.AddRoot("/")
-        self.SetPyData(self.root, None)
-        self.SetItemHasChildren(self.root, True)
-        self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
-        self.dirhash={ "": 1}
-        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
-        wx.EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
+        wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_BORDER|wx.SP_LIVE_UPDATE)
+        self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)
+        self.list=FileSystemFileView(mainwindow, self, wx.NewId())
+        pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
+        self.SplitVertically(self.tree, self.list, pos)
+        self.SetMinimumPaneSize(20)
+        wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
 
-        self.filemenu=wx.Menu()
-        self.filemenu.Append(guihelper.ID_FV_SAVE, "Save ...")
-        self.filemenu.Append(guihelper.ID_FV_HEXVIEW, "Hexdump")
-        self.filemenu.AppendSeparator()
-        self.filemenu.Append(guihelper.ID_FV_DELETE, "Delete")
-        self.filemenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite ...")
-
-        self.dirmenu=wx.Menu()
-        self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
-        self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_BACKUP, "Backup directory ...")
-        self.dirmenu.Append(guihelper.ID_FV_BACKUP_TREE, "Backup entire tree ...")
-        self.dirmenu.Append(guihelper.ID_FV_RESTORE, "Restore ...")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
-        self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
-        self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
-        # generic (neither file nor directory) menu
-        self.genericmenu=wx.Menu()
-        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
-        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
-        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
-
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, self.OnModemMode)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, self.OnPhoneOffline)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, self.OnPhoneReboot)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, self.OnModemMode)
-        wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
-        wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
-
-    def OnRightUp(self, event):
-        pt = event.GetPosition();
-        item, flags,unknown = self.HitTest(pt)
-        if item.IsOk():
-            self.SelectItem(item)
-            # is it a file or a directory
-            path=self.itemtopath(item)
-            if path in self.dirhash:
-                if self.dirhash[path]:
-                    self.PopupMenu(self.dirmenu, pt)
-                    return
-            self.PopupMenu(self.filemenu, pt)
-        else:
-            self.PopupMenu(self.genericmenu, pt)
-                    
-    def OnRightDown(self,event):
-        # You have to capture right down otherwise it doesn't feed you right up
-        pt = event.GetPosition();
-        item, flags, unknown = self.HitTest(pt)
-        try:
-            self.SelectItem(item)
-        except:
-            pass
-
-    def OnItemActivated(self,_):
-        # is it a file or a directory
-        item=self.GetSelection()
-        path=self.itemtopath(item)
-        if path in self.dirhash:
-            if self.dirhash[path]:
-                # directory - we ignore
-                return
-        self.OnHexView(self)
-        
-
-    def OnItemExpanded(self, event):
-        item=event.GetItem()
-        self.OnDirListing(self.itemtopath(item))
-
-    def OnDirListing(self, path):
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.dirlisting, path),
-                     Callback(self.OnDirListingResults, path) )
-
-    def OnDirListingResults(self, path, exception, result):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        item=self.pathtoitem(path)
-        l=[]
-        child,cookie=self.GetFirstChild(item)
-        for dummy in range(0,self.GetChildrenCount(item,False)):
-            l.append(child)
-            child,cookie=self.GetNextChild(item,cookie)
-        # we now have a list of children in l
-        for file in result:
-            f=guihelper.basename(file)
-            found=None
-            for i in l:
-                if self.GetItemText(i)==f:
-                    found=i
-                    break
-            made=0
-            if found is None:
-                found=self.AppendItem(item, f)
-                self.SetPyData(found, None)
-                made=1
-            if result[file]['type']=='file':
-                self.dirhash[result[file]['name']]=0
-                self.SetItemHasChildren(found, False)
-                self.SetItemText(found, `result[file]['size']  `, 1)
-                self.SetItemText(found, "  "+result[file]['date'][1], 2)
-                if self.datacolumn:
-                    self.SetItemText(found, result[file]['data'], 3)
-            else: # it is a directory
-                self.dirhash[result[file]['name']]=1
-                self.SetItemHasChildren(found, True)
-                if made: # only add this for new items
-                    self.SetPyData(self.AppendItem(found, "Retrieving..."), None)
-        for i in l: # remove all children not present in result
-            if not result.has_key(self.itemtopath(i)):
-                self.Delete(i)
-        self.SortChildren(item)
-
-
-    def OnFileSave(self, _):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.getfile, path),
-                     Callback(self.OnFileSaveResults, path) )
-        
-    def OnFileSaveResults(self, path, exception, contents):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        bn=guihelper.basename(path)
-        ext=guihelper.getextension(bn)
-        if len(ext):
-            ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
-        else:
-            ext="All files|*"
-        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wb").write(contents)
-        dlg.Destroy()
-
-    def OnHexView(self, _):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.getfile, path),
-                     Callback(self.OnHexViewResults, path) )
-        
-    def OnHexViewResults(self, path, exception, result):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        # ::TODO:: make this use HexEditor
-##        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
-##                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
-        dlg=hexeditor.HexEditorDialog(self, result, path+" Contents")
-        dlg.Show()
-
-    def OnFileDelete(self, _):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.rmfile, path),
-                     Callback(self.OnFileDeleteResults, guihelper.dirname(path)) )
-        
-    def OnFileDeleteResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
-
-    def OnFileOverwrite(self,_):
-        path=self.itemtopath(self.GetSelection())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
-        dlg.Destroy()
-        
-    def OnFileOverwriteResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
-
-    def OnNewSubdir(self, _):
-        dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        parent=self.itemtopath(self.GetSelection())
-        if len(parent):
-            path=parent+"/"+dlg.GetValue()
-        else:
-            path=dlg.GetValue()
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.mkdir, path),
-                     Callback(self.OnNewSubdirResults, parent) )
-        dlg.Destroy()
-            
-    def OnNewSubdirResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
-        
-    def OnNewFile(self,_):
-        parent=self.itemtopath(self.GetSelection())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(parent):
-            path=parent+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.OnNewFileResults, parent) )
-        dlg.Destroy()
-        
-    def OnNewFileResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
-
-    def OnDirDelete(self, _):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.rmdirs, path),
-                     Callback(self.OnDirDeleteResults, guihelper.dirname(path)) )
-        
-    def OnDirDeleteResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
+    def OnSplitterPosChanged(self,_):
+        pos=self.GetSashPosition()
+        self.mainwindow.config.WriteInt("filesystemsplitterpos", pos)        
 
     def OnPhoneReboot(self,_):
         mw=self.mainwindow
@@ -2164,6 +1906,610 @@ class FileSystemView(wx.gizmos.TreeListCtrl):
         mw=self.mainwindow
         if mw.HandleException(exception): return
 
+    def ShowFiles(self, dir):
+        self.list.ShowFiles(dir)
+
+    def OnNewFileResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.ShowFiles(parentdir)
+
+class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
+    def __init__(self, mainwindow, parent, id, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_SINGLE_SEL):
+        wx.ListCtrl.__init__(self, parent, id, style=style)
+        self.parent=parent
+        self.mainwindow=mainwindow
+        self.path=""
+        self.datacolumn=False # used for debugging and inspection of values
+        self.InsertColumn(0, "Name", width=300)
+        self.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT)
+        self.InsertColumn(2, "Date", width=200)
+        
+        self.files={}
+        self.itemDataMap = self.files
+        self.itemIndexMap = self.files.keys()
+        self.SetItemCount(0)
+
+        if self.datacolumn:
+            self.InsertColumn(3, "Extra Stuff", width=400)
+            listmix.ColumnSorterMixin.__init__(self, 4)
+        else:
+            listmix.ColumnSorterMixin.__init__(self, 3)
+
+        #sort by genre (column 2), A->Z ascending order (1)
+        self.filemenu=wx.Menu()
+        self.filemenu.Append(guihelper.ID_FV_SAVE, "Save ...")
+        self.filemenu.Append(guihelper.ID_FV_HEXVIEW, "Hexdump")
+        self.filemenu.AppendSeparator()
+        self.filemenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.filemenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite ...")
+        # generic menu
+        self.genericmenu=wx.Menu()
+        self.genericmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
+        self.genericmenu.AppendSeparator()
+        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
+        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
+        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
+        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
+        wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
+        wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
+        wx.EVT_LIST_ITEM_ACTIVATED(self,id, self.OnItemActivated)
+        self.image_list=wx.ImageList(16, 16)
+        a={"sm_up":"GO_UP","sm_dn":"GO_DOWN","w_idx":"WARNING","e_idx":"ERROR","i_idx":"QUESTION"}
+        for k,v in a.items():
+            s="self.%s= self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_%s,wx.ART_TOOLBAR,(16,16)))" % (k,v)
+            exec(s)
+        self.img_file=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE,
+                                                             wx.ART_OTHER,
+                                                             (16, 16)))
+        self.SetImageList(self.image_list, wx.IMAGE_LIST_SMALL)
+
+        #if guihelper.IsMSWindows():
+            # turn on drag-and-drag for windows
+            #wx.EVT_MOTION(self, self.OnStartDrag)
+
+        self.__dragging=False
+        self.add_files=[]
+        self.droptarget=guiwidgets.MyFileDropTarget(self, True)
+        self.SetDropTarget(self.droptarget)
+
+    def OnDropFiles(self, _, dummy, filenames):
+        # There is a bug in that the most recently created tab
+        # in the notebook that accepts filedrop receives these
+        # files, not the most visible one.  We find the currently
+        # viewed tab in the notebook and send the files there
+        if self.__dragging:
+            # I'm the drag source, forget 'bout it !
+            return
+        target=self # fallback
+        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        if isinstance(t, FileSystemFileView):
+            # changing target in dragndrop
+            target=t
+        self.add_files=filenames
+        target.OnAddFiles()
+
+    def OnDragOver(self, x, y, d):
+        # force copy (instead of move)
+        return wx._misc.DragCopy
+
+    def OnAddFiles(self):
+        mw=self.mainwindow
+        if not len(self.add_files):
+            return
+        for file in self.add_files:
+            if file is None:
+                continue
+            if len(self.path):
+                path=self.path+"/"+os.path.basename(file)
+            else:
+                path=os.path.basename(file) # you can't create files in root but I won't stop you
+            contents=open(file, "rb").read()
+            mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                         Callback(self.OnAddFilesResults, self.path) )
+            self.add_files.remove(file)
+            # can only add one file at a time
+            break
+
+    def OnAddFilesResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        # add next file if there is one
+        if not len(self.add_files):
+            self.ShowFiles(parentdir)
+        else:
+            self.OnAddFiles()
+
+    if guihelper.IsMSWindows():
+        # drag-and-drop files only works in Windows
+        def OnStartDrag(self, evt):
+            evt.Skip()
+            if not evt.LeftIsDown():
+                return
+            path=self.itemtopath(self.GetFirstSelected())
+            drag_source=wx.DropSource(self)
+            file_names=wx.FileDataObject()
+            file_names.AddFile(path)
+            drag_source.SetData(file_names)
+            self.__dragging=True
+            res=drag_source.DoDragDrop(wx.Drag_AllowMove)
+            self.__dragging=False
+
+    def OnRightUp(self, event):
+        pt = event.GetPosition();
+        item, flags = self.HitTest(pt)
+        if item is not -1:
+            self.Select(item)
+            self.PopupMenu(self.filemenu, pt)
+        else:
+            self.PopupMenu(self.genericmenu, pt)
+                    
+    def OnRightDown(self,event):
+        # You have to capture right down otherwise it doesn't feed you right up
+        pt = event.GetPosition();
+        item, flags = self.HitTest(pt)
+        try:
+            self.Select(item)
+        except:
+            pass
+
+    def OnNewFile(self,_):
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+        infile=dlg.GetPath()
+        contents=open(infile, "rb").read()
+        if len(self.path):
+            path=self.path+"/"+os.path.basename(dlg.GetPath())
+        else:
+            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                     Callback(self.parent.OnNewFileResults, self.path) )
+        dlg.Destroy()
+
+    def OnFileSave(self, _):
+        path=self.itemtopath(self.GetFirstSelected())
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.getfile, path),
+                     Callback(self.OnFileSaveResults, path) )
+        
+    def OnFileSaveResults(self, path, exception, contents):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        bn=guihelper.basename(path)
+        ext=guihelper.getextension(bn)
+        if len(ext):
+            ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
+        else:
+            ext="All files|*"
+        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
+            open(dlg.GetPath(), "wb").write(contents)
+        dlg.Destroy()
+
+    def OnItemActivated(self,_):
+        self.OnHexView(self)
+
+    def OnHexView(self, _):
+        path=self.itemtopath(self.GetFirstSelected())
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.getfile, path),
+                     Callback(self.OnHexViewResults, path) )
+        
+    def OnHexViewResults(self, path, exception, result):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        # ::TODO:: make this use HexEditor
+##        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
+##                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
+        dlg=hexeditor.HexEditorDialog(self, result, path+" Contents")
+        dlg.Show()
+
+    def OnFileDelete(self, _):
+        path=self.itemtopath(self.GetFirstSelected())
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.rmfile, path),
+                     Callback(self.OnFileDeleteResults, guihelper.dirname(path)) )
+        
+    def OnFileDeleteResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.ShowFiles(parentdir)
+
+    def OnFileOverwrite(self,_):
+        path=self.itemtopath(self.GetFirstSelected())
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+        infile=dlg.GetPath()
+        contents=open(infile, "rb").read()
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                     Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
+        dlg.Destroy()
+        
+    def OnFileOverwriteResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.ShowFiles(parentdir)
+
+    def ShowFiles(self, path):
+        mw=self.mainwindow
+        self.path=path
+        mw.MakeCall( Request(mw.wt.dirlisting, path),
+                     Callback(self.OnShowFilesResults, path) )
+        
+    def OnShowFilesResults(self, path, exception, result):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.DeleteAllItems()
+        self.files={}
+        index=0
+        for file in result:
+            if result[file]['type']=='file':
+                index=index+1
+                f=guihelper.basename(file)
+                if self.datacolumn:
+                    self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], result[file]['data'], file)
+                else:
+                    self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], file)
+        self.itemDataMap = self.files
+        self.itemIndexMap = self.files.keys()
+        self.SetItemCount(index)
+        self.SortListItems()
+
+    def itemtopath(self, item):
+        index=self.itemIndexMap[item]
+        if self.datacolumn:
+            return self.itemDataMap[index][4]
+        return self.itemDataMap[index][3]
+
+    def SortItems(self,sorter=None):
+        col=self._col
+        sf=self._colSortFlag[col]
+
+        #creating pairs [column item defined by col, key]
+        items=[]
+        for k,v in self.itemDataMap.items():
+            if col==1:
+                items.append([int(v[col]),k])
+            else:
+                items.append([v[col],k])
+
+        items.sort()
+        k=[key for value, key in items]
+
+        # False is descending
+        if sf==False:
+            k.reverse()
+
+        self.itemIndexMap=k
+
+        #redrawing the list
+        self.Refresh()
+
+    def GetListCtrl(self):
+        return self
+
+    def GetSortImages(self):
+        return (self.sm_dn, self.sm_up)
+
+    def OnGetItemText(self, item, col):
+        index=self.itemIndexMap[item]
+        s = self.itemDataMap[index][col]
+        return s
+
+    def OnGetItemImage(self, item):
+        return self.img_file
+
+    def OnGetItemAttr(self, item):
+        return None
+
+class FileSystemDirectoryView(wx.TreeCtrl):
+    def __init__(self, mainwindow, parent, id, style):
+        wx.TreeCtrl.__init__(self, parent, id, style=style)
+        self.first_time=True;
+        self.parent=parent
+        self.mainwindow=mainwindow
+        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
+        wx.EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
+        wx.EVT_TREE_SEL_CHANGED(self,id, self.OnItemSelected)
+        self.dirmenu=wx.Menu()
+        self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
+        self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_BACKUP, "Backup directory ...")
+        self.dirmenu.Append(guihelper.ID_FV_BACKUP_TREE, "Backup entire tree ...")
+        self.dirmenu.Append(guihelper.ID_FV_RESTORE, "Restore ...")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
+        self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
+        self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
+        self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
+        # generic menu
+        self.genericmenu=wx.Menu()
+        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
+        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
+        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
+        wx.EVT_RIGHT_UP(self, self.OnRightUp)
+        self.image_list=wx.ImageList(16, 16)
+        self.img_dir=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,
+                                                             wx.ART_OTHER,
+                                                             (16, 16)))
+        self.img_dir_open=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER_OPEN,
+                                                             wx.ART_OTHER,
+                                                             (16, 16)))
+        self.SetImageList(self.image_list)
+        self.add_files=[]
+        self.add_target=""
+        self.droptarget=guiwidgets.MyFileDropTarget(self, True, True)
+        self.SetDropTarget(self.droptarget)
+        self.root=self.AddRoot("/")
+        self.item=self.root
+        self.SetPyData(self.root, None)
+        self.SetItemHasChildren(self.root, True)
+        self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
+        self.selections=[]
+        self.dragging=False
+
+    def OnDropFiles(self, x, y, filenames):
+        target=self
+        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        if isinstance(t, FileSystemDirectoryView):
+            # changing target in dragndrop
+            target=t
+        # make sure that the files are being dropped onto a real directory
+        item, flags = self.HitTest((x, y))
+        if item.IsOk():
+            self.SelectItem(item)
+            self.add_target=self.itemtopath(item)
+            self.add_files=filenames
+            target.OnAddFiles()
+        self.dragging=False
+
+    def OnDragOver(self, x, y, d):
+        target=self
+        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        if isinstance(t, FileSystemDirectoryView):
+            # changing target in dragndrop
+            target=t
+        # make sure that the files are being dropped onto a real directory
+        item, flags = self.HitTest((x, y))
+        selections = self.GetSelections()
+        if item.IsOk():
+            if selections != [item]:
+                self.UnselectAll()
+                self.SelectItem(item)
+            return wx._misc.DragCopy
+        elif selections:
+            self.UnselectAll()
+        return wx._misc.DragNone
+
+
+
+
+    def _saveSelection(self):
+        self.selections = self.GetSelections()
+        self.UnselectAll()
+
+    def _restoreSelection(self):
+        self.UnselectAll()
+        for i in self.selections:
+            self.SelectItem(i)
+        self.selections=[]
+
+    def OnEnter(self, x, y, d):
+        self._saveSelection()
+        self.dragging=True
+        return d
+
+    def OnLeave(self):
+        self.dragging=False
+        self._restoreSelection()
+
+    def OnAddFiles(self):
+        mw=self.mainwindow
+        if not len(self.add_files):
+            return
+        for file in self.add_files:
+            if file is None:
+                continue
+            if len(self.add_target):
+                path=self.add_target+"/"+os.path.basename(file)
+            else:
+                path=os.path.basename(file) # you can't create files in root but I won't stop you
+            contents=open(file, "rb").read()
+            mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                         Callback(self.OnAddFilesResults, self.add_target) )
+            self.add_files.remove(file)
+            # can only add one file at a time
+            break
+
+    def OnAddFilesResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        # add next file if there is one
+        if not len(self.add_files):
+            self.parent.ShowFiles(parentdir)
+        else:
+            self.OnAddFiles()
+
+    def OnRightUp(self, event):
+        pt = event.GetPosition();
+        item, flags = self.HitTest(pt)
+        if item.IsOk():
+            self.SelectItem(item)
+            self.PopupMenu(self.dirmenu, pt)
+        else:
+            self.SelectItem(self.item)
+            self.PopupMenu(self.genericmenu, pt)
+                    
+    def OnItemActivated(self,_):
+        if not self.dragging:
+            item=self.GetSelection()
+            path=self.itemtopath(item)
+            self.parent.ShowFiles(path)
+            self.item=item
+
+    def OnItemSelected(self,_):
+        if not self.dragging:
+            item=self.GetSelection()
+            if item.IsOk():
+                path=self.itemtopath(item)
+                self.parent.ShowFiles(path)
+                self.item=item
+
+    def OnItemExpanded(self, event):
+        item=event.GetItem()
+        self.OnDirListing(self.itemtopath(item))
+        if self.first_time:
+            self.parent.ShowFiles("")
+            self.first_time=False
+
+    def OnDirListing(self, path):
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.dirlisting, path),
+                     Callback(self.OnDirListingResults, path) )
+
+    def OnDirListingResults(self, path, exception, result):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        item=self.pathtoitem(path)
+        l=[]
+        child,cookie=self.GetFirstChild(item)
+        for dummy in range(0,self.GetChildrenCount(item,False)):
+            l.append(child)
+            child,cookie=self.GetNextChild(item,cookie)
+        # we now have a list of children in l
+        children=False
+        for file in result:
+            if result[file]['type']=='directory':
+                children=True
+                f=guihelper.basename(file)
+                found=None
+                for i in l:
+                    if self.GetItemText(i)==f:
+                        found=i
+                        break
+                if found is None:
+                    found=self.AppendItem(item, f)
+                    self.SetItemHasChildren(found, has=True)
+                    self.SetPyData(found, None)
+                    self.SetItemImage(found, self.img_dir)
+                    self.SetItemImage(found, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
+                    self.SetPyData(self.AppendItem(found, "Retrieving..."), None)
+        for i in l: # remove all children not present in result
+            if not result.has_key(self.itemtopath(i)):
+                self.Delete(i)
+        if children:
+            self.SetItemHasChildren(item, has=True)
+            self.SetItemImage(item, self.img_dir)
+            self.SetItemImage(item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
+            self.SortChildren(item)
+        else:
+            self.CollapseAndReset(item)
+            self.SetItemHasChildren(item, has=False)
+            self.SetItemImage(item, self.img_dir)
+
+    def OnNewFile(self,_):
+        parent=self.tree.itemtopath(self.tree.GetSelection())
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+        infile=dlg.GetPath()
+        contents=open(infile, "rb").read()
+        if len(parent):
+            path=parent+"/"+os.path.basename(dlg.GetPath())
+        else:
+            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                     Callback(self.parent.OnNewFileResults, parent) )
+        dlg.Destroy()
+
+    def OnNewSubdir(self, _):
+        dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+        item=self.GetSelection()
+        parent=self.itemtopath(item)
+        if len(parent):
+            path=parent+"/"+dlg.GetValue()
+        else:
+            path=dlg.GetValue()
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.mkdir, path),
+                     Callback(self.OnNewSubdirResults, parent) )
+        dlg.Destroy()
+        self.SetItemHasChildren(item, has=True)
+        self.SetItemImage(item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
+            
+    def OnNewSubdirResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.OnDirListing(parentdir)
+        
+    def OnNewFile(self,_):
+        parent=self.itemtopath(self.GetSelection())
+        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+        infile=dlg.GetPath()
+        contents=open(infile, "rb").read()
+        if len(parent):
+            path=parent+"/"+os.path.basename(dlg.GetPath())
+        else:
+            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.writefile, path, contents),
+                     Callback(self.OnNewFileResults, parent) )
+        dlg.Destroy()
+        
+    def OnNewFileResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.parent.ShowFiles(parentdir)
+
+    def OnDirDelete(self, _):
+        path=self.itemtopath(self.GetSelection())
+        mw=self.mainwindow
+        mw.MakeCall( Request(mw.wt.rmdirs, path),
+                     Callback(self.OnDirDeleteResults, guihelper.dirname(path)) )
+        
+    def OnDirDeleteResults(self, parentdir, exception, _):
+        mw=self.mainwindow
+        if mw.HandleException(exception): return
+        self.OnDirListing(parentdir)
 
     def OnBackupTree(self, _):
         self.OnBackup(recurse=100)

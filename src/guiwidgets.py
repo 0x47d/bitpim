@@ -1033,12 +1033,29 @@ class BitFlingSettingsDialog(wx.Dialog):
 ###
 media_codec=phone_media_codec.codec_name
 class MyFileDropTarget(wx.FileDropTarget):
-    def __init__(self, target):
+    def __init__(self, target, drag_over=False, enter_leave=False):
         wx.FileDropTarget.__init__(self)
         self.target=target
+        self.drag_over=drag_over
+        self.enter_leave=enter_leave
         
     def OnDropFiles(self, x, y, filenames):
         return self.target.OnDropFiles(x,y,filenames)
+
+    def OnDragOver(self, x, y, d):
+        if self.drag_over:
+            return self.target.OnDragOver(x,y,d)
+        return wx.FileDropTarget.base_OnDragOver(self, x, y, d)
+
+    def OnEnter(self, x, y, d):
+        if self.enter_leave:
+            return self.target.OnEnter(x,y,d)
+        return wx.FileDropTarget.base_OnEnter(self, x, y, d)
+
+    def OnLeave(self):
+        if self.enter_leave:
+            return self.target.OnLeave()
+        return wx.FileDropTarget.base_OnLeave(self)
 
 class FileView(wx.Panel):
 
