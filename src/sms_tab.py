@@ -329,21 +329,22 @@ class FolderPage(wx.Panel):
 
     def delete_selection(self, data):
         # try to delete an item, return True of successful
-        sel_idx=self._item_list.GetSelection()
-        if not sel_idx.Ok():
+        sel_ids=self._item_list.GetSelections()
+        if not sel_ids:
             return False
-        k=self._item_list.GetPyData(sel_idx)
-        if k is None:
-            # this is not a leaf node
-            return False
-        self._item_list.Delete(sel_idx)
-        self._clear_info()
-        del data[k]
-        del self._data_map[k]
+        for sel_idx in sel_ids:
+            k=self._item_list.GetPyData(sel_idx)
+            if k is None:
+                # this is not a leaf node
+                continue
+            self._item_list.Delete(sel_idx)
+            self._clear_info()
+            del data[k]
+            del self._data_map[k]
         # check for new selection
-        sel_idx=self._item_list.GetSelection()
-        if sel_idx.Ok():
-            self._populate_each(self._item_list.GetPyData(sel_idx))
+        sel_ids=self._item_list.GetSelections()
+        if sel_ids and sel_ids[0].Ok():
+            self._populate_each(self._item_list.GetPyData(sel_ids[0]))
         return True
 
     def publish_today_data(self):
