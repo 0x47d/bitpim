@@ -42,8 +42,8 @@ class SanyoMedia:
         ( 300, 1, 0, "camera", 30),
         )
 
-    wallpaperexts=(".jpg", ".png", ".mp4")
-    ringerexts=(".mid", ".qcp")
+    wallpaperexts=(".jpg", ".png", ".mp4", "3g2")
+    ringerexts=(".mid", ".qcp", ".mp3", ".m4a", ".pmd", ".bin")
 
     def __init__(self):
         pass
@@ -75,10 +75,7 @@ class SanyoMedia:
                         # Wallet pictures
                         imagemedia[res.num3]={'name': res.filename, 'origin': "images"}
                 else:
-                    if res.num3==0:    # Original Camera Picture
-                        idx=ifile+1000*idir
-                    else:
-                        idx=res.num3
+                    idx=ifile+1000*idir
 
                     # Make this more elegant later
                     fname=res.filename
