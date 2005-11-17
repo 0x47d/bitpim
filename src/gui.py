@@ -1906,13 +1906,16 @@ class FileSystemView(wx.SplitterWindow):
         mw=self.mainwindow
         if mw.HandleException(exception): return
 
-    def ShowFiles(self, dir):
-        self.list.ShowFiles(dir)
+    def ShowFiles(self, dir, refresh=False):
+        self.list.ShowFiles(dir, refresh)
 
     def OnNewFileResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         self.ShowFiles(parentdir)
+
+    def SetNoSubdirectory(self, path):
+        self.tree.SetNoSubdirectory(path)
 
 class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
     def __init__(self, mainwindow, parent, id, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_SINGLE_SEL):
@@ -2043,8 +2046,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             self.__dragging=False
 
     def OnRightUp(self, event):
-        pt = event.GetPosition();
-        item, flags = self.HitTest(pt)
+        pt = event.GetPosition();        item, flags = self.HitTest(pt)
         if item is not -1:
             self.Select(item)
             self.PopupMenu(self.filemenu, pt)
@@ -2144,8 +2146,10 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         if mw.HandleException(exception): return
         self.ShowFiles(parentdir)
 
-    def ShowFiles(self, path):
+    def ShowFiles(self, path, refresh=False):
         mw=self.mainwindow
+        if path == self.path and not refresh:
+            return
         self.path=path
         mw.MakeCall( Request(mw.wt.dirlisting, path),
                      Callback(self.OnShowFilesResults, path) )
@@ -2155,6 +2159,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         if mw.HandleException(exception): return
         self.DeleteAllItems()
         self.files={}
+        directory=False
         index=0
         for file in result:
             if result[file]['type']=='file':
@@ -2164,10 +2169,15 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
                     self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], result[file]['data'], file)
                 else:
                     self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], file)
+            else:
+                directory=True
         self.itemDataMap = self.files
         self.itemIndexMap = self.files.keys()
         self.SetItemCount(index)
         self.SortListItems()
+        # we forward this to the directory view to update the + on the tree
+        if not directory:
+            self.parent.SetNoSubdirectory(path)
 
     def itemtopath(self, item):
         index=self.itemIndexMap[item]
@@ -2312,9 +2322,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.UnselectAll()
         return wx._misc.DragNone
 
-
-
-
     def _saveSelection(self):
         self.selections = self.GetSelections()
         self.UnselectAll()
@@ -2379,7 +2386,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.item=item
 
     def OnItemSelected(self,_):
-        if not self.dragging:
+        if not self.dragging and not self.first_time:
             item=self.GetSelection()
             if item.IsOk():
                 path=self.itemtopath(item)
@@ -2437,6 +2444,12 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.CollapseAndReset(item)
             self.SetItemHasChildren(item, has=False)
             self.SetItemImage(item, self.img_dir)
+
+    def SetNoSubdirectory(self, path):
+        item=self.pathtoitem(path)
+        self.CollapseAndReset(item)
+        self.SetItemHasChildren(item, has=False)
+        self.SetItemImage(item, self.img_dir)
 
     def OnNewFile(self,_):
         parent=self.tree.itemtopath(self.tree.GetSelection())
@@ -2589,7 +2602,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         if mw.HandleException(exception): return
         ok=filter(lambda s: s[0], results)
         fail=filter(lambda s: not s[0], results)
-
         if len(parentdir):
             dirs=[]
             for _, name in results:
@@ -2616,13 +2628,12 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         op="Failed to restore some files.  Check the log for reasons.:\n\n"
         for s,n in fail:
             op+="   "+n+"\n"
-
         wx.MessageBox(op, "Some restores failed", wx.OK|wx.ICON_ERROR)
-            
 
     def OnDirRefresh(self, _):
         path=self.itemtopath(self.GetSelection())
         self.OnDirListing(path)
+        self.parent.ShowFiles(path, True)
 
     def itemtopath(self, item):
         if item==self.root: return ""
