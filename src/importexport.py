@@ -1819,6 +1819,8 @@ def GetPhonebookExports():
     # CSV - always possible
     res.append( ('CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
     res.append( ('CSV Calendar...', 'Export the calendar to CSV', OnFileExportCSVCalendar) )
+    # SMS - always possible
+    res.append( ('SMS...', 'Export SMS Messages', OnFileExportSMS))
     return res
 
 class BaseExportDialog(wx.Dialog):
@@ -2360,5 +2362,11 @@ def OnFileExportCSV(parent):
 def OnFileExportCSVCalendar(parent):
     import csv_calendar
     dlg=csv_calendar.ExportCSVDialog(parent, 'Export Calendar to CSV')
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExportSMS(parent):
+    import sms_imexport
+    dlg=sms_imexport.ExportSMSDialog(parent, 'Export SMS')
     dlg.ShowModal()
     dlg.Destroy()

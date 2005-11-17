@@ -11,6 +11,7 @@
 
 import calendar
 import datetime
+import time
 
 class BPTime(object):
     def __init__(self, v=None):
@@ -155,3 +156,7 @@ class BPTime(object):
             self._date=datetime.date(*v[:3])
         if len(v)==5:
             self._time=datetime.time(*v[3:])
+
+    def mktime(self):
+        # return a float compatible with time.time()
+        return time.mktime(datetime.datetime.combine(self._date, self._time).timetuple())

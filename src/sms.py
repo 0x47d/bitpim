@@ -158,7 +158,7 @@ class SMSEntry(object):
     def _get_to(self):
         l=self._data.get('receivers', [])
         if l:
-            return ';'.join([x['name'] for x in l])
+            return ','.join([x['name'] for x in l])
         return self._data.get('_to', '')
     def _set_to(self, v):
         self._set_or_del('_to', v, [''])

@@ -362,6 +362,15 @@ class FolderPage(wx.Panel):
         if evt.data:
             self._item_list.SelectItem(evt.data['id'])
 
+    def get_sel_data(self):
+        # return a dict of selected data
+        res={}
+        for sel_idx in self._item_list.GetSelections():
+            k=self._item_list.GetPyData(sel_idx)
+            if k:
+                res[k]=self._data[k]
+        return res
+
 #-------------------------------------------------------------------------------
 class SMSWidget(wx.Panel):
     _data_key='sms'
@@ -401,6 +410,12 @@ class SMSWidget(wx.Panel):
         dict[self._data_key]=copy.deepcopy(self._data, {})
         dict[self._canned_data_key]=self._canned_data.get().get(
             self._canned_data_key, {})
+
+    def get_selected_data(self):
+        # return a dict of selected items
+        return self._sms.get_sel_data()
+    def get_data(self):
+        return self._data
 
     def populate(self, dict):
         self._data=dict.get(self._data_key, {})
