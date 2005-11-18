@@ -1922,7 +1922,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         wx.ListCtrl.__init__(self, parent, id, style=style)
         self.parent=parent
         self.mainwindow=mainwindow
-        self.path=""
+        self.path=None
         self.datacolumn=False # used for debugging and inspection of values
         self.InsertColumn(0, "Name", width=300)
         self.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT)
@@ -2042,7 +2042,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             file_names.AddFile(path)
             drag_source.SetData(file_names)
             self.__dragging=True
-            res=drag_source.DoDragDrop(wx.Drag_AllowMove)
+            res=drag_source.DoDragDrop(wx.Drag_CopyOnly)
             self.__dragging=False
 
     def OnRightUp(self, event):
@@ -2150,13 +2150,14 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         mw=self.mainwindow
         if path == self.path and not refresh:
             return
-        self.path=path
+        self.path=None
         mw.MakeCall( Request(mw.wt.dirlisting, path),
                      Callback(self.OnShowFilesResults, path) )
         
     def OnShowFilesResults(self, path, exception, result):
         mw=self.mainwindow
         if mw.HandleException(exception): return
+        self.path=path
         self.DeleteAllItems()
         self.files={}
         directory=False
@@ -2396,9 +2397,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnItemExpanded(self, event):
         item=event.GetItem()
         self.OnDirListing(self.itemtopath(item))
-        if self.first_time:
-            self.parent.ShowFiles("")
-            self.first_time=False
 
     def OnDirListing(self, path):
         mw=self.mainwindow
@@ -2444,6 +2442,9 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.CollapseAndReset(item)
             self.SetItemHasChildren(item, has=False)
             self.SetItemImage(item, self.img_dir)
+        if self.first_time:
+            self.parent.ShowFiles("")
+            self.first_time=False
 
     def SetNoSubdirectory(self, path):
         item=self.pathtoitem(path)
