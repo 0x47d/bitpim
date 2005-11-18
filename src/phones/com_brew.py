@@ -425,7 +425,8 @@ class RealBrewProtocol:
             req=p_brew.statfilerequest()
             req.filename=name
             res=self.sendbrewcommand(req, p_brew.statfileresponse)
-            results={ 'name': name, 'type': 'file', 'size': res.size }
+            results={ 'name': name, 'type': 'file', 'size': res.size,
+                      'datevalue': res.date }
             if res.date==0:
                 results['date']=(0, '')
             else:

@@ -31,7 +31,7 @@ class ExportSMSDialog(wx.Dialog):
         vbs=wx.BoxSizer(wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, "File"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
-        self.filenamectrl=wx.TextCtrl(self, -1, "sms.mbox")
+        self.filenamectrl=wx.TextCtrl(self, -1, "sms_export")
         hbs.Add(self.filenamectrl, 1, wx.ALL|wx.EXPAND, 5)
         self.browsectrl=wx.Button(self, wx.NewId(), "Browse...")
         hbs.Add(self.browsectrl, 0, wx.ALL|wx.EXPAND, 5)

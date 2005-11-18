@@ -383,7 +383,15 @@ def fmts_LGBIT(ifi):
         res.append( '%d BPP'%ifi.bpp)
     return ' '.join(res)
 
-
+def idimg_3GPP2(f):
+    "Identify a 3GPP2(3g2) file"
+    if f.GetBytes(4, 8)!='ftyp3g2a':
+        # Not a 3GPP2 file
+        return None
+    d={ 'format': '3GPP2',
+        'mimetypes': ['video/3gpp2'] }
+    return ImgFileInfo(f, **d)
+    
 imageids=[globals()[f] for f in dir() if f.startswith("idimg_")]
 def identify_imagefile(filename):
     v=thefileinfocache.get(filename)

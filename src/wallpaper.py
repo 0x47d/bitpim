@@ -296,12 +296,16 @@ class WallpaperView(guiwidgets.FileView):
             return guihelper.getresourcefile('wallpaper.png'), wx.Image
         if self.isBCI(file):
             return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
-        if fi is not None and fi.format=='AVI':
-            # return the 1st frame of the AVI file
-            return file, conversions.convertavitobmp
-        # LG phones may return a proprietary wallpaper media file, LGBIT
-        if fi is not None and fi.format=='LGBIT':
-            return file, conversions.convertfilelgbittobmp
+        if fi:
+            if fi.format=='AVI':
+                # return the 1st frame of the AVI file
+                return file, conversions.convertavitobmp
+            if fi.format=='LGBIT':
+                # LG phones may return a proprietary wallpaper media file, LGBIT
+                return file, conversions.convertfilelgbittobmp
+            if fi.format=='3GPP2':
+                # video format, can't yet display the firts frame.
+                return file, lambda name: None
         return file, wx.Image
 
     def GetFileInfo(self, filename):

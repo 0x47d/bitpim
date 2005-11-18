@@ -62,6 +62,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
 
     wallpaperlocations= (
         ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0),
+        ( 'video', 'dload/video.dat', None, 'brew/16452/mf', 1000, 50, 0x0304, 0),
         )
 
     # for removable media (miniSD cards)
@@ -77,6 +78,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             'maxsize': 155,
             'indexfile': 'dload/my_ringtone.dat',
             'sizefile': 'dload/my_ringtonesize.dat',
+            'dunno': 0, 'date': False,
         },
          'images': {
              'localpath': 'brew/16452/mp',
@@ -86,7 +88,18 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
              'index': 100,
              'maxsize': 155,
              'indexfile': 'dload/image.dat',
-             'sizefile': 'dload/imagesize.dat' }
+             'sizefile': 'dload/imagesize.dat',
+             'dunno': 0, 'date': False },
+         'video': {
+             'localpath': 'brew/16452/mf',
+             'rspath': None,
+             'vtype': protocolclass.MEDIA_TYPE_VIDEO,
+             'icon': protocolclass.MEDIA_VIDEO_DEFAULT_ICON,
+             'index': 1000,
+             'maxsize': 155,
+             'indexfile': 'dload/video.dat',
+             'sizefile': 'dload/videosize.dat',
+             'dunno': 0, 'date': True },
          }
         
     def __init__(self, logtarget, commport):
@@ -165,15 +178,18 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _icon=_info['icon']
         _index=_info['index']
         _maxsize=_info['maxsize']
+        _dunno=_info['dunno']
         indexfile=_info['indexfile']
         sizefile=_info['sizefile']
+        _need_date=_info['date']
         try:
             _files=self.listfiles(_local_dir)
         except (com_brew.BrewNoSuchDirectoryException,
                 com_brew.BrewBadPathnameException):
             pass
         try:
-            _files.update(self.listfiles(_rs_dir))
+            if _rs_dir:
+                _files.update(self.listfiles(_rs_dir))
         except (com_brew.BrewNoSuchDirectoryException,
                 com_brew.BrewBadPathnameException):
             # dir does not exist, no media files available
@@ -187,29 +203,37 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _idx_cnt=_index+len(idxlist)-1
         _file_size=0
         for idx in idxlist:
+            _fs_size=_files[idx]['size']
             ie=self.protocolclass.indexentry()
             ie.index=_idx_cnt
             ie.type=_vtype
             ie.filename=idx
+            if _need_date:
+                # need to fill in the date value
+                _stat=self.statfile(_files[idx]['name'])
+                if _stat:
+                    ie.date=_stat['datevalue']-time.timezone
             # ie.date left as zero
-            ie.dunno=0 # mmmm
+            ie.dunno=_dunno
             ie.icon=_icon
+            ie.size=_fs_size
             ifile.items.append(ie)
             _idx_cnt-=1
             if not self._is_rs_file(idx):
-                _file_size+=_files[idx]['size']
+                _file_size+=_fs_size
         buf=prototypes.buffer()
         ifile.writetobuffer(buf)
         self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
         self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
         self.writefile(_info['indexfile'], buf.getvalue())
         # writing the size file
-        szfile=self.protocolclass.sizefile()
-        szfile.size=_file_size
-        buf=prototypes.buffer()
-        szfile.writetobuffer(buf)
-        self.log("You are using a total of "+`_file_size`+" bytes for "+type)
-        self.writefile(sizefile, buf.getvalue())
+        if sizefile:
+            szfile=self.protocolclass.sizefile()
+            szfile.size=_file_size
+            buf=prototypes.buffer()
+            szfile.writetobuffer(buf)
+            self.log("You are using a total of "+`_file_size`+" bytes for "+type)
+            self.writefile(sizefile, buf.getvalue())
 
     def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
         """Actually saves out the media
@@ -252,7 +276,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                     if not merge and data is None:
                         # delete the entry
                         continue
-                    assert index>=lowestindex
+##                    assert index>=lowestindex
                     init[type][index]={'name': name, 'data': data, 'filename': fullname, 'vtype': vtype, 'icon': icon}
 
         # init now contains everything from wallpaper-index
