@@ -52,7 +52,7 @@ class ExportSMSDialog(wx.Dialog):
     _formats=('mbox', 'CSV')
     def GetSelectionGui(self, parent):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Rows"), wx.VERTICAL)
+        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "SMS Messages"), wx.VERTICAL)
         lsel=len(self._sel_data)
         lall=len(self._data)
         self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
