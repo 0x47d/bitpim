@@ -1742,7 +1742,17 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         try:
-            return self.commphone.getfilesystem(path, recurse)
+            _res=self.commphone.getfilesystem(path, recurse)
+            if not recurse:
+                for k,_entry in _res.items():
+                    if _entry['type']=='directory':
+                        # check to see of it has any childrem
+                        self.log('listing subdir '+_entry['name'])
+                        try:
+                            _entry['has_dirs']=bool(self.commphone.listsubdirs(_entry['name']))
+                        except:
+                            _entry['has_dirs']=False
+            return _res
         except:
             self.log('Failed to read dir: '+path)
             return {}
@@ -1912,7 +1922,7 @@ class FileSystemView(wx.SplitterWindow):
     def OnNewFileResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.ShowFiles(parentdir)
+        self.ShowFiles(parentdir, True)
 
     def SetNoSubdirectory(self, path):
         self.tree.SetNoSubdirectory(path)
@@ -2026,7 +2036,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         if mw.HandleException(exception): return
         # add next file if there is one
         if not len(self.add_files):
-            self.ShowFiles(parentdir)
+            self.ShowFiles(parentdir, True)
         else:
             self.OnAddFiles()
 
@@ -2046,7 +2056,8 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             self.__dragging=False
 
     def OnRightUp(self, event):
-        pt = event.GetPosition();        item, flags = self.HitTest(pt)
+        pt = event.GetPosition()
+        item, flags = self.HitTest(pt)
         if item is not -1:
             self.Select(item)
             self.PopupMenu(self.filemenu, pt)
@@ -2126,7 +2137,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
     def OnFileDeleteResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.ShowFiles(parentdir)
+        self.ShowFiles(parentdir, True)
 
     def OnFileOverwrite(self,_):
         path=self.itemtopath(self.GetFirstSelected())
@@ -2144,7 +2155,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
     def OnFileOverwriteResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.ShowFiles(parentdir)
+        self.ShowFiles(parentdir, True)
 
     def ShowFiles(self, path, refresh=False):
         mw=self.mainwindow
@@ -2234,7 +2245,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.parent=parent
         self.mainwindow=mainwindow
         wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
-        wx.EVT_TREE_ITEM_ACTIVATED(self,id, self.OnItemActivated)
         wx.EVT_TREE_SEL_CHANGED(self,id, self.OnItemSelected)
         self.dirmenu=wx.Menu()
         self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
@@ -2365,7 +2375,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         if mw.HandleException(exception): return
         # add next file if there is one
         if not len(self.add_files):
-            self.parent.ShowFiles(parentdir)
+            self.parent.ShowFiles(parentdir, True)
         else:
             self.OnAddFiles()
 
@@ -2379,13 +2389,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.SelectItem(self.item)
             self.PopupMenu(self.genericmenu, pt)
                     
-    def OnItemActivated(self,_):
-        if not self.dragging:
-            item=self.GetSelection()
-            path=self.itemtopath(item)
-            self.parent.ShowFiles(path)
-            self.item=item
-
     def OnItemSelected(self,_):
         if not self.dragging and not self.first_time:
             item=self.GetSelection()
@@ -2397,6 +2400,9 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnItemExpanded(self, event):
         item=event.GetItem()
         self.OnDirListing(self.itemtopath(item))
+        if self.first_time:
+            self.first_time=False
+            self.parent.ShowFiles('')
 
     def OnDirListing(self, path):
         mw=self.mainwindow
@@ -2407,67 +2413,24 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         item=self.pathtoitem(path)
-        l=[]
-        child,cookie=self.GetFirstChild(item)
-        for dummy in range(0,self.GetChildrenCount(item,False)):
-            l.append(child)
-            child,cookie=self.GetNextChild(item,cookie)
-        # we now have a list of children in l
-        children=False
-        for file in result:
-            if result[file]['type']=='directory':
-                children=True
-                f=guihelper.basename(file)
-                found=None
-                for i in l:
-                    if self.GetItemText(i)==f:
-                        found=i
-                        break
-                if found is None:
-                    found=self.AppendItem(item, f)
-                    self.SetItemHasChildren(found, has=True)
-                    self.SetPyData(found, None)
-                    self.SetItemImage(found, self.img_dir)
-                    self.SetItemImage(found, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
-                    self.SetPyData(self.AppendItem(found, "Retrieving..."), None)
-        for i in l: # remove all children not present in result
-            if not result.has_key(self.itemtopath(i)):
-                self.Delete(i)
-        if children:
-            self.SetItemHasChildren(item, has=True)
-            self.SetItemImage(item, self.img_dir)
-            self.SetItemImage(item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
-            self.SortChildren(item)
-        else:
-            self.CollapseAndReset(item)
-            self.SetItemHasChildren(item, has=False)
-            self.SetItemImage(item, self.img_dir)
-        if self.first_time:
-            self.parent.ShowFiles("")
-            self.first_time=False
+        self.DeleteChildren(item)
+        for k,_file in result.items():
+            if _file['type']!='directory':
+                continue
+            _name=guihelper.basename(k)
+            _id=self.AppendItem(item, _name)
+            self.SetItemImage(_id, self.img_dir)
+            if _file['has_dirs']:
+                self.AppendItem(_id, "Retrieving...")
+                self.SetItemImage(_id, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
+            self.SetPyData(_id, None)
+        self.SortChildren(item)
 
     def SetNoSubdirectory(self, path):
         item=self.pathtoitem(path)
         self.CollapseAndReset(item)
         self.SetItemHasChildren(item, has=False)
         self.SetItemImage(item, self.img_dir)
-
-    def OnNewFile(self,_):
-        parent=self.tree.itemtopath(self.tree.GetSelection())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(parent):
-            path=parent+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.parent.OnNewFileResults, parent) )
-        dlg.Destroy()
 
     def OnNewSubdir(self, _):
         dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
@@ -2512,7 +2475,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnNewFileResults(self, parentdir, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.parent.ShowFiles(parentdir)
+        self.parent.ShowFiles(parentdir, True)
 
     def OnDirDelete(self, _):
         path=self.itemtopath(self.GetSelection())
