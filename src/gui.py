@@ -1747,9 +1747,8 @@ class WorkerThread(WorkerThreadFramework):
                 for k,_entry in _res.items():
                     if _entry['type']=='directory':
                         # check to see of it has any childrem
-                        self.log('listing subdir '+_entry['name'])
                         try:
-                            _entry['has_dirs']=bool(self.commphone.listsubdirs(_entry['name']))
+                            _entry['has_dirs']=self.commphone.hassubdirs(_entry['name'])
                         except:
                             _entry['has_dirs']=False
             return _res
@@ -2241,11 +2240,9 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
 class FileSystemDirectoryView(wx.TreeCtrl):
     def __init__(self, mainwindow, parent, id, style):
         wx.TreeCtrl.__init__(self, parent, id, style=style)
-        self.first_time=True;
         self.parent=parent
         self.mainwindow=mainwindow
-        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
-        wx.EVT_TREE_SEL_CHANGED(self,id, self.OnItemSelected)
+        wx.EVT_TREE_ITEM_EXPANDED(self, id, self._OnItemExpanded0)
         self.dirmenu=wx.Menu()
         self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
         self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
@@ -2390,19 +2387,24 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.PopupMenu(self.genericmenu, pt)
                     
     def OnItemSelected(self,_):
-        if not self.dragging and not self.first_time:
+        if not self.dragging:
             item=self.GetSelection()
             if item.IsOk():
                 path=self.itemtopath(item)
                 self.parent.ShowFiles(path)
                 self.item=item
 
-    def OnItemExpanded(self, event):
+    def _OnItemExpanded0(self, event):
         item=event.GetItem()
         self.OnDirListing(self.itemtopath(item))
-        if self.first_time:
-            self.first_time=False
-            self.parent.ShowFiles('')
+        self.parent.ShowFiles('')
+        FileSystemDirectoryView.OnItemExpanded=FileSystemDirectoryView._OnItemExpanded1
+        wx.EVT_TREE_SEL_CHANGED(self, self.GetId(), self.OnItemSelected)
+        wx.EVT_TREE_ITEM_EXPANDED(self, self.GetId(), self._OnItemExpanded1)
+
+    def _OnItemExpanded1(self, event):
+        item=event.GetItem()
+        self.OnDirListing(self.itemtopath(item))
 
     def OnDirListing(self, path):
         mw=self.mainwindow

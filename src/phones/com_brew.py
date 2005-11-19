@@ -382,6 +382,22 @@ class RealBrewProtocol:
                 results.update(self.listsubdirs(_subdir['name'], recurse-1))
         return results
 
+    def hassubdirs(self, dir=''):
+        self.log('Checking for subdirs in dir: "'+dir+'"')
+        req=p_brew.listdirectoryrequest()
+        req.dirname=dir
+        req.entrynumber=0
+        try:
+            res=self.sendbrewcommand(req,p_brew.listdirectoryresponse)
+            # there's at least one subdir
+            return True
+        except BrewNoMoreEntriesException:
+            return False
+        except:
+            if __debug__:
+                raise
+            return False
+
     def listfiles(self, dir=''):
         results={}
         self.log("Listing files in dir: '"+dir+"'")
@@ -537,67 +553,7 @@ class RealBrewProtocol:
             file_cache.add(file, node.get('date', [0])[0], data)
         return data
 
-    class DirCache:
-        """This is a class that lets you do various filesystem manipulations and
-        it remembers the data.  Typical usage would be if you make changes to
-        files (adding, removing, rewriting) and then have to keep checking if
-        files exist, add sizes etc.  This class saves the hassle of rereading
-        the directory every single time.  Note that it will only see changes
-        you make via this class.  If you go directly to the Brew class then
-        those won't be seen.
-        """
-        def __init__(self, target):
-            "@param target: where operations should be done after recording them here"
-            self.__target=target
-            self.__cache={}
-
-        def rmfile(self, filename):
-            res=self.__target.rmfile(filename)
-            node=self._getdirectory(brewdirname(filename))
-            if node is None: # we didn't have it
-                return
-            del node[brewbasename(filename)]
-            return res
-
-        def stat(self, filename):
-            node=self._getdirectory(brewdirname(filename), ensure=True)
-            return node.get(brewbasename(filename), None)
-
-        def readfile(self, filename):
-            node=self._getdirectory(brewdirname(filename), ensure=True)
-            file=node.get(brewbasename(filename), None)
-            if file is None:
-                raise BrewNoSuchFileException()
-            # This class only populates the 'data' portion of the file obj when needed
-            data=file.get('data', None)
-            if data is None:
-                data=self.__target.getfilecontents(filename)
-                file['data']=data
-            return data
-
-        def writefile(self, filename, contents):
-            res=self.__target.writefile(filename, contents)
-            node=self._getdirectory(brewdirname(filename), ensure=True)
-            # we can't put the right date in since we have no idea
-            # what the timezone (or the time for that matter) on the
-            # phone is
-            stat=node.get(brewbasename(filename), {'name': filename, 'type': 'file', 'date': (0, "")})
-            stat['size']=len(contents)
-            stat['data']=contents
-            node[brewbasename(filename)]=stat
-            return res
-
-        def _getdirectory(self, dirname, ensure=False):
-            if not ensure:
-                return self.__cache.get(dirname, None)
-            node=self.__cache.get(dirname, None)
-            if node is not None: return node
-            node={}
-            fs=self.__target.getfilesystem(dirname)
-            for filename in fs.keys():
-                node[brewbasename(filename)]=fs[filename]
-            self.__cache[dirname]=node
-            return node
+    DirCache=_DirCache
 
     def _setmodebrew(self):
         req=p_brew.memoryconfigrequest()
