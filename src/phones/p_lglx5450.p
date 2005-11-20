@@ -10,7 +10,7 @@
 
 %{
 
-"""Various descriptions of data specific to LG VX5450"""
+"""Various descriptions of data specific to LG LX5450"""
 
 from prototypes import *
 
@@ -261,7 +261,7 @@ PACKET sms_in:
     169 DATA unknown6   # ?? inlcudes senders phone number in ascii
 
 PACKET sms_quick_text:
-# the vx5450 has variable length NULL terminated strings null terminated in it's canned messages
+# the lx5450 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
         * STRING {} msg #
