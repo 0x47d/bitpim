@@ -1742,18 +1742,47 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         try:
-            _res=self.commphone.getfilesystem(path, recurse)
-            if not recurse:
-                for k,_entry in _res.items():
-                    if _entry['type']=='directory':
-                        # check to see of it has any childrem
-                        try:
-                            _entry['has_dirs']=self.commphone.hassubdirs(_entry['name'])
-                        except:
-                            _entry['has_dirs']=False
-            return _res
+            return self.commphone.getfilesystem(path, recurse)
         except:
             self.log('Failed to read dir: '+path)
+            return {}
+
+    def getfileonlylist(self, path):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        try:
+            return self.commphone.listfiles(path)
+        except:
+            self.log('Failed to read filesystem')
+            return {}
+
+    def getdironlylist(self, path, recurse):
+        results=self.commphone.listsubdirs(path)
+        subdir_list=[x['name'] for k,x in results.items()]
+        if recurse:
+            for _subdir in subdir_list:
+                try:
+                    results.update(self.getdironlylist(_subdir, recurse))
+                except:
+                    self.log('Failed to list directories in ' +_subdir)
+        return results
+
+    def fulldirlisting(self):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        try:
+            return self.getdironlylist("", True)
+        except:
+            self.log('Failed to read filesystem')
+            return {}
+
+    def singledirlisting(self, path):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        try:
+            return self.getdironlylist(path, False)
+        except:
+            self.log('Failed to read filesystem')
             return {}
 
     def getfile(self, path):
@@ -1879,6 +1908,12 @@ class FileSystemView(wx.SplitterWindow):
         self.SplitVertically(self.tree, self.list, pos)
         self.SetMinimumPaneSize(20)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
+        pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
+
+    def OnPhoneModelChanged(self, msg):
+        # if the phone changes we reset ourselves
+        self.list.ResetView()
+        self.tree.ResetView()
 
     def OnSplitterPosChanged(self,_):
         pos=self.GetSashPosition()
@@ -1923,24 +1958,17 @@ class FileSystemView(wx.SplitterWindow):
         if mw.HandleException(exception): return
         self.ShowFiles(parentdir, True)
 
-    def SetNoSubdirectory(self, path):
-        self.tree.SetNoSubdirectory(path)
-
 class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
     def __init__(self, mainwindow, parent, id, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_SINGLE_SEL):
         wx.ListCtrl.__init__(self, parent, id, style=style)
         self.parent=parent
         self.mainwindow=mainwindow
-        self.path=None
         self.datacolumn=False # used for debugging and inspection of values
         self.InsertColumn(0, "Name", width=300)
         self.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT)
         self.InsertColumn(2, "Date", width=200)
-        
-        self.files={}
-        self.itemDataMap = self.files
-        self.itemIndexMap = self.files.keys()
-        self.SetItemCount(0)
+
+        self.ResetView()        
 
         if self.datacolumn:
             self.InsertColumn(3, "Extra Stuff", width=400)
@@ -2156,12 +2184,20 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         if mw.HandleException(exception): return
         self.ShowFiles(parentdir, True)
 
+    def ResetView(self):
+        self.DeleteAllItems()
+        self.files={}
+        self.path=None
+        self.itemDataMap = self.files
+        self.itemIndexMap = self.files.keys()
+        self.SetItemCount(0)
+
     def ShowFiles(self, path, refresh=False):
         mw=self.mainwindow
         if path == self.path and not refresh:
             return
         self.path=None
-        mw.MakeCall( Request(mw.wt.dirlisting, path),
+        mw.MakeCall( Request(mw.wt.getfileonlylist, path),
                      Callback(self.OnShowFilesResults, path) )
         
     def OnShowFilesResults(self, path, exception, result):
@@ -2170,25 +2206,18 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         self.path=path
         self.DeleteAllItems()
         self.files={}
-        directory=False
         index=0
         for file in result:
-            if result[file]['type']=='file':
-                index=index+1
-                f=guihelper.basename(file)
-                if self.datacolumn:
-                    self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], result[file]['data'], file)
-                else:
-                    self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], file)
+            index=index+1
+            f=guihelper.basename(file)
+            if self.datacolumn:
+                self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], result[file]['data'], file)
             else:
-                directory=True
+                self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], file)
         self.itemDataMap = self.files
         self.itemIndexMap = self.files.keys()
         self.SetItemCount(index)
         self.SortListItems()
-        # we forward this to the directory view to update the + on the tree
-        if not directory:
-            self.parent.SetNoSubdirectory(path)
 
     def itemtopath(self, item):
         index=self.itemIndexMap[item]
@@ -2242,7 +2271,8 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         wx.TreeCtrl.__init__(self, parent, id, style=style)
         self.parent=parent
         self.mainwindow=mainwindow
-        wx.EVT_TREE_ITEM_EXPANDED(self, id, self._OnItemExpanded0)
+        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
+        wx.EVT_TREE_SEL_CHANGED(self,id, self.OnItemSelected)
         self.dirmenu=wx.Menu()
         self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
         self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
@@ -2255,14 +2285,17 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.dirmenu.AppendSeparator()
         self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.dirmenu.AppendSeparator()
+        self.dirmenu.Append(guihelper.ID_FV_TOTAL_REFRESH, "Refresh Filesystem")
         self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
         self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
         self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
         # generic menu
         self.genericmenu=wx.Menu()
+        self.genericmenu.Append(guihelper.ID_FV_TOTAL_REFRESH, "Refresh Filesystem")
         self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
         self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
         self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
+        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_TOTAL_REFRESH, self.OnRefresh)
         wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
         wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
         wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
@@ -2273,6 +2306,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
+        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_TOTAL_REFRESH, self.OnRefresh)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
@@ -2289,10 +2323,17 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.add_target=""
         self.droptarget=guiwidgets.MyFileDropTarget(self, True, True)
         self.SetDropTarget(self.droptarget)
+        self.ResetView()
+
+    def ResetView(self):
+        self.first_time=True
+        self.DeleteAllItems()
         self.root=self.AddRoot("/")
         self.item=self.root
         self.SetPyData(self.root, None)
         self.SetItemHasChildren(self.root, True)
+        self.SetItemImage(self.root, self.img_dir)
+        self.SetItemImage(self.root, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.selections=[]
         self.dragging=False
@@ -2387,52 +2428,98 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.PopupMenu(self.genericmenu, pt)
                     
     def OnItemSelected(self,_):
-        if not self.dragging:
+        if not self.dragging and not self.first_time:
             item=self.GetSelection()
             if item.IsOk():
                 path=self.itemtopath(item)
                 self.parent.ShowFiles(path)
+                self.OnDirListing(path)
                 self.item=item
 
-    def _OnItemExpanded0(self, event):
+    def OnItemExpanded(self, event):
         item=event.GetItem()
-        self.OnDirListing(self.itemtopath(item))
-        self.parent.ShowFiles('')
-        FileSystemDirectoryView.OnItemExpanded=FileSystemDirectoryView._OnItemExpanded1
-        wx.EVT_TREE_SEL_CHANGED(self, self.GetId(), self.OnItemSelected)
-        wx.EVT_TREE_ITEM_EXPANDED(self, self.GetId(), self._OnItemExpanded1)
+        if self.first_time:
+            self.GetFullFS()
+        else:
+            path=self.itemtopath(item)
+            self.OnDirListing(path)
 
-    def _OnItemExpanded1(self, event):
-        item=event.GetItem()
-        self.OnDirListing(self.itemtopath(item))
+    def AddDirectory(self, location, name):
+        new_item=self.AppendItem(location, name)
+        self.SetPyData(new_item, None)
+        self.SetItemImage(new_item, self.img_dir)
+        self.SetItemImage(new_item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
+        # workaround for bug, + does not get displayed if this is the first child
+        if self.GetChildrenCount(location, False) == 1 and not self.IsExpanded(location):
+            self.Expand(location)
+            self.Collapse(location)
+        return new_item
+
+    def RemoveDirectory(self, parent, item):
+        # if this is the last item in the parent we need to collapse the parent
+        if self.GetChildrenCount(parent, False) == 1:
+            self.Collapse(parent)
+        self.Delete(item)
+
+    def GetFullFS(self):
+        mw=self.mainwindow
+        mw.OnBusyStart()
+        mw.GetStatusBar().progressminor(0, 100, 'Reading Phone File System ...')
+        mw.MakeCall( Request(mw.wt.fulldirlisting),
+                     Callback(self.OnFullDirListingResults) )
+
+    def OnFullDirListingResults(self, exception, result):
+        mw=self.mainwindow
+        mw.OnBusyEnd()
+        if mw.HandleException(exception): return
+        self.first_time=False
+        root=self.pathtoitem("")
+        # note: this select will cause ShowFiles to get called in the parent
+        self.SelectItem(root)
+        self.DeleteChildren(root)
+        keys=result.keys()
+        keys.sort()
+        # build up the tree
+        for k in keys:
+            path, dir=os.path.split(k)
+            item=self.pathtoitem(path)
+            self.AddDirectory(item, dir)
 
     def OnDirListing(self, path):
         mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.dirlisting, path),
+        mw.MakeCall( Request(mw.wt.singledirlisting, path),
                      Callback(self.OnDirListingResults, path) )
 
     def OnDirListingResults(self, path, exception, result):
         mw=self.mainwindow
         if mw.HandleException(exception): return
         item=self.pathtoitem(path)
-        self.DeleteChildren(item)
-        for k,_file in result.items():
-            if _file['type']!='directory':
-                continue
-            _name=guihelper.basename(k)
-            _id=self.AppendItem(item, _name)
-            self.SetItemImage(_id, self.img_dir)
-            if _file['has_dirs']:
-                self.AppendItem(_id, "Retrieving...")
-                self.SetItemImage(_id, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
-            self.SetPyData(_id, None)
-        self.SortChildren(item)
-
-    def SetNoSubdirectory(self, path):
-        item=self.pathtoitem(path)
-        self.CollapseAndReset(item)
-        self.SetItemHasChildren(item, has=False)
-        self.SetItemImage(item, self.img_dir)
+        l=[]
+        child,cookie=self.GetFirstChild(item)
+        for dummy in range(0,self.GetChildrenCount(item,False)):
+            l.append(child)
+            child,cookie=self.GetNextChild(item,cookie)
+        # we now have a list of children in l
+        sort=False
+        for file in result:
+            children=True
+            f=guihelper.basename(file)
+            found=None
+            for i in l:
+                if self.GetItemText(i)==f:
+                    found=i
+                    break
+            if found is None:
+                # this only happens if the phone has added the directory
+                # after we got the initial file view, unusual but possible
+                found=self.AddDirectory(item, f)
+                self.OnDirListing(file)
+                sort=True
+        for i in l: # remove all children not present in result
+            if not result.has_key(self.itemtopath(i)):
+                self.RemoveDirectory(item, i)
+        if sort:
+            self.SortChildren(item)
 
     def OnNewSubdir(self, _):
         dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
@@ -2447,15 +2534,19 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             path=dlg.GetValue()
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.mkdir, path),
-                     Callback(self.OnNewSubdirResults, parent) )
+                     Callback(self.OnNewSubdirResults, path) )
         dlg.Destroy()
-        self.SetItemHasChildren(item, has=True)
-        self.SetItemImage(item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
             
-    def OnNewSubdirResults(self, parentdir, exception, _):
+    def OnNewSubdirResults(self, new_path, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
+        path, dir=os.path.split(new_path)
+        item=self.pathtoitem(path)
+        self.AddDirectory(item, dir)
+        self.SortChildren(item)
+        self.Expand(item)
+        # requery the phone just incase
+        self.OnDirListing(path)
         
     def OnNewFile(self,_):
         parent=self.itemtopath(self.GetSelection())
@@ -2483,12 +2574,18 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         path=self.itemtopath(self.GetSelection())
         mw=self.mainwindow
         mw.MakeCall( Request(mw.wt.rmdirs, path),
-                     Callback(self.OnDirDeleteResults, guihelper.dirname(path)) )
+                     Callback(self.OnDirDeleteResults, path) )
         
-    def OnDirDeleteResults(self, parentdir, exception, _):
+    def OnDirDeleteResults(self, path, exception, _):
         mw=self.mainwindow
         if mw.HandleException(exception): return
-        self.OnDirListing(parentdir)
+        # remove the directory from the view
+        parent, dir=os.path.split(path)
+        parent_item=self.pathtoitem(parent)
+        del_item=self.pathtoitem(path)
+        self.RemoveDirectory(parent_item, del_item)
+        # requery the phone just incase
+        self.OnDirListing(parent)
 
     def OnBackupTree(self, _):
         self.OnBackup(recurse=100)
@@ -2568,6 +2665,8 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         if mw.HandleException(exception): return
         ok=filter(lambda s: s[0], results)
         fail=filter(lambda s: not s[0], results)
+
+        # re-read the filesystem (if anything was restored)
         if len(parentdir):
             dirs=[]
             for _, name in results:
@@ -2598,8 +2697,10 @@ class FileSystemDirectoryView(wx.TreeCtrl):
 
     def OnDirRefresh(self, _):
         path=self.itemtopath(self.GetSelection())
-        self.OnDirListing(path)
         self.parent.ShowFiles(path, True)
+
+    def OnRefresh(self, _):
+        self.GetFullFS()
 
     def itemtopath(self, item):
         if item==self.root: return ""
