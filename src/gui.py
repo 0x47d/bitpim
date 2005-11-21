@@ -1910,6 +1910,9 @@ class FileSystemView(wx.SplitterWindow):
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
         pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
 
+    def __del__(self):
+        pubsub.unsubscribe(self.OnPhoneModelChanged)
+
     def OnPhoneModelChanged(self, msg):
         # if the phone changes we reset ourselves
         self.list.ResetView()
@@ -2337,6 +2340,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.selections=[]
         self.dragging=False
+        self.skip_dir_list=False
 
     def OnDropFiles(self, x, y, filenames):
         target=self
@@ -2433,16 +2437,18 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             if item.IsOk():
                 path=self.itemtopath(item)
                 self.parent.ShowFiles(path)
-                self.OnDirListing(path)
+                if not self.skip_dir_list:
+                    self.OnDirListing(path)
                 self.item=item
 
     def OnItemExpanded(self, event):
-        item=event.GetItem()
-        if self.first_time:
-            self.GetFullFS()
-        else:
-            path=self.itemtopath(item)
-            self.OnDirListing(path)
+        if not self.skip_dir_list:
+            item=event.GetItem()
+            if self.first_time:
+                self.GetFullFS()
+            else:
+                path=self.itemtopath(item)
+                self.OnDirListing(path)
 
     def AddDirectory(self, location, name):
         new_item=self.AppendItem(location, name)
@@ -2474,6 +2480,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         if mw.HandleException(exception): return
         self.first_time=False
         root=self.pathtoitem("")
+        self.skip_dir_list=True
         # note: this select will cause ShowFiles to get called in the parent
         self.SelectItem(root)
         self.DeleteChildren(root)
@@ -2484,6 +2491,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             path, dir=os.path.split(k)
             item=self.pathtoitem(path)
             self.AddDirectory(item, dir)
+        self.skip_dir_list = False
 
     def OnDirListing(self, path):
         mw=self.mainwindow
