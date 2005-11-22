@@ -2340,7 +2340,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
         self.selections=[]
         self.dragging=False
-        self.skip_dir_list=False
+        self.skip_dir_list=0
 
     def OnDropFiles(self, x, y, filenames):
         target=self
@@ -2434,7 +2434,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnItemSelected(self,_):
         if not self.dragging and not self.first_time:
             item=self.GetSelection()
-            if item.IsOk():
+            if item.IsOk() and item != self.item:
                 path=self.itemtopath(item)
                 self.parent.ShowFiles(path)
                 if not self.skip_dir_list:
@@ -2457,8 +2457,10 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.SetItemImage(new_item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
         # workaround for bug, + does not get displayed if this is the first child
         if self.GetChildrenCount(location, False) == 1 and not self.IsExpanded(location):
+            self.skip_dir_list+=1
             self.Expand(location)
             self.Collapse(location)
+            self.skip_dir_list-=1
         return new_item
 
     def RemoveDirectory(self, parent, item):
@@ -2480,7 +2482,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         if mw.HandleException(exception): return
         self.first_time=False
         root=self.pathtoitem("")
-        self.skip_dir_list=True
+        self.skip_dir_list+=1
         # note: this select will cause ShowFiles to get called in the parent
         self.SelectItem(root)
         self.DeleteChildren(root)
@@ -2491,7 +2493,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             path, dir=os.path.split(k)
             item=self.pathtoitem(path)
             self.AddDirectory(item, dir)
-        self.skip_dir_list = False
+        self.skip_dir_list-=1
 
     def OnDirListing(self, path):
         mw=self.mainwindow
@@ -2706,6 +2708,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnDirRefresh(self, _):
         path=self.itemtopath(self.GetSelection())
         self.parent.ShowFiles(path, True)
+        self.OnDirListing(path)
 
     def OnRefresh(self, _):
         self.GetFullFS()
