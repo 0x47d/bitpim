@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2004 Stephen Wood <sawecw@users.sf.net>
+### Copyright (C) 2004, 2005 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -13,6 +13,7 @@
 
 import time
 import cStringIO
+import re
 
 # BitPim Modules
 import com_sanyo
@@ -24,7 +25,6 @@ import prototypes
 class SanyoMedia:
     "Download and upload media (ringers/wallpaper) from Sanyo Phones"
 
-    NUM_MEDIA_DIRECTORIES=4
     FIRST_MEDIA_DIRECTORY=2
     LAST_MEDIA_DIRECTORY=3
     CAMERA_DIRECTORY=1
@@ -52,6 +52,8 @@ class SanyoMedia:
         com_sanyo.SanyoPhonebook.getmediaindices(self, results)
         ringermedia=results['ringtone-index']
         imagemedia=results['wallpaper-index']
+
+        copypat=re.compile(r"(.*)\.(\d+)$")
         for idir in range(self.FIRST_MEDIA_DIRECTORY, self.LAST_MEDIA_DIRECTORY+1):
             self.log("Indexing directory "+`idir`)
             req=self.protocolclass.sanyochangedir()
@@ -65,30 +67,45 @@ class SanyoMedia:
                 req=self.protocolclass.sanyomediafilenamerequest()
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
-                # self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
+                name=res.filename
+                orgname=name
+                
+                unique=False
+                while not unique:
+                    unique=True
+                    for idx in imagemedia.keys():
+                        if name==imagemedia[idx]['name']:
+                            matchresult=copypat.match(name)
+                            if matchresult:
+                                copycount=int(matchresult.group(2))+1
+                                name=matchresult.group(1)+"."+str(copycount)
+                            else:
+                                name=name+".1"
+                            # Keep looping until sure we have unique name
+                            unique=False
+                            break
                 if idir==self.CAMERA_DIRECTORY:
 
                     if res.num3==0:    # Original Camera Picture
                         # Could convert filename to to a date
-                        imagemedia[ifile+1000*idir]={'name': "$camera_"+res.filename, 'origin': "camera"}
+                        imagemedia[ifile+1000*idir]={'name': name, 'origin': "camera"}
                     else:
                         # Wallet pictures
-                        imagemedia[res.num3]={'name': res.filename, 'origin': "images"}
+                        imagemedia[res.num3]={'name': name, 'origin': "images"}
                 else:
                     idx=ifile+1000*idir
 
                     # Make this more elegant later
-                    fname=res.filename
                     iswallpaper=0
                     for ext in self.wallpaperexts:
-                        if fname.endswith(ext):
-                            imagemedia[idx]={'name': res.filename, 'origin': "images"}
+                        if orgname.endswith(ext):
+                            imagemedia[idx]={'name': name, 'origin': "images"}
                             iswallpaper=1
                             break
                     if not iswallpaper:
                         for ext in self.ringerexts:
-                            if fname.endswith(ext):
-                                ringermedia[idx]={'name': res.filename, 'origin': "ringers"}
+                            if orgname.endswith(ext):
+                                ringermedia[idx]={'name': name, 'origin': "ringers"}
                                 break
 
         results['ringtone-index']=ringermedia
@@ -135,6 +152,12 @@ class SanyoMedia:
     def getmedia(self, exts, result, key):
         media={}
         # Essentially duplicating code in getmediaindices
+        copypat=re.compile(r"(.*)\.(\d+)$")
+        if key=="wallpapers":
+            mediaindex=result['wallpaper-index']
+        else:
+            mediaindex=result['ringtone-index']
+            
         for idir in range(self.FIRST_MEDIA_DIRECTORY, self.LAST_MEDIA_DIRECTORY+1):
             self.log("Reading "+key+" from directory "+`idir`)
             req=self.protocolclass.sanyochangedir()
@@ -149,15 +172,18 @@ class SanyoMedia:
                 req.index=ifile
                 res=self.sendpbcommand(req, self.protocolclass.sanyomediafilenameresponse)
                 # self.log(res.filename+": "+`res.num1`+" "+`res.num2`+" "+`res.num3`+" "+`res.num4`)
-                if idir==self.CAMERA_DIRECTORY and res.num3==0:
-                    filename="$camera_"+res.filename
+
+                orgname=res.filename
+                if idir==self.CAMERA_DIRECTORY and res.num3!=0:
+                    idx=res.num3
                 else:
-                    filename=res.filename
+                    idx=ifile+1000*idir
 
                 # Get the file if it has the right extension
                 for ext in exts:
-                    if filename.endswith(ext):
-                        self.log("Retrieving file: "+filename)
+                    if orgname.endswith(ext):
+                        filename=mediaindex[idx]['name']
+                        self.log("Retrieving file: "+orgname+", saving as "+filename)
                         try:
                             media[filename]=self.getsanyofilecontents(idir,ifile)
                         except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException):
