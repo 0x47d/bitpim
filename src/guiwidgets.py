@@ -1104,6 +1104,7 @@ class FileView(wx.Panel):
         self.thedir=None
         self.wildcard="I forgot to set wildcard in derived class|*"
         self.__dragging=False
+        self._in_context_menu=False
 
         # use the aggregatedisplay to do the actual item display
         self.aggdisp=aggregatedisplay.Display(self, self, watermark) # we are our own datasource
@@ -1177,7 +1178,10 @@ class FileView(wx.Panel):
             menu.Enable(guihelper.ID_FV_PASTE, self.CanPaste())
         if menu is None:
             return
+        # we're putting up the context menu, quit the tool tip timer.
+        self._in_context_menu=True
         self.aggdisp.PopupMenu(menu, evt.GetPosition())
+        self._in_context_menu=False
 
     def OnLaunch(self, _):
         item=self.GetSelectedItems()[0]
@@ -1220,11 +1224,16 @@ class FileView(wx.Panel):
         self.motionpos=evt.GetPosition()
         evt.Skip()
         self.thetimer.Stop()
-        if evt.AltDown() or evt.MetaDown() or evt.ControlDown() or evt.ShiftDown() or evt.Dragging() or evt.IsButton():
+        if evt.AltDown() or evt.MetaDown() or evt.ControlDown() or \
+           evt.ShiftDown() or evt.Dragging() or evt.IsButton() or \
+           self._in_context_menu:
             return
         self.thetimer.Start(1750, wx.TIMER_ONE_SHOT)
 
     def OnTooltipTimer(self, _):
+        if self._in_context_menu:
+            # we're putting up a context menu, forget this
+            return
         x,y=self.aggdisp.CalcUnscrolledPosition(*self.motionpos)
         res=self.aggdisp.HitTest(x,y)
         if res.item is not None:
