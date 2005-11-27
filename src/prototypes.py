@@ -333,9 +333,18 @@ class STRING(BaseProtogenClass):
 
     def readfrombuffer(self, buf):
         self._bufferstartoffset=buf.getcurrentoffset()
-
-        if self._pascal:
-            self._sizeinbytes=buf.getnextbyte()
+        
+        flush=0
+        if self._pascal: 
+            if self._sizeinbytes is None:
+                self._sizeinbytes=buf.getnextbyte()
+            # allow for fixed size pascal strings
+            else:
+                temp=self._sizeinbytes-1
+                self._sizeinbytes=buf.getnextbyte()
+                flush=temp-self._sizeinbytes
+                if(temp < 0):
+                    raise ValueLengthException()
 
         if self._sizeinbytes is not None:
             # fixed size
@@ -370,6 +379,10 @@ class STRING(BaseProtogenClass):
 
         if self._constant is not None and self._value!=self._constant:
             raise ValueException("The value read was not the constant")
+
+        # for fixed size pascal strings flush the remainder of the buffer
+        if(flush):
+            buf.getnextbytes(flush)
 
         self._bufferendoffset=buf.getcurrentoffset()
 
