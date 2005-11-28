@@ -69,9 +69,9 @@ PACKET evententry:
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT alarm
-    1 UNKNOWN +pad2
+    1 UNKNOWN +pad3
     1 UINT {'default': 0} +serial "Some kind of serial number"
-    3 UNKNOWN +pad3
+    3 UNKNOWN +pad4
     2 UINT ringtone
     
 PACKET eventresponse:
