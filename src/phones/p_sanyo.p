@@ -12,6 +12,7 @@
 """Various descriptions of data specific to Sanyo phones"""
 
 from prototypes import *
+from prototypeslg import *
 
 # We use LSB for all integer like fields
 
@@ -23,8 +24,13 @@ _NUMLONGNUMBERS=5
 _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
-_NUMCALLHISTORY=20
-NUMPHONENUMBERS=7
+
+NUMCALLHISTORY=20
+
+OUTGOING=0
+INCOMING=1
+MISSED=2
+
  %}
 
 PACKET sanyoerror:
@@ -295,8 +301,13 @@ PACKET messageresponse:
 # 0x3f Missed
 
 PACKET historyrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x3d} +header
+    P UINT type "0: Outgoing, 1: Incoming, 2: Missed"
+    if self.type==OUTGOING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3d} +header
+    if self.type==INCOMING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3e} +header
+    if self.type==MISSED:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3f} +header
     1 UINT slot
     501 UNKNOWN +pad
 
@@ -306,15 +317,20 @@ PACKET historyrequest:
 # 0x62 Missed
 
 PACKET historymiscrequest:
-    * sanyoheader {'packettype': 0x0c,
-		'command': 0x60} +header
+    P UINT type "0: Outgoing, 1: Incoming, 2: Missed"
+    if self.type==OUTGOING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x60} +header
+    if self.type==INCOMING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x61} +header
+    if self.type==MISSED:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x62} +header
     1 UINT slot
     501 UNKNOWN +pad
 
 PACKET historyentry:
     2 UINT slot
     1 UNKNOWN dunno1
-    4 UINT date
+    4 GPSDATE date
     1 UINT phonenumlen
     48 STRING {'raiseonunterminatedread': False} phonenum
     16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
@@ -370,7 +386,7 @@ PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
-    * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
+    * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
     49 STRING {'default': ""} +email
     1 UINT +url_len
