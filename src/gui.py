@@ -1850,24 +1850,27 @@ class WorkerThread(WorkerThreadFramework):
 
         count=0
         for k in keys:
-            count+=1
-            if files[k]['type']!='file':
-                continue
-            self.progressmajor(count, len(keys)+1, "Getting files")
-            # get the contents
-            contents=self.getfile(k)
-            # an artificial sleep. if you get files too quickly, the 4400 eventually
-            # runs out of buffers and returns truncated packets
-            time.sleep(0.3)
-            # add to zip file
-            zi=zipfile.ZipInfo()
-            zi.filename=k[strip:]
-            if files[k]['date'][0]==0:
-                zi.date_time=(0,0,0,0,0,0)
-            else:
-                zi.date_time=time.gmtime(files[k]['date'][0])[:6]
-            zi.compress_type=zipfile.ZIP_DEFLATED
-            zip.writestr(zi, contents)
+            try:
+                count+=1
+                if files[k]['type']!='file':
+                    continue
+                self.progressmajor(count, len(keys)+1, "Getting files")
+                # get the contents
+                contents=self.getfile(k)
+                # an artificial sleep. if you get files too quickly, the 4400 eventually
+                # runs out of buffers and returns truncated packets
+                time.sleep(0.3)
+                # add to zip file
+                zi=zipfile.ZipInfo()
+                zi.filename=k[strip:]
+                if files[k]['date'][0]==0:
+                    zi.date_time=(0,0,0,0,0,0)
+                else:
+                    zi.date_time=time.gmtime(files[k]['date'][0])[:6]
+                zi.compress_type=zipfile.ZIP_DEFLATED
+                zip.writestr(zi, contents)
+            except:
+                self.log('Failed to read file: '+k)
         zip.close()
 
         return op.getvalue()

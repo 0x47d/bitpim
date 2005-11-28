@@ -377,6 +377,9 @@ class RealBrewProtocol:
                 results[subdir]={ 'name': subdir, 'type': 'directory' }
             except BrewNoMoreEntriesException:
                 break
+            except (BrewBadPathnameException, ValueError):
+                self.log('Failed to list dir '+dir)
+                return {}
         if recurse:
             for k,_subdir in results.items():
                 results.update(self.listsubdirs(_subdir['name'], recurse-1))
@@ -422,6 +425,9 @@ class RealBrewProtocol:
                         results[res.filename]['date']=(0, "")
             except BrewNoMoreEntriesException:
                 break
+            except (BrewBadPathnameException, ValueError):
+                self.log('Failed to list files in dir '+dir)
+                return {}
         return results
 
     def getfilesystem(self, dir="", recurse=0):
@@ -521,7 +527,7 @@ class RealBrewProtocol:
         req.filename=file
         
         res=self.sendbrewcommand(req, p_brew.readfileresponse)
-        
+    
         filesize=res.filesize
         data.write(res.data)
 
