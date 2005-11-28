@@ -265,3 +265,54 @@ PACKET wallpaperbuffer:
     P STRING {'default': "wallpaper assignment info"} +comment
     * LIST {'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo} +wallpapers
     548 UNKNOWN +pad
+
+PACKET historyrequest:
+    P UINT type "0: Outgoing, 1: Incoming, 2: Missed"
+    if self.type==OUTGOING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3d} +header
+    if self.type==INCOMING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3e} +header
+    if self.type==MISSED:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x3f} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
+PACKET historymiscrequest:
+    P UINT type "0: Outgoing, 1: Incoming, 2: Missed"
+    if self.type==OUTGOING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x60} +header
+    if self.type==INCOMING:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x61} +header
+    if self.type==MISSED:
+        * sanyoheader {'packettype': 0x0c, 'command': 0x62} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
+PACKET historyentry:
+    2 UINT slot
+    1 UNKNOWN dunno1
+    4 GPSDATE date
+    1 UINT phonenumlen
+    48 STRING {'raiseonunterminatedread': False} phonenum
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    1 UNKNOWN dunno2
+    1 UNKNOWN dunno3
+
+PACKET historyresponse:
+    * sanyoheader header
+    * historyentry entry
+    428 UNKNOWN pad
+
+PACKET historymiscentry:
+    2 UINT slot
+    2 UINT pbslotandtype
+    2 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UINT dunno4
+
+PACKET historymiscresponse:
+    * sanyoheader header
+    * historymiscentry entry
+    493 UNKNOWN pad
+
