@@ -24,6 +24,7 @@ import prototypes
 import common
 import conversions
 import bpcalendar
+import call_history
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -721,11 +722,8 @@ class SanyoPhonebook:
 
         wp=results[mediakey].copy()
         wpi=results[mediaindexkey].copy()
+
         # remove builtins
-#        print "WP"
-#        print wp
-#        print "WPI"
-#        print wpi
         for k in wpi.keys():
             if wpi[k]['origin']=='builtin':
                 del wpi[k]
@@ -906,6 +904,9 @@ class SanyoPhonebook:
                     continue
             req.slot = i
             res=self.sendpbcommand(req, self.protocolclass.eventresponse)
+            if not reqflag:
+                if not res.entry.flag:
+                    continue
             self.log("Read calendar event "+`i`+" - "+res.entry.eventname+", alarm ID "+`res.entry.ringtone`)
             entry=bpcalendar.CalendarEntry()
             #entry.pos=i
@@ -1059,7 +1060,7 @@ class SanyoPhonebook:
                           # But it would take a lot more time
                 e.name_len=len(e.name)
                 #if entry.ringtone==0:
-                #    e.ringtone=self.calendar_defaultringtone
+                #    e.ringtone=self.calendar_defaultcaringtone
                 #else:
                 #    e.ringtone=entry.ringtone
                 # Use default ringtone for now
@@ -1127,10 +1128,11 @@ class SanyoPhonebook:
                 except: # If no valid end date, make end
                     e.end=e.start+60 #  one minute later 
 
-                #if entry['ringtone']==0:
+                #if entry.ringtone==0:
                 #    e.ringtone=self.calendar_defaultringtone
                 #else:
-                #    e.ringtone=entry['ringtone']
+                #    e.ringtone=entry.ringtone
+                # Use default ringtone for now
                 e.ringtone=self.calendar_defaultringtone
                 print "Setting ringtone "+`e.ringtone`
 
@@ -1208,6 +1210,29 @@ class SanyoPhonebook:
         dict['rebootphone'] = True
         return dict
 
+    def getcallhistory(self, result):
+        res={}
+        self._readhistory(self.protocolclass.OUTGOING,'Outgoing',res)
+        self._readhistory(self.protocolclass.MISSED,'Missed',res)
+        self._readhistory(self.protocolclass.INCOMING,'Incoming',res)
+        result['call_history']=res
+        return result
+
+    def _readhistory(self, type, folder, res):
+        req=self.protocolclass.historyrequest()
+        req.type=type
+        for slot in range(self.protocolclass.NUMCALLHISTORY):
+            req.slot=slot
+            call=self.sendpbcommand(req, self.protocolclass.historyresponse)
+            if call.entry.phonenum=='' and call.entry.name=='':
+                continue
+            entry=call_history.CallHistoryEntry()
+            entry.folder=folder
+            entry.name=call.entry.name
+            entry.number=call.entry.phonenum
+            entry.datetime=((call.entry.date))
+            res[entry.id]=entry
+    
     def decodedate(self,val):
         """Unpack 32 bit value into date/time
 
@@ -1267,6 +1292,7 @@ class Profile(com_phone.Profile):
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),
         ('ringtone', 'write', 'MERGE'),
+        ('call_history', 'read', None),# all call history list reading
         )
 ###
 
@@ -1394,7 +1420,7 @@ class Profile(com_phone.Profile):
         return data
 
 
-class Phone(com_phone.Phone,com_brew.BrewProtocol,SanyoPhonebook):
+class Phone(SanyoPhonebook,com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
     desc="Sanyo"
     
@@ -1416,5 +1442,4 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,SanyoPhonebook):
 
     getwallpapers=None
     getringtones=None
-
 
