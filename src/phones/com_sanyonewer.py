@@ -75,6 +75,7 @@ class Profile(com_sanyo.Profile):
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
     )
 
     def __init__(self):
