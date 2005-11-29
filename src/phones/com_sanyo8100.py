@@ -50,51 +50,6 @@ class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
         com_sanyomedia.SanyoMedia.__init__(self)
         self.mode=self.MODENONE
 
-
-    # Demonstration code to show how call history can be read into
-    # the calendar
-    def getcalendar(self,result):
-
-        result=com_sanyo.Phone.getcalendar(self,result)
-# Remove the following line to try out import of call history
-# into BitPim Calendar
-        return result
-
-        calres=result['calendar']
-        count=max(calres)
-        self.log("Calendar has "+`count`+" entries")
-
-        historytypetab=("Outgoing", "Incoming", "Missed")
-        req=self.protocolclass.historyrequest()
-        reqmisc=self.protocolclass.historymiscrequest()
-        for historytype in range(0,3):
-            for i in range(0,20):
-                req.header.command=0x3d+historytype
-                req.slot=i
-                res=self.sendpbcommand(req,self.protocolclass.historyresponse)
-                self.log(historytypetab[historytype]+" Call: "+res.entry.phonenum+"("+res.entry.name+")")
-                entry={}
-                entry['pos']=200+historytype*100+i
-                entry['changeserial']=0
-                datetime=res.entry.date
-                entry['start']=self.decodedate(datetime)
-                entry['end']=entry['start']
-                entry['description']=historytypetab[historytype]+":"+res.entry.phonenum+"("+res.entry.name+")"
-                entry['repeat']=None
-                entry['alarm']=None
-                entry['ringtone']=0
-                entry['snoozedelay']=0
-
-                reqmisc.header.command=0x60+historytype
-                reqmisc.slot=i
-                resmisc=self.sendpbcommand(reqmisc,self.protocolclass.historymiscresponse)
-
-                calres[count]=entry
-                count+=1
-
-        result['calendar']=calres
-        return result
-
 class Profile(com_sanyo.Profile):
 
     protocolclass=Phone.protocolclass
@@ -116,6 +71,7 @@ class Profile(com_sanyo.Profile):
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
     )
 
     def __init__(self):
