@@ -1905,7 +1905,7 @@ class FileSystemView(wx.SplitterWindow):
         # the listbox and textbox in a splitter
         self.mainwindow=mainwindow
         wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_BORDER|wx.SP_LIVE_UPDATE)
-        self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)
+        self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=(wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)&~wx.TR_TWIST_BUTTONS)
         self.list=FileSystemFileView(mainwindow, self, wx.NewId())
         pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
         self.SplitVertically(self.tree, self.list, pos)
@@ -1973,6 +1973,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         self.InsertColumn(0, "Name", width=300)
         self.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT)
         self.InsertColumn(2, "Date", width=200)
+        self.font=wx.TheFontList.FindOrCreateFont(10, family=wx.SWISS, style=wx.NORMAL, weight=wx.NORMAL)
 
         self.ResetView()        
 
@@ -2025,6 +2026,20 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         self.add_files=[]
         self.droptarget=guiwidgets.MyFileDropTarget(self, True)
         self.SetDropTarget(self.droptarget)
+
+    def OnPaint(self, evt):
+        w,h=self.GetSize()
+        self.Refresh()
+        dc=wx.PaintDC(self)
+        dc.BeginDrawing()
+        dc.SetFont(self.font)
+        x,y= dc.GetTextExtent("There are no items to show in this view")
+        # center the text
+        xx=(w-x)/2
+        if xx<0:
+            xx=0
+        dc.DrawText("There are no items to show in this view", xx, h/3)
+        dc.EndDrawing()
 
     def OnDropFiles(self, _, dummy, filenames):
         # There is a bug in that the most recently created tab
@@ -2209,6 +2224,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
     def OnShowFilesResults(self, path, exception, result):
         mw=self.mainwindow
         if mw.HandleException(exception): return
+        count=self.GetItemCount()
         self.path=path
         self.DeleteAllItems()
         self.files={}
@@ -2224,6 +2240,10 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
         self.itemIndexMap = self.files.keys()
         self.SetItemCount(index)
         self.SortListItems()
+        if count!=0 and index==0:
+            wx.EVT_PAINT(self, self.OnPaint)
+        elif count==0 and index!=0:
+            self.Unbind(wx.EVT_PAINT)
 
     def itemtopath(self, item):
         index=self.itemIndexMap[item]
@@ -2482,13 +2502,13 @@ class FileSystemDirectoryView(wx.TreeCtrl):
     def OnFullDirListingResults(self, exception, result):
         mw=self.mainwindow
         mw.OnBusyEnd()
-        if mw.HandleException(exception): return
+        if mw.HandleException(exception):
+            self.Collapse(self.root)
+            return
         self.first_time=False
-        root=self.pathtoitem("")
         self.skip_dir_list+=1
-        # note: this select will cause ShowFiles to get called in the parent
-        self.SelectItem(root)
-        self.DeleteChildren(root)
+        self.SelectItem(self.root)
+        self.DeleteChildren(self.root)
         keys=result.keys()
         keys.sort()
         # build up the tree
@@ -2497,6 +2517,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             item=self.pathtoitem(path)
             self.AddDirectory(item, dir)
         self.skip_dir_list-=1
+        self.parent.ShowFiles("")
 
     def OnDirListing(self, path):
         mw=self.mainwindow
