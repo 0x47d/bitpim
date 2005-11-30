@@ -1078,6 +1078,8 @@ class FileView(wx.Panel):
     maxlen=-1  # set via phone profile
     # acceptable characters in a filename
     filenamechars=None # set via phone profile
+    # lisf of available origins that can be set
+    origin_list=()
 
     def __init__(self, mainwindow, parent, watermark=None):
         wx.Panel.__init__(self,parent,style=wx.CLIP_CHILDREN)
@@ -1132,6 +1134,15 @@ class FileView(wx.Panel):
         self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.AppendSeparator()
+        # set origin menu
+        if self.origin_list:
+            _origin_menu=wx.Menu()
+            for o in self.origin_list:
+                _id=wx.NewId()
+                _origin_menu.Append(_id, o)
+                wx.EVT_MENU(self, _id, self.OnSetOrigin)
+            self.itemmenu.AppendMenu(wx.NewId(), 'Set Origin', _origin_menu)
+            self.itemmenu.AppendSeparator()
         # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
@@ -1336,6 +1347,13 @@ class FileView(wx.Panel):
             os.remove(item.filename)
         for item in items:
             item.RemoveFromIndex()
+        self.OnRefresh()
+
+    def OnSetOrigin(self, evt):
+        _origin=evt.GetEventObject().GetLabel(evt.GetId())
+        _items=self.GetSelectedItems()
+        for _item in _items:
+            _item.SetOrigin(_origin)
         self.OnRefresh()
 
     def genericpopulatefs(self, dict, key, indexkey, version):
@@ -1572,6 +1590,12 @@ class FileViewDisplayItem(object):
 
     def RenameInIndex(self, new_name):
         self.view._data[self.datakey][self.key]['name']=new_name
+        self.view.modified=True
+        self.view.OnRefresh()
+
+    def SetOrigin(self, new_origin):
+        # set the origin of this item
+        self.view._data[self.datakey][self.key]['origin']=new_origin
         self.view.modified=True
         self.view.OnRefresh()
 

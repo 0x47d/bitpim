@@ -50,7 +50,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon
         ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 0x201, 1),
         # the sound index file uses the same index as the ringers, bitpim does not support this (yet)
-        #( 'sounds', 'dload/mysound.dat', 'dload/mysoundsize.dat', 'brew/16452/ms', 100, 150, 2, 0),
+        ( 'sounds', 'dload/mysound.dat', 'dload/mysoundsize.dat', 'brew/16452/ms', 100, 150, 0x402, 0),
         )
 
     calendarlocation="sch/schedule.dat"

@@ -41,7 +41,8 @@ class RingerView(guiwidgets.FileView):
     # this is only used to prevent the pubsub module
     # from being GC while any instance of this class exists
     __publisher=pubsub.Publisher
-
+    # supported origins
+    origin_list=('ringers', 'sounds')
 
     organizetypes=("Origin", "Audio Type", "File Size")
     media_notification_type=pubsub.ringtone_type
@@ -75,7 +76,9 @@ class RingerView(guiwidgets.FileView):
         self.filenamechars=profile.RINGTONE_FILENAME_CHARS
 
     def OnListRequest(self, msg=None):
-        l=[self._data['ringtone-index'][x]['name'] for x in self._data['ringtone-index']]
+        l=[self._data['ringtone-index'][x]['name'] \
+           for x in self._data['ringtone-index'] \
+               if self._data['ringtone-index'][x].get('origin', None) in ('builtin', 'ringers') ]
         l.sort()
         pubsub.publish(pubsub.ALL_RINGTONES, l)
 

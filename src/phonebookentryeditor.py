@@ -13,6 +13,7 @@ import fixedscrolledpanel
 import pubsub
 import bphtml
 import database
+import nameparser
 import wallpaper
 import guihelper
 
@@ -1013,7 +1014,8 @@ class Editor(wx.Dialog):
 
     def __init__(self, parent, data, title="Edit PhoneBook Entry",
                  keytoopenon=None, dataindex=None,
-                 factory=database.dictdataobjectfactory, readonly=False):
+                 factory=database.dictdataobjectfactory, readonly=False,
+                 datakey=None, movement=False):
         """Constructor for phonebookentryeditor dialog
 
         @param parent: parent window
@@ -1025,6 +1027,10 @@ class Editor(wx.Dialog):
         """
         
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self._data_key=datakey
+        if movement and datakey is None and __debug__:
+            self.log('Movement and datakey is None')
+            raise ValueError
         # make a copy of the data we are going to work on
         self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
@@ -1039,6 +1045,18 @@ class Editor(wx.Dialog):
 
         tb.Realize()
         vs.Add(tb, 0, wx.EXPAND|wx.BOTTOM, 5)
+        # the title & direction button
+        if movement:
+            _hbs=wx.BoxSizer(wx.HORIZONTAL)
+            _prev_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Prev Item")
+            _next_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Item")
+            self._title=wx.StaticText(self, -1, "Name here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
+            _hbs.Add(_prev_btn, 0, wx.EXPAND, 0)
+            _hbs.Add(self._title, 1, wx.EXPAND, 0)
+            _hbs.Add(_next_btn, 0, wx.EXPAND, 0)
+            vs.Add(_hbs, 0, wx.ALL|wx.EXPAND, 5)
+            wx.EVT_BUTTON(self, _prev_btn.GetId(), self.OnMovePrev)
+            wx.EVT_BUTTON(self, _next_btn.GetId(), self.OnMoveNext)
 
         nb=wx.Notebook(self, -1)
         self.nb=nb
@@ -1046,34 +1064,52 @@ class Editor(wx.Dialog):
         vs.Add(nb,1,wx.EXPAND|wx.ALL,5)
 
         self.tabs=[]
-
+        # instantiate the nb widgets
         for name,key,klass in self.tabsfactory:
             widget=EditorManager(self.nb, klass)
             nb.AddPage(widget,name)
             if key==keytoopenon:
                 nb.SetSelection(len(self.tabs))
             self.tabs.append(widget)
-            if key is None: 
-                # the fields are in data, not in data[key]
-                widget.Populate([self.data])
-            elif self.data.has_key(key):
-                widget.Populate(self.data[key])
-                if key==keytoopenon and dataindex is not None:
-                    widget.SetFocusOnValue(dataindex)
+        # populate the data
+        self.Populate()
+        # and focus on the right one if specified
+        for _idx, (name,key,klass) in enumerate(self.tabsfactory):
+            if key and key==keytoopenon and dataindex is not None:
+                self.tabs[_idx].SetFocusOnValue(dataindex)
 
         vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
-        if readonly:
-            _buttons_flag=wx.CANCEL|wx.HELP
-        else:
-            _buttons_flag=wx.OK|wx.CANCEL|wx.HELP
-        vs.Add(self.CreateButtonSizer(_buttons_flag), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        _btn_sizer=wx.StdDialogButtonSizer()
+        if not readonly:
+            _btn_sizer.AddButton(wx.Button(self, wx.ID_OK))
+        if self._data_key is not None:
+            _btn_sizer.AddButton(wx.Button(self, wx.ID_APPLY))
+        _btn_sizer.AddButton(wx.Button(self, wx.ID_CANCEL))
+        _btn_sizer.Realize()
+        vs.Add(_btn_sizer, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.SetSizer(vs)
 
+        wx.EVT_BUTTON(self, wx.ID_APPLY, self.OnApply)
         wx.EVT_TOOL(self, self.ID_UP, self.MoveUp)
         wx.EVT_TOOL(self, self.ID_DOWN, self.MoveDown)
         wx.EVT_TOOL(self, self.ID_ADD, self.Add)
         wx.EVT_TOOL(self, self.ID_DELETE, self.Delete)
+
+    def OnApply(self, _):
+        # Save the current data
+        self.GetParent().SaveData(self.GetData(), self.GetDataKey())
+
+    def Populate(self):
+        # populate various widget with data
+        self._set_title()
+        for _idx, (name,key,klass) in enumerate(self.tabsfactory):
+            if key is None: 
+                # the fields are in data, not in data[key]
+                self.tabs[_idx].Populate([self.data])
+            else:
+                self.tabs[_idx].Populate(self.data.get(key, {}))
 
     def GetData(self):
         res=self.data
@@ -1095,6 +1131,9 @@ class Editor(wx.Dialog):
                     # which may not have existed ...
                     pass
         return res
+
+    def GetDataKey(self):
+        return self._data_key
             
     def MoveUp(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Move(-1)
@@ -1108,6 +1147,23 @@ class Editor(wx.Dialog):
     def Delete(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Delete()
 
+    def _set_title(self):
+        if hasattr(self, '_title'):
+            self._title.SetLabel(nameparser.getfullname(self.data['names'][0]))
+
+    def OnMoveNext(self, _):
+        _key,_data=self.GetParent().GetNextEntry(True)
+        if _data:
+            self.data=_data
+            self._data_key=_key
+            self.Populate()
+
+    def OnMovePrev(self, _):
+        _key,_data=self.GetParent().GetNextEntry(False)
+        if _data:
+            self.data=_data
+            self._data_key=_key
+            self.Populate()
 
 if __name__=='__main__':
 

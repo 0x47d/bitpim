@@ -839,10 +839,10 @@ class PhoneWidget(wx.Panel):
         self.SetPreview(self._data[self.dt.rowkeys[row]]) # bad breaking of abstraction referencing dt!
 
     def OnPreviewDClick(self, _):
-        self.EditEntry(self.table.GetGridCursorRow(), self.table.GetGridCursorCol())
+        self.EditEntries(self.table.GetGridCursorRow(), self.table.GetGridCursorCol())
 
     def OnCellDClick(self, event):
-        self.EditEntry(event.GetRow(), event.GetCol())
+        self.EditEntries(event.GetRow(), event.GetCol())
 
     def OnCellRightClick(self, evt):
         if not self.read_only or not self.GetSelectedRowKeys():
@@ -861,6 +861,29 @@ class PhoneWidget(wx.Panel):
             dict['categories']+=c
             self._save_db(dict)
 
+    def EditEntries(self, row, column):
+        # Allow moving to next/prev entries
+        key=self.dt.rowkeys[row]
+        data=self._data[key]
+        # can we get it to open on the correct field?
+        datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
+        dlg=phonebookentryeditor.Editor(self, data,
+                                        factory=phonebookobjectfactory,
+                                        keytoopenon=datakey,
+                                        dataindex=dataindex,
+                                        readonly=self.read_only,
+                                        datakey=key,
+                                        movement=True)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.SaveData(dlg.GetData(), dlg.GetDataKey())
+        dlg.Destroy()
+
+    def SaveData(self, data, key):
+        self._data[key]=data
+        self.dt.OnDataUpdated()
+        self.SetPreview(data)
+        self.modified=True
+        
     def EditEntry(self, row, column):
         key=self.dt.rowkeys[row]
         data=self._data[key]
@@ -878,6 +901,31 @@ class PhoneWidget(wx.Panel):
             self.SetPreview(data)
             self.modified=True
         dlg.Destroy()
+
+    def GetNextEntry(self, next=True):
+        # return the data for the next item on the list
+        _sel_rows=self.GetSelectedRows()
+        if not _sel_rows:
+            return None
+        try:
+            row=_sel_rows[0]
+            if next:
+                _new_row=row+1
+            else:
+                _new_row=row-1
+            _num_rows=self.table.GetNumberRows()
+            if _new_row>=_num_rows:
+                _new_row=0
+            elif _new_row<0:
+                _new_row=_num_rows-1
+            self.table.SetGridCursor(_new_row, self.table.GetGridCursorCol())
+            self.table.SelectRow(_new_row)
+            _key=self.dt.rowkeys[_new_row]
+            return (_key,self._data[_key])
+        except:
+            if __debug__:
+                raise
+            return None
 
     def OnAdd(self, _):
         if self.read_only:

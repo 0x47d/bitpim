@@ -12,7 +12,7 @@
 import time
 
 name="BitPim"
-version="0.8.03"
+version="0.8.04"
 ##vendor="official"
 vendor="Development"
 release=0  # when rereleases of the same version happen, this gets incremented
