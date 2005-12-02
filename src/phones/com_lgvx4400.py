@@ -1003,7 +1003,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         entry=bpcalendar.CalendarEntry()
         entry.start=event.start
         entry.end=event.end
-        entry.description=event.description
+        entry.desc_loc=event.description
         # check for allday event
         if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
             entry.allday=True
@@ -1117,7 +1117,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def _set_cal_event(self, event, entry, exceptions, ringtone_index,
                        voice_files):
         # desc
-        event.description=entry.description
+        event.description=entry.desc_loc
         # start & end times
         if entry.allday:
             event.start=entry.start[:3]+(0,0)

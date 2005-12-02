@@ -688,12 +688,13 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
             media[i]={'name': n, 'origin': 'builtin'}
 
         # maps
-        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
+        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon, idx_ofs  in maps:
             for item in self.getindex(indexfile):
                 if item.type&0xff!=typemajor&0xff:
                     self.log("Entry "+item.filename+" has wrong type for this index.  It is %d and should be %d" % (item.type&0xff, typemajor))
                     self.log("This is going to cause you all sorts of problems.")
-                media[item.index]={
+                _idx=item.index+idx_ofs
+                media[_idx]={
                     'name': basename(item.filename),
                     'filename': item.filename,
                     'origin': type,
@@ -701,7 +702,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
                     'icon': item.icon
                     }
                 if item.date!=0:
-                    media[item.index]['date']=item.date
+                    media[_idx]['date']=item.date
 
         # finish
         results[key]=media
@@ -709,7 +710,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
     def getmedia(self, maps, results, key):
         media={}
 
-        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
+        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon, idx_ofs in maps:
             for item in self.getindex(indexfile):
                 try:
                     media[basename(item.filename)]=self.getfilecontents(item.filename,

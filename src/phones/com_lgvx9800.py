@@ -47,10 +47,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                       ('No Ring',)
 
     ringtonelocations= (
-        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon
-        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 0x201, 1),
+        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon index_offset
+        ( 'ringers', 'dload/my_ringtone.dat', 'dload/my_ringtonesize.dat', 'brew/16452/lk/mr', 100, 150, 0x201, 1, 0),
         # the sound index file uses the same index as the ringers, bitpim does not support this (yet)
-        ( 'sounds', 'dload/mysound.dat', 'dload/mysoundsize.dat', 'brew/16452/ms', 100, 150, 0x402, 0),
+        ( 'sounds', 'dload/mysound.dat', 'dload/mysoundsize.dat', 'brew/16452/ms', 100, 150, 0x402, 0, 151),
         )
 
     calendarlocation="sch/schedule.dat"
@@ -61,8 +61,8 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
     builtinwallpapers = () # none
 
     wallpaperlocations= (
-        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0),
-        ( 'video', 'dload/video.dat', None, 'brew/16452/mf', 1000, 50, 0x0304, 0),
+        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0, 0),
+        ( 'video', 'dload/video.dat', None, 'brew/16452/mf', 1000, 50, 0x0304, 0, 0),
         )
 
     # for removable media (miniSD cards)
@@ -80,6 +80,16 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             'sizefile': 'dload/my_ringtonesize.dat',
             'dunno': 0, 'date': False,
         },
+         'sounds': {
+             'localpath': 'brew/16452/ms',
+             'rspath': None,
+             'vtype': protocolclass.MEDIA_TYPE_SOUND,
+             'icon': protocolclass.MEDIA_IMAGE_DEFAULT_ICON,
+             'index': 100,
+             'maxsize': 155,
+             'indexfile': 'dload/mysound.dat',
+             'sizefile': 'dload/mysoundsize.dat',
+             'dunno': 0, 'date': False },
          'images': {
              'localpath': 'brew/16452/mp',
              'rspath': _rs_images_path,
@@ -155,7 +165,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
     def getmedia(self, maps, results, key):
         media={}
 
-        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon  in maps:
+        for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon, idx_ofs  in maps:
             for item in self.getindex(indexfile):
                 try:
                     if not self._is_rs_file(item.filename):
@@ -257,7 +267,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
 
         # build up list into init
         init={}
-        for type,_,_,_,lowestindex,_,typemajor,_ in maps:
+        for type,_,_,_,lowestindex,_,typemajor,_,_ in maps:
             init[type]={}
             for k in wpi.keys():
                 if wpi[k]['origin']==type:
@@ -297,7 +307,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
 
         # wp will now consist of items that weren't assigned any particular place
         # so put them in the first available space
-        for type,_,_,_,lowestindex,maxentries,typemajor,def_icon in maps:
+        for type,_,_,_,lowestindex,maxentries,typemajor,def_icon,_ in maps:
             # fill it up
             for w in wp.keys():
                 if len(init[type])>=maxentries:
@@ -309,7 +319,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 del wp[w]
 
         # time to write the files out
-        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon  in maps:
+        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon,_  in maps:
             # get the index file so we can work out what to delete
             names=[init[type][x]['name'] for x in init[type]]
             for item in self.getindex(indexfile):

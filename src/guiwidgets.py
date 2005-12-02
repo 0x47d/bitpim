@@ -1141,8 +1141,12 @@ class FileView(wx.Panel):
                 _id=wx.NewId()
                 _origin_menu.Append(_id, o)
                 wx.EVT_MENU(self, _id, self.OnSetOrigin)
-            self.itemmenu.AppendMenu(wx.NewId(), 'Set Origin', _origin_menu)
+            self._origin_menu_id=wx.NewId()
+            self.itemmenu.AppendMenu(self._origin_menu_id,
+                                     'Set Origin', _origin_menu)
             self.itemmenu.AppendSeparator()
+        else:
+            self._origin_menu_id=None
         # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
@@ -1184,6 +1188,11 @@ class FileView(wx.Panel):
             # we always launch on mac
             if not guihelper.IsMac():
                 menu.FindItemById(guihelper.ID_FV_OPEN).Enable(guihelper.GetOpenCommand(item.fileinfo.mimetypes, item.filename) is not None)
+            # check for set origin menu item
+            if self._origin_menu_id:
+                menu.Enable(self._origin_menu_id,
+                            bool(len(self.GetSelectedItems())==1 and \
+                            item.origin is None))
         else:
             menu=self.bgmenu
             menu.Enable(guihelper.ID_FV_PASTE, self.CanPaste())

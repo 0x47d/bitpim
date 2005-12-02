@@ -22,6 +22,7 @@ fields:
 CalendarEntry properties:
 description - 'string description'
 location - 'string location'
+desc_loc - combination of description & location in the form of 'description[location]'
 priority - None=no priority, int from 1-10, 1=highest priority
 alarm - how many minutes beforehand to set the alarm (use 0 for on-time, None or -1 for no alarm)
 allday - True for an allday event, False otherwise
@@ -520,6 +521,23 @@ class CalendarEntry(object):
     def _set_location(self, location):
         self._set_or_del('location', location, ('',))
     location=property(fget=_get_location, fset=_set_location)
+
+    def _get_desc_loc(self):
+        # return 'description[location]'
+        if self.location:
+            return self.description+'['+self.location+']'
+        return self.description
+    def _set_desc_loc(self, v):
+        # parse and set for 'description[location]'
+        _idx1=v.find('[')
+        _idx2=v.find(']')
+        if _idx1!=-1 and _idx2!=-1 and _idx2>_idx1:
+            # location specified
+            self.location=v[_idx1+1:_idx2]
+            self.description=v[:_idx1]
+        else:
+            self.description=v
+    desc_loc=property(fget=_get_desc_loc, fset=_set_desc_loc)
 
     def _get_priority(self):
         return self._data.get('priority', None)

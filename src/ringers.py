@@ -268,6 +268,8 @@ class RingerView(guiwidgets.FileView):
     def AddToIndex(self, file):
         for i in self._data['ringtone-index']:
             if self._data['ringtone-index'][i]['name']==file:
+                if hasattr(self._data['ringtone-index'][i], 'origin'):
+                    del self._data['ringtone-index'][i]['origin']
                 return
         keys=self._data['ringtone-index'].keys()
         idx=10000
