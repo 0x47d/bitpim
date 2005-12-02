@@ -369,7 +369,7 @@ class MainApp(wx.App):
         menus=[mb.GetMenu(i) for i in range(mb.GetMenuCount())]
         fsw=self.frame.filesystemwidget
         if  fsw is not None:
-            menus.extend( [fsw.filemenu, fsw.dirmenu] )
+            menus.extend( [fsw.list.filemenu, fsw.tree.dirmenu, fsw.list.genericmenu] )
         for menu in menus:
             for id in removeids:
                 item=menu.FindItemById(id)
