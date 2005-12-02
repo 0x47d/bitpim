@@ -346,7 +346,10 @@ class SanyoPhonebook:
         numentries=sortstuff.slotsused
         self.log("There are %d entries" % (numentries,))
         
-        count = 0
+        count = 0 # Number of phonebook entries
+        numcount = 0 # Number of phone numbers
+        numemail = 0 # Number of emails
+        numurl = 0 # Number of urls
         res=self.protocolclass.phonebookentry()
         usedefaultnum = 'defaultnum' in res.getfields()
         print "usedefaultnum =",usedefaultnum
@@ -388,24 +391,14 @@ class SanyoPhonebook:
                 # Set default number, swap with first number
                 if usedefaultnum:
                     firsttype=res.entry.defaultnum-1
-                    if count==0:
-                        print count,firsttype
                     if firsttype < len(self.numbertypetab):
                         defaulttype=self.numbertypetab[firsttype]
-                        if count==0:
-                            print defaulttype
                         k=0
                         for j in range(len(entry['numbers'])):
-                            if count==0:
-                                print j
                             if entry['numbers'][j]['type'] == defaulttype:
                                 k=j
-                                if count==0:
-                                    print "k=",k
                                 break
                         if k>0:
-                            if count==0:
-                                print "Exchanging"
                             exchange=entry['numbers'][k]
                             for kk in range(k,0,-1):
                                 entry['numbers'][kk]=entry['numbers'][kk-1]
@@ -414,8 +407,14 @@ class SanyoPhonebook:
                 pbook[count]=entry 
                 self.progress(count, numentries, res.entry.name)
                 count+=1
+                numcount+=len(entry['numbers'])
+                if entry.has_key('emails'):
+                    numemail+=len(entry['emails'])
+                if entry.has_key('urls'):
+                    numurl+=len(entry['urls'])
         
         self.progress(numentries, numentries, "Phone book read completed")
+        self.log("Phone contains "+`count`+" contacts, "+`numcount`+" phone numbers, "+`numemail`+" Emails, "+`numurl`+" URLs")
         result['phonebook']=pbook
         return pbook
 
