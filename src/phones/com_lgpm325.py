@@ -7,44 +7,34 @@
 ###
 ### $Id$
 
-"""Communicate with the LG PM325 (Sprint) cell phone"""
+"""Communicate with the LG LX325/PM325 (Sprint) cell phone"""
 
 # standard modules
-import datetime
 import re
 import time
 import cStringIO
 import sha
 
 # my modules
-import bpcalendar
-import common
-import commport
-import copy
 import p_lgpm325
 import p_brew
+import common
+import commport
 import com_brew
 import com_phone
 import com_lg
 import com_lgvx4400
 import prototypes
-import fileinfo
-import call_history
-import sms
+
 
 class Phone(com_lgvx4400.Phone):
-    "Talk to the LG PM325 cell phone"
+    "Talk to the LG LX325/PM325 cell phone"
 
-    desc="LG-PM325"
+    desc="LG LX325/PM325"
     wallpaperindexfilename="setas/amsImageIndex.map"
     ringerindexfilename="setas/amsRingerIndex.map"
     protocolclass=p_lgpm325
     serialsname='lgpm325'
-
-    imagelocations=(
-        # offset, index file, files location, type, maximumentries
-        ( 2, wallpaperindexfilename, "brew/shared", "images", 30),
-        )
 
     ringtonelocations=(
         # offset, index file, files location, type, maximumentries
@@ -62,17 +52,15 @@ class Phone(com_lgvx4400.Phone):
                        'Symphony No.25 in G Minor', 'Capriccio a minor', 'Moonlight',
                        'A Nameless Girl', 'From the New World', 'They Called Me Elvis')
 
-
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
         com_brew.BrewProtocol.__init__(self)
         com_lg.LGPhonebook.__init__(self)
-        com_lg.LGIndexedMedia.__init__(self)
         self.log("Attempting to contact phone")
         self.mode=self.MODENONE
-        self._cal_has_voice_id=hasattr(self.protocolclass, 'cal_has_voice_id') \
-                                and self.protocolclass.cal_has_voice_id
+
+#----- PhoneBook -----------------------------------------------------------------------
 
     def getfundamentals(self, results):
         """Gets information fundamental to interoperating with the phone and UI.
@@ -81,8 +69,6 @@ class Phone(com_lgvx4400.Phone):
 
           - 'uniqueserial'     a unique serial number representing the phone
           - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
 
         This method is called before we read the phonebook data or before we
         write phonebook data.
@@ -110,12 +96,13 @@ class Phone(com_lgvx4400.Phone):
         self.log("Fundamentals retrieved")
         return results
 
+    def syncbegin(self):
+       self.mode = self.MODEPHONEBOOK
+       self.sendpbcommand(self.protocolclass.pbstartsyncrequest(), self.protocolclass.pbstartsyncresponse)
 
-    def getwallpaperindices(self, results):
-        return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
-
-    def getringtoneindices(self, results):
-        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+    def syncend(self):
+       req=self.protocolclass.pbendsyncrequest()
+       self.sendpbcommand(req, self.protocolclass.pbendsyncresponse)
 
     def getphonebook(self,result):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -143,56 +130,29 @@ class Phone(com_lgvx4400.Phone):
         # this by switching into brew mode which clears that.
         self.mode=self.MODENONE
         self.setmode(self.MODEBREW)
-        self.log("Reading number of phonebook entries")
-        req=self.protocolclass.pbinforequest()
-        res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
-        numentries=res.numentries
-        if numentries<0 or numentries>1000:
-            self.log("The phone is lying about how many entries are in the phonebook so we are doing it the hard way")
-            numentries=0
-            firstserial=None
-            loop=xrange(0,1000)
-            hardway=True
-        else:
-            self.log("There are %d entries" % (numentries,))
-            loop=xrange(0, numentries)
-            hardway=False
 
-        # reset cursor
-        self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
-        problemsdetected=False
-        dupecheck={}
-        for i in loop:
-            if hardway:
-                numentries+=1
+        self.log("Reading number of phonebook entries")
+        self.mode = self.MODEBREW
+        res=self.sendpbcommand(self.protocolclass.pbinforequest(), self.protocolclass.pbinforesponse)
+        numentries = res.numentries
+        self.log("There are %d entries" % (numentries,))
+        for i in range(0, numentries):
+            ### Read current entry
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
             self.log("Read entry "+`i`+" - "+res.entry.name)
             entry=self.extractphonebookentry(res.entry, speeds, result)
-            if hardway and firstserial is None:
-                firstserial=res.entry.serial1
             pbook[i]=entry
-            if res.entry.serial1 in dupecheck:
-                self.log("Entry %s has same serial as entry %s.  This will cause problems." % (`entry`, dupecheck[res.entry.serial1]))
-                problemsdetected=True
-            else:
-                dupecheck[res.entry.serial1]=entry
             self.progress(i, numentries, res.entry.name)
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
-            res=self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
-            if hardway:
-                # look to see if we have looped
-                if res.serial==firstserial or res.serial==0:
-                    break
+            self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
 
         self.progress(numentries, numentries, "Phone book read completed")
-
-        if problemsdetected:
-            self.log("There are duplicate serial numbers.  See above for details.")
-            raise common.IntegrityCheckFailed(self.desc, "Data in phonebook is inconsistent.  There are multiple entries with the same serial number.  See the log.")
+        self.log("Phone book read completed")
 
         result['phonebook']=pbook
+
         cats=[]
         for i in result['groups']:
             if result['groups'][i]['name']!='No Group':
@@ -200,6 +160,91 @@ class Phone(com_lgvx4400.Phone):
         result['categories']=cats
         print "returning keys",result.keys()
         return pbook
+
+    def extractphonebookentry(self, entry, speeds, fundamentals):
+        """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
+        res={}
+        # serials
+        res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.serial1,
+                          'sourceuniqueid': fundamentals['uniqueserial']} ]
+        # only one name
+        res['names']=[ {'full': entry.name} ]
+        # only one category
+        cat=fundamentals['groups'].get(entry.group, {'name': "No Group"})['name']
+        if cat!="No Group":
+            res['categories']=[ {'category': cat} ]
+        # emails
+        res['emails']=[]
+        for i in entry.emails:
+            if len(i.email):
+                res['emails'].append( {'email': i.email} )
+        if not len(res['emails']): del res['emails'] # it was empty
+        # urls
+        if 'url' in entry.getfields() and len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
+        # private
+        if 'secret' in entry.getfields() and entry.secret:
+            # we only supply secret if it is true
+            res['flags']=[ {'secret': entry.secret } ]
+        # memos
+        if  'memo' in entry.getfields() and len(entry.memo):
+            res['memos']=[ {'memo': entry.memo } ]
+        # wallpapers
+        if entry.wallpaper!=self.protocolclass.NOWALLPAPER:
+            try:
+                paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
+                res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]
+            except:
+                print "can't find wallpaper for index",entry.wallpaper
+                pass
+
+        # ringtones
+        res['ringtones']=[]
+        if 'ringtone' in entry.getfields() and entry.ringtone!=self.protocolclass.NORINGTONE:
+            try:
+                tone=fundamentals['ringtone-index'][entry.ringtone]['name']
+                res['ringtones'].append({'ringtone': tone, 'use': 'call'})
+            except:
+                print "can't find ringtone for index",entry.ringtone
+
+        if len(res['ringtones'])==0:
+            del res['ringtones']
+
+        if(getattr(self.protocolclass, 'SPEEDDIALINDEX', 0)==0):
+            res=self._assignpbtypeandspeeddialsbyposition(entry, speeds, res)
+        else:
+            res=self._assignpbtypeandspeeddialsbytype(entry, speeds, res)
+        return res
+
+    def makeentry(self, counter, entry, data):
+        """Creates pbentry object
+
+        @param counter: The new entry number
+        @param entry:   The phonebook object (as returned from convertphonebooktophone) that we
+                        are using as the source
+        @param data:    The main dictionary, which we use to get access to media indices amongst
+                        other things
+                        """
+        e=self.protocolclass.pbentry()
+        e.entrynumber=counter
+
+        for k in entry:
+            # special treatment for lists
+            if k in ('emails', 'numbers', 'numbertypes','numberspeeds'):
+                l=getattr(e,k)
+                for item in entry[k]:
+                    l.append(item)
+            elif k=='ringtone':
+                e.ringtone=self._findmediainindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
+            elif k=='msgringtone':
+                e.msgringtone=self._findmediainindex(data['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
+            elif k=='wallpaper':
+                e.wallpaper=self._findmediainindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
+            elif k in e.getfields():
+                # everything else we just set
+                setattr(e,k,entry[k])
+
+        return e
 
     def savegroups(self, data):
         groups=data['groups']
@@ -209,7 +254,8 @@ class Phone(com_lgvx4400.Phone):
         g=self.protocolclass.pbgroups()
         for k in keys:
             e=self.protocolclass.pbgroup()
-            e.icon=groups[k]['icon']
+            e.group_id=groups[k]['group_id']
+            e.rectype = 0x30
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
@@ -241,50 +287,33 @@ class Phone(com_lgvx4400.Phone):
         req=self.protocolclass.pbinforequest()
         res=self.sendpbcommand(req, self.protocolclass.pbinforesponse)
         numexistingentries=res.numentries
-        if numexistingentries<0 or numexistingentries>1000:
-            self.log("The phone is lying about how many entries are in the phonebook so we are doing it the hard way")
-            numexistingentries=0
-            firstserial=None
-            loop=xrange(0,1000)
-            hardway=True
-        else:
-            self.log("There are %d existing entries" % (numexistingentries,))
-            progressmax+=numexistingentries
-            loop=xrange(0, numexistingentries)
-            hardway=False
+        self.log("There are %d existing entries" % (numexistingentries,))
+        progressmax+=numexistingentries
+        loop=xrange(0, numexistingentries)
         progresscur=0
+
         # reset cursor
         self.sendpbcommand(self.protocolclass.pbinitrequest(), self.protocolclass.pbinitresponse)
         for i in loop:
             ### Read current entry
-            if hardway:
-                numexistingentries+=1
-                progressmax+=1
             req=self.protocolclass.pbreadentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
 
-            entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1,
-                    'name': res.entry.name}
-#            assert entry['serial1']==entry['serial2'] # always the same
-            self.log("Reading entry "+`i`+" - "+entry['name'])
-            if hardway and firstserial is None:
-                firstserial=res.entry.serial1
+            entry={ 'number':  res.entry.entrynumber, 'serial1':  res.entry.serial1, 'name': res.entry.name}
+
+            self.log("Reading entry "+`i`+" - "+str(entry['serial1'])+" - "+entry['name'])
             existingpbook[i]=entry
             self.progress(progresscur, progressmax, "existing "+entry['name'])
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
             progresscur+=1
-            if hardway:
-                # look to see if we have looped
-                if res.serial==firstserial or res.serial==0:
-                    break
         # we have now looped around back to begining
 
         # Find entries that have been deleted
         pbook=data['phonebook']
         dellist=[]
-        for i in range(0, numexistingentries):
+        for i in loop:
             ii=existingpbook[i]
             serial=ii['serial1']
             item=self._findserial(serial, pbook)
@@ -298,10 +327,10 @@ class Phone(com_lgvx4400.Phone):
             progresscur+=1
             numexistingentries-=1  # keep count right
             ii=existingpbook[i]
-            self.log("Deleting entry "+`i`+" - "+ii['name'])
+            self.log("Deleting entry "+`i`+" - "+str(ii['serial1'])+" - "+ii['name'])
             req=self.protocolclass.pbdeleteentryrequest()
             req.serial1=ii['serial1']
-#            req.serial2=ii['serial2']
+            req.serial2=ii['serial1']
             req.entrynumber=ii['number']
             self.sendpbcommand(req, self.protocolclass.pbdeleteentryresponse)
             self.progress(progresscur, progressmax, "Deleting "+ii['name'])
@@ -311,6 +340,7 @@ class Phone(com_lgvx4400.Phone):
         # counter to keep track of record number (otherwise appends don't work)
         counter=0
         # Now rewrite out existing entries
+        self.log("Rewrite existing entries")
         keys=existingpbook.keys()
         existingserials=[]
         keys.sort()  # do in same order as existingpbook
@@ -326,13 +356,15 @@ class Phone(com_lgvx4400.Phone):
             req.entry=entry
             res=self.sendpbcommand(req, self.protocolclass.pbupdateentryresponse)
             serialupdates.append( ( ii["bitpimserial"],
-                                    {'sourcetype': self.serialsname, 'serial1': res.serial1,
+                                    {'sourcetype': self.serialsname,
+                                     'serial1': res.serial1,
                                      'sourceuniqueid': data['uniqueserial']})
                                   )
             assert ii['serial1']==res.serial1 # serial should stay the same
 
         # Finally write out new entries
         keys=pbook.keys()
+        self.log("Write new entries")
         keys.sort()
         for i in keys:
             ii=pbook[i]
@@ -347,7 +379,8 @@ class Phone(com_lgvx4400.Phone):
             req.entry=entry
             res=self.sendpbcommand(req, self.protocolclass.pbappendentryresponse)
             serialupdates.append( ( ii["bitpimserial"],
-                                     {'sourcetype': self.serialsname, 'serial1': res.newserial,
+                                     {'sourcetype': self.serialsname,
+                                      'serial1': res.newserial,
                                      'sourceuniqueid': data['uniqueserial']})
                                   )
         data["serialupdates"]=serialupdates
@@ -407,289 +440,57 @@ class Phone(com_lgvx4400.Phone):
 
             # We check the existing speed dial file as changes require a reboot
             self.log("Checking existing speed dials")
-            if buffer.getvalue()!=self.getfilecontents("pim/pbooksdial.dat"):
-                self.logdata("New speed dial file", buffer.getvalue(), req)
-                self.writefile("pim/pbooksdial.dat", buffer.getvalue())
-                self.log("Your phone has to be rebooted due to the speed dials changing")
-                self.progress(progressmax, progressmax, "Rebooting phone")
-                data["rebootphone"]=True
-            else:
-                self.log("No changes to speed dials")
+            try:
+                if buffer.getvalue()!=self.getfilecontents("pim/pbooksdial.dat"):
+                    self.logdata("New speed dial file", buffer.getvalue(), req)
+                    self.writefile("pim/pbooksdial.dat", buffer.getvalue())
+                    self.log("Your phone has to be rebooted due to the speed dials changing")
+                    self.progress(progressmax, progressmax, "Rebooting phone")
+                    data["rebootphone"]=True
+                else:
+                    self.log("No changes to speed dials")
+            except com_brew.BrewNoSuchFileException:
+                self.log("speed dials file not found on phone")
 
         return data
 
+#----- Calendar  -----------------------------------------------------------------------
 
-    def _findserial(self, serial, dict):
-        """Searches dict to find entry with matching serial.  If not found,
-        returns None"""
-        for i in dict:
-            if dict[i]['serial1']==serial:
-                return i
-        return None
+    def getcalendar(self,result): pass
+    def savecalendar(self,result): pass
 
-    def _normaliseindices(self, d):
-        "turn all negative keys into positive ones for index"
-        res={}
-        keys=d.keys()
-        keys.sort()
-        keys.reverse()
-        for k in keys:
-            if k<0:
-                for c in range(999999):
-                    if c not in keys and c not in res:
-                        break
-                res[c]=d[k]
-            else:
-                res[k]=d[k]
-        return res
+#----- Ringtones -----------------------------------------------------------------------
 
-    def extractphonebookentry(self, entry, speeds, fundamentals):
-        """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
-        res={}
-        # serials
-        res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.serial1,
-                          'sourceuniqueid': fundamentals['uniqueserial']} ]
-        # only one name
-        res['names']=[ {'full': entry.name} ]
-        # only one category
-        cat=fundamentals['groups'].get(entry.group, {'name': "No Group"})['name']
-        if cat!="No Group":
-            res['categories']=[ {'category': cat} ]
-        # emails
-        res['emails']=[]
-        for i in entry.emails:
-            if len(i.email):
-                res['emails'].append( {'email': i.email} )
-        if not len(res['emails']): del res['emails'] # it was empty
-        # urls
-        if 'url' in entry.getfields() and len(entry.url):
-            res['urls']=[ {'url': entry.url} ]
-        # private
-        if 'secret' in entry.getfields() and entry.secret:
-            # we only supply secret if it is true
-            res['flags']=[ {'secret': entry.secret } ]
-        # memos
-        if  'memo' in entry.getfields() and len(entry.memo):
-            res['memos']=[ {'memo': entry.memo } ]
-        # wallpapers
-        if entry.wallpaper!=self.protocolclass.NOWALLPAPER:
-            try:
-                paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
-                res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]
-            except:
-                print "can't find wallpaper for index",entry.wallpaper
-                pass
+    def getringtones(self, result): pass
+    def saveringtones(self, results, merge): pass
 
-        # ringtones
-        res['ringtones']=[]
-        if 'ringtone' in entry.getfields() and entry.ringtone!=self.protocolclass.NORINGTONE:
-            try:
-                tone=fundamentals['ringtone-index'][entry.ringtone]['name']
-                res['ringtones'].append({'ringtone': tone, 'use': 'call'})
-            except:
-                print "can't find ringtone for index",entry.ringtone
-#       if 'msgringtone' in entry.getfields() and entry.msgringtone!=self.protocolclass.NOMSGRINGTONE:
-#           try:
-#               tone=fundamentals['ringtone-index'][entry.msgringtone]['name']
-#               res['ringtones'].append({'ringtone': tone, 'use': 'message'})
-#           except:
-#               print "can't find ringtone for index",entry.msgringtone
-#       if len(res['ringtones'])==0:
-#           del res['ringtones']
+#----- Wallpapers ----------------------------------------------------------------
 
-        if(getattr(self.protocolclass, 'SPEEDDIALINDEX', 0)==0):
-            res=self._assignpbtypeandspeeddialsbyposition(entry, speeds, res)
-        else:
-            res=self._assignpbtypeandspeeddialsbytype(entry, speeds, res)
-        return res
+    def getwallpapers(self, result): pass
+    savewallpapers=None
 
-    def _assignpbtypeandspeeddialsbyposition(self, entry, speeds, res):
-        # numbers
-        res['numbers']=[]
-        for i in range(self.protocolclass.NUMPHONENUMBERS):
-            num=entry.numbers[i].number
-            type=entry.numbertypes[i].numbertype
-            if len(num):
-                t=self.protocolclass.numbertypetab[type]
-                if t[-1]=='2':
-                    t=t[:-1]
-                res['numbers'].append({'number': num, 'type': t})
-        # speed dials
-        if entry.entrynumber in speeds:
-            for speeddial,numberindex in speeds[entry.entrynumber]:
-                try:
-                    res['numbers'][numberindex]['speeddial']=speeddial
-                except IndexError:
-                    print "speed dial refers to non-existent number\n",res['numbers'],"\n",numberindex,speeddial
-        return res
+#----- Phone Detection -----------------------------------------------------------
 
-    def _assignpbtypeandspeeddialsbytype(self, entry, speeds, res):
-        # for some phones (e.g. vx8100) the speeddial numberindex is really the numbertype (now why would LG want to change this!)
-        res['numbers']=[]
-        for i in range(self.protocolclass.NUMPHONENUMBERS):
-            num=entry.numbers[i].number
-            type=entry.numbertypes[i].numbertype
-            if len(num):
-                t=self.protocolclass.numbertypetab[type]
-                if t[-1]=='2':
-                    t=t[:-1]
-                res['numbers'].append({'number': num, 'type': t})
-                # if this is a speeddial number set it
-                if entry.entrynumber in speeds and speeds[entry.entrynumber][0][1]==entry.numbertypes[i].numbertype:
-                    res['numbers'][i]['speeddial']=speeds[entry.entrynumber][0][0]
-        return res
-
-    def _findmediainindex(self, index, name, pbentryname, type):
-        if type=="ringtone": default=self.protocolclass.NORINGTONE
-        elif type=="message ringtone": default=self.protocolclass.NOMSGRINGTONE
-        elif type=="wallpaper": default=self.protocolclass.NOWALLPAPER
-        else:
-            assert False, "unknown type "+type
-
-        if name is None:
-            return default
-        for i in index:
-            if index[i]['name']==name:
-                return i
-        self.log("%s: Unable to find %s %s in the index. Setting to default." % (pbentryname, type, name))
-        return default
-
-    def makeentry(self, counter, entry, data):
-        """Creates pbentry object
-
-        @param counter: The new entry number
-        @param entry:   The phonebook object (as returned from convertphonebooktophone) that we
-                        are using as the source
-        @param data:    The main dictionary, which we use to get access to media indices amongst
-                        other things
-                        """
-        e=self.protocolclass.pbentry()
-        e.entrynumber=counter
-
-        for k in entry:
-            # special treatment for lists
-            if k in ('emails', 'numbers', 'numbertypes'):
-                l=getattr(e,k)
-                for item in entry[k]:
-                    l.append(item)
-            elif k=='ringtone':
-                e.ringtone=self._findmediainindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
-            elif k=='msgringtone':
-                e.msgringtone=self._findmediainindex(data['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
-            elif k=='wallpaper':
-                e.wallpaper=self._findmediainindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
-            elif k in e.getfields():
-                # everything else we just set
-                setattr(e,k,entry[k])
-
-        return e
-
-    brew_version_txt_key='brew_version.txt'
-    brew_version_file='brew/version.txt'
-    lgpbinfo_key='lgpbinfo'
     esn_file_key='esn_file'
     esn_file='nvm/$SYS.ESN'
-    my_model='pm325'
 
-parentprofile=com_phone.Profile
+
+#----- Profile Class -------------------------------------------------------------
+def phonize(str):
+    """Convert the phone number into something the phone understands
+
+    All digits, P, H, T, * and # are kept, everything else is removed"""
+    return re.sub("[^0-9HPT#*]", "", str)
+
+parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
     BP_Calendar_Version=3
-    phone_manufacturer='LG Electronics Inc'
-    phone_model='LG-LX325'
+    phone_manufacturer='LG Electronics Inc.'
+    phone_model='LG-LX325'      # aka the PM325 from Sprint
+    brew_required=True
 
-    WALLPAPER_WIDTH=120
-    WALLPAPER_HEIGHT=98
-    MAX_WALLPAPER_BASENAME_LENGTH=19
-    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
-    WALLPAPER_CONVERT_FORMAT="bmp"
-
-    MAX_RINGTONE_BASENAME_LENGTH=19
-    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
-
-    # which usb ids correspond to us
-    usbids_straight=( ( 0x1004, 0x6000, 2), )# VID=LG Electronics, PID=LG pm325 -internal USB diagnostics interface
-    usbids_usbtoserial=(
-        ( 0x067b, 0x2303, None), # VID=Prolific, PID=USB to serial
-        ( 0x0403, 0x6001, None), # VID=FTDI, PID=USB to serial
-        ( 0x0731, 0x2003, None), # VID=Susteen, PID=Universal USB to serial
-        )
-    usbids=usbids_straight+usbids_usbtoserial
-
-    # which device classes we are.  we are not a modem!
-    deviceclasses=("serial",)
-
-    # nb we don't allow save to camera so it isn't listed here
-    imageorigins={}
-    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
-    def GetImageOrigins(self):
-        return self.imageorigins
-
-    # our targets are the same for all origins
-    imagetargets={}
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 120, 'height': 98, 'format': "BMP"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 120, 'height': 98, 'format': "BMP"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 120, 'height': 133, 'format': "BMP"}))
-
-    def GetTargetsForImageOrigin(self, origin):
-        return self.imagetargets
-
-    def __init__(self):
-        parentprofile.__init__(self)
-
-    def _getgroup(self, name, groups):
-        for key in groups:
-            if groups[key]['name']==name:
-                return key,groups[key]
-        return None,None
-
-
-    def normalisegroups(self, helper, data):
-        "Assigns groups based on category data"
-
-        pad=[]
-        keys=data['groups'].keys()
-        keys.sort()
-        for k in keys:
-                if k: # ignore key 0 which is 'No Group'
-                    name=data['groups'][k]['name']
-                    pad.append(name)
-
-        groups=helper.getmostpopularcategories(10, data['phonebook'], ["No Group"], 22, pad)
-
-        # alpha sort
-        groups.sort()
-
-        # newgroups
-        newgroups={}
-
-        # put in No group
-        newgroups[0]={'name': 'No Group', 'icon': 0}
-
-        # populate
-        for name in groups:
-            # existing entries remain unchanged
-            if name=="No Group": continue
-            key,value=self._getgroup(name, data['groups'])
-            if key is not None and key!=0:
-                newgroups[key]=value
-        # new entries get whatever numbers are free
-        for name in groups:
-            key,value=self._getgroup(name, newgroups)
-            if key is None:
-                for key in range(1,100000):
-                    if key not in newgroups:
-                        newgroups[key]={'name': name, 'icon': 1}
-                        break
-
-        # yay, done
-        if data['groups']!=newgroups:
-            data['groups']=newgroups
-            data['rebootphone']=True
 
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone
@@ -700,8 +501,6 @@ class Profile(parentprofile):
 
         speeds={}
 
-        self.normalisegroups(helper, data)
-
         for pbentry in data['phonebook']:
             if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
                 break
@@ -710,20 +509,18 @@ class Profile(parentprofile):
             try:
                 # serials
                 serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
-#                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
 
                 e['serial1']=serial1
-#                e['serial2']=serial2
                 for ss in entry["serials"]:
                     if ss["sourcetype"]=="bitpim":
                         e['bitpimserial']=ss
                 assert e['bitpimserial']
 
                 # name
-                e['name']=helper.getfullname(entry.get('names', []),1,1,22)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,33)[0]
 
                 # categories/groups
-                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,22), None)
+                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,32), None)
                 if cat is None:
                     e['group']=0
                 else:
@@ -749,6 +546,7 @@ class Profile(parentprofile):
                 minnumbers=1
                 if len(emails): minnumbers=0
                 numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
+                e['numberspeeds']=[]
                 e['numbertypes']=[]
                 e['numbers']=[]
                 for numindex in range(len(numbers)):
@@ -758,10 +556,6 @@ class Profile(parentprofile):
                     type=num['type']
                     for i,t in enumerate(self.protocolclass.numbertypetab):
                         if type==t:
-                            # some voodoo to ensure the second home becomes home2
-                            if i in e['numbertypes'] and t[-1]!='2':
-                                type+='2'
-                                continue
                             e['numbertypes'].append(i)
                             break
                         if t=='none': # conveniently last entry
@@ -785,13 +579,14 @@ class Profile(parentprofile):
                         if sd>=self.protocolclass.FIRSTSPEEDDIAL and sd<=self.protocolclass.LASTSPEEDDIAL:
                             speeds[sd]=(e['bitpimserial'], numindex)
 
+                e['numberspeeds']=helper.filllist(e['numberspeeds'], 5, 0)
                 e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=helper.filllist(e['numbers'], 5, "")
 
                 # ringtones, wallpaper
-#                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
-#                e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
-#                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                # e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
                 # flags
                 e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
@@ -808,21 +603,16 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-#        ('calendar', 'read', None),   # all calendar reading
-#        ('wallpaper', 'read', None),  # all wallpaper reading
-#        ('ringtone', 'read', None),   # all ringtone reading
-#        ('call_history', 'read', None),# all call history list reading
-#        ('sms', 'read', None),         # all SMS list reading
-#        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-#        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-#        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
-#        ('wallpaper', 'write', 'OVERWRITE'),
-#        ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
-#        ('ringtone', 'write', 'OVERWRITE'),
-#        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
+        #('calendar', 'read', None),   # all calendar reading
+        #('wallpaper', 'read', None),  # all wallpaper reading
+        #('ringtone', 'read', None),   # all ringtone reading
+        #('call_history', 'read', None),# all call history list reading
+        #('sms', 'read', None),         # all SMS list reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        #('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        #('wallpaper', 'write', 'OVERWRITE'),
+        #('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
+        #('ringtone', 'write', 'OVERWRITE'),
+        #('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         )
-
-
-
-
-
