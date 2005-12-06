@@ -69,7 +69,7 @@ PACKET pbentry:
     4  UINT serial1
     2  UINT {'constant': 0x026E} +entrysize
     2  UINT entrynumber                 #is this the right length?
-    2  UNKNOWN unknown1                 #what is this?
+    2  UNKNOWN +unknown1		#what is this?
     33 STRING {'raiseonunterminatedread': False} name
     2  UINT group
     1  UINT ringtone
@@ -90,12 +90,10 @@ PACKET pbentry:
 PACKET pbgroup:
     "A single group"
     1 UINT group_id
-    1 UINT {'constant': 0x30} unknown1   #????
-    3 UINT unknown2
-    3 UINT unknown3
-    32 STRING {'raiseonunterminatedread': False}name
-    1 UINT unk3
-
+    1 UINT rectype 	# 0x30 or 0xFF if deleted
+    3 UNKNOWN +unknown2
+    3 UNKNOWN +unknown3
+    33 STRING {'raiseonunterminatedread': False} name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -113,6 +111,3 @@ PACKET indexfile:
     P UINT {'constant': 30} maxitems
     2 UINT numactiveitems
     * LIST {'length': self.maxitems, 'elementclass': indexentry, 'createdefault': True} +items
-
-
-
