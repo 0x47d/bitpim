@@ -387,17 +387,17 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
             self._item_list.SetItemPyData(i, data_key)
 
     def _publish_today_data(self):
-        keys=self._data.keys()
+        keys=[(x.datetime, k) for k,x in self._data.items()]
         keys.sort()
         keys.reverse()
         today_event=today.TodayIncomingCallsEvent()
         today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for k in keys \
+                                    for _,k in keys \
                                     if self._data[k].folder==CallHistoryEntry.Folder_Incoming]
         today_event.broadcast()
         today_event=today.TodayMissedCallsEvent()
         today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for k in keys \
+                                    for _,k in keys \
                                     if self._data[k].folder==CallHistoryEntry.Folder_Missed]
         today_event.broadcast()
 

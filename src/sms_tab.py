@@ -348,11 +348,11 @@ class FolderPage(wx.Panel):
         return True
 
     def publish_today_data(self):
-        keys=self._data.keys()
+        keys=[(x.datetime,k) for k,x in self._data.items()]
         keys.sort()
         keys.reverse()
         today_event=today.TodaySMSEvent()
-        for k in keys:
+        for _,k in keys:
             if self._data[k].folder==sms.SMSEntry.Folder_Inbox:
                 today_event.append(self._data[k].text,
                                    { 'id': self._data_map[k] } )
