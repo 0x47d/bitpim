@@ -171,7 +171,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                     if not self._is_rs_file(item.filename):
                         media[common.basename(item.filename)]=self.getfilecontents(
                             item.filename, True)
-                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+                except (com_brew.BrewNoSuchFileException,
+                        com_brew.BrewBadPathnameException,
+                        com_brew.BrewNameTooLongException,
+                        ValueError):
                     self.log("It was in the index, but not on the filesystem")
 
         results[key]=media
