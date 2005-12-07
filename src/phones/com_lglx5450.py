@@ -90,6 +90,7 @@ class Phone(com_lgvx4400.Phone):
         return index
 
     def eval_detect_data(self, res):
+        found=False
         if res.get(self.brew_version_txt_key, None) is not None:
             found=res[self.brew_version_txt_key][:len(self.my_version_txt)]==self.my_version_txt
         if found:
