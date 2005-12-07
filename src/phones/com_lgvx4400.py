@@ -536,21 +536,26 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         keys=pbook.keys()
         keys.sort()
         for i in keys:
-            ii=pbook[i]
-            if ii['serial1'] in existingserials:
-                continue # already wrote this one out
-            progresscur+=1
-            entry=self.makeentry(counter, ii, data)
-            counter+=1
-            self.log("Appending entry "+ii['name'])
-            self.progress(progresscur, progressmax, "Writing "+ii['name'])
-            req=self.protocolclass.pbappendentryrequest()
-            req.entry=entry
-            res=self.sendpbcommand(req, self.protocolclass.pbappendentryresponse)
-            serialupdates.append( ( ii["bitpimserial"],
-                                     {'sourcetype': self.serialsname, 'serial1': res.newserial, 'serial2': res.newserial,
-                                     'sourceuniqueid': data['uniqueserial']})
+            try:
+                ii=pbook[i]
+                if ii['serial1'] in existingserials:
+                    continue # already wrote this one out
+                progresscur+=1
+                entry=self.makeentry(counter, ii, data)
+                counter+=1
+                self.log("Appending entry "+ii['name'])
+                self.progress(progresscur, progressmax, "Writing "+ii['name'])
+                req=self.protocolclass.pbappendentryrequest()
+                req.entry=entry
+                res=self.sendpbcommand(req, self.protocolclass.pbappendentryresponse)
+                serialupdates.append( ( ii["bitpimserial"],
+                                         {'sourcetype': self.serialsname, 'serial1': res.newserial, 'serial2': res.newserial,
+                                         'sourceuniqueid': data['uniqueserial']})
                                   )
+            except:
+                self.log('Failed to write entry: '+ii['name'])
+                if __debug__:
+                    raise
         data["serialupdates"]=serialupdates
         # deal with the speeddials
         if data.get("speeddials",None) is not None:
