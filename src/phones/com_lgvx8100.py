@@ -531,18 +531,38 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 com_brew.BrewBadPathnameException):
             # dir does not exist, no media files available
             pass
-        idxlist=_files.keys()
-        if len(idxlist)>_maxsize:
-            idxlist=idxlist[:_maxsize]
-        idxlist.sort()
-        idxlist.reverse()
+        # dict of all indices
+        _idx_keys={}
+        for _i in xrange(_index, _index+_maxsize):
+            _idx_keys[_i]=True
+        # assign existing indices
+        for _item in self.getindex(indexfile):
+            if _files.has_key(_item.filename):
+                _files[_item.filename]['index']=_item.index
+                _idx_keys[_item.index]=False
+        # available new indices
+        _idx_keys_list=[k for k,x in _idx_keys.items() if x]
+        _idx_keys_list.sort()
+        _idx_cnt=0
+        # assign new indices
+        _file_list=[x for x in _files if not _files[x].get('index', None)]
+        _file_list.sort()
+        if len(_file_list)>len(_idx_keys_list):
+            _file_list=_file_list[:len(_idx_keys_list)]
+        for i in _file_list:
+            _files[i]['index']=_idx_keys_list[_idx_cnt]
+            _idx_cnt+=1
+        # (index, file name) list for writing
+        _res_list=[(x['index'],k) for k,x in _files.items() if x.get('index', None)]
+        _res_list.sort()
+        _res_list.reverse()
+        # writing the index file
         ifile=self.protocolclass.indexfile()
-        _idx_cnt=_index+len(idxlist)-1
         _file_size=0
-        for idx in idxlist:
+        for index,idx in _res_list:
             _fs_size=_files[idx]['size']
             ie=self.protocolclass.indexentry()
-            ie.index=_idx_cnt
+            ie.index=index
             ie.type=_vtype
             ie.filename=idx
             if _need_date:
@@ -550,19 +570,17 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 _stat=self.statfile(_files[idx]['name'])
                 if _stat:
                     ie.date=_stat['datevalue']-time.timezone
-            # ie.date left as zero
             ie.dunno=_dunno
             ie.icon=_icon
             ie.size=_fs_size
             ifile.items.append(ie)
-            _idx_cnt-=1
             if not self._is_rs_file(idx):
                 _file_size+=_fs_size
         buf=prototypes.buffer()
         ifile.writetobuffer(buf)
         self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
-        self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
-        self.writefile(_info['indexfile'], buf.getvalue())
+        self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(_res_list)`+" entries.")
+        self.writefile(indexfile, buf.getvalue())
         # writing the size file
         if sizefile:
             szfile=self.protocolclass.sizefile()
