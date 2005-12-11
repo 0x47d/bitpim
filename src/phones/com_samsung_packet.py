@@ -1,7 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2004 Joe Pham <djpham@netzero.com>
-### Copyright (C) 2004 Stephen Wood <saw@bitpim.org>
+### Copyright (C) 2004-2005 Stephen Wood <saw@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -21,7 +21,7 @@ import re
 import todo
 import memo
 
-class Phone(com_phone.Phone,com_brew.BrewProtocol):
+class Phone(com_phone.Phone, com_brew.BrewProtocol):
     "Talk to a Samsung phone using AT commands"
 
     desc="Samsung SPH-Axx phone"
@@ -34,8 +34,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     # value such as 19800106T000000
     # if it does support end-datetime, set this to None
     __cal_end_datetime_value=None
-    __cal_alarm_values={
-        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    __cal_alarm_values={0: 10, 1: 30, 2: 60, 3: 0, 4: -1 }
     __cal_max_name_len=32
     
     def __init__(self, logtarget, commport):
@@ -491,18 +490,20 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             # time stamp
             req.timestamp=list(time.localtime(time.time())[0:6])
 
-            # Alarm type
-            alarm_type=None
+            # Approximate the alarm value
             alarm=c['alarm']
-            for i in self.__cal_alarm_values:
-                if self.__cal_alarm_values[i]==alarm:
-                    alarm_type=i
+            vals=self.__cal_alarm_values.values()
+            vals.sort()
+            vals.reverse()
+            normalized_alarm=-1
+            for m in vals:
+                if alarm>=m:
+                    normalized_alarm=m
                     break
-            if alarm_type is None:
-                self.log(c['description']+": Alarm value not specified, set to -1.")
-                alarm_type=0
-                c['alarm']=self.__cal_alarm_values[0]
-            req.alarm=alarm_type
+            for alarm_index in self.__cal_alarm_values.keys():
+                if normalized_alarm==self.__cal_alarm_values[alarm_index]:
+                    break
+            req.alarm=alarm_index
 
             # Name, check for bad char & proper length
             name=c['description'].replace('"', '')
@@ -632,7 +633,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             req.slot=slot
             self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
     
-        
+    getcallhistory=None
         
 class Profile(com_phone.Profile):
 
