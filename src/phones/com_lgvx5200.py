@@ -6,6 +6,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
+### $Id$
 
 """Communicate with the LG VX5200 cell phone
 
@@ -51,8 +52,8 @@ class Phone(com_lgvx8100.Phone):
 
     ringtonelocations= (
         # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon
-        ( 'ringers', 'dload/ringtone.dat', '', 'user/sound/ringer', 100, 150, 0x201, 1),
-        #( 'sounds', 'dload/sound.dat', 'dload/soundsize.dat', 'dload/snd', 100, 150, 2, 0),
+        ( 'ringers', 'dload/ringtone.dat', '', 'user/sound/ringer', 100, 150, 0x201, 1, 0),
+        #( 'sounds', 'dload/sound.dat', 'dload/soundsize.dat', 'dload/snd', 100, 150, 2, 0, 0),
         )
 
     calendarlocation="sch/schedule.dat"
@@ -63,7 +64,7 @@ class Phone(com_lgvx8100.Phone):
     builtinwallpapers = () # none
 
     wallpaperlocations= (
-        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'dload/img', 100, 50, 0, 0),
+        ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'dload/img', 100, 50, 0, 0, 0),
         )
     
     def __init__(self, logtarget, commport):
@@ -71,6 +72,13 @@ class Phone(com_lgvx8100.Phone):
         self.mode=self.MODENONE
 
     my_model='VX5200'
+
+    # Media stuff---------------------------------------------------------------
+    # Bypassing the 8100/9800 specific stuff
+    def getmedia(self, maps, results, key):
+        return com_lg.LGNewIndexedMedia2.getmedia(self, maps, results, key)
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+        return com_lg.LGNewIndexedMedia2.savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction)
 
 parentprofile=com_lgvx8100.Profile
 class Profile(parentprofile):
