@@ -19,6 +19,42 @@ import guihelper
 
 """The dialog for editing a phonebook entry"""
 
+# NavToolBar--------------------------------------------------------------------
+class NavToolBar(wx.ToolBar):
+    _id_up=wx.NewId()
+    _id_down=wx.NewId()
+    _id_del=wx.NewId()
+    def __init__(self, parent, horizontal=True):
+        self._parent=parent
+        self._grandpa=parent.GetParent()
+        _style=wx.TB_FLAT|wx.TB_TEXT
+        if horizontal:
+            _style|=wx.TB_HORIZONTAL
+        else:
+            _style|=wx.TB_VERTICAL
+        super(NavToolBar, self).__init__(parent, -1, style=_style)
+        self.SetToolBitmapSize(wx.Size(16, 16))
+        sz=self.GetToolBitmapSize()
+        self.AddLabelTool(NavToolBar._id_up, "Up", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_UP, wx.ART_TOOLBAR, sz), shortHelp="Move field up")
+        self.AddLabelTool(NavToolBar._id_down, "Down", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_DOWN, wx.ART_TOOLBAR, sz), shortHelp="Move field down")
+        self.AddLabelTool(NavToolBar._id_del, "Delete", wx.ArtProvider.GetBitmap(guihelper.ART_DEL_FIELD, wx.ART_TOOLBAR, sz), shortHelp="Delete field")
+        if hasattr(self._grandpa, 'MoveField'):
+            wx.EVT_TOOL(self, NavToolBar._id_up, self.OnMoveUp)
+            wx.EVT_TOOL(self, NavToolBar._id_down, self.OnMoveDown)
+        if hasattr(self._grandpa, 'DeleteField'):
+            wx.EVT_TOOL(self, NavToolBar._id_del, self.OnDelete)
+        self.Realize()
+
+    def OnMoveUp(self, _):
+        self._grandpa.MoveField(self._parent, -1)
+
+    def OnMoveDown(self, _):
+        self._grandpa.MoveField(self._parent, +1)
+
+    def OnDelete(self, _):
+        self._grandpa.DeleteField(self._parent)
+
+# DirtyUIBase-------------------------------------------------------------------
 myEVT_DIRTY_UI=wx.NewEventType()
 EVT_DIRTY_UI=wx.PyEventBinder(myEVT_DIRTY_UI, 1)
 
@@ -34,7 +70,8 @@ class DirtyUIBase(wx.Panel):
         self.dirty=True
         self.GetEventHandler().ProcessEvent(\
             wx.PyCommandEvent(myEVT_DIRTY_UI, self.GetId()))
-        
+
+# RingtoneEditor----------------------------------------------------------------
 class RingtoneEditor(DirtyUIBase):
     "Edit a ringtone"
 
@@ -49,7 +86,7 @@ class RingtoneEditor(DirtyUIBase):
 
     _bordersize=3
 
-    def __init__(self, parent, _, has_type=True):
+    def __init__(self, parent, _, has_type=True, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Ringtone"), wx.HORIZONTAL)
 
@@ -69,7 +106,8 @@ class RingtoneEditor(DirtyUIBase):
 
         self.ringtone=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
         hs.Add(self.ringtone, 1, wx.EXPAND|wx.ALL, 5)
-
+        if navtoolbar:
+            hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
 
@@ -160,7 +198,7 @@ class RingtoneEditor(DirtyUIBase):
             res['use']=self.type.GetStringSelection()
         return res
         
-        
+# WallpaperEditor---------------------------------------------------------------
 class WallpaperEditor(DirtyUIBase):
 
     unnamed="Select:"
@@ -172,7 +210,7 @@ class WallpaperEditor(DirtyUIBase):
 
     _bordersize=3 # border inside HTML widget
     
-    def __init__(self, parent, _, has_type=True):
+    def __init__(self, parent, _, has_type=True, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Wallpaper"), wx.HORIZONTAL)
@@ -192,7 +230,8 @@ class WallpaperEditor(DirtyUIBase):
 
         self.wallpaper=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200), style=wx.LB_SINGLE)
         hs.Add(self.wallpaper, 1, wx.EXPAND|wx.ALL, 5)
-
+        if navtoolbar:
+            hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
 
@@ -279,6 +318,7 @@ class WallpaperEditor(DirtyUIBase):
             res['use']=self.type.GetStringSelection()
         return res
 
+# CategoryManager---------------------------------------------------------------
 class CategoryManager(wx.Dialog):
 
     def __init__(self, parent, title="Manage Categories"):
@@ -396,14 +436,14 @@ class CategoryManager(wx.Dialog):
         self.dellist.sort()
         self.UpdateLBs()
                
-
+# CategoryEditor----------------------------------------------------------------
 class CategoryEditor(DirtyUIBase):
 
     # we have to have an entry with a special string for the unnamed string
 
     unnamed="Select:"
 
-    def __init__(self, parent, pos):
+    def __init__(self, parent, pos, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
 
@@ -422,7 +462,8 @@ class CategoryEditor(DirtyUIBase):
 
         wx.EVT_LISTBOX(self, self.category.GetId(), self.OnDirtyUI)
         wx.EVT_LISTBOX_DCLICK(self, self.category.GetId(), self.OnDirtyUI)
-
+        if navtoolbar:
+            hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
 
@@ -465,16 +506,19 @@ class CategoryEditor(DirtyUIBase):
             self.category.SetStringSelection(self.unnamed)
         self.ignore_dirty=self.dirty=False
                 
+# MemoEditor--------------------------------------------------------------------
 class MemoEditor(DirtyUIBase):
 
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
 
-        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.VERTICAL)
+        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.HORIZONTAL)
 
         self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
         vs.Add(self.memo, 1, wx.EXPAND|wx.ALL, 5)
         wx.EVT_TEXT(self, self.memo.GetId(), self.OnDirtyUI)
+        if navtoolbar:
+            vs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(vs)
         vs.Fit(self)
 
@@ -493,17 +537,19 @@ class MemoEditor(DirtyUIBase):
             return {'memo': self.memo.GetValue()}
         return {}
 
-class NumberEditor(wx.Panel):
+# NumberEditor------------------------------------------------------------------
+class NumberEditor(DirtyUIBase):
 
     choices=[ ("None", "none"), ("Home", "home"), ("Office",
     "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"),
     ("Data", "data")]
 
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
 
-        wx.Panel.__init__(self, parent, -1)
+        DirtyUIBase.__init__(self, parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Number details"), wx.HORIZONTAL)
+
         hs.Add(wx.StaticText(self, -1, "Type"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.type=wx.ComboBox(self, -1, "None", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
@@ -516,6 +562,10 @@ class NumberEditor(wx.Panel):
         hs.Add(wx.StaticText(self, -1, "Number"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.number=wx.TextCtrl(self, -1, "")
         hs.Add(self.number, 1, wx.EXPAND|wx.ALL, 5)
+
+        # add a toolbar w/ the Up/Down/Del buttons
+        if navtoolbar:
+            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
 
         self.SetSizer(hs)
         hs.Fit(self)
@@ -547,14 +597,12 @@ class NumberEditor(wx.Panel):
                 pass
         res['type']=self.choices[self.type.GetSelection()][1]
         return res
-        
-                             
-                          
 
+# EmailEditor-------------------------------------------------------------------
 class EmailEditor(wx.Panel):
 
     ID_TYPE=wx.NewId()
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         wx.Panel.__init__(self, parent, -1)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Email Address"), wx.HORIZONTAL)
@@ -563,7 +611,8 @@ class EmailEditor(wx.Panel):
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
         self.email=wx.TextCtrl(self, -1, "")
         hs.Add(self.email, 1, wx.EXPAND|wx.ALL, 5)
-
+        if navtoolbar:
+            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
 
@@ -588,10 +637,11 @@ class EmailEditor(wx.Panel):
             res['type']='business'
         return res
 
+# URLEditor---------------------------------------------------------------------
 class URLEditor(wx.Panel):
 
     ID_TYPE=wx.NewId()
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         wx.Panel.__init__(self, parent, -1)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "URL"), wx.HORIZONTAL)
@@ -600,7 +650,8 @@ class URLEditor(wx.Panel):
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
         self.url=wx.TextCtrl(self, -1, "")
         hs.Add(self.url, 1, wx.EXPAND|wx.ALL, 5)
-
+        if navtoolbar:
+            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
 
@@ -625,8 +676,7 @@ class URLEditor(wx.Panel):
             res['type']='business'
         return res
 
-
-
+# AddressEditor-----------------------------------------------------------------
 class AddressEditor(wx.Panel):
 
     ID_TYPE=wx.NewId()
@@ -634,11 +684,12 @@ class AddressEditor(wx.Panel):
     fieldinfos=("street", "Street"), ("street2", "Street2"), ("city", "City"), \
             ("state", "State"), ("postalcode", "Postal/Zipcode"), ("country", "Country/Region")
 
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         wx.Panel.__init__(self, parent, -1)
 
-        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Address Details"), wx.VERTICAL)
-
+        _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Address Details"),
+                              wx.HORIZONTAL)
+        vs=wx.BoxSizer(wx.VERTICAL)
         hs=wx.BoxSizer(wx.HORIZONTAL)
         hs.Add(wx.StaticText(self, -1, "Type"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.type=wx.ComboBox(self, self.ID_TYPE, "Home", choices=["Home", "Business"], style=wx.CB_READONLY)
@@ -659,9 +710,12 @@ class AddressEditor(wx.Panel):
         vs.Add(hs,0,wx.EXPAND|wx.ALL, 5)
         vs.Add(gs,0,wx.EXPAND|wx.ALL, 5)
 
+        _hs.Add(vs, 0, wx.EXPAND|wx.ALL, 5)
+        if navtoolbar:
+            _hs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND|wx.BOTTOM, 5)
         # ::TODO:: disable company when type is home
         
-        self.SetSizer(vs)
+        self.SetSizer(_hs)
         vs.Fit(self)
 
     def Set(self, data):
@@ -690,15 +744,16 @@ class AddressEditor(wx.Panel):
         if len(res):
             res['type']=['home', 'business'][self.type.GetSelection()]
         return res
-                                             
-        
 
+# NameEditor--------------------------------------------------------------------
 class NameEditor(wx.Panel):
 
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         wx.Panel.__init__(self, parent, -1)
-        
-        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Name Details "), wx.VERTICAL)
+
+        _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Name Details'),
+                              wx.HORIZONTAL)
+        vs=wx.BoxSizer(wx.VERTICAL)
         hstop=wx.BoxSizer(wx.HORIZONTAL)
         hsbot=wx.BoxSizer(wx.HORIZONTAL)
         hstop.Add(wx.StaticText(self, -1, "First"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
@@ -718,9 +773,13 @@ class NameEditor(wx.Panel):
         hsbot.Add(self.nickname, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hstop, 0, wx.EXPAND|wx.ALL, 5)
         vs.Add(hsbot, 0, wx.EXPAND|wx.ALL, 5)
+        _hs.Add(vs, 0, wx.EXPAND|wx.ALL, 5)
+        # add a toolbar w/ the Up/Down/Del buttons
+        if navtoolbar:
+            _hs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND|wx.BOTTOM, 5)
 
         # use the sizer and resize ourselves according to space needed by sizer
-        self.SetSizer(vs)
+        self.SetSizer(_hs)
         vs.Fit(self)
 
     def Set(self, data):
@@ -738,8 +797,9 @@ class NameEditor(wx.Panel):
                 res[name]=widget.GetValue()
         return res
 
+# StorageEditor-----------------------------------------------------------------
 class StorageEditor(wx.Panel):
-    def __init__(self, parent, _):
+    def __init__(self, parent, _, navtoolbar=False):
         super(StorageEditor, self).__init__(parent, -1)
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Storage Details"),
                              wx.VERTICAL)
@@ -767,8 +827,14 @@ class StorageEditor(wx.Panel):
 
     def Get(self):
         return { 'flags': [{'sim': self._storage.GetValue()=='SIM' }]}
-        
+
+# EditorManager-----------------------------------------------------------------
 class EditorManager(fixedscrolledpanel.wxScrolledPanel):
+
+    ID_DOWN=wx.NewId()
+    ID_UP=wx.NewId()
+    ID_ADD=wx.NewId()
+    ID_DELETE=wx.NewId()
 
     def __init__(self, parent, childclass):
         """Constructor
@@ -792,7 +858,6 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         self.sizer.Add(self.instructions, 0, wx.ALIGN_CENTER )
         self.SetupScrolling()
 
-
     def Get(self):
         """Returns a list of dicts corresponding to the values"""
         res=[]
@@ -809,7 +874,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         callsus=False
         while len(data)>len(self.widgets):
             callsus=True
-            self.widgets.append(self.childclass(self, len(self.widgets)))
+            self.widgets.append(self.childclass(self, len(self.widgets),
+                                                navtoolbar=True))
             self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
         while len(self.widgets)>len(data):
             callsus=True
@@ -860,7 +926,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             pos=self.GetCurrentWidgetIndex()
         except IndexError:
             pos=len(gets)-1
-        self.widgets.append(self.childclass(self, len(self.widgets)))
+        self.widgets.append(self.childclass(self, len(self.widgets),
+                                            navtoolbar=True))
         self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
         self.DoInstructionsLayout() 
         self.sizer.Layout()
@@ -872,7 +939,60 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             self.widgets[pos+1].SetFocus()
         else:
             self.widgets[0].SetFocus()
-        
+
+    def MoveField(self, field, delta):
+        try:
+            pos=self.widgets.index(field)
+        except IndexError:
+            wx.Bell()
+            return
+        if pos+delta<0:
+            print "that would go off top"
+            return
+        if pos+delta>=len(self.widgets):
+            print "that would go off bottom"
+            return
+        gets=[x.Get() for x in self.widgets]
+        # swap value
+        path,settings=self.GetWidgetPathAndSettings(self.widgets[pos], field)
+        self.widgets[pos+delta].Set(gets[pos])
+        self.widgets[pos].Set(gets[pos+delta])
+        self.SetWidgetPathAndSettings(self.widgets[pos+delta], path, settings)
+
+    def DeleteField(self, field):
+        """Deletes the currently select widget"""
+        # ignore if there is nothing to delete
+        if len(self.widgets)==0:
+            return
+        # get the current value of all widgets
+        gets=[x.Get() for x in self.widgets]
+        try:
+            pos=self.widgets.index(field)
+        except IndexError:
+            wx.Bell()
+            return
+        # remove the last widget (the UI, not the value)
+        self.sizer.Remove(self.widgets[-1])
+        self.widgets[-1].Destroy()
+        del self.widgets[-1]
+        # if we deleted last item and it had focus, move focus
+        # to second to last item
+        if len(self.widgets):
+            if pos==len(self.widgets):
+                self.widgets[pos-1].SetFocus()
+        self.DoInstructionsLayout() 
+        self.sizer.Layout()
+        self.SetupScrolling()
+
+        # update from one we deleted to end
+        for i in range(pos, len(self.widgets)):
+            self.widgets[i].Set(gets[i+1])
+            
+        if len(self.widgets):
+            # change focus if we deleted the last widget
+            if pos<len(self.widgets):
+                self.widgets[pos].SetFocus()
+
     def Delete(self):
         """Deletes the currently select widget"""
         # ignore if there is nothing to delete
@@ -990,6 +1110,7 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         """Sets focus to the editor widget corresponding to the supplied index"""
         wx.CallAfter(self.widgets[index].SetFocus)
 
+# Editor------------------------------------------------------------------------
 class Editor(wx.Dialog):
     "The Editor Dialog itself.  It contains panes for the various field types."
     
@@ -1034,29 +1155,25 @@ class Editor(wx.Dialog):
         # make a copy of the data we are going to work on
         self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
-        tb=wx.ToolBar(self, 7, style=wx.TB_FLAT|wx.TB_HORIZONTAL|wx.TB_TEXT)
-        tb.SetToolBitmapSize(wx.Size(32,32))
-        sz=tb.GetToolBitmapSize()
-        tb.AddLabelTool(self.ID_UP, "Up", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_UP, wx.ART_TOOLBAR, sz), shortHelp="Move field up")
-        tb.AddLabelTool(self.ID_DOWN, "Down", wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_DOWN, wx.ART_TOOLBAR, sz), shortHelp="Move field down")
-        tb.AddSeparator()
-        tb.AddLabelTool(self.ID_ADD, "Add", wx.ArtProvider.GetBitmap(guihelper.ART_ADD_FIELD, wx.ART_TOOLBAR, sz), shortHelp="Add field")
-        tb.AddLabelTool(self.ID_DELETE, "Delete", wx.ArtProvider.GetBitmap(guihelper.ART_DEL_FIELD, wx.ART_TOOLBAR, sz), shortHelp="Delete field")
-
-        tb.Realize()
-        vs.Add(tb, 0, wx.EXPAND|wx.BOTTOM, 5)
         # the title & direction button
+        _hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self._title=wx.StaticText(self, -1, "Name here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
+        _add_btn=wx.BitmapButton(self, wx.NewId(),
+                                 wx.ArtProvider.GetBitmap(guihelper.ART_ADD_FIELD), name="Prev Item")
         if movement:
-            _hbs=wx.BoxSizer(wx.HORIZONTAL)
             _prev_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Prev Item")
             _next_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Item")
-            self._title=wx.StaticText(self, -1, "Name here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
             _hbs.Add(_prev_btn, 0, wx.EXPAND, 0)
+            _hbs.Add(_add_btn, 0, wx.EXPAND|wx.LEFT, 10)
             _hbs.Add(self._title, 1, wx.EXPAND, 0)
             _hbs.Add(_next_btn, 0, wx.EXPAND, 0)
-            vs.Add(_hbs, 0, wx.ALL|wx.EXPAND, 5)
             wx.EVT_BUTTON(self, _prev_btn.GetId(), self.OnMovePrev)
             wx.EVT_BUTTON(self, _next_btn.GetId(), self.OnMoveNext)
+        else:
+            _hbs.Add(_add_btn, 0, wx.EXPAND|wx.LEFT, 10)
+            _hbs.Add(self._title, 1, wx.EXPAND, 0)
+        wx.EVT_BUTTON(self, _add_btn.GetId(), self.Add)
+        vs.Add(_hbs, 0, wx.ALL|wx.EXPAND, 5)
 
         nb=wx.Notebook(self, -1)
         self.nb=nb
@@ -1165,6 +1282,7 @@ class Editor(wx.Dialog):
             self._data_key=_key
             self.Populate()
 
+# main--------------------------------------------------------------------------
 if __name__=='__main__':
 
     # data to edit
@@ -1183,12 +1301,7 @@ if __name__=='__main__':
            'memos': [ {'memo': 'Some stuff about this person " is usually welcome'}, {'memo': 'A second note'}],
            'numbers': [ {'number': '123-432-2342', 'type': 'home', 'speeddial': 3}, {'number': '121=+4321/4', 'type': 'fax'}]
            }
-           
-        
-           
-                                                      
-    
+
     app=wx.PySimpleApp()
     dlg=Editor(None,data)
     dlg.ShowModal()
-
