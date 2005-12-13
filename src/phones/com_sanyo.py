@@ -863,11 +863,15 @@ class SanyoPhonebook:
                 return False
                 
         req=self.protocolclass.sanyosendfileterminator()
-        res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
+        try:
+            res=self.sendpbcommand(req, self.protocolclass.sanyosendfileresponse, writemode=True, returnerror=True)
         # The returned value in res.header.faset may mean something
-        if 'errorcode' in res.getfields():
-            self.log(name+" not written due to error code "+`res.errorcode`)
-            return False
+            if 'errorcode' in res.getfields():
+                self.log(name+" not written due to error code "+`res.errorcode`)
+                return False
+        except:
+            self.log("Exception on writing terminator for file "+name)
+            self.log("Continuing...")
         
         end=time.time()
         if end-start>3:
