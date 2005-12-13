@@ -1401,6 +1401,10 @@ class Profile(parentprofile):
                         if sd>=self.protocolclass.FIRSTSPEEDDIAL and sd<=self.protocolclass.LASTSPEEDDIAL:
                             speeds[sd]=(e['bitpimserial'], numindex)
 
+                if len(e['numbers'])<minnumbers:
+                    # we couldn't find any numbers
+                    # for this entry, so skip it, entries with no numbers cause error
+                    continue 
                 e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=helper.filllist(e['numbers'], 5, "")
 
