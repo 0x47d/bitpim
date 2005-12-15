@@ -76,6 +76,8 @@ class Profile(com_sanyo.Profile):
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None), # Read sms messages
+        ('todo', 'read', None), # Read todos
     )
 
     def __init__(self):
