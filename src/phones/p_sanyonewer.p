@@ -266,6 +266,88 @@ PACKET wallpaperbuffer:
     * LIST {'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo} +wallpapers
     548 UNKNOWN +pad
 
+PACKET messagerequest:
+    * sanyoheader {'packettype': 0x0c,
+                   'command': 0xe1} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
+PACKET messageentry:
+    1 UINT slot
+    1 UINT read
+    1 UINT counter
+    3 UNKNOWN pad1
+    1 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UNKNOWN pad2
+    1 UINT dunno4
+    1 UINT dunno5
+    1 UNKNOWN pad3
+    1 UINT message_len
+    255 STRING message "Text of the notification"
+    1 UNKNOWN pad4
+    1 UINT year
+    1 UINT month
+    1 UINT day
+    1 UINT hour
+    1 UINT minute
+    1 UINT second
+    1 UINT callback_len
+    34 STRING callback
+    1 UINT phonenum_len
+    37 STRING phonenum
+    1 UINT dunno6
+    1 UINT priority
+    3 UNKNOWN pad6
+    1 UINT dunno7
+    1 UINT dunno8
+
+PACKET messageresponse:
+    * sanyoheader header
+    * messageentry entry
+    151 UNKNOWN pad
+
+PACKET foldernamerequest:
+    * sanyoheader {'packettype': 0x0b, 'command': 0xef} +header
+    1 UINT index
+    501 UNKNOWN +pad
+
+PACKET foldernameentry:
+    1 UINT index
+    1 UINT flag "0 if empty, 1 in use"
+    1 UINT autofile "If 1, autofile messages with keyword"
+    1 UINT notify
+    1 UINT icon
+    13 STRING {'raiseonunterminatedread': False} name "Name of the folder"
+    3 UNKNOWN +pad
+    14 STRING {'raiseonunterminatedread': False} keyword
+
+PACKET foldernameresponse:
+    * sanyoheader header
+    * foldernameentry entry
+    467 UNKNOWN pad
+
+PACKET todorequest:
+    * sanyoheader {'packettype': 0x0c,'command': 0x25} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
+PACKET todoentry:
+    1 UINT slot
+    1 UINT flag "0: Not used, 1: Used"
+    14 STRING {'raiseonunterminatedread': False} todo
+    7 UNKNOWN +pad1
+    1 UINT todo_len
+    1 UINT priority "0: Normal, 1: Urgent, 2: Done"
+    1 UINT +dunno "Maybe always zero"
+    1 UINT order "Gets sorted on screen in this order"
+
+PACKET todoresponse:
+    * sanyoheader header
+    * todoentry entry
+    472 UNKNOWN pad
+
 PACKET historyrequest:
     P UINT type "0: Outgoing, 1: Incoming, 2: Missed"
     if self.type==OUTGOING:
