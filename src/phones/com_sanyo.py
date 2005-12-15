@@ -25,6 +25,8 @@ import common
 import conversions
 import bpcalendar
 import call_history
+import sms
+import todo
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -323,6 +325,53 @@ class SanyoPhonebook:
             return 1
         return cmp(x.lower(), y.lower())
     
+    def getsms(self, result):
+        gsms = {}
+        self.log("Getting sms entries")
+        req=self.protocolclass.messagerequest()
+        for slot in range(self.protocolclass.NUMMESSAGESLOTS):
+            req.slot=slot
+            res=self.sendpbcommand(req, self.protocolclass.messageresponse)
+            if res.entry.dunno4==2:
+                entry=sms.SMSEntry()
+                entry.folder=entry.Folder_Inbox
+                entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
+                if res.entry.read==17:
+                    entry.read=1
+                else:
+                    entry.read=0
+                entry._from=res.entry.phonenum
+                entry.callback=res.entry.callback
+                entry.subject="%d-%s-%s" % ((res.entry.counter, res.entry.phonenum, res.entry.message[:12]))
+                self.log(res.entry.message[:8])
+                if res.entry.priority==100:
+                    entry.priority=sms.SMSEntry.Priority_Normal
+                if res.entry.priority==200:
+                    entry.priority=sms.SMSEntry.Priority_High
+                entry.text=unicode(res.entry.message, errors='ignore')
+                gsms[entry.id]=entry
+                result['sms']=gsms
+        return result
+
+    def gettodo(self, result):
+        gtodo = {}
+        self.log("Getting todo entries")
+        req=self.protocolclass.todorequest()
+        for slot in range(self.protocolclass.NUMTODOSLOTS):
+            req.slot=slot
+            res=self.sendpbcommand(req, self.protocolclass.todoresponse)
+            entry=todo.TodoEntry()
+            entry.summary=res.entry.todo
+            if res.entry.priority==2:
+                entry.status=4
+            if res.entry.priority==0:
+                entry.priority=5
+            if res.entry.priority==1:
+                entry.priority=1
+            gtodo[entry.id]=entry
+            result['todo']=gtodo
+        return result
+
     def getphonebook(self,result):
         pbook={}
         # Get Sort buffer so we know which of the 300 phone book slots
@@ -1296,6 +1345,7 @@ class Profile(com_phone.Profile):
         ('wallpaper', 'write', 'MERGE'),
         ('ringtone', 'write', 'MERGE'),
         ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),
         )
 ###
 
