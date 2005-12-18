@@ -204,6 +204,8 @@ class DebugBrewProtocol:
 
     def getfilesystem(self, dir="", recurse=0):
         results={}
+        _file=[]
+        _dir=[]
         self.log("Listing dir '"+dir+"'")
         _pwd=os.path.join(self._fs_path, dir)
         for _root,_dir,_file in os.walk(_pwd):

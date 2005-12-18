@@ -743,7 +743,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
 
         # build up list into init
         init={}
-        for type,_,_,_,lowestindex,_,typemajor,_ in maps:
+        for type,_,_,_,lowestindex,_,typemajor,_,_ in maps:
             init[type]={}
             for k in wpi.keys():
                 if wpi[k]['origin']==type:
@@ -783,7 +783,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
 
         # wp will now consist of items that weren't assigned any particular place
         # so put them in the first available space
-        for type,_,_,_,lowestindex,maxentries,typemajor,def_icon in maps:
+        for type,_,_,_,lowestindex,maxentries,typemajor,def_icon,_ in maps:
             # fill it up
             for w in wp.keys():
                 if len(init[type])>=maxentries:
@@ -796,7 +796,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
 
         # time to write the files out
         dircache=self.DirCache(self)
-        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon  in maps:
+        for type, indexfile, sizefile, directory, lowestindex, maxentries,typemajor,def_icon,_  in maps:
             # get the index file so we can work out what to delete
             names=[init[type][x]['name'] for x in init[type]]
             for item in self.getindex(indexfile):
