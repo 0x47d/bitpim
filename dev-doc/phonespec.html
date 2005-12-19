@@ -230,6 +230,116 @@ convertphonebooktophone - don't conv wallpaper and ringtone names since they
       <li>Phone.savephonebook
     </ul>
 
+<h1>Monolog on adding phone support...</h1>
+
+<p>Each phone supported by bitpim has two source files and one protocol file.
+The protocol file is used to generate one of the protocol files.
+Say you wanted to add support for a new phone "newphone". The filenames would be
+<pre>
+com_newphone.py
+p_newphone.p
+p_newphone.py (this one is generated when you run protogen.py, you do not edit it)
+</pre>
+
+<p>To make things easy for yourself you should copy one of the existing phones in bitpim.
+Try to choose a phone which is similar, i.e. the same manufacturer and the same basic
+feature set. Do a search and replace on the model name to create your new files.
+Remember to run protogen.py to generate the protocol source file. Make sure you change the 
+import directive in the com_newphone to use the new p_newphone file.
+
+<p>To make your phone appear in the list of supported phones edit guiwidgets.py. 
+Find the ConfigDialog class (~ln 340) and add your new phone to the list, the second
+field in the list is the filename of the new file you just created without the extension.
+
+<p>In the p_newphone.py are a bunch of PACKET defnintions, these tell bitpim how to communicate
+with your phone. You have to create a PACKET definition for the files and messages you are decoding.
+Most of the time if you are copying a similar phone these PACKET definition will not need to 
+be changed, or if they do the change will be slight, often the size of a field will change from
+one model to another. The SMS PACKET definitions on the LG phones are a really good example of
+how the manufacturers constantly change things.
+
+<p>Figuring out the correct PACKET definitions is probably the hardest thing to do. There are 2 ways
+to get data from the phone, Sending messages over the serial port and reading/writing the phone's 
+filesystem directly. In general using the serial port to send messages is better than directly accessing
+the filesystem as the serial protocols change less from one phone to another. Also writing the
+filesystem directly can require a phone reboot for the changes to take effect.
+
+<p>These packet definitions get used by get and save functions in the com_newphone.py class.
+
+<p>The com_newphone class contains 2 classes that your phone inherits from and overrides.
+<p><b>Phone</b> - 
+<p>This class is where you will write most of the code to convert from the phone's proprietary
+format into the standard bitpim format. The get and save functions are called by bitpim to
+read and write things like the phonebook, calendar and ringtones.
+<p><b>Profile</b> - 
+<p>This class contains static information about your phone that bitpim needs.
+This includes things likde the usbIDs, the size of the wallpaper files, valid characters for filenames
+and other infomation. It can also contain helper functions that bitpim uses to convert data from the
+bitpim format into a format that is more convenient for your Phone class to manipulate.
+
+<h2> Really important info...</h2>
+<p>The get and save functions (in the Phone class). There is one pair for each feature supported by 
+bitpim, these functions are what bitpim uses to talk to your phone:
+<pre>
+getmemo, savememo
+getsms, savesms
+gettodo, savetodo
+getcalendar, savecalendar
+getwallpapers, savewallpapers
+getringtones, saveringtones
+getcallhistory, (no save function for call history)
+</pre>
+
+<p>If you are copying an existing phone then it is very likely that some or all of the code
+you need to make the phone work is already written and all you have to do is tweek the 
+PACKET definitions in the p_newphone.p file. It is better to reuse existing code than duplicate 
+it.
+
+<p>If you want to add support for a new feature that is not supported like say SMS or memo the 
+following will help...
+
+<p>You need to add code to your phone class to allow bitpim to access the SMS (or memo etc)
+ messages on your phone.
+<p>As mentioned before, for each type of data bitpim retrieves there is a get and a save 
+function defined, so to add SMS support you have to implement getsms() and savesms(). 
+You need to implement these functions in the Phone class in the com_newphone.py file.
+
+<p>In the Profile class you define the features supported by the phone, look for the 
+_supportedsyncs list, you need to add SMS (or whatever new feature you are adding) to this,
+note that SMS write only allows the user to change the prewritten presponses at the moment. 
+
+<p>For example, this is the _supportedsync from the lgvx4400, it supports everything except the 
+todo feature (limitation of the phone not bitpim). 
+<p>This list determines what options are greyed out in the get/send data dialog boxes in bitpim.
+<pre>
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),         # all SMS list reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
+        )
+</pre>
+
+<p>The contents of the getsms() function in your phone will decode the proprietary contents of 
+files on your phone and convert them into a standard format understood by bitpim. 
+Bitpim expects the data to be stored in records in a python dictionary data type. 
+The easiest way to do this is to copy code from another phone. I would recommend the 
+com_lgvx4400. Many other phones also implement this, most of the LG family uses the code in 
+the 4400, but the other models contain other implmentations you can copy. 
+Just search for getsms() or whatever function you are trying to add to find them.
+
+<p>As a rule try not to duplicate code from other phones, it is much better to add code to a base
+class and allow the code to be shared. This makes maintaining the code easier.
+
     <hr>
     <address><a href="mailto:rogerb@rogerbinns.com"></a></address>
 <!-- Created: Thu Dec 04 20:37:58 Pacific Standard Time 2003 -->
