@@ -27,7 +27,7 @@ class NavToolBar(wx.ToolBar):
     def __init__(self, parent, horizontal=True):
         self._parent=parent
         self._grandpa=parent.GetParent()
-        _style=wx.TB_FLAT|wx.TB_TEXT
+        _style=wx.TB_FLAT
         if horizontal:
             _style|=wx.TB_HORIZONTAL
         else:
@@ -70,6 +70,11 @@ class DirtyUIBase(wx.Panel):
         self.dirty=True
         self.GetEventHandler().ProcessEvent(\
             wx.PyCommandEvent(myEVT_DIRTY_UI, self.GetId()))
+    def Clean(self):
+        self.dirty=False
+        self.ignore_dirty=False
+    def Ignore(self, ignore=True):
+        self.ignore_dirty=ignore
 
 # RingtoneEditor----------------------------------------------------------------
 class RingtoneEditor(DirtyUIBase):
@@ -142,7 +147,7 @@ class RingtoneEditor(DirtyUIBase):
             pass
 
     def Set(self, data):
-        self.ignore_dirty=True
+        self.Ignore(True)
         if data is None:
             wp=self.unnamed
             type='call'
@@ -161,13 +166,13 @@ class RingtoneEditor(DirtyUIBase):
         # zero len?
         if len(wp)==0:
             self.ringtone.SetSelection(0)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
 
         # try using straight forward name
         try:
             self.ringtone.SetStringSelection(wp)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
         except:
             pass
@@ -175,7 +180,7 @@ class RingtoneEditor(DirtyUIBase):
         # ok, with unknownselprefix
         try:
             self.ringtone.SetStringSelection(self.unknownselprefix+wp)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
         except:
             pass
@@ -183,10 +188,10 @@ class RingtoneEditor(DirtyUIBase):
         # ok, just add it
         self.ringtone.InsertItems([self.unknownselprefix+wp], 1)
         self.ringtone.SetStringSelection(self.unknownselprefix+wp)
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
 
     def Get(self):
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
         res={}
         rt=self.ringtone.GetStringSelection()
         if rt==self.unnamed:
@@ -263,7 +268,7 @@ class WallpaperEditor(DirtyUIBase):
             self.preview.SetImage(name)        
 
     def Set(self, data):
-        self.ignore_dirty=True
+        self.Ignore()
         if data is None:
             wp=self.unnamed
             type='call'
@@ -281,13 +286,13 @@ class WallpaperEditor(DirtyUIBase):
 
         if len(wp)==0:
             self.wallpaper.SetSelection(0)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
 
         # try using straight forward name
         try:
             self.wallpaper.SetStringSelection(wp)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
         except:
             pass
@@ -295,7 +300,7 @@ class WallpaperEditor(DirtyUIBase):
         # ok, with unknownselprefix
         try:
             self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
-            self.ignore_dirty=self.dirty=False
+            self.Clean()
             return
         except:
             pass
@@ -303,10 +308,10 @@ class WallpaperEditor(DirtyUIBase):
         # ok, just add it
         self.wallpaper.InsertItems([self.unknownselprefix+wp], 1)
         self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
 
     def Get(self):
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
         res={}
         wp=self.wallpaper.GetStringSelection()
         if wp==self.unnamed:
@@ -487,14 +492,14 @@ class CategoryEditor(DirtyUIBase):
                 self.category.SetStringSelection(self.unnamed)
 
     def Get(self):
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
         v=self.category.GetStringSelection()
         if len(v) and v!=self.unnamed:
             return {'category': v}
         return {}
 
     def Set(self, data):
-        self.ignore_dirty=True
+        self.Ignore()
         if data is None:
             v=self.unnamed
         else:
@@ -504,7 +509,7 @@ class CategoryEditor(DirtyUIBase):
         except:
             assert v!=self.unnamed
             self.category.SetStringSelection(self.unnamed)
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
                 
 # MemoEditor--------------------------------------------------------------------
 class MemoEditor(DirtyUIBase):
@@ -523,16 +528,16 @@ class MemoEditor(DirtyUIBase):
         vs.Fit(self)
 
     def Set(self, data):
-        self.ignore_dirty=True
+        self.Ignore()
         if data is None:
             s=''
         else:
             s=data.get('memo', '')
         self.memo.SetValue(s)
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
 
     def Get(self):
-        self.ignore_dirty=self.dirty=False
+        self.Clean()
         if len(self.memo.GetValue()):
             return {'memo': self.memo.GetValue()}
         return {}
@@ -567,10 +572,14 @@ class NumberEditor(DirtyUIBase):
         if navtoolbar:
             hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
 
+        wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.speeddial.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.number.GetId(), self.OnDirtyUI)
         self.SetSizer(hs)
         hs.Fit(self)
 
     def Set(self, data):
+        self.Ignore()
         sd=data.get("speeddial", "")
         if isinstance(sd,int):
             sd=`sd`
@@ -581,10 +590,13 @@ class NumberEditor(DirtyUIBase):
         for i in range(len(self.choices)):
             if self.choices[i][1]==v:
                 self.type.SetSelection(i)
+                self.Clean()
                 return
         self.type.SetSelection(0)
+        self.Clean()
 
     def Get(self):
+        self.Clean()
         res={}
         if len(self.number.GetValue())==0:
             return res
@@ -599,11 +611,11 @@ class NumberEditor(DirtyUIBase):
         return res
 
 # EmailEditor-------------------------------------------------------------------
-class EmailEditor(wx.Panel):
+class EmailEditor(DirtyUIBase):
 
     ID_TYPE=wx.NewId()
     def __init__(self, parent, _, navtoolbar=False):
-        wx.Panel.__init__(self, parent, -1)
+        super(EmailEditor, self).__init__(parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Email Address"), wx.HORIZONTAL)
 
@@ -613,10 +625,13 @@ class EmailEditor(wx.Panel):
         hs.Add(self.email, 1, wx.EXPAND|wx.ALL, 5)
         if navtoolbar:
             hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+        wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.email.GetId(), self.OnDirtyUI)
         self.SetSizer(hs)
         hs.Fit(self)
 
     def Set(self, data):
+        self.Ignore()
         self.email.SetValue(data.get("email", ""))
         v=data.get("type", "")
         if v=="home":
@@ -625,8 +640,10 @@ class EmailEditor(wx.Panel):
             self.type.SetSelection(2)
         else:
             self.type.SetSelection(0)
+        self.Clean()
 
     def Get(self):
+        self.Clean()
         res={}
         if len(self.email.GetValue())==0:
             return res
@@ -638,11 +655,11 @@ class EmailEditor(wx.Panel):
         return res
 
 # URLEditor---------------------------------------------------------------------
-class URLEditor(wx.Panel):
+class URLEditor(DirtyUIBase):
 
     ID_TYPE=wx.NewId()
     def __init__(self, parent, _, navtoolbar=False):
-        wx.Panel.__init__(self, parent, -1)
+        super(URLEditor, self).__init__(parent)
 
         hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "URL"), wx.HORIZONTAL)
 
@@ -652,10 +669,13 @@ class URLEditor(wx.Panel):
         hs.Add(self.url, 1, wx.EXPAND|wx.ALL, 5)
         if navtoolbar:
             hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+        wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.url.GetId(), self.OnDirtyUI)
         self.SetSizer(hs)
         hs.Fit(self)
 
     def Set(self, data):
+        self.Ignore()
         self.url.SetValue(data.get("url", ""))
         v=data.get("type", "")
         if v=="home":
@@ -664,8 +684,10 @@ class URLEditor(wx.Panel):
             self.type.SetSelection(2)
         else:
             self.type.SetSelection(0)
+        self.Clean()
 
     def Get(self):
+        self.Clean()
         res={}
         if len(self.url.GetValue())==0:
             return res
@@ -677,7 +699,7 @@ class URLEditor(wx.Panel):
         return res
 
 # AddressEditor-----------------------------------------------------------------
-class AddressEditor(wx.Panel):
+class AddressEditor(DirtyUIBase):
 
     ID_TYPE=wx.NewId()
 
@@ -685,7 +707,7 @@ class AddressEditor(wx.Panel):
             ("state", "State"), ("postalcode", "Postal/Zipcode"), ("country", "Country/Region")
 
     def __init__(self, parent, _, navtoolbar=False):
-        wx.Panel.__init__(self, parent, -1)
+        super(AddressEditor, self).__init__(parent)
 
         _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Address Details"),
                               wx.HORIZONTAL)
@@ -714,11 +736,15 @@ class AddressEditor(wx.Panel):
         if navtoolbar:
             _hs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND|wx.BOTTOM, 5)
         # ::TODO:: disable company when type is home
-        
+        wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.company.GetId(), self.OnDirtyUI)
+        for name,_ in self.fieldinfos:
+            wx.EVT_TEXT(self, getattr(self, name).GetId(), self.OnDirtyUI)
         self.SetSizer(_hs)
         vs.Fit(self)
 
     def Set(self, data):
+        self.Ignore()
         # most fields
         for name,ignore in self.fieldinfos:
             getattr(self, name).SetValue(data.get(name, ""))
@@ -728,8 +754,10 @@ class AddressEditor(wx.Panel):
             self.type.SetValue("Home")
         else:
             self.type.SetValue("Business")
+        self.Clean()
 
     def Get(self):
+        self.Clean()
         res={}
         # most fields
         for name,ignore in self.fieldinfos:
@@ -746,10 +774,10 @@ class AddressEditor(wx.Panel):
         return res
 
 # NameEditor--------------------------------------------------------------------
-class NameEditor(wx.Panel):
+class NameEditor(DirtyUIBase):
 
     def __init__(self, parent, _, navtoolbar=False):
-        wx.Panel.__init__(self, parent, -1)
+        super(NameEditor, self).__init__(parent)
 
         _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Name Details'),
                               wx.HORIZONTAL)
@@ -776,20 +804,25 @@ class NameEditor(wx.Panel):
         _hs.Add(vs, 0, wx.EXPAND|wx.ALL, 5)
         # add a toolbar w/ the Up/Down/Del buttons
         if navtoolbar:
-            _hs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND|wx.BOTTOM, 5)
+            _hs.Add(NavToolBar(self, horizontal=False), 0, wx.EXPAND, 0)
+        for _name in ('first', 'middle', 'last', 'full', 'nickname'):
+            wx.EVT_TEXT(self, getattr(self, _name).GetId(), self.OnDirtyUI)
 
         # use the sizer and resize ourselves according to space needed by sizer
         self.SetSizer(_hs)
         vs.Fit(self)
 
     def Set(self, data):
+        self.Ignore()
         self.first.SetValue(data.get("first", ""))
         self.middle.SetValue(data.get("middle", ""))
         self.last.SetValue(data.get("last", ""))
         self.full.SetValue(data.get("full", ""))
         self.nickname.SetValue(data.get("nickname", ""))
+        self.Clean()
 
     def Get(self):
+        self.Clean()
         res={}
         for name,widget in ( "first", self.first), ("middle", self.middle), ("last", self.last), \
             ("full", self.full), ("nickname", self.nickname):
@@ -798,9 +831,9 @@ class NameEditor(wx.Panel):
         return res
 
 # StorageEditor-----------------------------------------------------------------
-class StorageEditor(wx.Panel):
+class StorageEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
-        super(StorageEditor, self).__init__(parent, -1)
+        super(StorageEditor, self).__init__(parent)
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Storage Details"),
                              wx.VERTICAL)
         hs=wx.BoxSizer(wx.HORIZONTAL)
@@ -835,6 +868,15 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
     ID_UP=wx.NewId()
     ID_ADD=wx.NewId()
     ID_DELETE=wx.NewId()
+    instruction_text="""
+\n\nPress Add above to add a field.  Press Delete to remove the field your
+cursor is on.
+
+You can use Up and Down to change the priority of items.  For example, some
+phones store the first five numbers in the numbers tab, and treat the first
+number as the default to call.  Other phones can only store one email address
+so only the first one would be stored.
+"""
 
     def __init__(self, parent, childclass):
         """Constructor
@@ -843,18 +885,12 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         @param childclass: One of the *Editor classes which is used as a factory for making the
                widgets that correspond to each value"""
         fixedscrolledpanel.wxScrolledPanel.__init__(self, parent)
+        self.dirty_ui_handler=getattr(parent, 'OnDirtyUI', None)
         self.sizer=wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
         self.widgets=[]
         self.childclass=childclass
-        self.instructions=wx.StaticText(self, -1,
-                                        "\n\n\nPress Add above to add a field.  Press Delete to remove the field your\n"
-                                        "cursor is on.\n"
-                                        "\n"
-                                        "You can use Up and Down to change the priority of items.  For example, some\n"
-                                        "phones store the first five numbers in the numbers tab, and treat the first\n"
-                                        "number as the default to call.  Other phones can only store one email address\n"
-                                        "so only the first one would be stored.")
+        self.instructions=wx.StaticText(self, -1, EditorManager.instruction_text)
         self.sizer.Add(self.instructions, 0, wx.ALIGN_CENTER )
         self.SetupScrolling()
 
@@ -874,15 +910,18 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         callsus=False
         while len(data)>len(self.widgets):
             callsus=True
-            self.widgets.append(self.childclass(self, len(self.widgets),
-                                                navtoolbar=True))
-            self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
+            _w=self.childclass(self, len(self.widgets), navtoolbar=True)
+            if self.dirty_ui_handler:
+                EVT_DIRTY_UI(self, _w.GetId(), self.dirty_ui_handler)
+            self.widgets.append(_w)
+            self.sizer.Add(_w, 0, wx.EXPAND|wx.ALL, 10)
         while len(self.widgets)>len(data):
             callsus=True
             self.sizer.Remove(self.widgets[-1])
             self.widgets[-1].Destroy()
             del self.widgets[-1]
         for num in range(len(data)):
+            self.widgets[num].Clean()
             self.widgets[num].Set(data[num])
         callsus=self.DoInstructionsLayout() or callsus
         if callsus:
@@ -926,9 +965,12 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
             pos=self.GetCurrentWidgetIndex()
         except IndexError:
             pos=len(gets)-1
-        self.widgets.append(self.childclass(self, len(self.widgets),
-                                            navtoolbar=True))
-        self.sizer.Add(self.widgets[-1], 0, wx.EXPAND|wx.ALL, 10)
+        _w=self.childclass(self, len(self.widgets), navtoolbar=True)
+        if self.dirty_ui_handler:
+            EVT_DIRTY_UI(self, _w.GetId(), self.dirty_ui_handler)
+            self.dirty_ui_handler(None)
+        self.widgets.append(_w)
+        self.sizer.Add(_w, 0, wx.EXPAND|wx.ALL, 10)
         self.DoInstructionsLayout() 
         self.sizer.Layout()
         self.SetupScrolling()
@@ -952,6 +994,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         if pos+delta>=len(self.widgets):
             print "that would go off bottom"
             return
+        if self.dirty_ui_handler:
+            self.dirty_ui_handler(None)
         gets=[x.Get() for x in self.widgets]
         # swap value
         path,settings=self.GetWidgetPathAndSettings(self.widgets[pos], field)
@@ -971,6 +1015,8 @@ class EditorManager(fixedscrolledpanel.wxScrolledPanel):
         except IndexError:
             wx.Bell()
             return
+        if self.dirty_ui_handler:
+            self.dirty_ui_handler(None)
         # remove the last widget (the UI, not the value)
         self.sizer.Remove(self.widgets[-1])
         self.widgets[-1].Destroy()
@@ -1153,6 +1199,7 @@ class Editor(wx.Dialog):
             self.log('Movement and datakey is None')
             raise ValueError
         # make a copy of the data we are going to work on
+        self.dirty_widgets={ True: [], False: [] }
         self.data=factory.newdataobject(data)
         vs=wx.BoxSizer(wx.VERTICAL)
         # the title & direction button
@@ -1163,6 +1210,8 @@ class Editor(wx.Dialog):
         if movement:
             _prev_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Prev Item")
             _next_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Item")
+            self.dirty_widgets[False].append(_prev_btn)
+            self.dirty_widgets[False].append(_next_btn)
             _hbs.Add(_prev_btn, 0, wx.EXPAND, 0)
             _hbs.Add(_add_btn, 0, wx.EXPAND|wx.LEFT, 10)
             _hbs.Add(self._title, 1, wx.EXPAND, 0)
@@ -1177,7 +1226,7 @@ class Editor(wx.Dialog):
 
         nb=wx.Notebook(self, -1)
         self.nb=nb
-
+        self.nb.OnDirtyUI=self.OnDirtyUI
         vs.Add(nb,1,wx.EXPAND|wx.ALL,5)
 
         self.tabs=[]
@@ -1200,23 +1249,50 @@ class Editor(wx.Dialog):
         _btn_sizer=wx.StdDialogButtonSizer()
         if not readonly:
             _btn_sizer.AddButton(wx.Button(self, wx.ID_OK))
-        if self._data_key is not None:
-            _btn_sizer.AddButton(wx.Button(self, wx.ID_APPLY))
+            if self._data_key is not None:
+                _w=wx.Button(self, wx.ID_APPLY)
+                self.dirty_widgets[True].append(_w)
+                _btn_sizer.AddButton(_w)
+                wx.EVT_BUTTON(self, wx.ID_APPLY, self.OnApply)
         _btn_sizer.AddButton(wx.Button(self, wx.ID_CANCEL))
+        _w=wx.Button(self, wx.ID_REVERT_TO_SAVED)
+        self.dirty_widgets[True].append(_w)
+        _btn_sizer.SetNegativeButton(_w)
         _btn_sizer.Realize()
         vs.Add(_btn_sizer, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.SetSizer(vs)
 
-        wx.EVT_BUTTON(self, wx.ID_APPLY, self.OnApply)
+        wx.EVT_BUTTON(self, wx.ID_REVERT_TO_SAVED, self.Revert)
         wx.EVT_TOOL(self, self.ID_UP, self.MoveUp)
         wx.EVT_TOOL(self, self.ID_DOWN, self.MoveDown)
         wx.EVT_TOOL(self, self.ID_ADD, self.Add)
         wx.EVT_TOOL(self, self.ID_DELETE, self.Delete)
+        self.ignore_dirty=False
+        self.dirty=False
+        self.setdirty(False)
+
+    def Revert(self, _):
+        # reload data
+        self.Populate()
+        self.setdirty(False)
+
+    def OnDirtyUI(self, _):
+        self.setdirty()
+
+    def setdirty(self, flg=True):
+        if self.ignore_dirty:
+            return
+        self.dirty=flg
+        for w in self.dirty_widgets[self.dirty]:
+            w.Enable(True)
+        for w in self.dirty_widgets[not self.dirty]:
+            w.Enable(False)
 
     def OnApply(self, _):
         # Save the current data
         self.GetParent().SaveData(self.GetData(), self.GetDataKey())
+        self.setdirty(False)
 
     def Populate(self):
         # populate various widget with data
@@ -1254,15 +1330,18 @@ class Editor(wx.Dialog):
             
     def MoveUp(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Move(-1)
+        self.setdirty()
     
     def MoveDown(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Move(+1)
+        self.setdirty()
 
     def Add(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Add()
 
     def Delete(self, _):
         self.nb.GetPage(self.nb.GetSelection()).Delete()
+        self.setdirty()
 
     def _set_title(self):
         if hasattr(self, '_title'):
