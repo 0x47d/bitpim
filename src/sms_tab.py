@@ -189,7 +189,8 @@ class FolderPage(wx.Panel):
         wx.EVT_RIGHT_UP(self._item_list, self._OnRightClick)
         # populate data
         self._populate()
-        # turn on dirty flag
+        # expand the whole tree
+        self._OnExpandAll(None)
 
     def _OnExpandAll(self, _):
         sel_ids=self._item_list.GetSelections()
