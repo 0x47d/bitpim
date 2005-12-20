@@ -361,15 +361,16 @@ class SanyoPhonebook:
             req.slot=slot
             res=self.sendpbcommand(req, self.protocolclass.todoresponse)
             entry=todo.TodoEntry()
-            entry.summary=res.entry.todo
-            if res.entry.priority==2:
-                entry.status=4
-            if res.entry.priority==0:
-                entry.priority=5
-            if res.entry.priority==1:
-                entry.priority=1
-            gtodo[entry.id]=entry
-            result['todo']=gtodo
+            if res.entry.flag:
+                entry.summary=res.entry.todo
+                if res.entry.priority==2:
+                    entry.status=4
+                if res.entry.priority==0:
+                    entry.priority=5
+                if res.entry.priority==1:
+                    entry.priority=1
+                gtodo[entry.id]=entry
+                result['todo']=gtodo
         return result
 
     def getphonebook(self,result):
