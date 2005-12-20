@@ -19,6 +19,7 @@ import wx.lib.mixins.listctrl as listmix
 
 # local modules
 import guiwidgets
+import pubsub
 
 no_end_date=(4000, 1, 1, 0, 0)
 
@@ -180,76 +181,101 @@ class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
         evt.Skip()
 
 #-------------------------------------------------------------------------------
-class FilterDialog(wx.Dialog):
+class FilterDialogBase(wx.Dialog):
+    unnamed="Select:"
     def __init__(self, parent, id, caption, categories, style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self, parent, id,
                            title=caption, style=style)
         # the main box sizer
         bs=wx.BoxSizer(wx.VERTICAL)
         # the flex grid sizers for the editable items
-        fgs=wx.FlexGridSizer(3, 3, 0, 5)
-        fgs.Add(wx.StaticText(self, -1, 'Start Date:'), 0, wx.ALIGN_CENTRE, 0)
-        self.__start_date_chkbox=wx.CheckBox(self, id=wx.NewId())
-        fgs.Add(self.__start_date_chkbox, 0, wx.ALIGN_CENTRE, 0)
-        self.__start_date=wx.calendar.CalendarCtrl(self, -1, wx.DateTime_Now(),
-                                          style = wx.calendar.CAL_SUNDAY_FIRST
-                                          | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
-        self.__start_date.Disable()
-        fgs.Add(self.__start_date, 1, wx.ALIGN_LEFT, 5)
-        fgs.Add(wx.StaticText(self, -1, 'End Date:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
-        self.__end_date_chkbox=wx.CheckBox(self, id=wx.NewId())
-        fgs.Add(self.__end_date_chkbox, 0, wx.ALIGN_CENTRE, 0)
-        self.__end_date=wx.calendar.CalendarCtrl(self, -1, wx.DateTime_Now(),
-                                          style = wx.calendar.CAL_SUNDAY_FIRST
-                                          | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
-        self.__end_date.Disable()
-        fgs.Add(self.__end_date, 1, wx.ALIGN_LEFT, 5)
+        main_fgs=wx.FlexGridSizer(0, 1, 0, 0)
+        fgs=wx.FlexGridSizer(3, 2, 0, 5)
+        fgs1=wx.FlexGridSizer(0, 1, 0, 0)
+        fgs2=wx.FlexGridSizer(0, 2, 0, 5)
+        # set the date options
+        self.SetDateControls(fgs, fgs1)
         # new repeat to single events option
-        fgs.Add(wx.StaticText(self, -1, 'Repeat Events:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
-        self.__rpt_chkbox=wx.CheckBox(self, id=wx.NewId())
+        self.__rpt_chkbox=wx.CheckBox(self, id=wx.NewId(), label='Repeat Events:',
+                                      style=wx.ALIGN_RIGHT)
         self.__rpt_chkbox.Disable()
-        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_CENTRE|wx.TOP|wx.BOTTOM, 5)
-        fgs.Add(wx.StaticText(self, -1, 'Import as multi-single events.'),
-                0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self.__rpt_chkbox_text=wx.StaticText(self, -1, 'Import as multi-single events.')
+        fgs.Add(self.__rpt_chkbox_text, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        self.__rpt_chkbox_text.Disable()
         # alarm option
-        fgs.Add(wx.StaticText(self, -1, 'No Alarm'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER, 0)
-        self.__no_alarm_chkbox=wx.CheckBox(self, id=wx.NewId())
-        fgs.Add(self.__no_alarm_chkbox, 0, wx.ALIGN_CENTRE|wx.TOP|wx.BOTTOM, 5)
-        fgs.Add(wx.StaticText(self, -1, 'Turn off all events alarms.'),
-                0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        choices=('Disable All Alarms', 'Use Alarm Settings From Calender', 
+                 'Set Alarm On All Events') 
+        self.__alarm_setting = wx.RadioBox(self, id=wx.NewId(),
+                                           label="Select Alarm Settings For Imported Events",
+                                           choices=choices,
+                                           majorDimension=1,
+                                           size=(280,-1))
+        fgs1.Add(self.__alarm_setting, 0, wx.ALIGN_CENTRE|wx.TOP|wx.BOTTOM, 5)
+        #alarm vibrate
+        self.__vibrate=wx.CheckBox(self, id=wx.NewId(), label='Alarm Vibrate:',
+                                   style=wx.ALIGN_RIGHT)
+        fgs2.Add(self.__vibrate, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self.__vibrate_text=wx.StaticText(self, -1, 'Enable vibrate for alarms.')
+        fgs2.Add(self.__vibrate_text, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 5)
+        # alarm settings
+        self.__ringtone_text=wx.StaticText(self, -1, 'Alarm Ringtone:')
+        fgs2.Add(self.__ringtone_text, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self.__ringtone=wx.ComboBox(self, id=wx.NewId(),
+                                    style=wx.CB_DROPDOWN|wx.CB_READONLY,
+                                    choices=[self.unnamed], size=(160,-1))
+        fgs2.Add(self.__ringtone, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 2)
+        # alarm value
+        self.__alarm_value_text=wx.StaticText(self, -1, 'Alert before (mins):')
+        fgs2.Add(self.__alarm_value_text, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self.__alarm_value=wx.lib.intctrl.IntCtrl(self, id=wx.NewId(), size=(50,-1), 
+                                               value=0, min=0, max=1000)
+        fgs2.Add( self.__alarm_value, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 2)
         # category option
-        fgs.Add(wx.StaticText(self, -1, 'Categories:'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
-        self.__cat_chkbox=wx.CheckBox(self, id=wx.NewId())
-        fgs.Add(self.__cat_chkbox, 0, wx.ALIGN_CENTRE, 0)
+        self.__cat_chkbox=wx.CheckBox(self, id=wx.NewId(), label='Categories:',
+                                      style=wx.ALIGN_RIGHT)
+        fgs2.Add(self.__cat_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
         for i,c in enumerate(categories):
             if not len(c):
                 categories[i]='<None>'
-        self.__cats=wx.CheckListBox(self, choices=categories, size=(180, 50))
+        self.__cats=wx.CheckListBox(self, choices=categories, size=(160, 50))
         self.__cats.Disable()
-        fgs.Add(self.__cats, 0, wx.ALIGN_LEFT, 5)
-        bs.Add(fgs, 1, wx.EXPAND|wx.ALL, 5)
+        fgs2.Add(self.__cats, 0, wx.ALIGN_LEFT, 0)
+        main_fgs.Add(fgs, 1, wx.EXPAND|wx.ALL, 0)
+        main_fgs.Add(fgs1, 1, wx.EXPAND|wx.ALL, 0)
+        main_fgs.Add(fgs2, 1, wx.EXPAND|wx.ALL, 0)
+        bs.Add(main_fgs, 1, wx.EXPAND|wx.ALL, 5)
         # the buttons
         bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
         bs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         # event handles
-        wx.EVT_CHECKBOX(self, self.__start_date_chkbox.GetId(), self.OnCheckBox)
-        wx.EVT_CHECKBOX(self, self.__end_date_chkbox.GetId(), self.OnCheckBox)
+        wx.EVT_CHECKBOX(self, self._start_date_chkbox.GetId(), self.OnCheckBox)
+        wx.EVT_CHECKBOX(self, self._end_date_chkbox.GetId(), self.OnCheckBox)
         wx.EVT_CHECKBOX(self, self.__cat_chkbox.GetId(), self.OnCheckBox)
+        wx.EVT_RADIOBOX(self, self.__alarm_setting.GetId(), self.OnAlarmSetting)
         # all done
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
 
-    def __set_date(self, chk_box, cal, d):
-        if d is None:
-            chk_box.SetValue(False)
-            cal.Disable()
-        else:
-            chk_box.SetValue(True)
-            cal.Enable()
-            dt=wx.DateTime()
-            dt.Set(d[2], year=d[0], month=d[1]-1)
-            cal.SetDate(dt)
+    def ShowModal(self):
+        # request ringtones from 
+        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
+        wx.CallAfter(pubsub.publish, pubsub.REQUEST_RINGTONES) # make the call once we are onscreen
+        return wx.Dialog.ShowModal(self)
+
+    def OnRingtoneUpdates(self, msg):
+        "Receives pubsub message with ringtone list"
+        tones=msg.data[:]
+        #cur=self.Get()
+        try:
+            self.__ringtone.Clear()
+            self.__ringtone.Append(self.unnamed)
+            for p in tones:
+                self.__ringtone.Append(p)
+            rt=self.__ringtone.SetStringSelection(self.ringtone)
+        except:
+            self.ringtone=self.unnamed
 
     def __set_cats(self, chk_box, c, data):
         if data is None:
@@ -265,37 +291,76 @@ class FilterDialog(wx.Dialog):
                 c.Check(i, c.GetString(i) in data)
 
     def __set_rpt(self, data):
-        if self.__start_date_chkbox.GetValue() and\
-           self.__end_date_chkbox.GetValue():
+        if self._start_date_chkbox.GetValue() and\
+           self._end_date_chkbox.GetValue():
             self.__rpt_chkbox.Enable()
+            self.__rpt_chkbox_text.Enable()
             self.__rpt_chkbox.SetValue(data)
         else:
             self.__rpt_chkbox.SetValue(False)
             self.__rpt_chkbox.Disable()
+            self.__rpt_chkbox_text.Disable()
 
-    def set(self, data):
-        self.__set_date(self.__start_date_chkbox, self.__start_date,
-                        data.get('start', None))
-        self.__set_date(self.__end_date_chkbox, self.__end_date,
-                        data.get('end', None))
+    def __set_alarm_fields(self, value):
+        if value==0:
+            self.__vibrate.Disable()
+            self.__alarm_value.Disable()
+            self.__ringtone.Disable()
+            self.__vibrate_text.Disable()
+            self.__alarm_value_text.Disable()
+            self.__ringtone_text.Disable()
+        elif value==1:
+            self.__vibrate.Enable()
+            self.__alarm_value.Disable()
+            self.__ringtone.Enable()
+            self.__vibrate_text.Enable()
+            self.__alarm_value_text.Disable()
+            self.__ringtone_text.Enable()
+        else:
+            self.__vibrate.Enable()
+            self.__alarm_value.Enable()
+            self.__ringtone.Enable()
+            self.__vibrate_text.Enable()
+            self.__alarm_value_text.Enable()
+            self.__ringtone_text.Enable()
+
+    def set_base(self, data):
         self.__set_rpt(data.get('rpt_events', False))
-        self.__no_alarm_chkbox.SetValue(data.get('no_alarm', False))
+        no_alarm=data.get('no_alarm', False)
+        alarm_override=data.get('alarm_override', False)
+        if no_alarm:
+            value=0
+        elif alarm_override:
+            value=2
+        else:
+            value=1
+        self.__set_alarm_fields(value)
+        self.__alarm_setting.SetSelection(value)
+        self.ringtone=data.get('ringtone', self.unnamed)
+        try:
+            self.__ringtone.SetStringSelection(ringtone)
+        except:
+            self.__ringtone.SetStringSelection(self.unnamed)
+        value=data.get('vibrate', False);
+        self.__vibrate.SetValue(value)
+        self.__alarm_value.SetValue(data.get('alarm_value', 0))
         self.__set_cats(self.__cat_chkbox, self.__cats, data.get('categories', None))
 
-    def get(self):
-        r={}
-        if self.__start_date_chkbox.GetValue():
-            dt=self.__start_date.GetDate()
-            r['start']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
-        else:
-            r['start']=None
-        if self.__end_date_chkbox.GetValue():
-            dt=self.__end_date.GetDate()
-            r['end']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
-        else:
-            r['end']=None
+    def get_base(self, r):
         r['rpt_events']=self.__rpt_chkbox.GetValue()
-        r['no_alarm']=self.__no_alarm_chkbox.GetValue()
+        value=self.__alarm_setting.GetSelection()
+        if value==0:
+            r['no_alarm']=True
+            r['alarm_override']=False
+        elif value==1:
+            r['no_alarm']=False
+            r['alarm_override']=False
+        else:
+            r['no_alarm']=False
+            r['alarm_override']=True
+        r['ringtone']=self.__ringtone.GetStringSelection()
+        r['vibrate']=self.__vibrate.GetValue()
+        r['alarm_value']=self.__alarm_value.GetValue()
         if self.__cat_chkbox.GetValue():
             c=[]
             for i in range(self.__cats.GetCount()):
@@ -308,14 +373,17 @@ class FilterDialog(wx.Dialog):
             r['categories']=c
         else:
             r['categories']=None
-        return r
+        return
     
+    def OnAlarmSetting(self, _):
+        self.__set_alarm_fields(self.__alarm_setting.GetSelection())
+
     def OnCheckBox(self, evt):
         evt_id=evt.GetId()
-        if evt_id==self.__start_date_chkbox.GetId():
-            w1,w2=self.__start_date_chkbox, self.__start_date
-        elif evt_id==self.__end_date_chkbox.GetId():
-            w1,w2=self.__end_date_chkbox, self.__end_date
+        if evt_id==self._start_date_chkbox.GetId():
+            w1,w2=self._start_date_chkbox, self._start_date
+        elif evt_id==self._end_date_chkbox.GetId():
+            w1,w2=self._end_date_chkbox, self._end_date
         else:
             w1,w2=self.__cat_chkbox, self.__cats
         if w1.GetValue():
@@ -324,10 +392,137 @@ class FilterDialog(wx.Dialog):
             w2.Disable()
         # turn on the repeat event option of both start date and end date
         # are specified.
-        if self.__start_date_chkbox.GetValue() and \
-           self.__end_date_chkbox.GetValue():
+        if self._start_date_chkbox.GetValue() and \
+           self._end_date_chkbox.GetValue():
             self.__rpt_chkbox.Enable()
+            self.__rpt_chkbox_text.Enable()
         else:
             self.__rpt_chkbox.SetValue(False)
             self.__rpt_chkbox.Disable()
+            self.__rpt_chkbox_text.Disable()
 
+#-------------------------------------------------------------------------------
+class FilterDialog(FilterDialogBase):
+    def __init__(self, parent, id, caption, categories, style=wx.DEFAULT_DIALOG_STYLE):
+        FilterDialogBase.__init__(self, parent, id, caption, categories, style)
+
+    def SetDateControls(self, fgs, fgs1):
+        self._start_date_chkbox=wx.CheckBox(self, id=wx.NewId(), 
+                                             label='Start Date:',
+                                             style=wx.ALIGN_RIGHT)
+        fgs.Add(self._start_date_chkbox, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL, 0)
+        self._start_date=wx.calendar.CalendarCtrl(self, -1, wx.DateTime_Now(),
+                                          style = wx.calendar.CAL_SUNDAY_FIRST
+                                          | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
+        self._start_date.Disable()
+        fgs.Add(self._start_date, 1, wx.ALIGN_LEFT, 5)
+        self._end_date_chkbox=wx.CheckBox(self, id=wx.NewId(),
+                                           label='End Date:',
+                                           style=wx.ALIGN_RIGHT)
+        fgs.Add(self._end_date_chkbox, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL, 0)
+        self._end_date=wx.calendar.CalendarCtrl(self, -1, wx.DateTime_Now(),
+                                          style = wx.calendar.CAL_SUNDAY_FIRST
+                                          | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
+        self._end_date.Disable()
+        fgs.Add(self._end_date, 1, wx.ALIGN_LEFT, 5)
+
+    def __set_date(self, chk_box, cal, d):
+        if d is None:
+            chk_box.SetValue(False)
+            cal.Disable()
+        else:
+            chk_box.SetValue(True)
+            cal.Enable()
+            dt=wx.DateTime()
+            dt.Set(d[2], year=d[0], month=d[1]-1)
+            cal.SetDate(dt)
+
+    def set(self, data):
+        self.__set_date(self._start_date_chkbox, self._start_date,
+                        data.get('start', None))
+        self.__set_date(self._end_date_chkbox, self._end_date,
+                        data.get('end', None))
+        self.set_base(data)
+
+    def get(self):
+        r={}
+        if self._start_date_chkbox.GetValue():
+            dt=self._start_date.GetDate()
+            r['start']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        else:
+            r['start']=None
+        if self._end_date_chkbox.GetValue():
+            dt=self._end_date.GetDate()
+            r['end']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        else:
+            r['end']=None
+        self.get_base(r)
+        return r
+    
+#-------------------------------------------------------------------------------
+class AutoSyncFilterDialog(FilterDialogBase):
+    def __init__(self, parent, id, caption, categories, style=wx.DEFAULT_DIALOG_STYLE):
+        FilterDialogBase.__init__(self, parent, id, caption, categories, style)
+
+    def SetDateControls(self, fgs, fgs1):
+        #start_offset
+        self._start_date_chkbox=wx.CheckBox(self, id=wx.NewId(), 
+                                             label='Start Offset (days):',
+                                             style=wx.ALIGN_RIGHT)
+        fgs.Add(self._start_date_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self._start_date=wx.lib.intctrl.IntCtrl(self, id=wx.NewId(), size=(50,-1), 
+                                                 value=0, min=0, max=1000)
+        self._start_date.Disable()
+        fgs.Add( self._start_date, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 2)
+        #end_offset
+        self._end_date_chkbox=wx.CheckBox(self, id=wx.NewId(),
+                                           label='End Offset (days):',
+                                           style=wx.ALIGN_RIGHT)
+        fgs.Add(self._end_date_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self._end_date=wx.lib.intctrl.IntCtrl(self, id=wx.NewId(), size=(50,-1), 
+                                               value=0, min=0, max=1000)
+        self._end_date.Disable()
+        fgs.Add( self._end_date, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 2)
+        fgs1.Add(wx.StaticText(self, -1, 'Note: The start offset is the number of days' + 
+                               ' in the past, and the end offset is the number of days' +
+                               ' in the future imported from the calender into your phone. If' +
+                               ' disabled, all past and/or future events are imported.',
+                               size=(270,55)),
+                               0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 5)
+
+
+    def __set_start_date(self, d):
+        if d is None:
+            self._start_date_chkbox.SetValue(False)
+            self._start_date.Disable()
+        else:
+            self._start_date_chkbox.SetValue(True)
+            self._start_date.Enable()
+            self._start_date.SetValue(d)
+
+    def __set_end_date(self, d):
+        if d is None:
+            self._end_date_chkbox.SetValue(False)
+            self._end_date.Disable()
+        else:
+            self._end_date_chkbox.SetValue(True)
+            self._end_date.Enable()
+            self._end_date.SetValue(d)
+
+    def set(self, data):
+        self.__set_start_date(data.get('start_offset', None))
+        self.__set_end_date(data.get('end_offset', None))
+        self.set_base(data)
+
+    def get(self):
+        r={}
+        if self._start_date_chkbox.GetValue():
+            r['start_offset']=self._start_date.GetValue()
+        else:
+            r['start_offset']=None
+        if self._end_date_chkbox.GetValue():
+            r['end_offset']=self._end_date.GetValue()
+        else:
+            r['end_offset']=None
+        self.get_base(r)
+        return r
