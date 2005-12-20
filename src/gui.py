@@ -23,6 +23,7 @@ import types
 import datetime
 import sha
 import codecs
+import locale
 
 # wx modules
 import wx
@@ -58,6 +59,7 @@ import hexeditor
 import today
 import pubsub
 import com_brew
+import auto_sync
 
 if guihelper.IsMSWindows():
     import win32api
@@ -599,6 +601,11 @@ class MainWindow(wx.Frame):
         menuBar.Append(menu, "&Data")
 
         menu=wx.Menu()
+        menu.Append(guihelper.ID_AUTOSYNCSETTINGS, "&Configure AutoSync Settings...", "Configures Schedule Auto-Synchronisation")
+        menu.Append(guihelper.ID_AUTOSYNCEXECUTE, "&Synchronize Schedule Now", "Synchronize Schedule Now")
+        menuBar.Append(menu, "&AutoSync")
+
+        menu=wx.Menu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
         menu.AppendCheckItem(guihelper.ID_VIEWPREVIEW, "Phonebook Preview", "Toggle Phonebook Preview Pane")
         menu.AppendSeparator()
@@ -677,6 +684,8 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
         wx.EVT_MENU(self, guihelper.ID_EDITPHONEINFO, self.OnPhoneInfo)
         wx.EVT_MENU(self, guihelper.ID_EDITDETECT, self.OnDetectPhone)
+        wx.EVT_MENU(self, guihelper.ID_AUTOSYNCSETTINGS, self.OnAutoSyncSettings)
+        wx.EVT_MENU(self, guihelper.ID_AUTOSYNCEXECUTE, self.OnAutoSyncExecute)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -694,6 +703,12 @@ class MainWindow(wx.Frame):
                 return
         self.configdlg.updatevariables()
         
+        ### Set autosync settings dialog
+        self.calenders=importexport.GetCalenderAutoSyncImports()
+        print "cal " +`self.calenders`
+        self.autosyncsetting=auto_sync.AutoSyncSettingsDialog(self, self)
+        self.autosyncsetting.updatevariables()
+
         ### notebook
         self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
 
@@ -911,11 +926,11 @@ class MainWindow(wx.Frame):
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
             return
         self.__detect_phone()
-    def __detect_phone(self, using_port=None):
+    def __detect_phone(self, using_port=None, check_auto_sync=0):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         self.MakeCall(Request(self.wt.detectphone, using_port),
-                      Callback(self.OnDetectPhoneReturn))
+                      Callback(self.OnDetectPhoneReturn, check_auto_sync))
     def __get_owner_name(self, esn):
         """ retrieve or ask user for the owner's name of this phone
         """
@@ -942,7 +957,7 @@ class MainWindow(wx.Frame):
             return s
         return phone_name
         
-    def OnDetectPhoneReturn(self, exception, r):
+    def OnDetectPhoneReturn(self, check_auto_sync, exception, r):
         self.OnBusyEnd()
         if self.HandleException(exception): return
         if r is None:
@@ -967,6 +982,9 @@ class MainWindow(wx.Frame):
                                                r['phone_name'],
                                                r['port']),
                           'Phone Detection', wx.OK)
+            if check_auto_sync:
+                # see if we should re-sync the calender on connect, do it silently
+                self.__autosync_phone(silent=1)
         
     def WindowsOnDeviceChanged(self, type, name="", drives=[], flag=None):
         if not name.lower().startswith("com"):
@@ -986,7 +1004,8 @@ class MainWindow(wx.Frame):
             # current phone operation ongoing, abort this
             return
         # check the new device
-        self.__detect_phone(name)
+        check_auto_sync=auto_sync.UpdateOnConnect(self)
+        self.__detect_phone(name, check_auto_sync)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -1317,6 +1336,27 @@ class MainWindow(wx.Frame):
             # clear the ower's name for manual setting
             self.__owner_name=''
             self.configdlg.ShowModal()
+
+    # deal with configuring the phone (commport)
+    def OnAutoSyncSettings(self, _=None):
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+        else:
+            # clear the ower's name for manual setting
+            self.__owner_name=''
+            self.autosyncsetting.ShowModal()
+
+    def OnAutoSyncExecute(self, _=None):
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't run autosync until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+            return
+        self.__autosync_phone()
+
+    def __autosync_phone(self, silent=0):
+        r=auto_sync.SyncSchedule(self).sync(self, silent)
+        
 
     def OnReqChangeTab(self, msg=None):
         if msg is None:

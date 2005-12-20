@@ -69,7 +69,11 @@ class VCalendarImportData(object):
         'end': None,
         'categories': None,
         'rpt_events': False,
-        'no_alarm': False
+        'no_alarm': False,
+        'ringtone': None,
+        'alarm_override':False,
+        'vibrate':False,
+        'alarm_value':0
         }
     __rrule_dow={
         'SU': 0x01, 'MO': 0x02, 'TU': 0x04, 'WE': 0x08, 'TH': 0x10,
@@ -179,8 +183,17 @@ class VCalendarImportData(object):
         v=e.get('priority', None)
         if v is not None:
             ce.priority=v
-        if not self.__filter.get('no_alarm', False) and e.get('alarm', False):
+        if not self._filter.get('no_alarm', False) and \
+               not self._filter.get('alarm_override', False) and \
+               e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
+        elif not self._filter.get('no_alarm', False) and \
+               self._filter.get('alarm_override', False):
+            ce.alarm=self._filter.get('alarm_value', 0)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
         ce_start=e.get('start', None)
         ce_end=e.get('end', None)
         if ce_start is None and ce_end is None:
@@ -522,3 +535,72 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         return self.__oc.get_category_list()
             
 #-------------------------------------------------------------------------------
+def ImportCal(folder, filters):
+    _oc=VCalendarImportData(folder)
+    _oc.set_filter(filters)
+    _oc.read()
+    res={ 'calendar':_oc.get() }
+    return res
+
+#-------------------------------------------------------------------------------
+class VCalAutoConfCalDialog(wx.Dialog):
+    def __init__(self, parent, id, title, folder, filters,
+                 style=wx.CAPTION|wx.MAXIMIZE_BOX| \
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
+        self._oc=VCalendarImportData()
+        self._oc.set_filter(filters)
+        self.__read=False
+        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
+        main_bs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        # label
+        hbs.Add(wx.StaticText(self, -1, "VCalendar File:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        # where the folder name goes
+        self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        self.folderctrl.SetValue(folder)
+        hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
+        # browse button
+        id_browse=wx.NewId()
+        hbs.Add(wx.Button(self, id_browse, 'Browse ...'), 0, wx.EXPAND|wx.ALL, 2)
+        main_bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        main_bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        wx.EVT_BUTTON(self, id_browse, self.OnBrowseFolder)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.Button(self, wx.ID_OK, 'OK'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        id_filter=wx.NewId()
+        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_HELP, 'Help'), 0,  wx.ALIGN_CENTRE|wx.ALL, 5)
+        main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        wx.EVT_BUTTON(self, id_filter, self.OnFilter)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
+        self.SetSizer(main_bs)
+        self.SetAutoLayout(True)
+        main_bs.Fit(self)
+
+    def OnBrowseFolder(self, evt):
+        dlg=wx.FileDialog(self, "Pick a VCalendar File", wildcard='*.vcs')
+        id=dlg.ShowModal()
+        if id==wx.ID_CANCEL:
+            dlg.Destroy()
+            return
+        self.folderctrl.SetValue(dlg.GetPath())
+        self.__read=False
+        dlg.Destroy()
+
+    def OnFilter(self, evt):
+        # read the calender to get the category list
+        if not self.__read:
+            self._oc.read(self.folderctrl.GetValue())
+            self.__read=True
+        cat_list=self._oc.get_category_list()
+        dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
+        dlg.set(self._oc.get_filter())
+        if dlg.ShowModal()==wx.ID_OK:
+            self._oc.set_filter(dlg.get())
+
+    def GetFolder(self):
+        return self.folderctrl.GetValue()
+
+    def GetFilter(self):
+        return self._oc.get_filter()

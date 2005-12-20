@@ -62,6 +62,22 @@ def GetPhonebookImports():
     
     return res
     
+def GetCalenderAutoSyncImports():
+    res=[]
+    # CSV - always possible
+    res.append( ("CSV Calendar", AutoConfCSVCalender, AutoImportCSVCalendar) )
+    # Vcal - always possible
+    res.append(('vCalendar', AutoConfVCal, AutoImportVCal))
+    # Outlook
+    try:
+        import native.outlook
+        res.append( ("Outlook", AutoConfOutlookCalender, AutoImportOutlookCalendar) )
+    except:
+        print "Failed to get outlook"
+        pass
+    # Evolution
+    
+    return res
 
 class PreviewGrid(wx.grid.Grid):
 
@@ -1805,6 +1821,64 @@ def OnFileImportCSVCalendar(parent):
         parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
     # all done
     dlg.Destroy()
+
+###
+###   AUTO_SYNC
+###
+
+def AutoConfOutlookCalender(parent, folder, filters):
+    import native.outlook
+    import outlook_calendar
+    config=()
+    dlg=outlook_calendar.OutlookAutoConfCalDialog(parent, -1,
+                                                 'Config Outlook Calendar AutoSync Settings',
+                                                 folder, filters)
+    return AutoConfCommon(dlg)
+
+def AutoConfCSVCalender(parent, folder, filters):
+    import csv_calendar
+    config=()
+    dlg=csv_calendar.CSVAutoConfCalDialog(parent, -1,
+                                                 'Config CSV Calendar AutoSync Settings',
+                                                 folder, filters)
+    return AutoConfCommon(dlg)
+
+def AutoConfVCal(parent, folder, filters):
+    import vcal_calendar
+    dlg=vcal_calendar.VCalAutoConfCalDialog(parent, -1,
+                                                 'Config VCal AutoSync Settings',
+                                                 folder, filters)
+    return AutoConfCommon(dlg)
+
+def AutoConfCommon(dlg):
+    config=()
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
+        config=(dlg.GetFolder(), dlg.GetFilter())
+    dlg.Destroy()
+    return res, config
+
+def AutoImportOutlookCalendar(parent, folder, filters):
+    import native.outlook
+    import outlook_calendar
+    calendar_r=outlook_calendar.ImportCal(folder, filters)
+    return AutoImportCalCommon(parent, calendar_r)
+
+def AutoImportVCal(parent, folder, filters):
+    import vcal_calendar
+    calendar_r=vcal_calendar.ImportCal(folder, filters)
+    return AutoImportCalCommon(parent, calendar_r)
+
+def AutoImportCSVCalendar(parent, folder, filters):
+    import csv_calendar
+    calendar_r=csv_calendar.ImportCal(folder, filters)
+    return AutoImportCalCommon(parent, calendar_r)
+
+def AutoImportCalCommon(parent, calendar_r):
+    parent.calendarwidget.populate(calendar_r)
+    parent.calendarwidget.populatefs(calendar_r)
+    res=1
+    return res
 
 ###
 ###   EXPORTS

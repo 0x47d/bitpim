@@ -68,7 +68,7 @@ def set_recurrence(item, dict, oc):
 
 #-------------------------------------------------------------------------------
 class OutlookCalendarImportData:
-    _calendar_keys=[
+    _non_auto_sync_calendar_keys=[
         # (Outlook field, BP Calendar field, convertor function)
         ('Subject', 'description', None),
         ('Location', 'location', None),
@@ -80,6 +80,21 @@ class OutlookCalendarImportData:
         ('ReminderMinutesBeforeStart', 'alarm_value', None),
         ('Importance', 'priority', None),
         ('Body', 'notes', None),
+        ('AllDayEvent', 'allday', None)
+        ]
+    # the auto_sync calender fields do not support the "body" of the appointment
+    # accessing this field causes an outlook warning to appear which prevents automation
+    _auto_sync_calendar_keys=[
+        # (Outlook field, BP Calendar field, convertor function)
+        ('Subject', 'description', None),
+        ('Location', 'location', None),
+        ('Start', 'start', to_bp_date),
+        ('End', 'end', to_bp_date),
+        ('Categories', 'categories', convert_categories),
+        ('IsRecurring', 'repeat', None),
+        ('ReminderSet', 'alarm', None),
+        ('ReminderMinutesBeforeStart', 'alarm_value', None),
+        ('Importance', 'priority', None),
         ('AllDayEvent', 'allday', None)
         ]
     _recurrence_keys=[
@@ -103,7 +118,11 @@ class OutlookCalendarImportData:
         'end': None,
         'categories': None,
         'rpt_events': False,
-        'no_alarm': False
+        'no_alarm': False,
+        'ringtone': None,
+        'alarm_override':False,
+        'vibrate':False,
+        'alarm_value':0
         }
 
     # Outlook constants
@@ -117,7 +136,7 @@ class OutlookCalendarImportData:
     olImportanceLow  = native.outlook.outlook_com.constants.olImportanceLow
     olImportanceNormal = native.outlook.outlook_com.constants.olImportanceNormal
 
-    def __init__(self, outlook):
+    def __init__(self, outlook, auto_sync_only=0):
         self._outlook=outlook
         self._data=[]
         self._error_list=[]
@@ -128,6 +147,10 @@ class OutlookCalendarImportData:
         self._current_count=0
         self._update_dlg=None
         self._exception_list=[]
+        if auto_sync_only:
+            self._calendar_keys=self._auto_sync_calendar_keys
+        else:
+            self._calendar_keys=self._non_auto_sync_calendar_keys
 
     def _accept(self, entry):
         s_date=entry['start'][:3]
@@ -149,7 +172,7 @@ class OutlookCalendarImportData:
                e_date>self._filter['end'][:3]:
                 return False
         # check the catefory
-        c=self._filter['categories']
+        c=self._filter.get('categories', None)
         if c is None or not len(c):
             # no categories specified => all catefories allowed.
             return True
@@ -169,8 +192,17 @@ class OutlookCalendarImportData:
                 ce.priority=ce.priority_low
             elif v==self.olImportanceHigh:
                 ce.priority=ce.priority_high
-        if not self._filter.get('no_alarm', False) and e.get('alarm', False):
+        if not self._filter.get('no_alarm', False) and \
+               not self._filter.get('alarm_override', False) and \
+               e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
+        elif not self._filter.get('no_alarm', False) and \
+               self._filter.get('alarm_override', False):
+            ce.alarm=self._filter.get('alarm_value', 0)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
         ce.allday=e.get('allday', False)
         ce.start=e['start']
         ce.end=e['end']
@@ -283,6 +315,15 @@ class OutlookCalendarImportData:
             self._folder=self._outlook.getfolderfromid('', True, 'calendar')
         else:
             self._folder=f
+
+    def get_folder_id(self):
+        return self._outlook.getfolderid(self._folder)
+
+    def set_folder_id(self, id):
+        if id is None or id=="":
+            self.set_folder(None)
+        else:
+            self._folder=self._outlook.getfolderfromid(id)
 
     def set_filter(self, filter):
         self._filter=filter
@@ -500,3 +541,74 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
 
     def get_categories(self):
         return self._oc.get_category_list()
+
+#-------------------------------------------------------------------------------
+def ImportCal(folder, filters):
+    _oc=OutlookCalendarImportData(native.outlook, auto_sync_only=1)
+    _oc.set_folder_id(folder)
+    _oc.set_filter(filters)
+    _oc.read()
+    res={ 'calendar':_oc.get() }
+    return res
+
+#-------------------------------------------------------------------------------
+class OutlookAutoConfCalDialog(wx.Dialog):
+    def __init__(self, parent, id, title, folder, filters,
+                 style=wx.CAPTION|wx.MAXIMIZE_BOX| \
+                 wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
+        self._oc=OutlookCalendarImportData(native.outlook, auto_sync_only=1)
+        self._oc.set_folder_id(folder)
+        self._oc.set_filter(filters)
+        self.__read=False
+        wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
+        main_bs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        # label
+        hbs.Add(wx.StaticText(self, -1, "Outlook Calendar Folder:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        # where the folder name goes
+        self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        self.folderctrl.SetValue(self._oc.get_folder_name())
+        hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
+        # browse button
+        id_browse=wx.NewId()
+        hbs.Add(wx.Button(self, id_browse, 'Browse ...'), 0, wx.EXPAND|wx.ALL, 2)
+        main_bs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        main_bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        wx.EVT_BUTTON(self, id_browse, self.OnBrowseFolder)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.Button(self, wx.ID_OK, 'OK'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        id_filter=wx.NewId()
+        hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, wx.ID_HELP, 'Help'), 0,  wx.ALIGN_CENTRE|wx.ALL, 5)
+        main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        wx.EVT_BUTTON(self, id_filter, self.OnFilter)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
+        self.SetSizer(main_bs)
+        self.SetAutoLayout(True)
+        main_bs.Fit(self)
+
+    def OnBrowseFolder(self, evt):
+        f=self._oc.pick_folder()
+        if f is None:
+            return # user hit cancel
+        self._oc.set_folder(f)
+        self.folderctrl.SetValue(self._oc.get_folder_name())
+        self.__read=False
+
+    def OnFilter(self, evt):
+        # read the calender to get the category list
+        if not self.__read:
+            self._oc.read()
+            self.__read=True
+        cat_list=self._oc.get_category_list()
+        dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
+        dlg.set(self._oc.get_filter())
+        if dlg.ShowModal()==wx.ID_OK:
+            self._oc.set_filter(dlg.get())
+
+    def GetFolder(self):
+        return self._oc.get_folder_id()
+
+    def GetFilter(self):
+        return self._oc.get_filter()
