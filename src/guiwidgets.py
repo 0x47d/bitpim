@@ -372,8 +372,9 @@ class ConfigDialog(wx.Dialog):
                   'SPH-N200': 'com_samsungsphn200',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
-                  'SK6100 (Pelephone)' : 'com_sk6100', 
-                  'Other CDMA phone': 'com_othercdma',
+                  'SK6100 (Pelephone)' : 'com_sk6100',
+                  'VM4050 (Sprint)' : 'com_toshibavm4050',
+                  'Other CDMA phone': 'com_othercdma'
                   }
 
     if __debug__:
