@@ -389,18 +389,18 @@ class STRING(BaseProtogenClass):
     def writetobuffer(self, buf):
         if self._value is None:
             raise ValueNotSetException()
-                
+
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._pascal:
-            l=len(self._value)
-            if self._terminator is not None:
-                l+=1
-            buf.appendbyte(l)
-        buf.appendbytes(self._value)
+        # calculate length
         l=len(self._value)
         if self._terminator is not None:
-            buf.appendbyte(self._terminator)
             l+=1
+        if self._pascal:
+            buf.appendbyte(l)
+            l+=1
+        buf.appendbytes(self._value)
+        if self._terminator is not None:
+            buf.appendbyte(self._terminator)
         if self._sizeinbytes is not None:
             if l<self._sizeinbytes:
                 buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
