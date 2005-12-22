@@ -471,7 +471,7 @@ class Profile(parentprofile):
                         # we couldn't find a type for the number
                         continue 
                     # deal with number
-                    number=com_lgvx4400.phonize(num['number'])
+                    number=self.phonize(num['number'])
                     if len(number)==0:
                         # no actual digits in the number
                         continue
