@@ -45,6 +45,8 @@ if __name__ == '__main__':
     import encodings.utf_8
     import encodings.ascii
     import encodings.iso8859_1
+    import getopt
+    import os.path
 
     # in production builds we don't need the stupid warnings
     if not __debug__:
@@ -64,8 +66,14 @@ if __name__ == '__main__':
         # heck, do it for all platforms
         sys.stdout=_donowt()
         sys.stderr=_donowt()
-    
-    if len(sys.argv)==2 and sys.argv[1]=="bitfling":
+    _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+    _kwargs={}
+    for _k,_v in _options:
+        if _k=='-d':
+            _kwargs['config_filename']=os.path.join(_v, '.bitpim')
+        elif _k=='-c':
+            _kwargs['config_filename']=_v
+    if _args and 'bitfling' in _args:
         import bitfling.bitfling
         #if True:
         #    profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")
@@ -76,4 +84,4 @@ if __name__ == '__main__':
         #if True:
         #    profile("bitpim.prof", "gui.run(sys.argv)")
         #else:
-        gui.run(sys.argv)
+        gui.run(sys.argv, _kwargs)

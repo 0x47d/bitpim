@@ -372,9 +372,8 @@ class ConfigDialog(wx.Dialog):
                   'SPH-N200': 'com_samsungsphn200',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
-                  'SK6100 (Pelephone)' : 'com_sk6100',
-                  'VM4050 (Sprint)' : 'com_toshibavm4050',
-                  'Other CDMA phone': 'com_othercdma'
+                  'SK6100 (Pelephone)' : 'com_sk6100', 
+                  'Other CDMA phone': 'com_othercdma',
                   }
 
     if __debug__:
@@ -404,42 +403,45 @@ class ConfigDialog(wx.Dialog):
 
         # where we store our files
         gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(1,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.diskbox=wx.TextCtrl(self, -1, self.setme, size=(400,-1))
-        gs.Add( self.diskbox, pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add( wx.Button(self, self.ID_DIRBROWSE, "Browse ..."), pos=(1,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(wx.StaticText(self, -1, self.mw.config.Read('path', '<Unknown>')),
+               pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(wx.StaticText(self, -1, 'Config File'), pos=(2,0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(wx.StaticText(self, -1, self.mw.config.Read('config')),
+               pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # phone type
-        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.phonebox, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # com port
-        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.commbox=wx.TextCtrl(self, -1, self.setme, size=(200,-1))
-        gs.Add( self.commbox, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.commbox, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(4,2), flag=wx.ALIGN_CENTER_VERTICAL)
 
         # Automatic check for update
-        gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.updatebox=wx.ComboBox(self, -1, self.update_choices[0],
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY,
                                    choices=self.update_choices)
-        gs.Add(self.updatebox, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(self.updatebox, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
         # always start with the 'Today' tab
-        gs.Add(wx.StaticText(self, -1, 'Startup'), pos=(5,0),
+        gs.Add(wx.StaticText(self, -1, 'Startup'), pos=(6,0),
                flag=wx.ALIGN_CENTER_VERTICAL)
         self.startup=wx.CheckBox(self, wx.NewId(), 'Always start with the Today tab')
-        gs.Add(self.startup, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(self.startup, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL)
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(6,0), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(7,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(6,2), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add(self.bitflingenabled, pos=(7,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(7,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -458,7 +460,6 @@ class ConfigDialog(wx.Dialog):
         bs.Add(but, 0, wx.CENTER|wx.ALL, 10)
 
         wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
-        wx.EVT_BUTTON(self, self.ID_DIRBROWSE, self.OnDirBrowse)
         wx.EVT_BUTTON(self, self.ID_COMBROWSE, self.OnComBrowse)
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOK)
 
@@ -478,29 +479,11 @@ class ConfigDialog(wx.Dialog):
 
     def OnOK(self, _):
         self.saveSize()
-        # validate directory
-        dir=self.diskbox.GetValue()
-        try:
-            os.makedirs(dir)
-        except:
-            pass
-        if os.path.isdir(dir):
-            self.EndModal(wx.ID_OK)
-            self.ApplyBitFlingSettings()
-            return
-        wx.TipWindow(self.diskbox, "No such directory - please correct")
-            
+        self.EndModal(wx.ID_OK)
+        self.ApplyBitFlingSettings()
 
     def OnHelp(self, _):
         wx.GetApp().displayhelpid(helpids.ID_SETTINGS_DIALOG)
-
-    def OnDirBrowse(self, _):
-        dlg=wx.DirDialog(self, defaultPath=self.diskbox.GetValue(), style=wx.DD_NEW_DIR_BUTTON)
-        res=dlg.ShowModal()
-        v=dlg.GetPath()
-        dlg.Destroy()
-        if res==wx.ID_OK:
-            self.diskbox.SetValue(v)
 
     def OnComBrowse(self, _):
         self.saveSize()
@@ -605,8 +588,6 @@ class ConfigDialog(wx.Dialog):
         self.EndModal(wx.ID_CANCEL)
 
     def setfromconfig(self):
-        if len(self.mw.config.Read("path", "")):
-            self.diskbox.SetValue(self.mw.config.Read("path", ""))
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
         if self.mw.config.Read("phonetype", "") in self.phonemodels:
@@ -620,21 +601,12 @@ class ConfigDialog(wx.Dialog):
         self.startup.SetValue(self.mw.config.ReadInt("startwithtoday", 0))
 
     def setdefaults(self):
-        if self.diskbox.GetValue()==self.setme:
-            if guihelper.IsMSWindows(): # we want subdir of my documents on windows
-                # nice and painful
-                from win32com.shell import shell, shellcon
-                path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
-                path=os.path.join(path, "bitpim")
-            else:
-                path=os.path.expanduser("~/.bitpim-files")
-            self.diskbox.SetValue(path)
         if self.commbox.GetValue()==self.setme:
             comm="auto"
             self.commbox.SetValue(comm)
 
     def updatevariables(self):
-        path=self.diskbox.GetValue()
+        path=self.mw.config.Read('path')
         self.mw.configpath=path
         self.mw.ringerpath=self._fixup(os.path.join(path, "ringer"))
         self.mw.wallpaperpath=self._fixup(os.path.join(path, "wallpaper"))
@@ -696,22 +668,13 @@ class ConfigDialog(wx.Dialog):
         if self.mw.config.Read("phonetype", "") not in self.phonemodels:
             return True
         # are any at unknown settings
-        if self.diskbox.GetValue()==self.setme or \
-           self.commbox.GetValue()==self.setme:
+        if self.commbox.GetValue()==self.setme:
             # fill in and set defaults
             self.setdefaults()
             self.updatevariables()
             # any still unset?
-            if self.diskbox.GetValue()==self.setme or \
-                   self.commbox.GetValue()==self.setme:
+            if self.commbox.GetValue()==self.setme:
                 return True
-        # does data directory exist?
-        try:
-            os.makedirs(self.diskbox.GetValue())
-        except:
-            pass
-        if not os.path.isdir(self.diskbox.GetValue()):
-            return True
 
         return False
 

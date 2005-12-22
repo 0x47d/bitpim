@@ -10,6 +10,7 @@
 """The main gui code for BitPim"""
 
 # System modules
+import ConfigParser
 import thread, threading
 import Queue
 import time
@@ -23,7 +24,6 @@ import types
 import datetime
 import sha
 import codecs
-import locale
 
 # wx modules
 import wx
@@ -59,7 +59,6 @@ import hexeditor
 import today
 import pubsub
 import com_brew
-import auto_sync
 
 if guihelper.IsMSWindows():
     import win32api
@@ -200,7 +199,91 @@ class WorkerThreadFramework(threading.Thread):
         if self.dispatchto.wantlog:
             wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data, klass))
 
+###
+###  BitPim Config class
+###
+class Config(ConfigParser.ConfigParser):
+    _default_config_filename='.bitpim'
 
+    def __init__(self, config_file_name=None):
+        ConfigParser.ConfigParser.__init__(self)
+        # get/set path & filename
+        if config_file_name:
+            self._filename=os.path.abspath(config_file_name)
+            self._path=os.path.dirname(self._filename)
+        else:
+            self._path, self._filename=self._getdefaults()
+        # read in the config if exist
+        if self._filename:
+            self.read([self._filename])
+            self.Write('path', self._path)
+            self.Write('config', self._filename)
+
+    def _getdefaults(self):
+        # return the default path & config file name
+        # consistent with the previous BitPim way
+        if guihelper.IsMSWindows(): # we want subdir of my documents on windows
+            # nice and painful
+            from win32com.shell import shell, shellcon
+            path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+            path=os.path.join(path, "bitpim")
+        else:
+            path=os.path.expanduser("~/.bitpim-files")
+        return path,os.path.join(path, Config._default_config_filename)
+
+    def _expand(self, key):
+        # return a tuple of (section, option) based on the key
+        _l=key.split('/')
+        return (len(_l)>1 and '/'.join(_l[:-1]) or 'DEFAULT', _l[-1])
+        
+    def _check_section(self, section):
+        if section and section!='DEFAULT' and not self.has_section(section):
+            self.add_section(section)
+
+    def Read(self, key, default=''):
+        try:
+            return self.get(*self._expand(key))
+        except:
+            return default
+
+    def ReadInt(self, key, default=0):
+        _section,_option=self._expand(key)
+        try:
+            # first try for an int value
+            return self.getint(_section, _option)
+        except:
+            pass
+        try:
+            # then check for a bool value
+            return self.getboolean(_section, _option)
+        except:
+            # none found, return the default
+            return default
+
+    def ReadFloat(self, key, default=0.0):
+        try:
+            return self.getfloat(*self._expand(key))
+        except:
+            return default
+
+    def Write(self, key, value):
+        try:
+            _section,_option=self._expand(key)
+            if not _section:
+                _section='DEFAULT'
+            self._check_section(_section)
+            self.set(_section, _option, str(value))
+            self.write(file(self._filename, 'wb'))
+            return True
+        except:
+            return False
+    WriteInt=Write
+    WriteFloat=Write
+
+    def HasEntry(self, key):
+        return self.has_option(*self._expand(key))
+    def Flush(self):
+        pass
 ###
 ###  Splash screen
 ###
@@ -283,10 +366,11 @@ _NotSafeObject=_NotSafeObject()
 
 EVT_CALLBACK=None
 class MainApp(wx.App):
-    def __init__(self, *_):
+    def __init__(self, argv, config_filename=None):
         self.frame=None
         self.SAFEMODE=False
         codecs.register(phone_media_codec.search_func)
+        self._config_filename=config_filename
         wx.App.__init__(self, redirect=False, useBestVisual=True)
         
     def OnInit(self):
@@ -298,15 +382,13 @@ class MainApp(wx.App):
         global mainthreadid
         mainthreadid=thread.get_ident()
 
-        # Establish config stuff
-        cfgstr='bitpim'
-        if guihelper.IsMSWindows():
-            cfgstr="BitPim"  # nicely capitalized on Windows
-        self.config=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
-
         # for help to save prefs
+        cfgstr='bitpim'
         self.SetAppName(cfgstr)
         self.SetVendorName(cfgstr)
+
+        # Establish config stuff
+        self.config=Config(self._config_filename)
 
         # safe mode is read at startup and can't be changed
         self.SAFEMODE=self.config.ReadInt("SafeMode", False)
@@ -479,10 +561,8 @@ def donothingexceptionhandler(*args):
     pass
 
 # Entry point
-def run(*args):
-    m=MainApp(*args)
-    res=m.MainLoop()
-    return res
+def run(argv, kwargs):
+    return MainApp(argv, **kwargs).MainLoop()
 
 ###
 ### Main Window (frame) class
@@ -601,11 +681,6 @@ class MainWindow(wx.Frame):
         menuBar.Append(menu, "&Data")
 
         menu=wx.Menu()
-        menu.Append(guihelper.ID_AUTOSYNCSETTINGS, "&Configure AutoSync Settings...", "Configures Schedule Auto-Synchronisation")
-        menu.Append(guihelper.ID_AUTOSYNCEXECUTE, "&Synchronize Schedule Now", "Synchronize Schedule Now")
-        menuBar.Append(menu, "&AutoSync")
-
-        menu=wx.Menu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "Columns ...", "Which columns to show")
         menu.AppendCheckItem(guihelper.ID_VIEWPREVIEW, "Phonebook Preview", "Toggle Phonebook Preview Pane")
         menu.AppendSeparator()
@@ -684,8 +759,6 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
         wx.EVT_MENU(self, guihelper.ID_EDITPHONEINFO, self.OnPhoneInfo)
         wx.EVT_MENU(self, guihelper.ID_EDITDETECT, self.OnDetectPhone)
-        wx.EVT_MENU(self, guihelper.ID_AUTOSYNCSETTINGS, self.OnAutoSyncSettings)
-        wx.EVT_MENU(self, guihelper.ID_AUTOSYNCEXECUTE, self.OnAutoSyncExecute)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -703,12 +776,6 @@ class MainWindow(wx.Frame):
                 return
         self.configdlg.updatevariables()
         
-        ### Set autosync settings dialog
-        self.calenders=importexport.GetCalenderAutoSyncImports()
-        print "cal " +`self.calenders`
-        self.autosyncsetting=auto_sync.AutoSyncSettingsDialog(self, self)
-        self.autosyncsetting.updatevariables()
-
         ### notebook
         self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
 
@@ -926,11 +993,11 @@ class MainWindow(wx.Frame):
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
             return
         self.__detect_phone()
-    def __detect_phone(self, using_port=None, check_auto_sync=0):
+    def __detect_phone(self, using_port=None):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         self.MakeCall(Request(self.wt.detectphone, using_port),
-                      Callback(self.OnDetectPhoneReturn, check_auto_sync))
+                      Callback(self.OnDetectPhoneReturn))
     def __get_owner_name(self, esn):
         """ retrieve or ask user for the owner's name of this phone
         """
@@ -957,7 +1024,7 @@ class MainWindow(wx.Frame):
             return s
         return phone_name
         
-    def OnDetectPhoneReturn(self, check_auto_sync, exception, r):
+    def OnDetectPhoneReturn(self, exception, r):
         self.OnBusyEnd()
         if self.HandleException(exception): return
         if r is None:
@@ -982,9 +1049,6 @@ class MainWindow(wx.Frame):
                                                r['phone_name'],
                                                r['port']),
                           'Phone Detection', wx.OK)
-            if check_auto_sync:
-                # see if we should re-sync the calender on connect, do it silently
-                self.__autosync_phone(silent=1)
         
     def WindowsOnDeviceChanged(self, type, name="", drives=[], flag=None):
         if not name.lower().startswith("com"):
@@ -1004,8 +1068,7 @@ class MainWindow(wx.Frame):
             # current phone operation ongoing, abort this
             return
         # check the new device
-        check_auto_sync=auto_sync.UpdateOnConnect(self)
-        self.__detect_phone(name, check_auto_sync)
+        self.__detect_phone(name)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -1336,27 +1399,6 @@ class MainWindow(wx.Frame):
             # clear the ower's name for manual setting
             self.__owner_name=''
             self.configdlg.ShowModal()
-
-    # deal with configuring the phone (commport)
-    def OnAutoSyncSettings(self, _=None):
-        if wx.IsBusy():
-            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
-        else:
-            # clear the ower's name for manual setting
-            self.__owner_name=''
-            self.autosyncsetting.ShowModal()
-
-    def OnAutoSyncExecute(self, _=None):
-        if wx.IsBusy():
-            wx.MessageBox("BitPim is busy.  You can't run autosync until it has finished talking to your phone.",
-                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
-            return
-        self.__autosync_phone()
-
-    def __autosync_phone(self, silent=0):
-        r=auto_sync.SyncSchedule(self).sync(self, silent)
-        
 
     def OnReqChangeTab(self, msg=None):
         if msg is None:
