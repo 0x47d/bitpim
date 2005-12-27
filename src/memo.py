@@ -419,6 +419,7 @@ class MemoWidget(wx.Panel):
 
     def getdata(self,dict,want=None):
         dict['memo']=copy.deepcopy(self._data)
+        return dict
 
     def populate(self, dict):
         self._data=dict.get('memo', {})

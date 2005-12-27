@@ -460,18 +460,26 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         ('categories', 'Category', 150, common_calendar.category_str)
         ]
     ID_ADD=wx.NewId()
+    _config_name='import/calendar/outlookdialog'
+    _browse_label='Outlook Calendar Folder:'
+    _progress_dlg_title='Outlook Calendar Import'
+    _error_dlg_title='Outlook Calendar Import Error'
+    _error_dlg_text='Outlook Calendar Items that failed to import:'
+    _data_class=OutlookCalendarImportData
+    _filter_dlg_class=common_calendar.FilterDialog
+
     def __init__(self, parent, id, title):
-        self._oc=OutlookCalendarImportData(native.outlook)
+        self._oc=self._data_class(native.outlook)
         self._oc.set_folder(None)
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
                                self._column_labels,
                                self._oc.get_display_data(),
-                               config_name='import/calendar/outlookdialog')
+                               config_name=self._config_name)
         
     def getcontrols(self, main_bs):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # label
-        hbs.Add(wx.StaticText(self, -1, "Outlook Calendar Folder:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        hbs.Add(wx.StaticText(self, -1, self._browse_label), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
         self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
         self.folderctrl.SetValue(self._oc.get_folder_name())
@@ -502,7 +510,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
 
     def OnImport(self, evt):
         wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog('Outlook Calendar Import',
+        dlg=wx.ProgressDialog(self._progress_dlg_title,
                               'Importing Outlook Data, please wait ...\n(Please also watch out for the Outlook Permission Request dialog)',
                               parent=self)
         self._oc.read(None, dlg)
@@ -511,8 +519,8 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         if self._oc.has_errors():
             # display the list of failed items
             error_dlg=wx.SingleChoiceDialog(self,
-                                            'Outlook Calendar Items that failed to import:',
-                                            'Outlook Calendar Import Error',
+                                            self._error_dlg_text,
+                                            self._error_dlg_title,
                                             self._oc.get_error_list())
             error_dlg.ShowModal()
             error_dlg.Destroy()
@@ -527,7 +535,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
 
     def OnFilter(self, evt):
         cat_list=self._oc.get_category_list()
-        dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
+        dlg=self._filter_dlg_class(self, -1, 'Filtering Parameters', cat_list)
         dlg.set(self._oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
             self._oc.set_filter(dlg.get())

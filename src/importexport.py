@@ -47,6 +47,7 @@ def GetPhonebookImports():
         import native.outlook
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
         res.append( ("Outlook Calendar...", "Import Outlook calendar for the calendar", OnFileImportOutlookCalendar) )
+        res.append( ("Outlook Notes...", "Import Outlook notes for the memo", OnFileImportOutlookNotes) )
     except:
         pass
     # Evolution
@@ -1768,6 +1769,36 @@ def OnFileImportOutlookCalendar(parent):
     dlg.Destroy()
     native.outlook.releaseoutlook()
 
+def OnFileImportOutlookNotes(parent):
+    import native.outlook
+    import outlook_notes
+    import pubsub
+    dlg=outlook_notes.OutlookImportNotesDialog(parent, -1,
+                                               'Import Outlook Notes')
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and save the new data
+        memo_r={ 'memo': dlg.get() }
+        parent.memowidget.populate(memo_r)
+        parent.memowidget.populatefs(memo_r)
+    elif res==outlook_notes.OutlookImportNotesDialog.ID_ADD:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # get existing data
+        memo_r=parent.memowidget.getdata({}).get('memo', {})
+        # and add the imported data
+        memo_r.update(dlg.get())
+        # and save it
+        parent.memowidget.populate({ 'memo': memo_r } )
+        parent.memowidget.populatefs({ 'memo': memo_r } )
+    # all done
+    dlg.Destroy()
+    native.outlook.releaseoutlook()
+    
 def OnFileImportVCal(parent):
     import vcal_calendar
     import pubsub
