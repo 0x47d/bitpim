@@ -259,6 +259,8 @@ def getfolderfromid(id, default=False, default_type='contacts'):
             default_folder=outlook_com.constants.olFolderCalendar
         elif default_type=='notes':
             default_folder=outlook_com.constants.olFolderNotes
+        elif default_type=='tasks':
+            default_folder=outlook_com.constants.olFolderTasks
         else:
             # default to contacts, works as before
             default_folder=outlook_com.constants.olFolderContacts

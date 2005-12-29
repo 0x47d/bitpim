@@ -97,6 +97,9 @@ class TodoEntry(object):
         'Completed', 'Cancelled', 'LAST')
     PC_Range=xrange(101)  # % Complete: 0-100%
     PR_Range=xrange(1, 11)
+    _id_index=0
+    _max_id_index=999
+
     def __init__(self):
         self._data={ 'serials': [] }
         self._create_id()
@@ -136,7 +139,12 @@ class TodoEntry(object):
     def _create_id(self):
         "Create a BitPim serial for this entry"
         self._data.setdefault("serials", []).append(\
-            {"sourcetype": "bitpim", "id": str(time.time())})
+            {"sourcetype": "bitpim",
+             "id": '%.3f%03d'%(time.time(), TodoEntry._id_index) })
+        if TodoEntry._id_index<TodoEntry._max_id_index:
+            TodoEntry._id_index+=1
+        else:
+            TodoEntry._id_index=0
     def _get_id(self):
         s=self._data.get('serials', [])
         for n in s:
@@ -625,6 +633,7 @@ class TodoWidget(wx.Panel):
 
     def getdata(self,dict,want=None):
         dict['todo']=copy.deepcopy(self._data)
+        return dict
 
     def populate(self, dict):
         self._data=dict.get('todo', {})

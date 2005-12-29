@@ -48,6 +48,7 @@ def GetPhonebookImports():
         res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
         res.append( ("Outlook Calendar...", "Import Outlook calendar for the calendar", OnFileImportOutlookCalendar) )
         res.append( ("Outlook Notes...", "Import Outlook notes for the memo", OnFileImportOutlookNotes) )
+        res.append( ("Outlook Tasks...", "Import Outlook tasks for the todo", OnFileImportOutlookTasks) )
     except:
         pass
     # Evolution
@@ -1798,7 +1799,37 @@ def OnFileImportOutlookNotes(parent):
     # all done
     dlg.Destroy()
     native.outlook.releaseoutlook()
-    
+
+def OnFileImportOutlookTasks(parent):
+    import native.outlook
+    import outlook_tasks
+    import pubsub
+    dlg=outlook_tasks.OutlookImportTasksDialog(parent, -1,
+                                               'Import Outlook Tasks')
+    res=dlg.ShowModal()
+    if res==wx.ID_OK:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and save the new data
+        todo_r={ 'todo': dlg.get() }
+        parent.todowidget.populate(todo_r)
+        parent.todowidget.populatefs(todo_r)
+    elif res==outlook_tasks.OutlookImportTasksDialog.ID_ADD:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # get existing data
+        todo_r=parent.todowidget.getdata({}).get('todo', {})
+        # and add the imported data
+        todo_r.update(dlg.get())
+        # and save it
+        parent.todowidget.populate({ 'todo': todo_r } )
+        parent.todowidget.populatefs({ 'todo': todo_r } )
+    # all done
+    dlg.Destroy()
+    native.outlook.releaseoutlook()
+
 def OnFileImportVCal(parent):
     import vcal_calendar
     import pubsub

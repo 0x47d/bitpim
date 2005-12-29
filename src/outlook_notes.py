@@ -21,7 +21,7 @@ import outlook_calendar
 
 #-------------------------------------------------------------------------------
 class OutlookNotesImportData(outlook_calendar.OutlookCalendarImportData):
-    _notes_keys=[
+    _data_keys=[
         # (Outlook field, MemoEntry field, convertor function)
         ('Subject', 'subject', None),
         ('Body', 'text', None),
@@ -33,12 +33,15 @@ class OutlookNotesImportData(outlook_calendar.OutlookCalendarImportData):
         'end': None,
         'categories': None,
         }
+    _data_item_class=memo.MemoEntry
+    _default_folder_type='notes'
+
     def __init__(self, outlook):
         self._outlook=outlook
         self._data=[]
         self._error_list=[]
         self._folder=None
-        self._filter=OutlookNotesImportData._default_filter
+        self._filter=self._default_filter
         self._total_count=0
         self._current_count=0
         self._update_dlg=None
@@ -69,11 +72,12 @@ class OutlookNotesImportData(outlook_calendar.OutlookCalendarImportData):
         for k in entry.get('categories', []):
             v.append({ 'category': k })
         memo_entry.categories=v
+
     def get(self):
         res={}
         for k in self._data:
             if self._accept(k):
-                _e=memo.MemoEntry()
+                _e=self._data_item_class()
                 self._populate_entry(k, _e)
                 res[_e.id]=_e
         return res
@@ -98,24 +102,29 @@ class OutlookNotesImportData(outlook_calendar.OutlookCalendarImportData):
         if folder is not None:
             self._folder=folder
         if self._folder is None:
-            self._folder=self._outlook.getfolderfromid('', True, 'notes')
+            self._folder=self._outlook.getfolderfromid('', True,
+                                                       self._default_folder_type)
         self._update_dlg=update_flg
         self._total_count=self._folder.Items.Count
         self._current_count=0
         self._data, self._error_list=self._outlook.getdata(self._folder,
-                                                           self._notes_keys,
+                                                           self._data_keys,
                                                            {}, self,
                                                            self.read_update)
 
     def set_folder(self, f):
         if f is None:
             # default folder
-            self._folder=self._outlook.getfolderfromid('', True, 'notes')
+            self._folder=self._outlook.getfolderfromid('', True,
+                                                       self._default_folder_type)
         else:
             self._folder=f
 
 #-------------------------------------------------------------------------------
 class FilterDialog(wx.Dialog):
+
+    _has_complete_option=False
+
     def __init__(self, parent, id, caption, categories,
                  style=wx.DEFAULT_DIALOG_STYLE):
         super(FilterDialog, self).__init__(parent, id, title=caption,
@@ -139,6 +148,14 @@ class FilterDialog(wx.Dialog):
         self.__cats=wx.CheckListBox(self, choices=categories, size=(160, 50))
         self.__cats.Disable()
         fgs2.Add(self.__cats, 0, wx.ALIGN_LEFT, 0)
+        # completed items only option
+        if self._has_complete_option:
+            self._complete_chkbox=wx.CheckBox(self, -1, label='',
+                                              style=wx.ALIGN_RIGHT)
+            fgs2.Add(self._complete_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+            fgs2.Add(wx.StaticText(self, -1, 'Non-completed Items Only'),
+                     0, wx.ALIGN_LEFT, 0)
+        # add everything to the main sizer
         main_fgs.Add(fgs, 1, wx.EXPAND|wx.ALL, 0)
         main_fgs.Add(fgs1, 1, wx.EXPAND|wx.ALL, 0)
         main_fgs.Add(fgs2, 1, wx.EXPAND|wx.ALL, 0)
@@ -212,6 +229,10 @@ class FilterDialog(wx.Dialog):
             dt.Set(d[2], year=d[0], month=d[1]-1)
             cal.SetDate(dt)
 
+    def _set_complete(self, v):
+        if self._has_complete_option:
+            self._complete_chkbox.SetValue(v)
+
     def set(self, data):
         self._set_date(self._start_date_chkbox, self._start_date,
                         data.get('start', None))
@@ -219,6 +240,7 @@ class FilterDialog(wx.Dialog):
                         data.get('end', None))
         self._set_cats(self.__cat_chkbox, self.__cats,
                        data.get('categories', None))
+        self._set_complete(data.get('non_completed', False))
 
     def get(self):
         r={}
@@ -244,6 +266,8 @@ class FilterDialog(wx.Dialog):
             r['categories']=c
         else:
             r['categories']=None
+        if self._has_complete_option:
+            r['non_completed']=self._complete_chkbox.GetValue()
         return r
 
 #-------------------------------------------------------------------------------
@@ -262,6 +286,3 @@ class OutlookImportNotesDialog(outlook_calendar.OutlookImportCalDialog):
     _error_dlg_text='Outlook Notes Items that failed to import:'
     _data_class=OutlookNotesImportData
     _filter_dlg_class=FilterDialog
-
-    def __init__(self, parent, id, title):
-        super(OutlookImportNotesDialog, self).__init__(parent, id, title)
