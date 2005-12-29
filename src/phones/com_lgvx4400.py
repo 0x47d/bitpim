@@ -730,6 +730,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
 
     def _assignpbtypeandspeeddialsbytype(self, entry, speeds, res):
         # for some phones (e.g. vx8100) the speeddial numberindex is really the numbertype (now why would LG want to change this!)
+        _sd_list=speeds.get(entry.entrynumber, [])
+        _sd_dict={}
+        for _sd in _sd_list:
+            _sd_dict[_sd[1]]=_sd[0]
         res['numbers']=[]
         for i in range(self.protocolclass.NUMPHONENUMBERS):
             num=entry.numbers[i].number
@@ -740,8 +744,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
                 # if this is a speeddial number set it
-                if entry.entrynumber in speeds and speeds[entry.entrynumber][0][1]==entry.numbertypes[i].numbertype:
-                    res['numbers'][i]['speeddial']=speeds[entry.entrynumber][0][0]
+                if _sd_dict.get(type, None):
+                    res['numbers'][i]['speeddial']=_sd_dict[type]
         return res
 
     def _findmediainindex(self, index, name, pbentryname, type):
