@@ -204,8 +204,13 @@ class OutlookCalendarImportData:
             ce.ringtone=self._filter.get('ringtone', "")
             ce.vibrate=self._filter.get('vibrate', False)
         ce.allday=e.get('allday', False)
-        ce.start=e['start']
-        ce.end=e['end']
+        if ce.allday:
+            # by definition, this is a 1-day deal!
+            ce.start=e['start'][:3]+(0,0)
+            ce.end=e['start'][:3]+(23,59)
+        else:
+            ce.start=e['start']
+            ce.end=e['end']
         ce.notes=e.get('notes', None)
         v=[]
         for k in e.get('categories', []):
