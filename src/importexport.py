@@ -31,6 +31,7 @@ import phonenumber
 import guiwidgets
 import nameparser
 import phonebook
+import pubsub
 
 # control
 def GetPhonebookImports():
@@ -1740,149 +1741,67 @@ def OnFileImporteGroupwareContacts(parent):
     if data is not None:
         parent.phonewidget.importdata(data, merge=True)
 
-def OnFileImportOutlookCalendar(parent):
-    import native.outlook
-    import outlook_calendar
-    import pubsub
-    dlg=outlook_calendar.OutlookImportCalDialog(parent, -1,
-                                                'Import Outlook Calendar')
+def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
+    dlg=dlg_class(parent, -1, dlg_title)
     res=dlg.ShowModal()
     if res==wx.ID_OK:
-        # ask phonebook to merge our categories
         pubsub.publish(pubsub.MERGE_CATEGORIES,
                        dlg.get_categories()[:])
         # and save the new data
-        calendar_r={ 'calendar': dlg.get() }
-        parent.calendarwidget.populate(calendar_r)
-        parent.calendarwidget.populatefs(calendar_r)
-    elif res==outlook_calendar.OutlookImportCalDialog.ID_ADD:
+        data_dict={ dict_key: dlg.get() }
+        widget.populate(data_dict)
+        widget.populatefs(data_dict)
+    elif res==dlg_class.ID_ADD:
         # ask phonebook to merge our categories
         pubsub.publish(pubsub.MERGE_CATEGORIES,
                        dlg.get_categories()[:])
         # get existing data
-        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
-        # and add the imported data
-        calendar_r.update(dlg.get())
+        data_res=widget.getdata({}).get(dict_key, {})
+        # and add the new imported data
+        data_res.update(dlg.get())
+        data_dict={ dict_key: data_res }
         # and save it
-        parent.calendarwidget.populate({ 'calendar': calendar_r } )
-        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
+        widget.populate(data_dict)
+        widget.populatefs(data_dict)
     # all done
-    dlg.Destroy()
+    dlg.Destroy
+
+def OnFileImportOutlookCalendar(parent):
+    import native.outlook
+    import outlook_calendar
+    import pubsub
+    OnFileImportCommon(parent, outlook_calendar.OutlookImportCalDialog,
+                       'Import Outlook Calendar', parent.calendarwidget,
+                       'calendar')
     native.outlook.releaseoutlook()
 
 def OnFileImportOutlookNotes(parent):
     import native.outlook
     import outlook_notes
-    import pubsub
-    dlg=outlook_notes.OutlookImportNotesDialog(parent, -1,
-                                               'Import Outlook Notes')
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and save the new data
-        memo_r={ 'memo': dlg.get() }
-        parent.memowidget.populate(memo_r)
-        parent.memowidget.populatefs(memo_r)
-    elif res==outlook_notes.OutlookImportNotesDialog.ID_ADD:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # get existing data
-        memo_r=parent.memowidget.getdata({}).get('memo', {})
-        # and add the imported data
-        memo_r.update(dlg.get())
-        # and save it
-        parent.memowidget.populate({ 'memo': memo_r } )
-        parent.memowidget.populatefs({ 'memo': memo_r } )
-    # all done
-    dlg.Destroy()
+    OnFileImportCommon(parent, outlook_notes.OutlookImportNotesDialog,
+                       'Import Outlook Notes', parent.memowidget,
+                       'memo')
     native.outlook.releaseoutlook()
 
 def OnFileImportOutlookTasks(parent):
     import native.outlook
     import outlook_tasks
-    import pubsub
-    dlg=outlook_tasks.OutlookImportTasksDialog(parent, -1,
-                                               'Import Outlook Tasks')
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and save the new data
-        todo_r={ 'todo': dlg.get() }
-        parent.todowidget.populate(todo_r)
-        parent.todowidget.populatefs(todo_r)
-    elif res==outlook_tasks.OutlookImportTasksDialog.ID_ADD:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # get existing data
-        todo_r=parent.todowidget.getdata({}).get('todo', {})
-        # and add the imported data
-        todo_r.update(dlg.get())
-        # and save it
-        parent.todowidget.populate({ 'todo': todo_r } )
-        parent.todowidget.populatefs({ 'todo': todo_r } )
-    # all done
-    dlg.Destroy()
+    OnFileImportCommon(parent, outlook_tasks.OutlookImportTasksDialog,
+                       'Import Outlook Tasks', parent.todowidget,
+                       'todo')
     native.outlook.releaseoutlook()
 
 def OnFileImportVCal(parent):
     import vcal_calendar
-    import pubsub
-    dlg=vcal_calendar.VcalImportCalDialog(parent, -1, 'Import vCalendar')
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and save the new data
-        calendar_r={ 'calendar': dlg.get() }
-        parent.calendarwidget.populate(calendar_r)
-        parent.calendarwidget.populatefs(calendar_r)
-    elif res==vcal_calendar.VcalImportCalDialog.ID_ADD:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # get existing data
-        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
-        # and add the imported data
-        calendar_r.update(dlg.get())
-        # and save it
-        parent.calendarwidget.populate({ 'calendar': calendar_r } )
-        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
-    # all done
-    dlg.Destroy()
+    OnFileImportCommon(parent, vcal_calendar.VcalImportCalDialog,
+                       'Import vCalendar', parent.calendarwidget,
+                       'calendar')
 
 def OnFileImportCSVCalendar(parent):
     import csv_calendar
-    import pubsub
-    dlg=csv_calendar.CSVImportDialog(parent, -1, 'Import CSV Calendar')
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and save the new data
-        calendar_r={ 'calendar': dlg.get() }
-        parent.calendarwidget.populate(calendar_r)
-        parent.calendarwidget.populatefs(calendar_r)
-    elif res==csv_calendar.CSVImportDialog.ID_ADD:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # get existing data
-        calendar_r=parent.calendarwidget.getdata({}).get('calendar', {})
-        # and add the imported data
-        calendar_r.update(dlg.get())
-        # and save it
-        parent.calendarwidget.populate({ 'calendar': calendar_r } )
-        parent.calendarwidget.populatefs({ 'calendar': calendar_r } )
-    # all done
-    dlg.Destroy()
+    OnFileImportCommon(parent, csv_calendar.CSVImportDialog,
+                       'Import CSV Calendar', parent.calendarwidget,
+                       'calendar')
 
 ###
 ###   AUTO_SYNC

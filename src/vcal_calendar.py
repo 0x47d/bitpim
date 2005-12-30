@@ -183,17 +183,17 @@ class VCalendarImportData(object):
         v=e.get('priority', None)
         if v is not None:
             ce.priority=v
-        if not self._filter.get('no_alarm', False) and \
-               not self._filter.get('alarm_override', False) and \
+        if not self.__filter.get('no_alarm', False) and \
+               not self.__filter.get('alarm_override', False) and \
                e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
-            ce.ringtone=self._filter.get('ringtone', "")
-            ce.vibrate=self._filter.get('vibrate', False)
-        elif not self._filter.get('no_alarm', False) and \
-               self._filter.get('alarm_override', False):
-            ce.alarm=self._filter.get('alarm_value', 0)
-            ce.ringtone=self._filter.get('ringtone', "")
-            ce.vibrate=self._filter.get('vibrate', False)
+            ce.ringtone=self.__filter.get('ringtone', "")
+            ce.vibrate=self.__filter.get('vibrate', False)
+        elif not self.__filter.get('no_alarm', False) and \
+               self.__filter.get('alarm_override', False):
+            ce.alarm=self.__filter.get('alarm_value', 0)
+            ce.ringtone=self.__filter.get('ringtone', "")
+            ce.vibrate=self.__filter.get('vibrate', False)
         ce_start=e.get('start', None)
         ce_end=e.get('end', None)
         if ce_start is None and ce_end is None:
