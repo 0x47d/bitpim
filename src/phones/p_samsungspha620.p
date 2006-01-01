@@ -29,6 +29,9 @@ NUMSMSENTRIES=94
 NUMGROUPS=4
 
 AMSREGISTRY="ams/AmsRegistry"
+ENDTRANSACTION="ams/EndTransaction"
+RINGERPREFIX="ams/Ringers/cnts"
+WALLPAPERPREFIX="ams/Screen Savers/cnts"
 
 %}
 
