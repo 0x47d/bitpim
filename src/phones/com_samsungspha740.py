@@ -66,16 +66,4 @@ class Profile(parentprofile):
         parentprofile.__init__(self)
         self.numbertypetab=numbertypetab
 
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('wallpaper', 'read', None),  # all wallpaper reading
-        ('ringtone', 'read', None),   # all ringtone reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('todo', 'read', None),     # all todo list reading
-        ('todo', 'write', 'OVERWRITE'),  # all todo list writing
-        ('memo', 'read', None),     # all memo list reading
-        ('memo', 'write', 'OVERWRITE'),  # all memo list writing
-        )
 
