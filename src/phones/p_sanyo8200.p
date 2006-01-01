@@ -9,7 +9,7 @@
 
 %{
 
-"""Various descriptions of data specific to Sanyo SCP-5500"""
+"""Various descriptions of data specific to Sanyo SCP-8200"""
 
 from prototypes import *
 
