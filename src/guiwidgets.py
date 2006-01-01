@@ -373,6 +373,7 @@ class ConfigDialog(wx.Dialog):
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
                   'SK6100 (Pelephone)' : 'com_sk6100', 
+                  'VI-2300': 'com_sanyo2300',
                   'Other CDMA phone': 'com_othercdma',
                   }
 
