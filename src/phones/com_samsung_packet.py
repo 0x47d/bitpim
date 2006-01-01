@@ -10,14 +10,19 @@
 
 """Communicate with a Samsung SCH-Axx phone using AT commands"""
 
+# standard modules
+import time
+import re
+import datetime
+
+# BitPim modules
+import bpcalendar
 import p_brew
 import com_brew
 import com_phone
 import prototypes
 import common
 import commport
-import time
-import re
 import todo
 import memo
 
@@ -36,6 +41,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     __cal_end_datetime_value=None
     __cal_alarm_values={0: 10, 1: 30, 2: 60, 3: 0, 4: -1 }
     __cal_max_name_len=32
+    _cal_max_events_per_day=9
     
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
@@ -407,34 +413,28 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                               res[0].eventname)
                 
                 # build a calendar entry
-                entry={}
+                entry=bpcalendar.CalendarEntry()
 
                 # start time date
-                entry['start']=res[0].start
+                entry.start=res[0].start[0:5]
 
                 if res[0].end:
                     # valid end time
-                    entry['end']=res[0].end
+                    entry.end=res[0].end[0:5]
                 else:
-                    entry['end']=entry['start'][:]
+                    entry.end=entry.start
 
                 # description
-                entry['description']=res[0].eventname
+                entry.description=res[0].eventname
 
                 try:
                     alarm=self.__cal_alarm_values[res[0].alarm]
                 except:
                     alarm=None
-                entry['alarm']=alarm
-
-                # pos
-                entry['pos']=cal_cnt
-
-                # Misc stuff
-                self._set_unused_calendar_fields(entry)
+                entry.alarm=alarm
 
                 # update calendar dict
-                entries[cal_cnt]=entry
+                entries[entry.id]=entry
                 cal_cnt += 1
 
         result['calendar']=entries
@@ -448,41 +448,101 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             entry['daybitmap']=0
             entry['ringtone']=0
 
+    def process_calendar(self, dict):
+        """ Optimize and expand calendar data suitable for phone download
+        """
+        # first go thru the dict to organize events by date
+        # and also determine the latest event date
+        r={}
+        rp=[]
+        today=datetime.date.today()
+        last_date=today
+        if __debug__:
+            print 'original calendar:'
+        for k,e in dict.items():
+            if __debug__:
+                print e.description,':',e.start
+            sd=datetime.date(*e.start[:3])
+            ed=datetime.date(*e.end[:3])
+            if ed>last_date:
+                last_date=ed
+            if e.repeat is None:
+                if sd>=today:
+                    r.setdefault(e.start[:3], []).append(Samsung_Calendar(e))
+            else:
+                if ed>=today:
+                    rp.append(e)
+        # go through and expand on the repeated events
+        delta_1=datetime.timedelta(1)
+        for n in rp:
+            current_date=today
+            end_date=datetime.date(*n.end[:3])
+            cnt=0
+            while current_date<=end_date:
+                if n.is_active(current_date.year, current_date.month,
+                               current_date.day):
+                    cd_l=(current_date.year, current_date.month,
+                          current_date.day)
+                    r.setdefault(cd_l, []).append(\
+                                      Samsung_Calendar(n, cd_l))
+                    cnt+=1
+                    if cnt>self.protocolclass.NUMCALENDAREVENTS:
+                        # enough for this one, breaking out
+                        break
+                current_date+=delta_1
+        # and put them all into a list
+        res=[]
+        keys=r.keys()
+        # sort by date
+        keys.sort()
+        for k in keys:
+            # sort by time within this date
+            r[k].sort()
+            # clip by max events/day
+            if len(r[k])>self._cal_max_events_per_day:
+                res+=r[k][:self._cal_max_events_per_day]
+            else:
+                res+=r[k]
+        # clip by max events
+        if len(res)>self.protocolclass.NUMCALENDAREVENTS:
+            res=res[:self.protocolclass.NUMCALENDAREVENTS]
+        return res
+            
     def savecalendar(self, dict, merge):
         
         self.log("Sending calendar entries")
 
-        cal=dict['calendar']
-        cal_len=len(cal)
-        l=self.protocolclass.NUMCALENDAREVENTS
-        if cal_len > l:
-            self.log("The number of events (%d) exceeded the mamximum (%d)" % (cal_len, l))
+        cal=self.process_calendar(dict['calendar'])
+        # testing
+        if __debug__:
+            print 'processed calendar: ', len(cal), ' items'
+            for c in cal:
+                print c.description,':', c.start
 
         self.setmode(self.MODEPHONEBOOK)
         self.log("Saving calendar entries")
         cal_cnt=0
         req=self.protocolclass.eventupdaterequest()
-        for k in cal:
+        l = self.protocolclass.NUMCALENDAREVENTS
+        for c in cal:
             if cal_cnt >= l:
                 # sent max events, stop
                 break
             # Save this entry to phone
             # self.log('Item %d' %k)
-            self._set_unused_calendar_fields(cal[k])
-            c = cal[k]
             
             # pos
             req.slot=cal_cnt
 
             # start date time
-            print "Start ",c['start']
-            req.start=list(c['start'])+[0]
+            print "Start ",c.start
+            req.start=list(c.start)+[0]
 
             # end date time
             if self.__cal_end_datetime_value is None:
                 # valid end-datetime
-                req.end=list(c['end'])+[0]
-                print "End ",c['end']
+                req.end=list(c.end)+[0]
+                print "End ",c.end
             else:
                 # no end-datetime, set to start-datetime
                 req.end=req.start
@@ -491,7 +551,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             req.timestamp=list(time.localtime(time.time())[0:6])
 
             # Approximate the alarm value
-            alarm=c['alarm']
+            alarm=c.alarm
             vals=self.__cal_alarm_values.values()
             vals.sort()
             vals.reverse()
@@ -506,7 +566,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             req.alarm=alarm_index
 
             # Name, check for bad char & proper length
-            name=c['description'].replace('"', '')
+            #name=c.description.replace('"', '')
+            name=c.description
             if len(name)>self.__cal_max_name_len:
                 name=name[:self.__cal_max_name_len]
             req.eventname=name
@@ -632,16 +693,19 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for slot in range(memo_cnt, self.protocolclass.NUMMEMOENTRIES):
             req.slot=slot
             self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
+
     
     getcallhistory=None
         
 class Profile(com_phone.Profile):
 
+    BP_Calendar_Version=3
+    
     usbids=( ( 0x04e8, 0x6601, 1),  # Samsung internal USB interface
         )
 
     # which device classes we are.
-    deviceclasses=("modem",)
+    deviceclasses=("modem","serial")
 
     _supportedsyncs=()
 
@@ -839,6 +903,61 @@ class Profile(com_phone.Profile):
         All digits, P, T, * and # are kept, everything else is removed"""
 
         return re.sub("[^0-9PT#*]", "", str)[:self.protocolclass.MAXNUMBERLEN]
+
+class Samsung_Calendar:
+    _cal_alarm_values={
+        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+    
+    def __init__(self, calendar_entry, new_date=None):
+        self._start=self._end=self._alarm=self._desc=None
+        self._extract_cal_info(calendar_entry, new_date)
+
+    def _extract_cal_info(self, cal_entry, new_date):
+        s=cal_entry.start
+        if new_date is not None:
+            s=new_date[:3]+s[3:]
+        self._start=s
+        self._end=cal_entry.end
+        self._desc=cal_entry.description
+        # approximate the alarm value
+        self._alarm='0'
+        alarm=cal_entry.alarm
+        _keys=self._cal_alarm_values.keys()
+        _keys.sort()
+        _keys.reverse()
+        for k in _keys:
+            if alarm>=self._cal_alarm_values[k]:
+                self._alarm=k
+                break
+
+    def __lt__(self, rhs):
+        return self.start<rhs.start
+    def __le__(self, rhs):
+        return self.start<=rhs.start
+    def __eq__(self, rhs):
+        return self.start==rhs.start
+    def __ne__(self, rhs):
+        return self.start!=rhs.start
+    def __gt__(self, rhs):
+        return self.start>rhs.start
+    def __ge__(self, rhs):
+        return self.start>=rhs.start
+    
+    def _get_start(self):
+        return self._start
+    start=property(fget=_get_start)
+
+    def _get_end(self):
+        return self._end
+    end=property(fget=_get_end)
+
+    def _get_desc(self):
+        return self._desc
+    description=property(fget=_get_desc)
+
+    def _get_alarm(self):
+        return self._alarm
+    alarm=property(fget=_get_alarm)
 
 
     
