@@ -12,10 +12,10 @@
 # my modules
 import common
 import p_sanyo8100
+import com_sanyomedia
+import com_sanyo
 import com_brew
 import com_phone
-import com_sanyo
-import com_sanyomedia
 import prototypes
 
 import os
@@ -72,6 +72,7 @@ class Profile(com_sanyo.Profile):
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),
     )
 
     def __init__(self):
