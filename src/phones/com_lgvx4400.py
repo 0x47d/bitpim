@@ -1389,6 +1389,8 @@ class Profile(parentprofile):
                             break
                     if len(e['numbertypes'])==b4:
                         # we couldn't find a type for the number
+                        helper.add_error_message("%s has number %s if of type %s not supported by phone" % 
+                                                (e['name'], num['number'], num['type']))
                         continue 
                     # deal with number
                     number=self.phonize(num['number'])
@@ -1408,6 +1410,7 @@ class Profile(parentprofile):
                 if len(e['numbers'])<minnumbers:
                     # we couldn't find any numbers
                     # for this entry, so skip it, entries with no numbers cause error
+                    helper.add_error_message("Name: %s. No suitable numbers or emails found" % e['name'])
                     continue 
                 e['numbertypes']=helper.filllist(e['numbertypes'], 5, 0)
                 e['numbers']=helper.filllist(e['numbers'], 5, "")

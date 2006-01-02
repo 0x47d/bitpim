@@ -557,6 +557,8 @@ class PhoneWidget(wx.Panel):
         self.table_panel=wx.Panel(split)
         self.table=wx.grid.Grid(self.table_panel, wx.NewId())
         self.table.EnableGridLines(False)
+        self.error_log=guihelper.MultiMessageBox(self.mainwindow , "Contact Export Errors", 
+                   "Bitpim is unable to send the following contacts to your phone")
         # which columns?
         cur=config.Read("phonebookcolumns", "")
         if len(cur):
@@ -1126,13 +1128,20 @@ class PhoneWidget(wx.Panel):
             self.populate(d, False)
     
     def converttophone(self, data):
+        self.error_log.ClearMessages()
         self.mainwindow.phoneprofile.convertphonebooktophone(self, data)
+        if self.error_log.MsgCount():
+            self.error_log.ShowMessages()
+        return
 
     ###
     ###  The methods from here on are passed as the 'helper' to
     ###  convertphonebooktophone in the phone profiles.  One
     ###  day they may move to a seperate class.
     ###
+
+    def add_error_message(self, msg, priority=99):
+        self.error_log.AddMessage(msg, priority)
 
     class ConversionFailed(Exception):
         pass

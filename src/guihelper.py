@@ -312,3 +312,65 @@ class ArtProvider(wx.ArtProvider):
             return getbitmap(_ourart[artid])
         print "not returning a bitmap for",artid
         return wx.NullBitmap
+          
+class MultiMessageBox:
+        
+        def __init__(self, parent, title="Bitpim", dlg_msg=""):
+            self.__title=title
+            self.__dlg_msg=dlg_msg
+            self.__parent=parent
+            self.__msgs={}
+                
+        def AddMessage(self, msg, priority=99):
+            """
+            Add a message to the list of messages to be displayed
+            Each message appears on it's own line
+            """
+            # find the insertion point for the message
+            # the key is in the format "priority.index", this creates a unique key which is
+            # sortable in priority and insertion order
+            loop=0
+            key="%d.%05d" % (priority, loop)
+            while self.__msgs.has_key(key):
+                loop=loop+1
+                key="%d.%05d" % (priority, loop)
+            self.__msgs[key]={'msg': msg}
+            return
+
+        def ShowMessages(self, max_rows=0, max_columns=0):
+            """
+            Displays the messages in a list in a dialog
+            max_rows: Max visible messages, if number of messages exceed
+                    this a scroll bar will appear
+            max_columns: Max visible width in characters
+            returns: button pressed to exit dialog 
+            """
+            keys=self.__msgs.keys()
+            keys.sort()
+            out_list=[]
+            for k in keys:
+                msg=self.__msgs[k]['msg']
+                out_list.append(msg)
+            #construct the dialog for display
+            msg_dlg=wx.Dialog(self.__parent, -1, self.__title, 
+                    style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
+            main_bs=wx.BoxSizer(wx.VERTICAL)
+            main_bs.Add(wx.StaticText(msg_dlg, -1, self.__dlg_msg), 0, wx.ALL|wx.ALIGN_LEFT, 5)
+            msgs=wx.ListBox(msg_dlg)
+            msgs.Set(out_list)
+            main_bs.Add(msgs, 0, wx.ALL|wx.EXPAND, 5)
+            main_bs.Add(wx.Button(msg_dlg, wx.ID_OK, 'OK'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+            msg_dlg.SetSizer(main_bs)
+            msg_dlg.SetAutoLayout(True)
+            main_bs.Fit(msg_dlg)
+            # show the dialog
+            res=msg_dlg.ShowModal()
+            print "multi "+`res`
+            msg_dlg.Destroy()
+            return res
+
+        def MsgCount(self):
+            return len(self.__msgs)
+
+        def ClearMessages(self):
+            self.__msgs.clear()
