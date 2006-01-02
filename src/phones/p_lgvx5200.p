@@ -168,7 +168,7 @@ PACKET sms_quick_text:
 # the features that other phones support, when you run bitpim you see loads of
 # options that do not work in the vx8100 on the memo page
 PACKET textmemo:
-    4 UINT { 'constant':1 } dunno
+    4 UINT { 'constant':1 } +dunno
     4 GPSDATE GPStime # time the memo was writen
     4 LGCALDATE memotime # time the memo was writen LG time
     152 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text

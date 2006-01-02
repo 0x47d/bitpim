@@ -204,6 +204,8 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             entry.text=memo_dict[k].text
             t=time.strptime(memo_dict[k].date, '%b %d, %Y %H:%M')
             entry.memotime=(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min)
+            if 'GPStime' in entry.getfields():
+                entry.GPStime = (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)    
             text_memo.items.append(entry)
         buf=prototypes.buffer()
         text_memo.writetobuffer(buf)
