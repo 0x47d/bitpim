@@ -2,7 +2,7 @@
 
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -66,6 +66,9 @@ if __name__ == '__main__':
         # heck, do it for all platforms
         sys.stdout=_donowt()
         sys.stderr=_donowt()
+    if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
+	# get rid of the process serial number on mac
+	sys.argv=sys.argv[:1]+sys.argv[2:]
     _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
     _kwargs={}
     for _k,_v in _options:
