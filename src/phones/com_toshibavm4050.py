@@ -157,7 +157,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             res=self.sendpbcommand(req, self.protocolclass.tosh_getpbentryresponse)
             if not res.swap_ok:
                 raw=self.readdatarecord()
-                open("c:/projects/temp/record"+`i`, "wb").write(raw)
+                # open("c:/projects/temp/record"+`i`, "wb").write(raw)
                 buf=prototypes.buffer(raw)
                 print "buf "+`buf`
                 entry.readfrombuffer(buf)
@@ -352,7 +352,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 self.writedatarecord(data)
                 req=self.protocolclass.tosh_setpbentryrequest()
                 req.entry_index=entry.index
-                open("c:/projects/temp/recordx"+`i`, "wb").write(data)
+                #open("c:/projects/temp/recordx"+`i`, "wb").write(data)
                 res=self.sendpbcommand(req, self.protocolclass.tosh_setpbentryresponse)
                 if res.swap_ok:
                     self.log("Error writing phonebook entry")
