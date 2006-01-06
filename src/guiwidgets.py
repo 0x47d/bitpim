@@ -398,53 +398,72 @@ class ConfigDialog(wx.Dialog):
 
         gs=wx.GridBagSizer(10, 10)
         gs.AddGrowableCol(1)
-
+        _row=0
         # safemode
-        gs.Add( wx.StaticText(self, -1, "Read Only"), pos=(0,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Read Only"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.safemode=wx.CheckBox(self, wx.NewId(), "Block writing anything to the phone")
-        gs.Add( self.safemode, pos=(0,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.safemode, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
 
         # where we store our files
-        gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(1,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Disk storage"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
         gs.Add(wx.StaticText(self, -1, self.mw.config.Read('path', '<Unknown>')),
-               pos=(1,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add(wx.StaticText(self, -1, 'Config File'), pos=(2,0),
+               pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+        gs.Add(wx.StaticText(self, -1, 'Config File'), pos=(_row,0),
                flag=wx.ALIGN_CENTER_VERTICAL)
         gs.Add(wx.StaticText(self, -1, self.mw.config.Read('config')),
-               pos=(2,1), flag=wx.ALIGN_CENTER_VERTICAL)
+               pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
 
         # phone type
-        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
         keys=self.phonemodels.keys()
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
-        gs.Add( self.phonebox, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.phonebox, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
 
         # com port
-        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.StaticText(self, -1, "Com Port"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.commbox=wx.TextCtrl(self, -1, self.setme, size=(200,-1))
-        gs.Add( self.commbox, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL)
-        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(4,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( self.commbox, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(_row,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
 
         # Automatic check for update
-        gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.updatebox=wx.ComboBox(self, -1, self.update_choices[0],
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY,
                                    choices=self.update_choices)
-        gs.Add(self.updatebox, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(self.updatebox, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+
         # always start with the 'Today' tab
-        gs.Add(wx.StaticText(self, -1, 'Startup'), pos=(6,0),
+        gs.Add(wx.StaticText(self, -1, 'Startup'), pos=(_row,0),
                flag=wx.ALIGN_CENTER_VERTICAL)
         self.startup=wx.CheckBox(self, wx.NewId(), 'Always start with the Today tab')
-        gs.Add(self.startup, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        gs.Add(self.startup, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+
+        # whether or not to use TaskBarIcon
+        if guihelper.IsMSWindows():
+            gs.Add(wx.StaticText(self, -1, 'Task Bar Icon'), pos=(_row,0),
+                   flag=wx.ALIGN_CENTER_VERTICAL)
+            self.taskbaricon=wx.CheckBox(self, wx.NewId(),
+                                         'Place BitPim Icon in the System Tray')
+            gs.Add(self.taskbaricon, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+            _row+=1
+        else:
+            self.taskbaricon=None
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
-            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(7,0), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.StaticText( self, -1, "BitFling"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
             self.bitflingenabled=wx.CheckBox(self, self.ID_BITFLING, "Enabled")
-            gs.Add(self.bitflingenabled, pos=(7,1), flag=wx.ALIGN_CENTER_VERTICAL)
-            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(7,2), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add(self.bitflingenabled, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+            gs.Add( wx.Button(self, self.ID_BITFLING, "Settings ..."), pos=(_row,2), flag=wx.ALIGN_CENTER_VERTICAL)
             wx.EVT_BUTTON(self, self.ID_BITFLING, self.OnBitFlingSettings)
             wx.EVT_CHECKBOX(self, self.ID_BITFLING, self.ApplyBitFlingSettings)
             if self.mw.config.Read("bitfling/password","<unconfigured>") \
@@ -602,6 +621,8 @@ class ConfigDialog(wx.Dialog):
         self.updatebox.SetValue(self.mw.config.Read("updaterate",
                                                     self.update_choices[0]))
         self.startup.SetValue(self.mw.config.ReadInt("startwithtoday", 0))
+        if self.taskbaricon:
+            self.taskbaricon.SetValue(self.mw.config.ReadInt('taskbaricon', 0))
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -647,6 +668,11 @@ class ConfigDialog(wx.Dialog):
         self.mw.config.Write('updaterate', self.updatebox.GetValue())
         # startup option
         self.mw.config.WriteInt('startwithtoday', self.startup.GetValue())
+        # Task Bar Icon option
+        if self.taskbaricon:
+            self.mw.config.WriteInt('taskbaricon', self.taskbaricon.GetValue())
+        else:
+            self.mw.config.WriteInt('taskbaricon', 0)
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)

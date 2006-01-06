@@ -73,7 +73,46 @@ if guihelper.IsMSWindows():
 mainthreadid=thread.get_ident()
 helperthreadid=-1 # set later
 
+###
+### Used to handle Task Bar Icon feature (Windows only)
+###
+if guihelper.IsMSWindows():
+    class TaskBarIcon(wx.TaskBarIcon):
+        def __init__(self, mw):
+            super(TaskBarIcon, self).__init__()
+            self.mw=mw
+            self._set_icon()
+            wx.EVT_TASKBAR_LEFT_DCLICK(self, self.OnRestore)
 
+        def _create_menu(self):
+            _menu=wx.Menu()
+            _id=wx.NewId()
+            if self.mw.IsIconized():
+                _menu.Append(_id, 'Restore')
+                wx.EVT_MENU(self, _id, self.OnRestore)
+            else:
+                _menu.Append(_id, 'Minimize')
+                wx.EVT_MENU(self, _id, self.OnMinimize)
+            _menu.AppendSeparator()
+            _id=wx.NewId()
+            _menu.Append(_id, 'Close')
+            wx.EVT_MENU(self, _id, self.OnClose)
+            return _menu
+
+        def _set_icon(self):
+            _icon=wx.Icon(guihelper.getresourcefile('bitpim.ico'),
+                          wx.BITMAP_TYPE_ICO)
+            if _icon.Ok():
+                self.SetIcon(_icon, 'BitPim')
+
+        def CreatePopupMenu(self):
+            return self._create_menu()
+        def OnRestore(self, _):
+            self.mw.Iconize(False)
+        def OnMinimize(self, _):
+            self.mw.Iconize(True)
+        def OnClose(self, _):
+            self.mw.Close()
 
 ###
 ### Implements a nice flexible callback object
@@ -609,7 +648,8 @@ class MainWindow(wx.Frame):
         self.__owner_name=''
 
         self.database=None
-        
+        self._taskbar=None
+
         ### Status bar
 
         sb=guiwidgets.MyStatusBar(self)
@@ -879,10 +919,15 @@ class MainWindow(wx.Frame):
         wx.CallAfter(self.OnPopulateEverythingFromDisk)
         # check for device changes
         if guihelper.IsMSWindows():
+            if self.config.ReadInt('taskbaricon', 0):
+                self._taskbar=TaskBarIcon(self)
             # save the old window proc
             self.oldwndproc = win32gui.SetWindowLong(self.GetHandle(),
                                                      win32con.GWL_WNDPROC,
                                                      self.MyWndProc)
+        if self._taskbar:
+            wx.EVT_ICONIZE(self, self.OnIconize)
+
         # response to pubsub request
         pubsub.subscribe(self.OnReqChangeTab, pubsub.REQUEST_TAB_CHANGED)
 
@@ -921,7 +966,8 @@ class MainWindow(wx.Frame):
 
     # It has been requested that we shutdown
     def OnClose(self, event):
-        self.saveSize()
+        if not self.IsIconized():
+            self.saveSize()
         if not self.wt:
             # worker thread doesn't exist yet
             self.Destroy()
@@ -935,8 +981,16 @@ class MainWindow(wx.Frame):
     def OnCloseResults(self, exception, _):
         assert isinstance(exception, SystemExit)
         # assume it worked
+        if self._taskbar:
+            self._taskbar.Destroy()
         self.Destroy()
         wx.GetApp().ExitMainLoop()
+
+    def OnIconize(self, evt):
+        if evt.Iconized():
+            self.Show(False)
+        else:
+            self.Show(True)
 
     # about and help
 
@@ -1487,7 +1541,7 @@ class MainWindow(wx.Frame):
         self.tooldelete.SetNormalBitmap(bmpdel)
         # this has to be called to force the actual update
         self.GetToolBar().Realize()
-
+        self.SendSizeEvent()
         # Toolbar
         self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enable_add)
         self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enable_del)
