@@ -196,10 +196,11 @@ class DebugBrewProtocol:
         for _root,_dir,_file in os.walk(_pwd):
             break
         for d in _dir:
+            if len(dir):
+                d=dir+"/"+d
             results[d]={ 'name': d, 'type': 'directory' }
             if recurse>0:
-                results.update(self.listsubdirs(os.path.join(dir, d),
-                                                  recurse-1))
+                results.update(self.listsubdirs(d, recurse-1))
         return results
 
     def getfilesystem(self, dir="", recurse=0):
@@ -239,6 +240,8 @@ class DebugBrewProtocol:
     def getfilecontents(self, name, use_cache=False):
         self.log("Getting file contents '"+name+"'")
         try:
+            if name[0]=='/':
+                return file(os.path.join(self._fs_path, name[1:]), 'rb').read()
             return file(os.path.join(self._fs_path, name), 'rb').read()
         except:
             raise BrewNoSuchFileException
