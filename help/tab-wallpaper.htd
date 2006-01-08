@@ -1,0 +1,37 @@
+#include "pagestart.h"
+
+<p>This tab displays the images that BitPim currently maintains and allows
+users to perform various actions on them.
+
+<p align=center><img src="screen-wallpapertab.jpg">
+
+<h2>Actions</h2>
+
+<p><b>Add</b>: To add new images to BitPim, either click on the "Add" button on the tool bar,
+or main menu "Edit" -> "New...", or context menu "Add ...", or by pressing Ctrl+N.  Users can then
+select one or more image files to add.  By default, BitPim displays a Image Preview dialog that
+allows users to decide how the image is going to be used on the phone (wallpaper, contact ID,
+external display, etc) and convert it into the proper format and resolution.  To bypass this process,
+press one of the Shift keys and click "Add" (Shift+"Add").
+
+<p><b>Delete</b>: To delete the selected images, either click on the "Delete" button on the tool bar,
+or main menu "Edit" -> "Delete", or context menu "Delete", or pressing on the "Delete" or "Del" key.
+
+<p><b>Open</b>: To activate the application associated with this type of image, either double-click on
+an image, or conext menu "Open".
+
+<p><b>Save</b>: To save the selected image into a file, go to context menu "Save ...".
+
+<p><b>Copy</b>: To copy the selecte images into the clipboard, go to main menu "Edit" -> "Copy", or
+context menu "Copy", or pressing Ctrl+C.
+
+<p><b>Paste</b>: To paste one or more image files from the clipboard, go to main menu "Edit" -> "Paste",
+or context menu "Paste", or pressing Ctrl+V.
+
+<p><b>Drag and Drop</b>: On Windows, BitPim supports drag-and-drop image files from other applications
+into BitPim (which is equivalent to adding files); and drag-and-drop files from BitPim to other applications.
+
+<p><b>Display Arrangements</b>: You can organize the display of the images either by Origin, Image Type,
+or File Size.  To change the current display arrangement, go to context menu "Organize by".
+
+#include "pageend.h"

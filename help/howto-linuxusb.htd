@@ -1,0 +1,60 @@
+#include "pagestart.h"
+
+<h2>USB drivers</h2>
+
+<p>Linux provides device drivers that can talk to the modem interface
+on phones.  This driver is named <code>acm</code> and is usually 
+autodetected and used.
+
+<p>Linux also provides device drivers for USB to serial converters.
+There is a builtin database of which vendor and product ids are
+applicable.  Since there is a wide variety of converter chips,
+there is also a wide variety of drivers.
+
+<h2>Direct USB access</h2>
+
+<p>BitPim can access USB devices directly.  This is done using
+<code>libusb</code> which accesses the usb filesystem.  You
+need to ensure the filesystem (usbdevfs) is mounted, usually
+below <code>/proc/bus/usb</code>.
+
+<p>By default Linux configures USB devices so that they are owned by
+root.  You should be running BitPim as yourself, not root.  Most recent
+Linux distributions use hotplug, and these instructions show you
+how to configure it.<br>&nbsp;</p>
+
+<ol>
+
+<li><b>Edit <code>/etc/hotplug/usb.usermap</code></b>
+
+<p>Add a line to the bottom.<br><br>
+<code>usbcell 0x0003 <i>VID</i> <i>PID</i> 0 0 0 0 0 0 0 0 0</code>
+
+<p>You need to replace <i>VID</i> and <i>PID</i> with the relevant
+<a href="ref-usbids.htm">vendor and product ids</a>.
+
+<p><b>Note</b>  For more recent versions of hotplug, it is considered better form
+to create the file <code>/etc/hotplug/usb/usbcell.usermap</code>.<br>&nbsp;
+
+<li><b>Create <code>/etc/hotplug/usb/usbcell</code></b>
+
+<p>This script is executed whenever the device is inserted.  Here
+is a simple example that makes the device be owned by root, group owned by
+<code>cellusers</code> and readable/writable by root and the members of <code>cellusers</code>.
+
+<pre>
+#!/bin/bash
+
+if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
+then
+        chown root "${DEVICE}"
+        chgrp cellusers "${DEVICE}"
+        chmod 660 "${DEVICE}"
+fi
+</pre>
+
+<p>You can adjust that script as you see fit.  Don't forget to make it executable.  On many versions of Linux, there is a script named <code>usbcam</code> in the same directory that changes the device to be owned by the same person who is logged into the console.  If you prefer that behavior, then copy <code>usbcam</code> to <code>usbcell</code>
+
+</ol>
+
+#include "pageend.h"

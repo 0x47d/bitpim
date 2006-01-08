@@ -1,0 +1,22 @@
+#include "pagestart.h"
+
+<p>There are tabs below the menu and toolbar.  Each tab allows you to view
+the contents of a specific feature. 
+
+<p align=center><img src="tabs.png">
+
+<p>Within each tab you can edit the data.
+<p>For wallpaper and ringtones you can right click on items to get a menu 
+or you can just drag and drop new files in.
+<p>For phonebook and calendar, you double click on the item you want to edit.
+
+<p>More detailed help is available in the <a href="tabs.htm">tabs reference</a>.
+
+<p>BitPim automatically saves all changes to your hard disk. There is no need 
+to manually save or load information from disk. 
+ 
+<P>When you are happy with changes you have made you can 
+<a href="tour-saving.htm">send them to the phone</a>.
+
+
+#include "pageend.h"

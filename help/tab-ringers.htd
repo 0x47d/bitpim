@@ -1,0 +1,36 @@
+#include "pagestart.h"
+
+<p>This tab displays the sound or ringtone files that BitPim currently maintains and allows
+users to perform various actions on them.
+
+<p align=center><img src="screen-ringerstab.png">
+
+<h2>Actions</h2>
+
+<p><b>Add</b>: To add new ringtones to BitPim, either click on the "Add" button on the tool bar,
+or main menu "Edit" -> "New...", or context menu "Add ...", or by pressing Ctrl+N.  Users can then
+select one or more ringtone files to add.  BitPim then displays a <a href="dialog-audioconversion.htm">
+Audio Conversion dialog</a> that allows users to create a sound clip and convert it into a proper
+format ringtone file.
+
+<p><b>Delete</b>: To delete the selected ringones, either click on the "Delete" button on the tool bar,
+or main menu "Edit" -> "Delete", or context menu "Delete", or pressing on the "Delete" or "Del" key.
+
+<p><b>Open</b>: To activate the application associated with this type of sound file, either double-click on
+an image, or conext menu "Open".
+
+<p><b>Save</b>: To save the selected ringtone into a file, go to context menu "Save ...".
+
+<p><b>Copy</b>: To copy the selecte ringtones into the clipboard, go to main menu "Edit" -> "Copy", or
+context menu "Copy", or pressing Ctrl+C.
+
+<p><b>Paste</b>: To paste one or more ringtone files from the clipboard, go to main menu "Edit" -> "Paste",
+or context menu "Paste", or pressing Ctrl+V.
+
+<p><b>Drag and Drop</b>: On Windows, BitPim supports drag-and-drop ringtone files from other applications
+into BitPim (which is equivalent to adding files); and drag-and-drop files from BitPim to other applications.
+
+<p><b>Display Arrangements</b>: You can organize the display of the ringtones either by Origin, Audio Type,
+or File Size.  To change the current display arrangement, go to context menu "Organize by".
+
+#include "pageend.h"

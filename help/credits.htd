@@ -1,0 +1,60 @@
+#include "pagestart.h"
+
+<p><b>Note:</b> I hope I have everyone listed here who have made contributions.
+If I left you out, or you want your details added, changed or removed, please let me know.
+
+<p>BitPim incorporates and depends on <A HREF="3rdparty.htm">components and products</A> from 
+other people.  
+
+<p>The primary author of BitPim is Roger Binns <font color="blue">&lt;rogerb@rogerbinns.com&gt;</font>
+
+<p>The following people also made notable recent contributions:
+
+<p>
+<blockquote>
+<table cellspacing=5 cellpadding=5>
+
+<tr>
+<td>Simon Capper
+<td>LG VX-8100 and other LG features support
+</tr>
+
+<tr>
+<td>Joe Pham
+<td>Samsung support, calendar upgrades, Memo/Todo/SMS support
+</tr>
+
+<tr>
+<td>Stephen Wood
+<td>Sanyo support, Samsung support
+</tr>
+
+</table>
+</blockquote>
+
+<p>The following people/companies loaned or donated phones or cables:
+
+<p><ul>
+<li>URL(http://www.3gcables.com/,3gcables.com)
+<li><a href="misc-rpiwireless.htm">RPI Wireless</a>
+<li>Rob Ross
+<li>Jim Asta
+<li>URL(http://www.ahcellular.com,A &amp; H Cellular) of Idaho
+<li>John Sabato
+<li>Rodney Meyers
+<li>URL(http://www.rapidigm.com/,Rapidigm)
+<li>URL(http://www.craytonelectronics.com/,Crayton Electronics)
+<li>Andy Hall
+<li>URL(http://www.bdipert.com/,Brian Dipert)
+<li>The folks at URL(http://www.ringerpost.com/,Ringerpost.com)
+<li>Christopher R. White
+</ul>
+
+<p>The following people made contributions in the past:
+<p>
+<ul>
+<li>Anthony Bellissimo, Billy, crackedvzw, Scott Craig, Jordan Foley, Alan Gonzalez, Vic Heintz, Christina Lee, Tim Lowery, Steven Palm, Adit Panchal, Alan Pinstein, Michael Smith,
+</ul>
+</p>
+
+#include "pageend.h"

@@ -1,0 +1,38 @@
+#include "pagestart.h"
+
+<p>BitPim stores its settings for the current user.  If you have multiple users, and login to
+your operating system as separate users, then it will work fine.  (On Windows XP, use the 
+windows key together with L to switch users).  This is the recommended way of doing things.
+
+<p>If you only login to your computer as one user, but would like to have separate BitPim
+data settings for multiple users, then you will need to tell BitPim either the data directory name
+or the configuration file name upon initialization.
+
+<P>BitPim now stores all of its <B>Settings</B> in a configuration file with a default name of <code>.bitpim</code>.
+The name of the current data directory and configuration file are displayed in the <B>Settings</B> dialog.
+To sepcify a different data directory, you can use the following command:
+<P><code>bitpim -d [data dir name]</code>
+
+<P>To specify a different configuration file to use, use the following command:
+<P><code>bitpim -c [config file name]</code>
+
+<P>In Windows, files with extension <code>.bitpim</code> are associated with the BitPim program, ie, you can double-click on such
+a file to launch BitPim using that file as the configuration file.  As a result, to use a different data directory, Windows users
+can simply double-click on the associated configuration file located in that data directory.
+
+<p>To create and use a new BitPim data directory, Windows users can do the following steps:
+<OL>
+<LI>Create a new data directory.
+<LI>In that data directory, create an empty file named <code>.bitpim</code>
+<LI>Double-click on the <code>.bitpim</code> file to launch BitPim using the new configuration file and data directory.
+</OL>
+
+<P>If you want to create and use a new BitPim data directory, but also want to maintain previous BitPim settings,
+you can do the following steps:
+<OL>
+<LI>Create a new data directory.
+<LI>Copy the previous BitPim configuration file to the new data directory.
+<LI>Double-click on the copied configuration file in the new data directory.
+</OL>
+
+#include "pageend.h"

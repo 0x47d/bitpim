@@ -1,0 +1,41 @@
+#include "pagestart.h"
+
+<p>The Sanyo SCP-4900, SCP-5300, SCP-5400 (RL2500), SCP-5500 (VM4500),
+SCP-7200 (RL2000), SCP-7300 (RL7300) and SCP-8100 all use the same
+straight through USB cable.  The following cables have been tested by
+the BitPim developers and work with BitPim.  Other straight through
+USB cables for Sanyo phones may also work.
+
+<blockquote>
+
+<h3>RPI Wireless charging cable</h2>
+This cable, available from URL(misc-rpiwireless.htm,RPI Wireless)
+will charge the phone as well as act as a data cable.
+<p align=center><img src="cable-sanyo-usb-rpiwireless.jpg">
+
+<h3>Futuredial cable</h2>
+The cable from URL(http://www.futuredial.com/,FutureDial) has the product
+id CSAYM03-03.
+<p align=center><img src="cable-sanyo-usb-futuredial.jpg">
+
+</blockquote>
+<h2>Drivers</h2>
+<blockquote>
+<h3>Windows</h3>
+<p>These cables require a driver.  Drivers may be downloaded either from
+URL(http://www.sanyo.com/consumer/communications/usb_driver_install.htm,Sanyo)
+or
+URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial).
+
+<h3>Linux</h3>
+<p>The Sanyo phones use the Linux "acm" driver with this cable.  This
+driver will automatically install with most modern Linux distributions
+will show up as the device <tt>/dev/usb/ttyACM0</tt>.  If the acm
+driver does not automatically get loaded, load it with <code>/sbin/insmod acm</code>
+while logged on as root.
+
+<h3>Mac</h3>
+<p>Mac OS X has drivers builtin.
+</blockquote>
+
+#include "pageend.h"

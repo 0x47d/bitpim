@@ -1,0 +1,16 @@
+#include "pagestart.h"
+
+<p align=center><img src="screen-callhistorytab.png">
+
+<p>This tab allows users to retrieve, store, and view call history data from the
+phone.  Display information for each call includes the date and time when the
+call is made/received, and the phone number or contact name of the call.
+
+#define DESC(title,desc) \
+   <p><b>title</b>: desc
+
+<h2>Button</h2>
+
+DESC(Delete,Delete the selected call.)
+
+#include "pageend.h"

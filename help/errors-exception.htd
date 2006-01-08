@@ -1,0 +1,11 @@
+#include "pagestart.h"
+
+<p><IMG SRC="exceptiondialog.png" BORDER="0">
+
+<p>An internal error has occurred and this dialog is reporting it.  Please scroll to the
+end of it to see the most pertinent details.  
+
+<p>Unless you believe the problem to be a one off, you should report it.  See 
+<a href="support.htm">support</a> for more details.
+
+#include "pageend.h"

@@ -1,0 +1,11 @@
+#include "pagestart.h"
+
+<p align=center><img src="screen-logtab.png">
+
+<p>This tab shows a record of what BitPim has been doing.
+You can watch it while operations are proceeding.  It should
+also be consulted when there are errors to get more detail
+as to what was happening at the time of the error.
+
+
+#include "pageend.h"

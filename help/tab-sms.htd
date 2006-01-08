@@ -1,0 +1,27 @@
+#include "pagestart.h"
+
+<p align=center><img src="screen-smstab.png">
+
+<p>This tab allows users to retrieve, store, and view SMS messages from the
+phone.  The list of available SMS folders and messages is displayed in the left
+tree panel, with the detailed information of the selected message displayed in
+the right fields.
+
+#define DESC(title,desc) \
+   <p><b>title</b>: desc
+
+<h2>Fields</h2>
+
+DESC(From,The phone number\, contact name\, or email address of the sender.)
+DESC(To, The phone number\, contact name\, or email address of the receiver.)
+DESC(Callback #,The callback phone number or contact name.)
+DESC(Subj,The subject of this message.)
+DESC(Date,The date on which this message was received.)
+DESC(Locked,Indicates that this message is locked when checked.)
+DESC(Memo,The content of this message.)
+
+<h2>Button</h2>
+
+DESC(Delete,Delete the selected message.)
+
+#include "pageend.h"

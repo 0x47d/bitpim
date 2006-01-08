@@ -1,0 +1,38 @@
+#include "pagestart.h"
+
+<p>The first step is to tell BitPim what phone model you're using.
+If your phone model supports <a href="phones-featuressupported.htm">BitPim's AutoDetect feature</a>,
+tell BitPim to detect your phone automatically by clicking on "Edit" -> "Detect Phone".
+
+<p align=center><img src="menu-detectphone.png">
+
+<p> If AutoDetect fails or your phone does not support it, you can set your phone model by using the
+<a href="ref-settings.htm">"Settings" dialog</a> ("Edit" -> "Settings").  This dialog will also
+automatically appear the first time you use BitPim.
+
+<p align=center><IMG SRC="screenshot-settingsdialog.png" BORDER="0">
+
+<p>The next step is to get your data from your phone into BitPim.
+<br>From the data menu choose 'Get Phone Data'.
+
+<p align=center><img src="screen-editget.png">
+
+<p>You will then be given a choice of what to get.  Initially it is worth
+getting everything so you can see what is on your phone.
+
+<p align=center><img src="screen-getdata.png">
+
+<p>BitPim will automatically detect your phone and transfer all data selected from the phone.  If you look 
+in the status bar you will see that BitPim is busy, and the progress it is making.
+
+<p align=center><img src="screen-statusbar.png">
+
+<blockquote>
+<p><b>Note</b>: In some cases, BitPim may fail to detect your phone.  You should
+<a href="trouble-serial.htm">troubleshoot</a> this.
+</blockquote>
+
+<p>You can now move on to where you can view and <a href="tour-edit.htm">edit</a> your data.
+
+
+#include "pageend.h"
