@@ -24,7 +24,7 @@ $PYTHON -O phone_features.py > help/phonesupporttable
 
 # update web tree of docs
 cd help
-$PYTHON contentsme.py bitpim.hhc webhelp/navtree.html
+$PYTHON contentsme.py bitpim.hhc
 
 # remove old files
 rm *.htm bitpim.chm bitpim.htb ../resources/bitpim.chm ../resources/bitpim.htb
@@ -60,9 +60,5 @@ then
     webhelp="`pwd`/../bpweb/site/testhelp"
     rm -rf "$webhelp"
     mkdir -p "$webhelp"
-    cd help
-    cp webhelp/*.{html,js,css} "$webhelp"
-    mkdir "$webhelp/img"
-    cp webhelp/img/*.gif "$webhelp/img"
-    unzip bitpim.htb -d "$webhelp"
+    $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
 fi
