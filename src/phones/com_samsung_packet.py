@@ -726,9 +726,9 @@ class Profile(com_phone.Profile):
         keys=data['groups'].keys()
         keys.sort()
         for k in keys:
-                if k==self.protocolclass.NUMGROUPS: # ignore key 4 which is 'Unassigned'
-                    name=data['groups'][k]['name']
-                    pad.append(name)
+            if k==self.protocolclass.NUMGROUPS: # ignore key 4 which is 'Unassigned'
+                name=data['groups'][k]['name']
+                pad.append(name)
 
         groups=helper.getmostpopularcategories(self.protocolclass.NUMGROUPS, data['phonebook'], ["Unassigned"], 12, pad)
 
@@ -803,7 +803,7 @@ class Profile(com_phone.Profile):
                 # name
                 e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
 
-                cat=helper.makeone(helper.getcategory(entry.get('cagetgories',[]),0,1,12), None)
+                cat=helper.makeone(helper.getcategory(entry.get('categories',[]),0,1,12), None)
                 if cat is None:
                     e['group']=self.protocolclass.NUMGROUPS # Unassigned group
                 else:
