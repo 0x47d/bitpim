@@ -742,6 +742,12 @@ class BitFlingService(XMLRPCService):
     def exp_devicesetbaudrate(self, handle, rate, context):
         return self.gethandle(context, handle).setbaudrate(rate)
 
+    def exp_devicesetdtr(self, handle, dtr, context):
+        return self.gethandle(context, handle).setdtr(dtr)
+
+    def exp_devicesetrts(self, handle, rts, context):
+        return self.gethandle(context, handle).setrts(rts)
+
     def exp_devicewrite(self, handle, data, context):
         self.gethandle(context, handle).write(data.data)
         return len(data.data)

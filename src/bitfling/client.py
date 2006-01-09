@@ -43,6 +43,12 @@ class client:
     def devicesetbaudrate(self, handle, rate):
         return self.server.devicesetbaudrate(handle, rate)
 
+    def devicesetdtr(self, handle, dtr):
+        return self.server.devicesetdtr(handle, dtr)
+
+    def devicesetrts(self, handle, rts):
+        return self.server.devicesetrts(handle, rts)
+
     def devicewrite(self, handle, data):
         return self.server.devicewrite(handle, Binary(data))
 

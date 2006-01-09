@@ -88,6 +88,14 @@ class flinger:
         self._configure()
         return self.client.devicesetbaudrate(handle, rate)
 
+    def devicesetdtr(self, handle, dtr):
+        self._configure()
+        return self.client.devicesetdtr(handle, dtr)
+
+    def devicesetrts(self, handle, rts):
+        self._configure()
+        return self.client.devicesetrts(handle, rts)
+
     def devicewrite(self, handle, data):
         self._configure()
         return self.client.devicewrite(handle, data)
@@ -281,6 +289,14 @@ class CommConnection:
         res=flinger.devicesetbaudrate(self.handle, rate)
         if res:
             self.baud=rate
+        return res
+
+    def setdtr(self, dtr):
+        res=flinger.devicesetdtr(self.handle, dtr)
+        return res
+
+    def setrts(self, rts):
+        res=flinger.devicesetrts(self.handle, rts)
         return res
 
     def write(self, data, log=True):
