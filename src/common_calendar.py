@@ -10,6 +10,8 @@
 "Common stuff for the Calendar Import functions"
 
 # system modules
+import calendar
+import datetime
 import sys
 
 # wxPython modules
@@ -378,6 +380,15 @@ class FilterDialogBase(wx.Dialog):
     def OnAlarmSetting(self, _):
         self.__set_alarm_fields(self.__alarm_setting.GetSelection())
 
+    def _repeat_option(self, on=True):
+        if on:
+            self.__rpt_chkbox.Enable()
+            self.__rpt_chkbox_text.Enable()
+        else:
+            self.__rpt_chkbox.SetValue(False)
+            self.__rpt_chkbox.Disable()
+            self.__rpt_chkbox_text.Disable()
+
     def OnCheckBox(self, evt):
         evt_id=evt.GetId()
         if evt_id==self._start_date_chkbox.GetId():
@@ -392,14 +403,8 @@ class FilterDialogBase(wx.Dialog):
             w2.Disable()
         # turn on the repeat event option of both start date and end date
         # are specified.
-        if self._start_date_chkbox.GetValue() and \
-           self._end_date_chkbox.GetValue():
-            self.__rpt_chkbox.Enable()
-            self.__rpt_chkbox_text.Enable()
-        else:
-            self.__rpt_chkbox.SetValue(False)
-            self.__rpt_chkbox.Disable()
-            self.__rpt_chkbox_text.Disable()
+        self._repeat_option(self._start_date_chkbox.GetValue() and \
+                            self._end_date_chkbox.GetValue())
 
 #-------------------------------------------------------------------------------
 class FilterDialog(FilterDialogBase):
@@ -425,6 +430,27 @@ class FilterDialog(FilterDialogBase):
                                           | wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
         self._end_date.Disable()
         fgs.Add(self._end_date, 1, wx.ALIGN_LEFT, 5)
+        self._preset_date_chkbox=wx.CheckBox(self, -1, label='Preset Duration',
+                                             style=wx.ALIGN_RIGHT)
+        fgs.Add(self._preset_date_chkbox, 0,
+                wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL, 0)
+        self._preset_date=wx.Choice(self, -1, choices=('This Week',
+                                                       'This Month',
+                                                       'This Year'))
+        self._preset_date.SetSelection(1)
+        self._preset_date.Disable()
+        fgs.Add(self._preset_date, 0, wx.ALIGN_LEFT, 5)
+        wx.EVT_CHECKBOX(self, self._preset_date_chkbox.GetId(),
+                        self.OnCheckBox)
+
+    def OnCheckBox(self, evt):
+        super(FilterDialog, self).OnCheckBox(evt)
+        if evt.GetId()==self._preset_date_chkbox.GetId():
+            self._repeat_option(self._preset_date_chkbox.GetValue())
+            if self._preset_date_chkbox.GetValue():
+                self._preset_date.Enable()
+            else:
+                self._preset_date.Disable()
 
     def __set_date(self, chk_box, cal, d):
         if d is None:
@@ -444,18 +470,54 @@ class FilterDialog(FilterDialogBase):
                         data.get('end', None))
         self.set_base(data)
 
+    def _get_preset_thisweek(self):
+        # return the dates of (today, Sat)
+        _today=datetime.date.today()
+        _dow=_today.isoweekday()%7  #Sun=0, Sat=6
+        _end=_today+datetime.timedelta(6-_dow)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _get_preset_thismonth(self):
+        # return the dates of (today, end-of-month)
+        _today=datetime.date.today()
+        _end=_today.replace(day=calendar.monthrange(_today.year,_today.month)[1])
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _get_preset_thisyear(self):
+        # return the dates of (today, end-of-year)
+        _today=datetime.date.today()
+        _end=_today.replace(month=12, day=31)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _get_preset_date(self):
+        _choice=self._preset_date.GetSelection()
+        if _choice==wx.NOT_FOUND:
+            return None, None
+        if _choice==0:
+            return self._get_preset_thisweek()
+        elif _choice==1:
+            return self._get_preset_thismonth()
+        else:
+            return self._get_preset_thisyear()
+
     def get(self):
         r={}
-        if self._start_date_chkbox.GetValue():
-            dt=self._start_date.GetDate()
-            r['start']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        if self._preset_date_chkbox.GetValue():
+            r['start'],r['end']=self._get_preset_date()
         else:
-            r['start']=None
-        if self._end_date_chkbox.GetValue():
-            dt=self._end_date.GetDate()
-            r['end']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
-        else:
-            r['end']=None
+            if self._start_date_chkbox.GetValue():
+                dt=self._start_date.GetDate()
+                r['start']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+            else:
+                r['start']=None
+            if self._end_date_chkbox.GetValue():
+                dt=self._end_date.GetDate()
+                r['end']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+            else:
+                r['end']=None
         self.get_base(r)
         return r
     
