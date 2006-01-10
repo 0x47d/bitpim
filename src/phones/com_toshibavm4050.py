@@ -157,16 +157,15 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             res=self.sendpbcommand(req, self.protocolclass.tosh_getpbentryresponse)
             if not res.swap_ok:
                 raw=self.readdatarecord()
-                # open("c:/projects/temp/record"+`i`, "wb").write(raw)
+                if __debug__:
+                    open("c:/projects/temp/record_in"+`i`, "wb").write(raw)
                 buf=prototypes.buffer(raw)
-                print "buf "+`buf`
                 entry.readfrombuffer(buf)
             else:
                 continue
             self.log("Read entry "+`i`+" - "+entry.name)
-            pb_entry=self.extractphonebookentry(i, entry, result)
-            pbook[count]=pb_entry
-            count+=1
+            pb_entry=self.extractphonebookentry(entry, result)
+            pbook[i]=pb_entry
         #except Exception, e:
             # must disable this to prevent phone problems
         #    self.disable_data_transfer()
@@ -254,11 +253,11 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             return 3, ringer_index
         return 5, 0
 
-    def extractphonebookentry(self, slotnumber, entry, result):
+    def extractphonebookentry(self, entry, result):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
-        res['serials']=[ {'sourcetype': self.serialsname, 'slot': slotnumber,
+        res['serials']=[ {'sourcetype': self.serialsname, 'serial1': entry.slot,
                           'sourceuniqueid': result['uniqueserial']} ]
         # numbers
         set=False
@@ -326,13 +325,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             e.emails.append(n)
         if fields['web_page']:
             e.web_page=fields['web_page']
+        e.slot=fields['slot']
         return e
 
     def savephonebook(self, data):
-        # this code does not quite work (hence it is not enabled)
-        # It seems that we can only fill empty slots on the phone.
-        # Not delete or alter existing ones, This is not very useful
-        # so I disabled the writing of the phonebook for now
+        # brute force, it is faster, otherwise we would have to 
+        # examine each entry to see if it was there and then decide what
+        # to do with it, deleting and re-writing is faster and what the user
+        # seleted with "OVERWRITE"
         self.log("New phonebook\n"+common.prettyprintdict(data['phonebook']))
         pb=data['phonebook']
         keys=pb.keys()
@@ -340,22 +340,17 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         keys=keys[:self.protocolclass.NUMSLOTS]
         self.enable_data_transfer()
         try:
+            # delete the old phonebook
+            self.rmfile("D/APL/SWAP/DIAG_APSWP_MEMORY")
+            for i in range(self.protocolclass.NUMSLOTS):
+                self.deletepbentry(i)
+            # create the new phonebook
             for i in range(len(keys)):
                 slot=keys[i]
                 entry=self.makephonebookentry(pb[slot])
-                entry.index=i
                 self.progress(i, len(keys), "Writing "+entry.name)
                 self.log('Writing entry '+`slot`+" - "+entry.name)
-                buf=prototypes.buffer()
-                entry.writetobuffer(buf)
-                data=buf.getvalue()
-                self.writedatarecord(data)
-                req=self.protocolclass.tosh_setpbentryrequest()
-                req.entry_index=entry.index
-                #open("c:/projects/temp/recordx"+`i`, "wb").write(data)
-                res=self.sendpbcommand(req, self.protocolclass.tosh_setpbentryresponse)
-                if res.swap_ok:
-                    self.log("Error writing phonebook entry")
+                self.sendpbentrytophone(entry)
         except Exception, e:
             # must disable this to prevent phone problems
             self.disable_data_transfer()
@@ -364,6 +359,24 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         self.progress(len(keys)+1, len(keys)+1, "Phone book write completed")
         return data
        
+    def sendpbentrytophone(self, entry):
+        # write out the new one
+        buf=prototypes.buffer()
+        entry.writetobuffer(buf)
+        data=buf.getvalue()
+        self.writedatarecord(data)
+        req=self.protocolclass.tosh_setpbentryrequest()
+        req.entry_index=entry.slot
+        if __debug__:
+            open("c:/projects/temp/record_out"+`entry.slot`, "wb").write(data)
+        res=self.sendpbcommand(req, self.protocolclass.tosh_setpbentryresponse)
+        if res.swap_ok:
+            self.log("Error writing phonebook entry")
+        
+    def deletepbentry(self, slot):
+        req=self.protocolclass.tosh_modifypbentryrequest()
+        req.entry_index=slot
+        res=self.sendpbcommand(req, self.protocolclass.tosh_modifypbentryresponse)
     
     def sendpbcommand(self, request, responseclass):
         self.setmode(self.MODEBREW)
@@ -471,7 +484,7 @@ class Profile(com_phone.Profile):
     # what types of syncing we support
     _supportedsyncs=(
         ('phonebook', 'read', None),         # all phonebook reading
-        #('phonebook', 'write', 'OVERWRITE'), # phonebook overwrite only
+        ('phonebook', 'write', 'OVERWRITE'), # phonebook overwrite only
         )
 
     def convertphonebooktophone(self, helper, data):
@@ -480,6 +493,15 @@ class Profile(com_phone.Profile):
         @param data: contains the dict returned by getfundamentals
                  as well as where the results go"""
         results={}
+        slotsused={}
+        # generate a list of used slots
+        for pbentry in data['phonebook']:
+            entry=data['phonebook'][pbentry]
+            serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
+            if(serial1 >= 0 and serial1 < self.protocolclass.NUMSLOTS):
+                slotsused[serial1]=1
+
+        lastunused=0 # One more than last unused slot
 
         for pbentry in data['phonebook']:
             if len(results)==self.protocolclass.NUMSLOTS:
@@ -489,6 +511,19 @@ class Profile(com_phone.Profile):
             try:
                 # name
                 e['name']=helper.getfullname(entry.get('names', []),1,1,36)[0]
+
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', -1)
+
+                if(serial1 >= 0 and serial1 < self.protocolclass.NUMSLOTS):
+                    e['slot']=serial1
+                else:  # A new entry.  Must find unused slot
+                    while(slotsused.has_key(lastunused)):
+                        lastunused+=1
+                        if(lastunused >= self.protocolclass.NUMSLOTS):
+                            helper.add_error_message("Name: %s. Unable to add, phonebook full" % e['name'])
+                            raise helper.ConversionFailed()
+                    e['slot']=lastunused
+                    slotsused[lastunused]=1
 
                 # email addresses
                 emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass.MAXEMAILS,self.protocolclass.MAXEMAILLEN)

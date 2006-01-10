@@ -2,7 +2,7 @@
 ###
 ### BITPIM
 ###
-### Copyright (C) 2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2006 Simon Capper <skhyjunky@sbcglobal.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -33,10 +33,10 @@ numbertypetab=( 'phone', 'home', 'office','cell', 'pager', 'fax' )
 
 PACKET pbnumber:
     1 UINT {'default': 0} +valid # 1 when number is valid, record can contain garbage so this must be checked
-    1 UINT {'default': 0} +type
+    1 UINT {'default': 0} +type # see numbertypetab above
     1 UINT {'default': 5} +ringer_group # 5=default, 1=pattern1, 2=pattern2, 3=melody,
     1 UINT {'default': 0} +pad0 #zeros
-    2 UINT {'default': 0} +ringer_index # 
+    2 UINT {'default': 0} +ringer_index # index in the ringer_group
     2 UINT {'default': 0} +pad1 #zeros
     1 UINT {'default': 0} +secret # individual numbers are secret on this phone
     33 STRING {'terminator': None, 'pascal': True, 'default': ""} +number
@@ -51,7 +51,7 @@ PACKET pbemail:
     49 STRING {'terminator': None, 'pascal': True, 'default': ""} +email
 
 PACKET pbentry:
-    2 UINT index # 
+    2 UINT slot # 
     2 UINT {'default': 0x0101} +pad2  # 0x0101 
     1 UINT {'default': 0} +pad3 # zero
     37 STRING {'terminator': None, 'pascal': True} name
@@ -87,6 +87,9 @@ PACKET tosh_swapheaderresponse:
     1 UINT {'constant': 0x0F} +cmd2
 
 PACKET tosh_getpbentryrequest:
+    """
+    Read an entry from a slot
+    """
     * tosh_swapheaderrequest {'command': 0x02} +header
     2 UINT {'constant': 0x03} +cmd
     2 UINT {'constant': 0x00} +pad
@@ -101,7 +104,10 @@ PACKET tosh_getpbentryresponse:
     2 UINT {'constant': 0x04} +data_type
     4 UINT swap_ok # 0 is OK, all F's failed
 
-PACKET tosh_setpbentryrequest:
+PACKET tosh_setpbentryrequest: 
+    """
+    Inserts a new entry into an empty slot
+    """
     * tosh_swapheaderrequest {'command': 0x02} +header
     2 UINT {'constant': 0x03} +cmd
     2 UINT {'constant': 0x100} +write
@@ -110,6 +116,24 @@ PACKET tosh_setpbentryrequest:
     2 UINT {'constant': 0x00} +pad
 
 PACKET tosh_setpbentryresponse:
+    * tosh_swapheaderresponse +header
+    1 UINT {'constant': 0x02} +cmd
+    4 UINT swap_ok # 0 is OK, all F's failed
+
+PACKET tosh_modifypbentryrequest:
+    """
+    Modifies/deletes an existing entry
+    delete occurs if the swap file does not exist when this command
+    is issued
+    """
+    * tosh_swapheaderrequest {'command': 0x02} +header
+    2 UINT {'constant': 0x03} +cmd
+    2 UINT {'constant': 0x200} +write
+    2 UINT {'constant': 0x04} +data_type
+    2 UINT entry_index
+    2 UINT {'constant': 0x00} +pad
+
+PACKET tosh_modifypbentryresponse:
     * tosh_swapheaderresponse +header
     1 UINT {'constant': 0x02} +cmd
     4 UINT swap_ok # 0 is OK, all F's failed
@@ -130,6 +154,8 @@ PACKET tosh_disableswapdataresponse:
     1 UINT {'constant': 0x01} +cmd3
     2 UINT {'constant': 0x00} +cmd4
 
+
+# test packets, not used
 PACKET tosh_getunknownrecordrequest:
     * tosh_swapheaderrequest {'command': 0x02} +header
     2 UINT data_type
