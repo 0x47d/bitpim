@@ -287,3 +287,13 @@ PACKET sms_in:
     68 DATA unknown5
     33 STRING senders_name
     169 DATA unknown6   # ?? inlcudes senders phone number in ascii
+
+# Text Memos. LG memo support is weak, it only supports the raw text and none of 
+# the features that other phones support, when you run bitpim you see loads of
+# options that do not work in the vx8100 on the memo page
+PACKET textmemo:
+    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items

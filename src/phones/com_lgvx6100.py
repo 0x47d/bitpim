@@ -158,7 +158,6 @@ class Profile(parentprofile):
     #imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
     #                                  {'width': 96, 'height': 64, 'format': "JPEG"}))
     
-
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
@@ -167,12 +166,14 @@ class Profile(parentprofile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None),         # all SMS list reading
+        ('memo', 'read', None),        # all memo list reading
         ('calendar', 'write', 'OVERWRITE'),  # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),     # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),       # all SMS list writing
+        ('memo', 'write', 'OVERWRITE'),      # all memo list writing
         )
  
     def __init__(self):
