@@ -973,7 +973,12 @@ class BitFlingSettingsDialog(wx.Dialog):
         wx.EVT_BUTTON(self, self.ID_TEST, self.OnTest)
 
         # fill in data
-        self.FindWindowById(self.ID_USERNAME).SetValue(config.Read("bitfling/username", getpass.getuser()))
+        defaultuser="user"
+        try:
+            defaultuser=getpass.getuser()
+        except:
+            pass
+        self.FindWindowById(self.ID_USERNAME).SetValue(config.Read("bitfling/username", defaultuser))
         if len(config.Read("bitfling/password", "")):
             self.FindWindowById(self.ID_PASSWORD).SetValue(self.passwordsentinel)
         self.FindWindowById(self.ID_HOST).SetValue(config.Read("bitfling/host", ""))
