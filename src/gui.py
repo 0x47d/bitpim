@@ -325,6 +325,7 @@ class Config(ConfigParser.ConfigParser):
         return self.has_option(*self._expand(key))
     def Flush(self):
         pass
+
 ###
 ###  Splash screen
 ###
@@ -430,6 +431,8 @@ class MainApp(wx.App):
 
         # Establish config stuff
         self.config=Config(self._config_filename)
+        # this is for wx native use, like the freaking help controller !
+        self.wxconfig=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
 
         # safe mode is read at startup and can't be changed
         self.SAFEMODE=self.config.ReadInt("SafeMode", False)
@@ -518,7 +521,7 @@ class MainApp(wx.App):
         # Get the help working
         self.helpcontroller=wx.html.HtmlHelpController()
         self.helpcontroller.AddBook(guihelper.gethelpfilename()+".htb")
-        self.helpcontroller.UseConfig(self.config, "help")
+        self.helpcontroller.UseConfig(self.wxconfig, "help")
 
         # now context help
         # (currently borken)
