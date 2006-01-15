@@ -520,7 +520,6 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
     def OnFilter(self, evt):
         cat_list=self.__oc.get_category_list()
         dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self.__oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
             self.__oc.set_filter(dlg.get())
             self.populate(self.__oc.get_display_data())

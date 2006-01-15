@@ -541,7 +541,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
     def OnFilter(self, evt):
         cat_list=self._oc.get_category_list()
         dlg=self._filter_dlg_class(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self._oc.get_filter())
+##        dlg.set(self._oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
             self._oc.set_filter(dlg.get())
             self.populate(self._oc.get_display_data())

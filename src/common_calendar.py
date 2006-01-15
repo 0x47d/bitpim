@@ -11,6 +11,7 @@
 
 # system modules
 import calendar
+import copy
 import datetime
 import sys
 
@@ -20,6 +21,7 @@ import wx.calendar
 import wx.lib.mixins.listctrl as listmix
 
 # local modules
+import database
 import guiwidgets
 import pubsub
 
@@ -183,6 +185,20 @@ class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
         evt.Skip()
 
 #-------------------------------------------------------------------------------
+class FilterDataObject(database.basedataobject):
+    _knownproperties=['rpt_events', 'no_alarm', 'alarm_override',
+                      'ringtone', 'vibrate', 'alarm_value',
+                      'preset_date' ]
+    _knownlistproperties=database.basedataobject._knownlistproperties.copy()
+    _knownlistproperties.update( {'categories': ['category'],
+                                  'start': ['year', 'month', 'day'],
+                                  'end': ['year', 'month', 'day'] })
+    def __init__(self, data=None):
+        if data:
+            self.update(data)
+
+filterobjectfactory=database.dataobjectfactory(FilterDataObject)
+#-------------------------------------------------------------------------------
 class FilterDialogBase(wx.Dialog):
     unnamed="Select:"
     def __init__(self, parent, id, caption, categories, style=wx.DEFAULT_DIALOG_STYLE):
@@ -198,13 +214,13 @@ class FilterDialogBase(wx.Dialog):
         # set the date options
         self.SetDateControls(fgs, fgs1)
         # new repeat to single events option
-        self.__rpt_chkbox=wx.CheckBox(self, id=wx.NewId(), label='Repeat Events:',
+        self._rpt_chkbox=wx.CheckBox(self, id=wx.NewId(), label='Repeat Events:',
                                       style=wx.ALIGN_RIGHT)
-        self.__rpt_chkbox.Disable()
-        fgs.Add(self.__rpt_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
-        self.__rpt_chkbox_text=wx.StaticText(self, -1, 'Import as multi-single events.')
-        fgs.Add(self.__rpt_chkbox_text, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
-        self.__rpt_chkbox_text.Disable()
+        self._rpt_chkbox.Disable()
+        fgs.Add(self._rpt_chkbox, 0, wx.ALIGN_RIGHT|wx.TOP|wx.BOTTOM, 5)
+        self._rpt_chkbox_text=wx.StaticText(self, -1, 'Import as multi-single events.')
+        fgs.Add(self._rpt_chkbox_text, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTRE, 0)
+        self._rpt_chkbox_text.Disable()
         # alarm option
         choices=('Disable All Alarms', 'Use Alarm Settings From Calender', 
                  'Set Alarm On All Events') 
@@ -295,13 +311,13 @@ class FilterDialogBase(wx.Dialog):
     def __set_rpt(self, data):
         if self._start_date_chkbox.GetValue() and\
            self._end_date_chkbox.GetValue():
-            self.__rpt_chkbox.Enable()
-            self.__rpt_chkbox_text.Enable()
-            self.__rpt_chkbox.SetValue(data)
+            self._rpt_chkbox.Enable()
+            self._rpt_chkbox_text.Enable()
+            self._rpt_chkbox.SetValue(data)
         else:
-            self.__rpt_chkbox.SetValue(False)
-            self.__rpt_chkbox.Disable()
-            self.__rpt_chkbox_text.Disable()
+            self._rpt_chkbox.SetValue(False)
+            self._rpt_chkbox.Disable()
+            self._rpt_chkbox_text.Disable()
 
     def __set_alarm_fields(self, value):
         if value==0:
@@ -349,7 +365,7 @@ class FilterDialogBase(wx.Dialog):
         self.__set_cats(self.__cat_chkbox, self.__cats, data.get('categories', None))
 
     def get_base(self, r):
-        r['rpt_events']=self.__rpt_chkbox.GetValue()
+        r['rpt_events']=self._rpt_chkbox.GetValue()
         value=self.__alarm_setting.GetSelection()
         if value==0:
             r['no_alarm']=True
@@ -382,12 +398,12 @@ class FilterDialogBase(wx.Dialog):
 
     def _repeat_option(self, on=True):
         if on:
-            self.__rpt_chkbox.Enable()
-            self.__rpt_chkbox_text.Enable()
+            self._rpt_chkbox.Enable()
+            self._rpt_chkbox_text.Enable()
         else:
-            self.__rpt_chkbox.SetValue(False)
-            self.__rpt_chkbox.Disable()
-            self.__rpt_chkbox_text.Disable()
+            self._rpt_chkbox.SetValue(False)
+            self._rpt_chkbox.Disable()
+            self._rpt_chkbox_text.Disable()
 
     def OnCheckBox(self, evt):
         evt_id=evt.GetId()
@@ -410,6 +426,49 @@ class FilterDialogBase(wx.Dialog):
 class FilterDialog(FilterDialogBase):
     def __init__(self, parent, id, caption, categories, style=wx.DEFAULT_DIALOG_STYLE):
         FilterDialogBase.__init__(self, parent, id, caption, categories, style)
+        self._get_from_fs()
+
+    def _get_from_fs(self):
+        _db_data=self.GetParent().GetParent().database.getmajordictvalues('calendar_filter',
+                                                           filterobjectfactory)
+        _data={}
+        _data.update(_db_data.get('filter', {}))
+        if _data.has_key('categories'):
+            _cat=[x['category'] for x in _data['categories']]
+            del _data['categories']
+            _data['categories']=_cat
+        if _data.has_key('start'):
+            _d0=_data['start'][0]
+            _date=(_d0['year'], _d0['month'], _d0['day'])
+            del _data['start']
+            _data['start']=_date
+        if _data.has_key('end'):
+            _d0=_data['end'][0]
+            _date=(_d0['year'], _d0['month'], _d0['day'])
+            del _data['end']
+            _data['end']=_date
+        self.set(_data)
+
+    def _save_to_fs(self, data):
+        _data=copy.deepcopy(data, {})
+        del _data['categories']
+        if data.has_key('categories') and data['categories']:
+            _cat=[{'category': x} for x in data['categories'] ]
+            _data['categories']=_cat
+        del _data['start']
+        if data.has_key('start') and data['start']:
+            _date=[{'year': data['start'][0], 'month': data['start'][1],
+                    'day': data['start'][2] }]
+            _data['start']=_date
+        del _data['end']
+        if data.has_key('end') and data['end']:
+            _date=[{'year': data['end'][0], 'month': data['end'][1],
+                    'day': data['end'][2] }]
+            _data['end']=_date
+        _dict={ 'filter': _data }
+        database.ensurerecordtype(_dict, filterobjectfactory)
+        self.GetParent().GetParent().database.savemajordict('calendar_filter',
+                                                            _dict)
 
     def SetDateControls(self, fgs, fgs1):
         self._start_date_chkbox=wx.CheckBox(self, id=wx.NewId(), 
@@ -445,8 +504,10 @@ class FilterDialog(FilterDialogBase):
 
     def OnCheckBox(self, evt):
         super(FilterDialog, self).OnCheckBox(evt)
+        self._repeat_option(self._start_date_chkbox.GetValue() and \
+                            self._end_date_chkbox.GetValue() or \
+                            self._preset_date_chkbox.GetValue())
         if evt.GetId()==self._preset_date_chkbox.GetId():
-            self._repeat_option(self._preset_date_chkbox.GetValue())
             if self._preset_date_chkbox.GetValue():
                 self._preset_date.Enable()
             else:
@@ -463,12 +524,24 @@ class FilterDialog(FilterDialogBase):
             dt.Set(d[2], year=d[0], month=d[1]-1)
             cal.SetDate(dt)
 
+    def set_base(self, data):
+        super(FilterDialog, self).set_base(data)
+        self._rpt_chkbox.SetValue(data.get('rpt_events', False))
+
     def set(self, data):
         self.__set_date(self._start_date_chkbox, self._start_date,
                         data.get('start', None))
         self.__set_date(self._end_date_chkbox, self._end_date,
                         data.get('end', None))
         self.set_base(data)
+        if data.get('preset_date', None) is not None:
+            self._preset_date_chkbox.SetValue(True)
+            self._preset_date.Enable()
+            self._preset_date.SetSelection(data['preset_date'])
+            self._repeat_option(True)
+        else:
+            self._preset_date_chkbox.SetValue(False)
+            self._preset_date.Disable()
 
     def _get_preset_thisweek(self):
         # return the dates of (today, Sat)
@@ -507,6 +580,7 @@ class FilterDialog(FilterDialogBase):
         r={}
         if self._preset_date_chkbox.GetValue():
             r['start'],r['end']=self._get_preset_date()
+            r['preset_date']=self._preset_date.GetSelection()
         else:
             if self._start_date_chkbox.GetValue():
                 dt=self._start_date.GetDate()
@@ -519,6 +593,7 @@ class FilterDialog(FilterDialogBase):
             else:
                 r['end']=None
         self.get_base(r)
+        self._save_to_fs(r)
         return r
     
 #-------------------------------------------------------------------------------
