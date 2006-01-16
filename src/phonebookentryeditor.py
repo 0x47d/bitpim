@@ -1361,6 +1361,70 @@ class Editor(wx.Dialog):
             self._data_key=_key
             self.Populate()
 
+# SingleFieldEditor-------------------------------------------------------------
+class SingleFieldEditor(wx.Dialog):
+    "Edit a single field for a groups of entries"
+
+    ID_DOWN=wx.NewId()
+    ID_UP=wx.NewId()
+    ID_ADD=wx.NewId()
+    ID_DELETE=wx.NewId()
+
+    tabsfactory={
+        'categories': ("Categories", "categories", CategoryEditor),
+        'wallpapers': ("Wallpapers", "wallpapers", WallpaperEditor),
+        'ringtones': ("Ringtones", "ringtones", RingtoneEditor) }
+
+    def __init__(self, parent, key):
+        if not self.tabsfactory.has_key(key):
+            raise KeyError
+        super(SingleFieldEditor, self).__init__(parent, -1,
+                                                "Edit PhoneBook Entry",
+                                                size=(740,580),
+                                                style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self._key=key
+        vs=wx.BoxSizer(wx.VERTICAL)
+        _hbs=wx.BoxSizer(wx.HORIZONTAL)
+        _add_btn=wx.BitmapButton(self, wx.NewId(),
+                                 wx.ArtProvider.GetBitmap(guihelper.ART_ADD_FIELD), name="Prev Item")
+        _hbs.Add(_add_btn, 0, wx.EXPAND|wx.LEFT, 10)
+        wx.EVT_BUTTON(self, _add_btn.GetId(), self.Add)
+        vs.Add(_hbs, 0, wx.ALL|wx.EXPAND, 5)
+
+        self.nb=wx.Notebook(self, -1)
+        vs.Add(self.nb,1,wx.EXPAND|wx.ALL,5)
+
+        # instantiate the nb widgets
+        name,key,klass=self.tabsfactory[key]
+        widget=EditorManager(self.nb, klass)
+        self.nb.AddPage(widget,name)
+
+        vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
+        _btn_sizer=self.CreateButtonSizer(wx.OK|wx.CANCEL)
+        vs.Add(_btn_sizer, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+
+        self.SetSizer(vs)
+
+        wx.EVT_TOOL(self, self.ID_UP, self.MoveUp)
+        wx.EVT_TOOL(self, self.ID_DOWN, self.MoveDown)
+        wx.EVT_TOOL(self, self.ID_ADD, self.Add)
+        wx.EVT_TOOL(self, self.ID_DELETE, self.Delete)
+
+    def MoveUp(self, _):
+        self.nb.GetPage(0).Move(-1)
+    
+    def MoveDown(self, _):
+        self.nb.GetPage(0).Move(+1)
+
+    def Add(self, _):
+        self.nb.GetPage(0).Add()
+
+    def Delete(self, _):
+        self.nb.GetPage(0).Delete()
+
+    def GetData(self):
+        return self.nb.GetPage(0).Get()
+
 # main--------------------------------------------------------------------------
 if __name__=='__main__':
 

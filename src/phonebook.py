@@ -869,15 +869,32 @@ class PhoneWidget(wx.Panel):
         data=self._data[key]
         # can we get it to open on the correct field?
         datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
-        dlg=phonebookentryeditor.Editor(self, data,
-                                        factory=phonebookobjectfactory,
-                                        keytoopenon=datakey,
-                                        dataindex=dataindex,
-                                        readonly=self.read_only,
-                                        datakey=key,
-                                        movement=True)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.SaveData(dlg.GetData(), dlg.GetDataKey())
+        _keys=self.GetSelectedRowKeys()
+        if datakey in ('categories', 'ringtones', 'wallpapers') and \
+           len(_keys)>1 and not self.read_only:
+            # Edit a single field for all seleced cells
+            dlg=phonebookentryeditor.SingleFieldEditor(self, datakey)
+            if dlg.ShowModal()==wx.ID_OK:
+                _data=dlg.GetData()
+                if _data:
+                    for r in _keys:
+                        self._data[r][datakey]=_data
+                else:
+                    for r in _keys:
+                        del self._data[r][datakey]
+                self.SetPreview(self._data[_keys[0]])
+                self.dt.OnDataUpdated()
+                self.modified=True
+        else:
+            dlg=phonebookentryeditor.Editor(self, data,
+                                            factory=phonebookobjectfactory,
+                                            keytoopenon=datakey,
+                                            dataindex=dataindex,
+                                            readonly=self.read_only,
+                                            datakey=key,
+                                            movement=True)
+            if dlg.ShowModal()==wx.ID_OK:
+                self.SaveData(dlg.GetData(), dlg.GetDataKey())
         dlg.Destroy()
 
     def SaveData(self, data, key):
