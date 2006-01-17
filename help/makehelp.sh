@@ -56,8 +56,11 @@ if [ -d ../bpweb/site/CVS ]
 then
     ver=`$PYTHON version.py --majorminor`
     echo "Copying $ver help into web site tree"
-    # webhelp="`pwd`/../bpweb/site/help/$ver" # what i really want
     webhelp="`pwd`/../bpweb/site/testhelp"
+    rm -rf "$webhelp"
+    mkdir -p "$webhelp"
+    $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
+    webhelp="`pwd`/../bpweb/site/help"
     rm -rf "$webhelp"
     mkdir -p "$webhelp"
     $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
