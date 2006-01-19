@@ -370,6 +370,7 @@ class ConfigDialog(wx.Dialog):
                   'SPH-A620 (VGA1000)': 'com_samsungspha620',
                   'SPH-A740': 'com_samsungspha740',
                   'SPH-N200': 'com_samsungsphn200',
+                  'SPH-N400': 'com_samsungsphn400',
                   'SCH-A650': 'com_samsungscha650',
                   'SCH-A670': 'com_samsungscha670',
                   'SK6100 (Pelephone)' : 'com_sk6100', 
