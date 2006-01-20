@@ -59,7 +59,7 @@ class Phone(com_sanyonewer.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def getfundamentals(self, results):
+    def xgetfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI."""
 
         # use a hash of ESN and other stuff (being paranoid)
@@ -69,14 +69,16 @@ class Phone(com_sanyonewer.Phone):
 
         return results
 
-    def getphonebook(self,result):
+    def testgetphonebook(self,result):
         pbook={}
 
         # Try the usual phonebook command
-        req=self.protocolclass.phonebookslotrequest()
-        for i in range(20):
-            req.slot = i
-            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
+        req=self.protocolclass.bufferpartrequest()
+        req.header.packettype=0x0c
+        for command in range(0x03,0xff):
+            req.header.command=command
+            res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
+        
 
 class Profile(com_sanyonewer.Profile):
 
