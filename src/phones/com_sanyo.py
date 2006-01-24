@@ -304,6 +304,7 @@ class SanyoPhonebook:
         """Gets information fundamental to interopating with the phone and UI."""
 
         # use a hash of ESN and other stuff (being paranoid)
+        print "HASRINGPICBUF=",self.protocolclass.HASRINGPICBUF
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
@@ -380,7 +381,7 @@ class SanyoPhonebook:
         sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
 
         # Get the ringer and wall paper assignments
-        if self.serialsname!='mm7400' and self.serialsname!='mm8300' and self.serialsname!='rl4903':
+        if self.protocolclass.HASRINGPICBUF:
             ringpic = self.getsanyobuffer(self.protocolclass.ringerpicbuffer)
 
         speedslot=[]
@@ -421,7 +422,7 @@ class SanyoPhonebook:
                                 entry['numbers'][k]['speeddial']=j+2
                                 break
 
-                if self.serialsname!='mm7400' and self.serialsname!='mm8300' and self.serialsname!='rl4903':
+                if self.protocolclass.HASRINGPICBUF:
                     # ringtones
                     if ringpic.ringtones[i].ringtone>0:
                         try:
@@ -724,7 +725,7 @@ class SanyoPhonebook:
         # Now write out the 3 buffers
         self.sendsanyobuffer(sortstuff)
 
-        if self.serialsname!='mm7400' and self.serialsname!='mm8300' and self.serialsname!='rl4903':
+        if self.protocolclass.HASRINGPICBUF:
             self.sendsanyobuffer(ringpic)
         
         self.sendsanyobuffer(callerid)

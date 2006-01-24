@@ -59,27 +59,6 @@ class Phone(com_sanyonewer.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def xgetfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI."""
-
-        # use a hash of ESN and other stuff (being paranoid)
-        self.log("Retrieving fundamental phone information")
-        self.log("Phone serial number")
-        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
-
-        return results
-
-    def testgetphonebook(self,result):
-        pbook={}
-
-        # Try the usual phonebook command
-        req=self.protocolclass.bufferpartrequest()
-        req.header.packettype=0x0c
-        for command in range(0x03,0xff):
-            req.header.command=command
-            res=self.sendpbcommand(req, self.protocolclass.bufferpartresponse)
-        
-
 class Profile(com_sanyonewer.Profile):
 
     protocolclass=Phone.protocolclass

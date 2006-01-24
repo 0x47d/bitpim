@@ -357,6 +357,7 @@ class ConfigDialog(wx.Dialog):
                   'MM-8300': 'com_sanyo8300',
                   'PM-8200': 'com_sanyo8200',
                   'RL-4920': 'com_sanyo4920',
+                  'RL-4930': 'com_sanyo4930',
                   'SCP-4900': 'com_sanyo4900',
                   'SCP-5300': 'com_sanyo5300',
                   'SCP-5400': 'com_sanyo5400',
@@ -381,7 +382,6 @@ class ConfigDialog(wx.Dialog):
 
     if __debug__:
         phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
-                             'RL-4930': 'com_sanyo4930',
                              'LG-PM325 (Sprint)': 'com_lgpm325',
                              })
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')

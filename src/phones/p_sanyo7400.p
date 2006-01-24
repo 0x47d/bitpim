@@ -30,6 +30,7 @@ _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
 _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
+HASRINGPICBUF=0
 
 %}
 
