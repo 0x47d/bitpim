@@ -205,9 +205,14 @@ class OutlookCalendarImportData:
             ce.vibrate=self._filter.get('vibrate', False)
         ce.allday=e.get('allday', False)
         if ce.allday:
-            # by definition, this is a 1-day deal!
-            ce.start=e['start'][:3]+(0,0)
-            ce.end=e['start'][:3]+(23,59)
+            if not e.get('repeat', False):
+                # by definition, this is a 1-day deal!
+                ce.start=e['start'][:3]+(0,0)
+                ce.end=e['start'][:3]+(23,59)
+            else:
+                # unless it is a repeating all day event!
+                ce.start=e['start'][:3]+(0,0)
+                ce.end=e['end'][:3]+(23,59)
         else:
             ce.start=e['start']
             ce.end=e['end']
