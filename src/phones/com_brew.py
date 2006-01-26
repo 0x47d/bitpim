@@ -184,9 +184,14 @@ class DebugBrewProtocol:
             _stat=os.stat(os.path.join(_pwd, f))
             _date=_stat[8]
             _name=dir+'/'+f
+            _timestr=''
+            try:
+                # date is not always present in filesystem
+                _timestr=time.strftime("%x %X", time.gmtime(_date))
+            except:
+                pass
             results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
-                             'date': (_date,
-                                      time.strftime("%x %X", time.gmtime(_date))) }
+                             'date': (_date, _timestr) }
         return results
         
     def listsubdirs(self, dir='', recurse=0):
