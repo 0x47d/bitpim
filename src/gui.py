@@ -1695,7 +1695,7 @@ class MainWindow(wx.Frame):
             text=exception.message+"\nPlease see the help."
             title="Communications Error - "+exception.device
             style=wx.OK|wx.ICON_EXCLAMATION
-            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_LG_COMMSDATAERROR)
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_COMMSDATAERROR)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
