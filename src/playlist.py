@@ -129,6 +129,8 @@ class PlaylistWidget(wx.Panel):
                                                style=gizmos.EL_ALLOW_NEW|\
                                                gizmos.EL_ALLOW_EDIT|\
                                                gizmos.EL_ALLOW_DELETE)
+        self._item_list.GetUpButton().Show(False)
+        self._item_list.GetDownButton().Show(False)
         self._item_list_w=self._item_list.GetListCtrl()
         hbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, border=5)
         hbs.Add(wx.StaticLine(self, -1, style=wx.LI_VERTICAL), 0,

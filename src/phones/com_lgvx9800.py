@@ -464,9 +464,13 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _buf=prototypes.buffer(self.getfilecontents(file_name))
         _pl_index=self.protocolclass.playlistfile()
         _pl_index.readfrombuffer(_buf)
-        _songs=[x.name.split('/')[-1] for x in _pl_index.items]
+        _songs=[x.name[self.protocolclass.mp3_dir_len:] for x in _pl_index.items]
         _entry=playlist.PlaylistEntry()
-        _entry.name=file_name.split('/')[-1][:-3]
+        if file_name.endswith(self.protocolclass.pl_extension):
+            _entry.name=file_name[self.protocolclass.pl_dir_len:\
+                                  -self.protocolclass.pl_extension_len]            
+        else:
+            _entry.name=file_name[self.protocolclass.pl_dir_len:]
         _entry.songs=_songs
         return _entry
 
@@ -476,7 +480,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _mp3_list=[]
         try:
             _files=self.listfiles(self.protocolclass.mp3_dir)
-            _mp3_list=[x.split('/')[-1] for x in _files]
+            _file_list=_files.keys()
+            _file_list.sort()
+            _mp3_list=[x[self.protocolclass.mp3_dir_len:] for x in _file_list ]
         except:
             if __debug__:
                 raise
@@ -485,7 +491,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _pl_list=[]
         try:
             _files=self.listfiles(self.protocolclass.pl_dir)
-            for _f in _files:
+            _file_list=_files.keys()
+            _file_list.sort()
+            for _f in _file_list:
                 _pl_list.append(self._read_pl_list(_f))
         except:
             if __debug__:

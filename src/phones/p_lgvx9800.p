@@ -60,7 +60,11 @@ BREW_FILE_SYSTEM=1
 
 # playlist constants
 pl_dir='mmc1/my_mp3_playlist'
+pl_dir_len=len(pl_dir)+1
+pl_extension='.pl'
+pl_extension_len=len(pl_extension)
 mp3_dir='mmc1/my_mp3'
+mp3_dir_len=len(mp3_dir)+1  # account for the last '/'
 mp3_index_file='dload/my_mp3.dat'
 
 %}
