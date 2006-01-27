@@ -57,6 +57,12 @@ SMS_CANNED_MAX_ITEMS=18
 SMS_CANNED_MAX_LENGTH=101
 
 BREW_FILE_SYSTEM=1
+
+# playlist constants
+pl_dir='mmc1/my_mp3_playlist'
+mp3_dir='mmc1/my_mp3'
+mp3_index_file='dload/my_mp3.dat'
+
 %}
 
 PACKET indexentry:
@@ -71,6 +77,16 @@ PACKET indexentry:
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
+
+PACKET playlistentry:
+    84 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } name
+    4 UINT { 'default': 0 } +date
+    4 UINT { 'default': 0 } +dunno1
+    4 UINT { 'default': 0 } +dunno2
+    4 UINT { 'default': 1 } +dunno3
+
+PACKET playlistfile:
+    * LIST { 'elementclass': playlistentry } +items
 
 PACKET pbgroup:
     "A single group"

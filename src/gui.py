@@ -61,6 +61,7 @@ import today
 import pubsub
 import com_brew
 import auto_sync
+import playlist
 
 if guihelper.IsMSWindows():
     import win32api
@@ -859,6 +860,8 @@ class MainWindow(wx.Frame):
         self.nb.AddPage(self.smswidget, 'SMS')
         self.callhistorywidget=call_history.CallHistoryWidget(self, self.nb)
         self.nb.AddPage(self.callhistorywidget, 'Call History')
+        self.playlistwidget=playlist.PlaylistWidget(self, self.nb)
+        self.nb.AddPage(self.playlistwidget, 'Play List')
 
         ### logwindow (last notebook tab)
         self.lw=guiwidgets.LogWindow(self.nb)
@@ -1320,6 +1323,12 @@ class MainWindow(wx.Frame):
             else:
                 self.callhistorywidget.populatefs(results)
                 self.callhistorywidget.populate(results)
+        # Playlist
+        if results['sync'].has_key(playlist.playlist_key):
+            if results['sync'][playlist.playlist_key]=='MERGE':
+                raise NotImplementedError
+            self.playlistwidget.populatefs(results)
+            self.playlistwidget.populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -1400,6 +1409,13 @@ class MainWindow(wx.Frame):
             self.smswidget.getdata(data)
             todo.append((self.wt.writesms, "SMS", merge))
 
+        ### Playlist
+        v=dlg.GetPlaylistSetting()
+        if v!=dlg.NOTREQUESTED:
+            merge=v!=dlg.OVERWRITE
+            self.playlistwidget.getdata(data)
+            todo.append((self.wt.writeplaylist, "Playlist", merge))
+
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
@@ -1444,6 +1460,7 @@ class MainWindow(wx.Frame):
             self.todowidget.getfromfs(results)
             self.smswidget.getfromfs(results)
             self.callhistorywidget.getfromfs(results)
+            self.playlistwidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -1461,6 +1478,8 @@ class MainWindow(wx.Frame):
             self.smswidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.callhistorywidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.playlistwidget.populate(results)
             # close the splash screen if it is still up
             self.CloseSplashScreen()
         finally:
@@ -1529,14 +1548,16 @@ class MainWindow(wx.Frame):
                    id(self.phonewidget): guihelper.ART_ADD_CONTACT,
                    id(self.memowidget): guihelper.ART_ADD_MEMO,
                    id(self.todowidget): guihelper.ART_ADD_TODO,
-                   id(self.smswidget): guihelper.ART_ADD_SMS
+                   id(self.smswidget): guihelper.ART_ADD_SMS,
+                   id(self.playlistwidget): guihelper.ART_ADD_TODO,
                    }
         mapbmpdelete={id(self.ringerwidget): guihelper.ART_DEL_RINGER,
                       id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
                       id(self.phonewidget): guihelper.ART_DEL_CONTACT,
                       id(self.memowidget): guihelper.ART_DEL_MEMO,
                       id(self.todowidget): guihelper.ART_DEL_TODO,
-                      id(self.smswidget): guihelper.ART_DEL_SMS                      
+                      id(self.smswidget): guihelper.ART_DEL_SMS,
+                      id(self.playlistwidget): guihelper.ART_DEL_TODO,
                       }
         bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooladd.SetNormalBitmap(bmpadd)
@@ -1821,7 +1842,8 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetMemoSetting, self.commphone.getmemo, "Memo", "memo"),
             (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo"),
             (req.GetSMSSetting, self.commphone.getsms, "SMS", "sms"),
-            (req.GetCallHistorySetting, self.commphone.getcallhistory, 'Call History', 'call_history')):
+            (req.GetCallHistorySetting, self.commphone.getcallhistory, 'Call History', 'call_history'),
+            (req.GetPlaylistSetting, self.commphone.getplaylist, 'Play List', 'playlist')):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
@@ -1901,6 +1923,11 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.savesms(data, merge)
+
+    def writeplaylist(self, data, merge):
+        if __debug__: self.checkthread()
+        self.setupcomm()
+        return self.commphone.saveplaylist(data, merge)
 
     def getphoneinfo(self):
         if __debug__: self.checkthread()

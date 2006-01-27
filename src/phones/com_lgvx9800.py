@@ -32,6 +32,7 @@ import bpcalendar
 import call_history
 import sms
 import memo
+import playlist
 
 class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
     "Talk to the LG VX9800 cell phone"
@@ -458,6 +459,39 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 res[entry.id]=entry
         return res 
 
+    # Playlist stuff------------------------------------------------------------
+    def _read_pl_list(self, file_name):
+        _buf=prototypes.buffer(self.getfilecontents(file_name))
+        _pl_index=self.protocolclass.playlistfile()
+        _pl_index.readfrombuffer(_buf)
+        _songs=[x.name.split('/')[-1] for x in _pl_index.items]
+        _entry=playlist.PlaylistEntry()
+        _entry.name=file_name.split('/')[-1][:-3]
+        _entry.songs=_songs
+        return _entry
+
+    def getplaylist(self, result):
+        # return the mp3 playlist if available
+        # first, read the list of all mp3 songs
+        _mp3_list=[]
+        try:
+            _files=self.listfiles(self.protocolclass.mp3_dir)
+            _mp3_list=[x.split('/')[-1] for x in _files]
+        except:
+            if __debug__:
+                raise
+        result[playlist.masterlist_key]=_mp3_list
+        # then read the playlist
+        _pl_list=[]
+        try:
+            _files=self.listfiles(self.protocolclass.pl_dir)
+            for _f in _files:
+                _pl_list.append(self._read_pl_list(_f))
+        except:
+            if __debug__:
+                raise
+        result[playlist.playlist_key]=_pl_list
+        return result
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8100.Profile
@@ -529,4 +563,6 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
+        ('playlist', 'read', 'OVERWRITE'),
+##        ('playlist', 'write', 'OVERWRITE'),
         )
