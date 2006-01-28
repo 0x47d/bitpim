@@ -269,6 +269,9 @@ class DebugBrewProtocol:
     def logdata(self, s, data, klass=None):
         print s
 
+    def exists(self, path):
+        return os.path.exists(os.path.join(self._fs_path, path))
+
     DirCache=_DirCache
 
 class RealBrewProtocol:
@@ -370,6 +373,23 @@ class RealBrewProtocol:
             else:
                 self.rmfile(k)
         self.rmdir(path)
+
+    def exists(self, path):
+        # Return True if path refers to an existing path
+        # just try a list file command and see if it bombs out
+        req=p_brew.listfilerequest()
+        req.dirname=path
+        req.entrynumber=0
+        try:
+            res=self.sendbrewcommand(req,p_brew.listfileresponse)
+        except (BrewBadPathnameException, BrewNoSuchDirectoryException,
+                ValueError):
+            return False
+        except:
+            if __debug__:
+                raise
+            return False
+        return True
 
     def listsubdirs(self, dir='', recurse=0):
         results={}

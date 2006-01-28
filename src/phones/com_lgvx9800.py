@@ -475,7 +475,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         return _entry
 
     def getplaylist(self, result):
-        # return the mp3 playlist if available
+        # return the mp3 playlists if available
         # first, read the list of all mp3 songs
         _mp3_list=[]
         try:
@@ -499,6 +499,47 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             if __debug__:
                 raise
         result[playlist.playlist_key]=_pl_list
+        return result
+
+    def _write_playlists(self, pl, all_songs):
+        for _pl_item in pl:
+            try:
+                _pl_file=self.protocolclass.playlistfile()
+                for _song in _pl_item.songs:
+                    _song_name=self.protocolclass.mp3_dir+'/'+_song
+                    if all_songs.has_key(_song_name):
+                        _entry=self.protocolclass.playlistentry()
+                        _entry.name=_song_name
+                        _pl_file.items.append(_entry)
+                if len(_pl_file.items):
+                    # don't write out an empty list
+                    _buf=prototypes.buffer()
+                    _pl_file.writetobuffer(_buf)
+                    _file_name=self.protocolclass.pl_dir+'/'+_pl_item.name+\
+                                self.protocolclass.pl_extension
+                    self.writefile(_file_name, _buf.getvalue())
+            except:
+                if __debug__:
+                    raise
+
+    def saveplaylist(self, result, merge):
+        # check to see if the pl_dir exist
+        if not self.exists(self.protocolclass.pl_dir):
+            self.log('Playlist dir does not exist. Bail')
+            return result
+        # get the list of available mp3 files
+        _all_songs=self.listfiles(self.protocolclass.mp3_dir)
+        # delete all existing playlists
+        _files=self.listfiles(self.protocolclass.pl_dir)
+        for _f in _files:
+            try:
+                self.rmfile(_f)
+            except:
+                if __debug__:
+                    raise
+        # update the new playlists
+        self._write_playlists(result.get(playlist.playlist_key, []),
+                              _all_songs)
         return result
 
 #-------------------------------------------------------------------------------
@@ -572,5 +613,5 @@ class Profile(parentprofile):
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         ('playlist', 'read', 'OVERWRITE'),
-##        ('playlist', 'write', 'OVERWRITE'),
+        ('playlist', 'write', 'OVERWRITE'),
         )

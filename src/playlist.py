@@ -7,13 +7,30 @@
 ###
 ### $Id$
 """
-Code to handle Playlist items
-The format of the Playlist items is standardized.  It is a list of dict whic has
-the following standard fields:
+Code to handle Playlist items.
+
+The playlist data includes 2 components: the list of available songs, and
+the playlist items.
+
+The format of the Playlist items is standardized.  It is a list of dict which
+has the following standard fields:
 
 name: string=the name of the play list
 type: string=the type of this play list.  Current supported types are mp3 and wma.
 songs: [ 'song name', ... ]
+
+To implement Playlist read/write for a phone module:
+1. Add 2 entries into Profile._supportedsyncs:
+        ...
+        ('playlist', 'read', 'OVERWRITE'),
+        ('playlist', 'write', 'OVERWRITE'),
+2. Implement the following 2 methods in your Phone class:
+    def getplaylist(self, result)
+    def saveplaylist(self, result, merge)
+
+The result dict should have:
+results[playlist.masterlist_key]=['song name 1', 'song name 2', ...]
+results[playlist.playlist_key=[playlist.PlaylistEntry, playlist.PlaylistEntry, ..]
 
 """
 
@@ -29,11 +46,7 @@ playlists_list='playlists'
 mp3_type='mp3'
 wma_type='wma'
 playlist_type=(mp3_type, wma_type)
-## testing data
-_test_master_list=('tune 1', 'tune 2', 'tune 3', 'tune 4', 'tune 5', 'tune 6')
-_test_playlist=(
-    {'name': 'list 1', 'songs': ('tune 1', 'tune 3') },
-    {'name': 'list 2', 'songs': ('tune 1', 'tune 2', 'tune 4') })
+
 #-------------------------------------------------------------------------------
 class MasterListDataObject(database.basedataobject):
     _knownproperties=[]
@@ -179,25 +192,12 @@ class PlaylistWidget(wx.Panel):
                                 self.OnMakeDirty)
         wx.EVT_LIST_DELETE_ITEM(self._pl_list, self._pl_list_w.GetId(),
                                 self.OnMakeDirty)
-
-##        wx.EVT_LISTBOX(self, self._item_list.GetId(), self._OnListBoxItem)
-##        wx.EVT_BUTTON(self, self._save_btn.GetId(), self._OnSave)
-##        wx.EVT_BUTTON(self, self._revert_btn.GetId(), self._OnRevert)
 ##        wx.EVT_BUTTON(self, wx.ID_HELP,
 ##                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_TODO))
         # populate data
         self._populate()
         # turn on dirty flag
         self.setdirty(False)
-        # testing data
-##        _test_pl=[]
-##        for l in _test_playlist:
-##            _e=PlaylistEntry()
-##            _e.name=l['name']
-##            _e.songs=l['songs']
-##            _test_pl.append(_e)
-##        self.populatefs({ masterlist_key: _test_master_list,
-##                          playlist_key: _test_pl })
 
     def setdirty(self, val):
         if self.ignoredirty:
@@ -336,8 +336,17 @@ class PlaylistWidget(wx.Panel):
         _entry_idx=self._name2idx(self._item_list_w.GetItemText(_pl_idx))
         if _entry_idx is not None:
             self.setdirty(True)
-            self._pl_list_w.InsertStringItem(self._pl_list_w.GetItemCount()-1,
-                                             self._master_list_w.GetItemText(_master_idx))
+            self._pl_list.SetStrings(self._pl_list.GetStrings()+\
+                                     [self._master_list_w.GetItemText(_master_idx)])
+
+    def _build_playlist(self):
+        _pl_list=[]
+        for _name in self._item_list.GetStrings():
+            if _name:
+                _idx=self._name2idx(_name)
+                if _idx is not None:
+                    _pl_list.append(self._data[_idx])
+        return _pl_list
 
     def OnSave(self, _):
         # save the current playlist
@@ -347,14 +356,8 @@ class PlaylistWidget(wx.Panel):
             if _entry_idx is not None:
                 self._data[_entry_idx].songs=self._pl_list.GetStrings()
         # create data dicts & save them to db
-        _pl_list=[]
-        for _name in self._item_list.GetStrings():
-            if _name:
-                _idx=self._name2idx(_name)
-                if _idx is not None:
-                    _pl_list.append(self._data[_idx])
         self._save_to_db({ masterlist_key: self._master_list.GetStrings(),
-                           playlist_key: _pl_list })
+                           playlist_key: self._build_playlist() })
         self.setdirty(False)
 
     def OnRevert(self, _):
@@ -367,3 +370,8 @@ class PlaylistWidget(wx.Panel):
             self._item_list_w.SetItemState(_pl_idx, wx.LIST_STATE_SELECTED,
                                            wx.LIST_MASK_STATE)
         self.setdirty(False)
+
+    def getdata(self, dict):
+        dict[masterlist_key]=self._master_list.GetStrings()
+        dict[playlist_key]=self._build_playlist()
+        return dict
