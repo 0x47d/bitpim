@@ -39,13 +39,10 @@ PACKET {'readwrite': 0x26} qcpheader:
     1 UINT command
     1 UINT packettype
 
-PACKET testrequest:
-    * qcpheader {'readwrite': 0x26} +header
-    1 UINT slot
-    129 UNKNOWN +pad
-
-PACKET testresponse:
-    * UNKNOWN pad
+PACKET {'readwrite': 0x27} qcpwriteheader:
+    1 UINT readwrite
+    1 UINT command
+    1 UINT packettype
 
 # How can I override bufsize without repeating the whole thing?
 PACKET pbsortbuffer:
@@ -92,3 +89,107 @@ PACKET calleridbuffer:
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     * UNKNOWN +pad
+
+PACKET eventresponse:
+    * sanyoheader header
+    * evententry entry
+    * UNKNOWN pad
+
+PACKET eventrequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x23} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET eventslotinuserequest:
+    * qcpheader {'readwrite': 0x26, 'packettype': 0x0d, 'command': 0x74} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+    
+PACKET evententry:
+    1 UINT slot
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    7 UNKNOWN +pad1
+    1 UINT eventname_len
+    4 UINT start "# seconds since Jan 1, 1980 approximately"
+    4 UINT end
+    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    7 UNKNOWN +pad2
+    1 UINT location_len
+    4 UINT alarmdiff "Displayed alarm time"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT alarm
+    1 UNKNOWN +pad3
+    1 UINT {'default': 0} +serial "Some kind of serial number"
+    3 UNKNOWN +pad4
+    2 UINT ringtone
+    
+PACKET eventresponse:
+    * qcpheader header
+    * evententry entry
+    * UNKNOWN pad
+
+PACKET eventslotinuseresponse:
+    * qcpheader header
+    1 UINT slot
+    1 UINT flag
+    * UNKNOWN pad
+
+PACKET eventslotinuseupdaterequest:
+    * qcpwriteheader {'packettype': 0x0d, 'command': 0x74} +header
+    1 UINT slot
+    1 UINT flag
+    124 UNKNOWN +pad
+    
+PACKET eventupdaterequest:
+    * qcpwriteheader {'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    56 UNKNOWN +pad
+
+PACKET callalarmrequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x24} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET callalarmresponse:
+    * qcpheader header
+    * callalarmentry entry
+    * UNKNOWN pad
+
+PACKET callalarmupdaterequest:
+    * qcpwriteheader {'packettype': 0x0c, 'command':0x24} +header
+    * callalarmentry entry
+    40 UNKNOWN +pad
+
+PACKET callalarmslotinuserequest:
+    * qcpheader {'packettype': 0x0d, 'command': 0x76} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
+PACKET callalarmslotinuseresponse:
+    * qcpheader header
+    1 UINT slot
+    1 UINT flag
+    * UNKNOWN pad
+
+PACKET callalarmentry:
+    1 UINT slot
+    1 UNKNOWN +pad0 "Not the flag?"
+    49 STRING {'raiseonunterminatedread': False} phonenum
+    1 UINT phonenum_len
+    4 UINT date "# seconds since Jan 1, 1980 approximately"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT datedup "Copy of the date.  Always the same???"
+    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    1 UNKNOWN +pad1
+    1 UINT name_len
+    1 UINT phonenumbertype "1: Home, 2: Work, ..." 
+    2 UINT phonenumberslot
+    1 UNKNOWN +pad2
+    1 UINT {'default': 0} +serial
+    2 UNKNOWN +pad3
+    1 UINT {'default': 0xfc} +ringtone
+    1 UNKNOWN +pad4 " This may be the ringtone.  Need to understand "
+    1 UINT +flag
+
