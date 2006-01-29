@@ -1,0 +1,25 @@
+#include "pagestart.h"
+
+<p>BitPim speaks two major protocols with your phone.  One is the
+official vendor sync protocol which usually only covers most of the
+phonebook information and the other is to access the embedded filesystem
+in the phone.  
+
+<p>For CDMA phones, the latter protocol has a checksum for each command
+and response transmitted and received.  Some of the synchronization
+protocols also have the checksum such as the protocol used for CDMA
+LG phones.
+
+<p>If you encounter this error, then it means the data the phone
+thinks it sent is not the same as the data received by BitPim.
+BitPim detects the problem and immediately stops.  
+
+<p>The usual cause is in your cabling and where you plugged it in.
+You should ensure your cable is plugged directly into a port on
+your computer, not going through a hub.  Do not use cable extenders,
+gender changes or converters.  If you still have problems, use
+a different host port.  Try reseating your cable at the phone
+end.  If none of these solve the problem, then the problem may be
+your cable.
+
+#include "pageend.h"
