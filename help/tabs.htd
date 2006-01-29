@@ -1,0 +1,30 @@
+#include "pagestart.h"
+
+You will see a set of tabs like this:
+
+<p align=center><IMG SRC="tabs.png" BORDER="0">
+
+<p>Simply click in BitPim on the tab you want to work with.
+There is a more detailed description of each one below.
+
+<!-- CONTENTS BEGIN -->
+BEGIN_TOC
+    TOC_0
+    TOCITEM_0(Today,tab-today.htm)
+    TOCITEM_0(Phonebook,tab-phonebook.htm)
+    TOCITEM_0(Wallpaper,tab-wallpaper.htm)
+    TOCITEM_0(Ringers,tab-ringers.htm)
+    TOCITEM_0(Calendar,tab-calendar.htm)
+    TOCITEM_0(Memo,tab-memo.htm)
+    TOCITEM_0(Todo,tab-todo.htm)
+    TOCITEM_0(SMS,tab-sms.htm)
+    TOCITEM_0(Call History,tab-callhistory.htm)
+    TOCITEM_0(Play List,tab-playlist.htm)
+    TOCITEM_0(Filesystem,tab-filesystem.htm)
+    TOCITEM_0(Log,tab-log.htm)
+    TOCITEM_0(Protocol Log,tab-protocollog.htm)
+    ENDTOC_0
+END_TOC
+<!-- CONTENTS END -->
+
+#include "pageend.h"

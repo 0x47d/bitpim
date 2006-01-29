@@ -38,6 +38,7 @@ import wx
 import wx.gizmos as gizmos
 
 import database
+import helpids
 
 # module constants--------------------------------------------------------------
 playlist_key='playlist'
@@ -192,8 +193,8 @@ class PlaylistWidget(wx.Panel):
                                 self.OnMakeDirty)
         wx.EVT_LIST_DELETE_ITEM(self._pl_list, self._pl_list_w.GetId(),
                                 self.OnMakeDirty)
-##        wx.EVT_BUTTON(self, wx.ID_HELP,
-##                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_TODO))
+        wx.EVT_BUTTON(self, wx.ID_HELP,
+                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_PLAYLIST))
         # populate data
         self._populate()
         # turn on dirty flag
