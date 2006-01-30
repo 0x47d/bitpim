@@ -20,9 +20,9 @@ import wx
 import wx.lib.colourselect
 
 # my modules
+import brewcompressedimage
 import conversions
 import guiwidgets
-import brewcompressedimage
 import guihelper
 import common
 import helpids
@@ -294,8 +294,6 @@ class WallpaperView(guiwidgets.FileView):
         fi=self.GetFileInfo(file)
         if file.endswith(".mp4") or not os.path.isfile(file):
             return guihelper.getresourcefile('wallpaper.png'), wx.Image
-        if self.isBCI(file):
-            return file, lambda name: brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
         if fi:
             if fi.format=='AVI':
                 # return the 1st frame of the AVI file
@@ -378,11 +376,8 @@ class WallpaperView(guiwidgets.FileView):
                 # is to add a wx.ImageHandler for it. Unfortunately wx.Image_AddHandler
                 # is broken in the current wxPython, so . . .
                 fi=self.GetFileInfo(file)
-                if fi is not None and fi.format in ('LGBIT', 'BCI'):
-                    if fi.format=='LGBIT':
-                        img=conversions.convertfilelgbittobmp(file)
-                    else:
-                        img=brewcompressedimage.getimage(brewcompressedimage.FileInputStream(file))
+                if fi is not None and fi.format=='LGBIT':
+                    img=conversions.convertfilelgbittobmp(file)
                 else:
                     img=wx.Image(file)
                 if not img.Ok():

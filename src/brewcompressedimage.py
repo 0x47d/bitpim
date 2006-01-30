@@ -60,7 +60,7 @@ class Display(wx.Frame):
     """Used for the builtin tester"""
 
     def __init__(self, file, parent=None):
-        bmp=wx.BitmapFromImage(getimage(FileInputStream(file)))
+        bmp=wx.BitmapFromImage(wx.Image(file))
         
         wx.Frame.__init__(self, parent, -1, "Image Display")
 
@@ -101,6 +101,7 @@ class MyImage:
         if img is None:
             img=wx.EmptyImage(self.width, self.height)
         else:
+            img.Destroy()
             img.Create(self.width, self.height)
         img.SetData(self.data)
         return img
@@ -135,7 +136,6 @@ def getimage(stream, intoImage=None):
 
     # try to read the entire thing in one gulp
     data=stream.read()
-
     # save hex version for debugging
     # f=open(file+".hex", "w")
     # f.write(common.datatohexstring(data))
@@ -170,7 +170,6 @@ def getimage(stream, intoImage=None):
     assert readlsb(data[0x18:0x1a])==0
     # palette depth?
     bpp=readlsb(data[0x1a:0x1c])
-    
     # read the palettes
     offset=0x1c
     for _ in range(numpalettes):
@@ -221,23 +220,20 @@ def readlsb(data):
         shift+=8
     return res
 
-wx.BITMAP_TYPE_BCI=73
+BITMAP_TYPE_BCI=wx.BITMAP_TYPE_ANY+1
 
-class BCIImageHandler(wx.ImageHandler):
+class BCIImageHandler(wx.PyImageHandler):
 
     def __init__(self):
-        wx.ImageHandler.__init__(self)
-        self.m_name="BREW Compressed Image"
-        self.m_extension="bci"
-        self.m_type=wx.BITMAP_TYPE_BCI
-        self.m_mimetype="image/x-brewcompressedimage"
+        super(BCIImageHandler, self).__init__()
+        self.SetName("BREW Compressed Image")
+        self.SetExtension("bci")
+        self.SetType(BITMAP_TYPE_BCI)
+        self.SetMimeType("image/x-brewcompressedimage")
 
     def GetImageCount(self, _):
         # ::TODO:: return multiple images
         return 1
-
-    def GetMimeType(self):
-        return self.m_mimetype
 
     def LoadFile(self, image, stream, verbose, index):
         try:
@@ -246,11 +242,32 @@ class BCIImageHandler(wx.ImageHandler):
         except:
             return False
 
-try:
-    wx.Image_AddHandler(BCIImageHandler())
-except:
-    pass
-    
+    def SaveFile(self, image, stream, verbose):
+        raise NotImplementedError
+
+    def DoCanRead(self, stream):
+        # Check to see if the stream is a valid BCI stream,
+        return stream.read(4)=='BCI\x00'
+
+BITMAP_TYPE_LGBIT=BITMAP_TYPE_BCI+1
+class LGBITImageHandler(wx.PyImageHandler):
+    def __init__(self):
+        super(LGBITImageHandler, self).__init__()
+        self.SetName('LG BIT Image')
+        self.SetExtension('bit')
+        self.SetType(BITMAP_TYPE_LGBIT)
+
+    def GetImageCount(self, _):
+        return 1
+
+    def LoadFile(self, image, stream, verbose, index):
+        return False
+    def SaveFile(self, image, stream, verbose):
+        return False
+    def DoCanRead(self, stream):
+        return False
+
+wx.Image_AddHandler(BCIImageHandler())
 
 if __name__=='__main__':
     import sys
