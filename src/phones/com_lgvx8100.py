@@ -502,6 +502,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                             item.filename, True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
+                except ValueError:
+                    # firmware wouldn't let us read this file, just mark it then
+                    self.log('Failed to read file: '+item.filename)
+                    media[common.basename(item.filename)]=''
 
         results[key]=media
         return results
@@ -706,6 +710,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 if data is None:
                     assert merge 
                     continue # we are doing an add and don't have data for this existing entry
+                elif not data:
+                    self.log('Not writing file: '+filename)
+                    continue # data is blank, could be a result of not being able to do a previous get
                 if fstat is not None and len(data)==fstat['size']:
                     self.log("Not writing "+filename+" as a file of the same name and length already exists.")
                 else:

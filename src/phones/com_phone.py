@@ -143,6 +143,7 @@ class Phone:
     gettodo=NotImplemented
     getsms=NotImplemented
     getcallhistory=NotImplemented
+    getplaylist=NotImplemented
 
 class Profile:
 
