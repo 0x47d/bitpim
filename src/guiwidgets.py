@@ -373,6 +373,7 @@ class ConfigDialog(wx.Dialog):
                   'SCH-A310': 'com_samsungscha310',
                   'SPH-A460': 'com_samsungspha460',
                   'SPH-A620 (VGA1000)': 'com_samsungspha620',
+                  'SPH-A660 (VI660)': 'com_samsungspha660',
                   'SPH-A740': 'com_samsungspha740',
                   'SPH-A840': 'com_samsungspha840',
                   'SPH-N200': 'com_samsungsphn200',
