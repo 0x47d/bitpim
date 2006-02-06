@@ -150,6 +150,11 @@ class TodayMissedCallsEvent(BaseEvent):
         super(TodayMissedCallsEvent, self).__init__(Today_Section_Today,
                                               Today_Group_MissedCalls)
 
+# Request Today Event-----------------------------------------------------------
+def bind_request_event(evt_handler):
+    pubsub.subscribe(evt_handler, pubsub.REQUEST_TODAY_DATA)
+def send_request_event():
+    pubsub.publish(pubsub.REQUEST_TODAY_DATA)
 
 #-------------------------------------------------------------------------------
 class HyperLinkCtrl(hl.HyperLinkCtrl):
@@ -323,6 +328,7 @@ class TodayWidget(aggr.Display):
         self.UpdateItems()
         # register for pubsub events
         BaseEvent.bind(self.OnNewData)
+        pubsub.subscribe(self._OnMidnight, pubsub.MIDNIGHT)
 
     def GetSections(self):
         "Return a list of section headers"
@@ -353,3 +359,6 @@ class TodayWidget(aggr.Display):
         if msg is None:
             return
         self._populate(msg.data)
+
+    def _OnMidnight(self, _):
+        send_request_event()

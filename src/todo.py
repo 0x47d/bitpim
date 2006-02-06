@@ -498,6 +498,7 @@ class TodoWidget(wx.Panel):
         # register for Today selection
         today.bind_notification_event(self.OnTodaySelection,
                                       today.Today_Group_Todo)
+        today.bind_request_event(self.OnTodayRequest)
 
     def _clear(self):
         self._item_list.Clear()
@@ -546,6 +547,10 @@ class TodoWidget(wx.Panel):
                 today_event.append(_name, { 'key': k,
                                             'index': self._data_map[k] })
         today_event.broadcast()
+
+    def OnTodayRequest(self, _):
+        self._publish_today_events()
+        self._publish_thisweek_events()
 
     def OnTodaySelection(self, evt):
         if evt.data:

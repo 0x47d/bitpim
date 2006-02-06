@@ -936,6 +936,8 @@ class MainWindow(wx.Frame):
 
         # response to pubsub request
         pubsub.subscribe(self.OnReqChangeTab, pubsub.REQUEST_TAB_CHANGED)
+        # setup the midnight timer
+        self._setup_midnight_timer()
 
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
@@ -1724,7 +1726,26 @@ class MainWindow(wx.Frame):
         self.exceptiondialog.Destroy()
         self.exceptiondialog=None
         return True
-        
+
+    # midnight timer stuff
+    def _OnTimer(self, _):
+        self.MakeCall(Request(self._pub_timer),
+                      Callback(self._OnTimerReturn))
+
+    def _pub_timer(self):
+        pubsub.publish(pubsub.MIDNIGHT)
+
+    def _OnTimerReturn(self, exceptions, result):
+        self._timer.Start(((3600*24)+1)*1000, True)
+
+    def _setup_midnight_timer(self):
+        _today=datetime.datetime.now()
+        _timer_val=24*3600-_today.hour*3600-_today.minute*60-_today.second+1
+        self._timer=wx.Timer(self)
+        wx.EVT_TIMER(self, self._timer.GetId(), self._OnTimer)
+        self._timer.Start(_timer_val*1000, True)
+        print _timer_val,'seconds till midnight'
+
     # plumbing for the multi-threading
 
     def OnCallback(self, event):

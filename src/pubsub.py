@@ -50,6 +50,7 @@ TODAY_ITEM_SELECTED=('notification', 'todayitemselected') # a Today item was sel
 REQUEST_TODAY_DATA=('request', 'todaydata') # request data for Today page
 RESPONSE_TODAY_DATA=('response', 'todaydata') # reponse data for Today page
 NEW_DATA_AVAILABLE=('notification', 'dataavailable') # new data available
+MIDNIGHT=('notification', 'midnight')
 
 # MEDIA_NAME_CHANGED keys & types
 media_change_type='type'

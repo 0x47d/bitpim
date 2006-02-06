@@ -749,6 +749,8 @@ class Calendar(calendarcontrol.Calendar):
         pubsub.subscribe(self.OnMediaNameChanged, pubsub.MEDIA_NAME_CHANGED)
         today.bind_notification_event(self.OnTodayItem,
                                       today.Today_Group_Calendar)
+        today.bind_request_event(self.OnTodayRequest)
+        pubsub.subscribe(self.OnTodayButton, pubsub.MIDNIGHT)
 
     def OnPrintDialog(self, mainwindow, config):
         dlg=CalendarPrintDialog(self, mainwindow, config)
@@ -958,6 +960,10 @@ class Calendar(calendarcontrol.Calendar):
                                                 'entry': x })
         today_event.broadcast()
             
+    def OnTodayRequest(self, _):
+        self._publish_today_events()
+        self._publish_thisweek_events()
+
     def populate(self, dict):
         """Updates the internal data with the contents of C{dict['calendar']}"""
         if dict.get('calendar_version', None)==2:
