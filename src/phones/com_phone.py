@@ -14,6 +14,7 @@
 import common
 import commport
 import copy
+import field_color
 import re
 import sys
 import time
@@ -158,6 +159,8 @@ class Profile:
     MAX_RINGTONE_BASENAME_LENGTH=64
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ."
     DIALSTRING_CHARS="[^0-9PT#*]"
+
+    field_color_data=field_color.default_field_info
 
     # which usb ids correspond to us
     usbids=( 

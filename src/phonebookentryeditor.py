@@ -16,6 +16,7 @@ import database
 import nameparser
 import wallpaper
 import guihelper
+import field_color
 
 """The dialog for editing a phonebook entry"""
 
@@ -93,7 +94,10 @@ class RingtoneEditor(DirtyUIBase):
 
     def __init__(self, parent, _, has_type=True, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Ringtone"), wx.HORIZONTAL)
+
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "Ringtone"), 'ringtone')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
@@ -121,6 +125,10 @@ class RingtoneEditor(DirtyUIBase):
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
+
+    def __del__(self):
+        pubsub.unsubscribe(self.OnRingtoneUpdates)
+        super(RingtoneEditor, self).__del__()
 
     def OnRingtoneUpdates(self, msg):
         "Receives pubsub message with ringtone list"
@@ -218,7 +226,10 @@ class WallpaperEditor(DirtyUIBase):
     def __init__(self, parent, _, has_type=True, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
 
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Wallpaper"), wx.HORIZONTAL)
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "Wallpaper"),
+                                           'wallpaper')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
@@ -245,7 +256,11 @@ class WallpaperEditor(DirtyUIBase):
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
-        
+
+    def __del__(self):
+        pubsub.unsubscribe(self.OnWallpaperUpdates)
+        super(WallpaperEditor, self).__del__()
+
     def OnWallpaperUpdates(self, msg):
         "Receives pubsub message with wallpaper list"
         papers=msg.data[:]
@@ -380,6 +395,10 @@ class CategoryManager(wx.Dialog):
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
 
+    def __del__(self):
+        pubsub.unsubscribe(self.OnUpdateCategories)
+        super(CategoryManager, self).__del__()
+
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
         if self.curlist is None:
@@ -450,7 +469,10 @@ class CategoryEditor(DirtyUIBase):
 
     def __init__(self, parent, pos, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "Category"),
+                                           'category')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         self.categories=[self.unnamed]
         self.category=wx.ListBox(self, -1, choices=self.categories)
@@ -471,6 +493,10 @@ class CategoryEditor(DirtyUIBase):
             hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
         self.SetSizer(hs)
         hs.Fit(self)
+
+    def __del__(self):
+        pubsub.unsubscribe(self.OnUpdateCategories)
+        super(CategoryEditor, self).__del__()
 
     def OnManageCategories(self, _):
         dlg=CategoryManager(self)
@@ -517,7 +543,10 @@ class MemoEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         DirtyUIBase.__init__(self, parent)
 
-        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Memo"), wx.HORIZONTAL)
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "Memo"),
+                                           'memo')
+        vs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
         vs.Add(self.memo, 1, wx.EXPAND|wx.ALL, 5)
@@ -553,18 +582,34 @@ class NumberEditor(DirtyUIBase):
 
         DirtyUIBase.__init__(self, parent)
 
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Number details"), wx.HORIZONTAL)
+        _field_color_dict=field_color.build_field_info(self, 'number')
 
-        hs.Add(wx.StaticText(self, -1, "Type"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hs=wx.StaticBoxSizer(field_color.build_color_field(self,
+                                                           wx.StaticBox,
+                                                           (self, -1, "Number details"),
+                                                           'details',
+                                                           _field_color_dict),
+                             wx.HORIZONTAL)
+
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Type"),
+                                           'type', _field_color_dict)
+        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.type=wx.ComboBox(self, -1, "None", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
 
-        hs.Add(wx.StaticText(self, -1, "SpeedDial"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "SpeedDial"),
+                                           'speeddial', _field_color_dict)
+        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.speeddial=wx.TextCtrl(self, -1, "", size=(32,10))
         hs.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
 
-        hs.Add(wx.StaticText(self, -1, "Number"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Number"),
+                                           'number', _field_color_dict)
+        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.number=wx.TextCtrl(self, -1, "")
         hs.Add(self.number, 1, wx.EXPAND|wx.ALL, 5)
 
@@ -617,7 +662,10 @@ class EmailEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(EmailEditor, self).__init__(parent)
 
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Email Address"), wx.HORIZONTAL)
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, 'Email Address'),
+                                           'email')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         self.type=wx.ComboBox(self, self.ID_TYPE, "", choices=["", "Home", "Business"], style=wx.CB_READONLY)
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
@@ -661,7 +709,9 @@ class URLEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(URLEditor, self).__init__(parent)
 
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "URL"), wx.HORIZONTAL)
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "URL"), 'url')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         self.type=wx.ComboBox(self, self.ID_TYPE, "", choices=["", "Home", "Business"], style=wx.CB_READONLY)
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
@@ -709,21 +759,33 @@ class AddressEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(AddressEditor, self).__init__(parent)
 
-        _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Address Details"),
+        _fc_dict=field_color.build_field_info(self, 'address')
+        _hs=wx.StaticBoxSizer(field_color.build_color_field(self, wx.StaticBox,
+                                          (self, -1, "Address Details"),
+                                           'details', _fc_dict),
                               wx.HORIZONTAL)
         vs=wx.BoxSizer(wx.VERTICAL)
         hs=wx.BoxSizer(wx.HORIZONTAL)
-        hs.Add(wx.StaticText(self, -1, "Type"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hs.Add(field_color.build_color_field(self, wx.StaticText,
+                                             (self, -1, "Type"),
+                                             'type', _fc_dict),
+               0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.type=wx.ComboBox(self, self.ID_TYPE, "Home", choices=["Home", "Business"], style=wx.CB_READONLY)
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
-        hs.Add(wx.StaticText(self, -1, "Company"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hs.Add(field_color.build_color_field(self, wx.StaticText,
+                                             (self, -1, "Company"),
+                                             'company', _fc_dict),
+               0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.company=wx.TextCtrl(self, -1, "")
         hs.Add(self.company, 1, wx.EXPAND|wx.ALL, 5)
 
         gs=wx.FlexGridSizer(6,2,2,5)
 
         for name,desc in self.fieldinfos:
-            gs.Add(wx.StaticText(self, -1, desc), 0, wx.ALIGN_CENTRE)
+            gs.Add(field_color.build_color_field(self, wx.StaticText,
+                                                 (self, -1, desc),
+                                                 name, _fc_dict),
+                   0, wx.ALIGN_CENTRE)
             setattr(self, name, wx.TextCtrl(self, -1, ""))
             gs.Add(getattr(self,name), 1, wx.EXPAND)
 
@@ -779,24 +841,43 @@ class NameEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(NameEditor, self).__init__(parent)
 
-        _hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Name Details'),
+        _fc_dict=field_color.build_field_info(self, 'name')
+        _hs=wx.StaticBoxSizer(field_color.build_color_field(self,
+                                                            wx.StaticBox,
+                                                            (self, -1, 'Name Details'),
+                                                            'details', _fc_dict),
                               wx.HORIZONTAL)
         vs=wx.BoxSizer(wx.VERTICAL)
         hstop=wx.BoxSizer(wx.HORIZONTAL)
         hsbot=wx.BoxSizer(wx.HORIZONTAL)
-        hstop.Add(wx.StaticText(self, -1, "First"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hstop.Add(field_color.build_color_field(self, wx.StaticText,
+                                                (self, -1, "First"),
+                                                'first', _fc_dict),
+                  0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.first=wx.TextCtrl(self, -1, "")
         hstop.Add(self.first, 1, wx.EXPAND|wx.ALL, 5)
-        hstop.Add(wx.StaticText(self, -1, "Middle"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hstop.Add(field_color.build_color_field(self, wx.StaticText,
+                                                (self, -1, "Middle"),
+                                                'middle', _fc_dict),
+                  0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.middle=wx.TextCtrl(self, -1, "")
         hstop.Add(self.middle, 1, wx.EXPAND|wx.ALL, 5)
-        hstop.Add(wx.StaticText(self, -1, "Last"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hstop.Add(field_color.build_color_field(self, wx.StaticText,
+                                                (self, -1, "Last"),
+                                                'last', _fc_dict),
+                  0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.last=wx.TextCtrl(self, -1, "")
         hstop.Add(self.last, 1, wx.EXPAND|wx.ALL, 5)
-        hsbot.Add(wx.StaticText(self, -1, "Full"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hsbot.Add(field_color.build_color_field(self, wx.StaticText,
+                                                (self, -1, "Full"),
+                                                'full', _fc_dict),
+                  0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.full=wx.TextCtrl(self, -1, "")
         hsbot.Add(self.full, 4, wx.EXPAND|wx.ALL, 5)
-        hsbot.Add(wx.StaticText(self, -1, "Nickname"), 0, wx.ALIGN_CENTRE|wx.ALL,5)
+        hsbot.Add(field_color.build_color_field(self, wx.StaticText,
+                                                (self, -1, "Nickname"),
+                                                'nickname', _fc_dict),
+                  0, wx.ALIGN_CENTRE|wx.ALL,5)
         self.nickname=wx.TextCtrl(self, -1, "")
         hsbot.Add(self.nickname, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hstop, 0, wx.EXPAND|wx.ALL, 5)
@@ -834,12 +915,17 @@ class NameEditor(DirtyUIBase):
 class StorageEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(StorageEditor, self).__init__(parent)
-        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Storage Details"),
+        vs=wx.StaticBoxSizer(field_color.build_color_field(self,
+                                                           wx.StaticBox,
+                                                           (self, -1, "Storage Details"),
+                                                           'storage'),
                              wx.VERTICAL)
         hs=wx.BoxSizer(wx.HORIZONTAL)
-        hs.Add(wx.StaticText(self, -1, "Storage Option:"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self._storage=wx.ComboBox(self, -1, 'Phone',
-                                  choices=["Phone", "SIM"],
+        hs.Add(field_color.build_color_field(self, wx.StaticText,
+                                             (self, -1, "Storage Option:"),
+                                             'storage'),
+               0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._storage=wx.ComboBox(self, -1, 'Phone', choices=["Phone", "SIM"],
                                   style=wx.CB_READONLY)
         hs.Add(self._storage, 0, wx.EXPAND|wx.LEFT, 5)
         vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
@@ -1165,6 +1251,8 @@ class Editor(wx.Dialog):
     ID_ADD=wx.NewId()
     ID_DELETE=wx.NewId()
 
+    color_field_name='phonebook'
+
     # the tabs and classes within them
     tabsfactory=[
         ("Names", "names", NameEditor),
@@ -1194,6 +1282,7 @@ class Editor(wx.Dialog):
         """
         
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        field_color.get_color_info_from_profile(self)
         self._data_key=datakey
         if movement and datakey is None and __debug__:
             self.log('Movement and datakey is None')
@@ -1375,6 +1464,8 @@ class SingleFieldEditor(wx.Dialog):
         'wallpapers': ("Wallpapers", "wallpapers", WallpaperEditor),
         'ringtones': ("Ringtones", "ringtones", RingtoneEditor) }
 
+    color_field_name='phonebook'
+
     def __init__(self, parent, key):
         if not self.tabsfactory.has_key(key):
             raise KeyError
@@ -1382,6 +1473,8 @@ class SingleFieldEditor(wx.Dialog):
                                                 "Edit PhoneBook Entry",
                                                 size=(740,580),
                                                 style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        field_color.get_color_info_from_profile(self)
+
         self._key=key
         vs=wx.BoxSizer(wx.VERTICAL)
         _hbs=wx.BoxSizer(wx.HORIZONTAL)
