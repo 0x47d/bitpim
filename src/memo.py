@@ -358,6 +358,7 @@ class MemoWidget(wx.Panel):
         for w in self._w:
             w.Set(None)
             w.Enable(False)
+        self.Refresh()
 
     def _populate(self):
         # populate new data
