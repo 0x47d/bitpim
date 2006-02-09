@@ -15,8 +15,13 @@ which fields are not, and which fields are unknown (default).
 To use/enable this feature for your phone, define a dict value in your phone
 profile that specifies the applicability of various fields.  It's probably best
 if you copy the default_field_info dict to your phone profile and set
-appropriate values.  The value of each key can be either None (don't know),
-0 (not applicable), or >0 (number of entries this phone can have).
+appropriate values.  The value of each key can be either:
+None (don't know),
+True (applicable),
+False (not applicable),
+0 (not applicable),
+int>0 (number of entries this phone can have).
+
 The name of this dict is 'field_color_data'.  An example is included in module
 com_lgvx9800.
 
@@ -47,17 +52,14 @@ default_field_info={
         'storage': None,
         },
     'calendar': {
-        'general': {
-            'summary': None, 'location': None, 'allday': None,
-            'from': None, 'to': None, 'priority': None,
-            'alarm': None, 'vibrate': None,
-            },
+        'description': None, 'location': None, 'allday': None,
+        'start': None, 'end': None, 'priority': None,
+        'alarm': None, 'vibrate': None,
         'repeat': None,
         'memo': None,
         'category': None,
         'wallpaper': None,
         'ringtone': None,
-        'storage': None,
         },
     }
 
@@ -121,7 +123,7 @@ def color(widget, name, tree=None):
     _cnt=get_children_count(widget)
     if _val is None:
         return dunno_color
-    elif _cnt>_val:
+    elif _val is False or not isinstance(_val, bool) and _cnt>_val:
         return notapplicable_color
     else:
         return applicable_color
@@ -134,3 +136,10 @@ def build_color_field(widget, klass, args, name, tree=None):
     if _w:
         _w.SetForegroundColour(color(widget, name, tree))
     return _w
+
+def reload_color_info(widget, widgets):
+    get_color_info_from_profile(widget)
+    _fc_dict=build_field_info(widget, widget.color_field_name)
+    for (_w, name) in widgets:
+        _w.SetForegroundColour(color(_w, name, _fc_dict))
+

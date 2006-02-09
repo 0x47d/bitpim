@@ -98,7 +98,7 @@ class RingtoneEditor(DirtyUIBase):
         _box=field_color.build_color_field(self, wx.StaticBox,
                                            (self, -1, "Ringtone"), 'ringtone')
         hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
-
+        self.static_box=_box
         vs=wx.BoxSizer(wx.VERTICAL)
 
         self.preview=bphtml.HTMLWindow(self, -1)
@@ -230,6 +230,7 @@ class WallpaperEditor(DirtyUIBase):
                                            (self, -1, "Wallpaper"),
                                            'wallpaper')
         hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
+        self.static_box=_box
 
         vs=wx.BoxSizer(wx.VERTICAL)
 
@@ -547,6 +548,7 @@ class MemoEditor(DirtyUIBase):
                                            (self, -1, "Memo"),
                                            'memo')
         vs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
+        self.static_box=_box
 
         self.memo=wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE)
         vs.Add(self.memo, 1, wx.EXPAND|wx.ALL, 5)

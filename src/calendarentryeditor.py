@@ -19,11 +19,14 @@ import wx.lib.intctrl
 import wx.lib.scrolledpanel as scrolled
 
 import bpcalendar
+import field_color
 import helpids
 import phonebookentryeditor as pb_editor
 import pubsub
 import guihelper
 import guiwidgets
+
+widgets_list=[]
 
 class RepeatEditor(pb_editor.DirtyUIBase):
     _repeat_type= {
@@ -39,6 +42,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
     _monthly_option_index=2
     
     def __init__(self, parent, _):
+        global widgets_list
         pb_editor.DirtyUIBase.__init__(self, parent)
         # overall container
         self._main_bs=wx.BoxSizer(wx.VERTICAL)
@@ -47,11 +51,14 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self._repeat_option_rb = wx.RadioBox(
                 self, -1, "Repeat Types:", wx.DefaultPosition, wx.DefaultSize,
                 self._repeat_options, 1, wx.RA_SPECIFY_COLS)
+        widgets_list.append((self._repeat_option_rb, 'repeat'))
         wx.EVT_RADIOBOX(self, self._repeat_option_rb.GetId(), self.OnRepeatType)
         hbs_1.Add(self._repeat_option_rb, 0, wx.LEFT, 5)
         # daily options widgets
         self._option_bs=wx.BoxSizer(wx.VERTICAL)
-        vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Daily Options:'), wx.VERTICAL)
+        _box=wx.StaticBox(self, -1, 'Daily Options:')
+        widgets_list.append((_box, 'repeat'))
+        vbs=wx.StaticBoxSizer(_box, wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         self._dl_every_nday=wx.RadioButton(self, -1, 'Every ', style=wx.RB_GROUP)
         self._dl_every_nday.SetValue(True)
@@ -68,7 +75,9 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self._option_bs.Add(vbs, 0, wx.LEFT, 5)
         self._daily_option_bs=vbs
         # weekly options widgets
-        vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Weekly Options:'), wx.VERTICAL)
+        _box=wx.StaticBox(self, -1, 'Weekly Options:')
+        widgets_list.append((_box, 'repeat'))
+        vbs=wx.StaticBoxSizer(_box, wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, 'Every '),0, wx.LEFT, 0)
         self._wl_interval=wx.TextCtrl(self, -1, '1')
@@ -87,7 +96,9 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         self._option_bs.Add(vbs, 0, wx.LEFT, 5)
         self._weekly_option_bs=vbs
         # monthly option widgets
-        vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Monthly Options:'), wx.VERTICAL)
+        _box=wx.StaticBox(self, -1, 'Monthly Options:')
+        widgets_list.append((_box, 'repeat'))
+        vbs=wx.StaticBoxSizer(_box, wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         hbs.Add(wx.StaticText(self, -1, 'Every '),0, wx.LEFT, 0)
         self._ml_interval=wx.TextCtrl(self, -1, '1')
@@ -121,7 +132,9 @@ class RepeatEditor(pb_editor.DirtyUIBase):
         hbs_1.Add(self._option_bs, 0, wx.LEFT, 5)
         self._main_bs.Add(hbs_1, 0, wx.LEFT|wx.TOP, 5)
         # the exceptions list
-        hbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Excluded Dates:'), wx.HORIZONTAL)
+        _box=wx.StaticBox(self, -1, 'Excluded Dates:')
+        widgets_list.append((_box, 'repeat'))
+        hbs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
         self._exception_list=wx.ListBox(self, -1)
         hbs.Add(self._exception_list, 1, wx.LEFT|wx.TOP|wx.EXPAND, 5)
         exception_del=wx.Button(self, -1, 'Include')
@@ -279,7 +292,9 @@ class GeneralEditor(pb_editor.DirtyUIBase):
     _get_index=3
     _set_index=4
     _w_index=5
+    color_field_name='general'
     def __init__(self, parent, _):
+        global widgets_list
         # base clase
         pb_editor.DirtyUIBase.__init__(self, parent)
         # structure to hold all the widgets of this panel
@@ -302,6 +317,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         for n in self._fields:
             desc=n[self._label_index]
             t=wx.StaticText(self, -1, desc, style=wx.ALIGN_LEFT)
+            widgets_list.append((t, n[self._dict_key_index]))
             gs.Add(t)
             if desc=='Priority:':
                 c=wx.ComboBox(self, -1, "", (-1, -1), (-1, -1),
@@ -406,8 +422,12 @@ class CategoryEditor(pb_editor.DirtyUIBase):
     unnamed="Select:"
 
     def __init__(self, parent, pos):
+        global widgets_list
+        
         pb_editor.DirtyUIBase.__init__(self, parent)
-        hs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Category"), wx.HORIZONTAL)
+        _box=wx.StaticBox(self, -1, "Category")
+        widgets_list.append((_box, 'category'))
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
 
         self.categories=[]
         self.category=wx.ListBox(self, -1, choices=self.categories)
@@ -536,15 +556,17 @@ class Editor(wx.Dialog):
     _ringtones_page=5
     _last_page=6
     _items=[
-        ("General", None, GeneralEditor),
-        ("Repeat", 'repeat', RepeatEditor),
-        ("Notes", "notes", pb_editor.MemoEditor),
-        ("Categories", "categories", CategoryEditor),
-        ("Wallpapers", "wallpapers", pb_editor.WallpaperEditor),
-        ("Ringtones", "ringtones", pb_editor.RingtoneEditor),
+        ("General", None, GeneralEditor, None),
+        ("Repeat", 'repeat', RepeatEditor, None),
+        ("Notes", "notes", pb_editor.MemoEditor, 'memo'),
+        ("Categories", "categories", CategoryEditor, None),
+        ("Wallpapers", "wallpapers", pb_editor.WallpaperEditor, 'wallpaper'),
+        ("Ringtones", "ringtones", pb_editor.RingtoneEditor, 'ringtone'),
         ]
-    def __init__(self, parent):
+    color_field_name='calendar'
 
+    def __init__(self, parent):
+        global widgets_list
         wx.Dialog.__init__(self, parent, -1, 'Calendar Entry Editor',
                            wx.DefaultPosition,
                            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
@@ -593,12 +615,14 @@ class Editor(wx.Dialog):
         # right hand bit with all fields
         self._nb=wx.Notebook(self, -1)
         self._widgets=[]
-        for i, (name, key, klass) in enumerate(self._items):
+        for i, (name, key, klass, color_name) in enumerate(self._items):
             if name in ('Ringtones', 'Wallpapers'):
                 self._widgets.append(klass(self._nb, parent, False))
             else:
                 self._widgets.append(klass(self._nb, parent))
             self._nb.AddPage(self._widgets[i], name)
+            if color_name:
+                widgets_list.append((self._widgets[i].static_box, color_name))
             
         # buttons below fields
         self._delete_btn=wx.Button(self, self.ID_DELETE, "Delete")
@@ -648,6 +672,13 @@ class Editor(wx.Dialog):
         self.ignoredirty=False
         self.setdirty(False)
         guiwidgets.set_size("CalendarEntryEditor", self, 50, 1.5)
+        field_color.reload_color_info(self, widgets_list)
+        pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
+
+    def OnPhoneChanged(self, _):
+        # just reload the color info based on the new phone
+        field_color.reload_color_info(self, widgets_list)
+        self.Refresh()
 
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
