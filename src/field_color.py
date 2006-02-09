@@ -61,6 +61,13 @@ default_field_info={
         'wallpaper': None,
         'ringtone': None,
         },
+    'memo': {
+        'subject': None,
+        'date': None,
+        'secret': None,
+        'category': None,
+        'memo': None,
+        },
     }
 
 current_field_info=default_field_info
@@ -140,6 +147,7 @@ def build_color_field(widget, klass, args, name, tree=None):
 def reload_color_info(widget, widgets):
     get_color_info_from_profile(widget)
     _fc_dict=build_field_info(widget, widget.color_field_name)
+    print 'current_field_info',current_field_info
     for (_w, name) in widgets:
         _w.SetForegroundColour(color(_w, name, _fc_dict))
 

@@ -425,9 +425,8 @@ class CategoryEditor(pb_editor.DirtyUIBase):
         global widgets_list
         
         pb_editor.DirtyUIBase.__init__(self, parent)
-        _box=wx.StaticBox(self, -1, "Category")
-        widgets_list.append((_box, 'category'))
-        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
+        self.static_box=wx.StaticBox(self, -1, "Category")
+        hs=wx.StaticBoxSizer(self.static_box, wx.HORIZONTAL)
 
         self.categories=[]
         self.category=wx.ListBox(self, -1, choices=self.categories)
@@ -559,7 +558,7 @@ class Editor(wx.Dialog):
         ("General", None, GeneralEditor, None),
         ("Repeat", 'repeat', RepeatEditor, None),
         ("Notes", "notes", pb_editor.MemoEditor, 'memo'),
-        ("Categories", "categories", CategoryEditor, None),
+        ("Categories", "categories", CategoryEditor, 'category'),
         ("Wallpapers", "wallpapers", pb_editor.WallpaperEditor, 'wallpaper'),
         ("Ringtones", "ringtones", pb_editor.RingtoneEditor, 'ringtone'),
         ]

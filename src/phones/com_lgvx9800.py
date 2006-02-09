@@ -645,4 +645,11 @@ class Profile(parentprofile):
             'wallpaper': False,
             'ringtone': True,
             },
+        'memo': {
+            'subject': True,
+            'date': True,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
         }

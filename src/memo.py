@@ -58,9 +58,13 @@ import wx
 import bptime
 import calendarentryeditor as cal_editor
 import database
+import field_color
 import helpids
 import phonebookentryeditor as pb_editor
+import pubsub
 import today
+
+widgets_list=[]
 
 #-------------------------------------------------------------------------------
 class MemoDataObject(database.basedataobject):
@@ -194,6 +198,8 @@ class GeneralEditor(pb_editor.DirtyUIBase):
     _set_index=4
     _w_index=5
     def __init__(self, parent, _=None):
+        global widgets_list
+
         pb_editor.DirtyUIBase.__init__(self, parent)
         self._fields=[
             ['subject', 'Subject:', cal_editor.DVTextControl, None, None, None],
@@ -203,8 +209,10 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
         for n in self._fields:
-            gs.Add(wx.StaticText(self, -1, n[self._label_index],
-                                 style=wx.ALIGN_LEFT),0, wx.EXPAND|wx.BOTTOM, 5)
+            _txt=wx.StaticText(self, -1, n[self._label_index],
+                               style=wx.ALIGN_LEFT)
+            widgets_list.append((_txt, n[0]))
+            gs.Add(_txt, 0, wx.EXPAND|wx.BOTTOM, 5)
             w=n[self._class_index](self, -1)
             gs.Add(w, 0, wx.EXPAND|wx.BOTTOM, 5)
             n[self._w_index]=w
@@ -253,6 +261,8 @@ class GeneralEditor(pb_editor.DirtyUIBase):
 
 #-------------------------------------------------------------------------------
 class MemoWidget(wx.Panel):
+    color_field_name='memo'
+
     def __init__(self, mainwindow, parent):
         wx.Panel.__init__(self, parent, -1)
         self._main_window=mainwindow
@@ -269,15 +279,17 @@ class MemoWidget(wx.Panel):
         # the detailed info pane
         vbs1=wx.BoxSizer(wx.VERTICAL)
         self._items=(
-            (GeneralEditor, 0),
-            (cal_editor.CategoryEditor, 1),
-            (pb_editor.MemoEditor, 1)
+            (GeneralEditor, 0, None),
+            (cal_editor.CategoryEditor, 1, 'category'),
+            (pb_editor.MemoEditor, 1, 'memo')
             )
         self._w=[]
         for n in self._items:
             w=n[0](self, -1)
             vbs1.Add(w, n[1], wx.EXPAND|wx.ALL, 5)
             self._w.append(w)
+            if n[2]:
+                widgets_list.append((w.static_box, n[2]))
         hbs.Add(vbs1, 3, wx.EXPAND|wx.ALL, border=5)
         self._general_editor_w=self._w[0]
         self._cat_editor_w=self._w[1]
@@ -314,6 +326,14 @@ class MemoWidget(wx.Panel):
         # register for Today selection
         today.bind_notification_event(self.OnTodaySelection,
                                       today.Today_Group_Memo)
+        # color code editable labels
+        field_color.reload_color_info(self, widgets_list)
+        pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
+
+    def OnPhoneChanged(self, _):
+        # just reload the color info based on the new phone
+        field_color.reload_color_info(self, widgets_list)
+        self.Refresh()
 
     def _send_today_data(self):
         keys=self._data.keys()
