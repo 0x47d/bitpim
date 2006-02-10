@@ -474,6 +474,7 @@ class MemoWidget(wx.Panel):
     def _OnListBoxItem(self, evt):
         # an item was clicked on/selected
         self._populate_each(self._item_list.GetClientData(evt.GetInt()))
+        self.Refresh()
 
     def _OnSave(self, evt):
         # save the current changes

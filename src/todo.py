@@ -65,9 +65,12 @@ import wx.lib.scrolledpanel as scrolled
 import calendarentryeditor as cal_editor
 import database
 import helpids
+import field_color
 import phonebookentryeditor as pb_editor
 import pubsub
 import today
+
+widgets_list=[]
 
 #-------------------------------------------------------------------------------
 class TodoDataObject(database.basedataobject):
@@ -380,7 +383,10 @@ class GeneralEditor(pb_editor.DirtyUIBase):
     _set_index=4
     _w_index=5
     _flg_index=6
+
     def __init__(self, parent, _=None):
+        global widgets_list
+
         super(GeneralEditor, self).__init__(parent)
         self._fields=[
             ['summary', 'Summary:', cal_editor.DVTextControl, None, None, None, wx.EXPAND],
@@ -394,8 +400,10 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         gs=wx.FlexGridSizer(-1, 2, 5, 5)
         gs.AddGrowableCol(1)
         for n in self._fields:
-            gs.Add(wx.StaticText(self, -1, n[self._label_index],
-                                 style=wx.ALIGN_LEFT),0, wx.EXPAND|wx.BOTTOM, 0)
+            _txt=wx.StaticText(self, -1, n[self._label_index],
+                               style=wx.ALIGN_LEFT)
+            widgets_list.append((_txt, n[self._dict_key_index]))
+            gs.Add(_txt, 0, wx.EXPAND|wx.BOTTOM, 0)
             w=n[self._class_index](self, -1)
             gs.Add(w, 0, n[self._flg_index]|wx.BOTTOM, 5)
             n[self._w_index]=w
@@ -432,7 +440,11 @@ class GeneralEditor(pb_editor.DirtyUIBase):
 
 #-------------------------------------------------------------------------------
 class TodoWidget(wx.Panel):
+    color_field_name='todo'
+
     def __init__(self, mainwindow, parent):
+        global widgets_list
+
         super(TodoWidget, self).__init__(parent, -1)
         self._main_window=mainwindow
         self._data=self._data_map={}
@@ -448,15 +460,17 @@ class TodoWidget(wx.Panel):
         scrolled_panel=scrolled.ScrolledPanel(self, -1)
         vbs1=wx.BoxSizer(wx.VERTICAL)
         self._items=(
-            (GeneralEditor, 0),
-            (cal_editor.CategoryEditor, 1),
-            (pb_editor.MemoEditor, 1)
+            (GeneralEditor, 0, None),
+            (cal_editor.CategoryEditor, 1, 'category'),
+            (pb_editor.MemoEditor, 1, 'memo')
             )
         self._w=[]
         for n in self._items:
             w=n[0](scrolled_panel, -1)
             vbs1.Add(w, n[1], wx.EXPAND|wx.ALL, 5)
             self._w.append(w)
+            if n[2]:
+                widgets_list.append((w.static_box, n[2]))
         scrolled_panel.SetSizer(vbs1)
         scrolled_panel.SetAutoLayout(True)
         vbs1.Fit(scrolled_panel)
@@ -499,6 +513,14 @@ class TodoWidget(wx.Panel):
         today.bind_notification_event(self.OnTodaySelection,
                                       today.Today_Group_Todo)
         today.bind_request_event(self.OnTodayRequest)
+        # color coded labels
+        field_color.reload_color_info(self, widgets_list)
+        pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
+
+    def OnPhoneChanged(self, _):
+        # just reload the color info based on the new phone
+        field_color.reload_color_info(self, widgets_list)
+        self.Refresh()
 
     def _clear(self):
         self._item_list.Clear()
@@ -508,6 +530,7 @@ class TodoWidget(wx.Panel):
         for w in self._w:
             w.Set(None)
             w.Enable(False)
+        self.Refresh()
 
     def _publish_today_events(self):
         now=datetime.datetime.now()
@@ -672,6 +695,7 @@ class TodoWidget(wx.Panel):
     def _OnListBoxItem(self, evt):
         # an item was clicked on/selected
         self._populate_each(self._item_list.GetClientData(evt.GetInt()))
+        self.Refresh()
 
     def _OnSave(self, evt):
         # save the current changes

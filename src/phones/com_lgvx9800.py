@@ -652,4 +652,15 @@ class Profile(parentprofile):
             'category': False,
             'memo': True,
             },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
         }
