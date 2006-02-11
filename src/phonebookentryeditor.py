@@ -598,7 +598,7 @@ class NumberEditor(DirtyUIBase):
                                            'type', _field_color_dict)
         hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
-        self.type=wx.ComboBox(self, -1, "None", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
+        self.type=wx.ComboBox(self, -1, "Cell", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
         hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
 
         _txt=field_color.build_color_field(self, wx.StaticText,
@@ -633,7 +633,7 @@ class NumberEditor(DirtyUIBase):
         self.speeddial.SetValue(sd)
         self.number.SetValue(data.get("number", ""))
 
-        v=data.get("type", "none")
+        v=data.get("type", "cell")
         for i in range(len(self.choices)):
             if self.choices[i][1]==v:
                 self.type.SetSelection(i)
