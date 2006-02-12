@@ -330,10 +330,17 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             data.description=entry.desc_loc
             data.start=entry.start
             data.end=entry.end
-            self.setalarm(entry, data)
+            alarm_set=self.setalarm(entry, data)
             data.ringtone=0
+            if alarm_set:
+                if entry.ringtone=="No Ring" and not entry.vibrate:
+                    alarm_name="Low Beep Once"
+                else:
+                    alarm_name=entry.ringtone
+            else:# set alarm to "No Ring" gets rid of alarm icon on phone
+                alarm_name="No Ring"
             for i in dict['ringtone-index']:
-                if dict['ringtone-index'][i]['name']==entry.ringtone:
+                if dict['ringtone-index'][i]['name']==alarm_name:
                     data.ringtone=i
             # check for exceptions and add them to the exceptions list
             exceptions=0
@@ -419,6 +426,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
 
     def setalarm(self, entry, data):
         # vx8100 only allows certain repeat intervals, adjust to fit, it also stores an index to the interval
+        rc=True
         if entry.alarm>=2880:
             entry.alarm=2880
             data.alarmminutes=0
@@ -463,11 +471,12 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             data.alarmminutes=0x64
             data.alarmhours=0x64
             data.alarmindex_vibrate=1
+            rc=False
 
         # set the vibrate bit
         if data.alarmindex_vibrate > 1 and entry.vibrate==0:
             data.alarmindex_vibrate+=1
-        return
+        return rc
 
     my_model='VX8100'
 
