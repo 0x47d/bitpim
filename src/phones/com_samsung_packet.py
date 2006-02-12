@@ -1,7 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2004 Joe Pham <djpham@netzero.com>
-### Copyright (C) 2004-2005 Stephen Wood <saw@bitpim.org>
+### Copyright (C) 2004-2006 Stephen Wood <saw@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -295,12 +295,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # phone sets secret flag for every defined phone number
         res['flags']=[ {'secret': secret} ]
 
-        if entry.ringtone != 20:
+        if entry.ringtone != self.protocolclass.DEFAULT_RINGTONE:
             tone=self.serialsname+"Index_"+`entry.ringtone`
             res['ringtones']=[{'ringtone': tone, 'use': 'call'}]
             
         try:
-            if entry.wallpaper != 20:
+            if entry.wallpaper != self.protocolclass.DEFAULT_WALLPAPER:
                 tone=self.serialsname+"Index_"+`entry.wallpaper`
                 res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
 
@@ -345,7 +345,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                         reqhack=self.protocolclass.phonebookslotupdaterequest()
                         reqhack.entry=res[0].entry
                         reqhack.entry.url=""
-                        reqhack.entry.wallpaper=20
+                        reqhack.entry.ringtone=self.protocolclass.DEFAULT_RINGTONE
+                        reqhack.entry.wallpaper=self.protocolclass.DEFAULT_WALLPAPER
                         reqhack.entry.timestamp=[1900,1,1,0,0,0]
                         self.sendpbcommand(reqhack, self.protocolclass.phonebookslotupdateresponse)
                 else:
@@ -363,6 +364,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             slot=keys[i]
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=self.makeentry(pb[slot],data)
+            req.entry.ringtone=self.protocolclass.DEFAULT_RINGTONE
+            req.entry.wallpaper=self.protocolclass.DEFAULT_WALLPAPER
             if names[slot]==req.entry.name:
                 req.entry.birthday=birthdays[slot]
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
