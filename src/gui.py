@@ -393,6 +393,43 @@ class MySplashScreen(wx.SplashScreen):
         self.goforit()
         evt.Skip()
 
+###
+### Startup auto detect dialog
+###
+
+class StartupPhoneDetect(wx.SplashScreen):
+    def __init__(self):
+        bmp=guihelper.getbitmap("splashscreen")
+        self.drawnameandnumber(bmp)
+        wx.SplashScreen.__init__(self, bmp, wx.SPLASH_CENTRE_ON_SCREEN,
+                                0, None, -1)
+        self.Show()
+        wx.Yield()
+
+    def drawnameandnumber(self, bmp):
+        dc=wx.MemoryDC()
+        dc.SelectObject(bmp)
+        # detection message
+        x=58
+        y=127
+        str1="Phone detection is progress."
+        str2="Please wait..."
+        dc.SetTextForeground( wx.NamedColour("CYAN") )
+        dc.SetFont( self._gimmethedamnsizeirequested(15, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
+        w,h=dc.GetTextExtent(str1)
+        dc.DrawText(str1, x+10, y)
+        y+=h
+        dc.DrawText(str2, x+10, y)
+        # all done
+        dc.SelectObject(wx.NullBitmap)
+
+    def _gimmethedamnsizeirequested(self, ps, family, style, weight):
+        # on Linux we have to ask for bigger than we want
+        if guihelper.IsGtk():
+            ps=ps*1.6
+        font=wx.TheFontList.FindOrCreateFont(int(ps), family, style, weight)
+        return font
+
 ####
 #### Main application class.  Runs the event loop etc
 ####
@@ -653,6 +690,7 @@ class MainWindow(wx.Frame):
 
         self.database=None
         self._taskbar=None
+        self.__phone_detect_at_startup=False
 
         ### Status bar
 
@@ -819,14 +857,18 @@ class MainWindow(wx.Frame):
         if min(self.GetSize())<250:
             self.SetSize( (640, 480) )
 
-
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
         if self.configdlg.needconfig():
+            # run autodetect
             self.CloseSplashScreen()
-            if self.configdlg.ShowModal()!=wx.ID_OK:
-                self.OnExit()
-                return
+            spd=StartupPhoneDetect()
+            found=self.DetectPhoneAtStartup()
+            spd.Destroy()
+            if not found:
+                if self.configdlg.ShowModal()!=wx.ID_OK:
+                    self.OnExit()
+                    return
         self.configdlg.updatevariables()
         
         ### Set autosync settings dialog
@@ -1064,6 +1106,38 @@ class MainWindow(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
+    def DetectPhoneAtStartup(self):
+        "Called at startup to detect phone before main window is shown"
+        self.__phone_detect_at_startup=True
+        rc=False
+        r=None
+        try:
+            r=phone_detect.DetectPhone().detect()
+        except:
+            r=None
+        if r==None:
+            self.__owner_name=''
+            wx.MessageBox('No phone detected/recognized.\r\nYou will have to configure you phone manually.',
+                          'Phone Detection Failed.', wx.OK)
+        else:
+            self.__owner_name=self.__get_owner_name(r.get('phone_esn', None), style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP)
+            if self.__owner_name is None or len(self.__owner_name)==0:
+                self.__owner_name=''
+            else:
+                self.__owner_name+="'s"
+            self.config.Write("phonetype", r['phone_name'])
+            self.commportsetting=str(r['port'])
+            self.config.Write("lgvx4400port", r['port'])
+            self.phonemodule=__import__(r['phone_module'])
+            self.phoneprofile=self.phonemodule.Profile()
+            wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
+                                               r['phone_name'],
+                                               r['port']),
+                          'Phone Detection', wx.OK)
+            rc=True
+        self.__phone_detect_at_startup=False
+        return rc
+
     def OnDetectPhone(self, _):
         if wx.IsBusy():
             wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
@@ -1075,7 +1149,7 @@ class MainWindow(wx.Frame):
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         self.MakeCall(Request(self.wt.detectphone, using_port),
                       Callback(self.OnDetectPhoneReturn, check_auto_sync))
-    def __get_owner_name(self, esn):
+    def __get_owner_name(self, esn, style=wx.DEFAULT_DIALOG_STYLE):
         """ retrieve or ask user for the owner's name of this phone
         """
         if esn is None or not len(esn):
@@ -1088,7 +1162,7 @@ class MainWindow(wx.Frame):
             # not seen before
             dlg=guiwidgets.AskPhoneNameDialog(
                 self, 'A new phone has been detected,\n'
-                "Would you like to enter the owner's name:")
+                "Would you like to enter the owner's name:", style=style)
             r=dlg.ShowModal()
             if r==wx.ID_OK:
                 # user gave a name
@@ -1629,6 +1703,8 @@ class MainWindow(wx.Frame):
         self.GetStatusBar().progressmajor(pos, max, desc)
 
     def OnLog(self, str):
+        if self.__phone_detect_at_startup:
+            return
         str=common.strorunicode(str)
         self.lw.log(str)
         if self.lwdata is not None:

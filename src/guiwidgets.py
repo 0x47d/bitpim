@@ -2047,12 +2047,12 @@ class LogProgressDialog(wx.ProgressDialog):
         super(LogProgressDialog, self).Update(self.__progress_value, msgstr)
 
 class AskPhoneNameDialog(wx.Dialog):
-    def __init__(self, parent, message, caption="Enter phone owner's name"):
+    def __init__(self, parent, message, caption="Enter phone owner's name",style=wx.DEFAULT_DIALOG_STYLE):
         """ Ask a user to enter an owner's name of a phone.
         Similar to the wx.TextEntryDialog but has 3 buttons, Ok, No Thanks, and
         Maybe latter.
         """
-        super(AskPhoneNameDialog, self).__init__(parent, -1, caption)
+        super(AskPhoneNameDialog, self).__init__(parent, -1, caption, style=style)
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, message), 0, wx.ALL, 5)
         self.__text_ctrl=wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
