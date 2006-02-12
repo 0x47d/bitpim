@@ -903,7 +903,11 @@ class RealBrewProtocol2:
             file_cache.add(file, node.get('date', [0])[0], data)
         return data
 
-    def getfilesystem(self, dir="", recurse=0):
+    def listfiles(self, dir=''):
+        self.log("Listing files in dir: '"+dir+"'")
+        return self.getfilesystem(dir, recurse=0, directories=0)
+
+    def getfilesystem(self, dir="", recurse=0, directories=1, files=1):
         results={}
         self.log("Listing dir '"+dir+"'")
         req=p_brew.new_opendirectoryrequest()
@@ -930,14 +934,14 @@ class RealBrewProtocol2:
                     direntry=dir+"/"+res.entryname
                 else:
                     direntry=res.entryname
-                if res.type==0: # file
+                if files and res.type==0: # file
                     results[direntry]={ 'name': direntry, 'type': 'file',
                                     'size': res.size }
                     if res.date==0:
                         results[direntry]['date']=(0, "")
                     else:
                         results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
-                else: #==1 directory
+                elif directories and res.type: # directory
                     results[direntry]={ 'name': direntry, 'type': 'directory' }
                     if recurse>0:
                         dirs[count]=direntry
@@ -992,7 +996,7 @@ class BrewProtocol(RealBrewProtocol):
         elif __debug__ and getattr(self, "protocolclass", 0) and \
                 getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
             print '_set_new_brew', self.protocolclass
-##            self._set_new_brew(self.__class__)
+         ##   self._set_new_brew(self.__class__)
 
     def _update_base_class(self, klass):
         # update the RealBrewProtocol class to DebugBrewProtocol one.
