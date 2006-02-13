@@ -200,7 +200,7 @@ class LGIndexedMedia:
         g.readfrombuffer(buf)
         self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
         for i in g.items:
-            if i.index!=0xffff:
+            if i.index!=0xffff and len(i.name):
                 index[i.index]=i.name
         return index
         
@@ -383,7 +383,6 @@ class LGIndexedMedia:
         del results[mediakey] # done with it
         reindexfunction(results)
         return results
-
 
 class LGNewIndexedMedia:
     "Implements media for LG phones that use the new index format such as the VX7000/8000"
