@@ -344,6 +344,7 @@ class ConfigDialog(wx.Dialog):
     phonemodels={ 'LG-G4015 (AT&T)': 'com_lgg4015',
                   'LG-C2000 (Cingular)': 'com_lgc2000',
                   'LG-VX3200': 'com_lgvx3200',
+                  'LG-VX3300': 'com_lgvx3300',
                   'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
@@ -356,6 +357,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX8000 (Verizon Wireless)': 'com_lgvx8000',
                   'LG-VX8100 (Verizon Wireless)': 'com_lgvx8100',
                   'LG-VX9800 (Verizon Wireless)': 'com_lgvx9800',
+                  'LG-PM225 (Sprint)': 'com_lgpm225',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'MM-7400': 'com_sanyo7400',
@@ -465,6 +467,23 @@ class ConfigDialog(wx.Dialog):
             _row+=1
         else:
             self.taskbaricon=None
+
+        # whether or not to run autodetect at startup
+        gs.Add(wx.StaticText(self, -1, 'Autodetect at Startup'), pos=(_row,0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self.autodetect_start=wx.CheckBox(self, wx.NewId(),
+                                     'Detect phone at bitpim startup')
+        gs.Add(self.autodetect_start, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+
+        # whether or not to run autodetect at startup
+        gs.Add(wx.StaticText(self, -1, 'Detect on Connect'), pos=(_row,0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self.autodetect_connect=wx.CheckBox(self, wx.NewId(),
+                                     'Detect phone type when new device connected')
+        gs.Add(self.autodetect_connect, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
@@ -631,6 +650,8 @@ class ConfigDialog(wx.Dialog):
         self.startup.SetValue(self.mw.config.ReadInt("startwithtoday", 0))
         if self.taskbaricon:
             self.taskbaricon.SetValue(self.mw.config.ReadInt('taskbaricon', 0))
+        self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
+        self.autodetect_connect.SetValue(self.mw.config.ReadInt("autodetectconnect", 1))
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -681,6 +702,10 @@ class ConfigDialog(wx.Dialog):
             self.mw.config.WriteInt('taskbaricon', self.taskbaricon.GetValue())
         else:
             self.mw.config.WriteInt('taskbaricon', 0)
+        # startup autodetect option
+        self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
+        # connect autodetect option
+        self.mw.config.WriteInt('autodetectconnect', self.autodetect_connect.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
@@ -2047,12 +2072,12 @@ class LogProgressDialog(wx.ProgressDialog):
         super(LogProgressDialog, self).Update(self.__progress_value, msgstr)
 
 class AskPhoneNameDialog(wx.Dialog):
-    def __init__(self, parent, message, caption="Enter phone owner's name",style=wx.DEFAULT_DIALOG_STYLE):
+    def __init__(self, parent, message, caption="Enter phone owner's name"):
         """ Ask a user to enter an owner's name of a phone.
         Similar to the wx.TextEntryDialog but has 3 buttons, Ok, No Thanks, and
         Maybe latter.
         """
-        super(AskPhoneNameDialog, self).__init__(parent, -1, caption, style=style)
+        super(AskPhoneNameDialog, self).__init__(parent, -1, caption)
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, message), 0, wx.ALL, 5)
         self.__text_ctrl=wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)

@@ -859,16 +859,17 @@ class MainWindow(wx.Frame):
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
-        if self.configdlg.needconfig():
+        if self.configdlg.needconfig() or self.config.ReadInt('autodetectstart', 0):
             # run autodetect
             self.CloseSplashScreen()
             spd=StartupPhoneDetect()
-            found=self.DetectPhoneAtStartup()
+            self.DetectPhoneAtStartup()
             spd.Destroy()
-            if not found:
+            if self.configdlg.needconfig():
                 if self.configdlg.ShowModal()!=wx.ID_OK:
                     self.OnExit()
                     return
+
         self.configdlg.updatevariables()
         
         ### Set autosync settings dialog
@@ -1117,7 +1118,7 @@ class MainWindow(wx.Frame):
             r=None
         if r==None:
             self.__owner_name=''
-            wx.MessageBox('No phone detected/recognized.\r\nYou will have to configure you phone manually.',
+            wx.MessageBox('No phone detected/recognized.',
                           'Phone Detection Failed.', wx.OK)
         else:
             self.__owner_name=self.__get_owner_name(r.get('phone_esn', None), style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP)
@@ -1221,9 +1222,10 @@ class MainWindow(wx.Frame):
         if wx.IsBusy():
             # current phone operation ongoing, abort this
             return
-        # check the new device
-        check_auto_sync=auto_sync.UpdateOnConnect(self)
-        self.__detect_phone(name, check_auto_sync)
+        if self.config.ReadInt('autodetectconnect', 1):
+            # check the new device
+            check_auto_sync=auto_sync.UpdateOnConnect(self)
+            self.__detect_phone(name, check_auto_sync)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
