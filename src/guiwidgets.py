@@ -35,6 +35,7 @@ import wx.lib.newevent
 
 # my modules
 import common
+import version
 import helpids
 import comscan
 import usbscan
@@ -1712,7 +1713,7 @@ class ExceptionDialog(wx.Dialog):
         
     def addexception(self, exception):
         s=StringIO.StringIO()
-        s.write("An unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
+        s.write("BitPim version: "+version.versionstring+"-"+version.vendor+"\nAn unexpected exception has occurred.\nPlease see the help for details on what to do.\n\n")
         if hasattr(exception, 'gui_exc_info'):
             s.write(common.formatexception(exception.gui_exc_info))
         else:
