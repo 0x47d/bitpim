@@ -357,7 +357,6 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX8000 (Verizon Wireless)': 'com_lgvx8000',
                   'LG-VX8100 (Verizon Wireless)': 'com_lgvx8100',
                   'LG-VX9800 (Verizon Wireless)': 'com_lgvx9800',
-                  'LG-PM225 (Sprint)': 'com_lgpm225',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'MM-7400': 'com_sanyo7400',
@@ -2072,12 +2071,12 @@ class LogProgressDialog(wx.ProgressDialog):
         super(LogProgressDialog, self).Update(self.__progress_value, msgstr)
 
 class AskPhoneNameDialog(wx.Dialog):
-    def __init__(self, parent, message, caption="Enter phone owner's name"):
+    def __init__(self, parent, message, caption="Enter phone owner's name", style=wx.DEFAULT_DIALOG_STYLE):
         """ Ask a user to enter an owner's name of a phone.
         Similar to the wx.TextEntryDialog but has 3 buttons, Ok, No Thanks, and
         Maybe latter.
         """
-        super(AskPhoneNameDialog, self).__init__(parent, -1, caption)
+        super(AskPhoneNameDialog, self).__init__(parent, -1, caption, style=style)
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, message), 0, wx.ALL, 5)
         self.__text_ctrl=wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
