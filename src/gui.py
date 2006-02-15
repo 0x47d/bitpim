@@ -1131,10 +1131,6 @@ class MainWindow(wx.Frame):
             self.config.Write("lgvx4400port", r['port'])
             self.phonemodule=__import__(r['phone_module'])
             self.phoneprofile=self.phonemodule.Profile()
-            wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
-                                               r['phone_name'],
-                                               r['port']),
-                          'Phone Detection', wx.OK)
             rc=True
         self.__phone_detect_at_startup=False
         return rc
@@ -1145,10 +1141,10 @@ class MainWindow(wx.Frame):
                          "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
             return
         self.__detect_phone()
-    def __detect_phone(self, using_port=None, check_auto_sync=0):
+    def __detect_phone(self, using_port=None, check_auto_sync=0, delay=0):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
-        self.MakeCall(Request(self.wt.detectphone, using_port),
+        self.MakeCall(Request(self.wt.detectphone, using_port, delay),
                       Callback(self.OnDetectPhoneReturn, check_auto_sync))
     def __get_owner_name(self, esn, style=wx.DEFAULT_DIALOG_STYLE):
         """ retrieve or ask user for the owner's name of this phone
@@ -1222,10 +1218,10 @@ class MainWindow(wx.Frame):
         if wx.IsBusy():
             # current phone operation ongoing, abort this
             return
-        if self.config.ReadInt('autodetectconnect', 1):
-            # check the new device
-            check_auto_sync=auto_sync.UpdateOnConnect(self)
-            self.__detect_phone(name, check_auto_sync)
+        delay=self.config.ReadInt('autodetectconnectdelay', 3)
+        # check the new device
+        check_auto_sync=auto_sync.UpdateOnConnect(self)
+        self.__detect_phone(name, check_auto_sync, delay)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -2041,10 +2037,10 @@ class WorkerThread(WorkerThreadFramework):
             getattr(self.commphone, 'getphoneinfo')(phone_info)
             return phone_info
 
-    def detectphone(self, using_port=None):
+    def detectphone(self, using_port=None, delay=0):
         self.clearcomm()
+        time.sleep(delay)
         return phone_detect.DetectPhone(self).detect(using_port)
-
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):

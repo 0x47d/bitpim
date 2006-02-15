@@ -475,14 +475,6 @@ class ConfigDialog(wx.Dialog):
         gs.Add(self.autodetect_start, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
 
-        # whether or not to run autodetect at startup
-        gs.Add(wx.StaticText(self, -1, 'Detect on Connect'), pos=(_row,0),
-               flag=wx.ALIGN_CENTER_VERTICAL)
-        self.autodetect_connect=wx.CheckBox(self, wx.NewId(),
-                                     'Detect phone type when new device connected')
-        gs.Add(self.autodetect_connect, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
-        _row+=1
-
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
@@ -650,7 +642,6 @@ class ConfigDialog(wx.Dialog):
         if self.taskbaricon:
             self.taskbaricon.SetValue(self.mw.config.ReadInt('taskbaricon', 0))
         self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
-        self.autodetect_connect.SetValue(self.mw.config.ReadInt("autodetectconnect", 1))
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -703,8 +694,6 @@ class ConfigDialog(wx.Dialog):
             self.mw.config.WriteInt('taskbaricon', 0)
         # startup autodetect option
         self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
-        # connect autodetect option
-        self.mw.config.WriteInt('autodetectconnect', self.autodetect_connect.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         self.mw.EnsureDatabase(path, oldpath)
