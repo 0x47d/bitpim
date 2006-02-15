@@ -345,7 +345,6 @@ class ConfigDialog(wx.Dialog):
     phonemodels={ 'LG-G4015 (AT&T)': 'com_lgg4015',
                   'LG-C2000 (Cingular)': 'com_lgc2000',
                   'LG-VX3200': 'com_lgvx3200',
-                  'LG-VX3300': 'com_lgvx3300',
                   'LG-VX4400': 'com_lgvx4400',
                   'LG-VX4500': 'com_lgvx4500',
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
