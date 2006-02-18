@@ -44,6 +44,7 @@ import wx.lib.scrolledpanel as scrolled
 
 # BitPim modules
 import database
+import guiwidgets
 import phonenumber
 import pubsub
 import today
@@ -245,6 +246,18 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
                              self._display_by_number)
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
+        # data date adjuster
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.read_only=False
+        self.historical_date=None
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
+                                                 'Historical Data Status:'),
+                                    wx.VERTICAL)
+        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        # main list
         self._item_list=wx.TreeCtrl(self, wx.NewId())
         vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
         self._root=self._item_list.AddRoot('Call History')
@@ -417,6 +430,8 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         self._publish_today_data()
             
     def OnDelete(self, _):
+        if self.read_only:
+            return
         sel_idx=self._item_list.GetSelection()
         if not sel_idx.Ok():
             return
@@ -430,10 +445,15 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
 
     def getdata(self, dict, want=None):
         dict[self._data_key]=copy.deepcopy(self._data)
-    def populate(self, dict):
+    def populate(self, dict, force=False):
+        if self.read_only and not force:
+            # historical data, bail
+            return
         self._data=dict.get(self._data_key, {})
         self._populate()
     def _save_to_db(self, dict):
+        if self.read_only:
+            return
         db_rr={}
         for k,e in dict.items():
             db_rr[k]=CallHistoryDataobject(e)
@@ -441,12 +461,18 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         self._main_window.database.savemajordict(self._data_key, db_rr)
 
     def populatefs(self, dict):
-        self._save_to_db(dict.get(self._data_key, {}))
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Call History Data',
+                             style=wx.OK|wx.ICON_ERROR)
+        else:
+            self._save_to_db(dict.get(self._data_key, {}))
         return dict
-    def getfromfs(self, result):
+    def getfromfs(self, result, timestamp=None):
         dict=self._main_window.database.\
                    getmajordictvalues(self._data_key,
-                                      callhistoryobjectfactory)
+                                      callhistoryobjectfactory,
+                                      at_time=timestamp)
         r={}
         for k,e in dict.items():
             ce=CallHistoryEntry()
@@ -455,6 +481,11 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         result.update({ self._data_key: r})
         return result
     def merge(self, dict):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Call History Data',
+                             style=wx.OK|wx.ICON_ERROR)
+            return
         d=dict.get(self._data_key, {})
         l=[e for k,e in self._data.items()]
         for k,e in d.items():
@@ -462,3 +493,32 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
                 self._data[e.id]=e
         self._save_to_db(self._data)
         self._populate()
+
+    def OnHistoricalData(self):
+        """Display current or historical data"""
+        if self.read_only:
+            current_choice=guiwidgets.HistoricalDataDialog.Historical_Data
+        else:
+            current_choice=guiwidgets.HistoricalDataDialog.Current_Data
+        dlg=guiwidgets.HistoricalDataDialog(self,
+                                            current_choice=current_choice,
+                                            historical_date=self.historical_date,
+                                            historical_events=\
+                                            self._main_window.database.getchangescount(self._data_key))
+        if dlg.ShowModal()==wx.ID_OK:
+            self._main_window.OnBusyStart()
+            current_choice, self.historical_date=dlg.GetValue()
+            r={}
+            if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                self.read_only=False
+                msg_str='Current Data'
+                self.getfromfs(r)
+            else:
+                self.read_only=True
+                msg_str='Historical Data as of %s'%\
+                         str(wx.DateTimeFromTimeT(self.historical_date))
+                self.getfromfs(r, self.historical_date)
+            self.populate(r, True)
+            self.historical_data_label.SetLabel(msg_str)
+            self._main_window.OnBusyEnd()
+        dlg.Destroy()
