@@ -743,14 +743,14 @@ class Profile(parentprofile):
     WALLPAPER_WIDTH=160
     WALLPAPER_HEIGHT=120
     MAX_WALLPAPER_BASENAME_LENGTH=32
-    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ ."
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
     WALLPAPER_CONVERT_FORMAT="jpg"
 
     # the 8100 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
    
     MAX_RINGTONE_BASENAME_LENGTH=32
-    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ ."
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
 
     # there is an origin named 'aod' - no idea what it is for except maybe
     # 'all other downloads'
