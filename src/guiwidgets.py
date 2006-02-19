@@ -357,6 +357,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX8000 (Verizon Wireless)': 'com_lgvx8000',
                   'LG-VX8100 (Verizon Wireless)': 'com_lgvx8100',
                   'LG-VX9800 (Verizon Wireless)': 'com_lgvx9800',
+                  'LG-PM225 (Sprint)': 'com_lgpm225',
                   'LG-TM520': 'com_lgtm520',
                   'LG-VX10': 'com_lgtm520',
                   'MM-7400': 'com_sanyo7400',
