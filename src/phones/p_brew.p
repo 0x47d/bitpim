@@ -17,6 +17,11 @@ from prototypes import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+new_fileopen_mode_read=0
+new_fileopen_mode_write=0x41
+new_fileopen_flag_existing=0
+new_fileopen_flag_create=1
+
 import com_brew
 
 %}
@@ -365,9 +370,4 @@ setfileattrresponse=responseheader
 new_mkdirresponse=new_responseheader
 new_rmdirresponse=new_responseheader
 new_rmfileresponse=new_responseheader
-
-new_fileopen_mode_read=0
-new_fileopen_mode_write=0x41
-new_fileopen_flag_existing=0
-new_fileopen_flag_create=1
 %}

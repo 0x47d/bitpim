@@ -350,7 +350,7 @@ class ConfigDialog(wx.Dialog):
                   'LG-VX4600 (Telus Mobility)': 'com_lgvx4600',
                   'LG-VX4650 (Verizon Wireless)': 'com_lgvx4650',
                   'LG-VX5200 (Verizon Wireless)': 'com_lgvx5200',
-                  'LG-lX5450 (Alltel)': 'com_lglx5450',
+                  'LG-LX5450 (Alltel)': 'com_lglx5450',
                   'LG-VX6000': 'com_lgvx6000',
                   'LG-VX6100': 'com_lgvx6100',
                   'LG-VX7000': 'com_lgvx7000',
