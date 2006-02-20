@@ -24,6 +24,7 @@ import wx.lib.scrolledpanel as scrolled
 
 # BitPim modules
 import database
+import guiwidgets
 import phonebookentryeditor as pb_editor
 import phonenumber
 import pubsub
@@ -382,6 +383,17 @@ class SMSWidget(wx.Panel):
         self._data=self._canned_data={}
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
+        # data date adjuster
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self.read_only=False
+        self.historical_date=None
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
+                                                 'Historical Data Status:'),
+                                    wx.VERTICAL)
+        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # the notebook with the tabs
         self._sms=FolderPage(self)
         # Event Handling
@@ -400,10 +412,17 @@ class SMSWidget(wx.Panel):
         self._sms.publish_today_data()
 
     def OnSaveCannedMsg(self, _):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                          'Cannot Save SMS Data',
+                          style=wx.OK|wx.ICON_ERROR)
+            return
         self._data, self._canned_data=self._sms.Get()
         self._save_to_db(canned_msg_dict=self._canned_data)
 
     def OnDelete(self, _):
+        if self.read_only:
+            return
         if self._sms.delete_selection(self._data):
             self._save_to_db(sms_dict=self._data)
 
@@ -418,13 +437,18 @@ class SMSWidget(wx.Panel):
     def get_data(self):
         return self._data
 
-    def populate(self, dict):
+    def populate(self, dict, force=False):
+        if self.read_only and not force:
+            return
+        if not self.read_only:
+            self._canned_data=sms.CannedMsgEntry()
+            self._canned_data.set({ self._canned_data_key: dict.get(self._canned_data_key, [])})
         self._data=dict.get(self._data_key, {})
-        self._canned_data=sms.CannedMsgEntry()
-        self._canned_data.set({ self._canned_data_key: dict.get(self._canned_data_key, [])})
         self._populate()
 
     def _save_to_db(self, sms_dict=None, canned_msg_dict=None):
+        if self.read_only:
+            return
         if sms_dict is not None:
             db_rr={}
             for k, e in sms_dict.items():
@@ -439,16 +463,22 @@ class SMSWidget(wx.Panel):
             self._main_window.database.savemajordict(self._canned_data_key,
                                                       db_rr)
     def populatefs(self, dict):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                          'Cannot Save SMS Data',
+                          style=wx.OK|wx.ICON_ERROR)
+            return
         canned_msg=sms.CannedMsgEntry()
         canned_msg.set({ self._canned_data_key: dict.get(self._canned_data_key, [])})
         self._save_to_db(sms_dict=dict.get(self._data_key, []),
                           canned_msg_dict=canned_msg)
         return dict
 
-    def getfromfs(self, result):
+    def getfromfs(self, result, timestamp=None):
         # read data from the database
         sms_dict=self._main_window.database.\
-                   getmajordictvalues(self._data_key, sms.smsobjectfactory)
+                   getmajordictvalues(self._data_key, sms.smsobjectfactory,
+                                      at_time=timestamp)
         r={}
         for k,e in sms_dict.items():
             ce=sms.SMSEntry()
@@ -468,6 +498,11 @@ class SMSWidget(wx.Panel):
     def merge(self, dict):
         # merge this data with our data
         # the merge criteria is simple: reject if msg_id's are same
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                          'Cannot Save SMS Data',
+                          style=wx.OK|wx.ICON_ERROR)
+            return
         existing_id=[e.msg_id for k,e in self._data.items()]
         d=dict.get(self._data_key, {})
         for k,e in d.items():
@@ -479,4 +514,33 @@ class SMSWidget(wx.Panel):
         # populate the display and save the data
         self._populate()
         self._save_to_db(sms_dict=self._data,
-                          canned_msg_dict=self._canned_data)
+                         canned_msg_dict=self._canned_data)
+
+    def OnHistoricalData(self):
+        """Display current or historical data"""
+        if self.read_only:
+            current_choice=guiwidgets.HistoricalDataDialog.Historical_Data
+        else:
+            current_choice=guiwidgets.HistoricalDataDialog.Current_Data
+        dlg=guiwidgets.HistoricalDataDialog(self,
+                                            current_choice=current_choice,
+                                            historical_date=self.historical_date,
+                                            historical_events=\
+                                            self._main_window.database.getchangescount(self._data_key))
+        if dlg.ShowModal()==wx.ID_OK:
+            self._main_window.OnBusyStart()
+            current_choice, self.historical_date=dlg.GetValue()
+            r={}
+            if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                self.read_only=False
+                msg_str='Current Data'
+                self.getfromfs(r)
+            else:
+                self.read_only=True
+                msg_str='Historical Data as of %s'%\
+                         str(wx.DateTimeFromTimeT(self.historical_date))
+                self.getfromfs(r, self.historical_date)
+            self.populate(r, True)
+            self.historical_data_label.SetLabel(msg_str)
+            self._main_window.OnBusyEnd()
+        dlg.Destroy()
