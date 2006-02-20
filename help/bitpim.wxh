@@ -1,0 +1,3864 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
+  <header>
+    <long name="name_counter">287</long>
+    <string name="html_path">""</string>
+    <string name="title">"BitPim"</string>
+    <string name="author">"Roger Binns"</string>
+    <string name="description">""</string>
+    <long name="doc_count">238</long>
+    <long name="use-preprocessor">1</long>
+    <long name="use-c-style-comments">0</long>
+    <long name="auto-generate-filenames">1</long>
+    <string name="quote-symbol">"\"</string>
+    <string name="custom-preprocessor-options">""</string>
+    <double name="version">1.1700</double>
+    <string name="page-header">"&lt;HTML&gt;
+&lt;head&gt;&lt;title&gt;_HELP_TITLE&lt;/title&gt;&lt;/head&gt;
+
+&lt;BODY TOPMARGIN=4 BGCOLOR=#FFFFFF TEXT=#000000 VLINK=#000000 LINK=#000000 ALINK=#000000&gt;
+&lt;FONT FACE=&quot;Arial, Lucida, Helvetica&quot;&gt;
+
+&lt;TABLE WIDTH=&quot;100%&quot; ALIGN=CENTER CELLPADDING=1 CELLSPACING=0&gt;
+&lt;TR&gt;
+&lt;TD WIDTH=&quot;100%&quot; ALIGN=CENTER&gt;
+#ifdef _HELP_INDEX_FILE
+&lt;A HREF=\&quot;_HELP_INDEX_FILE\&quot;&gt;Contents&lt;/A&gt;
+#endif
+
+#ifdef _HELP_PARENT_FILE
+&lt;A HREF=\&quot;_HELP_PARENT_FILE\&quot;&gt;Up&lt;/A&gt;
+#endif
+
+#ifdef _HELP_PREVIOUS_FILE
+&lt;A HREF=\&quot;_HELP_PREVIOUS_FILE\&quot;&gt;Previous&lt;/A&gt;
+#endif
+
+#ifdef _HELP_NEXT_FILE
+&lt;A HREF=\&quot;_HELP_NEXT_FILE\&quot;&gt;Next&lt;/A&gt;
+#endif
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;TR&gt;
+
+&lt;!-- A narrow row representing the horizontal rule --&gt;
+&lt;TD COLSPAN=2 HEIGHT=2 BGCOLOR=&quot;#C0C0C0&quot;&gt;
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+&lt;H2&gt;_HELP_TITLE&lt;/H2&gt;
+"</string>
+    <string name="page-footer">"&lt;/FONT&gt;&lt;/BODY&gt;&lt;/HTML&gt;
+"</string>
+    <string name="page-header-single-page-formats">"&lt;A NAME=\&quot;_TOPIC_NAME\&quot;&gt;&lt;/a&gt;
+&lt;H2&gt;_HELP_TITLE&lt;/H2&gt;
+"</string>
+    <string name="page-footer-single-page-formats">"&lt;!-- PegHelp --&gt;
+"</string>
+    <string name="document-header-htp">"&lt;HTML&gt;
+&lt;HEAD&gt;
+%KEYWORDS%
+&lt;TITLE&gt;%TITLE%&lt;/TITLE&gt;
+&lt;META HTTP-EQUIV=&quot;Htm-Help&quot; Content=&quot;%FILENAME%#Main_Contents&quot;&gt;
+
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+"</string>
+    <string name="document-footer-htp">"&lt;/BODY&gt;
+&lt;/HTML&gt;
+"</string>
+    <string name="document-header-html">"&lt;HTML&gt;&lt;HEAD&gt;&lt;/HEAD&gt;
+&lt;BODY&gt;
+"</string>
+    <string name="document-footer-html">"&lt;/BODY&gt;
+&lt;/HTML&gt;
+"</string>
+    <long name="use-page-header-footer">0</long>
+    <string name="single-page-filename">""</string>
+    <string name="html-encoding">"iso-8859-1"</string>
+    <long name="chm-contents-encoding">0</long>
+    <long name="chm-contents-language">2057</long>
+  </header>
+  <data>
+    <document>
+      <string name="title">""</string>
+      <string name="type">"data-document"</string>
+      <string name="filename">""</string>
+      <string name="icon-name">""</string>
+      <long name="is-transient">0</long>
+      <long name="owns-file">1</long>
+      <long name="title-mode">0</long>
+      <long name="locked">0</long>
+    </document>
+  </data>
+
+  <documents>
+    <document>
+      <string name="title">"Root"</string>
+      <string name="type">"root-document"</string>
+      <string name="filename">""</string>
+      <string name="icon-name">"project"</string>
+      <long name="is-transient">1</long>
+      <long name="owns-file">1</long>
+      <long name="title-mode">0</long>
+      <long name="locked">0</long>
+      <document>
+        <string name="title">"Help Files"</string>
+        <string name="type">"html-document"</string>
+        <string name="filename">"doc-0003.htn"</string>
+        <string name="icon-name">"helproot"</string>
+        <long name="is-transient">1</long>
+        <long name="owns-file">1</long>
+        <long name="title-mode">0</long>
+        <long name="locked">1</long>
+        <string name="created">"16/10/2003"</string>
+        <document>
+          <string name="title">"Welcome"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"welcome.htd"</string>
+          <string name="icon-name">"htmldoc"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <long name="is-folder">0</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">1</long>
+          <string name="topic-name">"ID_WELCOME"</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+        </document>
+        <document>
+          <string name="title">"Tour"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"tour-master.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"20/10/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">"ID_TOUR"</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"What does BitPim do?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tour-overview.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What do I need?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tour-prerequisites.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What do I do first?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tour-gettingdata.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Editing your data"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tour-edit.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Sending your changes to the phone"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tour-saving.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"Troubleshooting"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"troubleshooting.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"4/11/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"Ports/Serial communications"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"trouble-serial.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Linux Issues"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"trouble-linux-issues.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"12/12/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"Reference"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"reference-top.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"20/10/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"Dialog boxes"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"dialogs.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Settings"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"ref-settings.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"20/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_SETTINGS_DIALOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Comm Port Settings"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"ref-commsettingsdialog.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"21/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_COMMSETTINGS_DIALOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"File Contents View"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"ref-hexviewdialog.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"26/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_HEXVIEW_DIALOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Restore Files"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-restore.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"3/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_RESTOREDIALOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Get Phone Data"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-getphonedata.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_GET_PHONE_DATA"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Send Phone Data"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-sendphonedata.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_SEND_PHONE_DATA"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Editing Calendar Events"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"editingcalendarevents.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_EDITING_CALENDAR_EVENTS"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Merging phonebook entries"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-mergingphonebookentries.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"20/10/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_DLG_PBMERGEENTRIES"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Audio Conversion"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-audioconversion.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"15/3/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_DLG_AUDIOCONVERT"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Calendar Import"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-calendarimport.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"10/4/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_DLG_CALENDAR_IMPORT"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Image Preview"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"dialog-imagepreview.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_DLG_IMAGEPREVIEW"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Tabs"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"tabs.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Today"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-today.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_TODAY"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Phonebook"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-phonebook.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_PHONEBOOK"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Wallpaper"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-wallpaper.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_WALLPAPER"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Ringers"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-ringers.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_RINGERS"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Calendar"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-calendar.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_CALENDAR"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Memo"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-memo.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/5/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_MEMO"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Todo"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-todo.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_TODO"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"SMS"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-sms.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_SMS"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Call History"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-callhistory.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_CALLHISTORY"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Play List"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-playlist.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_PLAYLIST"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Filesystem"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-filesystem.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_FILESYSTEM"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Log"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-log.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_LOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Protocol Log"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"tab-protocollog.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"28/10/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_TAB_PROTOCOLLOG"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Howtos"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"howtos.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/11/2003"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Backups"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-backups.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Multiple Users/Data Directories"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-multipleusers.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Import Calendar Data"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howtos-calendarimport.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"10/4/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">"ID_HOWTOS_CALENDAR_IMPORT"</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Import Outlook Notes/Tasks"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howtos-importoutlooknotes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"3/3/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Add Ringtones"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-addringtones.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"9/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Add Images"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-addimages.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"9/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Set category, ringtone, or wallpaper to multiple contacts"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howtos-group-edit.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/3/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"USB"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"hoto-usbintro.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/3/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Linux USB Setup"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-linuxusb.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/3/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Mac USB Setup"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-macusb.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Windows USB Setup"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"howto-windowsusb.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Vendor and Product ids"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"ref-usbids.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"17/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"BitPim Internals"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"bitpim-internals.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/3/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"How BitPim stores data"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"internals-data-storage.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Phone Protocols"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"internals-protocols.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Working with the code"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"internals-code.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+        </document>
+        <document>
+          <string name="title">"Errors"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"errors.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"24/10/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"Device Needs Attention"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-deviceneedsattention.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_DEVICE_NEEDS_ATTENTION"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Failed to open device"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-failedtoopendevice.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_FAILED_TO_OPEN_DEVICE"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"No associated programs"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-nomimeopencommand.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_NO_MIME_OPEN"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Failed to execute external command"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-mimeexecfailed.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_MIME_EXEC_FAILED"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Failed to automatically detect port"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-failedtoautodetectport.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_FAILED_TO_AUTODETECT_PORT"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"An exception occurred"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-exception.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"26/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_EXCEPTION_DIALOG"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Invalid Image File"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"error-invalidimagefile.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"1/11/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_INVALID_FILE_MESSAGE"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Zipfile corrupted"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-zipfilecorrupted.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/11/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_ZIPFILE_CORRUPTED"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"A Zipfile is required"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"error-zipfilerequired.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/11/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_NOT_A_ZIPFILE"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Failed to find PureVoice converter"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"error-nopvconv.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/3/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_NO_PVCONV"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Phonebook busy on phone"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"error-phonebookbusy.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"13/5/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_PHONEBOOKBUSY"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Data Communications Error"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"errors-datacomms.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"27/3/2006"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_COMMSDATAERROR"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"Phones"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"phones.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"28/10/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"Phone features supported"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-featuressupported.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"19/5/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What phones do the developers have?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-developer.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"17/7/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Audiovox CDM8900"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-audiovoxcdm8900.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/5/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"LG C2000"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgc2000.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"12/3/2006"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgc2000-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"12/3/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgc2000-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"12/3/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG G4015"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgg4015.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"12/12/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgg4015-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"12/12/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgg4015-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"12/12/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgg4015-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/12/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG PM225"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgpm225.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"19/2/2006"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgpm225-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"19/2/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-3200"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx3200.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"26/7/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx3200-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"26/7/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx3200-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"26/7/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx3200-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"26/7/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-4400"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx4400.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lg4400-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"4/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lg4400-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"4/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"vx4400-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"4/11/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-4500"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx4500.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/7/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx4500-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/7/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-lgvx4500-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/7/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-lgvx4500-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/7/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-4650"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx4650.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgvx4650-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgvx4650-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-5200"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx5200.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx5200-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx5200-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-6000"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx6000.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/3/2003"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lg6000-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lg6000-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lg6000-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"5/3/2003"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-6100"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx6100.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/3/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgvx6100-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgvx6100-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"lgvx6100-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-7000"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx7000.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"19/2/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx7000-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"19/2/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-lgvx7000-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"19/2/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-8000"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx8000.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"1/8/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx8000-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"1/8/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx8000-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"1/8/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-8100"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx8100.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/10/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx8100-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/10/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx8100-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/10/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx8100-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"13/2/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG VX-9800"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx9800.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/2/2005"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx9800-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/2/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx9800-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/2/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx9800-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/2/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Samsung Phones"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-samsung.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/2/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-samsung-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/2/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-samsung-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/2/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Model Specific Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-samsung-model-specific-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"16/2/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Sanyo Phones"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-sanyo.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"25/3/2004"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-sanyo-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"25/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-sanyo-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"25/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Model Specific Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phones-sanyo-model-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"25/3/2004"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Toshiba VM-4050"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-toshiba_vm4050.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/3/2006"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-toshiba_vm4050-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/3/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"Other Phones"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-other.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"BitFling"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"bitfling.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"12/6/2004"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">"ID_BITFLING"</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"Configuring BitFling"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"bitfling-configure.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"12/6/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Configuring BitPim to use BitFling"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"bitpim-bitfling-configure.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"12/6/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Security Considerations"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"bitfling-security.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"26/6/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"Frequently Asked Questions"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"faq.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"3/9/2004"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"My phone is not in the list"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-phonenotlisted.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/9/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Which features will BitPim support of my phone?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-phonefeaturessupport.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/9/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"When will you support my phone?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-phonesupport.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/9/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"I get a Brew File Locked exception"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-brewfilelockedexception.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/9/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What are the memory limits of my phone"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-limits.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/3/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Why do you do this stupid thing with my phone?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-stupidformat.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/9/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"I get an IntegrityCheckFailed exception on my LG phone"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-lg-integritycheckfailed.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/5/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_LG_INTEGRITYCHECKFAILED"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"How do I bypass the Image Preview/Conversion Dialog?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-bypassimagepreview.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/11/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"I do not have the Send Phone Data memu item?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-donthavesendphonedata.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/3/2006"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"About BitPim"</string>
+          <string name="type">"text-editor-document"</string>
+          <string name="filename">"about.htd"</string>
+          <string name="icon-name">"htmlfolder"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"28/10/2003"</string>
+          <long name="is-folder">1</long>
+          <long name="link-icon-to-page">1</long>
+          <long name="is-visible-in-contents">1</long>
+          <long name="is-default-page">0</long>
+          <string name="topic-name">""</string>
+          <long name="use-header-footer">1</long>
+          <long name="page-break">1</long>
+          <document>
+            <string name="title">"RPI Wireless"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"misc-rpiwireless.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"15/3/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">0</long>
+            <long name="is-visible-in-contents">0</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"License and Warranty"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"licenseandwarranty.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"3rd party components and licenses"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"3rdparty.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Upgrading"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"upgrading.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/11/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_UPGRADING"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"BitPim versioning scheme"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"versionscheme.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/8/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Version History"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"versionhistory.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_VERSION_HISTORY"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Contributing to BitPim"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"contributing.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Future Plans"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"futureplans.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Contacts"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"contacts.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Support"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"support.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_HELPSUPPORT"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"No support on bitpim-user"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"bitpim-user-no-support.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"3/11/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"Credits"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"credits.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+        </document>
+      </document>
+      <document>
+        <string name="title">"Resources"</string>
+        <string name="type">"html-document"</string>
+        <string name="filename">"doc-0004.htn"</string>
+        <string name="icon-name">"pushpin"</string>
+        <long name="is-transient">1</long>
+        <long name="owns-file">1</long>
+        <long name="title-mode">0</long>
+        <long name="locked">1</long>
+        <string name="created">"16/10/2003"</string>
+        <document>
+          <string name="title">"blank.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"blank.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"26/10/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"previous.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"previous.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"parent.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"parent.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"nextitem.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"nextitem.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"4/11/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"contents.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"contents.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"next.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"next.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"screenshots"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">"doc-0020.txt"</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"16/10/2003"</string>
+          <document>
+            <string name="title">"tabs.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"tabs.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/10/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screenshot-settingsdialog.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screenshot-settingsdialog.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"exceptiondialog.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"exceptiondialog.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"deviceneedsattention.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"deviceneedsattention.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"28/10/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-editget.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-editget.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-getdata.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-getdata.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-statusbar.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-statusbar.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-comportsettings.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-comportsettings.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-datasend.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-datasend.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-datasendchoices.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-datasendchoices.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-filecontentshex.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-filecontentshex.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-restorefiles.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-restorefiles.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-phonebooktab.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-phonebooktab.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"restoredialog.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"restoredialog.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-wallpapertab.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-wallpapertab.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"5/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-ringerstab.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-ringerstab.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-filesystem.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-filesystem.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-filesysdirmenu.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-filesysdirmenu.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-filesysfilemenu.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-filesysfilemenu.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-logtab.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-logtab.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-protocollog.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-protocollog.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-failedtoopencomms.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-failedtoopencomms.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-failedtoautodetectport.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-failedtoautodetectport.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-invalidimagefile.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-invalidimagefile.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-isnotavalidzip.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-isnotavalidzip.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"screen-repeatingedit.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-repeatingedit.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"import phonebook"</string>
+            <string name="type">"html-folder-document"</string>
+            <string name="filename">""</string>
+            <string name="icon-name">"folder"</string>
+            <long name="is-transient">1</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"20/10/2004"</string>
+            <document>
+              <string name="title">"screen-importpbmergecolours.jpg"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-importpbmergecolours.jpg"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"20/10/2004"</string>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-importphonebook.jpg"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-importphonebook.jpg"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"20/10/2004"</string>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-importpb-menu.jpg"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-importpb-menu.jpg"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"20/10/2004"</string>
+              <long name="zoom-level">100</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"screen-nopvconv.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-nopvconv.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"16/3/2005"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"calendar"</string>
+            <string name="type">"html-folder-document"</string>
+            <string name="filename">""</string>
+            <string name="icon-name">"folder"</string>
+            <long name="is-transient">1</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"10/4/2005"</string>
+            <document>
+              <string name="title">"screen-editingcalendarevent1.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent1.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent2.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent2.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent3.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent3.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent4.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent4.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent5.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent5.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent6.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent6.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevent7.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevent7.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-calendartab.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-calendartab.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+            <document>
+              <string name="title">"screen-editingcalendarevents.png"</string>
+              <string name="type">"image-document"</string>
+              <string name="filename">"screen-editingcalendarevents.png"</string>
+              <string name="icon-name">"image"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <long name="zoom-level">100</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"screen-memotab.png"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"screen-memotab.png"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/5/2005"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"vx4400"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">"doc-0086.txt"</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"4/11/2003"</string>
+          <document>
+            <string name="title">"cable-vx4400-usb.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-vx4400-usb.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"cable-vx4400-usb2serial.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-vx4400-usb2serial.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"vx4400-using-downloaded.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"vx4400-using-downloaded.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"4/11/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"scp4900"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">"doc-0130.txt"</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"6/3/2003"</string>
+          <document>
+            <string name="title">"cable-sanyo4900-usb.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-sanyo4900-usb.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/3/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"cable-sanyo4900-usb2.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-sanyo4900-usb2.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/3/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"sanyo4900-poweroff.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"sanyo4900-poweroff.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/3/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"sanyo4900-scarymessage.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"sanyo4900-scarymessage.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/3/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"sanyo4900.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"sanyo4900.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/3/2003"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"sanyo stuff"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">"doc-0145.txt"</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"8/5/2004"</string>
+          <document>
+            <string name="title">"cable-samsungvga1000-usb.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-samsungvga1000-usb.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"cable-sanyo-usb-futuredial.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-sanyo-usb-futuredial.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"cable-sanyo-usb-rpiwireless.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"cable-sanyo-usb-rpiwireless.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"sanyo5500.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"sanyo5500.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"sanyo8100.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"sanyo8100.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"vx6000"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">"doc-0148.txt"</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"13/5/2004"</string>
+          <document>
+            <string name="title">"vx6000-cable.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"vx6000-cable.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"13/5/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+          <document>
+            <string name="title">"futuredial-19-usb2serial.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"futuredial-19-usb2serial.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"vx4500"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">""</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"7/7/2004"</string>
+          <document>
+            <string name="title">"vx4500-vmo-cable.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"vx4500-vmo-cable.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/7/2004"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+        <document>
+          <string name="title">"screen-importphonebook_1.jpg"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"screen-importphonebook_1.jpg"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"20/10/2004"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"screen-importpbmergecolours_1.jpg"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"screen-importpbmergecolours_1.jpg"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"20/10/2004"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"screen-importpb-menu_1.jpg"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"screen-importpb-menu_1.jpg"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"20/10/2004"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"dialog-audioconvert.png"</string>
+          <string name="type">"image-document"</string>
+          <string name="filename">"dialog-audioconvert.png"</string>
+          <string name="icon-name">"image"</string>
+          <long name="is-transient">0</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"15/3/2005"</string>
+          <long name="zoom-level">100</long>
+        </document>
+        <document>
+          <string name="title">"LG stuff"</string>
+          <string name="type">"html-folder-document"</string>
+          <string name="filename">""</string>
+          <string name="icon-name">"folder"</string>
+          <long name="is-transient">1</long>
+          <long name="owns-file">1</long>
+          <long name="title-mode">0</long>
+          <long name="locked">0</long>
+          <string name="created">"1/8/2005"</string>
+          <document>
+            <string name="title">"vx7000-cable.jpg"</string>
+            <string name="type">"image-document"</string>
+            <string name="filename">"vx7000-cable.jpg"</string>
+            <string name="icon-name">"image"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"1/8/2005"</string>
+            <long name="zoom-level">100</long>
+          </document>
+        </document>
+      </document>
+    </document>
+  </documents>
+
+</anthemion-project>
