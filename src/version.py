@@ -12,9 +12,9 @@
 import time
 
 name="BitPim"
-version="0.8.08"
-vendor="official"
-##vendor="Development"
+version="0.8.09"
+##vendor="official"
+vendor="Development"
 release=0  # when rereleases of the same version happen, this gets incremented
 testver=0  # value of zero is non-test build
 extrainfo="" # More gunk should it be test version
