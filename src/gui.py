@@ -595,7 +595,7 @@ class MainApp(wx.App):
                               guihelper.ID_HELP_UPDATE))
 
     def CheckDetectPhone(self):
-        if self.config.ReadInt('autodetectstart', 0):
+        if self.config.ReadInt('autodetectstart', 0) or self.frame.needconfig:
             self.frame.AddPendingEvent(
                 wx.PyCommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED,
                                   guihelper.ID_EDITDETECT))
@@ -830,11 +830,7 @@ class MainWindow(wx.Frame):
 
         ### Is config set?
         self.configdlg=guiwidgets.ConfigDialog(self, self)
-        if self.configdlg.needconfig():
-            self.CloseSplashScreen()
-            if self.configdlg.ShowModal()!=wx.ID_OK:
-                self.OnExit()
-                return
+        self.needconfig=self.configdlg.needconfig()
         self.configdlg.updatevariables()
         
         ### Set autosync settings dialog
@@ -1114,8 +1110,11 @@ class MainWindow(wx.Frame):
         if self.HandleException(exception): return
         if r is None:
             self.__owner_name=''
-            wx.MessageBox('No phone detected/recognized',
-                          'Phone Detection Failed', wx.OK)
+            _dlg=wx.MessageDialog(self, 'No phone detected/recognized.\nRun Settings?',
+                                  'Phone Detection Failed', wx.YES_NO)
+            if _dlg.ShowModal()==wx.ID_YES:
+                wx.CallAfter(self.OnEditSettings)
+            _dlg.Destroy()
         else:
             self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
             if self.__owner_name is None:
