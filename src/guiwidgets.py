@@ -77,6 +77,7 @@ class LogWindow(wx.Panel):
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
         wx.EVT_IDLE(self, self.OnIdle)
+        wx.EVT_SHOW(self, self.OnShow)
         self.outstandingtext=StringIO.StringIO()
 
         wx.EVT_KEY_UP(self.tb, self.OnKeyUp)
@@ -86,6 +87,15 @@ class LogWindow(wx.Panel):
 
     def OnSelectAll(self, _):
         self.tb.SetSelection(-1, -1)
+
+    def OnShow(self, show):
+        if show.GetShow():
+            wx.CallAfter(self.CleanupView)
+
+    def CleanupView(self):
+        self.tb.SetInsertionPoint(0)
+        self.tb.SetInsertionPointEnd()
+        self.tb.Refresh()
 
     def OnIdle(self,_):
         if self.outstandingtext.tell():
