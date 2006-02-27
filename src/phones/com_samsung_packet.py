@@ -39,9 +39,13 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     # value such as 19800106T000000
     # if it does support end-datetime, set this to None
     __cal_end_datetime_value=None
-    __cal_alarm_values={0: 10, 1: 30, 2: 60, 3: 0, 4: -1 }
+    __cal_alarm_values={0: 10, 1: 30, 2: 60, 3: -1, 4: 0 }
     __cal_max_name_len=32
     _cal_max_events_per_day=9
+
+    builtinringtones=()
+
+    builtinimages=()
     
     def __init__(self, logtarget, commport):
         "Call all the contructors and sets initial modes"
@@ -528,9 +532,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         req=self.protocolclass.eventupdaterequest()
         l = self.protocolclass.NUMCALENDAREVENTS
         for c in cal:
-            if cal_cnt >= l:
-                # sent max events, stop
-                break
             # Save this entry to phone
             # self.log('Item %d' %k)
             
@@ -538,14 +539,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             req.slot=cal_cnt
 
             # start date time
-            print "Start ",c.start
+            #print "Start ",c.start
             req.start=list(c.start)+[0]
 
             # end date time
             if self.__cal_end_datetime_value is None:
                 # valid end-datetime
                 req.end=list(c.end)+[0]
-                print "End ",c.end
+                #print "End ",c.end
             else:
                 # no end-datetime, set to start-datetime
                 req.end=req.start
@@ -553,20 +554,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             # time stamp
             req.timestamp=list(time.localtime(time.time())[0:6])
 
-            # Approximate the alarm value
-            alarm=c.alarm
-            vals=self.__cal_alarm_values.values()
-            vals.sort()
-            vals.reverse()
-            normalized_alarm=-1
-            for m in vals:
-                if alarm>=m:
-                    normalized_alarm=m
-                    break
-            for alarm_index in self.__cal_alarm_values.keys():
-                if normalized_alarm==self.__cal_alarm_values[alarm_index]:
-                    break
-            req.alarm=alarm_index
+            #print "Alarm ",c.alarm
+            req.alarm=c.alarm
 
             # Name, check for bad char & proper length
             #name=c.description.replace('"', '')
@@ -909,7 +898,7 @@ class Profile(com_phone.Profile):
 
 class Samsung_Calendar:
     _cal_alarm_values={
-        '0': -1, '1': 0, '2': 10, '3': 30, '4': 60 }
+        10: 0, 30: 1, 60: 2, -1: 3, 0: 4 }
     
     def __init__(self, calendar_entry, new_date=None):
         self._start=self._end=self._alarm=self._desc=None
@@ -923,14 +912,14 @@ class Samsung_Calendar:
         self._end=cal_entry.end
         self._desc=cal_entry.description
         # approximate the alarm value
-        self._alarm='0'
+        self._alarm=0
         alarm=cal_entry.alarm
         _keys=self._cal_alarm_values.keys()
         _keys.sort()
         _keys.reverse()
         for k in _keys:
-            if alarm>=self._cal_alarm_values[k]:
-                self._alarm=k
+            if alarm>=k:
+                self._alarm=self._cal_alarm_values[k]
                 break
 
     def __lt__(self, rhs):
