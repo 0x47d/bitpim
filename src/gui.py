@@ -59,7 +59,7 @@ import phone_media_codec
 import hexeditor
 import today
 import pubsub
-import com_brew
+from phones import com_brew
 import auto_sync
 import playlist
 
@@ -1125,7 +1125,7 @@ class MainWindow(wx.Frame):
             self.commportsetting=str(r['port'])
             self.wt.clearcomm()
             self.config.Write("lgvx4400port", r['port'])
-            self.phonemodule=__import__(r['phone_module'])
+            self.phonemodule=__import__('phones.'+r['phone_module'], globals(), locals(), ['Profile'])
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
             self.SetPhoneModelStatus()

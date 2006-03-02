@@ -396,7 +396,6 @@ class ConfigDialog(wx.Dialog):
                   'SK6100 (Pelephone)' : 'com_sk6100', 
                   'VM4050 (Sprint)' : 'com_toshibavm4050',
                   'VI-2300': 'com_sanyo2300',
-                  'LG-VI5225 (STI-Mobile)': 'com_lgvi5225',
                   'Other CDMA phone': 'com_othercdma',
                   }
 
@@ -545,7 +544,7 @@ class ConfigDialog(wx.Dialog):
         # w=self.mw.config.ReadInt("combrowsewidth", 640)
         # h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
-        dlg=CommPortDialog(self, __import__(self.phonemodels[self.phonebox.GetValue()]), defaultport=self.commbox.GetValue(), sashposition=p)
+        dlg=CommPortDialog(self, __import__('phones.'+self.phonemodels[self.phonebox.GetValue()], globals(), locals(), ['Profile']), defaultport=self.commbox.GetValue(), sashposition=p)
         # dlg.SetSize(wx.Size(w,h))
         # dlg.Centre()
         res=dlg.ShowModal()
@@ -683,7 +682,7 @@ class ConfigDialog(wx.Dialog):
         self.mw.commparams=commparm
         # phone model
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
-        self.mw.phonemodule=__import__(self.phonemodels[self.phonebox.GetValue()])
+        self.mw.phonemodule=__import__('phones.'+self.phonemodels[self.phonebox.GetValue()], globals(), locals(), ['Profile'])
         self.mw.phoneprofile=self.mw.phonemodule.Profile()
         pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
         #  bitfling

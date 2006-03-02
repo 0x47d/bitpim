@@ -44,7 +44,7 @@ def generate_phone_features():
     models.sort()
     r={}
     for model in models:
-        module=__import__(pm[model])
+        module=__import__('phones.'+pm[model], globals(), locals(), ['Profile'])
         # check for Profile._supportedsyncs
         support_sync=[(x[0], x[1]) for x in module.Profile._supportedsyncs]
         d={}
