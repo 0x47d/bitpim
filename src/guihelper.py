@@ -296,7 +296,14 @@ _ourart={
     "ART_ADD_TODO": "add_todo",
     "ART_DEL_TODO": "delete_todo",
     "ART_ADD_SMS": "add_sms",
-    "ART_DEL_SMS": "delete_sms"
+    "ART_DEL_SMS": "delete_sms",
+    "ART_DATAGETPHONE": "datagetphone",
+    "ART_DATASENDPHONE": "datasendphone",
+    "ART_AUTOSYNCEXECUTE": "autosyncexecute",
+    "ART_HELPCONTENTS": "helpcontents",
+    "ART_EDITPHONEINFO": "editphoneinfo",
+    "ART_EDITDETECT": "editdetect",
+    "ART_EDITSETTINGS": "editsettings"
     }
 
 # populate namespace

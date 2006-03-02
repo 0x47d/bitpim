@@ -409,6 +409,9 @@ class AutoSyncSettingsDialog(wx.Dialog):
         self.sync_frequency.SetValue(int(self.settings.sync_frequency))
         return
 
+    def IsConfigured(self):
+        return self.settings.caltype!='None'
+
     def updatevariables(self):
         self.mw.auto_save_dict=self.settings
 

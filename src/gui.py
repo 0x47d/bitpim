@@ -677,7 +677,6 @@ class MainWindow(wx.Frame):
         ### Menubar
 
         menuBar = wx.MenuBar()
-        self.SetMenuBar(menuBar)
         menu = wx.Menu()
         # menu.Append(guihelper.ID_FILENEW,  "&New", "Start from new")
         # menu.Append(guihelper.ID_FILEOPEN, "&Open", "Open a file")
@@ -749,7 +748,6 @@ class MainWindow(wx.Frame):
         menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View filesystem", "View filesystem on the phone")
         menuBar.Append(menu, "&View")
-        
 
         menu=wx.Menu()
         if guihelper.IsMac():
@@ -772,28 +770,45 @@ class MainWindow(wx.Frame):
             menu.AppendSeparator()
             menu.Append(guihelper.ID_HELPABOUT, "&About", "Display program information")
         menuBar.Append(menu, "&Help");
+        self.SetMenuBar(menuBar)
 
         ### toolbar
-        self.tb=self.CreateToolBar(wx.TB_HORIZONTAL|wx.TB_TEXT)
-        self.tb.SetToolBitmapSize(wx.Size(32,32))
+        self.tb=self.CreateToolBar(wx.TB_HORIZONTAL)
+        self.tb.SetToolBitmapSize(wx.Size(22,22))
         sz=self.tb.GetToolBitmapSize()
 
         # add and delete tools
+        self.getphonedata=self.tb.AddSimpleTool(guihelper.ID_DATAGETPHONE, wx.ArtProvider.GetBitmap(guihelper.ART_DATAGETPHONE, wx.ART_TOOLBAR, sz),
+                                                "Get Phone Data", "Synchronize BitPim with Phone")
+        self.sendphonedata=self.tb.AddLabelTool(guihelper.ID_DATASENDPHONE, "Send Phone Data", wx.ArtProvider.GetBitmap(guihelper.ART_DATASENDPHONE, wx.ART_TOOLBAR, sz),
+                                          shortHelp="Send Phone Data", longHelp="Synchronize Phone with BitPim")
+        self.tb.AddSeparator()
         self.tooladd=self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider.GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
                                           shortHelp="Add", longHelp="Add an item")
         self.tooldelete=self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider.GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
                                              shortHelp="Delete", longHelp="Delete item")
-            
+        self.editphoneinfo=self.tb.AddLabelTool(guihelper.ID_EDITPHONEINFO, "Phone Info", wx.ArtProvider.GetBitmap(guihelper.ART_EDITPHONEINFO, wx.ART_TOOLBAR, sz),
+                                          shortHelp="Phone Info", longHelp="Show Phone Info")
+        self.editdetectphone=self.tb.AddLabelTool(guihelper.ID_EDITDETECT, "Find Phone", wx.ArtProvider.GetBitmap(guihelper.ART_EDITDETECT, wx.ART_TOOLBAR, sz),
+                                          shortHelp="Find Phone", longHelp="Find Phone")
+        self.editsettings=self.tb.AddLabelTool(guihelper.ID_EDITSETTINGS, "Edit Settings", wx.ArtProvider.GetBitmap(guihelper.ART_EDITSETTINGS, wx.ART_TOOLBAR, sz),
+                                          shortHelp="Edit Settings", longHelp="Edit BitPim Settings")
+        self.tb.AddSeparator()
+        self.autosync=self.tb.AddSimpleTool(guihelper.ID_AUTOSYNCEXECUTE, wx.ArtProvider.GetBitmap(guihelper.ART_AUTOSYNCEXECUTE, wx.ART_TOOLBAR, sz),
+                                            "Autosync Calendar", "Synchronize Phone Calendar with PC")
+        self.tb.AddSeparator()
+        self.help=self.tb.AddLabelTool(guihelper.ID_HELPCONTENTS, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_HELPCONTENTS, wx.ART_TOOLBAR, sz),
+                                             shortHelp="BitPim Help", longHelp="BitPim Help")
+
+
         # You have to make this call for the toolbar to draw itself properly
         self.tb.Realize()
-
 
         ### persistent dialogs
         self.dlggetphone=guiwidgets.GetPhoneDialog(self, "Get Data from Phone")
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         ### Events we handle
-        wx.EVT_MENU_OPEN(self, self.OnMenuOpen)
         wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
         wx.EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
@@ -823,6 +838,20 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_AUTOSYNCEXECUTE, self.OnAutoSyncExecute)
         wx.EVT_CLOSE(self, self.OnClose)
 
+        # add update handlers for controls that are not always available
+        wx.EVT_UPDATE_UI(self, guihelper.ID_AUTOSYNCEXECUTE, self.AutosyncUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATASENDPHONE, self.DataSendPhoneUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.DataDeleteItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.DataAddItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.HistoricalDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.FilePrintDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.SelectAllDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.EditCopyUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITPASTE, self.EditPasteUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.EditRenameUpdateUIEvent)
+
         ### Double check our size is meaningful, and make bigger
         ### if necessary (especially needed on Mac and Linux)
         if min(self.GetSize())<250:
@@ -846,7 +875,7 @@ class MainWindow(wx.Frame):
         if self.config.ReadInt("console", 0):
             import developer
             self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self, 'db': self.database} ), "Console")
-        self.todaywidget=today.TodayWidget(self, self.nb)
+        self.widget=self.todaywidget=today.TodayWidget(self, self.nb)
         self.nb.AddPage(self.todaywidget, "Today")
         self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
         self.nb.AddPage(self.phonewidget, "PhoneBook")
@@ -943,6 +972,59 @@ class MainWindow(wx.Frame):
         # setup the midnight timer
         self._setup_midnight_timer()
 
+    # update handlers for controls that are not always available
+    def AutosyncUpdateUIEvent(self, event):
+        event.Enable(self.autosyncsetting.IsConfigured())
+
+    def DataSendPhoneUpdateUIEvent(self, event):
+        event.Enable(not wx.GetApp().SAFEMODE)
+
+    def EditCopyUpdateUIEvent(self, event):
+        enable_copy=hasattr(self.widget, "OnCopy") and \
+                     hasattr(self.widget, "CanCopy") and \
+                     self.widget.CanCopy()
+        event.Enable(enable_copy)
+
+    def EditPasteUpdateUIEvent(self, event):
+        enable_paste=hasattr(self.widget, "OnPaste") and \
+                      hasattr(self.widget, "CanPaste") and \
+                      self.widget.CanPaste()
+        event.Enable(enable_paste)
+
+    def EditRenameUpdateUIEvent(self, event):
+        enable_rename=hasattr(self.widget, "OnRename") and \
+                       hasattr(self.widget, "CanRename") and \
+                       self.widget.CanRename()
+        event.Enable(enable_rename)
+
+    # we should really add a method to the widgets to enable/disable
+    # all of these controls, some only work if a specific item
+    # is selected in the widget, the control should only
+    # be enabled if it will really do something
+    def DataDeleteItemUpdateUIEvent(self, event):
+        enable_del=hasattr(self.widget, "OnDelete")
+        event.Enable(enable_del)
+
+    def DataAddItemUpdateUIEvent(self, event):
+        enable_add=hasattr(self.widget, "OnAdd")
+        event.Enable(enable_add)
+
+    def HistoricalDataUpdateUIEvent(self, event):
+        enable_historical_data=hasattr(self.widget, 'OnHistoricalData')
+        event.Enable(enable_historical_data)
+
+    def ViewColumnsandPreviewDataUpdateUIEvent(self, event):
+        is_phone_widget=self.widget is self.phonewidget
+        event.Enable(is_phone_widget)
+
+    def FilePrintDataUpdateUIEvent(self, event):
+        enable_print=hasattr(self.widget, "OnPrintDialog")
+        event.Enable(enable_print)
+
+    def SelectAllDataUpdateUIEvent(self, event):
+        enable_select_all=hasattr(self.widget, "OnSelectAll")
+        event.Enable(enable_select_all)
+
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
         global thesplashscreen
@@ -954,24 +1036,6 @@ class MainWindow(wx.Frame):
                 pass
             thesplashscreen=None
             wx.SafeYield(onlyIfNeeded=True)
-
-    def OnMenuOpen(self, evt):
-        if evt.GetMenu()!=self.__menu_edit:
-            return
-        widget=self.nb.GetPage(self.nb.GetSelection())
-        enable_copy=hasattr(widget, "OnCopy") and \
-                     hasattr(widget, "CanCopy") and \
-                     widget.CanCopy()
-        enable_paste=hasattr(widget, "OnCopy") and \
-                      hasattr(widget, "CanPaste") and \
-                      widget.CanPaste()
-        enable_rename=hasattr(widget, "OnRename") and \
-                       hasattr(widget, "CanRename") and \
-                       widget.CanRename()
-        menu_bar=self.GetMenuBar()
-        menu_bar.Enable(guihelper.ID_EDITCOPY, enable_copy)
-        menu_bar.Enable(guihelper.ID_EDITPASTE, enable_paste)
-        menu_bar.Enable(guihelper.ID_EDITRENAME, enable_rename)
 
     def OnExit(self,_=None):
         self.Close()
@@ -1543,14 +1607,9 @@ class MainWindow(wx.Frame):
         if text is not None:
             self.config.Write("viewnotebookpage", text)
         # does the page have editable properties?
-        widget=self.nb.GetPage(self.nb.GetSelection())
+        self.widget=self.nb.GetPage(self.nb.GetSelection())
         # force focus to its child
-        widget.SetFocus()
-        enable_add=hasattr(widget, "OnAdd")
-        enable_del=hasattr(widget, "OnDelete")
-        enable_print=hasattr(widget, "OnPrintDialog")
-        enable_select_all=hasattr(widget, "OnSelectAll")
-        enable_historical_data=hasattr(widget, 'OnHistoricalData')
+        self.widget.SetFocus()
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
@@ -1569,31 +1628,38 @@ class MainWindow(wx.Frame):
                       id(self.smswidget): guihelper.ART_DEL_SMS,
                       id(self.playlistwidget): guihelper.ART_DEL_TODO,
                       }
-        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz)
+        shorthelpadd={id(self.ringerwidget): "Add Ringer",
+                   id(self.wallpaperwidget): "Add Wallpaper",
+                   id(self.phonewidget): "Add Contact",
+                   id(self.memowidget): "Add Memo",
+                   id(self.todowidget): "Add Todo Item",
+                   id(self.smswidget): "Add SMS",
+                   id(self.playlistwidget): "Add Playlist",
+                   }
+        shorthelpdelete={id(self.ringerwidget): "Delete Ringer",
+                   id(self.wallpaperwidget): "Delete Wallpaper",
+                   id(self.phonewidget): "Delete Contact",
+                   id(self.memowidget): "Delete Memo",
+                   id(self.todowidget): "Delete Todo Item",
+                   id(self.smswidget): "Delete SMS",
+                   id(self.playlistwidget): "Delete Playlist",
+                   id(self.callhistorywidget): "Delete Call",
+                   }
+        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(self.widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooladd.SetNormalBitmap(bmpadd)
-        bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
+        if id(self.widget) in shorthelpadd:
+            self.tooladd.SetShortHelp(shorthelpadd[id(self.widget)])
+        else:
+            self.tooladd.SetShortHelp("Add")
+        bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(self.widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
         self.tooldelete.SetNormalBitmap(bmpdel)
+        if id(self.widget) in shorthelpdelete:
+            self.tooldelete.SetShortHelp(shorthelpdelete[id(self.widget)])
+        else:
+            self.tooldelete.SetShortHelp("Delete")
         # this has to be called to force the actual update
         self.GetToolBar().Realize()
         self.SendSizeEvent()
-        # Toolbar
-        self.GetToolBar().EnableTool(guihelper.ID_EDITADDENTRY, enable_add)
-        self.GetToolBar().EnableTool(guihelper.ID_EDITDELETEENTRY, enable_del)
-        # menu items
-        menu_bar=self.GetMenuBar()
-        menu_bar.Enable(guihelper.ID_EDITADDENTRY, enable_add)
-        menu_bar.Enable(guihelper.ID_EDITDELETEENTRY, enable_del)
-        menu_bar.Enable(guihelper.ID_DATAHISTORICAL, enable_historical_data)
-
-        # View Columns .. is only in Phonebook
-        is_phone_widget=widget is self.phonewidget
-        menu_bar.Enable(guihelper.ID_VIEWCOLUMNS, is_phone_widget)
-        menu_bar.Enable(guihelper.ID_VIEWPREVIEW, is_phone_widget)
-        # as is File Print
-        menu_bar.Enable(guihelper.ID_FILEPRINT, enable_print)
-
-        # select all
-        menu_bar.Enable(guihelper.ID_EDITSELECTALL, enable_select_all)
          
     # add/delete entry in the current tab
     def OnEditAddEntry(self, evt):
