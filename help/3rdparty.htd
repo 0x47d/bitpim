@@ -69,6 +69,12 @@ changes.  URL(http://www.gnu.org/licenses/lgpl.html,LGPL license)
 	URL(http://awstats.sourceforge.net,awstats) are used for the
 	different operating systems.
 
+	<li><p>Icons from
+	URL(http://tango-project.org/Tango_Desktop_Project,Tango Desktop Project) are used for some
+    of the toolbar icons.
+
+	<li><p>Some icons used in BitPim were created using URL(http://www.gimp.org/,GIMP).
+
     </ul>
 
 <p>Additionally a number of other tools are used, but not shipped with BitPim
