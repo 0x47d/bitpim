@@ -6,7 +6,7 @@
     <ul>
       <li><b>Samsung A620/A740/A840:</b> Fix writing of calendar alarm times.
 	(Rounds down to 0, 10, 30, or 60 minutes)
-      <li>Add phonebook read/write support for <b>LG-PM325</b>.
+      <li>Add phonebook read support for <b>LG-PM325</b>.
       <li>Added new toolbar to main window.
     </ul>
 

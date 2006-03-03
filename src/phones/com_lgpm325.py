@@ -608,7 +608,7 @@ class Profile(parentprofile):
         #('ringtone', 'read', None),   # all ringtone reading
         #('call_history', 'read', None),# all call history list reading
         #('sms', 'read', None),         # all SMS list reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         #('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         #('wallpaper', 'write', 'OVERWRITE'),
