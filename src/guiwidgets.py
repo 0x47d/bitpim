@@ -397,6 +397,7 @@ class ConfigDialog(wx.Dialog):
                   'SK6100 (Pelephone)' : 'com_sk6100', 
                   'VM4050 (Sprint)' : 'com_toshibavm4050',
                   'VI-2300': 'com_sanyo2300',
+                  'LG-VI5225 (STI-Mobile)': 'com_lgvi5225',
                   'Other CDMA phone': 'com_othercdma',
                   }
 

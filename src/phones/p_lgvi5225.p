@@ -78,19 +78,6 @@ PACKET ffpacket:
     1 UINT dunno3
     1 UINT dunno4
 
-PACKET pbfileentry:
-    4 UINT serial1
-    2 UNKNOWN dunno1
-    22 STRING {'default': ""} +name
-    202 UNKNOWN dunno2
-    1 UINT nine
-    4 UNKNOWN dunno3
-    * LIST {'length': 5} numbers:
-        2 UINT pnumber
-
-PACKET pbfile:
-    * LIST { 'elementclass': pbfileentry } items
-
 # Looks same as 4400
 PACKET speeddial:
     1 UINT {'default': 0xff} +entry
@@ -131,8 +118,8 @@ PACKET pbentry:
     1 UINT ringtone                                     "ringtone index for a call"
     1 UINT secret
     * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
-    1 BOOL dunno1
-    2 UINT dunno2
+    1 UINT {'default': 0} +dunno1
+    2 UINT {'default': 0} +dunno2
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
