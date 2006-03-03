@@ -20,6 +20,7 @@ import traceback
 import tempfile
 import random
 import os
+import imp
 
 class FeatureNotAvailable(Exception):
      """The device doesn't support the feature"""
@@ -659,3 +660,19 @@ def importas(name):
     return __import__(name, globals(), locals(),
                       [name.split('.')[-1]])
 
+# http://starship.python.net/crew/theller/moin.cgi/HowToDetermineIfRunningFromExe
+def main_is_frozen():
+    """ Return T if running from an exe, F otherwise
+    """
+    return (hasattr(sys, "frozen") or # new py2exe
+           hasattr(sys, "importers") # old py2exe
+           or imp.is_frozen("__main__")) # tools/freeze
+
+def get_main_dir():
+    """Return the absoluate path of the main BitPim dir
+    """
+    if main_is_frozen():
+        # running from exe, return as is
+        return os.path.abspath(os.path.dirname(sys.executable))
+    # running from src, up one
+    return os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
