@@ -60,7 +60,7 @@ import comdiagnose
 import common
 import commport
 import comscan
-import guiwidgets
+import phones
 
 class DetectPhone(object):
     __default_timeout=1
@@ -215,13 +215,13 @@ class DetectPhone(object):
 ##        for e in available_modem_coms:
 ##            self.do_get_data(e)
         # go through each phone and ask it
-        pm=guiwidgets.ConfigDialog.phonemodels
+        pm=phones.phonemodels
         models=pm.keys()
         models.sort()
         found_port=found_model=None
         for model in models:
             self.log('Checking for model: '+model)
-            module=__import__('phones.'+pm[model], globals(), locals(), ['Profile'])
+            module=common.importas(pm[model])
             # check for detectphone in module.Phone or
             # phone_model and phone_manufacturer in module.Profile
             if hasattr(module.Phone, 'detectphone'):

@@ -9,7 +9,8 @@
 
 """ Generate Phone Features from source code """
 
-import guiwidgets
+import common
+import phones
 
 def check_phone_info(module):
     # check if this phone module supports Phone Info feature
@@ -39,12 +40,12 @@ req_attrs={ 'phonebook': { 'r': 'getphonebook', 'w': 'savephonebook' },
             'Auto Detect': check_auto_detect
             }
 def generate_phone_features():
-    pm=guiwidgets.ConfigDialog.phonemodels
+    pm=phones.phonemodels
     models=pm.keys()
     models.sort()
     r={}
     for model in models:
-        module=__import__('phones.'+pm[model], globals(), locals(), ['Profile'])
+        module=common.importas(pm[model])
         # check for Profile._supportedsyncs
         support_sync=[(x[0], x[1]) for x in module.Profile._supportedsyncs]
         d={}

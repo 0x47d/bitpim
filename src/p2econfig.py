@@ -14,7 +14,10 @@ import makedist
 import version
 
 # See http://starship.python.net/crew/theller/moin.cgi/WinShell
-import modulefinder
+if py2exe.__version__<'0.6.4':
+    import modulefinder
+else:
+    import py2exe.mf as modulefinder
 import win32com
 for p in win32com.__path__[1:]:
     modulefinder.AddPackagePath("win32com", p)

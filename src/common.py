@@ -653,4 +653,9 @@ class FileCache:
           # has calculated value but before calling this function
           self.items[filename]=statinfo(filename),value
           return value
-          
+
+# wrapper for __import__
+def importas(name):
+    return __import__(name, globals(), locals(),
+                      [name.split('.')[-1]])
+

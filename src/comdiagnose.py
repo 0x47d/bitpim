@@ -286,5 +286,5 @@ def autoguessports(phonemodule):
 
 
 if __name__=='__main__':
-    print autoguessports(__import__("com_lgvx4400"))
-
+    import common
+    print autoguessports(common.importas("phones.com_lgvx4400"))

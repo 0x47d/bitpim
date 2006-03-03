@@ -49,7 +49,15 @@ if __name__ == '__main__':
     import os.path
 
     # in production builds we don't need the stupid warnings
-    if not __debug__:
+    if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
+	# get rid of the process serial number on mac
+	sys.argv=sys.argv[:1]+sys.argv[2:]
+    _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+    _kwargs={}
+    # check for debug flag
+    _debug=__debug__ or bool(_args and 'debug' in _args)
+
+    if not _debug:
         import warnings
         def ignorer(*args, **kwargs): pass
         warnings.showwarning=ignorer
@@ -66,11 +74,7 @@ if __name__ == '__main__':
         # heck, do it for all platforms
         sys.stdout=_donowt()
         sys.stderr=_donowt()
-    if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
-	# get rid of the process serial number on mac
-	sys.argv=sys.argv[:1]+sys.argv[2:]
-    _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
-    _kwargs={}
+
     for _k,_v in _options:
         if _k=='-d':
             _kwargs['config_filename']=os.path.join(_v, '.bitpim')

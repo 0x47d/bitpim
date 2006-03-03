@@ -808,7 +808,7 @@ class HexEditor(wx.ScrolledWindow):
                                'Module Import')
         if dlg.ShowModal()==wx.ID_OK:
             try:
-                self._module=__import__(dlg.GetValue())
+                self._module=common.importas(dlg.GetValue())
             except ImportError:
                 self._module=None
                 w=wx.MessageDialog(self, 'Failed to import module: '+dlg.GetValue(),
