@@ -23,7 +23,12 @@ class ConversionFailed(Exception): pass
 helperdir=sys.path[0]
 if os.path.isfile(helperdir):
     helperdir=os.path.dirname(helperdir)
-helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
+if os.path.exists(os.path.join(helperdir, 'helpers')):
+    # helpers is at local dir
+    helperdir=os.path.abspath(os.path.join(helperdir, "helpers"))
+else:
+    # else upper dir (if running from src)
+    helperdir=os.path.abspath(os.path.join(helperdir, "../helpers"))
 
 osext={'win32': '.exe',
        'darwin': '.mbin',
