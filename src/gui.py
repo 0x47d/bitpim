@@ -797,7 +797,7 @@ class MainWindow(wx.Frame):
         self.autosync=self.tb.AddSimpleTool(guihelper.ID_AUTOSYNCEXECUTE, wx.ArtProvider.GetBitmap(guihelper.ART_AUTOSYNCEXECUTE, wx.ART_TOOLBAR, sz),
                                             "Autosync Calendar", "Synchronize Phone Calendar with PC")
         self.tb.AddSeparator()
-        self.help=self.tb.AddLabelTool(guihelper.ID_HELPCONTENTS, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_HELPCONTENTS, wx.ART_TOOLBAR, sz),
+        self.help=self.tb.AddLabelTool(guihelper.ID_HELPHELP, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_HELPHELP, wx.ART_TOOLBAR, sz),
                                              shortHelp="BitPim Help", longHelp="BitPim Help")
 
 

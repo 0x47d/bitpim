@@ -300,7 +300,7 @@ _ourart={
     "ART_DATAGETPHONE": "datagetphone",
     "ART_DATASENDPHONE": "datasendphone",
     "ART_AUTOSYNCEXECUTE": "autosyncexecute",
-    "ART_HELPCONTENTS": "helpcontents",
+    "ART_HELPHELP": "helphelp",
     "ART_EDITPHONEINFO": "editphoneinfo",
     "ART_EDITDETECT": "editdetect",
     "ART_EDITSETTINGS": "editsettings"
