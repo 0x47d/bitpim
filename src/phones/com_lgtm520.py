@@ -554,7 +554,7 @@ def phonize(str):
     return re.sub("[^0-9HPT#*]", "", str)
 
 
-class Profile:
+class Profile(com_phone.Profile):
     serialsname='lgtm520'
     WALLPAPER_WIDTH=100
     WALLPAPER_HEIGHT=100

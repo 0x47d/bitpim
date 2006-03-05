@@ -1045,6 +1045,8 @@ class Profile(parentprofile):
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
                                       {'width': 160, 'height': 120, 'format': "JPEG"}))
+    # delay auto-detection when the phone is plugged in (in seconds)
+    autodetect_delay=3
 
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone

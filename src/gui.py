@@ -662,6 +662,7 @@ class MainWindow(wx.Frame):
         self.database=None
         self._taskbar=None
         self.__phone_detect_at_startup=False
+        self._autodetect_delay=0
 
         ### Status bar
 
@@ -1170,6 +1171,7 @@ class MainWindow(wx.Frame):
         return phone_name
         
     def OnDetectPhoneReturn(self, check_auto_sync, exception, r):
+        self._autodetect_delay=0
         self.OnBusyEnd()
         if self.HandleException(exception): return
         if r is None:
@@ -1218,10 +1220,9 @@ class MainWindow(wx.Frame):
         if wx.IsBusy():
             # current phone operation ongoing, abort this
             return
-        delay=self.config.ReadInt('autodetectconnectdelay', 3)
         # check the new device
         check_auto_sync=auto_sync.UpdateOnConnect(self)
-        self.__detect_phone(name, check_auto_sync, delay)
+        self.__detect_phone(name, check_auto_sync, self._autodetect_delay)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -1321,6 +1322,7 @@ class MainWindow(wx.Frame):
         dlg.UpdateWithProfile(self.phoneprofile)
         if dlg.ShowModal()!=wx.ID_OK:
             return
+        self._autodetect_delay=self.phoneprofile.autodetect_delay
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getdata, dlg, todo),
                       Callback(self.OnDataGetPhoneResults))
@@ -1490,6 +1492,7 @@ class MainWindow(wx.Frame):
             self.playlistwidget.getdata(data)
             todo.append((self.wt.writeplaylist, "Playlist", merge))
 
+        self._autodetect_delay=self.phoneprofile.autodetect_delay
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
                       Callback(self.OnDataSendPhoneGotFundamentals, data, todo, convertors, funcscb))
@@ -2045,6 +2048,7 @@ class WorkerThread(WorkerThreadFramework):
 
     def detectphone(self, using_port=None, delay=0):
         self.clearcomm()
+        print 'detectphone:sleeping',delay
         time.sleep(delay)
         return phone_detect.DetectPhone(self).detect(using_port)
 

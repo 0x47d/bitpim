@@ -161,6 +161,8 @@ class Profile:
     DIALSTRING_CHARS="[^0-9PT#*]"
 
     field_color_data=field_color.default_field_info
+    # delay auto-detection when the phone is plugged in (in seconds)
+    autodetect_delay=0
 
     # which usb ids correspond to us
     usbids=( 
