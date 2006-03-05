@@ -258,7 +258,8 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # main list
-        self._item_list=wx.TreeCtrl(self, wx.NewId())
+        self._item_list=wx.TreeCtrl(self, wx.NewId(),
+                                    style=wx.TR_MULTIPLE|wx.TR_HAS_BUTTONS)
         vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
         self._root=self._item_list.AddRoot('Call History')
         self._nodes={}
@@ -330,19 +331,25 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
             self._item_list.Expand(id)
             id, cookie=self._item_list.GetNextChild(sel_id, cookie)
     def _OnExpandAll(self, _):
-        sel_id=self._item_list.GetSelection()
-        if not sel_id.IsOk():
-            sel_id=self._root
-        self._expand_all(sel_id)
+        sel_ids=self._item_list.GetSelections()
+        if not sel_ids:
+            sel_ids=[self._root]
+        for sel_id in sel_ids:
+            if not sel_id.IsOk():
+                sel_id=self._root
+            self._expand_all(sel_id)
     def _OnCollapseAll(self, _):
-        sel_id=self._item_list.GetSelection()
-        if not sel_id.IsOk():
-            sel_id=self._root
-        self._item_list.Collapse(sel_id)
-        id, cookie=self._item_list.GetFirstChild(sel_id)
-        while id.IsOk():
-            self._item_list.Collapse(id)
-            id, cookie=self._item_list.GetNextChild(sel_id, cookie)
+        sel_ids=self._item_list.GetSelections()
+        if not sel_ids:
+            sel_ids=[self._root]
+        for sel_id in sel_ids:
+            if not sel_id.IsOk():
+                sel_id=self._root
+            self._item_list.Collapse(sel_id)
+            id, cookie=self._item_list.GetFirstChild(sel_id)
+            while id.IsOk():
+                self._item_list.Collapse(id)
+                id, cookie=self._item_list.GetNextChild(sel_id, cookie)
 
     def _clear(self):
         self._item_list.Collapse(self._root)
@@ -427,6 +434,9 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
                     pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
                                    { 'item': e.number } )
         self._display_func[self._by_mode]()
+        # expand the whole tree
+        self._OnExpandAll(None)
+        # tell today 'bout it
         self._publish_today_data()
             
     def OnDelete(self, _):

@@ -339,76 +339,79 @@ class USBClassList:
 ###  Interactive testing code
 ###
 if (__name__ == "__main__"):
-	def print_vendor_info(USBids):
-		# Print out vendor / device / interface info
-		vlist = USBids.getVendorList()
-		for v in vlist.getVendorList():
-			print ("VENDOR: %s %s" % (v.id, v.description))
-			for d in v.getDevices():
-				print ("\tDEVICE: %s %s" % (d.id, d.description))
-				for i in d.getInterfaces():
-					print ("\t\tIFACE: %s %s" % (i.id, i.description))
-	
-	def print_class_info(USBids):
-		# Print out class / subclass / protocol
-		clist = USBids.getUSBClassList()
-		for c in clist.getUSBClassList():
-			print ("CLASS: %s %s" % (c.id, c.description))
-			for s in c.getSubclasses():
-				print ("\tSUBCLASS: %s %s" % (s.id, s.description))
-				for p in s.getProtocols():
-					print ("\t\tPROTOCOL: %s %s" % (p.id, p.description))	
+    import os, guihelper
+    def print_vendor_info(USBids):
+            # Print out vendor / device / interface info
+            vlist = USBids.getVendorList()
+            for v in vlist.getVendorList():
+                    print ("VENDOR: %s %s" % (v.id, v.description))
+                    for d in v.getDevices():
+                            print ("\tDEVICE: %s %s" % (d.id, d.description))
+                            for i in d.getInterfaces():
+                                    print ("\t\tIFACE: %s %s" % (i.id, i.description))
+    
+    def print_class_info(USBids):
+            # Print out class / subclass / protocol
+            clist = USBids.getUSBClassList()
+            for c in clist.getUSBClassList():
+                    print ("CLASS: %s %s" % (c.id, c.description))
+                    for s in c.getSubclasses():
+                            print ("\tSUBCLASS: %s %s" % (s.id, s.description))
+                            for p in s.getProtocols():
+                                    print ("\t\tPROTOCOL: %s %s" % (p.id, p.description))	
 
-	myUSBids = usb_ids("resources/usb.ids")
+    myUSBids = usb_ids(os.path.join(guihelper.resourcedirectory,
+                                    "usb.ids"))
 
-	# PRINT OUT THE WHOLE TREE AS A TEST CASE
-	# print_vendor_info(myUSBids)
-	# print_class_info(myUSBids)
+    # PRINT OUT THE WHOLE TREE AS A TEST CASE
+    # print_vendor_info(myUSBids)
+    # print_class_info(myUSBids)
 
-	# Our list is now internally decimal, so to lookup/inquire by hex
-	# You must convert to decimal before passing your inquiry in...
+    # Our list is now internally decimal, so to lookup/inquire by hex
+    # You must convert to decimal before passing your inquiry in...
 
-	# Test lookup for various bits of USB Vendor/Device/Interface information
-	print "Inquire on Vendor 1452, Device 518, Iface 1 using various levels of detail:" 
-	vlist = myUSBids.getVendorList()
-	print vlist.getVendorInfo(1452)
-	print vlist.getVendorInfo(1452, 518)
-	print vlist.getVendorInfo(1452, 518, 1)
-	print
-	
-	# Test lookup for various bits of USB Class/Subclass/Protocol information
-	print "Inquire on Class 8, Subclass 4, Protocol 0 using various levels of detail:" 
-	clist = myUSBids.getUSBClassList()
-	print clist.getClassInfo(8)
-	print clist.getClassInfo(8, 4)
-	print clist.getClassInfo(8, 4, 0)
-	print
+    # Test lookup for various bits of USB Vendor/Device/Interface information
+    print "Inquire on Vendor 1452, Device 518, Iface 1 using various levels of detail:" 
+    vlist = myUSBids.getVendorList()
+    print vlist.getVendorInfo(1452)
+    print vlist.getVendorInfo(1452, 518)
+    print vlist.getVendorInfo(1452, 518, 1)
+    print
+    
+    # Test lookup for various bits of USB Class/Subclass/Protocol information
+    print "Inquire on Class 8, Subclass 4, Protocol 0 using various levels of detail:" 
+    clist = myUSBids.getUSBClassList()
+    print clist.getClassInfo(8)
+    print clist.getClassInfo(8, 4)
+    print clist.getClassInfo(8, 4, 0)
+    print
 
-	# For reference, this is how you'd inquire on hex values
-	# print vlist.getVendorInfo(int("05ac", 16))
-	# print vlist.getVendorInfo(int("05ac", 16), int("0206", 16))
-	# print vlist.getVendorInfo(int("05ac", 16), int("0206", 16), int("01", 16))
-	# print clist.getClassInfo(int("08", 16))
-	# print clist.getClassInfo(int("08", 16), int("04", 16))
-	# print clist.getClassInfo(int("08", 16), int("04", 16), int("00", 16))
+    # For reference, this is how you'd inquire on hex values
+    # print vlist.getVendorInfo(int("05ac", 16))
+    # print vlist.getVendorInfo(int("05ac", 16), int("0206", 16))
+    # print vlist.getVendorInfo(int("05ac", 16), int("0206", 16), int("01", 16))
+    # print clist.getClassInfo(int("08", 16))
+    # print clist.getClassInfo(int("08", 16), int("04", 16))
+    # print clist.getClassInfo(int("08", 16), int("04", 16), int("00", 16))
 
-	# The following are in hex just becuase that way I can visually match them
-	# up with the entries in the test.ids file
+    # The following are in hex just becuase that way I can visually match them
+    # up with the entries in the test.ids file
 
-	# Now, let's test for something that doesn't exist:
-	print "Look up something with little detail in Internet file... 1004/6000/(00..02)"
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))
-	print
+    # Now, let's test for something that doesn't exist:
+    print "Look up something with little detail in Internet file... 1004/6000/(00..02)"
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))
+    print
 
-	# Put the data in from our local copy
-	print "Add in our test data to override internet data"
-	myUSBids.add_data("resources/test.ids")
-	print
-	
-	# Now, it should be there
-	print "Check it again..."
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
-	print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))
+    # Put the data in from our local copy
+    print "Add in our test data to override internet data"
+    myUSBids.add_data(os.path.join(guihelper.resourcedirectory,
+                                   "test.ids"))
+    print
+    
+    # Now, it should be there
+    print "Check it again..."
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("00", 16))
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("01", 16))
+    print vlist.getVendorInfo(int("1004", 16), int("6000", 16), int("02", 16))

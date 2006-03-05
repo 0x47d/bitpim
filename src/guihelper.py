@@ -210,7 +210,7 @@ def gethelpfilename():
     # we look in a help subdirectory first which is
     # present in the developer tree
     j=os.path.join
-    paths=( (j(resourcedirectory, "..", "help"), True),
+    paths=( (helpdirectory, True),
             (resourcedirectory, False) )
 
     if IsMSWindows():
@@ -233,13 +233,8 @@ def getresourcefiles(wildcard):
     return l
 
 # Where to find bitmaps etc
-if IsMac():
-    p=os.getcwd()
-else:
-    p=sys.path[0]
-if os.path.isfile(p): # zip importer in action
-    p=os.path.dirname(p)
-resourcedirectory=os.path.abspath(os.path.join(p, 'resources'))
+resourcedirectory=os.path.join(common.get_main_dir(), 'resources')
+helpdirectory=os.path.join(common.get_main_dir(), 'help')
 
 # See strorunicode comment in common
 if wx.USE_UNICODE:
