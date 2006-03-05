@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# $Id: $
+# $Id$
 
 # Check subversion is on the path
 import os, sys, xml.dom.minidom
@@ -10,7 +10,7 @@ if os.popen("svn help", "r").read().find("proplist")<0:
 
 
 # check to see we are at a top level directory
-topdirs=('buildrelease', 'dev-doc', 'examples', 'experiments', 'help', 'helpers', 'scripts', 'src')
+topdirs=('buildrelease', 'dev-doc', 'examples', 'experiments', 'help', 'helpers', 'resources', 'scripts', 'src')
 for d in topdirs:
     if not os.path.isdir(d):
         print "There should be a directory named",d
