@@ -18,9 +18,9 @@ PYTHON=python
 HBDIR="/c/program files/helpblocks"
 
 # version info for helpblocks pre-processor
-$PYTHON version.py > help/version.h
+$PYTHON src/version.py > help/version.h
 # phone features info
-$PYTHON -O phone_features.py > help/phonesupporttable
+PYTHONPATH=src $PYTHON -O help/phone_features.py > help/phonesupporttable
 
 # update web tree of docs
 cd help
@@ -38,7 +38,7 @@ cd "$HBDIR"
 cd "$oldpwd"
 
 # generate various ids
-$PYTHON genids.py bitpim_alias.h ../helpids.py
+$PYTHON genids.py bitpim_alias.h ../src/helpids.py
 cp bitpim.htb bitpim.chm ../resources
 
 # did anyone forget to rename files?
@@ -52,16 +52,13 @@ fi
 cd ..
 
 # copy into website
-if [ -d ../bpweb/site/CVS ]
+if [ -d ../bpweb/site/.svn ]
 then
-    ver=`$PYTHON version.py --majorminor`
-    echo "Copying $ver help into web site tree"
-    webhelp="`pwd`/../bpweb/site/testhelp"
-    rm -rf "$webhelp"
-    mkdir -p "$webhelp"
-    $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
+    echo "Copying help into web site tree"
     webhelp="`pwd`/../bpweb/site/help"
     rm -rf "$webhelp"
     mkdir -p "$webhelp"
     $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
+    rm -rf "$webhelp/../testhelp"
+    cp -rp "$webhelp" "$webhelp/../testhelp"
 fi

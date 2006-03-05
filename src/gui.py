@@ -570,6 +570,8 @@ class MainApp(wx.App):
 
     update_delta={ 'Daily': 1, 'Weekly': 7, 'Monthly': 30 }
     def CheckUpdate(self):
+        if version.isdevelopmentversion():
+            return
         if self.frame is None: 
             return
         # tell the frame to do a check-for-update
@@ -761,7 +763,7 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
         if version.vendor=='official':
             menu.AppendSeparator()
-            menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Checking for any BitPim Update")
+            menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Check for any BitPim Update")
         if guihelper.IsMac():
             wx.App_SetMacAboutMenuItemId(guihelper.ID_HELPABOUT)
             menu.Append(guihelper.ID_HELPABOUT, "&About BitPim", "Display program information")
@@ -1075,11 +1077,6 @@ class MainWindow(wx.Frame):
         import version
 
         str="BitPim Version "+version.versionstring+" - "+version.vendor
-        if version.isdevelopmentversion(): str+="\nDevelopment Version"
-        str+="\n\n"
-        if len(version.extrainfo):
-            str+=version.extrainfo+"\n\n"
-        str+=version.contact
 
         d=wx.MessageDialog(self, str, "About BitPim", wx.OK|wx.ICON_INFORMATION)
         d.ShowModal()

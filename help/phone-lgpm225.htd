@@ -1,3 +1,5 @@
+#include "pagestart.h"
+
 <h2>What works</h2>
 
 <ul>
@@ -53,3 +55,6 @@
 
 
 <h2>Contents</h2>
+
+
+#include "pageend.h"

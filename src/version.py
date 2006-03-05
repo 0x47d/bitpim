@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -9,56 +9,73 @@
 
 """Information about BitPim version number"""
 
+# When a release build is made, this file is run with the 'freeze' argument.
+# This file is then self modified to put only one component on the
+# frozen (but inside the dollar id so svn won't consider the file modified)
+
+__FROZEN__="$Id$"
+
 import time
 
 name="BitPim"
-version="0.8.09"
-##vendor="official"
-vendor="Development"
+vendor=""
 release=0  # when rereleases of the same version happen, this gets incremented
-testver=0  # value of zero is non-test build
-extrainfo="" # More gunk should it be test version
 contact="The BitPim home page is at http://www.bitpim.org.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
 
-def isdevelopmentversion(): return int(version.split(".")[1])%2
+svnrevision=""  # we don't know
+_headurl="$HeadURL$".split()[1]
+# work out our version number
+_rp="https://svn.sourceforge.com/svnroot/bitpim/releases/"
+if _headurl.startswith(_rp):
+    def isdevelopmentversion(): return False
+    version=_headurl[len(_rp):].split("/")[0]
+    if len(vendor)==0:
+        vendor="official"
+else:
+    def isdevelopmentversion(): return True
+    prefix="https://svn.sourceforge.com/svnroot/bitpim/"
+    version="-".join(_headurl[len(prefix):].split("/")[:-2]) # -2 to prune off src/version.py
+    del prefix
+    # were we frozen?
+    f=__FROZEN__.split()
+    if len(f)==3: # we were - add revision
+        svnrevision=f[1]
+        version=version+"-"+svnrevision.replace(':', '_')
+    if len(vendor)==0:
+        vendor="developer build"
 
-if isdevelopmentversion():
-    # Different strings in development versions
-    extrainfo="This is a development of BitPim which provides a work in progress.  You can find older stable releases at http://www.bitpim.org"
-    contact="For questions or feedback, please read the support page in the About section of the online help."
+del _headurl
+del _rp
 
 versionstring=version
-if testver>0:
-    versionstring+="-test"+`testver`
+
 if release>0:
     versionstring+="-"+`release`
 
-# dotted quad version as used on Windows (a.b.c.d where all must be digits only)
-# we use major.minor.point.last
-# last is <1000 for test releases, and 1000+release for real releases
-x=[int(x) for x in version.split(".")]
-if x[1]<10:  # ie .6 not .62
-    x[1]=x[1]*10
-assert x[1]>=10 and x[1]<=99
-x.append(x[1]%10)
-# we don't normalise (ie 0.6 is left as 0.60 because 0.62 was shipped as 0.62.0.0 and 0.7 as 0.7.0.0 is less than that)
-# we can only fix this once the major version number changes
-# x[1]=x[1]/10
-if testver:
-    x.append(testver)
+if not isdevelopmentversion():
+    # dotted quad version as used on Windows (a.b.c.d where all must be digits only)
+    # we use major.minor.point.last
+    dqver=[int(x) for x in version.split(".")]+[0,0,0,0]
+    dqver=dqver[:4]
+elif len(svnrevision):
+    svnrevision.split(":")
+    dqver=[0,0,0,svnrevision]
 else:
-    x.append(1000+release)
-dqver=x[:]
-del x
+    dqver=[0,0,0,0]
+
 dqverstr=".".join([`x` for x in dqver])
 
+del x
+
+
+# need to fix these ...
 author="Roger Binns"
 author_email="rogerb@rogerbinns.com"
 url="http://www.bitpim.org"
 
 description="BitPim "+versionstring
-copyright="(C) 2003-2005 Roger Binns and others - see http://www.bitpim.org"
+copyright="(C) 2003-2006 Roger Binns and others - see http://www.bitpim.org"
 
 if __name__=='__main__':
     import sys
@@ -67,7 +84,27 @@ if __name__=='__main__':
         # purposely missing " around values
         print "#define VERSION", versionstring
         print "#define DATENOW", time.strftime("%d %B %Y")
-    elif sys.argv[1]=="--majorminor":
-        print ".".join(version.split(".")[:2])
+    elif sys.argv[1]=="freeze":
+        # modify the frozen field with the current revision number
+        import os
+        svnver=os.popen("svnversion -n .", "r").read()
+        if len(svnver)<4:
+            print "svnversion command doesn't appear to be working."
+            sys.exit(3)
+        try:
+            [int(x) for x in svnver.split(":")]
+        except:
+            print "Your tree isn't pure. Do you have files not checked in (M)?"
+            print svnver,"was returned by svnversion"
+            sys.exit(4)
+        print "Embedding svnrevision",svnver,"into",sys.argv[0]
+        result=[]
+        for line in open(sys.argv[0], "rtU"):
+            if line.startswith('__FROZEN__="$Id:'):
+                line='__FROZEN__="$Id$"\n'
+            result.append(line)
+
+        open(sys.argv[0], "wt").write("".join(result))
+                
     else:
         print "Unknown arguments",sys.argv[1:]
