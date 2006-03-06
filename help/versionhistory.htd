@@ -4,8 +4,9 @@
 
    <h2><a name="0.8.09">Changes in 0.8.09</a></h2>
     <ul>
-      <li><b>Samsung A620/A740/A840:</b> Fix writing of calendar alarm times.
-	(Rounds down to 0, 10, 30, or 60 minutes)
+      <li><b>Samsung A620/A740/A840:</b> Add capability to upload wallpaper
+             to phone.  Fix writing of calendar alarm times.  (Rounds down
+             to 0, 10, 30, or 60 minutes)
       <li>Add phonebook read support for <b>LG-PM325</b>.
       <li>Added new toolbar to main window.
     </ul>
