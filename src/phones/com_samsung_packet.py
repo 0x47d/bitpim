@@ -191,8 +191,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
     def read_groups(self):
 
-        self.setmode(self.MODEPHONEBOOK)
         g={}
+        # Don't crash if phone doesn't accept #PMODE=1 (Canadian phones)
+        try:
+            self.setmode(self.MODEPHONEBOOK)
+        except:
+            return g
         req=self.protocolclass.groupnamerequest()
 	for i in range(self.protocolclass.NUMGROUPS+1):
             req.gid=i
@@ -698,6 +702,15 @@ class Profile(com_phone.Profile):
 
     # which device classes we are.
     deviceclasses=("modem","serial")
+    WALLPAPER_WIDTH=128
+    WALLPAPER_HEIGHT=118
+    OVERSIZE_PERCENTAGE=100
+    MAX_WALLPAPER_BASENAME_LENGTH=19
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .`~!@#$%^&()-_=+[{]};\'"
+    WALLPAPER_CONVERT_FORMAT="png"
+    
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .`~!@#$%^&()-_=+[{]};\'"
 
     _supportedsyncs=()
 

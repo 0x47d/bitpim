@@ -456,7 +456,7 @@ class Profile(com_samsung_packet.Profile):
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('wallpaper', 'read', None),  # all wallpaper reading
-        #('wallpaper', 'write', None), # Image conversion needs work
+        ('wallpaper', 'write', None), # Image conversion needs work
         ('ringtone', 'read', None),   # all ringtone reading
         ('ringtone', 'write', None),
         ('calendar', 'read', None),   # all calendar reading
