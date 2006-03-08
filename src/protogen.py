@@ -662,4 +662,6 @@ if __name__=='__main__':
         import glob
         for f in glob.glob("*.p"):
             processfile(f, f+"y")
+        for f in glob.glob("phones/*.p"):
+            processfile(f, f+"y")
 
