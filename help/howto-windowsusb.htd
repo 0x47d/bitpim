@@ -8,15 +8,11 @@ storage devices such as CompactFlash readers and external hard
 drivers.  For communication devices, the vendor must supply
 a device driver.
 
-<h2>Direct USB access</h2>
-
-<p>BitPim can also access USB devices directly.  This is done using
-URL(http://libusb-win32.sourceforge.net,libusb-win32).  You need to
-install it first, which currently also requires a reboot.  It is also
-in the beta stage and has some issues on some machines during hibernation
-and shutdown.
-
 <h2>Clearing out stale USB information</h2>
+
+For Power Users who have too many COM devices, you can remove all knowledge of existing
+ones by following these steps.  Note that you could seriously mess your machine up
+(ie it won't boot) if you are not careful.
 
 <p>
 <ul>
@@ -30,7 +26,7 @@ below that.  Click on each one.
 <li><code>HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E978-E325-11CE-BFC1-08002BE10318}</code> is ports
 <li><code>HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E96D-E325-11CE-BFC1-08002BE10318}</code> is modems
 <li><code>HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Ports</code>
-<li><code>HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\COM Name Arbiter</code> COMdb key is a bitmask of which com ports are available (8 ports per byte).  Set to 3 to reserve com1 and com2
+<li><code>HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\COM Name Arbiter</code> COMdb key is a bitmask of which com ports are in use (8 ports per byte).  Set to 3 to reserve com1 and com2
 </ul>
 
 

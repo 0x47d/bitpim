@@ -1,4 +1,3 @@
-
 #include "pagestart.h"
 
 
@@ -9,6 +8,7 @@
              to 0, 10, 30, or 60 minutes)
       <li>Add phonebook read support for <b>LG-PM325</b>.
       <li>Added new toolbar to main window.
+      <li><b>Windows</b> libusb is no longer looked for on Windows.  (To use libusb on Windows, you had to have a device driver first.  And if you had a device driver, you'd have no need for libusb.)
     </ul>
 
    <h2><a name="0.8.08">Changes in 0.8.08</a></h2>
