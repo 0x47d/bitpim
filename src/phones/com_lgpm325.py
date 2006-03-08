@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2005 Brent Roettger <broettge@msn.com>
+### Copyright (C) 2005, 2006 Brent Roettger <broettge@msn.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -25,20 +25,28 @@ import com_phone
 import com_lg
 import com_lgvx4400
 import prototypes
-
+import call_history
+import sms
+import fileinfo
+import memo
 
 class Phone(com_lgvx4400.Phone):
     "Talk to the LG LX325/PM325 cell phone"
 
-    desc="LG LX325/PM325"
-    wallpaperindexfilename="setas/amsImageIndex.map"
-    ringerindexfilename="setas/amsRingerIndex.map"
+    desc="LG PM325"
     protocolclass=p_lgpm325
     serialsname='lgpm325'
 
+    # read only locations, for regular ringers/wallpaper this phone stores
+    # the information in a different location
+    imagelocations=(
+        # offset, index file, files location, type, maximumentries
+        (0x600, "setas/dcamIndex.map", "Dcam/Wallet", "camera", 50, 6),
+        )
+
     ringtonelocations=(
         # offset, index file, files location, type, maximumentries
-        ( 2, ringerindexfilename, "user/sound/ringer", "ringers", 30),
+        (0x1100, "setas/voicememoRingerIndex.map", "VoiceDB/All/Memos", "voice_memo", 50, 11),
         )
 
     builtinimages=('Starfish', 'Goldfish', 'Leaves', 'Bicycle', 'Speed',
@@ -58,6 +66,8 @@ class Phone(com_lgvx4400.Phone):
         com_brew.BrewProtocol.__init__(self)
         com_lg.LGPhonebook.__init__(self)
         self.log("Attempting to contact phone")
+        self._cal_has_voice_id=hasattr(self.protocolclass, 'cal_has_voice_id') \
+                                and self.protocolclass.cal_has_voice_id
         self.mode=self.MODENONE
 
 #----- PhoneBook -----------------------------------------------------------------------
@@ -148,6 +158,8 @@ class Phone(com_lgvx4400.Phone):
             req=self.protocolclass.pbnextentryrequest()
             self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)
 
+        pbook=self.get_phonebook_media(pbook, result)
+
         self.progress(numentries, numentries, "Phone book read completed")
         self.log("Phone book read completed")
 
@@ -158,8 +170,50 @@ class Phone(com_lgvx4400.Phone):
             if result['groups'][i]['name']!='No Group':
                 cats.append(result['groups'][i]['name'])
         result['categories']=cats
-        print "returning keys",result.keys()
         return pbook
+
+    def get_phonebook_media(self, pbook, fundamentals):
+        """This phone does not provide ringtone and image info for contacts in 
+        the regular packets so we have to read the filesystem directly """
+        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.phonebook_media))
+        g=self.protocolclass.pb_contact_media_file()
+        g.readfrombuffer(buf)
+        self.logdata("PB Media read", buf.getdata(), g)
+        for i in range(len(g.contacts)):
+            # adjust wallpaper for stock
+            if (g.contacts[i].wallpaper & 0xFF00)==0x100:
+                g.contacts[i].wallpaper-=0x100
+            if __debug__:
+                tone="None"
+                paper="None"
+                try:
+                    tone=fundamentals['ringtone-index'][g.contacts[i].ringer]['name']
+                except:
+                    pass
+                try:
+                    paper=fundamentals['wallpaper-index'][g.contacts[i].wallpaper]['name']
+                except:
+                    pass
+                self.log("media entry "+g.contacts[i].name+" ringer "+`tone`+" ("+`g.contacts[i].ringer`+")")
+                self.log("media entry "+g.contacts[i].name+" wallpaper "+`paper`+" ("+`g.contacts[i].wallpaper`+")")
+            if g.contacts[i].index in pbook:
+                self.log("Index "+`g.contacts[i].index`+" found")
+                if g.contacts[i].ringer:
+                    try:
+                        tone=fundamentals['ringtone-index'][g.contacts[i].ringer]['name']
+                        pbook[g.contacts[i].index]['ringtones']=[{'ringtone': tone, 'use': 'call'}]
+                    except:
+                        self.log("Exception in ringtone assignment")
+                if g.contacts[i].wallpaper:
+                    try:
+                        paper=fundamentals['wallpaper-index'][g.contacts[i].wallpaper]['name']
+                        pbook[g.contacts[i].index]['wallpapers']=[{'wallpaper': paper, 'use': 'call'}]                
+                    except:
+                        self.log("Exception in wallpaper assignment")
+            else:
+                self.log("Index "+`g.contacts[i].index`+" not found")
+        return pbook
+
 
     def extractphonebookentry(self, entry, speeds, fundamentals):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
@@ -237,7 +291,8 @@ class Phone(com_lgvx4400.Phone):
             elif k=='ringtone':
                 e.ringtone=self._findmediainindex(data['ringtone-index'], entry['ringtone'], entry['name'], 'ringtone')
             elif k=='msgringtone':
-                e.msgringtone=self._findmediainindex(data['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
+                pass # not supported by phone
+                #e.msgringtone=self._findmediainindex(data['ringtone-index'], entry['msgringtone'], entry['name'], 'message ringtone')
             elif k=='wallpaper':
                 e.wallpaper=self._findmediainindex(data['wallpaper-index'], entry['wallpaper'], entry['name'], 'wallpaper')
             elif k in e.getfields():
@@ -454,43 +509,569 @@ class Phone(com_lgvx4400.Phone):
 
         return data
 
-#----- Calendar  -----------------------------------------------------------------------
+#----- SMS  ---------------------------------------------------------------------------
 
-    def getcalendar(self,result): pass
-    def savecalendar(self,result): pass
+    def _setquicktext(self, result):
+        sf=self.protocolclass.sms_canned_file()
+        quicktext=result.get('canned_msg', [])
+        count=0
+        for entry in quicktext:
+            if count < self.protocolclass.SMS_CANNED_MAX_ITEMS:
+                msg_entry=self.protocolclass.sms_quick_text()
+                msg_entry.msg=entry['text'][:self.protocolclass.SMS_CANNED_MAX_LENGTH-1]
+                sf.msgs.append(msg_entry)
+                count+=1
+            else:
+                break
+        if count!=0:
+            # don't create the file if there are no entries 
+            sf.num_active=count
+            buf=prototypes.buffer()
+            sf.writetobuffer(buf)
+            self.logdata("Writing quicktext", buf.getvalue(), sf)
+            self.writefile(self.protocolclass.SMS_CANNED_FILENAME, buf.getvalue())
+        return
 
-#----- Ringtones -----------------------------------------------------------------------
+    def _getquicktext(self):
+        quicks=[]
+        try:
+            buf=prototypes.buffer(self.getfilecontents(self.protocolclass.SMS_CANNED_FILENAME))
+            sf=self.protocolclass.sms_canned_file()
+            sf.readfrombuffer(buf)
+            self.logdata("SMS quicktext file sms/canned_msg.dat", buf.getdata(), sf)
+            for rec in sf.msgs:
+                if rec.msg!="":
+                    quicks.append({ 'text': rec.msg, 'type': sms.CannedMsgEntry.user_type })
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
+        return quicks
 
-    def getringtones(self, result): pass
-    def saveringtones(self, results, merge): pass
+    def _getinboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Inbox
+        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
+        entry._from=self._getsender(sf.sender, sf.sender_length)
+        entry.subject=sf.subject
+#        entry.locked=sf.locked
+#        if sf.priority==0:
+#            entry.priority=sms.SMSEntry.Priority_Normal
+#        else:
+#            entry.priority=sms.SMSEntry.Priority_High
+        entry.read=sf.read
+        entry.text=unicode(sf.msg, errors='ignore')
+        entry.callback=sf.callback
+        return entry
 
-#----- Wallpapers ----------------------------------------------------------------
+    def _getoutboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Sent
+        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
+        # add all the recipients
+        for r in sf.recipients:
+            if r.number:
+                confirmed=(r.status==2)
+                confirmed_date=None
+                if confirmed:
+                    confirmed_date="%d%02d%02dT%02d%02d00" % r.time
+                entry.add_recipient(r.number, confirmed, confirmed_date)
+        entry.subject=unicode(sf.msg[:28], errors='ignore')
+        entry.text=unicode(sf.msg, errors='ignore')
+#        if sf.priority==0:
+#            entry.priority=sms.SMSEntry.Priority_Normal
+#        else:
+#            entry.priority=sms.SMSEntry.Priority_High
+#        entry.locked=sf.locked
+        entry.callback=sf.callback
+        return entry
 
-    def getwallpapers(self, result): pass
-    savewallpapers=None
+#----- Media  -----------------------------------------------------------------------
+
+    # this phone can take MP3 files, but you have to use the vnd.qcelp MIME type
+    # this makes renaming the files (from the ##.dat format) back to a real
+    # name difficult, we assume all vnd.qcelp files are mp3 files as this is the
+    # most common format
+
+    __mimetype={ 'mid': 'audio/midi', 'qcp': 'audio/vnd.qcelp', 'jar': 'application/java-archive',
+                 'jpg': 'image/jpg', 'jpeg': 'image/jpeg', 'gif': 'image/gif', 
+                 'bmp': 'image/bmp', 'png': 'image/png', 'mp3': 'audio/vnd.qcelp'}
+
+    __reverse_mimetype={ 'audio/midi': 'mid', 'audio/vnd.qcelp': 'mp3', 'application/java-archive': 'jar',
+                 'image/jpg': 'jpg', 'image/jpeg': 'jpeg', 'image/gif': 'gif', 
+                 'image/bmp': 'bmp', 'image/png': 'png', 'audio/mp3': 'mp3'}
+
+    __app_extensions={ 'jar':'' }
+
+
+    def getwallpaperindices(self, results):
+        return self.getmediaindex(self.builtinimages, self.imagelocations, results, 'wallpaper-index')
+
+    def getringtoneindices(self, results):
+        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+
+    def getwallpapers(self, result):
+        return self.getmedia(self.imagelocations, result, 'wallpapers')
+
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
+
+    def savewallpapers(self, results, merge):
+        return self.savemedia('wallpapers', 'wallpaper-index', results, merge, self.getwallpaperindices)
+
+    def saveringtones(self, results, merge):
+        return self.savemedia('ringtone', 'ringtone-index', results, merge, self.getringtoneindices)
+
+    def getindex(self, indexfile):
+        "Read an index file"
+        index={}
+        try:
+            buf=prototypes.buffer(self.getfilecontents(indexfile))
+        except com_brew.BrewNoSuchFileException:
+            # file may not exist
+            return index
+        g=self.protocolclass.indexfile()
+        g.readfrombuffer(buf)
+        self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+        for i in g.items:
+            if i.index!=0xffff and len(i.name):
+                index[i.index]=i.name
+        return index
+
+    def get_content_file(self, key):
+        index={}
+        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
+        g=self.protocolclass.content_file()
+        g.readfrombuffer(buf)
+        self.logdata("Content file %s read with %d entries" % (self.protocolclass.content_file_name,len(g.items)), buf.getdata(), g)
+        if key=='ringtone' or key=='ringtone-index':
+            type='Ringers'
+            index_const=self.protocolclass.ringerconst*0x100
+            indexfile=self.getindex(self.protocolclass.ringerindex)
+        else:
+            type='Screen Savers'
+            index_const=self.protocolclass.imageconst*0x100
+            indexfile=self.getindex(self.protocolclass.imageindex)
+        for i in g.items:
+            if i.type=='!C' and i.content_type==type:
+                try:
+                    # construct a user friendly filename
+                    ext=self.__reverse_mimetype[i.mime_type]
+                    # find the "file" in the index file and get it's index
+                    # if the index was created by bitpim it will be the same 
+                    # as the unfriendly filename, but this is not guarenteed
+                    found=False
+                    for j in indexfile.keys():
+                        # convert to int to strip leading zero
+                        try:
+                            if int(common.stripext(indexfile[j]))==int(i.index1):
+                                index[j + index_const]=i.name1+'.'+ext
+                                found=True
+                                break;
+                        except:
+                            pass
+                    if not found:
+                        self.logdata("Unable to find index entry for "+i.name1+". Index : "+`i.index1`)
+                except:
+                    pass
+        return index, indexfile, index_const
+
+    def getmedia(self, maps, result, key):
+        """Returns the contents of media as a dict where the key is a name as returned
+        by getindex, and the value is the contents of the media"""
+        media={}
+        # first read the maps
+        type=None
+        for offset,indexfile,location,type,maxentries,const in maps:
+            index=self.getindex(indexfile)
+            for i in index:
+                try:
+                    media[index[i]]=self.getfilecontents(location+"/"+index[i], True)
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+                    self.log("It was in the index, but not on the filesystem")
+                    
+        # secondly read the content file
+        index, indexfile, index_const=self.get_content_file(key)
+        for i in index:
+            try:
+                buf=prototypes.buffer(self.getfilecontents(self.protocolclass.media_directory+'/'+indexfile[i-index_const], True))
+                _fname=index[i]
+                # This would be nice but this will read the entire file which will slow the media retrieval down
+#                ext=common.getext(_fname)
+#                if ext=='mp3':
+#                    # see if it is really an mp3, we will need to rename it
+#                    try:
+#                        qcp_header=self.protocolclass.qcp_media_header()
+#                        qcp_header.readfrombuffer(buf)
+#                    except: # exception will be thrown if header does not match
+#                        _fname=common.stripext(index[i])+'.'+'qcp'
+                media[_fname]=buf.getdata()
+            except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+                self.log("It was in the index, but not on the filesystem")
+
+        result[key]=media
+        return result
+
+    def getmediaindex(self, builtins, maps, results, key):
+        """Gets the media (wallpaper/ringtone) index
+
+        @param builtins: the builtin list on the phone
+        @param results: places results in this dict
+        @param maps: the list of index files and locations
+        @param key: key to place results in
+        """
+
+        self.log("Reading "+key)
+        media={}
+
+        # builtins
+        c=1
+        for name in builtins:
+            media[c]={'name': name, 'origin': 'builtin' }
+            c+=1
+
+        # the maps
+        type=None
+        for offset,indexfile,location,type,maxentries,const in maps:
+            index=self.getindex(indexfile)
+            for i in index:
+                media[i+offset]={'name': index[i], 'origin': type}
+
+        # secondly read the content file
+        if key=='ringtone-index':
+            type='ringers'
+        else:
+            type='images'
+        index,_,_=self.get_content_file(key)
+        for i in index:
+            media[i]={'name': index[i], 'origin': type}
+        results[key]=media
+        return media
+
+    def savemedia(self, mediakey, mediaindexkey, results, merge, reindexfunction):
+        """Actually saves out the media
+
+        @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
+        @param mediaindexkey:  index key (eg 'wallpaper-index')
+        @param maps: list index files and locations
+        @param results: results dict
+        @param merge: are we merging or overwriting what is there?
+        @param reindexfunction: the media is re-indexed at the end.  this function is called to do it
+        """
+        content_changed=False
+        media=results[mediakey].copy()
+
+
+        #figure out if the origin we are interested in
+        if mediaindexkey=='ringtone-index':
+            type='ringers'
+            content_type="Ringers"
+            indexfile=self.protocolclass.ringerindex
+            index_const=self.protocolclass.ringerconst
+            max_media_entries=self.protocolclass.max_ringers
+          # remove voice_memos
+            for i in media.keys():
+                try:
+                    if media[i]['origin']=='voice_memo':
+                        del media[i]
+                except:
+                    pass
+        else:
+            type='images'
+            content_type="Screen Savers"
+            indexfile=self.protocolclass.imageindex
+            index_const=self.protocolclass.imageconst
+            max_media_entries=self.protocolclass.max_images
+            # remove camera images
+            for i in media.keys():
+                try:
+                    if media[i]['origin']=='camera':
+                        del media[i]
+                except:
+                    pass
+
+        #read content file off the phone
+        content={}
+        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
+        g=self.protocolclass.content_file()
+        g.readfrombuffer(buf)
+        for i in g.items:
+            # type !C always appears first
+            if i.type=='!C':
+                content[int(i.index1)]= {'C': i}
+            elif i.type=='!E':
+                content[int(i.index2)]['E']=i
+
+        # get a list of files in the media directory so we can figure out what to delete
+        # and what needs to be copied onto the phone
+        dirlisting=self.getfilesystem(self.protocolclass.media_directory)
+        # strip path from directory listing
+        for i in dirlisting.keys():
+            dirlisting[i[len(self.protocolclass.media_directory)+1:]]=dirlisting[i]
+            del dirlisting[i]
+
+        # build up list of existing media items into init, remove missing items from content list
+        init={}
+        for k in content.keys():
+            if content[k]['C'].content_type==content_type:
+                index=k
+                name=content[k]['C'].name1
+                size=int(content[k]['C'].size)
+                data=None
+                # find the media content file, check that the size matches
+                for w in media:
+                    if common.stripext(media[w]['name'])==name and media[w]['data']!=None:
+                        size_fix=((3024+len(media[w]['data']))/1008)*1008
+                        if size_fix==size:
+                            data=media[w]['data']
+                            del media[w]
+                            break
+                # remove unused entries from index and filesystem
+                if not merge and data is None:
+                    # delete the entry
+                    del content[k]
+                    content_changed=True
+                    # we have to remove the data file, the gcd file and the url file
+                    _fname='%02d.dat' % k
+                    if _fname in dirlisting:
+                        self.rmfile(self.protocolclass.media_directory+'/'+_fname)
+                        del dirlisting[_fname]
+                    gcdname='%02d.gcd' % k
+                    if gcdname in dirlisting:
+                        self.rmfile(self.protocolclass.media_directory+'/'+gcdname)
+                        del dirlisting[gcdname]
+                    urlname='%02d.url' % k
+                    if urlname in dirlisting:
+                        self.rmfile(self.protocolclass.media_directory+'/'+urlname)
+                        del dirlisting[urlname]
+                    continue
+                init[index]={'name': name, 'data': data}
+
+        # go through adding new media not currently on the phone
+        # assign these item keys in the content media
+        applications={}
+        for sp in range(100):
+            if len(media.keys()) == 0:
+                break
+            if sp not in content:
+                #found a hole
+                for w in media.keys():
+                    C,E,add_to_index=self.make_new_media_entry(media[w], sp, type)
+                    if add_to_index=='index':
+                        content[sp]= {'C': C, 'E': E}
+                        init[sp]=media[w]
+                        content_changed=True
+                    elif add_to_index=='content':
+                        content[sp]= {'C': C, 'E': E}
+                        applications[sp]=media[w]
+                        content_changed=True
+                    else:
+                        self.log("Unknown media type for "+`media[w]['name']`+". Not written to phone.")
+                        sp-=1
+                    del media[w]
+                    break
+
+        if len(media.keys()):
+            self.log("Phone index full, some media not written to phone")
+
+        # write out the new index, there are two files on this phone
+        # the content file and the media index, kinda dumb having two copies
+        # of the same thing
+        # content_file
+        content_count=0
+        keys=content.keys()
+        keys.sort()
+        cfile=self.protocolclass.content_file()
+        # add in the !C types first
+        for k in keys:
+            content_count+=1
+            cfile.items.append(content[k]['C'])
+        for k in keys:
+            cfile.items.append(content[k]['E'])
+        #terminator
+        entry=self.protocolclass.content_entry()
+        entry.type='!F'
+        cfile.items.append(entry)
+        buffer=prototypes.buffer()
+        cfile.writetobuffer(buffer)
+        self.logdata("Updated content file "+self.protocolclass.content_file_name, buffer.getvalue(), cfile)
+        self.writefile(self.protocolclass.content_file_name, buffer.getvalue())
+
+        countfile=self.protocolclass.content_count()
+        countfile.count=`content_count`            
+        buffer=prototypes.buffer()
+        countfile.writetobuffer(buffer)
+        self.logdata("Updated content count file "+self.protocolclass.content_count_file_name, buffer.getvalue(), countfile)
+        self.writefile(self.protocolclass.content_count_file_name, buffer.getvalue())
+
+        # now write out the index file (this is like the verizon LG phones)
+        keys=init.keys()
+        keys.sort()
+        ifile=self.protocolclass.indexfile()
+        ifile.numactiveitems=len(keys)
+        for k in keys:
+            entry=self.protocolclass.indexentry()
+            entry.index=k
+            entry.const=index_const
+            entry.name='%02d.dat' % k
+            ifile.items.append(entry)
+        # fill the remainder of the entries with unused keys
+        for k in range(max_media_entries):
+            if k in keys:
+                continue
+            entry=self.protocolclass.indexentry()
+            entry.index=k
+            entry.const=index_const
+            ifile.items.append(entry)
+        buffer=prototypes.buffer()
+        ifile.writetobuffer(buffer)
+        self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
+        self.writefile(indexfile, buffer.getvalue())
+
+        # Write out files - we compare against existing dir listing and don't rewrite if they
+        # are the same size
+        for k in keys:
+            entry=init[k]
+            data=entry.get("data", None)
+            _fname='%02d.dat' % k
+            gcdname='%02d.gcd' % k
+            urlname='%02d.url' % k
+            if data is None:
+                if _fname not in dirlisting:
+                    self.log("Index error.  I have no data for "+entry['name']+" and it isn't already in the filesystem")
+                continue
+            contentsize=len(data)
+            urlcontents='file://'+entry['name']
+            gcdcontents=self.makegcd(entry['name'],contentsize)
+            if _fname in dirlisting and len(data)==dirlisting[_fname]['size']:
+                self.log("Skipping writing %s/%s as there is already a file of the same length" % (self.protocolclass.media_directory,entry['name']))
+                # repair gcd and url incase they are missing
+                if gcdname not in dirlisting:
+                    self.writefile(self.protocolclass.media_directory+"/"+gcdname, gcdcontents)
+                if urlname not in dirlisting:
+                    self.writefile(self.protocolclass.media_directory+"/"+urlname, urlcontents)
+                continue
+            self.writefile(self.protocolclass.media_directory+"/"+_fname, data)
+            self.writefile(self.protocolclass.media_directory+"/"+gcdname, gcdcontents)
+            self.writefile(self.protocolclass.media_directory+"/"+urlname, urlcontents)
+
+        # write out applications
+        for k in applications.keys():
+            entry=applications[k]
+            data=entry.get("data", None)
+            _fname='%02d.jar' % k
+            jadname='%02d.jad' % k
+            urlname='%02d.url' % k
+            if data is None:
+                if _fname not in dirlisting:
+                    self.log("Index error.  I have no data for "+entry['name']+" and it isn't already in the filesystem")
+                print "here2"
+                continue
+            contentsize=len(data)
+            urlcontents='file://'+entry['name']
+            jadcontents=self.makejad(entry['name'],contentsize)
+            print "here3"
+            if _fname in dirlisting and len(data)==dirlisting[_fname]['size']:
+                self.log("Skipping writing %s/%s as there is already a file of the same length" % (self.protocolclass.media_directory,entry['name']))
+                # repair jad and url incase they are missing
+                if jadname not in dirlisting:
+                    self.writefile(self.protocolclass.media_directory+"/"+jadname, jadcontents)
+                if urlname not in dirlisting:
+                    self.writefile(self.protocolclass.media_directory+"/"+urlname, urlcontents)
+                print "here4"
+                continue
+            print "here5"
+            self.writefile(self.protocolclass.media_directory+"/"+_fname, data)
+            self.writefile(self.protocolclass.media_directory+"/"+jadname, jadcontents)
+            self.writefile(self.protocolclass.media_directory+"/"+urlname, urlcontents)
+
+        del results[mediakey] # done with it
+        reindexfunction(results)
+        if content_changed:
+            results["rebootphone"]=True
+        return results
+    
+    def make_new_media_entry(self, entry, index, type):
+        c=self.protocolclass.content_entry()
+        e=self.protocolclass.content_entry()
+        name=common.stripext(entry['name'])
+        ext=common.getext(entry['name'])
+        data=entry.get("data", None)
+        add_to_index='index'
+        c.type='!C'
+        c.index1=index
+        c.name1=name
+        try:
+            c.mime_type=self.__mimetype[ext]
+        except:
+            # bad file type
+            add_to_index='none'
+            return c, e, add_to_index
+        if c.mime_type=='application/java-archive':
+            c.content_type='Games'
+            e.location_maybe='midlet:'+name
+            add_to_index='content'
+        elif type=='ringers':
+            c.content_type='Ringers'
+        else:
+            c.content_type='Screen Savers'
+        c.size=`((3024+len(data))/1008)*1008`
+        e.type='!E'
+        e.index2=index
+        e.name2=name
+        return c, e, add_to_index
+
+    def makegcd(self,filename,size):
+        "Build a GCD file for filename"
+        ext=common.getext(filename.lower())
+        noextname=common.stripext(filename)
+        try:
+            mimetype=self.__mimetype[ext]
+            gcdcontent="Content-Type: "+mimetype+"\nContent-Name: "+noextname+"\nContent-Version: 1.0\nContent-Vendor: BitPim\nContent-URL: file://"+filename+"\nContent-Size: "+`size`+"\nContent-Description: Content for V10044 LG PM225"+"\n\n\n"
+        except:
+            gcdcontent="Content-Name: "+noextname+"\nContent-Version: 1.0\nContent-Vendor: BitPim\nContent-URL: file://"+filename+"\nContent-Size: "+`size`+"\n\n\n"
+        return gcdcontent
+
+    def makejad(self,filename,size):
+        "Build a JAD file for filename"
+        ext=common.getext(filename.lower())
+        noextname=common.stripext(filename)
+        jadcontent="MIDlet-1: "+noextname+", "+noextname+".png, BitPim\nMIDlet-Jar-Size: "+`size`+"\nMIDlet-Jar-URL: "+filename+"\nMIDlet-Name: "+noextname+"\nMIDlet-Vendor: Unknown\nMIDlet-Version: 1.0\nMicroEdition-Configuration: CLDC-1.0\nMicroEdition-Profile: MIDP-1.0\nContent-Folder: Games\n\n\n"
+        return jadcontent
+
 
 #----- Phone Detection -----------------------------------------------------------
 
-    esn_file_key='esn_file'
-    esn_file='nvm/$SYS.ESN'
+    brew_version_file='ams/version.txt'
+    brew_version_txt_key='ams_version.txt'
+    my_model='LX325'    # AKA the PM325 from Sprint
 
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        try:
+            s=self.getfilecontents('ams/version.txt')
+            if s[:5]==self.my_model:
+                phone_info.append('Model:', self.my_model+'/PM325')
+                phone_info.append('ESN:', self.get_brew_esn())
+                req=p_brew.firmwarerequest()
+                res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+                phone_info.append('Firmware Version:', res.firmware)
+                txt=self.getfilecontents("nvm/nvm/nvm_0000")[207:217]
+                phone_info.append('Phone Number:', txt)
+        except:
+            self.log('Error Getting Phone Info')
+            pass
+        return
 
 #----- Profile Class -------------------------------------------------------------
-def phonize(str):
-    """Convert the phone number into something the phone understands
-
-    All digits, P, H, T, * and # are kept, everything else is removed"""
-    return re.sub("[^0-9HPT#*]", "", str)
-
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
     BP_Calendar_Version=3
-    phone_manufacturer='LG Electronics Inc.'
-    phone_model='LG-LX325'      # aka the PM325 from Sprint
+    phone_manufacturer='LG Electronics Inc'
+    phone_model='LX325'      # aka the PM325 from Sprint
     brew_required=True
 
+    DIALSTRING_CHARS="[^0-9PT#*]"
 
     def convertphonebooktophone(self, helper, data):
         """Converts the data to what will be used by the phone
@@ -498,7 +1079,6 @@ class Profile(parentprofile):
         @param data: contains the dict returned by getfundamentals
                      as well as where the results go"""
         results={}
-
         speeds={}
 
         for pbentry in data['phonebook']:
@@ -508,7 +1088,7 @@ class Profile(parentprofile):
             entry=data['phonebook'][pbentry] # entry in
             try:
                 # serials
-                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0xFFFFFFFF)
 
                 e['serial1']=serial1
                 for ss in entry["serials"]:
@@ -517,7 +1097,7 @@ class Profile(parentprofile):
                 assert e['bitpimserial']
 
                 # name
-                e['name']=helper.getfullname(entry.get('names', []),1,1,33)[0]
+                e['name']=helper.getfullname(entry.get('names', []),1,1,32)[0]
 
                 # categories/groups
                 cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,32), None)
@@ -565,7 +1145,7 @@ class Profile(parentprofile):
                         # we couldn't find a type for the number
                         continue
                     # deal with number
-                    number=phonize(num['number'])
+                    number=self.phonize(num['number'])
                     if len(number)==0:
                         # no actual digits in the number
                         continue
@@ -603,12 +1183,12 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-        #('calendar', 'read', None),   # all calendar reading
-        #('wallpaper', 'read', None),  # all wallpaper reading
-        #('ringtone', 'read', None),   # all ringtone reading
-        #('call_history', 'read', None),# all call history list reading
-        #('sms', 'read', None),         # all SMS list reading
-        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'read', None),   # all calendar reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
+        #('memo', 'read', None),        # all memo list reading
+        ('sms', 'read', None),         # all SMS list reading
         #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         #('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         #('wallpaper', 'write', 'OVERWRITE'),
