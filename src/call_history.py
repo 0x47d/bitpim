@@ -442,15 +442,18 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
     def OnDelete(self, _):
         if self.read_only:
             return
-        sel_idx=self._item_list.GetSelection()
-        if not sel_idx.Ok():
+        sels_idx=self._item_list.GetSelections()
+        if not sels_idx:
             return
-        k=self._item_list.GetPyData(sel_idx)
-        if k is None:
-            # this is not a leaf node
-            return
-        self._item_list.Delete(sel_idx)
-        del self._data[k]
+        for sel_idx in sels_idx:
+            if not sel_idx.Ok():
+                continue
+            k=self._item_list.GetPyData(sel_idx)
+            if k is None:
+                # this is not a leaf node
+                continue
+            self._item_list.Delete(sel_idx)
+            del self._data[k]
         self._save_to_db(self._data)
 
     def getdata(self, dict, want=None):
@@ -532,3 +535,14 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
             self.historical_data_label.SetLabel(msg_str)
             self._main_window.OnBusyEnd()
         dlg.Destroy()
+
+    def get_selected_data(self):
+        # return a dict of selected items
+        res={}
+        for sel_idx in self._item_list.GetSelections():
+            k=self._item_list.GetPyData(sel_idx)
+            if k:
+                res[k]=self._data[k]
+        return res
+    def get_data(self):
+        return self._data
