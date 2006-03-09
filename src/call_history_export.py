@@ -91,18 +91,18 @@ class ExportCallHistoyDialog(wx.Dialog):
         return _dt.date_str()+' '+_dt.time_str()
     def _phonenumber_str(self, v):
         return phonenumber.format(v)
-    def _int(self, v):
-        if v is None:
+    def _hms(self, v):
+        if v is None or not isinstance(v, int):
             return ''
         else:
-            return str(v)
+            return '%02d:%02d:%02d'%(v/3600, v/60, v%60)
 
     _csv_template=(
         ('Date', 'datetime', _datetime_str),
         ('Number', 'number', _phonenumber_str),
         ('Name', 'name', None),
-        ('Duration', 'duration', _int),
-        ('Folder', 'folder', None))
+        ('Duration', 'duration', _hms),
+        ('Type', 'folder', None))
     def _export_csv(self, fp, ch):
         # export Call History data to CSV format
         # print out the header
