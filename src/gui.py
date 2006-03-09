@@ -777,7 +777,7 @@ class MainWindow(wx.Frame):
 
         ### toolbar
         self.tb=self.CreateToolBar(wx.TB_HORIZONTAL)
-        self.tb.SetToolBitmapSize(wx.Size(22,22))
+        self.tb.SetToolBitmapSize(wx.Size(32,32))
         sz=self.tb.GetToolBitmapSize()
 
         # add and delete tools
