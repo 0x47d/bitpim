@@ -597,10 +597,6 @@ class Phone(com_lgvx4400.Phone):
 
     def get_content_file(self, key):
         index={}
-        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
-        g=self.protocolclass.content_file()
-        g.readfrombuffer(buf)
-        self.logdata("Content file %s read with %d entries" % (self.protocolclass.content_file_name,len(g.items)), buf.getdata(), g)
         if key=='ringtone' or key=='ringtone-index':
             type='Ringers'
             index_const=self.protocolclass.ringerconst*0x100
@@ -609,28 +605,35 @@ class Phone(com_lgvx4400.Phone):
             type='Screen Savers'
             index_const=self.protocolclass.imageconst*0x100
             indexfile=self.getindex(self.protocolclass.imageindex)
-        for i in g.items:
-            if i.type=='!C' and i.content_type==type:
-                try:
-                    # construct a user friendly filename
-                    ext=self.__reverse_mimetype[i.mime_type]
-                    # find the "file" in the index file and get it's index
-                    # if the index was created by bitpim it will be the same 
-                    # as the unfriendly filename, but this is not guarenteed
-                    found=False
-                    for j in indexfile.keys():
-                        # convert to int to strip leading zero
-                        try:
-                            if int(common.stripext(indexfile[j]))==int(i.index1):
-                                index[j + index_const]=i.name1+'.'+ext
-                                found=True
-                                break;
-                        except:
-                            pass
-                    if not found:
-                        self.logdata("Unable to find index entry for "+i.name1+". Index : "+`i.index1`)
-                except:
-                    pass
+        try:
+            buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
+            g=self.protocolclass.content_file()
+            g.readfrombuffer(buf)
+            self.logdata("Content file %s read with %d entries" % (self.protocolclass.content_file_name,len(g.items)), buf.getdata(), g)
+            for i in g.items:
+                if i.type=='!C' and i.content_type==type:
+                    try:
+                        # construct a user friendly filename
+                        ext=self.__reverse_mimetype[i.mime_type]
+                        # find the "file" in the index file and get it's index
+                        # if the index was created by bitpim it will be the same 
+                        # as the unfriendly filename, but this is not guarenteed
+                        found=False
+                        for j in indexfile.keys():
+                            # convert to int to strip leading zero
+                            try:
+                                if int(common.stripext(indexfile[j]))==int(i.index1):
+                                    index[j + index_const]=i.name1+'.'+ext
+                                    found=True
+                                    break;
+                            except:
+                                pass
+                        if not found:
+                            self.logdata("Unable to find index entry for "+i.name1+". Index : "+`i.index1`)
+                    except:
+                        pass
+        except com_brew.BrewNoSuchFileException:
+            pass
         return index, indexfile, index_const
 
     def getmedia(self, maps, result, key):
@@ -665,6 +668,7 @@ class Phone(com_lgvx4400.Phone):
                 media[_fname]=buf.getdata()
             except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                 self.log("It was in the index, but not on the filesystem")
+        self.log("Contents not in the filesystem")
 
         result[key]=media
         return result
@@ -749,16 +753,18 @@ class Phone(com_lgvx4400.Phone):
 
         #read content file off the phone
         content={}
-        buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
-        g=self.protocolclass.content_file()
-        g.readfrombuffer(buf)
-        for i in g.items:
-            # type !C always appears first
-            if i.type=='!C':
-                content[int(i.index1)]= {'C': i}
-            elif i.type=='!E':
-                content[int(i.index2)]['E']=i
-
+        try:
+            buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
+            g=self.protocolclass.content_file()
+            g.readfrombuffer(buf)
+            for i in g.items:
+                # type !C always appears first
+                if i.type=='!C':
+                    content[int(i.index1)]= {'C': i}
+                elif i.type=='!E':
+                    content[int(i.index2)]['E']=i
+        except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+            pass
         # get a list of files in the media directory so we can figure out what to delete
         # and what needs to be copied onto the phone
         dirlisting=self.getfilesystem(self.protocolclass.media_directory)
