@@ -385,20 +385,23 @@ class ImportDialog(wx.Dialog):
         # categories
         cats=[]
         if rec.has_key("Category"):
-            for cat in rec['Category']:
-                cats.append({'category': cat})
+            cats=rec['Category']
             del rec["Category"]
         if rec.has_key("Categories"):
             # multiple entries in the field, semi-colon seperated
             if isinstance(rec['Categories'], list):
-                for cat in rec['Categories']:
-                    cats.append({'category': cat})
+                cats+=rec['Categories']
             else:
                 for cat in rec['Categories'].split(';'):
-                    cats.append({'category': cat})
+                    cats.append(cat)
             del rec['Categories']
-        if len(cats):
-            entry["categories"]=cats
+        _cats=[]
+        if self.categorieswanted is not None:
+            for c in self.categorieswanted:
+                if c in cats:
+                    _cats.append({'category': c })
+        if _cats:
+            entry["categories"]=_cats
         # wallpapers
         l=[]
         r=rec.get('Wallpapers', None)
@@ -704,6 +707,16 @@ class CategorySelectorDialog(wx.Dialog):
         self.any=wx.RadioButton(self, wx.NewId(), "Any/All")
         hbs.Add(self.selected, 0, wx.ALL, 5)
         hbs.Add(self.any, 0, wx.ALL, 5)
+        _up=wx.BitmapButton(self, -1,
+                            wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_UP, wx.ART_TOOLBAR,
+                                                     wx.Size(16, 16)))
+        _dn=wx.BitmapButton(self, -1,
+                            wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_DOWN, wx.ART_TOOLBAR,
+                                                     wx.Size(16, 16)))
+        hbs.Add(_up, 0, wx.ALL, 5)
+        wx.EVT_BUTTON(self, _up.GetId(), self.OnMoveUp)
+        wx.EVT_BUTTON(self, _dn.GetId(), self.OnMoveDown)
+        hbs.Add(_dn, 0, wx.ALL, 5)
         vbs.Add(hbs, 0, wx.ALL, 5)
 
         self.categoriesavailable=categoriesavailable
@@ -736,9 +749,40 @@ class CategorySelectorDialog(wx.Dialog):
     def GetCategories(self):
         if self.any.GetValue():
             return None
-        return [self.categoriesavailable[x] for x in range(len(self.categoriesavailable)) if self.cats.IsChecked(x)]
+        return [self.cats.GetString(x) for x in range(len(self.categoriesavailable)) if self.cats.IsChecked(x)]
 
+    def _populate(self):
+        _sel_str=self.cats.GetStringSelection()
+        _chk=self.GetCategories()
+        if _chk is None:
+            _chk=[]
+        self.cats.Clear()
+        for s in self.categoriesavailable:
+            i=self.cats.Append(s)
+            if s==_sel_str:
+                self.cats.SetSelection(i)
+            self.cats.Check(i, s in _chk)
 
+    def OnMoveUp(self, _):
+        _sel_idx=self.cats.GetSelection()
+        if _sel_idx==wx.NOT_FOUND or not _sel_idx:
+            # no selection or top item
+            return
+        # move the selected item one up
+        self.categoriesavailable[_sel_idx], self.categoriesavailable[_sel_idx-1]=\
+        self.categoriesavailable[_sel_idx-1], self.categoriesavailable[_sel_idx]
+        self._populate()
+
+    def OnMoveDown(self, _):
+        _sel_idx=self.cats.GetSelection()
+        if _sel_idx==wx.NOT_FOUND or \
+           _sel_idx==len(self.categoriesavailable)-1:
+            # no selection or bottom item
+            return
+        # move the selected item one up
+        self.categoriesavailable[_sel_idx], self.categoriesavailable[_sel_idx+1]=\
+        self.categoriesavailable[_sel_idx+1], self.categoriesavailable[_sel_idx]
+        self._populate()
 
 class ImportCSVDialog(ImportDialog):
 

@@ -10,6 +10,7 @@
       <li>Added new toolbar to main window.
       <li><b>Windows</b> libusb is no longer looked for on Windows.  (To use libusb on Windows, you had to have a device driver first.  And if you had a device driver, you'd have no need for libusb.)
       <li>Added Call History export to CSV format.
+      <li><b>Import Outlook Contacts:</b>Added contact category priority filter.
     </ul>
 
    <h2><a name="0.8.08">Changes in 0.8.08</a></h2>
