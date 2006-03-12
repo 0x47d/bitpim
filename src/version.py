@@ -84,7 +84,7 @@ url="http://www.bitpim.org"
 description="BitPim "+versionstring
 copyright="(C) 2003-2006 Roger Binns and others - see http://www.bitpim.org"
 
-def __freeze(foo=None):
+def __freeze():
     # my filename
     myfilename=os.path.splitext(__file__)[0]+".py"
 

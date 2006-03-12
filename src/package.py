@@ -213,6 +213,7 @@ def getvals():
         'VERSION': version.version,
         'DQVERSION': version.dqverstr,
         'COMMENTS': "Provided under the GNU Public License (GPL)",
+        'DESCRIPTION': "BitPim is a program that allows you to view and manipulate data on many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This includes the PhoneBook, Calendar, WallPapers, RingTones (functionality varies by phone) and the Filesystem for most Qualcomm CDMA chipset based phones.",
         'COPYRIGHT': "Copyright © 2003-2006 The BitPim developers",
         'URL': version.url,
         'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
