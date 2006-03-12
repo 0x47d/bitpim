@@ -26,15 +26,21 @@ contact="The BitPim home page is at http://www.bitpim.org.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
 
 svnrevision=0  # we don't know
+# were we frozen?
+f=__FROZEN__.split()
+if len(f)==3: # we were - calc svnrevision
+    svnrevision=int(f[1])
+
 # fixup vendor
 if vendor[1:].startswith("Id:"):
     if len(vendor.split())>3:
         vendor=""
     else:
         vendor=vendor.split()[1]
+
 _headurl="$HeadURL$".split()[1]
 # work out our version number
-_rp="https://svn.sourceforge.com/svnroot/bitpim/releases/"
+_rp="https://svn.sourceforge.net/svnroot/bitpim/releases/"
 if _headurl.startswith(_rp):
     def isdevelopmentversion(): return False
     version=_headurl[len(_rp):].split("/")[0]
@@ -46,9 +52,7 @@ else:
     version="-".join(_headurl[len(prefix):].split("/")[:-2]) # -2 to prune off src/version.py
     del prefix
     # were we frozen?
-    f=__FROZEN__.split()
-    if len(f)==3: # we were - add revision
-        svnrevision=int(f[1])
+    if svnrevision:
         version=version+"-"+`svnrevision`
     if len(vendor)==0:
         vendor="developer build"
