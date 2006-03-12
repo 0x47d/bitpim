@@ -102,8 +102,8 @@ def __freeze(foo=None):
         print "Your tree isn't pure. Do you have files not checked in (M)?"
         print svnver,"was returned by svnversion"
         sys.exit(4)
-    print "Embedding svnrevision",svnver,"into",myfilename
     svnver=svnver.split(":")[-1]
+    print "Embedding svnrevision",svnver,"into",myfilename
     result=[]
     for line in open(myfilename, "rtU"):
         if line.startswith('__FROZEN__="$Id:'):
