@@ -12,11 +12,15 @@
 # This file provides the packaging definitions used by the buildrelease system
 
 import sys
+import os
+
+sys.path=[os.path.dirname(__file__)]+sys.path # this directory needs to be on the path
 
 import version
 
 def sanitycheck():
-    "Check everything is ok"
+    "Check all dependencies are present and at the correct version"
+    
     print "=== Sanity check ==="
 
     print "python version",
@@ -74,7 +78,6 @@ def sanitycheck():
     if apsw.sqlitelibversion()!=ver:
         raise Exception("Should be sqlite version %s - you have %s" % (ver, apsw.sqlitelibversion()))
     print "  OK"
-
         
     print "jaro/winkler string matcher",
     import native.strings.jarow
@@ -86,14 +89,17 @@ def sanitycheck():
         import bsddb
         print "  OK"
 
-    # libusb on Windows
-        # check libusb
-    import win32api
-    try:
-        win32api.FreeLibrary(win32api.LoadLibrary("libusb0.dll"))
-    except:
-        raise Exception("You need libusb0.dll to be available to do a build.  You only need the dll, not the rest of libusb-win32.  (It doesn't have to be available on the end user system, but does need to be present to do a correct build")
-
+    # win32com.shell - See http://starship.python.net/crew/theller/moin.cgi/WinShell
+    if sys.platform=='win32':
+        import py2exe.mf as modulefinder # in py2exe < 0.6.4 use "import modulefinder"
+        import win32com
+        for p in win32com.__path__[1:]:
+            modulefinder.AddPackagePath("win32com", p)
+        for extra in ["win32com.shell"]: #,"win32com.mapi"
+            __import__(extra)
+            m = sys.modules[extra]
+            for p in m.__path__[1:]:
+                modulefinder.AddPackagePath(extra, p)
 
     print "=== All checks out ==="
 
@@ -143,14 +149,75 @@ def isofficialbuild():
 
 def ensureofficial():
     """If this is not an official build then ensure that version.vendor doesn't say it is"""
+    # First do a freeze
+    version.__freeze()
+    print "Reloading version"
+    reload(version)
     if not isofficialbuild():
         if version.vendor=="official":
-            # it isn't official, so modify file
-            f=open("version.py", "rt").read()
-            newf=f.replace('vendor="official"', 'vendor="unofficial"')
-            assert newf!=f
-            open("version.py", "wt").write(newf)
+            # so modify file
+            out=[]
+            for line in open("version.py", "rt"):
+                if line.startswith('vendor="'):
+                    line='vendor="$%s %s $"\n' % ("Id:", "unofficial")
+                out.append(line)
+                    
+            open("version.py", "wt").write("".join(out))
             reload(version)
 
 def getversion():
     return version.version
+
+def getpy2exeoptions(defaults):
+    defaults.update(
+        {
+        'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', 'icon_resources': [(1, "packaging/bitpim.ico")],
+                      'product_version': '%%VERSION%%', 'version': '%%DQVERSION%%',
+                      'comments': '%%COMMENTS%%',
+                      'company_name': "%%URL%%",
+                      'copyright': "%%COPYRIGHT%%",
+                      'name': "%%NAME%%",
+                      'description': "%%DESCRIPTION%%",
+                      }],
+        }
+        )
+    return defaults
+
+def copyresources(destdir):
+    import packageutils
+    packageutils.copysvndir('resources', os.path.join(destdir, 'resources'), resourcefilter)
+    packageutils.copysvndir('helpers', os.path.join(destdir, 'helpers'), resourcefilter)
+
+def resourcefilter(srcfilename, destfilename):
+    exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids']
+    if sys.platform=='win32':
+        # on windows we also want the chm help file and the manifest needed to get Xp style widgets
+        exts=exts+['.chm', '.ico', '.exe', '.dll']
+    if sys.platform=='linux2':
+        exts=exts+['.lbin', '.htb']
+    if sys.platform=='darwin':
+        exts=exts+['.mbin', '*.htb']
+    if os.path.splitext(srcfilename)[1] in exts:
+        return srcfilename, destfilename
+    return None
+
+def finalize(destdir):
+    for f in ("w9xpopen.exe",):
+        if os.path.exists(os.path.join(destdir, f)):
+            os.remove(os.path.join(destdir, f))
+
+def getvals():
+    "Return various values about this product"
+    res={
+        'NAME': version.name,
+        'VERSION': version.version,
+        'DQVERSION': version.dqverstr,
+        'COMMENTS': "Provided under the GNU Public License (GPL)",
+        'COPYRIGHT': "Copyright © 2003-2006 The BitPim developers",
+        'URL': version.url,
+        'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
+        'GUID': "(FA61D601-A0FC-48BD-AE7A-54946BCD7FB6}",
+        'VENDOR': version.vendor,
+        'PUBLISHER': "Roger Binns <rogerb@rogerbinns.com> and others"
+        }
+    return res

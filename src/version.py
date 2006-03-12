@@ -9,21 +9,28 @@
 
 """Information about BitPim version number"""
 
-# When a release build is made, this file is run with the 'freeze' argument.
-# This file is then self modified to put only one component on the
-# frozen (but inside the dollar id so svn won't consider the file modified)
+# We'd like to record information in this file, but without subversion
+# considering the file modified.  This is done by placing the information
+# in the dollar id fields.  When freeze is run, it does those various
+# substitutions
 
 __FROZEN__="$Id$"
 
 import time
 
 name="BitPim"
-vendor=""
+vendor="$Id$"
 release=0  # when rereleases of the same version happen, this gets incremented
 contact="The BitPim home page is at http://www.bitpim.org.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
 
-svnrevision=""  # we don't know
+svnrevision=0  # we don't know
+# fixup vendor
+if vendor[1:].startswith("Id:"):
+    if len(vendor.split())>3:
+        vendor=""
+    else:
+        vendor=vendor.split()[1]
 _headurl="$HeadURL$".split()[1]
 # work out our version number
 _rp="https://svn.sourceforge.com/svnroot/bitpim/releases/"
@@ -40,8 +47,8 @@ else:
     # were we frozen?
     f=__FROZEN__.split()
     if len(f)==3: # we were - add revision
-        svnrevision=f[1]
-        version=version+"-"+svnrevision.replace(':', '_')
+        svnrevision=int(f[1])
+        version=version+"-"+`svnrevision`
     if len(vendor)==0:
         vendor="developer build"
 
@@ -56,26 +63,57 @@ if release>0:
 if not isdevelopmentversion():
     # dotted quad version as used on Windows (a.b.c.d where all must be digits only)
     # we use major.minor.point.last
-    dqver=[int(x) for x in version.split(".")]+[0,0,0,0]
+    dqver=[int(x) for x in version.split(".")]
+    while len(dqver)<3:
+        dqver.append(0)
+    while len(dqver)<4:
+        dqver.append(svnrevision)
     dqver=dqver[:4]
-elif len(svnrevision):
-    svnrevision.split(":")
-    dqver=[0,0,0,svnrevision]
 else:
-    dqver=[0,0,0,0]
+    dqver=[0,0,0,svnrevision] # svnrevision will be zero if we weren't frozen
 
 dqverstr=".".join([`x` for x in dqver])
 
 del x
 
 
-# need to fix these ...
-author="Roger Binns"
-author_email="rogerb@rogerbinns.com"
+
 url="http://www.bitpim.org"
 
 description="BitPim "+versionstring
 copyright="(C) 2003-2006 Roger Binns and others - see http://www.bitpim.org"
+
+def __freeze():
+        # modify the frozen field with the current revision number
+        print "Freezing version"
+        import os, sys
+        svnver=os.popen("svnversion -n .", "r").read()
+        if len(svnver)<4:
+            print "svnversion command doesn't appear to be working."
+            sys.exit(3)
+        try:
+            # temporary - remove following line once code works
+            if svnver[-1]=='M': svnver=svnver[:-1]
+            [int(x) for x in svnver.split(":")]
+        except:
+            print "Your tree isn't pure. Do you have files not checked in (M)?"
+            print svnver,"was returned by svnversion"
+            sys.exit(4)
+        print "Embedding svnrevision",svnver,"into",sys.argv[0]
+        svnver=svnver.split(":")[-1]
+        result=[]
+        for line in open(__file__, "rtU"):
+            if line.startswith('__FROZEN__="$Id:'):
+                line='__FROZEN__="$%s %s $"\n' % ("Id:", svnver)
+            result.append(line)
+
+        open(__file__, "wt").write("".join(result))
+        # python doesn't check .pyc/.pyo files correctly so we proactively delete them
+        for ext in (".pyc", ".pyo"):
+            try:
+                os.remove(os.path.splitext(__file__)[0]+ext)
+            except OSError:
+                pass
 
 if __name__=='__main__':
     import sys
@@ -85,26 +123,6 @@ if __name__=='__main__':
         print "#define VERSION", versionstring
         print "#define DATENOW", time.strftime("%d %B %Y")
     elif sys.argv[1]=="freeze":
-        # modify the frozen field with the current revision number
-        import os
-        svnver=os.popen("svnversion -n .", "r").read()
-        if len(svnver)<4:
-            print "svnversion command doesn't appear to be working."
-            sys.exit(3)
-        try:
-            [int(x) for x in svnver.split(":")]
-        except:
-            print "Your tree isn't pure. Do you have files not checked in (M)?"
-            print svnver,"was returned by svnversion"
-            sys.exit(4)
-        print "Embedding svnrevision",svnver,"into",sys.argv[0]
-        result=[]
-        for line in open(sys.argv[0], "rtU"):
-            if line.startswith('__FROZEN__="$Id:'):
-                line='__FROZEN__="$Id$"\n'
-            result.append(line)
-
-        open(sys.argv[0], "wt").write("".join(result))
-                
+        __freeze()
     else:
         print "Unknown arguments",sys.argv[1:]
