@@ -16,6 +16,7 @@
 
 __FROZEN__="$Id$"
 
+import os, sys
 import time
 
 name="BitPim"
@@ -83,37 +84,39 @@ url="http://www.bitpim.org"
 description="BitPim "+versionstring
 copyright="(C) 2003-2006 Roger Binns and others - see http://www.bitpim.org"
 
-def __freeze():
-        # modify the frozen field with the current revision number
-        print "Freezing version"
-        import os, sys
-        svnver=os.popen("svnversion -n .", "r").read()
-        if len(svnver)<4:
-            print "svnversion command doesn't appear to be working."
-            sys.exit(3)
-        try:
-            # temporary - remove following line once code works
-            if svnver[-1]=='M': svnver=svnver[:-1]
-            [int(x) for x in svnver.split(":")]
-        except:
-            print "Your tree isn't pure. Do you have files not checked in (M)?"
-            print svnver,"was returned by svnversion"
-            sys.exit(4)
-        print "Embedding svnrevision",svnver,"into",sys.argv[0]
-        svnver=svnver.split(":")[-1]
-        result=[]
-        for line in open(__file__, "rtU"):
-            if line.startswith('__FROZEN__="$Id:'):
-                line='__FROZEN__="$%s %s $"\n' % ("Id:", svnver)
-            result.append(line)
+def __freeze(foo=None):
+    # my filename
+    myfilename=os.path.splitext(__file__)[0]+".py"
 
-        open(__file__, "wt").write("".join(result))
-        # python doesn't check .pyc/.pyo files correctly so we proactively delete them
-        for ext in (".pyc", ".pyo"):
-            try:
-                os.remove(os.path.splitext(__file__)[0]+ext)
-            except OSError:
-                pass
+    # modify the frozen field with the current revision number
+    print "Freezing version"
+    svnver=os.popen("svnversion -n .", "r").read()
+    if len(svnver)<4:
+        print "svnversion command doesn't appear to be working."
+        sys.exit(3)
+    try:
+        # temporary - remove following line once code works
+        if svnver[-1]=='M': svnver=svnver[:-1]
+        [int(x) for x in svnver.split(":")]
+    except:
+        print "Your tree isn't pure. Do you have files not checked in (M)?"
+        print svnver,"was returned by svnversion"
+        sys.exit(4)
+    print "Embedding svnrevision",svnver,"into",myfilename
+    svnver=svnver.split(":")[-1]
+    result=[]
+    for line in open(myfilename, "rtU"):
+        if line.startswith('__FROZEN__="$Id:'):
+            line='__FROZEN__="$%s %s $"\n' % ("Id:", svnver)
+        result.append(line)
+
+    open(myfilename, "wt").write("".join(result))
+    # python doesn't check .pyc/.pyo files correctly so we proactively delete them
+    for ext in (".pyc", ".pyo"):
+        try:
+            os.remove(os.path.splitext(__file__)[0]+ext)
+        except OSError:
+            pass
 
 if __name__=='__main__':
     import sys
