@@ -1628,38 +1628,31 @@ class MainWindow(wx.Frame):
                       id(self.smswidget): guihelper.ART_DEL_SMS,
                       id(self.playlistwidget): guihelper.ART_DEL_TODO,
                       }
-        shorthelpadd={id(self.ringerwidget): "Add Ringer",
-                   id(self.wallpaperwidget): "Add Wallpaper",
-                   id(self.phonewidget): "Add Contact",
-                   id(self.memowidget): "Add Memo",
-                   id(self.todowidget): "Add Todo Item",
-                   id(self.smswidget): "Add SMS",
-                   id(self.playlistwidget): "Add Playlist",
+        shorthelp={id(self.ringerwidget): ("Add Ringer", "Delete Ringer"),
+                   id(self.wallpaperwidget): ("Add Wallpaper","Delete Wallpaper"),
+                   id(self.phonewidget): ("Add Contact","Delete Contact"),
+                   id(self.memowidget): ("Add Memo","Delete Memo"),
+                   id(self.todowidget): ("Add Todo Item","Delete Todo Item"),
+                   id(self.smswidget): ("Add SMS","Delete SMS"),
+                   id(self.playlistwidget): ("Add Playlist","Delete Playlist"),
+                   id(self.callhistorywidget): ("Add","Delete Call"),
                    }
-        shorthelpdelete={id(self.ringerwidget): "Delete Ringer",
-                   id(self.wallpaperwidget): "Delete Wallpaper",
-                   id(self.phonewidget): "Delete Contact",
-                   id(self.memowidget): "Delete Memo",
-                   id(self.todowidget): "Delete Todo Item",
-                   id(self.smswidget): "Delete SMS",
-                   id(self.playlistwidget): "Delete Playlist",
-                   id(self.callhistorywidget): "Delete Call",
-                   }
-        bmpadd=wx.ArtProvider.GetBitmap(mapbmpadd.get(id(self.widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz)
-        self.tooladd.SetNormalBitmap(bmpadd)
-        if id(self.widget) in shorthelpadd:
-            self.tooladd.SetShortHelp(shorthelpadd[id(self.widget)])
+        if id(self.widget) in shorthelp:
+            short_help_add, short_help_delete=shorthelp[id(self.widget)]
         else:
-            self.tooladd.SetShortHelp("Add")
-        bmpdel=wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(self.widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz)
-        self.tooldelete.SetNormalBitmap(bmpdel)
-        if id(self.widget) in shorthelpdelete:
-            self.tooldelete.SetShortHelp(shorthelpdelete[id(self.widget)])
-        else:
-            self.tooldelete.SetShortHelp("Delete")
-        # this has to be called to force the actual update
-        self.GetToolBar().Realize()
-        self.SendSizeEvent()
+            short_help_add, short_help_delete=("Add", "Delete")
+        # replace the add/delete buttons with new ones specific to the widget being shown
+        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITADDENTRY)
+        self.GetToolBar().DeleteTool(guihelper.ID_EDITADDENTRY)
+        self.tooladd=self.tb.InsertLabelTool(pos, guihelper.ID_EDITADDENTRY, short_help_add, 
+                                             wx.ArtProvider.GetBitmap(mapbmpadd.get(id(self.widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz),
+                                             shortHelp=short_help_add, longHelp="Add an item")
+        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITDELETEENTRY)
+        self.GetToolBar().DeleteTool(guihelper.ID_EDITDELETEENTRY)
+        self.tooldelete=self.tb.InsertLabelTool(pos, guihelper.ID_EDITDELETEENTRY, short_help_delete, 
+                                                wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(self.widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz),
+                                                shortHelp=short_help_delete, longHelp="Delete item")
+        self.tb.Realize()
          
     # add/delete entry in the current tab
     def OnEditAddEntry(self, evt):
