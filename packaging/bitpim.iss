@@ -16,7 +16,6 @@ DefaultDirName={pf}\%%NAME%%
 OutputBaseFilename=%%OUTFILE%%
 OutputDir=.
 WizardStyle=modern
-UninstallStyle=modern
 Compression=lzma/ultra
 SolidCompression=yes
 InternalCompressLevel=ultra
