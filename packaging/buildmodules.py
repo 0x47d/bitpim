@@ -10,17 +10,20 @@ import glob
 
 topdir=os.getcwd()
 
-# Mac fixup
-if sys.platform=='darwin':
+# fixup
+if sys.platform!='win32':
     sys.path=['']+sys.path
 
 # USB
 print "===== src/native/usb"
-if sys.platform=='darwin':
+if sys.platform in ('darwin', 'linux2'):
     os.chdir("src/native/usb")
     if os.path.exists("_libusb.so"):
         os.remove("_libusb.so")
-    os.system("./macbuild.sh")
+    if sys.platform=='darwin':
+        os.system("./macbuild.sh")
+    else:
+        os.system("./build.sh")
     assert os.path.exists("_libusb.so")
     os.chdir(topdir)
 

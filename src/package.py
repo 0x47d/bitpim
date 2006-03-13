@@ -168,6 +168,14 @@ def ensureofficial():
 def getversion():
     return version.version
 
+def getcxfreezeoptions(defaults):
+    defaults.update(
+        {
+        'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}]
+        }
+        )
+    return defaults
+
 def getpy2appoptions(defaults):
     defaults.update(
         {

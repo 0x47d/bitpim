@@ -22,7 +22,7 @@ import wx.lib.colourselect
 # my modules
 import brewcompressedimage
 import conversions
-import guiwidgets
+import fileview
 import guihelper
 import common
 import helpids
@@ -30,18 +30,20 @@ import pubsub
 import aggregatedisplay
 import fileinfo
 
+# do NOT import guiwidgets into this file else you'll cause a circular dependency
+
 ###
 ###  Wallpaper pane
 ###
 
-class DisplayItem(guiwidgets.FileViewDisplayItem):
+class DisplayItem(fileview.FileViewDisplayItem):
 
     datakey="wallpaper-index"
     datatype="Image"  # this is used in the tooltip
         
 thewallpapermanager=None
 
-class WallpaperView(guiwidgets.FileView):
+class WallpaperView(fileview.FileView):
     CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
@@ -71,7 +73,7 @@ class WallpaperView(guiwidgets.FileView):
         self.updateprofilevariables(self.mainwindow.phoneprofile)
 
         self.organizemenu=wx.Menu()
-        guiwidgets.FileView.__init__(self, mainwindow, parent, "wallpaper-watermark")
+        fileview.FileView.__init__(self, mainwindow, parent, "wallpaper-watermark")
 
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci;*.bit"
 
@@ -240,7 +242,7 @@ class WallpaperView(guiwidgets.FileView):
         # is it a bci file?
         return open(filename, "rb").read(4)=="BCI\x00"
 
-    def getdata(self,dict,want=guiwidgets.FileView.NONE):
+    def getdata(self,dict,want=fileview.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.wallpaperpath, 'wallpapers', 'wallpaper-index')
 
     def RemoveFromIndex(self, names):
@@ -252,7 +254,7 @@ class WallpaperView(guiwidgets.FileView):
                     self.modified=True
 
     def GetItemThumbnail(self, name, width, height):
-        img,_=self.GetImage(name.encode(guiwidgets.media_codec))
+        img,_=self.GetImage(name.encode(fileview.media_codec))
         if img is None or not img.Ok():
             # unknown image file, display wallpaper.png
             img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
@@ -368,7 +370,7 @@ class WallpaperView(guiwidgets.FileView):
                 decoded_file=self.decodefilename(file)
                 targetfilename=self.getshortenedbasename(decoded_file)
                 open(targetfilename, 'wb').write(open(file, 'rb').read())
-                self.AddToIndex(str(os.path.basename(targetfilename)).decode(guiwidgets.media_codec),
+                self.AddToIndex(str(os.path.basename(targetfilename)).decode(fileview.media_codec),
                                 'images')
             else:
                 # :::TODO:: do i need to handle bci specially here?
@@ -420,7 +422,7 @@ class WallpaperView(guiwidgets.FileView):
             dlg.ShowModal()
             return
 
-        self.AddToIndex(str(os.path.basename(targetfilename)).decode(guiwidgets.media_codec), origin)
+        self.AddToIndex(str(os.path.basename(targetfilename)).decode(fileview.media_codec), origin)
         if refresh:
             self.OnRefresh()
 
@@ -1065,10 +1067,12 @@ class ImagePreviewDialog(wx.Dialog):
         
         self.SetSizer(vbsouter)
         vbsouter.Fit(self)
+        import guiwidgets
         guiwidgets.set_size("wallpaperpreview", self, 80, 1.0)
 
     def ShowModal(self):
         res=wx.Dialog.ShowModal(self)
+        import guiwidgets
         guiwidgets.save_size("wallpaperpreview", self.GetRect())
         return res
 

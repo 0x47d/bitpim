@@ -13,7 +13,7 @@ import time
 import wx
 from wx.lib import masked
 
-import guiwidgets
+import fileview
 import guihelper
 import pubsub
 import aggregatedisplay
@@ -29,13 +29,13 @@ import rangedslider
 ###  Ringers
 ###
 
-class DisplayItem(guiwidgets.FileViewDisplayItem):
+class DisplayItem(fileview.FileViewDisplayItem):
 
     datakey='ringtone-index'
     datatype='Audio' # used in the tooltip
 
 
-class RingerView(guiwidgets.FileView):
+class RingerView(fileview.FileView):
     CURRENTFILEVERSION=2
 
     # this is only used to prevent the pubsub module
@@ -52,7 +52,7 @@ class RingerView(guiwidgets.FileView):
         self._data={'ringtone-index': {}}
         self.updateprofilevariables(self.mainwindow.phoneprofile)
         self.organizemenu=wx.Menu()
-        guiwidgets.FileView.__init__(self, mainwindow, parent, "ringtone-watermark")
+        fileview.FileView.__init__(self, mainwindow, parent, "ringtone-watermark")
         self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3;*.pmd|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|PMD/CMX files|*.pmd|All files|*.*"
 
         self.organizeinfo={}
@@ -102,7 +102,7 @@ class RingerView(guiwidgets.FileView):
         # reset the fla
         self._shift_down=False
 
-    def getdata(self,dict,want=guiwidgets.FileView.NONE):
+    def getdata(self,dict,want=fileview.FileView.NONE):
         return self.genericgetdata(dict, want, self.mainwindow.ringerpath, 'ringtone', 'ringtone-index')
 
     def GetItemThumbnail(self, item, w, h):
@@ -226,7 +226,7 @@ class RingerView(guiwidgets.FileView):
                 decoded_file=self.decodefilename(file)
                 target=self.getshortenedbasename(decoded_file)
                 open(target, 'wb').write(open(file, 'rb').read())
-                self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
+                self.AddToIndex(str(os.path.basename(target)).decode(fileview.media_codec))
             else:
                 # do we want to convert file?
                 afi=fileinfo.identify_audiofile(file)
@@ -260,7 +260,7 @@ class RingerView(guiwidgets.FileView):
                 decoded_file=self.decodefilename(file)
                 target=self.getshortenedbasename(decoded_file, newext)
                 open(target, "wb").write(filedata)
-                self.AddToIndex(str(os.path.basename(target)).decode(guiwidgets.media_codec))
+                self.AddToIndex(str(os.path.basename(target)).decode(fileview.media_codec))
         self.OnRefresh()
 
     OnAddFiles=guihelper.BusyWrapper(OnAddFiles)

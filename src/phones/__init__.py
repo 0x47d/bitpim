@@ -65,3 +65,6 @@ if __debug__:
 # update the module path
 for k, e in phonemodels.items():
     phonemodels[k]=__name__+'.'+e
+
+# temporary until i can unconfuse cx-freeze
+import com_lgvx4400

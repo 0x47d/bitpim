@@ -1609,7 +1609,7 @@ class MainWindow(wx.Frame):
         # does the page have editable properties?
         self.widget=self.nb.GetPage(self.nb.GetSelection())
         # force focus to its child
-        self.widget.SetFocus()
+        wx.CallAfter(self.widget.SetFocus)
 
         sz=self.tb.GetToolBitmapSize()
         mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,

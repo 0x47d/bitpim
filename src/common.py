@@ -664,17 +664,21 @@ def importas(name):
 def main_is_frozen():
     """ Return T if running from an exe, F otherwise
     """
-    return (hasattr(sys, "frozen") or # new py2exe
-           hasattr(sys, "importers") # old py2exe
-           or imp.is_frozen("__main__")) # tools/freeze
+    return (hasattr(sys, "frozen")  # new py2exe
+           or hasattr(sys, "importers") # old py2exe
+           or imp.is_frozen("__main__") # tools/freeze
+            or os.path.isfile(sys.path[0])) # cxfreeze
 
 def get_main_dir():
     """Return the absoluate path of the main BitPim dir
     """
     if main_is_frozen():
-        # running from exe, return as is
-        if sys.platform=='darwin': # except on Mac
-             return sys.path[0]
+        if sys.platform!='win32':
+             p=sys.path[0]
+             if os.path.isfile(p):
+                  p=os.path.dirname(p)
+             return p
+        # windows running from exe, return as is
         return os.path.abspath(os.path.dirname(sys.executable))
     # running from src, up one
     return os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
