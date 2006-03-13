@@ -376,6 +376,12 @@ class Phone(com_samsung_packet.Phone):
         media_prefix=self.protocolclass.WALLPAPERPREFIX
         endtransactionpath=self.protocolclass.ENDTRANSACTION
         media=result.get('wallpapers', {})
+        for i in media.keys():
+            try:
+                if media[i]['origin']=='camera':
+                    del media[i]
+            except:
+                pass
         media_index=result.get('wallpaper-index', {})
         media_names=[x['name'] for x in media.values()]
         index_names=[x['name'] for x in media_index.values()]
@@ -388,8 +394,8 @@ class Phone(com_samsung_packet.Phone):
 
         progressmax=len(del_names)+len(new_names)
         progresscur=0
-        self.log("Writing ringers")
-        self.progress(progresscur, progressmax, "Writing ringers")
+        self.log("Writing images")
+        self.progress(progresscur, progressmax, "Writing images")
 
         for icnt in range(1,101):
             if not (new_names or del_names):
@@ -402,8 +408,8 @@ class Phone(com_samsung_packet.Phone):
                 gcdcontents=dircache.readfile(fnamegcd)
                 thisfile=gcdpattern.search(gcdcontents).groups()[0]
                 if thisfile in del_names:
-                    self.log("Deleting ringer "+thisfile)
-                    self.progress(progresscur, progressmax, "Deleting ringer "+thisfile)
+                    self.log("Deleting image "+thisfile)
+                    self.progress(progresscur, progressmax, "Deleting image "+thisfile)
                     progresscur+=1
                     dircache.rmfile(fname)
                     dircache.rmfile(fnamegcd)
@@ -420,15 +426,15 @@ class Phone(com_samsung_packet.Phone):
                 contentsize=len(contents)
                 if contentsize:
                     gcdcontents=self.makegcd(newname,contentsize,self.__image_mimetype)
-                    self.log("Writing ringer "+newname)
-                    self.progress(progresscur, progressmax, "Deleting ringer "+newname)
+                    self.log("Writing image "+newname)
+                    self.progress(progresscur, progressmax, "Deleting image "+newname)
                     progresscur+=1
                     dircache.writefile(fname,contents)
                     dircache.writefile(fnamegcd,gcdcontents)
 
         fstat=dircache.stat(endtransactionpath)
-        self.log("Finished writing ringers")
-        self.progress(progressmax, progressmax, "Finished writing ringers")
+        self.log("Finished writing images")
+        self.progress(progressmax, progressmax, "Finished writing images")
         if fstat:
             dircache.rmfile(endtransactionpath)
         result['rebootphone']=True
