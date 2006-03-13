@@ -673,6 +673,8 @@ def get_main_dir():
     """
     if main_is_frozen():
         # running from exe, return as is
+        if sys.platform=='darwin': # except on Mac
+             return sys.path[0]
         return os.path.abspath(os.path.dirname(sys.executable))
     # running from src, up one
     return os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]

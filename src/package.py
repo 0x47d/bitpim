@@ -168,17 +168,18 @@ def ensureofficial():
 def getversion():
     return version.version
 
+def getpy2appoptions(defaults):
+    defaults.update(
+        {
+        'app': [{'script': 'src/bp.py',}],
+        }
+        )
+    return defaults
+
 def getpy2exeoptions(defaults):
     defaults.update(
         {
-        'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', 'icon_resources': [(1, "packaging/bitpim.ico")],
-                      'product_version': '%%VERSION%%', 'version': '%%DQVERSION%%',
-                      'comments': '%%COMMENTS%%',
-                      'company_name': "%%URL%%",
-                      'copyright': "%%COPYRIGHT%%",
-                      'name': "%%NAME%%",
-                      'description': "%%DESCRIPTION%%",
-                      }],
+        'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
         }
         )
     return defaults
@@ -191,7 +192,7 @@ def copyresources(destdir):
 def resourcefilter(srcfilename, destfilename):
     exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids']
     if sys.platform=='win32':
-        # on windows we also want the chm help file and the manifest needed to get Xp style widgets
+        # on windows we also want the chm help file 
         exts=exts+['.chm', '.ico', '.exe', '.dll']
     if sys.platform=='linux2':
         exts=exts+['.lbin', '.htb']
@@ -211,14 +212,19 @@ def getvals():
     res={
         'NAME': version.name,
         'VERSION': version.version,
+        'RELEASE': version.release,
         'DQVERSION': version.dqverstr,
         'COMMENTS': "Provided under the GNU Public License (GPL)",
-        'DESCRIPTION': "BitPim is a program that allows you to view and manipulate data on many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This includes the PhoneBook, Calendar, WallPapers, RingTones (functionality varies by phone) and the Filesystem for most Qualcomm CDMA chipset based phones.",
+        'DESCRIPTION': "View and manipulate data on many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This includes the PhoneBook, Calendar, WallPapers, RingTones (functionality varies by phone) and the Filesystem for most Qualcomm CDMA chipset based phones.",
         'COPYRIGHT': "Copyright © 2003-2006 The BitPim developers",
         'URL': version.url,
         'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
-        'GUID': "(FA61D601-A0FC-48BD-AE7A-54946BCD7FB6}",
+        'GUID': "{FA61D601-A0FC-48BD-AE7A-54946BCD7FB6}",
         'VENDOR': version.vendor,
         'PUBLISHER': "Roger Binns <rogerb@rogerbinns.com> and others"
         }
+    if sys.platform=='win32':
+        res['ICONFILE']="packaging/bitpim.ico"
+    if sys.platform=="darwin":
+        res['ICONFILE']="packaging/bitpim.icns"
     return res
