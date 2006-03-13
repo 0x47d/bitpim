@@ -227,4 +227,14 @@ def getvals():
         res['ICONFILE']="packaging/bitpim.ico"
     if sys.platform=="darwin":
         res['ICONFILE']="packaging/bitpim.icns"
+        # prefix with macos versiopn
+        v=os.popen("sw_vers -productVersion", "r").read()
+        if v.startswith("10.3"):
+            res['OUTFILEPREFIX']='PANTHER-'
+        elif v.startswith("10.4"):
+            res['OUTFILEPREFIX']='TIGER-'
+        elif v.startswith("10.2"):
+            res['OUTFILEPREFIX']='JAGUAR-'
+        elif v.startswith("10.5"):
+            res['OUTFILEPREFIX']='LEOPARD-'
     return res
