@@ -59,6 +59,7 @@ phonemodels={ 'LG-G4015 (AT&T)': 'com_lgg4015',
 
 if __debug__:
     phonemodels.update( {'Audiovox CDM-8900': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
+                         'SPH-A680': 'com_samsungspha680',
                          })
 
 # update the module path
