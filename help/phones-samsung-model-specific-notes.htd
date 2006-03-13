@@ -1,9 +1,15 @@
 #include "pagestart.h"
 
 <h4>SPH-A620 (VGA1000), SPH-A660, SPH-A740, SPH-A840 (Sprint)</h4>
-BitPim can read and write the phonebook and calendar.  Wallpaper (and
-pictures), and ringers can be read from the phone.  Ringers can be writen
-back to these phones.
+BitPim can read and write the phonebook and calendar.  Wallpaper and ringers
+can be read and writen to the phone.  For phones with cameras,
+pictures and videos are read with the wallpaper.
+<p>
+Many of these Samsung models are also available from carriers other
+than Sprint in the Americas.  While these phones are not officially
+supported by BitPim, many of the capabilities may work.  In many
+cases, the phonebook and calendar can be transferred, but media
+(photos, wallpaper, ringers) transfer does work.
 <p>
 These phones have a limit of 300 numbers, urls and emails.  There is
 an internal counter of numbers, urls of emails.  This counter can
