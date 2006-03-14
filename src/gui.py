@@ -62,6 +62,7 @@ import pubsub
 import phones.com_brew as com_brew
 import auto_sync
 import playlist
+import fileview
 
 if guihelper.IsMSWindows():
     import win32api
@@ -2329,7 +2330,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
 
         self.__dragging=False
         self.add_files=[]
-        self.droptarget=guiwidgets.MyFileDropTarget(self, True)
+        self.droptarget=fileview.MyFileDropTarget(self, True)
         self.SetDropTarget(self.droptarget)
 
     def OnPaint(self, evt):
@@ -2652,7 +2653,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         self.SetImageList(self.image_list)
         self.add_files=[]
         self.add_target=""
-        self.droptarget=guiwidgets.MyFileDropTarget(self, True, True)
+        self.droptarget=fileview.MyFileDropTarget(self, True, True)
         self.SetDropTarget(self.droptarget)
         self.ResetView()
 

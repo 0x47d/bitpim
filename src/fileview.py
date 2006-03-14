@@ -19,6 +19,40 @@ import phone_media_codec
 import wx
 import guihelper
 import aggregatedisplay
+import common
+
+def DrawTextWithLimit(dc, x, y, text, widthavailable, guardspace, term="..."):
+    """Draws text and if it will overflow the width available, truncates and  puts ... at the end
+
+    @param x: start position for text
+    @param y: start position for text
+    @param text: the string to draw
+    @param widthavailable: the total amount of space available
+    @param guardspace: if the text is longer than widthavailable then this amount of space is
+             reclaimed from the right handside and term put there instead.  Consequently
+             this value should be at least the width of term
+    @param term: the string that is placed in the guardspace if it gets truncated.  Make sure guardspace
+             is at least the width of this string!
+    @returns: The extent of the text that was drawn in the end as a tuple of (width, height)
+    """
+    w,h=dc.GetTextExtent(text)
+    if w<widthavailable:
+        dc.DrawText(text,x,y)
+        return w,h
+    extents=dc.GetPartialTextExtents(text)
+    limit=widthavailable-guardspace
+    # find out how many chars in we have to go before hitting limit
+    for i,offset in enumerate(extents):
+        if offset>limit:
+            break
+    # back off 1 in case the new text's a tad long
+    if i:
+        i-=1
+    text=text[:i]+term
+    w,h=dc.GetTextExtent(text)
+    assert w<=widthavailable
+    dc.DrawText(text, x, y)
+    return w,h
 
 media_codec=phone_media_codec.codec_name
 class MyFileDropTarget(wx.FileDropTarget):
