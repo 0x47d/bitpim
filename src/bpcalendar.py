@@ -726,7 +726,7 @@ class CalendarEntry(object):
 
 #-------------------------------------------------------------------------------
 class Calendar(calendarcontrol.Calendar):
-    """A class encapsulating the GUI and data of the calendar (all days).  A seperate L{DayViewDialog} is
+    """A class encapsulating the GUI and data of the calendar (all days).  A seperate dialog is
     used to edit the content of one particular day."""
 
     CURRENTFILEVERSION=3

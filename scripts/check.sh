@@ -6,14 +6,15 @@
 # including epydoc and pychecker
 
 EPYDOC=epydoc
-PYCHECKER=pychecker
+PYCHECKERARGS="--only --limit 10000"
+PYCHECKER="pychecker $PYCHECKERARGS"
 PYXRDIR=
 PYTHON=python # will probably want this to be python2.3 on rh9
 
 case $MACHTYPE in
     *-msys ) # windows machine
         EPYDOC="python /c/python23/scripts/epydoc.py"
-        PYCHECKER="python /c/python23/lib/site-packages/pychecker/checker.py pychecker"
+        PYCHECKER="python /c/python23/lib/site-packages/pychecker/checker.py $PYCHECKERARGS pychecker"
 	PYXRDIR="/c/bin/pyxr"
 	PATH="/usr/bin:$PATH"  # msys is usually not on path!
     ;;
@@ -36,7 +37,7 @@ copytowebsite() {
 
     # this is how we detect the website - look for a bpweb checkout alongside this
     # directory
-    if [ ! -d ../bpweb/site/CVS ]
+    if [ ! -d ../bpweb/site/.svn ]
     then
 	return  # not found
     fi
@@ -47,46 +48,47 @@ copytowebsite() {
     cp -r $1 ../bpweb/site/$2
 }
 
-# nice little function to see if a file is in CVS
-isincvs() {
-    efile=`dirname $1`/CVS/Entries
-    grep -s "^[^/]*/`basename $1`/" $efile >/dev/null
+# nice little function to see if a file is in subversion
+isinsvn() {
+    efile=`dirname $1`/.svn/entries
+    grep -s "name=\"`basename $1`\"" $efile >/dev/null
 }
 
-# we look for all .py files in CVS
+# we look for all .py files in SVN
 pyfiles="bp.py gui.py guiwidgets.py guihelper.py common.py" # we have to do this in this order first else python crashes
 
-# find files in this directory
-for f in `echo *.py | sort`
+# find files in src
+for f in `find src -name '*.py' -print |sed s@^src/@@ | sort`
 do
-    if isincvs $f
+    if isinsvn src/$f
     then
        case `basename $f` in
-         p2econfig.py | p_*.py ) # we don't want these
+          p_*.py | __init__.py | setup.py | p2econfig.py ) # we don't want these
             true
          ;;   
          * )
-	    pyfiles="$pyfiles $f"
+	    case $f in
+		native/evolution/* | native/outlook/* | native/qtopiadesktop/* | native/usb/* | native/wab/* )
+                  # pychecker barfs on the above
+		  true
+                ;;
+                *)
+		  pyfiles="$pyfiles $f"
+                ;;
+	    esac
          ;;
        esac
     fi
 done
 
-# find all modules
-for f in `find . -type f -name __init__.py | sed s@^./@@`
-do
-   if isincvs "$f"
-   then
-	pyfiles="$pyfiles `dirname \"$f\" | sed s@/@.@g`"
-    fi
-done
-
+pyfiles="`echo $pyfiles | sed 's/\.py//g' | sed 's@/@.@g'`"
+pyfiles="$pyfiles native.evolution native.outlook native.qtopiadesktop native.usb native.wab"
 echo $pyfiles
 
 if [ "$EPYDOC" != "" ]
 then
-    $EPYDOC --check $pyfiles > check.out
-    $EPYDOC -o apidoc  --css blue  -n bitpim -u http://www.bitpim.org $pyfiles
+    PYTHONPATH=src $EPYDOC --check $pyfiles > check.out
+    PYTHONPATH=src $EPYDOC -o apidoc  --css blue  -n bitpim -u http://www.bitpim.org $pyfiles
     copytowebsite apidoc apidoc
 fi
 
@@ -101,5 +103,5 @@ fi
 
 if [ "$PYCHECKER" != "" ]
 then
-    $PYCHECKER $pyfiles
+    PYTHONPATH=src $PYCHECKER $pyfiles
 fi
