@@ -11,8 +11,7 @@ import glob
 topdir=os.getcwd()
 
 # fixup
-if sys.platform!='win32':
-    sys.path=['']+sys.path
+sys.path=['']+sys.path
 
 # USB
 print "===== src/native/usb"
@@ -40,7 +39,7 @@ if os.path.exists(fname):
     os.remove(fname)
 sys.argv=[sys.argv[0]]+['build']
 if sys.platform=='win32':
-    sys.argv.append("--compiler=mingw")
+    sys.argv.append("--compiler=mingw32")
 import setup
 shutil.copy2(glob.glob("build/*/"+fname)[0], '.')
 os.chdir(topdir)
