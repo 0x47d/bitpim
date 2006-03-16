@@ -823,7 +823,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 # read this file
                 s=self.getfilecontents(self.brew_version_file)
                 res[self.brew_version_txt_key]=s
-            except com_brew.BrewNoSuchFileException:
+            except (com_brew.BrewNoSuchFileException, ValueError):
                 res[self.brew_version_txt_key]=None
             except:
                 if __debug__:

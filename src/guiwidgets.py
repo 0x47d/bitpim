@@ -48,6 +48,8 @@ import bitflingscan
 import aggregatedisplay
 import phone_media_codec
 import pubsub
+import phones
+import setphone_wizard
 
 ###
 ### BitFling cert stuff
@@ -352,7 +354,6 @@ class SendPhoneDialog(GetPhoneDialog):
 ###
 
 class ConfigDialog(wx.Dialog):
-    import phones
     phonemodels=phones.phonemodels
     update_choices=('Never', 'Daily', 'Weekly', 'Monthly')
     setme="<setme>"
@@ -389,11 +390,14 @@ class ConfigDialog(wx.Dialog):
 
         # phone type
         gs.Add( wx.StaticText(self, -1, "Phone Type"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        keys=self.phonemodels.keys()
+        keys=self.phonemodels
         keys.sort()
         self.phonebox=wx.ComboBox(self, -1, "LG-VX4400", style=wx.CB_DROPDOWN|wx.CB_READONLY,choices=keys)
         self.phonebox.SetValue("LG-VX4400")
         gs.Add( self.phonebox, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _phone_btn=wx.Button(self, -1, 'Phone Wizard...')
+        wx.EVT_BUTTON(self, _phone_btn.GetId(), self.OnPhoneWizard)
+        gs.Add(_phone_btn, pos=(_row, 2), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
 
         # com port
@@ -495,7 +499,7 @@ class ConfigDialog(wx.Dialog):
         # w=self.mw.config.ReadInt("combrowsewidth", 640)
         # h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
-        dlg=CommPortDialog(self, common.importas(self.phonemodels[self.phonebox.GetValue()]), defaultport=self.commbox.GetValue(), sashposition=p)
+        dlg=CommPortDialog(self, common.importas(phones.module(self.phonebox.GetValue())), defaultport=self.commbox.GetValue(), sashposition=p)
         # dlg.SetSize(wx.Size(w,h))
         # dlg.Centre()
         res=dlg.ShowModal()
@@ -633,7 +637,7 @@ class ConfigDialog(wx.Dialog):
         self.mw.commparams=commparm
         # phone model
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
-        self.mw.phonemodule=common.importas(self.phonemodels[self.phonebox.GetValue()])
+        self.mw.phonemodule=common.importas(phones.module(self.phonebox.GetValue()))
         self.mw.phoneprofile=self.mw.phonemodule.Profile()
         pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
         #  bitfling
@@ -699,6 +703,14 @@ class ConfigDialog(wx.Dialog):
 
     def saveSize(self):
         save_size("ConfigDialog", self.GetRect())
+
+    def OnPhoneWizard(self, _):
+        # running the set phone wizard
+        _wz=setphone_wizard.SetPhoneWizard(self)
+        if _wz.RunWizard():
+            _res=_wz.get()
+            self.commbox.SetValue(_res.get('com', ''))
+            self.phonebox.SetValue(_res.get('phone', ''))
 
 ###
 ### The select a comm port dialog box

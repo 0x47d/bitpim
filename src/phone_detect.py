@@ -180,7 +180,7 @@ class DetectPhone(object):
         self.__data_lock.release()
         self.log('Done on port: '+port)
 
-    def detect(self, using_port=None):
+    def detect(self, using_port=None, using_model=None):
         # start the detection process
         # 1st, get the list of available ports
         coms=comscan.comscan()
@@ -215,19 +215,24 @@ class DetectPhone(object):
 ##        for e in available_modem_coms:
 ##            self.do_get_data(e)
         # go through each phone and ask it
-        pm=phones.phonemodels
-        models=pm.keys()
-        models.sort()
+##        pm=phones.phonemodels
+        if using_model:
+            models=[using_model]
+        else:
+            models=phones.phonemodels
         found_port=found_model=None
         for model in models:
             self.log('Checking for model: '+model)
-            module=common.importas(pm[model])
+            module=common.importas(phones.module(model))
             # check for detectphone in module.Phone or
             # phone_model and phone_manufacturer in module.Profile
             if hasattr(module.Phone, 'detectphone'):
-                likely_ports=[x['name'] for x in coms if \
-                              x['available'] and \
-                              comdiagnose.islikelyport(x, module)]
+                if using_port is None:
+                    likely_ports=[x['name'] for x in coms if \
+                                  x['available'] and \
+                                  comdiagnose.islikelyport(x, module)]
+                else:
+                    likely_ports=[using_port]
                 self.log('Likely ports:'+str(likely_ports))
                 found_port=getattr(module.Phone, 'detectphone')(coms,
                                                                 likely_ports,
@@ -249,7 +254,7 @@ class DetectPhone(object):
         if found_port is not None and found_model is not None:
             self.log('Found phone:'+found_model+' port:'+`found_port`)
             return { 'port': found_port, 'phone_name': found_model,
-                     'phone_module': pm[found_model],
+                     'phone_module': phones.module(found_model),
                      'phone_esn': self.__data[found_port]['esn'] }
     def get(self):
         return self.__data

@@ -40,12 +40,12 @@ req_attrs={ 'phonebook': { 'r': 'getphonebook', 'w': 'savephonebook' },
             'Auto Detect': check_auto_detect
             }
 def generate_phone_features():
-    pm=phones.phonemodels
-    models=pm.keys()
-    models.sort()
+##    pm=phones.phonemodels
+##    models=pm.keys()
+##    models.sort()
     r={}
-    for model in models:
-        module=common.importas(pm[model])
+    for model in phones.phonemodels:
+        module=common.importas(phones.module(model))
         # check for Profile._supportedsyncs
         support_sync=[(x[0], x[1]) for x in module.Profile._supportedsyncs]
         d={}
