@@ -79,10 +79,10 @@ class Phone(com_lgpm225.Phone):
     my_model='LG_LG6200' 
 
     def eval_detect_data(self, res):
+        found=False
         if res.get(self.brew_version_txt_key, None) is not None:
             found=res[self.brew_version_txt_key][0x5b1:0x5b1+len(self.my_model)]==self.my_model
         if found:
-            
             res['model']=self.my_model
             res['manufacturer']='LG Electronics Inc'
             s=res.get(self.esn_file_key, None)
