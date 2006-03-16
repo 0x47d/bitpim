@@ -13,6 +13,7 @@ import serial
 import sys
 import common
 import time
+import threading
 try:
     import native.usb as usb
 except:
@@ -212,12 +213,28 @@ class CommConnection:
         except SilentException:
             return False
 
-    def write(self, data, log=True):
+    def _write(self, data, log=True):
         self.writerequests+=1
         if log:
             self.logdata("Writing", data)
         self.ser.write(data)
         self.writebytes+=len(data)
+
+    def write_thread(self, data, log):
+        try:
+            self._write(data, log)
+            self._write_res=True
+        except Exception,e:
+            self.log('Write Exception: '+str(e))
+    def write(self, data, log=True):
+        _t=threading.Thread(target=self.write_thread, args=(data, log))
+        self._write_res=False
+        _t.start()
+        _t.join(self.params[1]+1)
+        if _t.isAlive():
+            _t._Thread__stop()
+        if not self._write_res:
+            raise CommTimeout()
 
     def sendatcommand(self, atcommand, ignoreerror=False):
         #print "sendatcommand: "+atcommand
@@ -319,7 +336,7 @@ class CommConnection:
                     raise
         raise CommTimeout()
 
-    def read(self, numchars=1, log=True):
+    def _read(self, numchars=1, log=True):
         self.readrequests+=1
         try:
             res=self.ser.read(numchars)
@@ -331,6 +348,23 @@ class CommConnection:
             self.logdata("Reading exact data - requested "+`numchars`, res)
         self.readbytes+=len(res)
         return res
+
+    def read_thread(self, numchars=1, log=True):
+        try:
+            self._read_res=self._read(numchars, log)
+        except Exception,e:
+            self.log('Read Exception: '+str(e))
+
+    def read(self, numchars=1, log=True):
+        _t=threading.Thread(target=self.read_thread, args=(numchars, log))
+        self._read_res=None
+        _t.start()
+        _t.join(self.params[1]+1)
+        if _t.isAlive():
+            _t._Thread__stop()
+        if self._read_res is None:
+            raise CommTimeout()
+        return self._read_res
 
     def readsome(self, log=True, numchars=None):
         self.readrequests+=1

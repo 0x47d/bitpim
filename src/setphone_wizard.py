@@ -246,6 +246,7 @@ class SummaryPage(MyPage):
         return vs
 
     def set(self, data):
+        self._status.SetLabel('')
         self._model_name=data.get('phone', '')
         self._model.SetLabel(self._model_name)
         self._com_port=data.get('com', '')

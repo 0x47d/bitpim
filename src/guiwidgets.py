@@ -705,6 +705,9 @@ class ConfigDialog(wx.Dialog):
         save_size("ConfigDialog", self.GetRect())
 
     def OnPhoneWizard(self, _):
+        # clear the port
+        if self.mw.wt is not None:
+            self.mw.wt.clearcomm()
         # running the set phone wizard
         _wz=setphone_wizard.SetPhoneWizard(self)
         if _wz.RunWizard():
