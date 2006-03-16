@@ -11,8 +11,8 @@
 # %define debug_package %{nil}
 
 Summary: Interfaces with the phonebook, calendar, wallpaper of many CDMA phones
-Name: %%NAME%%
-Version: %%VERSION%%
+Name: %%RPMNAME%%
+Version: %%RPMVERSION%%
 Release: %%RELEASE%%
 License: GNU GPL
 Group: Utilities/Phone
@@ -22,11 +22,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 AutoReqProv: no
 
 %description
-Bitpim is a program that allows you to view and manipulate data
-on LG VX4400/VX6000 and many Sanyo Sprint cell phones.  This
-includes the PhoneBook, Calendar, WallPapers, RingTones
-(functionality varies by phone) and the Filesystem for most
-Qualcomm CDMA chipset based phones.
+BitPim is a program that allows you to view and manipulate data on
+many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This
+includes the PhoneBook, Calendar, WallPapers, RingTones (functionality
+varies by phone) and the Filesystem for most Qualcomm CDMA chipset
+based phones.
 
 %prep
 %setup -q
@@ -36,17 +36,13 @@ Qualcomm CDMA chipset based phones.
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT VERSION=%%VERSION%%
+tar xvf dist.tar -C $RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%files
+%files -f FILELIST
 %defattr(-,root,root,-)
-
-/usr/bin/bitpim
-/usr/bin/bitfling
-/usr/lib/%{name}-%{version}
 
 %doc
 
