@@ -172,9 +172,9 @@ def getcxfreezeoptions(defaults):
     defaults.update(
         {
         'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}],
-        'includes': phones.getallmodulenames(),
         }
         )
+    defaults['options']['cxfreeze']['includes']=phones.getallmodulenames()
     return defaults
 
 def getpy2appoptions(defaults):
