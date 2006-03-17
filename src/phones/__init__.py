@@ -1,6 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2006 Joe Pham <djpham@bitpim.org>
+### Copyright (C) 2006 Roger Binns <rogerb@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -243,3 +244,8 @@ def carrier2phones(carrier_name):
 def manufacturer2phones(brand_name):
     # return a list of phone belongs to this brand
     return [x for x in phonemodels if manufacturer(x)==brand_name]
+
+def getallmodulenames():
+    return [_phonedata[k]['module'] for k in _phonedata]
+
+    

@@ -637,7 +637,13 @@ class ConfigDialog(wx.Dialog):
         self.mw.commparams=commparm
         # phone model
         self.mw.config.Write("phonetype", self.phonebox.GetValue())
-        self.mw.phonemodule=common.importas(phones.module(self.phonebox.GetValue()))
+        # do not touch this module importing code unless you check
+        # that it also works with the freezing tools (py2exe, py2app,
+        # cxfreeze etc).  doing the sane sensible thing (__import__)
+        # results in the wrong module being loaded!
+        mod=phones.module(self.phonebox.GetValue())
+        exec("import "+mod)
+        self.mw.phonemodule=eval(mod)
         self.mw.phoneprofile=self.mw.phonemodule.Profile()
         pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.mw.phonemodule)
         #  bitfling

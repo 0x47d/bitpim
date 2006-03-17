@@ -1730,7 +1730,8 @@ class MainWindow(wx.Frame):
         assert isinstance(exception, Exception)
         self.CloseSplashScreen()
         # always close comm connection when we have any form of exception
-        self.wt.clearcomm()
+        if self.wt is not None:
+            self.wt.clearcomm()
         text=None
         title=None
         style=None
@@ -1793,7 +1794,11 @@ class MainWindow(wx.Frame):
             self.exceptcount+=1
             if self.exceptcount<10:
                 print "Ignoring an exception as the exception dialog is already up"
-                self.OnLog("Exception during exception swallowed")
+                try:
+                    self.OnLog("Exception during exception swallowed")
+                except AttributeError:
+                    # this can happen if main gui hasn't been built yet
+                    pass
             return True
             
         self.exceptiondialog.ShowModal()

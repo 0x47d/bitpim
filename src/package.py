@@ -14,8 +14,6 @@
 import sys
 import os
 
-sys.path=[os.path.dirname(__file__)]+sys.path # this directory needs to be on the path
-
 import version
 
 def sanitycheck():
@@ -168,10 +166,13 @@ def ensureofficial():
 def getversion():
     return version.version
 
+import phones
+
 def getcxfreezeoptions(defaults):
     defaults.update(
         {
-        'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}]
+        'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}],
+        'includes': phones.getallmodulenames(),
         }
         )
     return defaults
@@ -180,6 +181,7 @@ def getpy2appoptions(defaults):
     defaults.update(
         {
         'app': [{'script': 'src/bp.py',}],
+        'includes': phones.getallmodulenames(),
         }
         )
     return defaults
@@ -190,6 +192,8 @@ def getpy2exeoptions(defaults):
         'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
         }
         )
+    defaults['options']['py2exe']['includes']=phones.getallmodulenames()
+
     return defaults
 
 def copyresources(destdir):
