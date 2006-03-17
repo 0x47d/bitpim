@@ -181,9 +181,9 @@ def getpy2appoptions(defaults):
     defaults.update(
         {
         'app': [{'script': 'src/bp.py',}],
-        'includes': phones.getallmodulenames(),
         }
         )
+    defaults['options']['py2app']['includes']=phones.getallmodulenames()
     return defaults
 
 def getpy2exeoptions(defaults):
