@@ -1,3 +1,4 @@
+#define APPLETITLE "BitPim Help"
 #include "pagestart.h"
 
 <p>Welcome to BitPim.  

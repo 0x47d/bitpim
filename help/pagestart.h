@@ -1,5 +1,8 @@
 <html>
 <head><title>_HELP_TITLE</title>
+#ifdef APPLETITLE
+<META NAME="AppleTitle" CONTENT=APPLETITLE>
+#endif
 <LINK rel="stylesheet"
       href="../bitpim.css"
       type="text/css">

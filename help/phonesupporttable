@@ -11,7 +11,7 @@
 <th>PHONE INFO
 <th>AUTO DETECT
 </tr>
-<tr><th>LG-C2000 (Cingular)
+<tr><th>LG-C2000
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
@@ -23,7 +23,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>LG-G4015 (AT&T)
+<tr><th>LG-G4015
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -35,19 +35,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>LG-LX5450 (Alltel)
-<td align=center>R W
-<td align=center>R W
-<td align=center>R W
-<td align=center>R W
-<td align=center>R W
-<td align=center>&nbsp;
-<td align=center>R W
-<td align=center>R 
-<td align=center>&nbsp;
-<td align=center>X
-</tr>
-<tr><th>LG-PM225 (Sprint)
+<tr><th>LG-LG6200
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -59,16 +47,40 @@
 <td align=center>X
 <td align=center>X
 </tr>
-<tr><th>LG-PM325 (Sprint)
+<tr><th>LG-LX5450
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>R W
+<td align=center>R 
+<td align=center>&nbsp;
+<td align=center>X
+</tr>
+<tr><th>LG-PM225
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>R W
+<td align=center>R 
+<td align=center>X
+<td align=center>X
+</tr>
+<tr><th>LG-PM325
+<td align=center>R 
+<td align=center>R 
+<td align=center>R 
 <td align=center>R 
 <td align=center>&nbsp;
 <td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>R 
+<td align=center>X
 <td align=center>X
 </tr>
 <tr><th>LG-TM520
@@ -83,7 +95,7 @@
 <td align=center>&nbsp;
 <td align=center>&nbsp;
 </tr>
-<tr><th>LG-VI5225 (STI-Mobile)
+<tr><th>LG-VI5225
 <td align=center>R W
 <td align=center>&nbsp;
 <td align=center>&nbsp;
@@ -143,7 +155,7 @@
 <td align=center>X
 <td align=center>X
 </tr>
-<tr><th>LG-VX4600 (Telus Mobility)
+<tr><th>LG-VX4600
 <td align=center>R W
 <td align=center>R 
 <td align=center>R W
@@ -155,7 +167,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>LG-VX4650 (Verizon Wireless)
+<tr><th>LG-VX4650
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -167,7 +179,7 @@
 <td align=center>X
 <td align=center>X
 </tr>
-<tr><th>LG-VX5200 (Verizon Wireless)
+<tr><th>LG-VX5200
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -215,7 +227,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>LG-VX8000 (Verizon Wireless)
+<tr><th>LG-VX8000
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -227,7 +239,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>LG-VX8100 (Verizon Wireless)
+<tr><th>LG-VX8100
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -239,7 +251,7 @@
 <td align=center>X
 <td align=center>X
 </tr>
-<tr><th>LG-VX9800 (Verizon Wireless)
+<tr><th>LG-VX9800
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -434,18 +446,6 @@
 <tr><th>SCP-8100
 <td align=center>R W
 <td align=center>R W
-<td align=center>R W
-<td align=center>R W
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>R 
-<td align=center>R 
-<td align=center>&nbsp;
-<td align=center>X
-</tr>
-<tr><th>SCP-8100 (Bell Mobility)
-<td align=center>R W
-<td align=center>R W
 <td align=center>R 
 <td align=center>R 
 <td align=center>&nbsp;
@@ -455,7 +455,7 @@
 <td align=center>&nbsp;
 <td align=center>&nbsp;
 </tr>
-<tr><th>SK6100 (Pelephone)
+<tr><th>SK6100
 <td align=center>R 
 <td align=center>&nbsp;
 <td align=center>&nbsp;
@@ -483,7 +483,7 @@
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
@@ -495,7 +495,7 @@
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
@@ -507,7 +507,7 @@
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
@@ -519,7 +519,7 @@
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
@@ -563,7 +563,7 @@
 <td align=center>&nbsp;
 <td align=center>X
 </tr>
-<tr><th>VM4050 (Sprint)
+<tr><th>VM4050
 <td align=center>R W
 <td align=center>&nbsp;
 <td align=center>&nbsp;
