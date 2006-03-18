@@ -516,7 +516,18 @@ class MainApp(wx.App):
 
     def _setuphelp(self):
         """Does all the nonsense to get help working"""
+        if guihelper.IsMac():
+            # we use apple's help mechanism
+            from Carbon import AH
+            # path = /Applications/MyApp.app
+            path=os.path.abspath(os.path.join(guihelper.resourcedirectory, "..", "..", ".."))
+            print "registering help book for bundle",path
+            res=AH.AHRegisterHelpBook(path)
+            print "result was",res
+            self.helpcontroller=True
+            return
 
+        # Standard WX style help
         # htmlhelp isn't correctly wrapper in wx package
         # Add the Zip filesystem
         wx.FileSystem_AddHandler(wx.ZipFSHandler())
@@ -539,6 +550,12 @@ class MainApp(wx.App):
             # unfortunately I can't get the stupid help viewer to also make the treeview
             # on the left to go to the right place
             win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
+        elif guihelper.IsMac():
+            if self.helpcontroller is None:
+                self._setuphelp()
+            from Carbon import AH
+            res=AH.AHGotoPage('BitPim Help', id, None)
+            print "gotopage",id,"returned",res
         else:
             if self.helpcontroller is None:
                 self._setuphelp()
@@ -755,8 +772,7 @@ class MainWindow(wx.Frame):
 
         menu=wx.Menu()
         if guihelper.IsMac():
-            menu.Append(guihelper.ID_HELPHELP, "&BitPim Help", "Help for the panel you are looking at")
-            menu.AppendSeparator()
+            menu.Append(guihelper.ID_HELPHELP, "&Help on this panel", "Help for the panel you are looking at")
         else:
             menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")

@@ -13,6 +13,7 @@
 
 import sys
 import os
+import shutil
 
 import version
 
@@ -184,6 +185,8 @@ def getpy2appoptions(defaults):
         }
         )
     defaults['options']['py2app']['includes']=phones.getallmodulenames()
+    defaults['options']['py2app']['plist']['CFBundleHelpBookFolder']="BitPim Help"
+    defaults['options']['py2app']['plist']['CFBundleHelpBookName']="BitPim Help"
     return defaults
 
 def getpy2exeoptions(defaults):
@@ -215,9 +218,52 @@ def resourcefilter(srcfilename, destfilename):
     return None
 
 def finalize(destdir):
-    for f in ("w9xpopen.exe",):
-        if os.path.exists(os.path.join(destdir, f)):
-            os.remove(os.path.join(destdir, f))
+    if sys.platform=='win32':
+        for f in ("w9xpopen.exe",):
+            if os.path.exists(os.path.join(destdir, f)):
+                os.remove(os.path.join(destdir, f))
+    if sys.platform=='darwin':
+        # do apple help
+        import zipfile
+        helpdir=os.path.join(destdir, "English.lproj", "BitPim Help")
+        os.makedirs(helpdir)
+        f=zipfile.ZipFile(os.path.join(destdir, "resources", "bitpim.htb"), "r")
+        for name in f.namelist():
+            if os.path.splitext(name)[1] in ('.htm', '.html', '.jpg', '.png'):
+                open(os.path.join(helpdir, name), "wb").write(f.read(name))
+                os.chmod(os.path.join(helpdir, name), 0444)
+            else:
+                print "skipping help file",name
+        # the idiots at apple decided to make it impossible to automate the help indexer
+        # how about giving it command line options?
+        res=os.system("open -a \"Apple Help Indexing Tool\" \""+helpdir+"\"")
+        assert res==0
+        # we do this stupid loop monitoring cpu consumption and once it is
+        # unchanged for 2 seconds, assume that the indexing is complete
+        print "Waiting for indexing tool to stop by monitoring CPU consumption"
+        import time
+        lastval=""
+        val="x"
+        pid=0
+        while val!=lastval:
+            print ".",
+            sys.stdout.flush()
+            time.sleep(2)
+            for line in os.popen("ps cx", "r"):
+                line=line.split()
+                line=line[:4]+[" ".join(line[4:])]
+                if line[4]!="Apple Help Indexing Tool":
+                    continue
+                pid=line[0]
+                lastval=val
+                val=line[3]
+                break
+        print "\nIt would appear to be done"
+        os.system("kill "+pid)
+        # copy the css file in
+        shutil.copy2(os.path.join(destdir, "resources", "bitpim.css"), os.path.join(helpdir, ".."))
+        # don't need the wx style help any more
+        os.remove(os.path.join(destdir, "resources", "bitpim.htb"))
 
 def getvals():
     "Return various values about this product"
