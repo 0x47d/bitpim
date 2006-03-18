@@ -277,10 +277,10 @@ class SetPhoneWizard(wiz.Wizard):
         commport_page=CommPortPage(self)
         phonemodel_page=PhoneModelPage(self)
         summary_page=SummaryPage(self)
-        wiz.WizardPageSimple_Chain(commport_page, phonemodel_page)
-        wiz.WizardPageSimple_Chain(phonemodel_page, summary_page)
-        self.first_page=commport_page
-        self.GetPageAreaSizer().Add(commport_page, 1, wx.EXPAND|wx.ALL, 5)
+        wiz.WizardPageSimple_Chain(phonemodel_page, commport_page)
+        wiz.WizardPageSimple_Chain(commport_page, summary_page)
+        self.first_page=phonemodel_page
+        self.GetPageAreaSizer().Add(phonemodel_page, 1, wx.EXPAND|wx.ALL, 5)
         wiz.EVT_WIZARD_PAGE_CHANGING(self, self.GetId(), self.OnPageChanging)
         wiz.EVT_WIZARD_PAGE_CHANGED(self, self.GetId(), self.OnPageChanged)
 
