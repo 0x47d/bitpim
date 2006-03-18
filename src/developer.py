@@ -14,7 +14,7 @@ import wx.html
 import wx.py
 
 class DeveloperPanel(wx.Panel):
-
+    
     def __init__(self, parent, locals=None):
         wx.Panel.__init__(self, parent)
 
@@ -26,7 +26,7 @@ class DeveloperPanel(wx.Panel):
             self.locals=locals.copy()
         self.locals.update(self.getlocals())
         
-        cmd=wx.py.shell.Shell(split, locals=self.locals)
+        cmd=wx.py.shell.Shell(split, locals=self.locals, introText=self.introtext)
         
         self.htmlw=wx.html.HtmlWindow(split)
 
@@ -37,11 +37,32 @@ class DeveloperPanel(wx.Panel):
         vbs.Add(split, 1, wx.EXPAND)
         self.SetSizer(vbs)
 
+    introtext="""
+Welcome to the BitPim developer shell
+
+You can do any standard Python stuff here you want.  For example you can import the
+various modules, access functions and variables etc.  The following shortcuts are
+also available:
+
+Database:
+
+  sql("your sql here", bindings=())  -- runs query and displays results
+  tables()                           -- displays list of all tables and their schema
+  rows("tablename")                  -- shows all rows in named table
+
+Useful variables:
+
+  wx                                 -- the wxPython module
+  app                                -- the application instance
+  mw                                 -- the main window instance
+"""
+
     def getlocals(self):
         return {
             'sql': self.sql,
             'wx': wx,
             'app': wx.GetApp(),
+            'mw': wx.GetApp().frame,
             'tables': self.tables,
             'rows': self.rows,
             }
