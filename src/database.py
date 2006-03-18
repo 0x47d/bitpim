@@ -303,10 +303,12 @@ class Database:
     def __init__(self, filename):
         self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
-        # we always do an integrity check first
+        # first tell sqlite to use the pre 3.4 format.  this will allow downgrades
+        self.cursor.execute("PRAGMA legacy_file_format=1") # nb you don't get an error for unknown pragmas
+        # we always do an integrity check second
         icheck=[]
         print "database integrity check"
-        for row in self.cursor.execute("pragma integrity_check"):
+        for row in self.cursor.execute("PRAGMA integrity_check"):
             icheck.extend(row)
         print "database integrity check complete"
         icheck="\n".join(icheck)
