@@ -695,6 +695,11 @@ class MainWindow(wx.Frame):
         # this is a global setting, so no need to call it for each toolbar
         wx.ArtProvider_PushProvider(guihelper.ArtProvider())
 
+        # frame icon
+        ib=wx.IconBundle()
+        ib.AddIconFromFile(guihelper.getresourcefile("bitpim.ico"), wx.BITMAP_TYPE_ANY)
+        self.SetIcons(ib)
+
         ### Menubar
 
         menuBar = wx.MenuBar()
