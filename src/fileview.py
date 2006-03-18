@@ -196,6 +196,13 @@ class FileView(wx.Panel):
 
         self.droptarget=MyFileDropTarget(self)
         self.SetDropTarget(self.droptarget)
+        wx.EVT_SIZE(self, self.OnSize)
+
+    def OnSize(self, evt):
+        # stop the tool tip from poping up when we're resizing!
+        if self.thetimer.IsRunning():
+            self.thetimer.Stop()
+        evt.Skip()
 
     def OnRightClick(self, evt):
         """Popup the right click context menu
