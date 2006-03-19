@@ -25,6 +25,7 @@
 #define TOC_1 TOC_0
 #define TOC_2 TOC_1
 #define TOCITEM_1 TOCITEM_0
+#define TOCITEM_2 TOCITEM_1
 
 #define ENDTOC_1 ENDTOC_0
 #define ENDTOC_2 ENDTOC_1

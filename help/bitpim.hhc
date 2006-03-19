@@ -7,6 +7,10 @@
 </HEAD><BODY>
 <UL>
   <LI><OBJECT type="text/sitemap">
+      <param name="Name" value="Table of Contents">
+      <param name="Local" value="rootcontents.htm">
+      </OBJECT>
+  <LI><OBJECT type="text/sitemap">
       <param name="Name" value="Welcome">
       <param name="Local" value="welcome.htm">
       </OBJECT>

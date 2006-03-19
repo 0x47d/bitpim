@@ -133,3 +133,4 @@ if __name__ == '__main__':
 
     # printhier(parser.hier)
     fixupcontentspages(parser.hier)
+    fixuppage("rootcontents.htd", parser.hier)

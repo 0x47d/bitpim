@@ -1,3 +1,4 @@
+Table_of_Contents=rootcontents.htm
 ID_WELCOME=welcome.htm
 ID_TOUR=tour-master.htm
 ID_SETTINGS_DIALOG=ref-settings.htm

@@ -12,6 +12,7 @@ Title=BitPim
 Help=,"bitpim.hhc","bitpim.hhk","welcome.htm",,,,,,0x2420,,0x380e,,,,,0,,,
 
 [FILES]
+rootcontents.htm
 welcome.htm
 tour-master.htm
 tour-overview.htm
