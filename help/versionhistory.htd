@@ -19,6 +19,8 @@
       <li><b>Mac</b> The native Mac online help system is used for BitPim help.  
       (Note: if the help viewer is slow or has other issues then that is a <a href="http://www.thexlab.com/faqs/helpviewer.html">known issue</a>
       and nothing to do with BitPim)
+      <li><b>Mac</b> The top pane of the comm port selection dialog would startup zero sized so you wouldn't know it is there.  Now forced to be
+     shown.
     </ul>
 
    <h2><a name="0.8.08">Changes in 0.8.08</a></h2>

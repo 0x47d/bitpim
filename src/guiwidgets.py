@@ -745,6 +745,9 @@ class CommPortDialog(wx.Dialog):
         splitter=wx.SplitterWindow(p, self.ID_SASH, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         self.lb=wx.ListBox(splitter, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
         self.tb=wx.html.HtmlWindow(splitter, self.ID_TEXTBOX, size=wx.Size(400,400)) # default style is auto scrollbar
+        # On Mac, top pane will go to zero size on startup completely ignoring the sashposition passed in.
+        # We ensure that the top pane is always visible ...
+        splitter.SetMinimumPaneSize(100)
         splitter.SplitHorizontally(self.lb, self.tb, sashposition)
 
         # the buttons
@@ -778,7 +781,7 @@ class CommPortDialog(wx.Dialog):
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBox)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.ID_SASH, self.OnSashChange)
 
-        # Retrieve saved settings... Use 40% of screen if not specified
+        # Retrieve saved settings... Use 60% of screen if not specified
         set_size("CommDialog", self, screenpct=60)
         wx.EVT_CLOSE(self, self.OnClose)
 
