@@ -115,7 +115,7 @@
    <h2><a name="0.8.03">Changes in 0.8.03</a></h2>
     <ul>
       <li>Added full support for the LG LX5450 (Alltel).
-      <li>Fixed SMS Deletion excetion.
+      <li>Fixed SMS Deletion exception.
       <li>Added SMS Export to CSV and mbox formats.
       <li>Update filesystem tab with new look and feel. Supports drag and drop 
           for copying files into the phone's file system.
@@ -550,7 +550,7 @@
 
       <li>Added the Call History tab to the main BitPim display.
 
-      <li>Added an initial implmentation of the Phone Auto-Detect feature.
+      <li>Added an initial implementation of the Phone Auto-Detect feature.
 
           Currently, the only phones that support this feature are the
 

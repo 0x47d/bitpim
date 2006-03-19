@@ -10,7 +10,7 @@ or the configuration file name upon initialization.
 
 <P>BitPim now stores all of its <B>Settings</B> in a configuration file with a default name of <code>.bitpim</code>.
 The name of the current data directory and configuration file are displayed in the <B>Settings</B> dialog.
-To sepcify a different data directory, you can use the following command:
+To specify a different data directory, you can use the following command:
 <P><code>bitpim -d [data dir name]</code>
 
 <P>To specify a different configuration file to use, use the following command:

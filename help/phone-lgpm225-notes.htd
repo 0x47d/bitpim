@@ -14,7 +14,7 @@ dialog to appear. This can be bypassed by holding down crtl+shift when pressing 
 
 <p>Media filenames will be truncated to 30 characters.
 
-<p>Due to the way the phone stores data and a limitation in the way the ringers have been inplemented in BitPim the filename extension of a qcp file
+<p>Due to the way the phone stores data and a limitation in the way the ringers have been implemented in BitPim the filename extension of a qcp file
 will be changed to .mp3 when they are retrieved from the phone. BitPim will show the type as QCP in the ringer tab even though the filename ends
 in .qcp. 
 

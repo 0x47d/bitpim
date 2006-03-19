@@ -2,7 +2,7 @@
 
 
 
-<p>There has been a report that this PitBim will crash if you have pager numbers in the phonebook
+<p>There has been a report that BitPit will crash if you have pager numbers in the phonebook
 
 that you are trying to upload into the phone. Removing the pager entries resolves this issue.
 

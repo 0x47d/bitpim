@@ -10,7 +10,7 @@
 <LI>Optionally set one or more filtering parameters to eliminate unwanted items.
 <LI>Import the data into BitPim by using one of the following methods:
 <OL type="a">
-<LI><B>Replace All:</B> First  delete all exising calendar data in BitPim, and then import the new data.
+<LI><B>Replace All:</B> First  delete all existing calendar data in BitPim, and then import the new data.
 <LI><B>Add:</B> Import the new data with existing data intact.  This could result in duplicate data items.
 </OL> 
 </OL>

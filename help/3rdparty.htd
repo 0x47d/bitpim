@@ -41,7 +41,7 @@ URL(http://netpbm.sourceforge.net/,netpbm) project are used.  The
 binaries, located in the helpers directory, are taken from netpbm
 builds for the URL(http://gallery.sourceforge.net/,Gallery) project
 and have no source code changes.  (Licensed under a combination of the
-Artistic, GNU General Public License, and MIT licences)
+Artistic, GNU General Public License, and MIT licenses)
 
       <li><p>Various recipes from the URL(http://aspn.activestate.com/ASPN/Python/Cookbook/,ASPN Python Cookbook)
       which are under the URL(http://www.opensource.org/licenses/bsd-license.php,BSD License)

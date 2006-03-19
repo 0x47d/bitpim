@@ -28,7 +28,7 @@ conversion.
 <p>After the conversion has completed, you will want to select
 which portion is actually used.  Use the two sliders to change
 the beginning and end.  You can press Play Clip to hear the
-selected portion in its entirity, or Play Position to play from
+selected portion in its entirety, or Play Position to play from
 the position marker.  The text fields update to tell you how
 long the clip is in both time and file size.
 
@@ -95,7 +95,7 @@ beginning of the sound file.
 
 <dt><p>Volume Adjustment
 <dd><p>Changes to the volume of the clip in decibels (dB).  0 dB specifies no changes,
-positive dB specfies louder volume, negative dB less loud.
+positive dB specifies louder volume, negative dB less loud.
 
 <dt><p>Set
 <dd><p>Click on this to apply the values of the Crop Fields.
@@ -104,7 +104,7 @@ positive dB specfies louder volume, negative dB less loud.
 <dd><p>Play the current clip which parameters are specified by the Crop Fields.
 
 <dt><p>Play Position
-<dd><p>Play the sound file from the current postion to the end of the file.
+<dd><p>Play the sound file from the current position to the end of the file.
 
 <dt><p>Stop
 <dd><p>Stop playing

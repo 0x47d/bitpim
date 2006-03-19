@@ -6,7 +6,7 @@
 <h2>Drivers</h2>
 <h3>Windows</h3>
 <p>USB Cables for Samsung phones require a driver.  Windows drivers
-are availabe from
+are available from
 URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial).
 <h3>Linux</h3>
 <p>Samsung phones use the Linux "acm" driver.  This

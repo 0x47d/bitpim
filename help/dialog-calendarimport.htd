@@ -40,7 +40,7 @@ calendar events would be imported.)
 <B>This Month</B>, or <B>This Year</B>.  The <B>Preset Duration</B> starts from today
 and lasts through the end of the week, month, or year.  This parameter takes precedence
 over the <B>Start Date</B> and <B>End Date</B> parameter.
-DESC(Repeat Events,Import/translate repeat events into mutilple single events.\
+DESC(Repeat Events,Import/translate repeat events into multiple single events.\
 This feature is useful for phones that do not support repeat events natively.)
 DESC(Disable All Alarms,Turn off the alarms of all events being imported.)
 DESC(Use Alarm Settings From Calender, Import as-is settings from source data.)
