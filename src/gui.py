@@ -519,13 +519,14 @@ class MainApp(wx.App):
         if guihelper.IsMac():
             # we use apple's help mechanism
             from Carbon import AH
-            # path = /Applications/MyApp.app
             path=os.path.abspath(os.path.join(guihelper.resourcedirectory, "..", "..", ".."))
-            print "registering help book for bundle",path
-            res=AH.AHRegisterHelpBook(path)
-            print "result was",res
-            self.helpcontroller=True
-            return
+            # path won't exist if we aren't a bundle
+            if  os.path.exists(path) and path.endswith(".app"):
+                print "registering help book for bundle",path
+                res=AH.AHRegisterHelpBook(path)
+                print "result was",res
+                self.helpcontroller=True
+                return
 
         # Standard WX style help
         # htmlhelp isn't correctly wrapper in wx package
@@ -550,19 +551,22 @@ class MainApp(wx.App):
             # unfortunately I can't get the stupid help viewer to also make the treeview
             # on the left to go to the right place
             win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
+            return
         elif guihelper.IsMac():
             if self.helpcontroller is None:
                 self._setuphelp()
-            from Carbon import AH
-            res=AH.AHGotoPage('BitPim Help', id, None)
-            print "gotopage",id,"returned",res
+            if self.helpcontroller is True:
+                from Carbon import AH
+                res=AH.AHGotoPage('BitPim Help', id, None)
+                print "gotopage",id,"returned",res
+                return
+
+        if self.helpcontroller is None:
+            self._setuphelp()
+        if id is None:
+            self.helpcontroller.DisplayContents()
         else:
-            if self.helpcontroller is None:
-                self._setuphelp()
-            if id is None:
-                self.helpcontroller.DisplayContents()
-            else:
-                self.helpcontroller.Display(id)
+            self.helpcontroller.Display(id)
 
     def makemainwindow(self):
         if self.made:
