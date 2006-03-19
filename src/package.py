@@ -205,10 +205,10 @@ def copyresources(destdir):
     packageutils.copysvndir('helpers', os.path.join(destdir, 'helpers'), resourcefilter)
 
 def resourcefilter(srcfilename, destfilename):
-    exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids']
+    exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids', '.ico']
     if sys.platform=='win32':
         # on windows we also want the chm help file 
-        exts=exts+['.chm', '.ico', '.exe', '.dll']
+        exts=exts+['.chm', '.exe', '.dll']
     if sys.platform=='linux2':
         exts=exts+['.lbin', '.htb']
     if sys.platform=='darwin':
@@ -284,6 +284,7 @@ def getvals():
     if sys.platform=='win32':
         res['ICONFILE']="packaging/bitpim.ico"
     if sys.platform=="darwin":
+        res['GUID']='org.bitpim.bitpim' # less opaque than the guid style above!
         res['ICONFILE']="packaging/bitpim.icns"
         # prefix with macos versiopn
         v=os.popen("sw_vers -productVersion", "r").read()
