@@ -191,16 +191,8 @@ class Phone(com_samsung_packet.Phone):
 
         # Now read from the directories in the maps array
         for offset,location,type,maxentries, headeroffset in maps:
-            for i in range(10000):
-                req=p_brew.listfilerequest()
-                req.entrynumber=i
-                req.dirname=location
-                try:
-                    res=self.sendbrewcommand(req, p_brew.listfileresponse)
-                except com_brew.BrewNoMoreEntriesException:
-                    break
-
-                filename=res.filename
+            for item in self.listfiles(location).values():
+                filename=item['name']
                 p=filename.rfind("/")
                 basefilename=filename[p+1:]+".jpg"
                 contents=self.getfilecontents(filename)
@@ -235,45 +227,18 @@ class Phone(com_samsung_packet.Phone):
 
         media=results[key] # Get any existing indices
         for offset,location,origin,maxentries, headeroffset in maps:
-            for i in range(10000):
-                req=p_brew.listfilerequest()
-                req.entrynumber=i
-                req.dirname=location
-                try:
-                    res=self.sendbrewcommand(req, p_brew.listfileresponse)
-                except com_brew.BrewNoMoreEntriesException:
-                    break
-                filename=res.filename
+            i=0
+            for item in self.listfiles(location).values():
+                print item
+                filename=item['name']
                 p=filename.rfind("/")
                 filename=filename[p+1:]+".jpg"
                 media[offset+i]={'name': filename, 'origin': origin}
+                i+=1
 
         results[key] = media
         return
-                    
-        
-    def getcameraindices(self, results):
-        """Get the index of camera pictures"""
-        imagemedia=results['wallpaper-index']
-        for i in range(10000):
-            try:
-                req=p_brew.listfilerequest()
-                req.entrynumber=i
-                req.dirname='digital_cam/jpeg'
-                res=self.sendbrewcommand(req, p_brew.listfileresponse)
-                filename=res.filename
-                p=filename.rfind("/")
-                filename=filename[p+1:]+".jpg"
-                # Just a made up index number for now.  Have not studied
-                # what phone is using.
-                imagemedia[100+i]={'name': filename, 'origin': "camera"}
 
-            except com_brew.BrewNoMoreEntriesException:
-                break
-
-        results['wallpaper-index']=imagemedia
-        return
-        
     def _findmediaindex(self, index, name, pbentryname, type):
         if name is None:
             return 0
