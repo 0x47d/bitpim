@@ -279,7 +279,6 @@ def getvals():
         'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
         'GUID': "{FA61D601-A0FC-48BD-AE7A-54946BCD7FB6}",
         'VENDOR': version.vendor,
-        'PUBLISHER': "Roger Binns <rogerb@rogerbinns.com> and others",
         'ISSFILE': 'packaging/bitpim.iss',
         'SPECFILE': 'packaging/bitpim.spec',
         }

@@ -14,11 +14,11 @@ Summary: Interfaces with the phonebook, calendar, wallpaper of many CDMA phones
 Name: %%RPMNAME%%
 Version: %%RPMVERSION%%
 Release: %%RELEASE%%
+Packager: %%PUBLISHER%%
 License: GNU GPL
 Group: Utilities/Phone
 URL: http://www.bitpim.org
 Source0: %{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 AutoReqProv: no
 
 %description

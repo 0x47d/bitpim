@@ -2,7 +2,8 @@
 # $Id$
 
 # Check subversion is on the path
-import os, sys, xml.dom.minidom
+import os, sys, xml.dom.minidom, tempfile
+
 if os.popen("svn help", "r").read().find("proplist")<0:
     print "You need to have the Subversion binaries available.  A good start is"
     print "http://subversion.tigris.org/project_packages.html"
@@ -10,7 +11,7 @@ if os.popen("svn help", "r").read().find("proplist")<0:
 
 
 # check to see we are at a top level directory
-topdirs=('buildrelease', 'dev-doc', 'examples', 'experiments', 'help', 'helpers', 'resources', 'scripts', 'src')
+topdirs=('buildrelease', 'dev-doc', 'examples', 'experiments', 'help', 'helpers', 'packaging', 'resources', 'scripts', 'src')
 for d in topdirs:
     if not os.path.isdir(d):
         print "There should be a directory named",d
@@ -79,8 +80,8 @@ for src,dest,rev,path in copies:
     run(cmd)
 
 # subversion doesn't allow setting properties against a URL - it has to be against local copy
-branchdirname="__branch__"
-externalsfile="__externals__"
+branchdirname=tempfile.mkdtemp(prefix="__branch__")
+externalsfile=tempfile.mkstemp(prefix="__externals__")
 
 try:
     open(externalsfile, "wt").write("\n".join(["   ".join([d,url]) for d,url in externals]))
