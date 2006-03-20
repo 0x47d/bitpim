@@ -15,11 +15,11 @@ DefaultGroupName=%%NAME%%
 DefaultDirName={pf}\%%NAME%%
 OutputBaseFilename=%%OUTFILE%%
 OutputDir=.
-WizardStyle=modern
 Compression=lzma/ultra
 SolidCompression=yes
 InternalCompressLevel=ultra
 ChangesAssociations=yes
+LicenseFile=..\src\LICENSE
 
 [Registry]
 Root: HKCR; Subkey: ".bitpim"; ValueType: string; ValueName: ""; ValueData: "BitPimConfigFile"; Flags: uninsdeletevalue

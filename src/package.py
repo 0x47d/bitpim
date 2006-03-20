@@ -196,7 +196,7 @@ def getpy2exeoptions(defaults):
         }
         )
     defaults['options']['py2exe']['includes']=phones.getallmodulenames()
-
+    defaults['options']['py2exe']['compressed']=0 # make setup.exe smaller but installed code larger
     return defaults
 
 def copyresources(destdir):
@@ -279,12 +279,15 @@ def getvals():
         'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
         'GUID': "{FA61D601-A0FC-48BD-AE7A-54946BCD7FB6}",
         'VENDOR': version.vendor,
-        'PUBLISHER': "Roger Binns <rogerb@rogerbinns.com> and others"
+        'PUBLISHER': "Roger Binns <rogerb@rogerbinns.com> and others",
+        'ISSFILE': 'packaging/bitpim.iss',
+        'SPECFILE': 'packaging/bitpim.spec',
         }
     if sys.platform=='win32':
         res['ICONFILE']="packaging/bitpim.ico"
+
     if sys.platform=="darwin":
-        res['GUID']='org.bitpim.bitpim' # less opaque than the guid style above!
+        res['GUID']='org.bitpim.bitpim' # Java style less opaque than the guid style above!
         res['ICONFILE']="packaging/bitpim.icns"
         # prefix with macos versiopn
         v=os.popen("sw_vers -productVersion", "r").read()
