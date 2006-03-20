@@ -86,7 +86,7 @@ class CommPortPage(MyPage):
         _sbs1=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Available Ports'),
                                 wx.VERTICAL)
         self._ports_lb=wx.ListBox(self, -1,
-                                  style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+                                  style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._ports_lb.GetId(),
                        self.OnPortSelected)
         _sbs1.Add(self._ports_lb, 1, wx.EXPAND|wx.ALL, 5)
@@ -154,42 +154,49 @@ class PhoneModelPage(MyPage):
         _sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Carriers'),
                               wx.VERTICAL)
         self._carriers_lb=wx.ListBox(self, -1,
-                                     style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+                                     style=wx.LB_MULTIPLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._carriers_lb.GetId(), self.OnCarriersLB)
         _sbs.Add(self._carriers_lb, 1, wx.EXPAND|wx.ALL, 5)
         hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
         _sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Manufacturers'),
                                wx.VERTICAL)
         self._manuf_lb=wx.ListBox(self, -1,
-                                  style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+                                  style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._manuf_lb.GetId(), self.OnCarriersLB)
         _sbs.Add(self._manuf_lb, 1, wx.EXPAND|wx.ALL, 5)
         hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
         _sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Models'),
                                wx.VERTICAL)
         self._models_lb=wx.ListBox(self, -1,
-                                   style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+                                   style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._models_lb.GetId(), self.OnModelsLB)
         _sbs.Add(self._models_lb, 1, wx.EXPAND|wx.ALL, 5)
         hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
         return hs
 
-    def _populate_models(self, carrier=None, brand=None):
+    def _populate_models(self, carriers=None, brand=None):
         # populate the list of phones based on the carrier and/or brand
         self._models_lb.Clear()
-        for e in phones.phoneslist(brand, carrier):
+        _l=phones.phoneslist(brand, None)
+        if carriers:
+            for _c in carriers:
+                _l=[x for x in phones.phoneslist(brand, _c) if x in _l]
+        for e in _l:
             self._models_lb.Append(e)
 
-    def _populate(self):
+    def _populate_carriers(self, selection=None):
         self._carriers_lb.Clear()
-        self._manuf_lb.Clear()
-        self._models_lb.Clear()
         for e in ['All']+phones.phonecarriers:
             self._carriers_lb.Append(e)
+        if selection is not None:
+            self._carriers_lb.SetSelection(0)
+
+    def _populate(self):
+        self._manuf_lb.Clear()
         for e in ['All']+phones.phonemanufacturers:
             self._manuf_lb.Append(e)
-        self._carriers_lb.SetSelection(0)
         self._manuf_lb.SetSelection(0)
+        self._populate_carriers(0)
         self._populate_models()
 
     def ok(self):
@@ -198,22 +205,26 @@ class PhoneModelPage(MyPage):
         data['phone']=self._models_lb.GetStringSelection()
 
     def OnCarriersLB(self, evt):
-        _s=self._carriers_lb.GetStringSelection()
-        if not _s or _s=='All':
-            _carrier=None
+        _s=self._carriers_lb.GetSelections()
+        if _s==wx.NOT_FOUND:
+            return
+        if 0 in _s:
+            _carriers=None
         else:
-            _carrier=_s
+            _carriers=[self._carriers_lb.GetString(x) for x in _s]
         _s=self._manuf_lb.GetStringSelection()
         if not _s or _s=='All':
             _brand=None
         else:
             _brand=_s
-        self._populate_models(_carrier, _brand)
+        self._populate_models(_carriers, _brand)
 
     def OnModelsLB(self, evt):
         _model=evt.GetString()
-        self._carriers_lb.SetStringSelection(phones.carrier(_model))
         self._manuf_lb.SetStringSelection(phones.manufacturer(_model))
+        self._populate_carriers()
+        for s in phones.carriers(_model):
+            self._carriers_lb.SetStringSelection(s)
 
 #-------------------------------------------------------------------------------
 class SummaryPage(MyPage):
