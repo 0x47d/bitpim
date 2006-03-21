@@ -867,20 +867,6 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_AUTOSYNCEXECUTE, self.OnAutoSyncExecute)
         wx.EVT_CLOSE(self, self.OnClose)
 
-        # add update handlers for controls that are not always available
-        wx.EVT_UPDATE_UI(self, guihelper.ID_AUTOSYNCEXECUTE, self.AutosyncUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_DATASENDPHONE, self.DataSendPhoneUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.DataDeleteItemUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.DataAddItemUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.HistoricalDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.ViewColumnsandPreviewDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.ViewColumnsandPreviewDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.FilePrintDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.SelectAllDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.EditCopyUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITPASTE, self.EditPasteUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.EditRenameUpdateUIEvent)
-
         ### Double check our size is meaningful, and make bigger
         ### if necessary (especially needed on Mac and Linux)
         if min(self.GetSize())<250:
@@ -951,6 +937,19 @@ class MainWindow(wx.Frame):
         # now register for notebook changes
         wx.EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
 
+        # add update handlers for controls that are not always available
+        wx.EVT_UPDATE_UI(self, guihelper.ID_AUTOSYNCEXECUTE, self.AutosyncUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATASENDPHONE, self.DataSendPhoneUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.DataDeleteItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.DataAddItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.HistoricalDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.FilePrintDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.SelectAllDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.EditCopyUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITPASTE, self.EditPasteUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.EditRenameUpdateUIEvent)
 
         # show the last page we were on
         if self.config.ReadInt('startwithtoday', 0):
