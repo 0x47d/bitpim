@@ -29,8 +29,7 @@ branchdirs=topdirs
 
 def run(cmd):
     print cmd
-    #res=os.system(cmd)
-    res=False
+    res=os.system(cmd)
     if res:
         print "Returned code",res,"! Aborting!"
         sys.exit(res)
