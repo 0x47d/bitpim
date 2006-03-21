@@ -155,13 +155,14 @@ def ensureofficial():
     if not isofficialbuild():
         if version.vendor=="official":
             # so modify file
+            versionpy=os.path.join(os.path.dirname(__file__), "version.py")
             out=[]
-            for line in open("version.py", "rt"):
+            for line in open(versionpy, "rt"):
                 if line.startswith('vendor="'):
                     line='vendor="$%s %s $"\n' % ("Id:", "unofficial")
                 out.append(line)
                     
-            open("version.py", "wt").write("".join(out))
+            open(versionpy, "wt").write("".join(out))
             reload(version)
 
 def getversion():
@@ -264,6 +265,8 @@ def finalize(destdir):
         shutil.copy2(os.path.join(destdir, "resources", "bitpim.css"), os.path.join(helpdir, ".."))
         # don't need the wx style help any more
         os.remove(os.path.join(destdir, "resources", "bitpim.htb"))
+    if sys.platform!='win32':
+        os.system("find \""+destdir+"\" -depth -print0 | xargs -0 chmod a-w")
 
 def getvals():
     "Return various values about this product"
