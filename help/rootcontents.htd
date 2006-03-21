@@ -3,6 +3,7 @@
 <!-- CONTENTS BEGIN -->
 BEGIN_TOC
     TOC_0
+    TOCITEM_0(Table of Contents,rootcontents.htm)
     TOCITEM_0(Welcome,welcome.htm)
     TOCITEM_0(Tour,tour-master.htm)
         TOC_1
