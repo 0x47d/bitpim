@@ -19,6 +19,7 @@ License: GNU GPL
 Group: Utilities/Phone
 URL: http://www.bitpim.org
 Source0: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 AutoReqProv: no
 
 %description
@@ -34,11 +35,13 @@ based phones.
 %build
 
 %install
+find $RPM_BUILD_ROOT -type d -print0 | xargs -0 chmod +w || true
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 tar xvf dist.tar -C $RPM_BUILD_ROOT
 
 %clean
+find $RPM_BUILD_ROOT -type d -print0 | xargs -0 chmod +w || true
 rm -rf $RPM_BUILD_ROOT
 
 %files -f FILELIST
