@@ -23,6 +23,7 @@ import wx.calendar
 import cStringIO
 import calendar
 import time
+import widgets
 
 
 class FontscaleCache(dict):
@@ -457,7 +458,7 @@ class CalendarLabel(wx.PyWindow):
             row=endrow+1
 
 
-class Calendar(wx.Panel):
+class Calendar(wx.Panel, widgets.BitPimWidget):
     """The main calendar control.
 
     You should subclass this clas and need to

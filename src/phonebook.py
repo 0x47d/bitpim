@@ -106,6 +106,7 @@ import guiwidgets
 import phonenumber
 import helpids
 import database
+import widgets
 
 
 ###
@@ -532,9 +533,7 @@ class PhoneDataTable(wx.grid.PyGridTableBase):
         r.IncRef()
         return r
 
-thephonewidget=None  # track the instance
-
-class PhoneWidget(wx.Panel):
+class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     """Main phone editing/displaying widget"""
     CURRENTFILEVERSION=2
     # Data selector const
@@ -542,8 +541,6 @@ class PhoneWidget(wx.Panel):
     _Historic_Data=1
 
     def __init__(self, mainwindow, parent, config):
-        global thephonewidget
-        thephonewidget=self
         wx.Panel.__init__(self, parent,-1)
         # keep this around while we exist
         self.categorymanager=CategoryManager
@@ -623,6 +620,11 @@ class PhoneWidget(wx.Panel):
         self.context_menu.Append(id, 'Set to current',
                                  'Set the selected item to current data')
         wx.EVT_MENU(self, id, self.OnSetToCurrent)
+
+    def OnInit(self):
+        # whether or not to turn on phonebook preview pane
+        if not self.config.ReadInt("viewphonebookpreview", 1):
+            self.OnViewPreview(False)
 
     def OnColumnHeaderPaint(self, evt):
         w = self.table.GetGridColLabelWindow()
@@ -740,6 +742,12 @@ class PhoneWidget(wx.Panel):
                     self._data[k][main_key][i][element_key]=_new_name
                     self.modified=True
 
+    def HasPreviewPane(self):
+        return True
+
+    def IsPreviewPaneEnabled(self):
+        return self.split.IsSplit()
+    
     def OnViewPreview(self, preview_on):
         if preview_on:
             self.split.SplitVertically(self.table_panel, self.preview,
@@ -751,7 +759,11 @@ class PhoneWidget(wx.Panel):
                 self.sash_pos=self.split.GetSashPosition()
             self.split.Unsplit(self.preview)
         # refresh the table view
+        self.config.WriteInt('viewphonebookpreview', preview_on)
         self.dt.GetView().AutoSizeColumns()
+
+    def HasHistoricalData(self):
+        return True
 
     def OnHistoricalData(self):
         """Display current or historical data"""
@@ -832,6 +844,9 @@ class PhoneWidget(wx.Panel):
                 entry['serials'].append(updserial)
         self.modified=True
                     
+    def CanSelectAll(self):
+        return True
+
     def OnSelectAll(self, _):
         self.table.SelectAll()
 
@@ -946,6 +961,17 @@ class PhoneWidget(wx.Panel):
                 raise
             return None
 
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_CONTACT, "Delete Contact"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_CONTACT, "Add Contact"
+
+    def CanAdd(self):
+        if self.read_only:
+            return False
+        return True
+
     def OnAdd(self, _):
         if self.read_only:
             return
@@ -987,6 +1013,13 @@ class PhoneWidget(wx.Panel):
     def GetSelectedRowKeys(self):
         return [self.dt.rowkeys[r] for r in self.GetSelectedRows()]
 
+    def CanDelete(self):
+        if self.read_only:
+            return False
+        # there always seems to be something selected in the phonebook, so 
+        # there is no point testing for number of items, it just burns cycles
+        return True
+
     def OnDelete(self,_):
         if self.read_only:
             return
@@ -998,6 +1031,9 @@ class PhoneWidget(wx.Panel):
 
     def SetPreview(self, entry):
         self.preview.ShowEntry(entry)
+
+    def CanPrint(self):
+        return True
 
     def OnPrintDialog(self, mainwindow, config):
         dlg=PhonebookPrintDialog(self, mainwindow, config)

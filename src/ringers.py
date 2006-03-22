@@ -96,6 +96,12 @@ class RingerView(fileview.FileView):
         self._shift_down=evt.ShiftDown()
         evt.Skip()
 
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_RINGER, "Delete Ringer"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_RINGER, "Add Ringer"
+
     def OnAdd(self, evt=None):
         self._raw_media=self._shift_down
         super(RingerView, self).OnAdd(evt)

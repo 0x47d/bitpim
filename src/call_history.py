@@ -45,9 +45,11 @@ import wx.lib.scrolledpanel as scrolled
 # BitPim modules
 import database
 import guiwidgets
+import guihelper
 import phonenumber
 import pubsub
 import today
+import widgets
 
 #-------------------------------------------------------------------------------
 class CallHistoryDataobject(database.basedataobject):
@@ -183,28 +185,15 @@ class CallHistoryEntry(object):
             raise TypeError
         self._data[self._datetime_key]=s
     datetime=property(fget=_get_datetime, fset=_set_datetime)
-    def get_repr(self, name=None):
-        # return a string representing this item in the format of
-        # [YYYY-MM-DD hh:mm:ss<ddm>] - <Number/Name>
-        f=self.folder[0].upper()
+    def get_date_time_str(self):
+        # return a string representing this date/time in the format of
+        # YYYY-MM-DD hh:mm:ss
         s=self.datetime
-        if self.duration is None:
-            _duration=''
-        else:
-            _duration='<%dm%ds>'%(self.duration/60, self.duration%60)
         if not len(s):
-            s=f+'['+self._unknown_datetime+_duration+']'
+            s=self._unknown_datetime
         else:
-            s=f+'['+s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+\
-               ':'+s[13:]+_duration+']  -  '
-        if name:
-            s+=name
-        elif self.name:
-            s+=self.name
-        else:
-            s+=phonenumber.format(self.number)
+            s=s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+':'+s[13:]
         return s
-
     def summary(self, name=None):
         # return a short summary for this entry in the format of
         # MM/DD hh:mm <Number/Name>
@@ -221,35 +210,25 @@ class CallHistoryEntry(object):
             s+=phonenumber.format(self.number)
         return s
 
-    def _get_date_str(self):
-        s=self.datetime
-        if not len(s):
-            return '****-**-**'
-        else:
-            return s[:4]+'-'+s[4:6]+'-'+s[6:8]
-    date_str=property(fget=_get_date_str)
-
 #-------------------------------------------------------------------------------
-class CallHistoryWidget(scrolled.ScrolledPanel):
+class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
     _data_key='call_history'
-    _by_type=0
-    _by_date=1
-    _by_number=2
+    stat_list=("Data", "Missed", "Incoming", "Outgoing", "All")
     def __init__(self, mainwindow, parent):
         super(CallHistoryWidget, self).__init__(parent, -1)
         self._main_window=mainwindow
+        self.call_history_tree_nodes={}
+        self._parent=parent
+        self.read_only=False
+        self.historical_date=None
         self._data={}
-        self._node_dict={}
         self._name_map={}
-        self._by_mode=self._by_type
-        self._display_func=(self._display_by_type, self._display_by_date,
-                             self._display_by_number)
+        pubsub.subscribe(self._OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
+        self.list_widget=CallHistoryList(self._main_window, self._parent, self)
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
         # data date adjuster
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self.read_only=False
-        self.historical_date=None
         static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
                                                  'Historical Data Status:'),
                                     wx.VERTICAL)
@@ -257,255 +236,55 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
         static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        # main list
-        self._item_list=wx.TreeCtrl(self, wx.NewId(),
-                                    style=wx.TR_MULTIPLE|wx.TR_HAS_BUTTONS)
-        vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
-        self._root=self._item_list.AddRoot('Call History')
-        self._nodes={}
-        # context menu
-        organize_menu=wx.Menu()
-        organize_menu_data=(
-            ('Type', self._OnOrganizedByType),
-            ('Date', self._OnOrganizedByDate),
-            ('Number', self._OnOrganizedByNumber))
-        for e in organize_menu_data:
-            id=wx.NewId()
-            organize_menu.AppendRadioItem(id, e[0])
-            wx.EVT_MENU(self, id, e[1])
-        context_menu_data=(
-            ('Expand All', self._OnExpandAll),
-            ('Collapse All', self._OnCollapseAll))
-        self._bgmenu=wx.Menu()
-        self._bgmenu.AppendMenu(wx.NewId(), 'Organize Items by', organize_menu)
-        for e in context_menu_data:
-            id=wx.NewId()
-            self._bgmenu.Append(id, e[0])
-            wx.EVT_MENU(self, id, e[1])
-        # event handlers
-        pubsub.subscribe(self._OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
-        wx.EVT_RIGHT_UP(self._item_list, self._OnRightClick)
+        # main stats display
+        self.total_calls=wx.StaticText(self, -1, '  Total Calls: 0')
+        self.total_in=wx.StaticText(self, -1, '  Incoming Calls: 0')
+        self.total_out=wx.StaticText(self, -1, '  Outgoing Calls: 0')
+        self.total_missed=wx.StaticText(self, -1, '  Missed Calls: 0')
+        self.total_data=wx.StaticText(self, -1, '  Data Calls: 0')
+        self.duration_all=wx.StaticText(self, -1, '  Total Duration(h:m:s): 0')
+        self.duration_in=wx.StaticText(self, -1, '  Incoming Duration(h:m:s): 0')
+        self.duration_out=wx.StaticText(self, -1, '  Outgoing Duration(h:m:s): 0')
+        self.duration_data=wx.StaticText(self, -1, '  Data Duration(h:m:s): 0')
+        vbs.Add(wx.StaticText(self, -1, ''), 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.total_calls, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.total_in, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.total_out, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.total_missed, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.total_data, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(wx.StaticText(self, -1, ''), 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.duration_all, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.duration_in, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.duration_out, 0, wx.ALIGN_LEFT|wx.ALL, 2)
+        vbs.Add(self.duration_data, 0, wx.ALIGN_LEFT|wx.ALL, 2)
         # all done
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
         self.SetupScrolling()
+        self.SetBackgroundColour(wx.WHITE)
         # populate data
         self._populate()
 
-    def _OnPBLookup(self, msg):
-        d=msg.data
-        k=d.get('item', None)
-        name=d.get('name', None)
-        if k is None:
-            return
-        self._name_map[k]=name
-
-    def _OnRightClick(self, evt):
-        self._item_list.PopupMenu(self._bgmenu, evt.GetPosition())
-    def _OnOrganizedByType(self, evt):
-        evt.GetEventObject().Check(evt.GetId(), True)
-        if self._by_mode!=self._by_type:
-            self._by_mode=self._by_type
-            self._display_func[self._by_type]()
-            self._expand_all()
-    def _OnOrganizedByDate(self, evt):
-        evt.GetEventObject().Check(evt.GetId(), True)
-        if self._by_mode!=self._by_date:
-            self._by_mode=self._by_date
-            self._display_func[self._by_date]()
-            self._expand_all()
-    def _OnOrganizedByNumber(self, evt):
-        evt.GetEventObject().Check(evt.GetId(), True)
-        if self._by_mode!=self._by_number:
-            self._by_mode=self._by_number
-            self._display_func[self._by_number]()
-            self._expand_all()
-
-    def _expand_all(self, sel_id=None):
-        if sel_id is None:
-            sel_id=self._root
-        self._item_list.Expand(sel_id)
-        id, cookie=self._item_list.GetFirstChild(sel_id)
-        while id.IsOk():
-            self._item_list.Expand(id)
-            id, cookie=self._item_list.GetNextChild(sel_id, cookie)
-    def _OnExpandAll(self, _):
-        sel_ids=self._item_list.GetSelections()
-        if not sel_ids:
-            sel_ids=[self._root]
-        for sel_id in sel_ids:
-            if not sel_id.IsOk():
-                sel_id=self._root
-            self._expand_all(sel_id)
-    def _OnCollapseAll(self, _):
-        sel_ids=self._item_list.GetSelections()
-        if not sel_ids:
-            sel_ids=[self._root]
-        for sel_id in sel_ids:
-            if not sel_id.IsOk():
-                sel_id=self._root
-            self._item_list.Collapse(sel_id)
-            id, cookie=self._item_list.GetFirstChild(sel_id)
-            while id.IsOk():
-                self._item_list.Collapse(id)
-                id, cookie=self._item_list.GetNextChild(sel_id, cookie)
-
-    def _clear(self):
-        self._item_list.Collapse(self._root)
-        for k,e in self._nodes.items():
-            self._item_list.DeleteChildren(e)
-    def _display_by_date(self):
-        self._item_list.CollapseAndReset(self._root)
-        self._nodes={}
-        # go through our data to collect the dates
-        date_list=[]
-        for k,e in self._data.items():
-            if e.date_str not in date_list:
-                date_list.append(e.date_str)
-        date_list.sort()
-        for s in date_list:
-            self._nodes[s]=self._item_list.AppendItem(self._root, s)
-        # build the tree
-        for k,e in self._data.items():
-            i=self._item_list.AppendItem(self._nodes[e.date_str],
-                                          e.get_repr(self._name_map.get(e.number, None)))
-            self._item_list.SetItemPyData(i, k)
-
-    def _display_by_number(self):
-        self._item_list.CollapseAndReset(self._root)
-        self._nodes={}
-        # go through our data to collect the numbers
-        number_list=[]
-        for k,e in self._data.items():
-            s=phonenumber.format(e.number)
-            if s not in number_list:
-                number_list.append(s)
-        number_list.sort()
-        for s in number_list:
-            self._nodes[s]=self._item_list.AppendItem(self._root, s)
-        # build the tree
-        for k,e in self._data.items():
-            i=self._item_list.AppendItem(self._nodes[phonenumber.format(e.number)],
-                                          e.get_repr(self._name_map.get(e.number, None)))
-            self._item_list.SetItemPyData(i, k)
-        
-    def _display_by_type(self):
-        self._item_list.CollapseAndReset(self._root)
-        self._nodes={}
-        for s in CallHistoryEntry.Valid_Folders:
-            self._nodes[s]=self._item_list.AppendItem(self._root, s)
-        node_dict={}
-        for k,e in self._data.items():
-            node_dict[e.get_repr(self._name_map.get(e.number, None))]=k
-        keys=node_dict.keys()
-        keys.sort()
-        for k in keys:
-            data_key=node_dict[k]
-            n=self._data[data_key]
-            i=self._item_list.AppendItem(self._nodes[n.folder], k)
-            self._item_list.SetItemPyData(i, data_key)
-
-    def _publish_today_data(self):
-        keys=[(x.datetime, k) for k,x in self._data.items()]
-        keys.sort()
-        keys.reverse()
-        today_event=today.TodayIncomingCallsEvent()
-        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for _,k in keys \
-                                    if self._data[k].folder==CallHistoryEntry.Folder_Incoming]
-        today_event.broadcast()
-        today_event=today.TodayMissedCallsEvent()
-        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for _,k in keys \
-                                    if self._data[k].folder==CallHistoryEntry.Folder_Missed]
-        today_event.broadcast()
-
-    def _populate(self):
-        self._clear()
-        self._node_dict={}
-        # lookup phone book for names
-        for k,e in self._data.items():
-            if e.name:
-                if not self._name_map.has_key(e.number):
-                    self._name_map[e.number]=e.name
-            else:
-                if not self._name_map.has_key(e.number):
-                    pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
-                                   { 'item': e.number } )
-        self._display_func[self._by_mode]()
-        # expand the whole tree
-        self._OnExpandAll(None)
-        # tell today 'bout it
-        self._publish_today_data()
-            
-    def OnDelete(self, _):
-        if self.read_only:
-            return
-        sels_idx=self._item_list.GetSelections()
-        if not sels_idx:
-            return
-        for sel_idx in sels_idx:
-            if not sel_idx.Ok():
-                continue
-            k=self._item_list.GetPyData(sel_idx)
-            if k is None:
-                # this is not a leaf node
-                continue
-            self._item_list.Delete(sel_idx)
-            del self._data[k]
-        self._save_to_db(self._data)
-
-    def getdata(self, dict, want=None):
-        dict[self._data_key]=copy.deepcopy(self._data)
     def populate(self, dict, force=False):
         if self.read_only and not force:
             # historical data, bail
             return
         self._data=dict.get(self._data_key, {})
         self._populate()
-    def _save_to_db(self, dict):
-        if self.read_only:
-            return
-        db_rr={}
-        for k,e in dict.items():
-            db_rr[k]=CallHistoryDataobject(e)
-        database.ensurerecordtype(db_rr, callhistoryobjectfactory)
-        self._main_window.database.savemajordict(self._data_key, db_rr)
 
-    def populatefs(self, dict):
-        if self.read_only:
-            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
-                             'Cannot Save Call History Data',
-                             style=wx.OK|wx.ICON_ERROR)
-        else:
-            self._save_to_db(dict.get(self._data_key, {}))
-        return dict
-    def getfromfs(self, result, timestamp=None):
-        dict=self._main_window.database.\
-                   getmajordictvalues(self._data_key,
-                                      callhistoryobjectfactory,
-                                      at_time=timestamp)
-        r={}
-        for k,e in dict.items():
-            ce=CallHistoryEntry()
-            ce.set_db_dict(e)
-            r[ce.id]=ce
-        result.update({ self._data_key: r})
+    def OnInit(self):
+        for stat in self.stat_list:
+            self.call_history_tree_nodes[stat]=self.AddSubPage(self.list_widget, stat, self._tree.calls)
+
+    def GetRightClickMenuItems(self, node):
+        result=[]
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EXPORT_CSV_CALL_HISTORY, "Export to CSV ...", "Export the call history to a csv file"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_DATAHISTORICAL, "Historical Data ...", "Display Historical Data"))
         return result
-    def merge(self, dict):
-        if self.read_only:
-            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
-                             'Cannot Save Call History Data',
-                             style=wx.OK|wx.ICON_ERROR)
-            return
-        d=dict.get(self._data_key, {})
-        l=[e for k,e in self._data.items()]
-        for k,e in d.items():
-            if e not in l:
-                self._data[e.id]=e
-        self._save_to_db(self._data)
-        self._populate()
+
+    def HasHistoricalData(self):
+        return True
 
     def OnHistoricalData(self):
         """Display current or historical data"""
@@ -533,16 +312,269 @@ class CallHistoryWidget(scrolled.ScrolledPanel):
                 self.getfromfs(r, self.historical_date)
             self.populate(r, True)
             self.historical_data_label.SetLabel(msg_str)
+            self.list_widget.historical_data_label.SetLabel(msg_str)
             self._main_window.OnBusyEnd()
         dlg.Destroy()
+
+    def _publish_today_data(self):
+        keys=[(x.datetime, k) for k,x in self._data.items()]
+        keys.sort()
+        keys.reverse()
+        today_event=today.TodayIncomingCallsEvent()
+        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
+                                    for _,k in keys \
+                                    if self._data[k].folder==CallHistoryEntry.Folder_Incoming]
+        today_event.broadcast()
+        today_event=today.TodayMissedCallsEvent()
+        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
+                                    for _,k in keys \
+                                    if self._data[k].folder==CallHistoryEntry.Folder_Missed]
+        today_event.broadcast()
+
+    def _populate(self):
+        # lookup phone book for names
+        for k,e in self._data.items():
+            if e.name:
+                if not self._name_map.has_key(e.number):
+                    self._name_map[e.number]=e.name
+            else:
+                if not self._name_map.has_key(e.number):
+                    pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                                   { 'item': e.number } )
+        self.list_widget.populate()
+        #update stats
+        self.CalculateStats()
+        # tell today 'bout it
+        self._publish_today_data()
+
+    def CalculateStats(self):
+        total=inc=out=miss=data=0
+        total_d=in_d=out_d=data_d=0
+        for k, e in self._data.items():
+            total+=1
+            if e.duration==None:
+                dur=0
+            else:
+                dur=e.duration
+            total_d+=dur
+            if e.folder==CallHistoryEntry.Folder_Incoming:
+                inc+=1
+                in_d+=dur
+            elif e.folder==CallHistoryEntry.Folder_Outgoing:
+                out+=1
+                out_d+=dur
+            elif e.folder==CallHistoryEntry.Folder_Missed:
+                miss+=1
+            elif e.folder==CallHistoryEntry.Folder_Data:
+                data+=1
+                data_d+=dur
+        self.total_calls.SetLabel('  Total Calls: '+`total`)
+        self.total_in.SetLabel('  Incoming Calls: '+`inc`)
+        self.total_out.SetLabel('  Outgoing Calls: '+`out`)
+        self.total_missed.SetLabel('  Missed Calls: '+`miss`)
+        self.total_data.SetLabel('  Data Calls: '+`data`)
+        self.duration_all.SetLabel('  Total Duration(h:m:s): '+self.GetDurationStr(total_d))
+        self.duration_in.SetLabel('  Incoming Duration(h:m:s): '+self.GetDurationStr(in_d))
+        self.duration_out.SetLabel('  Outgoing Duration(h:m:s): '+self.GetDurationStr(out_d))
+        self.duration_data.SetLabel('  Data Duration(h:m:s): '+self.GetDurationStr(data_d))
+            
+    def GetDurationStr(self, duration):
+        sec=duration%60
+        min=duration/60
+        hr=min/60
+        min=min%60
+        return "%d:%02d:%02d" % (hr, min, sec)
+
+    def _OnPBLookup(self, msg):
+        d=msg.data
+        k=d.get('item', None)
+        name=d.get('name', None)
+        if k is None:
+            return
+        self._name_map[k]=name
+
+    def getdata(self, dict, want=None):
+        dict[self._data_key]=copy.deepcopy(self._data)
+
+    def _save_to_db(self, dict):
+        if self.read_only:
+            return
+        db_rr={}
+        for k,e in dict.items():
+            db_rr[k]=CallHistoryDataobject(e)
+        database.ensurerecordtype(db_rr, callhistoryobjectfactory)
+        self._main_window.database.savemajordict(self._data_key, db_rr)
+
+    def populatefs(self, dict):
+        if self._stats.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Call History Data',
+                             style=wx.OK|wx.ICON_ERROR)
+        else:
+            self._save_to_db(dict.get(self._data_key, {}))
+        return dict
+
+    def getfromfs(self, result, timestamp=None):
+        dict=self._main_window.database.\
+                   getmajordictvalues(self._data_key,
+                                      callhistoryobjectfactory,
+                                      at_time=timestamp)
+        r={}
+        for k,e in dict.items():
+            ce=CallHistoryEntry()
+            ce.set_db_dict(e)
+            r[ce.id]=ce
+        result.update({ self._data_key: r})
+        return result
+
+    def merge(self, dict):
+        if self.read_only:
+            wx.MessageBox('You are viewing historical data which cannot be changed or saved',
+                             'Cannot Save Call History Data',
+                             style=wx.OK|wx.ICON_ERROR)
+            return
+        d=dict.get(self._data_key, {})
+        l=[e for k,e in self._data.items()]
+        for k,e in d.items():
+            if e not in l:
+                self._data[e.id]=e
+        self._save_to_db(self._data)
+        self._populate()
 
     def get_selected_data(self):
         # return a dict of selected items
         res={}
-        for sel_idx in self._item_list.GetSelections():
-            k=self._item_list.GetPyData(sel_idx)
+        for sel_idx in self.list_widget._item_list.GetSelections():
+            k=self.list_widget._item_list.GetItemData(sel_idx)
             if k:
                 res[k]=self._data[k]
         return res
+
     def get_data(self):
         return self._data
+
+#-------------------------------------------------------------------------------
+class CallHistoryList(wx.Panel, widgets.BitPimWidget):
+    _by_type=0
+    _by_date=1
+    _by_number=2
+    def __init__(self, mainwindow, parent, stats):
+        super(CallHistoryList, self).__init__(parent, -1)
+        self._main_window=mainwindow
+        self._stats=stats
+        self.nodes={}
+        self.nodes_keys={}
+        self._display_filter="All"
+        # main box sizer
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        # data date adjuster
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
+                                                 'Historical Data Status:'),
+                                    wx.VERTICAL)
+        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        # main list
+        column_info=[]
+        column_info.append(("Call Type", 80))
+        column_info.append(("Date", 120))
+        column_info.append(("Number", 100))
+        column_info.append(("Duration", 80))
+        column_info.append(("Name", 130))
+        self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
+        self._item_list.ResetView(self.nodes, self.nodes_keys)
+        vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticText(self, -1, '  Note: Click column headings to sort data'), 0, wx.ALIGN_CENTRE|wx.BOTTOM, 10)
+        # all done
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnSelected(self, node):
+        for stat in self._stats.stat_list:
+            if self._stats.call_history_tree_nodes[stat]==node:
+                if self._display_filter!=stat:
+                    self._display_filter=stat
+                    # for some reason GetTopItem return 0 (instead of -1)
+                    # when the list is empty
+                    if self._item_list.GetItemCount():
+                        item=self._item_list.GetTopItem()
+                        # deselect all the items when changing view
+                        while item!=-1:
+                            self._item_list.Select(item, 0)
+                            item=self._item_list.GetNextItem(item)
+                    self.populate()
+
+    def GetRightClickMenuItems(self, node):
+        result=[]
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EDITSELECTALL, "Select All", "Select All Items"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EDITDELETEENTRY, "Delete Selected", "Delete Selected Items"))
+        result.append((widgets.BitPimWidget.MENU_SPACER, 0, "", ""))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EXPORT_CSV_CALL_HISTORY, "Export to CSV ...", "Export the call history to a csv file"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_DATAHISTORICAL, "Historical Data ...", "Display Historical Data"))
+        return result
+
+    def CanSelectAll(self):
+        if self._item_list.GetItemCount():
+            return True
+        return False
+
+    def OnSelectAll(self, _):
+        item=self._item_list.GetTopItem()
+        while item!=-1:
+            self._item_list.Select(item)
+            item=self._item_list.GetNextItem(item)
+
+    def HasHistoricalData(self):
+        return self._stats.HasHistoricalData()
+
+    def OnHistoricalData(self):
+        return self._stats.OnHistoricalData()
+
+    def populate(self):
+        self.nodes={}
+        self.nodes_keys={}
+        index=0
+        for k,e in self._stats._data.items():
+            if self._display_filter=="All" or e.folder==self._display_filter:
+                if e.duration==None:
+                    duration=0
+                else:
+                    duration=e.duration
+                name=e.name
+                if name==None or name=="":
+                    temp=self._stats._name_map.get(e.number, None)
+                    if temp !=None:
+                        name=temp
+                    else:
+                        name=""
+                self.nodes[index]=(e.folder, e.get_date_time_str(), e.number, `duration`, name)
+                self.nodes_keys[index]=k
+                index+=1
+        self._item_list.ResetView(self.nodes, self.nodes_keys)
+
+    def CanDelete(self):
+        if self._stats.read_only:
+            return False
+        sels_idx=self._item_list.GetFirstSelected()
+        if sels_idx==-1:
+            return False
+        return True
+
+    def GetDeleteInfo(self):
+        return wx.ART_DEL_BOOKMARK, "Delete Call Record"
+
+    def OnDelete(self, _):
+        if self._stats.read_only:
+            return
+        sels_idx=self._item_list.GetSelections()
+        if len(sels_idx):
+            # delete them from the data list
+            for i,item in sels_idx.items():
+                del self._stats._data[self._item_list.GetItemData(item)]
+                self._item_list.Select(item, 0)
+            self.populate()
+            self._stats._save_to_db(self._stats._data)
+

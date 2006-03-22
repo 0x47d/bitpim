@@ -22,6 +22,8 @@ import wx.lib.hyperlink as hl
 # BitPim modules
 import aggregatedisplay as aggr
 import pubsub
+import widgets
+
 
 # Today REQUEST_TAB_CHANGED keys, types, and constants
 Tab_Today=0
@@ -191,7 +193,7 @@ class ItemHyperLink(HyperLinkCtrl):
         self.client_data=client_data
     
 #-------------------------------------------------------------------------------
-class GroupWidget(wx.Panel):
+class GroupWidget(wx.Panel, widgets.BitPimWidget):
     max_total_items=10
     max_items=9
     _title_font=None
@@ -302,7 +304,7 @@ class SectionHeader(aggr.SectionHeader):
 
 
 #-------------------------------------------------------------------------------
-class TodayWidget(aggr.Display):
+class TodayWidget(aggr.Display, widgets.BitPimWidget):
     _section_names=('Today','This Week')
     _item_names=(({ 'name': Today_Group_Calendar, 'tab_index': Tab_Calendar },
                   { 'name': Today_Group_Todo, 'tab_index': Tab_Todo },

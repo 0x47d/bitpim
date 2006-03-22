@@ -138,6 +138,12 @@ class WallpaperView(fileview.FileView):
         self._shift_down=evt.ShiftDown()
         evt.Skip()
 
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_WALLPAPER, "Delete Wallpaper"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_WALLPAPER, "Add Wallpaper"
+
     def OnAdd(self, evt=None):
         self._raw_image=self._shift_down
         super(WallpaperView, self).OnAdd(evt)

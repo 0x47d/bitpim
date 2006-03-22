@@ -39,6 +39,8 @@ import wx.gizmos as gizmos
 
 import database
 import helpids
+import guihelper
+import widgets
 
 # module constants--------------------------------------------------------------
 playlist_key='playlist'
@@ -126,7 +128,7 @@ class PlaylistEntry(object):
     songs=property(fget=_get_songs, fset=_set_songs)
 
 #-------------------------------------------------------------------------------
-class PlaylistWidget(wx.Panel):
+class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
     def __init__(self, mainwindow, parent):
         super(PlaylistWidget, self).__init__(parent, -1)
         self._mw=mainwindow
@@ -327,6 +329,13 @@ class PlaylistWidget(wx.Panel):
             else:
                 self._add_playlist_name(_new_name)
         evt.Skip()
+
+    # kinda redundant given that the playlist does not support the add/delet controls
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_TODO, "Delete Playlist"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_TODO, "Add Playlist"
 
     def OnAdd2Playlist(self, _):
         _pl_idx=self._item_list_w.GetNextItem(-1, state=wx.LIST_STATE_SELECTED)

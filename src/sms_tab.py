@@ -30,6 +30,8 @@ import phonenumber
 import pubsub
 import sms
 import today
+import guihelper
+import widgets
 
 #-------------------------------------------------------------------------------
 class StaticText(wx.StaticText):
@@ -105,7 +107,10 @@ class SMSInfo(pb_editor.DirtyUIBase):
         self.ignore_dirty=True
         if data is None:
             for n in self._fields:
-                n[self._w_index].Enable(False)
+                if n[self._class_index]==StaticText or n[self._class_index]==DeliveryStatus or \
+                   n[self._class_index]==TimeStamp:
+                    w=n[self._w_index]
+                    w.SetValue('')
         else:
             _bad_fields=self._not_used_fields.get(data.folder, ())
             for i,n in enumerate(self._fields):
@@ -116,300 +121,72 @@ class SMSInfo(pb_editor.DirtyUIBase):
                 else:
                     self._gs.Show(i*2, True)
                     self._gs.Show(i*2+1, True)
-                    w.Enable(True)
                     w.SetValue(getattr(data, n[self._dict_key_index]))
         self._gs.Layout()
         self.ignore_dirty=self.dirty=False
 
     def Clear(self):
         self.Set(None)
-        self.Enable(False)
 
 #-------------------------------------------------------------------------------
-class FolderPage(wx.Panel):
-    canned_msg_key='canned_msg'
-    def __init__(self, parent):
-        super(FolderPage, self).__init__(parent, -1)
-        self._data=self._data_map=self._name_map={}
-        self.canned_data=sms.CannedMsgEntry()
-        # main box sizer
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        # the tree
-        scrolled_panel=scrolled.ScrolledPanel(self, -1)
-        vbs0=wx.BoxSizer(wx.VERTICAL)
-        self._item_list=wx.TreeCtrl(scrolled_panel, wx.NewId(),
-                                    style=wx.TR_MULTIPLE|wx.TR_HAS_BUTTONS)
-        vbs0.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
-        self._root=self._item_list.AddRoot('SMS')
-        self._nodes={}
-        for s in sms.SMSEntry.Valid_Folders:
-            self._nodes[s]=self._item_list.AppendItem(self._root, s)
-        # and the canned message
-        canned_node=self._item_list.AppendItem(self._root, 'Canned')
-        self._item_list.AppendItem(canned_node, 'Built-In')
-        self._item_list.AppendItem(canned_node, 'User')
-        scrolled_panel.SetSizer(vbs0)
-        scrolled_panel.SetAutoLayout(True)
-        vbs0.Fit(scrolled_panel)
-        scrolled_panel.SetupScrolling()
-        hbs.Add(scrolled_panel, 1, wx.EXPAND|wx.BOTTOM, border=5)
-        # the detailed info pane as a scrolled panel
-        vbs1=wx.BoxSizer(wx.VERTICAL)
-        self._item_info=SMSInfo(self)
-        vbs1.Add(self._item_info, 0, wx.EXPAND|wx.ALL, 5)
-        self._item_text=pb_editor.MemoEditor(self, -1)
-        vbs1.Add(self._item_text, 1, wx.EXPAND|wx.ALL, 5)
-        self.canned_list=gizmos.EditableListBox(self, -1, 'Canned Messages')
-        vbs1.Add(self.canned_list, 1, wx.EXPAND|wx.ALL, 5)
-        vbs1.Show(self.canned_list, False)
-        self.builtin_canned_list=wx.ListBox(self, -1)
-        vbs1.Add(self.builtin_canned_list, 1, wx.EXPAND|wx.ALL, 5)
-        vbs1.Show(self.builtin_canned_list, False)
-        self.save_btn=wx.Button(self, wx.NewId(), 'Save')
-        vbs1.Add(self.save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        vbs1.Show(self.save_btn, False)
-        self.info_bs=vbs1
-        hbs.Add(vbs1, 3, wx.EXPAND|wx.ALL, border=5)
-        # context menu
-        self._bgmenu=wx.Menu()
-        context_menu_data=(
-            ('Expand All', self._OnExpandAll),
-            ('Collapse All', self._OnCollapseAll))
-        for e in context_menu_data:
-            id=wx.NewId()
-            self._bgmenu.Append(id, e[0])
-            wx.EVT_MENU(self, id, e[1])
-        # all done
-        self.SetSizer(hbs)
-        self.SetAutoLayout(True)
-        hbs.Fit(self)
-        # event handlers
-        wx.EVT_TREE_SEL_CHANGED(self, self._item_list.GetId(),
-                                self._OnSelChanged)
-        pubsub.subscribe(self._OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
-        wx.EVT_RIGHT_UP(self._item_list, self._OnRightClick)
-        # populate data
-        self._populate()
-        # expand the whole tree
-        self._OnExpandAll(None)
-
-    def _OnExpandAll(self, _):
-        sel_ids=self._item_list.GetSelections()
-        if not sel_ids:
-            sel_ids=[self._root]
-        for sel_id in sel_ids:
-            self._item_list.Expand(sel_id)
-            id, cookie=self._item_list.GetFirstChild(sel_id)
-            while id.IsOk():
-                self._item_list.Expand(id)
-                id, cookie=self._item_list.GetNextChild(sel_id, cookie)
-    def _OnCollapseAll(self, _):
-        sel_ids=self._item_list.GetSelections()
-        if not sel_ids:
-            sel_ids=[self._root]
-        for sel_id in sel_ids:
-            self._item_list.Collapse(sel_id)
-            id, cookie=self._item_list.GetFirstChild(sel_id)
-            while id.IsOk():
-                self._item_list.Collapse(id)
-                id, cookie=self._item_list.GetNextChild(sel_id, cookie)
-    def _OnRightClick(self, evt):
-        self._item_list.PopupMenu(self._bgmenu, evt.GetPosition())
-
-    def _OnSelChanged(self, evt):
-        # an item was clicked on/selected
-        item=evt.GetItem()
-        if item.IsOk():
-            item_text=self._item_list.GetItemText(item)
-            if item_text=='Built-In':
-                self.info_bs.Show(self._item_info, False)
-                self.info_bs.Show(self._item_text, False)
-                self.info_bs.Show(self.canned_list, False)
-                self.info_bs.Show(self.builtin_canned_list, True)
-                self.info_bs.Show(self.save_btn, False)
-                self.info_bs.Layout()
-            elif item_text=='User':
-                self.info_bs.Show(self._item_info, False)
-                self.info_bs.Show(self._item_text, False)
-                self.info_bs.Show(self.canned_list, True)
-                self.info_bs.Show(self.builtin_canned_list, False)
-                self.info_bs.Show(self.save_btn, True)
-                self.info_bs.Layout()
-            else:
-                self.info_bs.Show(self._item_info, True)
-                self.info_bs.Show(self._item_text, True)
-                self.info_bs.Show(self.canned_list, False)
-                self.info_bs.Show(self.builtin_canned_list, False)
-                self.info_bs.Show(self.save_btn, False)
-                k=self._item_list.GetPyData(evt.GetItem())
-                self._populate_each(k)
-                self.info_bs.Layout()
-
-    def _OnPBLookup(self, msg):
-        d=msg.data
-        k=d.get('item', None)
-        name=d.get('name', None)
-        if k is None:
-            return
-        self._name_map[k]=name
-
-    def _clear_info(self):
-        self._item_info.Clear()
-        self._item_text.Set(None)
-
-    def _clear(self):
-        for k,e in self._nodes.items():
-            self._item_list.DeleteChildren(e)
-        self._clear_info()
-
-    def _populate(self):
-        # populate new data
-        self._clear()
-        self._data_map={}
-        # populate the list with data
-        keys=[(x.datetime, k) for k,x in self._data.items()]
-        keys.sort()
-        for (_,k) in keys:
-            n=self._data[k]
-            i=self._item_list.AppendItem(self._nodes[n.folder], n.subject)
-            self._item_list.SetItemPyData(i, k)
-            self._data_map[k]=i
-            if len(n._from) and not self._name_map.has_key(n._from):
-                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
-                               { 'item': n._from } )
-            if len(n._to) and not self._name_map.has_key(n._to):
-                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
-                               { 'item': n._to } )
-            if len(n.callback) and not self._name_map.has_key(n.callback):
-                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
-                               { 'item': n.callback } )
-        # populate the canned data
-        self.canned_list.SetStrings(
-            self.canned_data.user_list)
-        self.builtin_canned_list.Set(self.canned_data.builtin_list)
-
-    def _populate_each(self, k):
-        # populate the detailed info of the item keyed k
-        if k is None:
-            # clear out all the subfields
-            self._item_info.Clear()
-            self._item_text.Set(None)
-            return
-        entry=self._data.get(k, None)
-        if entry is None:
-            return
-        # there're data, first enable the widgets
-        self._item_info.Enable(True)
-        # set the general detail
-        e=copy.deepcopy(entry)
-        # lookup names if available
-        s=self._name_map.get(e._from, None)
-        if s is None:
-            e._from=phonenumber.format(e._from)
-        else:
-            e._from=s
-        s=self._name_map.get(e._to, None)
-        if s is None:
-            e._to=phonenumber.format(e._to)
-        else:
-            e._to=s
-        s=self._name_map.get(e.callback, None)
-        if s is None:
-            e.callback=phonenumber.format(e.callback)
-        else:
-            e.callback=s
-        self._item_info.Set(e)
-        self._item_text.Set({'memo': e.text})
-
-    def Set(self, data, canned_data):
-        self._data=data
-        self.canned_data=canned_data
-        self._populate()
-    def Get(self):
-        self.canned_data.user_list=self.canned_list.GetStrings()
-        return self._data, self.canned_data
-
-    def delete_selection(self, data):
-        # try to delete an item, return True of successful
-        sel_ids=self._item_list.GetSelections()
-        if not sel_ids:
-            return False
-        for sel_idx in sel_ids:
-            k=self._item_list.GetPyData(sel_idx)
-            if k is None:
-                # this is not a leaf node
-                continue
-            self._item_list.Delete(sel_idx)
-            self._clear_info()
-            del data[k]
-            del self._data_map[k]
-        # check for new selection
-        sel_ids=self._item_list.GetSelections()
-        if sel_ids and sel_ids[0].Ok():
-            self._populate_each(self._item_list.GetPyData(sel_ids[0]))
-        return True
-
-    def publish_today_data(self):
-        keys=[(x.datetime,k) for k,x in self._data.items()]
-        keys.sort()
-        keys.reverse()
-        today_event=today.TodaySMSEvent()
-        for _,k in keys:
-            if self._data[k].folder==sms.SMSEntry.Folder_Inbox:
-                today_event.append(self._data[k].text,
-                                   { 'id': self._data_map[k] } )
-        today_event.broadcast()
-
-    def OnTodaySelection(self, evt):
-        if evt.data:
-            self._item_list.SelectItem(evt.data['id'])
-
-    def get_sel_data(self):
-        # return a dict of selected data
-        res={}
-        for sel_idx in self._item_list.GetSelections():
-            k=self._item_list.GetPyData(sel_idx)
-            if k:
-                res[k]=self._data[k]
-        return res
-
-#-------------------------------------------------------------------------------
-class SMSWidget(wx.Panel):
+class SMSWidget(wx.Panel, widgets.BitPimWidget):
     _data_key='sms'
     _canned_data_key='canned_msg'
+    msg_type_list=(sms.SMSEntry.Folder_Saved, sms.SMSEntry.Folder_Sent, sms.SMSEntry.Folder_Inbox)
     def __init__(self, mainwindow, parent):
         super(SMSWidget, self).__init__(parent, -1)
         self._main_window=mainwindow
-        self._data=self._canned_data={}
+        #self._data=self._canned_data={}
+        self._data={}
+        self._parent=parent
+        self.sms_tree_nodes={}
         # main box sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
         # data date adjuster
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         self.read_only=False
         self.historical_date=None
-        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
-                                                 'Historical Data Status:'),
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Historical Data Status:'),
                                     wx.VERTICAL)
         self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
         static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        # the notebook with the tabs
-        self._sms=FolderPage(self)
-        # Event Handling
-        wx.EVT_BUTTON(self, self._sms.save_btn.GetId(), self.OnSaveCannedMsg)
+        static_bs1=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Canned Messages:'),
+                                    wx.HORIZONTAL)
+        self.canned_list=gizmos.EditableListBox(self, -1, 'User Defined Canned Messages:')
+        static_bs1.Add(self.canned_list, 1, wx.EXPAND|wx.ALL, 5)
+        vbs1=wx.BoxSizer(wx.VERTICAL)
+        vbs1.Add(wx.StaticText(self, -1, '  Built-in Canned Messages:'), 0, wx.ALL, 0)
+        self.builtin_canned_list=wx.ListBox(self, -1)
+        vbs1.Add(self.builtin_canned_list, 1, wx.EXPAND|wx.ALL, 5)
+        static_bs1.Add(vbs1, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(static_bs1, 1, wx.EXPAND|wx.ALL, 5)
+        self.save_btn=wx.Button(self, wx.NewId(), 'Save')
+        vbs.Add(self.save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.list_widget=SMSList(self._main_window, self._parent, self)
+        wx.EVT_BUTTON(self, self.save_btn.GetId(), self.OnSaveCannedMsg)
         # all done
-        vbs.Add(self._sms, 1, wx.EXPAND|wx.ALL, 5)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
-        # register for Today selection
-        today.bind_notification_event(self._sms.OnTodaySelection,
-                                      today.Today_Group_IncomingSMS)
+
+    def OnInit(self):
+        for stat in self.msg_type_list:
+            self.sms_tree_nodes[stat]=self.AddSubPage(self.list_widget, stat, self._tree.message)
+
+    def GetRightClickMenuItems(self, node):
+        result=[]
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EXPORT_SMS, "Export SMS ...", "Export the SMS"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_DATAHISTORICAL, "Historical Data ...", "Display Historical Data"))
+        return result
 
     def _populate(self):
-        self._sms.Set(self._data, self._canned_data)
-        self._sms.publish_today_data()
+        self.list_widget.populate()
+        # populate the canned data
+        self.canned_list.SetStrings(
+            self._canned_data.user_list)
+        self.builtin_canned_list.Set(self._canned_data.builtin_list)
 
     def OnSaveCannedMsg(self, _):
         if self.read_only:
@@ -417,14 +194,14 @@ class SMSWidget(wx.Panel):
                           'Cannot Save SMS Data',
                           style=wx.OK|wx.ICON_ERROR)
             return
-        self._data, self._canned_data=self._sms.Get()
+        self._canned_data.user_list=self.canned_list.GetStrings()
         self._save_to_db(canned_msg_dict=self._canned_data)
 
-    def OnDelete(self, _):
-        if self.read_only:
-            return
-        if self._sms.delete_selection(self._data):
-            self._save_to_db(sms_dict=self._data)
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_SMS, "Delete SMS"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_SMS, "Add SMS"
 
     def getdata(self,dict,want=None):
         dict[self._data_key]=copy.deepcopy(self._data, {})
@@ -433,7 +210,13 @@ class SMSWidget(wx.Panel):
 
     def get_selected_data(self):
         # return a dict of selected items
-        return self._sms.get_sel_data()
+        res={}
+        for sel_idx in self.list_widget._item_list.GetSelections():
+            k=self.list_widget._item_list.GetItemData(sel_idx)
+            if k:
+                res[k]=self._data[k]
+        return res
+
     def get_data(self):
         return self._data
 
@@ -516,6 +299,9 @@ class SMSWidget(wx.Panel):
         self._save_to_db(sms_dict=self._data,
                          canned_msg_dict=self._canned_data)
 
+    def HasHistoricalData(self):
+        return True
+
     def OnHistoricalData(self):
         """Display current or historical data"""
         if self.read_only:
@@ -542,5 +328,235 @@ class SMSWidget(wx.Panel):
                 self.getfromfs(r, self.historical_date)
             self.populate(r, True)
             self.historical_data_label.SetLabel(msg_str)
+            self.list_widget.historical_data_label.SetLabel(msg_str)
             self._main_window.OnBusyEnd()
         dlg.Destroy()
+
+#-------------------------------------------------------------------------------
+class SMSList(wx.Panel, widgets.BitPimWidget):
+    _by_type=0
+    _by_date=1
+    _by_number=2
+    def __init__(self, mainwindow, parent, stats):
+        super(SMSList, self).__init__(parent, -1)
+        self._main_window=mainwindow
+        self._stats=stats
+        self.nodes={}
+        self.nodes_keys={}
+        self._display_filter="All"
+        self._name_map={}
+        self._data_map={}
+
+        # main box sizer
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        # data date adjuster
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Historical Data Status:'),
+                                    wx.VERTICAL)
+        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        # main list
+        hbmessage=wx.BoxSizer(wx.HORIZONTAL)
+        column_info=[]
+        column_info.append(("From/To", 105))
+        column_info.append(("Date", 120))
+        column_info.append(("Subject", 180))
+        self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
+        self._item_list.ResetView(self.nodes, self.nodes_keys)
+        vbs0=wx.BoxSizer(wx.VERTICAL)
+        vbs0.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
+        vbs0.Add(wx.StaticText(self, -1, '  Note: Click column headings to sort data'), 0, wx.ALIGN_CENTRE|wx.BOTTOM, 10)
+        hbmessage.Add(vbs0, 1, wx.EXPAND|wx.ALL, 5)
+        vbs1=wx.BoxSizer(wx.VERTICAL)
+        self._item_info=SMSInfo(self)
+        vbs1.Add(self._item_info, 0, wx.EXPAND|wx.ALL, 5)
+        self._item_text=pb_editor.MemoEditor(self, -1)
+        vbs1.Add(self._item_text, 1, wx.EXPAND|wx.ALL, 5)
+        hbmessage.Add(vbs1, 0, wx.EXPAND|wx.ALL, 5)
+        hbmessage.SetItemMinSize(1, (350, 20))
+        vbs.Add(hbmessage, 1, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_LIST_ITEM_SELECTED(self, self._item_list.GetId(), self._OnSelChanged)
+        pubsub.subscribe(self._OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
+        # register for Today selection
+        today.bind_notification_event(self.OnTodaySelection,
+                                      today.Today_Group_IncomingSMS)
+        # all done
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnSelected(self, node):
+        for stat in self._stats.msg_type_list:
+            if self._stats.sms_tree_nodes[stat]==node:
+                if self._display_filter!=stat:
+                    self._display_filter=stat
+                    # for some reason GetTopItem return 0 (instead of -1)
+                    # when the list is empty
+                    if self._item_list.GetItemCount():
+                        item=self._item_list.GetTopItem()
+                        # deselect all the items when changing view
+                        while item!=-1:
+                            self._item_list.Select(item, 0)
+                            item=self._item_list.GetNextItem(item)
+                    self._item_info.Clear()
+                    self._item_text.Set(None)
+                    self.populate()
+
+    def GetRightClickMenuItems(self, node):
+        result=[]
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EDITSELECTALL, "Select All", "Select All Items"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EDITDELETEENTRY, "Delete Selected", "Delete Selected Items"))
+        result.append((widgets.BitPimWidget.MENU_SPACER, 0, "", ""))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_EXPORT_SMS, "Export SMS ...", "Export the SMS"))
+        result.append((widgets.BitPimWidget.MENU_NORMAL, guihelper.ID_DATAHISTORICAL, "Historical Data ...", "Display Historical Data"))
+        return result
+
+    def CanSelectAll(self):
+        if self._item_list.GetItemCount():
+            return True
+        return False
+
+    def _OnPBLookup(self, msg):
+        d=msg.data
+        k=d.get('item', None)
+        name=d.get('name', None)
+        if k is None:
+            return
+        self._name_map[k]=name
+
+    def publish_today_data(self):
+        keys=[(x.datetime,k) for k,x in self._stats._data.items()]
+        keys.sort()
+        keys.reverse()
+        today_event=today.TodaySMSEvent()
+        for _,k in keys:
+            if self._stats._data[k].folder==sms.SMSEntry.Folder_Inbox:
+                today_event.append(self._stats._data[k].text,
+                                   { 'id': k } ) 
+        today_event.broadcast()
+
+    def OnTodaySelection(self, evt):
+        if evt.data and self._item_list.GetItemCount():
+            item=self._item_list.GetTopItem()
+            while item>0:
+                if evt.data==self._item_list.GetItemData(item):
+                    self._item_list.Select(item, 1)
+                    return
+                item=self._item_list.GetNextItem(item)
+
+    def OnSelectAll(self, _):
+        item=self._item_list.GetTopItem()
+        while item!=-1:
+            self._item_list.Select(item)
+            item=self._item_list.GetNextItem(item)
+
+    def _OnSelChanged(self, evt):
+        # an item was clicked on/selected
+        item=evt.GetIndex()
+        k=self._item_list.GetItemData(item)
+        # populate the detailed info of the item keyed k
+        if k is None:
+            # clear out all the subfields
+            self._item_info.Clear()
+            self._item_text.Set(None)
+            return
+        entry=self._stats._data.get(k, None)
+        if entry is None:
+            return
+        # set the general detail
+        e=copy.deepcopy(entry)
+        # lookup names if available
+        s=self._name_map.get(e._from, None)
+        if s is None:
+            e._from=phonenumber.format(e._from)
+        else:
+            e._from=s
+        s=self._name_map.get(e._to, None)
+        if s is None:
+            e._to=phonenumber.format(e._to)
+        else:
+            e._to=s
+        s=self._name_map.get(e.callback, None)
+        if s is None:
+            e.callback=phonenumber.format(e.callback)
+        else:
+            e.callback=s
+        self._item_info.Set(e)
+        self._item_text.Set({'memo': e.text})
+
+#    def CanDelete(self):
+#        if self.read_only:
+#            return False
+#        return self._sms.can_delete()
+
+#    def OnDelete(self, _):
+#        if self.read_only:
+#            return
+#        if self._sms.delete_selection(self._data):
+#            self._save_to_db(sms_dict=self._data)
+
+    def HasHistoricalData(self):
+        return self._stats.HasHistoricalData()
+
+    def OnHistoricalData(self):
+        return self._stats.OnHistoricalData()
+
+    def populate(self):
+        self.nodes={}
+        self.nodes_keys={}
+        index=0
+        for k,e in self._stats._data.items():
+            if len(e._from) and not self._name_map.has_key(e._from):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': e._from } )
+            if len(e._to) and not self._name_map.has_key(e._to):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': e._to } )
+            if len(e.callback) and not self._name_map.has_key(e.callback):
+                pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
+                               { 'item': e.callback } )
+            if e.folder==self._display_filter:
+                col=self._item_list.GetColumn(0)
+                col.SetMask(wx.LIST_MASK_TEXT)
+                if e.folder==sms.SMSEntry.Folder_Inbox:
+                    col.SetText("From")
+                    name=e._from
+                else:
+                    col.SetText("To")
+                    name=e._to
+                self._item_list.SetColumn(0, col)
+                if name!=None and name!="":
+                    temp=self._name_map.get(name, None)
+                    if temp !=None:
+                        name=temp
+                self.nodes[index]=(name, e.get_date_time_str(), e.subject)
+                self.nodes_keys[index]=k
+                self._data_map[k]=index
+                index+=1
+        self._item_list.ResetView(self.nodes, self.nodes_keys)
+        self.publish_today_data()
+
+    def CanDelete(self):
+        if self._stats.read_only:
+            return False
+        sels_idx=self._item_list.GetFirstSelected()
+        if sels_idx==-1:
+            return False
+        return True
+
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_SMS, "Delete Message"
+
+    def OnDelete(self, _):
+        if self._stats.read_only:
+            return
+        sels_idx=self._item_list.GetSelections()
+        if len(sels_idx):
+            # delete them from the data list
+            for i,item in sels_idx.items():
+                del self._stats._data[self._item_list.GetItemData(item)]
+                self._item_list.Select(item, 0)
+            self.populate()
+            self._stats._save_to_db(self._stats._data)

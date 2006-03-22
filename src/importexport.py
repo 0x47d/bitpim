@@ -32,36 +32,37 @@ import guiwidgets
 import nameparser
 import phonebook
 import pubsub
+import guihelper
 
 # control
 def GetPhonebookImports():
     res=[]
     # CSV - always possible
-    res.append( ("CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
-    res.append( ("CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
+    res.append( (guihelper.ID_IMPORT_CSV_CONTACTS,"CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
+    res.append( (guihelper.ID_IMPORT_CSV_CALENDAR,"CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
     # Vcards - always possible
-    res.append( ("vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
+    res.append( (guihelper.ID_IMPORT_VCARDS,"vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Vcal - always possible
-    res.append(('vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
+    res.append((guihelper.ID_IMPORT_VCALENDAR,'vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
     # Outlook
     try:
         import native.outlook
-        res.append( ("Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
-        res.append( ("Outlook Calendar...", "Import Outlook calendar for the calendar", OnFileImportOutlookCalendar) )
-        res.append( ("Outlook Notes...", "Import Outlook notes for the memo", OnFileImportOutlookNotes) )
-        res.append( ("Outlook Tasks...", "Import Outlook tasks for the todo", OnFileImportOutlookTasks) )
+        res.append( (guihelper.ID_IMPORT_OUTLOOK_CONTACTS,"Outlook Contacts...", "Import Outlook contacts for the phonebook", OnFileImportOutlookContacts) )
+        res.append( (guihelper.ID_IMPORT_OUTLOOK_CALENDAR,"Outlook Calendar...", "Import Outlook calendar for the calendar", OnFileImportOutlookCalendar) )
+        res.append( (guihelper.ID_IMPORT_OUTLOOK_NOTES,"Outlook Notes...", "Import Outlook notes for the memo", OnFileImportOutlookNotes) )
+        res.append( (guihelper.ID_IMPORT_OUTLOOK_TASKS,"Outlook Tasks...", "Import Outlook tasks for the todo", OnFileImportOutlookTasks) )
     except:
         pass
     # Evolution
     try:
         import native.evolution
-        res.append( ("Evolution Contacts...", "Import Evolution contacts for the phonebook", OnFileImportEvolutionContacts) )
+        res.append( (guihelper.ID_IMPORT_EVO_CONTACTS,"Evolution Contacts...", "Import Evolution contacts for the phonebook", OnFileImportEvolutionContacts) )
     except ImportError:
         pass
     # Qtopia Desktop - always possible
-    res.append( ("Qtopia Desktop...", "Import Qtopia Desktop contacts for the phonebook", OnFileImportQtopiaDesktopContacts) )
+    res.append( (guihelper.ID_IMPORT_QTOPIA_CONTACTS,"Qtopia Desktop...", "Import Qtopia Desktop contacts for the phonebook", OnFileImportQtopiaDesktopContacts) )
     # eGroupware - always possible
-    res.append( ("eGroupware...", "Import eGroupware contacts for the phonebook", OnFileImporteGroupwareContacts) )
+    res.append( (guihelper.ID_IMPORT_GROUPWARE_CONTACTS,"eGroupware...", "Import eGroupware contacts for the phonebook", OnFileImporteGroupwareContacts) )
     
     return res
     
@@ -1723,7 +1724,7 @@ def OnFileImportCSVContacts(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
 def OnFileImportVCards(parent):
     dlg=wx.FileDialog(parent, "Import vCards file",
@@ -1742,7 +1743,7 @@ def OnFileImportVCards(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
 def OnFileImportQtopiaDesktopContacts(parent):
     dlg=ImportQtopiaDesktopDialog(parent, -1, "Import Qtopia Desktop Contacts")
@@ -1751,7 +1752,7 @@ def OnFileImportQtopiaDesktopContacts(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
         
 def OnFileImportOutlookContacts(parent):
@@ -1763,7 +1764,7 @@ def OnFileImportOutlookContacts(parent):
     dlg.Destroy()
     native.outlook.releaseoutlook()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
 def OnFileImportEvolutionContacts(parent):
     import native.evolution
@@ -1773,7 +1774,7 @@ def OnFileImportEvolutionContacts(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
 def OnFileImporteGroupwareContacts(parent):
     import native.egroupware
@@ -1783,7 +1784,7 @@ def OnFileImporteGroupwareContacts(parent):
         data=dlg.GetFormattedData()
     dlg.Destroy()
     if data is not None:
-        parent.phonewidget.importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=True)
 
 def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
     dlg=dlg_class(parent, -1, dlg_title)
@@ -1815,7 +1816,7 @@ def OnFileImportOutlookCalendar(parent):
     import outlook_calendar
     import pubsub
     OnFileImportCommon(parent, outlook_calendar.OutlookImportCalDialog,
-                       'Import Outlook Calendar', parent.calendarwidget,
+                       'Import Outlook Calendar', parent.GetActiveCalendarWidget(),
                        'calendar')
     native.outlook.releaseoutlook()
 
@@ -1823,7 +1824,7 @@ def OnFileImportOutlookNotes(parent):
     import native.outlook
     import outlook_notes
     OnFileImportCommon(parent, outlook_notes.OutlookImportNotesDialog,
-                       'Import Outlook Notes', parent.memowidget,
+                       'Import Outlook Notes', parent.GetActiveMemoWidget(),
                        'memo')
     native.outlook.releaseoutlook()
 
@@ -1831,20 +1832,20 @@ def OnFileImportOutlookTasks(parent):
     import native.outlook
     import outlook_tasks
     OnFileImportCommon(parent, outlook_tasks.OutlookImportTasksDialog,
-                       'Import Outlook Tasks', parent.todowidget,
+                       'Import Outlook Tasks', parent.GetActiveTodoWidget(),
                        'todo')
     native.outlook.releaseoutlook()
 
 def OnFileImportVCal(parent):
     import vcal_calendar
     OnFileImportCommon(parent, vcal_calendar.VcalImportCalDialog,
-                       'Import vCalendar', parent.calendarwidget,
+                       'Import vCalendar', parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportCSVCalendar(parent):
     import csv_calendar
     OnFileImportCommon(parent, csv_calendar.CSVImportDialog,
-                       'Import CSV Calendar', parent.calendarwidget,
+                       'Import CSV Calendar', parent.GetActiveCalendarWidget(),
                        'calendar')
 
 ###
@@ -1912,16 +1913,16 @@ def AutoImportCalCommon(parent, calendar_r):
 def GetPhonebookExports():
     res=[]
     # Vcards - always possible
-    res.append( ("vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
+    res.append( (guihelper.ID_EXPORT_VCARD_CONTACTS, "vCards...", "Export the phonebook to vCards", OnFileExportVCards) )
     # eGroupware - always possible
-    res.append( ("eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
+    res.append( (guihelper.ID_EXPORT_GROUPWARE_CONTACTS, "eGroupware...", "Export the phonebook to eGroupware", OnFileExporteGroupware) )
     # CSV - always possible
-    res.append( ('CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
-    res.append( ('CSV Calendar...', 'Export the calendar to CSV', OnFileExportCSVCalendar) )
+    res.append( (guihelper.ID_EXPORT_CSV_CONTACTS, 'CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
+    res.append( (guihelper.ID_EXPORT_CSV_CALENDAR, 'CSV Calendar...', 'Export the calendar to CSV', OnFileExportCSVCalendar) )
     # SMS - always possible
-    res.append( ('SMS...', 'Export SMS Messages', OnFileExportSMS))
+    res.append( (guihelper.ID_EXPORT_SMS, 'SMS...', 'Export SMS Messages', OnFileExportSMS))
     # Call History - always possible
-    res.append( ('CSV Call History...', 'Export Call History to CSV',
+    res.append( (guihelper.ID_EXPORT_CSV_CALL_HISTORY, 'CSV Call History...', 'Export Call History to CSV',
                  OnFileExportCallHistory))
     return res
 
@@ -1930,7 +1931,7 @@ class BaseExportDialog(wx.Dialog):
     def __init__(self, parent, title, style=wx.CAPTION|wx.MAXIMIZE_BOX|\
              wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self, parent, id=-1, title=title, style=style)
-        self._phonebook_module=phonebook.thephonewidget
+        self._phonebook_module=parent.GetActivePhonebookWidget()
 
     def GetSelectionGui(self, parent):
         "Returns a sizer containing the gui for selecting which items and which fields are exported"
@@ -2156,6 +2157,7 @@ class ExporteGroupwareDialog(BaseExportDialog):
         BaseExportDialog.__init__(self, parent, title)
 
         self.module=module
+        self.parent=parent
         
         # make the ui
         
@@ -2299,7 +2301,7 @@ class ExporteGroupwareDialog(BaseExportDialog):
                         found=False
                         for serial in record["serials"]:
                             if serial["sourcetype"]=="bitpim":
-                                phonebook.thephonewidget.DeleteBySerial(serial)
+                                self.parent.GetActivePhonebookWidget().DeleteBySerial(serial)
                                 found=True
                                 break
                         assert found
@@ -2309,7 +2311,7 @@ class ExporteGroupwareDialog(BaseExportDialog):
             found=False
             for serial in record["serials"]:
                 if serial["sourcetype"]=="bitpim":
-                    phonebook.thephonewidget.UpdateSerial(serial, {"sourcetype": "egroupware", "id": newid})
+                    self.parent.GetActivePhonebookWidget().UpdateSerial(serial, {"sourcetype": "egroupware", "id": newid})
                     found=True
                     break
             assert found
@@ -2475,6 +2477,6 @@ def OnFileExportSMS(parent):
 
 def OnFileExportCallHistory(parent):
     import call_history_export
-    dlg=call_history_export.ExportCallHistoyDialog(parent, 'Export Call History')
+    dlg=call_history_export.ExportCallHistoryDialog(parent, 'Export Call History')
     dlg.ShowModal()
     dlg.Destroy()

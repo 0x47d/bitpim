@@ -24,7 +24,7 @@ import sms
 class ExportSMSDialog(wx.Dialog):
     def __init__(self, parent, title):
         super(ExportSMSDialog, self).__init__(parent, -1, title)
-        self._smswidget=parent.smswidget
+        self._smswidget=parent.GetActiveSMSWidget()
         self._sel_data=self._smswidget.get_selected_data()
         self._data=self._smswidget.get_data()
         # make the ui
@@ -57,6 +57,10 @@ class ExportSMSDialog(wx.Dialog):
         lall=len(self._data)
         self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
         self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
+        if lsel==0:
+            self.rows_selected.Enable(False)
+            self.rows_selected.SetValue(0)
+            self.rows_all.SetValue(1)
         rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
         hbs.Add(rbs, 3, wx.EXPAND|wx.ALL, 5)
         rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)

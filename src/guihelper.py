@@ -85,6 +85,25 @@ ID_FV_REBOOTPHONE=1
 ID_FV_MODEMMODE=1
 ID_FV_COPY=1
 
+# export/import IDs
+ID_EXPORT_VCARD_CONTACTS=1
+ID_EXPORT_GROUPWARE_CONTACTS=1
+ID_EXPORT_CSV_CONTACTS=1
+ID_EXPORT_CSV_CALENDAR=1
+ID_EXPORT_SMS=1
+ID_EXPORT_CSV_CALL_HISTORY=1
+ID_IMPORT_CSV_CONTACTS=1
+ID_IMPORT_CSV_CALENDAR=1
+ID_IMPORT_VCARDS=1
+ID_IMPORT_VCALENDAR=1
+ID_IMPORT_OUTLOOK_CONTACTS=1
+ID_IMPORT_OUTLOOK_CALENDAR=1
+ID_IMPORT_OUTLOOK_NOTES=1
+ID_IMPORT_OUTLOOK_TASKS=1
+ID_IMPORT_EVO_CONTACTS=1
+ID_IMPORT_QTOPIA_CONTACTS=1
+ID_IMPORT_GROUPWARE_CONTACTS=1
+
 # keep map around
 idmap={}
 # Start at 2 (if anything ends up being one then this code didn't spot it
@@ -292,13 +311,32 @@ _ourart={
     "ART_DEL_TODO": "delete_todo",
     "ART_ADD_SMS": "add_sms",
     "ART_DEL_SMS": "delete_sms",
+    "ART_SEL_PHONEBOOK": "select_phonebook",
+    "ART_SEL_WALLPAPER": "select_wallpaper",
+    "ART_SEL_RINGERS": "select_ringers",
+    "ART_SEL_CALENDAR": "select_calendar",
+    "ART_SEL_CALLHISTORY": "select_call_history",
+    "ART_SEL_CALLS": "select_calls",
+    "ART_SEL_SMS": "select_sms",
+    "ART_SEL_MESSAGE": "select_message",
+    "ART_SEL_FILE": "select_file",
+    "ART_SEL_LOG": "select_log",
+    "ART_SEL_MEMO": "select_memo",
+    "ART_SEL_TODO": "select_todo",
+    "ART_SEL_PLAYLIST": "select_playlist",
+    "ART_SEL_PROTOCOL": "select_protocol",
+    "ART_SEL_CONSOLE": "select_console",
+    "ART_SEL_ROOT_IMAGE": "select_root",
+    "ART_SEL_PHONE_ROOT": "phone_root",
+    "ART_SEL_PHONE": "phone_root",
     "ART_DATAGETPHONE": "datagetphone",
     "ART_DATASENDPHONE": "datasendphone",
     "ART_AUTOSYNCEXECUTE": "autosyncexecute",
     "ART_HELPHELP": "helphelp",
     "ART_EDITPHONEINFO": "editphoneinfo",
     "ART_EDITDETECT": "editdetect",
-    "ART_EDITSETTINGS": "editsettings"
+    "ART_EDITSETTINGS": "editsettings",
+    "ART_DATAHISTORICAL": "data_history"
     }
 
 # populate namespace

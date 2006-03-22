@@ -12,8 +12,9 @@
 import wx
 import wx.html
 import wx.py
+import widgets
 
-class DeveloperPanel(wx.Panel):
+class DeveloperPanel(wx.Panel, widgets.BitPimWidget):
     
     def __init__(self, parent, locals=None):
         wx.Panel.__init__(self, parent)

@@ -29,9 +29,9 @@ import time
 # wx. modules
 import wx
 import wx.html
-import wx.lib.mixins.listctrl
 import wx.lib.intctrl
 import wx.lib.newevent
+import wx.lib.mixins.listctrl  as  listmix
 
 # my modules
 import common
@@ -48,6 +48,7 @@ import bitflingscan
 import aggregatedisplay
 import phone_media_codec
 import pubsub
+import widgets
 import phones
 import setphone_wizard
 
@@ -57,12 +58,13 @@ import setphone_wizard
 
 BitFlingCertificateVerificationEvent, EVT_BITFLINGCERTIFICATEVERIFICATION = wx.lib.newevent.NewEvent()
 
+
 ####
 #### A simple text widget that does nice pretty logging.
 ####        
 
     
-class LogWindow(wx.Panel):
+class LogWindow(wx.Panel, widgets.BitPimWidget):
 
     theanalyser=None
     
@@ -617,12 +619,6 @@ class ConfigDialog(wx.Dialog):
     def updatevariables(self):
         path=self.mw.config.Read('path')
         self.mw.configpath=path
-        self.mw.ringerpath=self._fixup(os.path.join(path, "ringer"))
-        self.mw.wallpaperpath=self._fixup(os.path.join(path, "wallpaper"))
-        self.mw.phonebookpath=self._fixup(os.path.join(path, "phonebook"))
-        self.mw.calendarpath=self._fixup(os.path.join(path, "calendar"))
-        oldpath=self.mw.config.Read("path", "")
-        self.mw.config.Write("path", path)
         self.mw.commportsetting=str(self.commbox.GetValue())
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
         if self.mw.wt is not None:
@@ -668,21 +664,11 @@ class ConfigDialog(wx.Dialog):
         self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
-        self.mw.EnsureDatabase(path, oldpath)
         # update the status bar
         self.mw.SetPhoneModelStatus()
         # update the cache path
         self.mw.update_cache_path()
 
-    def _fixup(self, path):
-        # os.path.join screws up adding root directory of a drive to
-        # a directory.  eg join("c:\", "foo") gives "c:\\foo" whch
-        # is invalid.  This function fixes that
-        if len(path)>=3:
-            if path[1]==':' and path[2]=='\\' and path[3]=='\\':
-                return path[0:2]+path[3:]
-        return path
-        
     def needconfig(self):
         # Set base config
         self.setfromconfig()
@@ -1547,3 +1533,106 @@ class HistoricalDataDialog(wx.Dialog):
                                      historical_events[k]['mod']),
                                     k)
 
+
+class BitPimListCtrl(wx.ListCtrl, listmix.ColumnSorterMixin):
+    def __init__(self, parent, column_info):
+        self.lcparent=parent
+        wx.ListCtrl.__init__(self, self.lcparent, wx.NewId(), style=wx.LC_REPORT|wx.LC_VIRTUAL)
+        index=0
+        for info in column_info:
+            text, width=info
+            self.InsertColumn(index, text, width=width)
+            index+=1
+        self.handle_paint=False
+        listmix.ColumnSorterMixin.__init__(self, index)
+        self.font=wx.TheFontList.FindOrCreateFont(10, family=wx.SWISS, style=wx.NORMAL, weight=wx.NORMAL)
+        self.image_list=wx.ImageList(16, 16)
+        a={"sm_up":"GO_UP","sm_dn":"GO_DOWN","w_idx":"WARNING","e_idx":"ERROR","i_idx":"QUESTION"}
+        for k,v in a.items():
+            s="self.%s= self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_%s,wx.ART_TOOLBAR,(16,16)))" % (k,v)
+            exec(s)
+        self.SetImageList(self.image_list, wx.IMAGE_LIST_SMALL)
+
+    def SortItems(self,sorter=None):
+        col=self._col
+        sf=self._colSortFlag[col]
+
+        #creating pairs [column item defined by col, key]
+        items=[]
+        for k,v in self.itemDataMap.items():
+            if col==3:
+                items.append([int(v[col]),k])
+            else:
+                items.append([v[col],k])
+
+        items.sort()
+        k=[key for value, key in items]
+
+        # False is descending
+        if sf==False:
+            k.reverse()
+
+        self.itemIndexMap=k
+
+        #redrawing the list
+        self.Refresh()
+
+    def GetListCtrl(self):
+        return self
+
+    def GetSortImages(self):
+        return (self.sm_dn, self.sm_up)
+
+    def OnGetItemText(self, item, col):
+        index=self.itemIndexMap[item]
+        s = self.itemDataMap[index][col]
+        return s
+
+    def OnGetItemImage(self, item):
+        return -1
+
+    def OnGetItemAttr(self, item):
+        return None
+
+    def GetItemData(self, item):
+        index=self.itemIndexMap[item]
+        return self.itemPyDataMap[index]
+
+    def ResetView(self, display_data, data_keys):
+        self.itemDataMap = display_data
+        self.itemIndexMap = display_data.keys()
+        self.itemPyDataMap = data_keys
+        count=len(self.lcparent.nodes)
+        self.SetItemCount(count)
+        self.SortListItems()
+        if count==0 and not self.handle_paint:
+            wx.EVT_PAINT(self, self.OnPaint)
+            self.handle_paint=True
+        elif count!=0 and self.handle_paint:
+            self.Unbind(wx.EVT_PAINT)
+            self.handle_paint=False
+
+    def OnPaint(self, evt):
+        w,h=self.GetSize()
+        self.Refresh()
+        dc=wx.PaintDC(self)
+        dc.BeginDrawing()
+        dc.SetFont(self.font)
+        x,y= dc.GetTextExtent("There are no items to show in this view")
+        # center the text
+        xx=(w-x)/2
+        if xx<0:
+            xx=0
+        dc.DrawText("There are no items to show in this view", xx, h/3)
+        dc.EndDrawing()
+
+    def GetSelections(self):
+        sels_idx={}
+        index=0
+        sels_idx[index]=self.GetFirstSelected()
+        # build up a list of all selected items
+        while sels_idx[index]!=-1:
+            index+=1
+            sels_idx[index]=self.GetNextSelected(sels_idx[index-1])
+        del sels_idx[index]
+        return sels_idx

@@ -69,6 +69,8 @@ import field_color
 import phonebookentryeditor as pb_editor
 import pubsub
 import today
+import guihelper
+import widgets
 
 widgets_list=[]
 
@@ -316,7 +318,7 @@ class PriorityBox(wx.ComboBox):
         super(PriorityBox, self).SetValue(self._choices[v])
 
 #-------------------------------------------------------------------------------
-class DateControl(wx.Panel):
+class DateControl(wx.Panel, widgets.BitPimWidget):
     def __init__(self, parent, _=None):
         super(DateControl, self).__init__(parent, -1)
         self._dt=None
@@ -439,7 +441,7 @@ class GeneralEditor(pb_editor.DirtyUIBase):
             setattr(data, n[self._dict_key_index], v)
 
 #-------------------------------------------------------------------------------
-class TodoWidget(wx.Panel):
+class TodoWidget(wx.Panel, widgets.BitPimWidget):
     color_field_name='todo'
 
     def __init__(self, mainwindow, parent):
@@ -630,6 +632,17 @@ class TodoWidget(wx.Panel):
         self._save_btn.Enable(self.dirty)
         self._revert_btn.Enable(self.dirty)
 
+    def GetDeleteInfo(self):
+        return guihelper.ART_DEL_TODO, "Delete Todo Item"
+
+    def GetAddInfo(self):
+        return guihelper.ART_ADD_TODO, "Add Todo Item"
+
+    def CanAdd(self):
+        if self.dirty:
+            return False
+        return True
+
     def OnAdd(self, _):
         # add a new memo item
         if self.dirty:
@@ -642,6 +655,13 @@ class TodoWidget(wx.Panel):
         self._save_to_db(self._data)
         self._item_list.Select(self._data_map[m.id])
         self._populate_each(m.id)
+
+    def CanDelete(self):
+        sel_idx=self._item_list.GetSelection()
+        if sel_idx is None or sel_idx==-1:
+            # none selected
+            return False
+        return True
 
     def OnDelete(self, _):
         # delete the current selected item

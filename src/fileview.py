@@ -20,6 +20,7 @@ import wx
 import guihelper
 import aggregatedisplay
 import common
+import widgets
 
 def DrawTextWithLimit(dc, x, y, text, widthavailable, guardspace, term="..."):
     """Draws text and if it will overflow the width available, truncates and  puts ... at the end
@@ -80,7 +81,7 @@ class MyFileDropTarget(wx.FileDropTarget):
             return self.target.OnLeave()
         return wx.FileDropTarget.base_OnLeave(self)
 
-class FileView(wx.Panel):
+class FileView(wx.Panel, widgets.BitPimWidget):
 
     # Various DC objects used for drawing the items.  We have to calculate them in the constructor as
     # the app object hasn't been constructed when this file is imported.
@@ -380,6 +381,11 @@ class FileView(wx.Panel):
         wx.TheClipboard.Close()
         return r
 
+    def CanDelete(self):
+        if len(self.aggdisp.GetSelection()):
+            return True
+        return False        
+
     def OnDelete(self,_):
         items=self.GetSelectedItems()
         for item in items:
@@ -458,6 +464,9 @@ class FileView(wx.Panel):
             # changing target in dragndrop
             target=t
         target.OnAddFiles(filenames)
+
+    def CanAdd(self):
+        return True
 
     def OnAdd(self, _=None):
         dlg=wx.FileDialog(self, "Choose files", style=wx.OPEN|wx.MULTIPLE, wildcard=self.wildcard)

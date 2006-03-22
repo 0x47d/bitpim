@@ -184,6 +184,15 @@ class SMSEntry(object):
         self._set_or_del('datetime', v, [''])
         self._check_and_create_msg_id()
     datetime=property(fget=_get_datetime, fset=_set_datetime)
+    def get_date_time_str(self):
+        # return a string representing this date/time in the format of
+        # YYYY-MM-DD hh:mm:ss
+        s=self.datetime
+        if not len(s):
+            s=self._unknown_datetime
+        else:
+            s=s[:4]+'-'+s[4:6]+'-'+s[6:8]+' '+s[9:11]+':'+s[11:13]+':'+s[13:]
+        return s
     def _check_and_create_msg_id(self):
         if not len(self.msg_id) and len(self.text) and len(self.datetime):
             self._data['msg_id']=sha.new(self.datetime+self.text).hexdigest()

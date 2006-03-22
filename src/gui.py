@@ -29,9 +29,7 @@ import locale
 # wx modules
 import wx
 import wx.lib.colourdb
-import wx.gizmos
 import wx.html
-import wx.lib.mixins.listctrl  as  listmix
 
 # my modules
 import guiwidgets
@@ -41,26 +39,17 @@ import helpids
 import comdiagnose
 import phonebook
 import importexport
-import wallpaper
-import ringers
 import guihelper
-import bpcalendar
 import bphtml
 import bitflingscan
-import database
-import memo
 import update
-import todo
-import sms_tab
 import phoneinfo
-import call_history
 import phone_detect
 import phone_media_codec
-import hexeditor
-import today
 import pubsub
 import phones.com_brew as com_brew
 import auto_sync
+import phone_root
 import playlist
 import fileview
 
@@ -184,6 +173,69 @@ class HelperReturnEvent(wx.PyEvent):
 ###
 ### Our helper thread where all the work gets done
 ###
+
+thesplashscreen=None  # set to non-none if there is one
+
+class MySplashScreen(wx.SplashScreen):
+    def __init__(self, app, config):
+        self.app=app
+        # how long are we going to be up for?
+        time=config.ReadInt("splashscreentime", 2500)
+        if time>0:
+            bmp=guihelper.getbitmap("splashscreen")
+            self.drawnameandnumber(bmp)
+            wx.SplashScreen.__init__(self, bmp, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
+                                    time,
+                                    None, -1)
+            wx.EVT_CLOSE(self, self.OnClose)
+            self.Show()
+            app.Yield(True)
+            global thesplashscreen
+            thesplashscreen=self
+            return
+        # timeout is <=0 so don't show splash screen
+        self.goforit()
+
+    def drawnameandnumber(self, bmp):
+        dc=wx.MemoryDC()
+        dc.SelectObject(bmp)
+        # where we start writing
+        x=23 
+        y=40
+        # Product name
+        if False:
+            str=version.name
+            dc.SetTextForeground( wx.NamedColour("MEDIUMORCHID4") ) 
+            dc.SetFont( self._gimmethedamnsizeirequested(25, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
+            w,h=dc.GetTextExtent(str)
+            dc.DrawText(str, x, y)
+            y+=h+0
+        # Version number
+        x=58
+        y=127
+        str=version.versionstring+"-"+version.vendor
+        dc.SetTextForeground( wx.NamedColour("MEDIUMBLUE") )
+        dc.SetFont( self._gimmethedamnsizeirequested(15, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
+        w,h=dc.GetTextExtent(str)
+        dc.DrawText(str, x+10, y)
+        y+=h+0
+        # all done
+        dc.SelectObject(wx.NullBitmap)
+
+    def _gimmethedamnsizeirequested(self, ps, family, style, weight):
+        # on Linux we have to ask for bigger than we want
+        if guihelper.IsGtk():
+            ps=ps*1.6
+        font=wx.TheFontList.FindOrCreateFont(int(ps), family, style, weight)
+        return font
+
+    def goforit(self):
+        self.app.makemainwindow()
+        
+    def OnClose(self, evt):
+        self.goforit()
+        evt.Skip()
+
 
 class WorkerThreadFramework(threading.Thread):
     def __init__(self):
@@ -327,72 +379,6 @@ class Config(ConfigParser.ConfigParser):
         return self.has_option(*self._expand(key))
     def Flush(self):
         pass
-
-###
-###  Splash screen
-###
-
-thesplashscreen=None  # set to non-none if there is one
-
-class MySplashScreen(wx.SplashScreen):
-    def __init__(self, app, config):
-        self.app=app
-        # how long are we going to be up for?
-        time=config.ReadInt("splashscreentime", 2500)
-        if time>0:
-            bmp=guihelper.getbitmap("splashscreen")
-            self.drawnameandnumber(bmp)
-            wx.SplashScreen.__init__(self, bmp, wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
-                                    time,
-                                    None, -1)
-            wx.EVT_CLOSE(self, self.OnClose)
-            self.Show()
-            app.Yield(True)
-            global thesplashscreen
-            thesplashscreen=self
-            return
-        # timeout is <=0 so don't show splash screen
-        self.goforit()
-
-    def drawnameandnumber(self, bmp):
-        dc=wx.MemoryDC()
-        dc.SelectObject(bmp)
-        # where we start writing
-        x=23 
-        y=40
-        # Product name
-        if False:
-            str=version.name
-            dc.SetTextForeground( wx.NamedColour("MEDIUMORCHID4") ) 
-            dc.SetFont( self._gimmethedamnsizeirequested(25, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
-            w,h=dc.GetTextExtent(str)
-            dc.DrawText(str, x, y)
-            y+=h+0
-        # Version number
-        x=58
-        y=127
-        str=version.versionstring+"-"+version.vendor
-        dc.SetTextForeground( wx.NamedColour("MEDIUMBLUE") )
-        dc.SetFont( self._gimmethedamnsizeirequested(15, wx.ROMAN, wx.NORMAL, wx.NORMAL) )
-        w,h=dc.GetTextExtent(str)
-        dc.DrawText(str, x+10, y)
-        y+=h+0
-        # all done
-        dc.SelectObject(wx.NullBitmap)
-
-    def _gimmethedamnsizeirequested(self, ps, family, style, weight):
-        # on Linux we have to ask for bigger than we want
-        if guihelper.IsGtk():
-            ps=ps*1.6
-        font=wx.TheFontList.FindOrCreateFont(int(ps), family, style, weight)
-        return font
-
-    def goforit(self):
-        self.app.makemainwindow()
-        
-    def OnClose(self, evt):
-        self.goforit()
-        evt.Skip()
 
 ####
 #### Main application class.  Runs the event loop etc
@@ -678,12 +664,8 @@ class MainWindow(wx.Frame):
         self.wantlog=1  # do we want to receive log information
         self.config=config
         self.progmajortext=""
-        self.lw=None
-        self.lwdata=None
-        self.filesystemwidget=None
         self.__owner_name=''
 
-        self.database=None
         self._taskbar=None
         self.__phone_detect_at_startup=False
         self._autodetect_delay=0
@@ -716,8 +698,7 @@ class MainWindow(wx.Frame):
         
         # imports
         impmenu=wx.Menu()
-        for desc, help, func in importexport.GetPhonebookImports():
-            x=wx.NewId()
+        for x, desc, help, func in importexport.GetPhonebookImports():
             impmenu.Append(x, desc, help)
             wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
@@ -725,8 +706,7 @@ class MainWindow(wx.Frame):
 
         # exports
         expmenu=wx.Menu()
-        for desc, help, func in importexport.GetPhonebookExports():
-            x=wx.NewId()
+        for x, desc, help, func in importexport.GetPhonebookExports():
             expmenu.Append(x, desc, help)
             wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
@@ -761,7 +741,7 @@ class MainWindow(wx.Frame):
         menu=wx.Menu()
         menu.Append(guihelper.ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
-        menu.Append(guihelper.ID_DATAHISTORICAL, "Historical Data", "View Current & Historical Data")
+        menu.Append(guihelper.ID_DATAHISTORICAL, "Historical Data ...", "View Current & Historical Data")
         menuBar.Append(menu, "&Data")
 
         menu=wx.Menu()
@@ -807,26 +787,28 @@ class MainWindow(wx.Frame):
         sz=self.tb.GetToolBitmapSize()
 
         # add and delete tools
-        self.getphonedata=self.tb.AddSimpleTool(guihelper.ID_DATAGETPHONE, wx.ArtProvider.GetBitmap(guihelper.ART_DATAGETPHONE, wx.ART_TOOLBAR, sz),
+        self.tb.AddSimpleTool(guihelper.ID_DATAGETPHONE, wx.ArtProvider.GetBitmap(guihelper.ART_DATAGETPHONE, wx.ART_TOOLBAR, sz),
                                                 "Get Phone Data", "Synchronize BitPim with Phone")
-        self.sendphonedata=self.tb.AddLabelTool(guihelper.ID_DATASENDPHONE, "Send Phone Data", wx.ArtProvider.GetBitmap(guihelper.ART_DATASENDPHONE, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_DATASENDPHONE, "Send Phone Data", wx.ArtProvider.GetBitmap(guihelper.ART_DATASENDPHONE, wx.ART_TOOLBAR, sz),
                                           shortHelp="Send Phone Data", longHelp="Synchronize Phone with BitPim")
+        self.tb.AddLabelTool(guihelper.ID_DATAHISTORICAL, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_DATAHISTORICAL, wx.ART_TOOLBAR, sz),
+                                             shortHelp="Historical Data", longHelp="Show Historical Data")
         self.tb.AddSeparator()
-        self.tooladd=self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider.GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITADDENTRY, "Add", wx.ArtProvider.GetBitmap(wx.ART_ADD_BOOKMARK, wx.ART_TOOLBAR, sz),
                                           shortHelp="Add", longHelp="Add an item")
-        self.tooldelete=self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider.GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITDELETEENTRY, "Delete", wx.ArtProvider.GetBitmap(wx.ART_DEL_BOOKMARK, wx.ART_TOOLBAR, sz),
                                              shortHelp="Delete", longHelp="Delete item")
-        self.editphoneinfo=self.tb.AddLabelTool(guihelper.ID_EDITPHONEINFO, "Phone Info", wx.ArtProvider.GetBitmap(guihelper.ART_EDITPHONEINFO, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITPHONEINFO, "Phone Info", wx.ArtProvider.GetBitmap(guihelper.ART_EDITPHONEINFO, wx.ART_TOOLBAR, sz),
                                           shortHelp="Phone Info", longHelp="Show Phone Info")
-        self.editdetectphone=self.tb.AddLabelTool(guihelper.ID_EDITDETECT, "Find Phone", wx.ArtProvider.GetBitmap(guihelper.ART_EDITDETECT, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITDETECT, "Find Phone", wx.ArtProvider.GetBitmap(guihelper.ART_EDITDETECT, wx.ART_TOOLBAR, sz),
                                           shortHelp="Find Phone", longHelp="Find Phone")
-        self.editsettings=self.tb.AddLabelTool(guihelper.ID_EDITSETTINGS, "Edit Settings", wx.ArtProvider.GetBitmap(guihelper.ART_EDITSETTINGS, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_EDITSETTINGS, "Edit Settings", wx.ArtProvider.GetBitmap(guihelper.ART_EDITSETTINGS, wx.ART_TOOLBAR, sz),
                                           shortHelp="Edit Settings", longHelp="Edit BitPim Settings")
         self.tb.AddSeparator()
-        self.autosync=self.tb.AddSimpleTool(guihelper.ID_AUTOSYNCEXECUTE, wx.ArtProvider.GetBitmap(guihelper.ART_AUTOSYNCEXECUTE, wx.ART_TOOLBAR, sz),
+        self.tb.AddSimpleTool(guihelper.ID_AUTOSYNCEXECUTE, wx.ArtProvider.GetBitmap(guihelper.ART_AUTOSYNCEXECUTE, wx.ART_TOOLBAR, sz),
                                             "Autosync Calendar", "Synchronize Phone Calendar with PC")
         self.tb.AddSeparator()
-        self.help=self.tb.AddLabelTool(guihelper.ID_HELPHELP, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_HELPHELP, wx.ART_TOOLBAR, sz),
+        self.tb.AddLabelTool(guihelper.ID_HELPHELP, "BitPim Help", wx.ArtProvider.GetBitmap(guihelper.ART_HELPHELP, wx.ART_TOOLBAR, sz),
                                              shortHelp="BitPim Help", longHelp="BitPim Help")
 
 
@@ -837,24 +819,30 @@ class MainWindow(wx.Frame):
         self.dlggetphone=guiwidgets.GetPhoneDialog(self, "Get Data from Phone")
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
+        # the splitter
+        self.sw=wx.SplitterWindow(self, wx.NewId(), style=wx.SP_3D|wx.SP_NO_XP_THEME)
+
+        ### create main tree view
+        self.tree = phone_root.PhoneTree(self.sw, self, wx.NewId())
+
         ### Events we handle
-        wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.OnFilePrint)
+        wx.EVT_MENU(self, guihelper.ID_FILEPRINT, self.tree.OnFilePrint)
         wx.EVT_MENU(self, guihelper.ID_FILEEXIT, self.OnExit)
         wx.EVT_MENU(self, guihelper.ID_EDITSETTINGS, self.OnEditSettings)
         wx.EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         wx.EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
-        wx.EVT_MENU(self, guihelper.ID_DATAHISTORICAL, self.OnDataHistorical)
-        wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.OnViewColumns)
-        wx.EVT_MENU(self, guihelper.ID_VIEWPREVIEW, self.OnViewPreview)
-        wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.OnViewClearLogs)
-        wx.EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.OnViewLogData)
-        wx.EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.OnViewFilesystem)
-        wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.OnEditAddEntry)
-        wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.OnEditDeleteEntry)
-        wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.OnEditSelectAll)
-        wx.EVT_MENU(self, guihelper.ID_EDITCOPY, self.OnCopyEntry)
-        wx.EVT_MENU(self, guihelper.ID_EDITPASTE, self.OnPasteEntry)
-        wx.EVT_MENU(self, guihelper.ID_EDITRENAME, self.OnRenameEntry)
+        wx.EVT_MENU(self, guihelper.ID_DATAHISTORICAL, self.tree.OnDataHistorical)
+        wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.tree.OnViewColumns)
+        wx.EVT_MENU(self, guihelper.ID_VIEWPREVIEW, self.tree.OnViewPreview)
+        wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.tree.OnViewClearLogs)
+        wx.EVT_MENU(self, guihelper.ID_VIEWLOGDATA, self.tree.OnViewLogData)
+        wx.EVT_MENU(self, guihelper.ID_VIEWFILESYSTEM, self.tree.OnViewFilesystem)
+        wx.EVT_MENU(self, guihelper.ID_EDITADDENTRY, self.tree.OnEditAddEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITDELETEENTRY, self.tree.OnEditDeleteEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITSELECTALL, self.tree.OnEditSelectAll)
+        wx.EVT_MENU(self, guihelper.ID_EDITCOPY, self.tree.OnCopyEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITPASTE, self.tree.OnPasteEntry)
+        wx.EVT_MENU(self, guihelper.ID_EDITRENAME, self.tree.OnRenameEntry)
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
@@ -877,98 +865,38 @@ class MainWindow(wx.Frame):
         self.needconfig=self.configdlg.needconfig()
         self.configdlg.updatevariables()
         
+        pos=self.config.ReadInt("mainwindowsplitterpos", 200)
+        self.sw.SplitVertically(self.tree, self.tree.active_panel, pos)
+        self.sw.SetMinimumPaneSize(50)
+        wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
+        self.tree.Expand(self.tree.root)
+
+        # multiple phones can be added here, although we have to figure out which phone
+        # to use in send/get phone data.
+        self.tree.CreatePhone("Phone", self.config, self.configpath)
+        #self.tree.CreatePhone("Different database", self.config, "C:/Documents and Settings/Simon/My Documents/bitpim_old")
+
         ### Set autosync settings dialog
         self.calenders=importexport.GetCalenderAutoSyncImports()
-        print "cal " +`self.calenders`
         self.autosyncsetting=auto_sync.AutoSyncSettingsDialog(self, self)
         self.autosyncsetting.updatevariables()
-
-        ### notebook
-        self.nb=wx.Notebook(self,-1, style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
-
-        ### notebook tabs
-        if self.config.ReadInt("console", 0):
-            import developer
-            self.nb.AddPage(developer.DeveloperPanel(self.nb, {'mw': self, 'db': self.database} ), "Console")
-        self.widget=self.todaywidget=today.TodayWidget(self, self.nb)
-        self.nb.AddPage(self.todaywidget, "Today")
-        self.phonewidget=phonebook.PhoneWidget(self, self.nb, self.config)
-        self.nb.AddPage(self.phonewidget, "PhoneBook")
-        self.wallpaperwidget=wallpaper.WallpaperView(self, self.nb)
-        self.nb.AddPage(self.wallpaperwidget, "Wallpaper")
-        self.ringerwidget=ringers.RingerView(self, self.nb)
-        self.nb.AddPage(self.ringerwidget, "Ringers")
-        self.calendarwidget=bpcalendar.Calendar(self, self.nb)
-        self.nb.AddPage(self.calendarwidget, "Calendar")
-        self.memowidget=memo.MemoWidget(self, self.nb)
-        self.nb.AddPage(self.memowidget, "Memo")
-        self.todowidget=todo.TodoWidget(self, self.nb)
-        self.nb.AddPage(self.todowidget, 'Todo')
-        self.smswidget=sms_tab.SMSWidget(self, self.nb)
-        self.nb.AddPage(self.smswidget, 'SMS')
-        self.callhistorywidget=call_history.CallHistoryWidget(self, self.nb)
-        self.nb.AddPage(self.callhistorywidget, 'Call History')
-        self.playlistwidget=playlist.PlaylistWidget(self, self.nb)
-        self.nb.AddPage(self.playlistwidget, 'Play List')
-
-        ### logwindow (last notebook tab)
-        self.lw=guiwidgets.LogWindow(self.nb)
-        self.nb.AddPage(self.lw, "Log")
-
-        # Final widgets that depend on config
-        lv=self.config.ReadInt("viewlogdata", 0)
-        if lv:
-            menuBar.Check(guihelper.ID_VIEWLOGDATA, 1)
-            self.OnViewLogData(None)
-
-        fv=self.config.ReadInt("viewfilesystem", 0)
-        if fv:
-            menuBar.Check(guihelper.ID_VIEWFILESYSTEM, 1)
-            self.OnViewFilesystem(None)
-            wx.Yield()
-        # whether or not to turn on phonebook preview pane
-        if self.config.ReadInt("viewpreview", 1):
-            menuBar.Check(guihelper.ID_VIEWPREVIEW, 1)
-        else:
-            self.phonewidget.OnViewPreview(False)
-        # update the the status bar info
-        self.SetPhoneModelStatus()
-        self.SetVersionsStatus()
-        # now register for notebook changes
-        wx.EVT_NOTEBOOK_PAGE_CHANGED(self, -1, self.OnNotebookPageChanged)
+        self.CloseSplashScreen()
 
         # add update handlers for controls that are not always available
         wx.EVT_UPDATE_UI(self, guihelper.ID_AUTOSYNCEXECUTE, self.AutosyncUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_DATASENDPHONE, self.DataSendPhoneUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.DataDeleteItemUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.DataAddItemUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.HistoricalDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.ViewColumnsandPreviewDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.ViewColumnsandPreviewDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.FilePrintDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.SelectAllDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.EditCopyUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITPASTE, self.EditPasteUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.EditRenameUpdateUIEvent)
-
-        # show the last page we were on
-        if self.config.ReadInt('startwithtoday', 0):
-            pg='Today'
-        else:
-            pg=self.config.Read("viewnotebookpage", "")
-        sel=0
-        if len(pg):
-            for i in range(self.nb.GetPageCount()):
-                if pg==self.nb.GetPageText(i):
-                    sel=i
-                    break
-
-        if sel==self.nb.GetSelection():
-            # no callback is generated if we change to the page we are already
-            # on, but we need to update toolbar etc so fake it
-            self.OnNotebookPageChanged()
-        else:
-            self.nb.SetSelection(sel)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATASENDPHONE, self.tree.DataSendPhoneUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.tree.DataDeleteItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.tree.DataAddItemUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.tree.HistoricalDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.tree.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.tree.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.tree.FilePrintDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.tree.SelectAllDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.tree.EditCopyUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITPASTE, self.tree.EditPasteUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.tree.EditRenameUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWLOGDATA, self.tree.ViewLogDataUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWFILESYSTEM, self.tree.ViewFileSystemUIEvent)
 
         # Retrieve saved settings... Use 90% of screen if not specified
         guiwidgets.set_size("MainWin", self, screenpct=90)
@@ -982,8 +910,6 @@ class MainWindow(wx.Frame):
             self.config.Flush()
             wx.CallAfter(self.OnHelpTour)
 
-        # Populate all widgets from disk
-        wx.CallAfter(self.OnPopulateEverythingFromDisk)
         # check for device changes
         if guihelper.IsMSWindows():
             if self.config.ReadInt('taskbaricon', 0):
@@ -1000,58 +926,63 @@ class MainWindow(wx.Frame):
         # setup the midnight timer
         self._setup_midnight_timer()
 
-    # update handlers for controls that are not always available
-    def AutosyncUpdateUIEvent(self, event):
-        event.Enable(self.autosyncsetting.IsConfigured())
+    def OnSplitterPosChanged(self,_):
+        pos=self.sw.GetSashPosition()
+        self.config.WriteInt("mainwindowsplitterpos", pos)        
 
-    def DataSendPhoneUpdateUIEvent(self, event):
-        event.Enable(not wx.GetApp().SAFEMODE)
+    def SetActivePanel(self, panel):
+        w2=self.sw.GetWindow2()
+        if w2==None: # still in startup
+            return
+        w2.Show(False)
+        self.sw.ReplaceWindow(w2, panel)
+        panel.Show(True)
+        panel.SetFocus()
 
-    def EditCopyUpdateUIEvent(self, event):
-        enable_copy=hasattr(self.widget, "OnCopy") and \
-                     hasattr(self.widget, "CanCopy") and \
-                     self.widget.CanCopy()
-        event.Enable(enable_copy)
+    def GetActiveMemoWidget(self):
+        return self.tree.GetActivePhone().memowidget
 
-    def EditPasteUpdateUIEvent(self, event):
-        enable_paste=hasattr(self.widget, "OnPaste") and \
-                      hasattr(self.widget, "CanPaste") and \
-                      self.widget.CanPaste()
-        event.Enable(enable_paste)
+    def GetActiveRingerWidget(self):
+        return self.tree.GetActivePhone().ringerwidget
 
-    def EditRenameUpdateUIEvent(self, event):
-        enable_rename=hasattr(self.widget, "OnRename") and \
-                       hasattr(self.widget, "CanRename") and \
-                       self.widget.CanRename()
-        event.Enable(enable_rename)
+    def GetActiveWallpaperWidget(self):
+        return self.tree.GetActivePhone().wallpaperwidget
 
-    # we should really add a method to the widgets to enable/disable
-    # all of these controls, some only work if a specific item
-    # is selected in the widget, the control should only
-    # be enabled if it will really do something
-    def DataDeleteItemUpdateUIEvent(self, event):
-        enable_del=hasattr(self.widget, "OnDelete")
-        event.Enable(enable_del)
+    def GetActiveTodoWidget(self):
+        return self.tree.GetActivePhone().todowidget
 
-    def DataAddItemUpdateUIEvent(self, event):
-        enable_add=hasattr(self.widget, "OnAdd")
-        event.Enable(enable_add)
+    def GetActiveCalendarWidget(self):
+        return self.tree.GetActivePhone().calendarwidget
 
-    def HistoricalDataUpdateUIEvent(self, event):
-        enable_historical_data=hasattr(self.widget, 'OnHistoricalData')
-        event.Enable(enable_historical_data)
+    def GetActivePlaylistWidget(self):
+        return self.tree.GetActivePhone().playlistwidget
 
-    def ViewColumnsandPreviewDataUpdateUIEvent(self, event):
-        is_phone_widget=self.widget is self.phonewidget
-        event.Enable(is_phone_widget)
+    def GetActivePhonebookWidget(self):
+        return self.tree.GetActivePhone().phonewidget
 
-    def FilePrintDataUpdateUIEvent(self, event):
-        enable_print=hasattr(self.widget, "OnPrintDialog")
-        event.Enable(enable_print)
+    def GetActiveCallHistoryWidget(self):
+        return self.tree.GetActivePhone().callhistorywidget
 
-    def SelectAllDataUpdateUIEvent(self, event):
-        enable_select_all=hasattr(self.widget, "OnSelectAll")
-        event.Enable(enable_select_all)
+    def GetActiveSMSWidget(self):
+        return self.tree.GetActivePhone().smswidget
+
+    def GetCurrentActiveWidget(self):
+        return self.tree.GetActiveWidget()
+
+    def UpdateToolbarOnPanelChange(self, add_image, add_help, delete_image, delete_help):
+        sz=self.tb.GetToolBitmapSize()
+        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITADDENTRY)
+        self.GetToolBar().DeleteTool(guihelper.ID_EDITADDENTRY)
+        self.tooladd=self.tb.InsertLabelTool(pos, guihelper.ID_EDITADDENTRY, add_help, 
+                                             wx.ArtProvider.GetBitmap(add_image, wx.ART_TOOLBAR, sz),
+                                             shortHelp=add_help, longHelp="Add an item")
+        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITDELETEENTRY)
+        self.GetToolBar().DeleteTool(guihelper.ID_EDITDELETEENTRY)
+        self.tooldelete=self.tb.InsertLabelTool(pos, guihelper.ID_EDITDELETEENTRY, delete_help, 
+                                                wx.ArtProvider.GetBitmap(delete_image, wx.ART_TOOLBAR, sz),
+                                                shortHelp=delete_help, longHelp="Delete item")
+        self.tb.Realize()
+
 
     def CloseSplashScreen(self):
         ### remove splash screen if there is one
@@ -1064,6 +995,9 @@ class MainWindow(wx.Frame):
                 pass
             thesplashscreen=None
             wx.SafeYield(onlyIfNeeded=True)
+
+    def AutosyncUpdateUIEvent(self, event):
+        event.Enable(self.autosyncsetting.IsConfigured())
 
     def OnExit(self,_=None):
         self.Close()
@@ -1096,6 +1030,15 @@ class MainWindow(wx.Frame):
         else:
             self.Show(True)
 
+    # deal with configuring the phone (commport)
+    def OnEditSettings(self, _=None):
+        if wx.IsBusy():
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+        else:
+            # clear the ower's name for manual setting
+            self.__owner_name=''
+            self.configdlg.ShowModal()
     # about and help
 
     def OnHelpAbout(self,_):
@@ -1108,8 +1051,7 @@ class MainWindow(wx.Frame):
         d.Destroy()
         
     def OnHelpHelp(self, _):
-        text=re.sub("[^A-Za-z]", "", self.nb.GetPageText(self.nb.GetSelection()))
-        wx.GetApp().displayhelpid(getattr(helpids, "ID_TAB_"+text.upper()))
+        wx.GetApp().displayhelpid(self.GetCurrentActiveWidget().GetHelpID())
 
     def OnHelpContents(self, _):
         wx.GetApp().displayhelpid(None)
@@ -1274,69 +1216,12 @@ class MainWindow(wx.Frame):
         latest_v=self.config.Read('latest_version')
         self.GetStatusBar().set_versions(current_v, latest_v)
 
-    def OnViewColumns(self, _):
-        dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
-        dlg.ShowModal()
-        dlg.Destroy()
-
-    def OnViewPreview(self, evt):
-        if evt.IsChecked():
-            config=1
-            preview_on=True
-        else:
-            config=0
-            preview_on=False
-        self.config.WriteInt('viewpreview', config)
-        self.phonewidget.OnViewPreview(preview_on)
-
-    def OnViewLogData(self, _):
-        # toggle state of the log data
-        logdatatitle="Protocol Log"
-        if self.lwdata is None:
-            self.lwdata=guiwidgets.LogWindow(self.nb)
-            self.nb.AddPage(self.lwdata, logdatatitle)
-            self.config.WriteInt("viewlogdata", 1)
-        else:
-            self.lwdata=None
-            for i in range(0,self.nb.GetPageCount()):
-                if self.nb.GetPageText(i)==logdatatitle:
-                    self.nb.DeletePage(i)
-                    break
-            self.config.WriteInt("viewlogdata", 0)
-
-    def OnViewFilesystem(self,_):
-        # toggle filesystem view
-        logtitle="Log"
-        fstitle="Filesystem"
-        if self.filesystemwidget is None:
-            for i in range(0, self.nb.GetPageCount()):
-                if self.nb.GetPageText(i)==logtitle:
-                    self.filesystemwidget=FileSystemView(self, self.nb, id=97)
-                    self.nb.InsertPage(i, self.filesystemwidget, fstitle, True)
-                    self.config.WriteInt("viewfilesystem", True)
-                    return
-            assert False, "log page is missing!"
-            return
-        self.filesystemwidget=None
-        for i in range(0, self.nb.GetPageCount()):
-            if self.nb.GetPageText(i)==fstitle:
-                self.nb.DeletePage(i)
-                self.config.WriteInt("viewfilesystem", False)
-                return
-        assert False, "filesytem view page is missing!"
-        
     def update_cache_path(self):
         com_brew.file_cache.set_path(self.configpath)
-
-    def OnFilePrint(self,_):
-        self.nb.GetPage(self.nb.GetSelection()).OnPrintDialog(self, self.config)
 
     ### 
     ### Main bit for getting stuff from phone
     ###
-
-    def OnDataHistorical(self, _):
-        self.nb.GetPage(self.nb.GetSelection()).OnHistoricalData()
 
     def OnDataGetPhone(self,_):
         todo=[]
@@ -1362,7 +1247,7 @@ class MainWindow(wx.Frame):
                 merge=True
             else:
                 merge=False
-            self.phonewidget.importdata(results['phonebook'], results.get('categories', []), merge)
+            self.GetActivePhonebookWidget().importdata(results['phonebook'], results.get('categories', []), merge)
 
         # wallpaper
         updwp=False # did we update the wallpaper
@@ -1370,63 +1255,63 @@ class MainWindow(wx.Frame):
             v=results['sync']['wallpaper']
             if v=='MERGE': raise Exception("Not implemented")
             updwp=True
-            self.wallpaperwidget.populatefs(results)
-            self.wallpaperwidget.populate(results)
+            self.GetActiveWallpaperWidget().populatefs(results)
+            self.GetActiveWallpaperWidget().populate(results)
         # wallpaper-index
         if not updwp and results.has_key('wallpaper-index'):
-            self.wallpaperwidget.updateindex(results['wallpaper-index'])
+            self.GetActiveWallpaperWidget().updateindex(results['wallpaper-index'])
         # ringtone
         updrng=False # did we update ringtones
         if results['sync'].has_key('ringtone'):
             v=results['sync']['ringtone']
             if v=='MERGE': raise Exception("Not implemented")
             updrng=True
-            self.ringerwidget.populatefs(results)
-            self.ringerwidget.populate(results)
+            self.GetActiveRingerWidget().populatefs(results)
+            self.GetActiveRingerWidget().populate(results)
         # ringtone-index
         if not updrng and results.has_key('ringtone-index'):
-            self.ringerwidget.updateindex(results['ringtone-index'])            
+            self.GetActiveRingerWidget().updateindex(results['ringtone-index'])            
         # calendar
         if results['sync'].has_key('calendar'):
             v=results['sync']['calendar']
             if v=='MERGE': raise Exception("Not implemented")
             results['calendar_version']=self.phoneprofile.BP_Calendar_Version
-            self.calendarwidget.populatefs(results)
-            self.calendarwidget.populate(results)
+            self.GetActiveCalendarWidget().populatefs(results)
+            self.GetActiveCalendarWidget().populate(results)
         # memo
         if results['sync'].has_key('memo'):
             v=results['sync']['memo']
             if v=='MERGE': raise Exception("Not implemented")
-            self.memowidget.populatefs(results)
-            self.memowidget.populate(results)
+            self.GetActiveMemoWidget().populatefs(results)
+            self.GetActiveMemoWidget().populate(results)
         # todo
         if results['sync'].has_key('todo'):
             v=results['sync']['todo']
             if v=='MERGE': raise NotImplementedError
-            self.todowidget.populatefs(results)
-            self.todowidget.populate(results)
+            self.tree.GetActiveTodoWidget().populatefs(results)
+            self.tree.GetActiveTodoWidget().populate(results)
         # SMS
         if results['sync'].has_key('sms'):
             v=results['sync']['sms']
             if v=='MERGE':
-                self.smswidget.merge(results)
+                self.GetActiveSMSWidget().merge(results)
             else:
-                self.smswidget.populatefs(results)
-                self.smswidget.populate(results)
+                self.GetActiveSMSWidget().populatefs(results)
+                self.GetActiveSMSWidget().populate(results)
         # call history
         if results['sync'].has_key('call_history'):
             v=results['sync']['call_history']
             if v=='MERGE':
-                self.callhistorywidget.merge(results)
+                self.GetActiveCallHistoryWidget().merge(results)
             else:
-                self.callhistorywidget.populatefs(results)
-                self.callhistorywidget.populate(results)
+                self.GetActiveCallHistoryWidget().populatefs(results)
+                self.GetActiveCallHistoryWidget().populate(results)
         # Playlist
         if results['sync'].has_key(playlist.playlist_key):
             if results['sync'][playlist.playlist_key]=='MERGE':
                 raise NotImplementedError
-            self.playlistwidget.populatefs(results)
-            self.playlistwidget.populate(results)
+            self.GetActivePlaylistWidget().populatefs(results)
+            self.GetActivePlaylistWidget().populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -1447,10 +1332,10 @@ class MainWindow(wx.Frame):
             merge=True
             if v==dlg.OVERWRITE: merge=False
             if merge:
-                want=self.wallpaperwidget.SELECTED
+                want=self.GetActiveWallpaperWidget().SELECTED
             else:
-                want=self.wallpaperwidget.ALL
-            self.wallpaperwidget.getdata(data, want)
+                want=self.GetActiveWallpaperWidget().ALL
+            self.GetActiveWallpaperWidget().getdata(data, want)
             todo.append( (self.wt.writewallpaper, "Wallpaper", merge) )
             # funcscb.append( self.wallpaperwidget.populate )
 
@@ -1460,10 +1345,10 @@ class MainWindow(wx.Frame):
             merge=True
             if v==dlg.OVERWRITE: merge=False
             if merge:
-                want=self.ringerwidget.SELECTED
+                want=self.GetActiveRingerWidget().SELECTED
             else:
-                want=self.ringerwidget.ALL
-            self.ringerwidget.getdata(data, want)
+                want=self.GetActiveRingerWidget().ALL
+            self.GetActiveRingerWidget().getdata(data, want)
             todo.append( (self.wt.writeringtone, "Ringtone", merge) )
             # funcscb.append( self.ringerwidget.populate )
 
@@ -1473,45 +1358,45 @@ class MainWindow(wx.Frame):
             merge=True
             if v==dlg.OVERWRITE: merge=False
             data['calendar_version']=self.phoneprofile.BP_Calendar_Version
-            self.calendarwidget.getdata(data)
+            self.GetActiveCalendarWidget().getdata(data)
             todo.append( (self.wt.writecalendar, "Calendar", merge) )
 
         ### Phonebook
         v=dlg.GetPhoneBookSetting()
         if v!=dlg.NOTREQUESTED:
             if v==dlg.OVERWRITE: 
-                self.phonewidget.getdata(data)
+                self.GetActivePhonebookWidget().getdata(data)
                 todo.append( (self.wt.writephonebook, "Phonebook") )
-            convertors.append(self.phonewidget.converttophone)
+            convertors.append(self.GetActivePhonebookWidget().converttophone)
             # writing will modify serials so we need to update
-            funcscb.append(self.phonewidget.updateserials)
+            funcscb.append(self.GetActivePhonebookWidget().updateserials)
 
         ### Memo
         v=dlg.GetMemoSetting()
         if v!=dlg.NOTREQUESTED:
             merge=v!=dlg.OVERWRITE
-            self.memowidget.getdata(data)
+            self.GetActiveMemoWidget().getdata(data)
             todo.append((self.wt.writememo, "Memo", merge))
 
         ### Todo
         v=dlg.GetTodoSetting()
         if v!=dlg.NOTREQUESTED:
             merge=v!=dlg.OVERWRITE
-            self.todowidget.getdata(data)
+            self.tree.GetActiveTodoWidget().getdata(data)
             todo.append((self.wt.writetodo, "Todo", merge))
 
         ### SMS
         v=dlg.GetSMSSetting()
         if v!=dlg.NOTREQUESTED:
             merge=v!=dlg.OVERWRITE
-            self.smswidget.getdata(data)
+            self.GetActiveSMSWidget().getdata(data)
             todo.append((self.wt.writesms, "SMS", merge))
 
         ### Playlist
         v=dlg.GetPlaylistSetting()
         if v!=dlg.NOTREQUESTED:
             merge=v!=dlg.OVERWRITE
-            self.playlistwidget.getdata(data)
+            self.GetActivePlaylistWidget().getdata(data)
             todo.append((self.wt.writeplaylist, "Playlist", merge))
 
         self._autodetect_delay=self.phoneprofile.autodetect_delay
@@ -1543,57 +1428,9 @@ class MainWindow(wx.Frame):
     def GetCalendarData(self):
         # return calendar data for export
         d={}
-        return self.calendarwidget.getdata(d).get('calendar', {})
+        return self.GetActiveCalendarWidget().getdata(d).get('calendar', {})
 
-    # Get data from disk
-    def OnPopulateEverythingFromDisk(self,_=None):
-        self.OnBusyStart()
-        try:
-            results={}
-            # get info
-            self.phonewidget.getfromfs(results)
-            self.wallpaperwidget.getfromfs(results)
-            self.ringerwidget.getfromfs(results)
-            self.calendarwidget.getfromfs(results)
-            self.memowidget.getfromfs(results)
-            self.todowidget.getfromfs(results)
-            self.smswidget.getfromfs(results)
-            self.callhistorywidget.getfromfs(results)
-            self.playlistwidget.getfromfs(results)
-            # update controls
-            wx.SafeYield(onlyIfNeeded=True)
-            self.phonewidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.wallpaperwidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.ringerwidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.calendarwidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.memowidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.todowidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.smswidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.callhistorywidget.populate(results)
-            wx.SafeYield(onlyIfNeeded=True)
-            self.playlistwidget.populate(results)
-            # close the splash screen if it is still up
-            self.CloseSplashScreen()
-        finally:
-            self.OnBusyEnd()
         
-    # deal with configuring the phone (commport)
-    def OnEditSettings(self, _=None):
-        if wx.IsBusy():
-            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
-        else:
-            # clear the ower's name for manual setting
-            self.__owner_name=''
-            self.configdlg.ShowModal()
-
     def OnAutoSyncSettings(self, _=None):
         if wx.IsBusy():
             wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
@@ -1623,80 +1460,6 @@ class MainWindow(wx.Frame):
             if __debug__:
                 raise TypeError
             return
-        self.nb.SetSelection(data)
-
-    # deal with graying out/in menu items on notebook page changing
-    def OnNotebookPageChanged(self, _=None):
-        # remember what we are looking at
-        text=self.nb.GetPageText(self.nb.GetSelection())
-        if text is not None:
-            self.config.Write("viewnotebookpage", text)
-        # does the page have editable properties?
-        self.widget=self.nb.GetPage(self.nb.GetSelection())
-        # force focus to its child
-        wx.CallAfter(self.widget.SetFocus)
-
-        sz=self.tb.GetToolBitmapSize()
-        mapbmpadd={id(self.ringerwidget): guihelper.ART_ADD_RINGER,
-                   id(self.wallpaperwidget): guihelper.ART_ADD_WALLPAPER,
-                   id(self.phonewidget): guihelper.ART_ADD_CONTACT,
-                   id(self.memowidget): guihelper.ART_ADD_MEMO,
-                   id(self.todowidget): guihelper.ART_ADD_TODO,
-                   id(self.smswidget): guihelper.ART_ADD_SMS,
-                   id(self.playlistwidget): guihelper.ART_ADD_TODO,
-                   }
-        mapbmpdelete={id(self.ringerwidget): guihelper.ART_DEL_RINGER,
-                      id(self.wallpaperwidget): guihelper.ART_DEL_WALLPAPER,
-                      id(self.phonewidget): guihelper.ART_DEL_CONTACT,
-                      id(self.memowidget): guihelper.ART_DEL_MEMO,
-                      id(self.todowidget): guihelper.ART_DEL_TODO,
-                      id(self.smswidget): guihelper.ART_DEL_SMS,
-                      id(self.playlistwidget): guihelper.ART_DEL_TODO,
-                      }
-        shorthelp={id(self.ringerwidget): ("Add Ringer", "Delete Ringer"),
-                   id(self.wallpaperwidget): ("Add Wallpaper","Delete Wallpaper"),
-                   id(self.phonewidget): ("Add Contact","Delete Contact"),
-                   id(self.memowidget): ("Add Memo","Delete Memo"),
-                   id(self.todowidget): ("Add Todo Item","Delete Todo Item"),
-                   id(self.smswidget): ("Add SMS","Delete SMS"),
-                   id(self.playlistwidget): ("Add Playlist","Delete Playlist"),
-                   id(self.callhistorywidget): ("Add","Delete Call"),
-                   }
-        if id(self.widget) in shorthelp:
-            short_help_add, short_help_delete=shorthelp[id(self.widget)]
-        else:
-            short_help_add, short_help_delete=("Add", "Delete")
-        # replace the add/delete buttons with new ones specific to the widget being shown
-        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITADDENTRY)
-        self.GetToolBar().DeleteTool(guihelper.ID_EDITADDENTRY)
-        self.tooladd=self.tb.InsertLabelTool(pos, guihelper.ID_EDITADDENTRY, short_help_add, 
-                                             wx.ArtProvider.GetBitmap(mapbmpadd.get(id(self.widget), wx.ART_ADD_BOOKMARK), wx.ART_TOOLBAR, sz),
-                                             shortHelp=short_help_add, longHelp="Add an item")
-        pos=self.GetToolBar().GetToolPos(guihelper.ID_EDITDELETEENTRY)
-        self.GetToolBar().DeleteTool(guihelper.ID_EDITDELETEENTRY)
-        self.tooldelete=self.tb.InsertLabelTool(pos, guihelper.ID_EDITDELETEENTRY, short_help_delete, 
-                                                wx.ArtProvider.GetBitmap(mapbmpdelete.get(id(self.widget), wx.ART_DEL_BOOKMARK), wx.ART_TOOLBAR, sz),
-                                                shortHelp=short_help_delete, longHelp="Delete item")
-        self.tb.Realize()
-         
-    # add/delete entry in the current tab
-    def OnEditAddEntry(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnAdd(evt)
-
-    def OnEditDeleteEntry(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnDelete(evt)
-
-    def OnEditSelectAll(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnSelectAll(evt)
-
-    def OnCopyEntry(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnCopy(evt)
-
-    def OnPasteEntry(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnPaste(evt)
-
-    def OnRenameEntry(self, evt):
-        self.nb.GetPage(self.nb.GetSelection()).OnRename(evt)
 
     # Busy handling
     def OnBusyStart(self):
@@ -1713,11 +1476,6 @@ class MainWindow(wx.Frame):
             wx.CallAfter(_q[0], *_q[1], **_q[2])
 
     # progress and logging
-    def OnViewClearLogs(self, _):
-        self.lw.Clear()
-        if self.lwdata is not None:
-            self.lwdata.Clear()
-
     def OnProgressMinor(self, pos, max, desc=""):
         self.GetStatusBar().progressminor(pos, max, desc)
 
@@ -1728,9 +1486,9 @@ class MainWindow(wx.Frame):
         if self.__phone_detect_at_startup:
             return
         str=common.strorunicode(str)
-        self.lw.log(str)
-        if self.lwdata is not None:
-            self.lwdata.log(str)
+        self.tree.lw.log(str)
+        if self.tree.lwdata is not None:
+            self.tree.lwdata.log(str)
         if str.startswith("<!= "):
             p=str.index("=!>")+3
             dlg=wx.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION)
@@ -1739,8 +1497,8 @@ class MainWindow(wx.Frame):
             self.OnLog("Alert dialog closed")
     log=OnLog
     def OnLogData(self, str, data, klass=None):
-        if self.lwdata is not None:
-            self.lwdata.logdata(str,data, klass)
+        if self.tree.lwdata is not None:
+            self.tree.lwdata.logdata(str,data, klass)
 
     def excepthook(self, type, value, traceback):
         if not hasattr(value, "gui_exc_info"):
@@ -1864,21 +1622,6 @@ class MainWindow(wx.Frame):
 
     def saveSize(self):
         guiwidgets.save_size("MainWin", self.GetRect())
-
-    # deal with the database
-    def EnsureDatabase(self, newpath, oldpath):
-        newdbpath=os.path.abspath(os.path.join(newpath, "bitpim.db"))
-        if oldpath is not None and len(oldpath) and oldpath!=newpath:
-            # copy database to new location
-            if self.database:
-                self.database=None # cause it to be closed
-            olddbpath=os.path.abspath(os.path.join(oldpath, "bitpim.db"))
-            if os.path.exists(olddbpath) and not os.path.exists(newdbpath):
-                shutil.copyfile(olddbpath, newdbpath)
-        self.database=None # allow gc
-        self.database=database.Database(newdbpath)
-            
-        
 
 ###
 ### Container for midi files
@@ -2234,932 +1977,6 @@ class WorkerThread(WorkerThreadFramework):
 
         return results
 
-
-class FileSystemView(wx.SplitterWindow):
-    def __init__(self, mainwindow, parent, id=-1):
-        # the listbox and textbox in a splitter
-        self.mainwindow=mainwindow
-        wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_BORDER|wx.SP_LIVE_UPDATE)
-        self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=(wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)&~wx.TR_TWIST_BUTTONS)
-        self.list=FileSystemFileView(mainwindow, self, wx.NewId())
-        pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
-        self.SplitVertically(self.tree, self.list, pos)
-        self.SetMinimumPaneSize(20)
-        wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
-        pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
-
-    def __del__(self):
-        pubsub.unsubscribe(self.OnPhoneModelChanged)
-
-    def OnPhoneModelChanged(self, msg):
-        # if the phone changes we reset ourselves
-        self.list.ResetView()
-        self.tree.ResetView()
-
-    def OnSplitterPosChanged(self,_):
-        pos=self.GetSashPosition()
-        self.mainwindow.config.WriteInt("filesystemsplitterpos", pos)        
-
-    def OnPhoneReboot(self,_):
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.phonerebootrequest),
-                     Callback(self.OnPhoneRebootResults) )
-
-    def OnPhoneRebootResults(self, exception, _):
-        # special case - we always clear the comm connection
-        # it is needed if the reboot succeeds, and if it didn't
-        # we probably have bad comms anyway
-        mw=self.mainwindow
-        mw.wt.clearcomm()
-        if mw.HandleException(exception): return
-
-    def OnPhoneOffline(self,_):
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.phoneofflinerequest),
-                     Callback(self.OnPhoneOfflineResults) )
-
-    def OnPhoneOfflineResults(self, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-
-    def OnModemMode(self,_):
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.modemmoderequest),
-                     Callback(self.OnModemModeResults) )
-
-    def OnModemModeResults(self, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-
-    def ShowFiles(self, dir, refresh=False):
-        self.list.ShowFiles(dir, refresh)
-
-    def OnNewFileResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.ShowFiles(parentdir, True)
-
-class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
-    def __init__(self, mainwindow, parent, id, style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_SINGLE_SEL):
-        wx.ListCtrl.__init__(self, parent, id, style=style)
-        self.parent=parent
-        self.mainwindow=mainwindow
-        self.datacolumn=False # used for debugging and inspection of values
-        self.InsertColumn(0, "Name", width=300)
-        self.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT)
-        self.InsertColumn(2, "Date", width=200)
-        self.font=wx.TheFontList.FindOrCreateFont(10, family=wx.SWISS, style=wx.NORMAL, weight=wx.NORMAL)
-
-        self.ResetView()        
-
-        if self.datacolumn:
-            self.InsertColumn(3, "Extra Stuff", width=400)
-            listmix.ColumnSorterMixin.__init__(self, 4)
-        else:
-            listmix.ColumnSorterMixin.__init__(self, 3)
-
-        #sort by genre (column 2), A->Z ascending order (1)
-        self.filemenu=wx.Menu()
-        self.filemenu.Append(guihelper.ID_FV_SAVE, "Save ...")
-        self.filemenu.Append(guihelper.ID_FV_HEXVIEW, "Hexdump")
-        self.filemenu.AppendSeparator()
-        self.filemenu.Append(guihelper.ID_FV_DELETE, "Delete")
-        self.filemenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite ...")
-        # generic menu
-        self.genericmenu=wx.Menu()
-        self.genericmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
-        self.genericmenu.AppendSeparator()
-        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
-        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
-        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_SAVE, self.OnFileSave)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_HEXVIEW, self.OnHexView)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_DELETE, self.OnFileDelete)
-        wx.EVT_MENU(self.filemenu, guihelper.ID_FV_OVERWRITE, self.OnFileOverwrite)
-        wx.EVT_RIGHT_DOWN(self.GetMainWindow(), self.OnRightDown)
-        wx.EVT_RIGHT_UP(self.GetMainWindow(), self.OnRightUp)
-        wx.EVT_LIST_ITEM_ACTIVATED(self,id, self.OnItemActivated)
-        self.image_list=wx.ImageList(16, 16)
-        a={"sm_up":"GO_UP","sm_dn":"GO_DOWN","w_idx":"WARNING","e_idx":"ERROR","i_idx":"QUESTION"}
-        for k,v in a.items():
-            s="self.%s= self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_%s,wx.ART_TOOLBAR,(16,16)))" % (k,v)
-            exec(s)
-        self.img_file=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE,
-                                                             wx.ART_OTHER,
-                                                             (16, 16)))
-        self.SetImageList(self.image_list, wx.IMAGE_LIST_SMALL)
-
-        #if guihelper.IsMSWindows():
-            # turn on drag-and-drag for windows
-            #wx.EVT_MOTION(self, self.OnStartDrag)
-
-        self.__dragging=False
-        self.add_files=[]
-        self.droptarget=fileview.MyFileDropTarget(self, True)
-        self.SetDropTarget(self.droptarget)
-
-    def OnPaint(self, evt):
-        w,h=self.GetSize()
-        self.Refresh()
-        dc=wx.PaintDC(self)
-        dc.BeginDrawing()
-        dc.SetFont(self.font)
-        x,y= dc.GetTextExtent("There are no items to show in this view")
-        # center the text
-        xx=(w-x)/2
-        if xx<0:
-            xx=0
-        dc.DrawText("There are no items to show in this view", xx, h/3)
-        dc.EndDrawing()
-
-    def OnDropFiles(self, _, dummy, filenames):
-        # There is a bug in that the most recently created tab
-        # in the notebook that accepts filedrop receives these
-        # files, not the most visible one.  We find the currently
-        # viewed tab in the notebook and send the files there
-        if self.__dragging:
-            # I'm the drag source, forget 'bout it !
-            return
-        target=self # fallback
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
-        if isinstance(t, FileSystemFileView):
-            # changing target in dragndrop
-            target=t
-        self.add_files=filenames
-        target.OnAddFiles()
-
-    def OnDragOver(self, x, y, d):
-        # force copy (instead of move)
-        return wx._misc.DragCopy
-
-    def OnAddFiles(self):
-        mw=self.mainwindow
-        if not len(self.add_files):
-            return
-        for file in self.add_files:
-            if file is None:
-                continue
-            if len(self.path):
-                path=self.path+"/"+os.path.basename(file)
-            else:
-                path=os.path.basename(file) # you can't create files in root but I won't stop you
-            contents=open(file, "rb").read()
-            mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                         Callback(self.OnAddFilesResults, self.path) )
-            self.add_files.remove(file)
-            # can only add one file at a time
-            break
-
-    def OnAddFilesResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        # add next file if there is one
-        if not len(self.add_files):
-            self.ShowFiles(parentdir, True)
-        else:
-            self.OnAddFiles()
-
-    if guihelper.IsMSWindows():
-        # drag-and-drop files only works in Windows
-        def OnStartDrag(self, evt):
-            evt.Skip()
-            if not evt.LeftIsDown():
-                return
-            path=self.itemtopath(self.GetFirstSelected())
-            drag_source=wx.DropSource(self)
-            file_names=wx.FileDataObject()
-            file_names.AddFile(path)
-            drag_source.SetData(file_names)
-            self.__dragging=True
-            res=drag_source.DoDragDrop(wx.Drag_CopyOnly)
-            self.__dragging=False
-
-    def OnRightUp(self, event):
-        pt = event.GetPosition()
-        item, flags = self.HitTest(pt)
-        if item is not -1:
-            self.Select(item)
-            self.PopupMenu(self.filemenu, pt)
-        else:
-            self.PopupMenu(self.genericmenu, pt)
-                    
-    def OnRightDown(self,event):
-        # You have to capture right down otherwise it doesn't feed you right up
-        pt = event.GetPosition();
-        item, flags = self.HitTest(pt)
-        try:
-            self.Select(item)
-        except:
-            pass
-
-    def OnNewFile(self,_):
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(self.path):
-            path=self.path+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.parent.OnNewFileResults, self.path) )
-        dlg.Destroy()
-
-    def OnFileSave(self, _):
-        path=self.itemtopath(self.GetFirstSelected())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.getfile, path),
-                     Callback(self.OnFileSaveResults, path) )
-        
-    def OnFileSaveResults(self, path, exception, contents):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        bn=guihelper.basename(path)
-        ext=guihelper.getextension(bn)
-        if len(ext):
-            ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
-        else:
-            ext="All files|*"
-        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wb").write(contents)
-        dlg.Destroy()
-
-    def OnItemActivated(self,_):
-        self.OnHexView(self)
-
-    def OnHexView(self, _):
-        path=self.itemtopath(self.GetFirstSelected())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.getfile, path),
-                     Callback(self.OnHexViewResults, path) )
-        
-    def OnHexViewResults(self, path, exception, result):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        # ::TODO:: make this use HexEditor
-##        dlg=guiwidgets.MyFixedScrolledMessageDialog(self, common.datatohexstring(result),
-##                                                    path+" Contents", helpids.ID_HEXVIEW_DIALOG)
-        dlg=hexeditor.HexEditorDialog(self, result, path+" Contents")
-        dlg.Show()
-
-    def OnFileDelete(self, _):
-        path=self.itemtopath(self.GetFirstSelected())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.rmfile, path),
-                     Callback(self.OnFileDeleteResults, guihelper.dirname(path)) )
-        
-    def OnFileDeleteResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.ShowFiles(parentdir, True)
-
-    def OnFileOverwrite(self,_):
-        path=self.itemtopath(self.GetFirstSelected())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
-        dlg.Destroy()
-        
-    def OnFileOverwriteResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.ShowFiles(parentdir, True)
-
-    def ResetView(self):
-        self.DeleteAllItems()
-        self.files={}
-        self.path=None
-        self.itemDataMap = self.files
-        self.itemIndexMap = self.files.keys()
-        self.SetItemCount(0)
-
-    def ShowFiles(self, path, refresh=False):
-        mw=self.mainwindow
-        if path == self.path and not refresh:
-            return
-        self.path=None
-        mw.MakeCall( Request(mw.wt.getfileonlylist, path),
-                     Callback(self.OnShowFilesResults, path) )
-        
-    def OnShowFilesResults(self, path, exception, result):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        count=self.GetItemCount()
-        self.path=path
-        self.DeleteAllItems()
-        self.files={}
-        index=0
-        for file in result:
-            index=index+1
-            f=guihelper.basename(file)
-            if self.datacolumn:
-                self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], result[file]['data'], file)
-            else:
-                self.files[index]=(f, `result[file]['size']`, result[file]['date'][1], file)
-        self.itemDataMap = self.files
-        self.itemIndexMap = self.files.keys()
-        self.SetItemCount(index)
-        self.SortListItems()
-        if count!=0 and index==0:
-            wx.EVT_PAINT(self, self.OnPaint)
-        elif count==0 and index!=0:
-            self.Unbind(wx.EVT_PAINT)
-
-    def itemtopath(self, item):
-        index=self.itemIndexMap[item]
-        if self.datacolumn:
-            return self.itemDataMap[index][4]
-        return self.itemDataMap[index][3]
-
-    def SortItems(self,sorter=None):
-        col=self._col
-        sf=self._colSortFlag[col]
-
-        #creating pairs [column item defined by col, key]
-        items=[]
-        for k,v in self.itemDataMap.items():
-            if col==1:
-                items.append([int(v[col]),k])
-            else:
-                items.append([v[col],k])
-
-        items.sort()
-        k=[key for value, key in items]
-
-        # False is descending
-        if sf==False:
-            k.reverse()
-
-        self.itemIndexMap=k
-
-        #redrawing the list
-        self.Refresh()
-
-    def GetListCtrl(self):
-        return self
-
-    def GetSortImages(self):
-        return (self.sm_dn, self.sm_up)
-
-    def OnGetItemText(self, item, col):
-        index=self.itemIndexMap[item]
-        s = self.itemDataMap[index][col]
-        return s
-
-    def OnGetItemImage(self, item):
-        return self.img_file
-
-    def OnGetItemAttr(self, item):
-        return None
-
-class FileSystemDirectoryView(wx.TreeCtrl):
-    def __init__(self, mainwindow, parent, id, style):
-        wx.TreeCtrl.__init__(self, parent, id, style=style)
-        self.parent=parent
-        self.mainwindow=mainwindow
-        wx.EVT_TREE_ITEM_EXPANDED(self, id, self.OnItemExpanded)
-        wx.EVT_TREE_SEL_CHANGED(self,id, self.OnItemSelected)
-        self.dirmenu=wx.Menu()
-        self.dirmenu.Append(guihelper.ID_FV_NEWSUBDIR, "Make subdirectory ...")
-        self.dirmenu.Append(guihelper.ID_FV_NEWFILE, "New File ...")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_BACKUP, "Backup directory ...")
-        self.dirmenu.Append(guihelper.ID_FV_BACKUP_TREE, "Backup entire tree ...")
-        self.dirmenu.Append(guihelper.ID_FV_RESTORE, "Restore ...")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_DELETE, "Delete")
-        self.dirmenu.AppendSeparator()
-        self.dirmenu.Append(guihelper.ID_FV_TOTAL_REFRESH, "Refresh Filesystem")
-        self.dirmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
-        self.dirmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
-        self.dirmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
-        # generic menu
-        self.genericmenu=wx.Menu()
-        self.genericmenu.Append(guihelper.ID_FV_TOTAL_REFRESH, "Refresh Filesystem")
-        self.genericmenu.Append(guihelper.ID_FV_OFFLINEPHONE, "Offline Phone")
-        self.genericmenu.Append(guihelper.ID_FV_REBOOTPHONE, "Reboot Phone")
-        self.genericmenu.Append(guihelper.ID_FV_MODEMMODE, "Go to modem mode")
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_TOTAL_REFRESH, self.OnRefresh)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
-        wx.EVT_MENU(self.genericmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWSUBDIR, self.OnNewSubdir)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_NEWFILE, self.OnNewFile)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_DELETE, self.OnDirDelete)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP, self.OnBackupDirectory)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_BACKUP_TREE, self.OnBackupTree)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_RESTORE, self.OnRestore)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REFRESH, self.OnDirRefresh)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_TOTAL_REFRESH, self.OnRefresh)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
-        wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
-        wx.EVT_RIGHT_UP(self, self.OnRightUp)
-        self.image_list=wx.ImageList(16, 16)
-        self.img_dir=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,
-                                                             wx.ART_OTHER,
-                                                             (16, 16)))
-        self.img_dir_open=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER_OPEN,
-                                                             wx.ART_OTHER,
-                                                             (16, 16)))
-        self.SetImageList(self.image_list)
-        self.add_files=[]
-        self.add_target=""
-        self.droptarget=fileview.MyFileDropTarget(self, True, True)
-        self.SetDropTarget(self.droptarget)
-        self.ResetView()
-
-    def ResetView(self):
-        self.first_time=True
-        self.DeleteAllItems()
-        self.root=self.AddRoot("/")
-        self.item=self.root
-        self.SetPyData(self.root, None)
-        self.SetItemHasChildren(self.root, True)
-        self.SetItemImage(self.root, self.img_dir)
-        self.SetItemImage(self.root, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
-        self.SetPyData(self.AppendItem(self.root, "Retrieving..."), None)
-        self.selections=[]
-        self.dragging=False
-        self.skip_dir_list=0
-
-    def OnDropFiles(self, x, y, filenames):
-        target=self
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
-        if isinstance(t, FileSystemDirectoryView):
-            # changing target in dragndrop
-            target=t
-        # make sure that the files are being dropped onto a real directory
-        item, flags = self.HitTest((x, y))
-        if item.IsOk():
-            self.SelectItem(item)
-            self.add_target=self.itemtopath(item)
-            self.add_files=filenames
-            target.OnAddFiles()
-        self.dragging=False
-
-    def OnDragOver(self, x, y, d):
-        target=self
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
-        if isinstance(t, FileSystemDirectoryView):
-            # changing target in dragndrop
-            target=t
-        # make sure that the files are being dropped onto a real directory
-        item, flags = self.HitTest((x, y))
-        selections = self.GetSelections()
-        if item.IsOk():
-            if selections != [item]:
-                self.UnselectAll()
-                self.SelectItem(item)
-            return wx._misc.DragCopy
-        elif selections:
-            self.UnselectAll()
-        return wx._misc.DragNone
-
-    def _saveSelection(self):
-        self.selections = self.GetSelections()
-        self.UnselectAll()
-
-    def _restoreSelection(self):
-        self.UnselectAll()
-        for i in self.selections:
-            self.SelectItem(i)
-        self.selections=[]
-
-    def OnEnter(self, x, y, d):
-        self._saveSelection()
-        self.dragging=True
-        return d
-
-    def OnLeave(self):
-        self.dragging=False
-        self._restoreSelection()
-
-    def OnAddFiles(self):
-        mw=self.mainwindow
-        if not len(self.add_files):
-            return
-        for file in self.add_files:
-            if file is None:
-                continue
-            if len(self.add_target):
-                path=self.add_target+"/"+os.path.basename(file)
-            else:
-                path=os.path.basename(file) # you can't create files in root but I won't stop you
-            contents=open(file, "rb").read()
-            mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                         Callback(self.OnAddFilesResults, self.add_target) )
-            self.add_files.remove(file)
-            # can only add one file at a time
-            break
-
-    def OnAddFilesResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        # add next file if there is one
-        if not len(self.add_files):
-            self.parent.ShowFiles(parentdir, True)
-        else:
-            self.OnAddFiles()
-
-    def OnRightUp(self, event):
-        pt = event.GetPosition();
-        item, flags = self.HitTest(pt)
-        if item.IsOk():
-            self.SelectItem(item)
-            self.PopupMenu(self.dirmenu, pt)
-        else:
-            self.SelectItem(self.item)
-            self.PopupMenu(self.genericmenu, pt)
-                    
-    def OnItemSelected(self,_):
-        if not self.dragging and not self.first_time:
-            item=self.GetSelection()
-            if item.IsOk() and item != self.item:
-                path=self.itemtopath(item)
-                self.parent.ShowFiles(path)
-                if not self.skip_dir_list:
-                    self.OnDirListing(path)
-                self.item=item
-
-    def OnItemExpanded(self, event):
-        if not self.skip_dir_list:
-            item=event.GetItem()
-            if self.first_time:
-                self.GetFullFS()
-            else:
-                path=self.itemtopath(item)
-                self.OnDirListing(path)
-
-    def AddDirectory(self, location, name):
-        new_item=self.AppendItem(location, name)
-        self.SetPyData(new_item, None)
-        self.SetItemImage(new_item, self.img_dir)
-        self.SetItemImage(new_item, self.img_dir_open, which=wx.TreeItemIcon_Expanded)
-        # workaround for bug, + does not get displayed if this is the first child
-        if self.GetChildrenCount(location, False) == 1 and not self.IsExpanded(location):
-            self.skip_dir_list+=1
-            self.Expand(location)
-            self.Collapse(location)
-            self.skip_dir_list-=1
-        return new_item
-
-    def RemoveDirectory(self, parent, item):
-        # if this is the last item in the parent we need to collapse the parent
-        if self.GetChildrenCount(parent, False) == 1:
-            self.Collapse(parent)
-        self.Delete(item)
-
-    def GetFullFS(self):
-        mw=self.mainwindow
-        mw.OnBusyStart()
-        mw.GetStatusBar().progressminor(0, 100, 'Reading Phone File System ...')
-        mw.MakeCall( Request(mw.wt.fulldirlisting),
-                     Callback(self.OnFullDirListingResults) )
-
-    def OnFullDirListingResults(self, exception, result):
-        mw=self.mainwindow
-        mw.OnBusyEnd()
-        if mw.HandleException(exception):
-            self.Collapse(self.root)
-            return
-        self.first_time=False
-        self.skip_dir_list+=1
-        self.SelectItem(self.root)
-        self.DeleteChildren(self.root)
-        keys=result.keys()
-        keys.sort()
-        # build up the tree
-        for k in keys:
-            path, dir=os.path.split(k)
-            item=self.pathtoitem(path)
-            self.AddDirectory(item, dir)
-        self.skip_dir_list-=1
-        self.parent.ShowFiles("")
-
-    def OnDirListing(self, path):
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.singledirlisting, path),
-                     Callback(self.OnDirListingResults, path) )
-
-    def OnDirListingResults(self, path, exception, result):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        item=self.pathtoitem(path)
-        l=[]
-        child,cookie=self.GetFirstChild(item)
-        for dummy in range(0,self.GetChildrenCount(item,False)):
-            l.append(child)
-            child,cookie=self.GetNextChild(item,cookie)
-        # we now have a list of children in l
-        sort=False
-        for file in result:
-            children=True
-            f=guihelper.basename(file)
-            found=None
-            for i in l:
-                if self.GetItemText(i)==f:
-                    found=i
-                    break
-            if found is None:
-                # this only happens if the phone has added the directory
-                # after we got the initial file view, unusual but possible
-                found=self.AddDirectory(item, f)
-                self.OnDirListing(file)
-                sort=True
-        for i in l: # remove all children not present in result
-            if not result.has_key(self.itemtopath(i)):
-                self.RemoveDirectory(item, i)
-        if sort:
-            self.SortChildren(item)
-
-    def OnNewSubdir(self, _):
-        dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        item=self.GetSelection()
-        parent=self.itemtopath(item)
-        if len(parent):
-            path=parent+"/"+dlg.GetValue()
-        else:
-            path=dlg.GetValue()
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.mkdir, path),
-                     Callback(self.OnNewSubdirResults, path) )
-        dlg.Destroy()
-            
-    def OnNewSubdirResults(self, new_path, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        path, dir=os.path.split(new_path)
-        item=self.pathtoitem(path)
-        self.AddDirectory(item, dir)
-        self.SortChildren(item)
-        self.Expand(item)
-        # requery the phone just incase
-        self.OnDirListing(path)
-        
-    def OnNewFile(self,_):
-        parent=self.itemtopath(self.GetSelection())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(parent):
-            path=parent+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.writefile, path, contents),
-                     Callback(self.OnNewFileResults, parent) )
-        dlg.Destroy()
-        
-    def OnNewFileResults(self, parentdir, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        self.parent.ShowFiles(parentdir, True)
-
-    def OnDirDelete(self, _):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.rmdirs, path),
-                     Callback(self.OnDirDeleteResults, path) )
-        
-    def OnDirDeleteResults(self, path, exception, _):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        # remove the directory from the view
-        parent, dir=os.path.split(path)
-        parent_item=self.pathtoitem(parent)
-        del_item=self.pathtoitem(path)
-        self.RemoveDirectory(parent_item, del_item)
-        # requery the phone just incase
-        self.OnDirListing(parent)
-
-    def OnBackupTree(self, _):
-        self.OnBackup(recurse=100)
-
-    def OnBackupDirectory(self, _):
-        self.OnBackup()
-
-    def OnBackup(self, recurse=0):
-        path=self.itemtopath(self.GetSelection())
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.getbackup, path, recurse),
-                     Callback(self.OnBackupResults, path) )
-
-    def OnBackupResults(self, path, exception, backup):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        bn=guihelper.basename(path)
-        if len(bn)<1:
-            bn="root"
-        bn+=".zip"
-        ext="Zip files|*.zip|All Files|*"
-        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wb").write(backup)
-        dlg.Destroy()
-
-    def OnRestore(self, _):
-        ext="Zip files|*.zip|All Files|*"
-        path=self.itemtopath(self.GetSelection())
-        bn=guihelper.basename(path)
-        if len(bn)<1:
-            bn="root"
-        bn+=".zip"
-        ext="Zip files|*.zip|All Files|*"
-        dlg=wx.FileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
-                             style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            return
-        name=dlg.GetPath()
-        if not zipfile.is_zipfile(name):
-            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" is not a valid zipfile.", "Zip file required",
-                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
-                                               style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
-        zipf=zipfile.ZipFile(name, "r")
-        xx=zipf.testzip()
-        if xx is not None:
-            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" has corrupted contents.  Use a repair utility to fix it",
-                                               "Zip file corrupted",
-                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
-                                               style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
-
-        dlg=RestoreDialog(self.mainwindow, "Restore files", zipf, path, self.OnRestoreOK)
-        dlg.Show(True)
-
-    def OnRestoreOK(self, zipf, names, parentdir):
-        if len(names)==0:
-            wx.MessageBox("You didn't select any files to restore!", "No files selected",
-                         wx.OK|wx.ICON_EXCLAMATION)
-            return
-        l=[]
-        for zipname, fsname in names:
-            l.append( (fsname, zipf.read(zipname)) )
-
-        mw=self.mainwindow
-        mw.MakeCall( Request(mw.wt.restorefiles, l),
-                     Callback(self.OnRestoreResults, parentdir) )
-
-    def OnRestoreResults(self, parentdir, exception, results):
-        mw=self.mainwindow
-        if mw.HandleException(exception): return
-        ok=filter(lambda s: s[0], results)
-        fail=filter(lambda s: not s[0], results)
-
-        # re-read the filesystem (if anything was restored)
-        if len(parentdir):
-            dirs=[]
-            for _, name in results:
-                while(len(name)>len(parentdir)):
-                    name=guihelper.dirname(name)
-                    if name not in dirs:
-                        dirs.append(name)
-            dirs.sort()
-            for d in dirs:
-                self.OnDirListing(d)
-
-        self.OnDirListing(parentdir)
-
-        if len(ok) and len(fail)==0:
-            dlg=wx.MessageDialog(mw, "All files restored ok", "All files restored",
-                                wx.OK|wx.ICON_INFORMATION)
-            dlg.Show(True)
-            return
-        if len(fail) and len(ok)==0:
-            wx.MessageBox("All files failed to restore", "No files restored",
-                         wx.OK|wx.ICON_ERROR)
-            return
-
-        op="Failed to restore some files.  Check the log for reasons.:\n\n"
-        for s,n in fail:
-            op+="   "+n+"\n"
-        wx.MessageBox(op, "Some restores failed", wx.OK|wx.ICON_ERROR)
-
-    def OnDirRefresh(self, _):
-        path=self.itemtopath(self.GetSelection())
-        self.parent.ShowFiles(path, True)
-        self.OnDirListing(path)
-
-    def OnRefresh(self, _):
-        self.GetFullFS()
-
-    def itemtopath(self, item):
-        if item==self.root: return ""
-        res=self.GetItemText(item)
-        while True:
-            parent=self.GetItemParent(item)
-            if parent==self.root:
-                return res
-            item=parent
-            res=self.GetItemText(item)+"/"+res
-        # can't get here, but pychecker doesn't seem to realise
-        assert False
-        return ""
-        
-    def pathtoitem(self, path):
-        if path=="": return self.root
-        dirs=path.split('/')
-        node=self.root
-        for n in range(0, len(dirs)):
-            foundnode=None
-            child,cookie=self.GetFirstChild(node)
-            for dummy in range(0, self.GetChildrenCount(node, False)):
-                d=self.GetItemText(child)
-                if d==dirs[n]:
-                    node=child
-                    foundnode=node
-                    break
-                child,cookie=self.GetNextChild(node,cookie)
-            if foundnode is not None:
-                continue
-            # make the node
-            node=self.AppendItem(node, dirs[n])
-            self.SetPyData(node, None)
-        return node
-
-class RestoreDialog(wx.Dialog):
-    """A dialog that lists all the files that will be restored"""
-    
-    def __init__(self, parent, title, zipf, path, okcb):
-        """Constructor
-
-        @param path: Placed before names in the archive.  Should not include a
-                       trailing slash.
-        """
-        wx.Dialog.__init__(self, parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        vbs.Add( wx.StaticText(self, -1, "Choose files to restore"), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-
-        nl=zipf.namelist()
-        nl.sort()
-
-        prefix=path
-        if len(prefix)=="/" or prefix=="":
-            prefix=""
-        else:
-            prefix+="/"
-
-        nnl=map(lambda i: prefix+i, nl)
-
-        self.clb=wx.CheckListBox(self, -1, choices=nnl, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB, size=wx.Size(200,300))
-
-        for i in range(len(nnl)):
-            self.clb.Check(i, True)
-
-        vbs.Add( self.clb, 1, wx.EXPAND|wx.ALL, 5)
-
-        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
-
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
-    
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
-
-        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_RESTOREDIALOG))
-        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOK)
-        self.okcb=okcb
-        self.zipf=zipf
-        self.nl=zip(nl, nnl)
-        self.path=path
-
-    def OnOK(self, _):
-        names=[]
-        for i in range(len(self.nl)):
-            if self.clb.IsChecked(i):
-                names.append(self.nl[i])
-        self.okcb(self.zipf, names, self.path)
-        self.Show(False)
-        self.Destroy()
 #-------------------------------------------------------------------------------
 # For windows platform only
 if guihelper.IsMSWindows():

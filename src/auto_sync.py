@@ -36,7 +36,7 @@ _filter_keys=['start_offset', 'end_offset', 'no_alarm', 'rpt_events', "alarm_val
 
 def _getsettings(mw, profile):
     settings=AutoSyncSettingsEntry()
-    dict=mw.database.getmajordictvalues(_data_key, autosyncsettingsobjectfactory)
+    dict=mw.tree.GetActivePhone().GetDatabase().getmajordictvalues(_data_key, autosyncsettingsobjectfactory)
     if profile in dict:
         settings.set_db_dict(dict[profile])
     return settings
@@ -88,7 +88,7 @@ class SyncSchedule(object):
                             filter['start']=None
                         if setting=='end_offset':
                             filter['end']=None
-                res=entry[2](self.mw, self.settings.calender_id, filter)
+                res=entry[2](self.mw.tree.GetActivePhone(), self.settings.calender_id, filter)
                 if res==1:
                     # imported calender OK!!!
                     self.log("Auto Sync: Imported calender OK")
@@ -101,7 +101,7 @@ class SyncSchedule(object):
         data={}
         todo=[]
         data['calendar_version']=self.mw.phoneprofile.BP_Calendar_Version
-        self.mw.calendarwidget.getdata(data)
+        self.mw.GetActiveCalendarWidget().getdata(data)
         todo.append( (self.mw.wt.writecalendar, "Calendar", False) )
         todo.append((self.mw.wt.rebootcheck, "Phone Reboot"))
         self.mw.MakeCall(gui.Request(self.mw.wt.getfundamentals),
@@ -400,7 +400,7 @@ class AutoSyncSettingsDialog(wx.Dialog):
         self.settings.id=self.profile
         db_rr[self.settings.id]=AutoSyncSettingsobject(self.settings)
         database.ensurerecordtype(db_rr, autosyncsettingsobjectfactory)
-        self.mw.database.savemajordict(_data_key, db_rr)
+        self.mw.tree.GetActivePhone().GetDatabase().savemajordict(_data_key, db_rr)
 
     def getfromfs(self):
         self.settings=_getsettings(self.mw, self.profile)
