@@ -22,6 +22,10 @@ import aggregatedisplay
 import common
 import widgets
 
+basename=common.basename
+stripext=common.stripext
+getext=common.getext
+
 def DrawTextWithLimit(dc, x, y, text, widthavailable, guardspace, term="..."):
     """Draws text and if it will overflow the width available, truncates and  puts ... at the end
 
