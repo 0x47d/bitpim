@@ -3296,7 +3296,7 @@ class msg_record(BaseProtogenClass):
         self.__field_length.writetobuffer(buf)
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 219})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 220})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3314,7 +3314,7 @@ class msg_record(BaseProtogenClass):
         self.__field_unknown6.readfrombuffer(buf)
         self.__field_length=UINT(**{'sizeinbytes': 1})
         self.__field_length.readfrombuffer(buf)
-        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 219})
+        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 220})
         self.__field_msg.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3387,14 +3387,14 @@ class msg_record(BaseProtogenClass):
     def __getfield_msg(self):
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 219})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx9800_280, 'length': 220})
         return self.__field_msg.getvalue()
 
     def __setfield_msg(self, value):
         if isinstance(value,LIST):
             self.__field_msg=value
         else:
-            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx9800_280, 'length': 219})
+            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx9800_280, 'length': 220})
 
     def __delfield_msg(self): del self.__field_msg
 
@@ -3572,7 +3572,7 @@ class sms_out(BaseProtogenClass):
         self.__field_messages.readfrombuffer(buf)
         self.__field_priority=UINT(**{'sizeinbytes': 1})
         self.__field_priority.readfrombuffer(buf)
-        self.__field_unknown7=DATA(**{'sizeinbytes': 19})
+        self.__field_unknown7=DATA(**{'sizeinbytes': 12})
         self.__field_unknown7.readfrombuffer(buf)
         self.__field_unknown8=DATA(**{'sizeinbytes': 3})
         self.__field_unknown8.readfrombuffer(buf)
@@ -3751,7 +3751,7 @@ class sms_out(BaseProtogenClass):
         if isinstance(value,DATA):
             self.__field_unknown7=value
         else:
-            self.__field_unknown7=DATA(value,**{'sizeinbytes': 19})
+            self.__field_unknown7=DATA(value,**{'sizeinbytes': 12})
 
     def __delfield_unknown7(self): del self.__field_unknown7
 

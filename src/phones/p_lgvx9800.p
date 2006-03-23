@@ -276,7 +276,7 @@ PACKET msg_record:
     1 UINT unknown4 # 0
     1 UINT unknown6 # 2=simple text, 9=binary/concatinated
     1 UINT length
-    * LIST {'length': 219} +msg:
+    * LIST {'length': 220} +msg:
         1 UINT byte "individual byte of message"
 
 PACKET sms_out:
@@ -292,7 +292,7 @@ PACKET sms_out:
     1 UINT unknown6
     * LIST {'elementclass': msg_record, 'length': 7} +messages
     1 UINT priority # 0=normal, 1=high
-    19 DATA unknown7
+    12 DATA unknown7
     3 DATA unknown8 # set to 01,00,01 
     23 STRING callback
     * LIST {'elementclass': recipient_record,'length': 10} +recipients
