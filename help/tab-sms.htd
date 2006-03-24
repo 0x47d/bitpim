@@ -2,10 +2,8 @@
 
 <p align=center><img src="screen-smstab.png">
 
-<p>This tab allows users to retrieve, store, and view SMS messages from the
-phone.  The list of available SMS folders and messages is displayed in the left
-tree panel, with the detailed information of the selected message displayed in
-the right fields.
+<p>This page allows users to retrieve, store, and view SMS messages from the
+phone.  Expand the SMS tree item to show separate items for Inbox, Sent and Saved messages.
 
 #define DESC(title,desc) \
    <p><b>title</b>: desc
@@ -20,8 +18,16 @@ DESC(Date,The date on which this message was received.)
 DESC(Locked,Indicates that this message is locked when checked.)
 DESC(Memo,The content of this message.)
 
+
 <h2>Button</h2>
 
-DESC(Delete,Delete the selected message.)
+DESC(Delete, Use the Delete button on the toolbar to delete the selected message(s).)
+
+<h2>Quick Text</h2>
+
+<p>If you select the SMS item itself you can manage the quick text message stored on your phone.
+
+<p align=center><img src="screen-smstab2.png">
+
 
 #include "pageend.h"

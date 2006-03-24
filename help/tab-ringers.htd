@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p>This tab displays the sound or ringtone files that BitPim currently maintains and allows
+<p>This page displays the sound or ringtone files that BitPim currently maintains and allows
 users to perform various actions on them.
 
 <p align=center><img src="screen-ringerstab.png">

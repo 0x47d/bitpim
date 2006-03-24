@@ -1,8 +1,8 @@
 #include "pagestart.h"
 
-<p>Choose 'Send Phone Data' from the Data menu.
+<p>Press the 'Send Phone Data' on the toolbar.
 
-<p align=center><img src="screen-datasend.png">
+<p align=center><img src="toolbar_senddata.png">
 
 <p>You will then get a choice of what to send to the phone.
 

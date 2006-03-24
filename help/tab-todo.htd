@@ -2,7 +2,7 @@
 
 <p align=center><img src="screen-todotab.png">
 
-<p>This tab allows users to retrieve, maintain, and send to-do task items
+<p>This page allows users to retrieve, maintain, and send to-do task items
 from/to the phone.  The list of task items is displayed on the left listbox,
 with the detailed information of the selected item displayed in the right
 fields.

@@ -2,7 +2,7 @@
 
 <p align=center><img src="screen-playlisttab.jpg">
 
-<p>This tab allows users to retrieve, edit, and send their mp3 playlists from/to the phone.
+<p>This page allows users to retrieve, edit, and send their mp3 playlists from/to the phone.
 
 #define DESC(title,desc) \
    <p><b>title</b>: desc

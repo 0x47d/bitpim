@@ -28,12 +28,14 @@ puts new content in them.
 
 <p>Select the model name of your phone.  Only select the model that
 exactly matches your phone.  Selecting a "similar" model number could
-damage your phone.
+damage your phone. Use the "Phone Wizard" button to have BitPim help you
+choose your phone and select how it is connected to your computer
 
 <h2>Com port</h2>
 
 <p>This is the serial port that will be used to talk to your phone.  Click the browse button to
-see the list of valid ports on your machine.
+see the list of valid ports on your machine. The "Phone Wizard" will let you choose and test 
+the Com port.
 
 <h2>Check for Update</h2>
 

@@ -1,24 +1,31 @@
 #include "pagestart.h"
 
 <p>The first step is to tell BitPim what phone model you're using.
-If your phone model supports <a href="phones-featuressupported.htm">BitPim's AutoDetect feature</a>,
-tell BitPim to detect your phone automatically by clicking on "Edit" -> "Detect Phone".
+Bitpim will try to detect your phone when you run it for the first time. 
+If this fails, or you change the phone you are using you can tell BitPim 
+to detect your phone again by clicking on the detect phone button on the 
+toolbar or selecting "Edit" -> "Detect Phone" from the menu. 
 
-<p align=center><img src="menu-detectphone.png">
+<p align=center><img src="toolbar-detect.png">
 
-<p> If AutoDetect fails or your phone does not support it, you can set your phone model by using the
-<a href="ref-settings.htm">"Settings" dialog</a> ("Edit" -> "Settings").  This dialog will also
-automatically appear the first time you use BitPim.
+<p> Note: Not all phone support AutoDetection. See <a href="phones-featuressupported.htm"> 
+here</a> for a list of phones BitPim can AutoDetect.
+BitPim may not be able to AutoDetect phones connected via Bluetooth.
+
+<p> If AutoDetect fails, BitPim will give you the option to open the Settings dialog so that you 
+can configure your phone manually. Press the Phone Wizard button in the Settings dialog to have 
+BitPim help you choose your phone and it's connection to your computer.
 
 <p align=center><IMG SRC="screenshot-settingsdialog.png" BORDER="0">
 
 <p>The next step is to get your data from your phone into BitPim.
-<br>From the data menu choose 'Get Phone Data'.
+<br>Press the Get Data button on the toolbar or select "Data" -> "Get Phone Data" from the menu.
 
-<p align=center><img src="screen-editget.png">
+<p align=center><img src="toolbar-getdata.png">
 
 <p>You will then be given a choice of what to get.  Initially it is worth
-getting everything so you can see what is on your phone.
+getting everything so you can see what is on your phone. If an option is disabled and you cannot
+select it, this means that BitPim does not support this feature on your phone.
 
 <p align=center><img src="screen-getdata.png">
 

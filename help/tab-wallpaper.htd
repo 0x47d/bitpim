@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p>This tab displays the images that BitPim currently maintains and allows
+<p>This page displays the images that BitPim currently maintains and allows
 users to perform various actions on them.
 
 <p align=center><img src="screen-wallpapertab.jpg">
