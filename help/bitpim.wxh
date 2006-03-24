@@ -570,7 +570,7 @@
             </document>
           </document>
           <document>
-            <string name="title">"Tabs"</string>
+            <string name="title">"Tree Items"</string>
             <string name="type">"text-editor-document"</string>
             <string name="filename">"tabs.htd"</string>
             <string name="icon-name">"htmlfolder"</string>
@@ -588,7 +588,7 @@
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
-              <string name="title">"Today"</string>
+              <string name="title">"Phone"</string>
               <string name="type">"text-editor-document"</string>
               <string name="filename">"tab-today.htd"</string>
               <string name="icon-name">"htmldoc"</string>
