@@ -16,6 +16,7 @@ import re
 
 
 import helpids
+import bphtml
 
 class BitPimWidget:
     MENU_NORMAL=wx.ITEM_NORMAL
@@ -150,13 +151,35 @@ class BitPimWidget:
     def OnViewPreview(self, on):
         pass
 
-class RootWidget(wx.Panel, BitPimWidget):
+class RootWidget(bphtml.HTMLWindow, BitPimWidget):
+    welcome_text="""
+<html>
+<head><title>Welcome</title>
+</head>
+<body>
+<h1>Welcome</h1>
+
+<p>Welcome to BitPim.  
+
+<p>If you are new to BitPim, please take the <a href="http://www.bitpim.org/help/tour-master.htm">tour</a>.
+<p>BitPim's homepage is <a href="http://www.bitpim.org" target="bitpimhelpexternallink">www.bitpim.org</a>.
+    The project page is <a href="http://www.sourceforge.net/projects/bitpim" target="bitpimhelpexternallink">www.sourceforge.net/projects/bitpim</a></a>.
+
+<p>You may be interested in <a href="http://www.bitpim.org/help/upgrading.htm">upgrade information</a> or the 
+<a href="http://www.bitpim.org/help/versionhistory.htm">version history</a>.
+
+<p>If you have any problems or questions please read the <a href="http://www.bitpim.org/help/support.htm">information about support</a>.
+
+<p>BitPim is free software, praise and <a href="http://www.bitpim.org/help/contributing.htm">contributions</a> (e.g. Phones) are always welcome!
+
+
+<hr> 
+
+
+</body></html>
+"""
+
     def __init__(self, parent, id):
-        wx.Panel.__init__(self, parent, id)
-        self.SetBackgroundColour(wx.WHITE)
-        # main box sizer
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        vbs.Add(wx.StaticText(self, -1, 'Welcome to BitPim'), 0, wx.ALIGN_LEFT|wx.ALL, 2)
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
+        wx.html.HtmlWindow.__init__(self, parent, id)
+        self.SetPage(self.welcome_text)
+
