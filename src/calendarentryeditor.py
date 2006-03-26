@@ -670,7 +670,7 @@ class Editor(wx.Dialog):
             pb_editor.EVT_DIRTY_UI(self, w.GetId(), self.OnMakeDirty)
         self.ignoredirty=False
         self.setdirty(False)
-        guiwidgets.set_size("CalendarEntryEditor", self, 50, 1.5)
+        guiwidgets.set_size("CalendarEntryEditor", self, 52, 1.0)
         field_color.reload_color_info(self, widgets_list)
         pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
 

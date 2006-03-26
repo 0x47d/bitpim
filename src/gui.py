@@ -820,7 +820,7 @@ class MainWindow(wx.Frame):
         self.dlgsendphone=guiwidgets.SendPhoneDialog(self, "Send Data to Phone")
 
         # the splitter
-        self.sw=wx.SplitterWindow(self, wx.NewId(), style=wx.SP_3D|wx.SP_NO_XP_THEME)
+        self.sw=wx.SplitterWindow(self, wx.NewId(), style=wx.SP_3D|wx.SP_NO_XP_THEME|wx.SP_LIVE_UPDATE)
 
         ### create main tree view
         self.tree = phone_root.PhoneTree(self.sw, self, wx.NewId())
