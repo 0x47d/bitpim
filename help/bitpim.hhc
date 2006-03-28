@@ -110,12 +110,12 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
-        <param name="Name" value="Tabs">
+        <param name="Name" value="Tree Items">
         <param name="Local" value="tabs.htm">
         </OBJECT>
     <UL>
       <LI><OBJECT type="text/sitemap">
-          <param name="Name" value="Today">
+          <param name="Name" value="Phone">
           <param name="Local" value="tab-today.htm">
           </OBJECT>
       <LI><OBJECT type="text/sitemap">
