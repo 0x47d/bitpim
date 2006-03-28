@@ -2,6 +2,8 @@
 
    <h2><a name="0.8.10">Changes in 0.8.10</a></h2>
     <ul>
+      <li>New look and feel for BitPim main screen
+      <li>Fixed bug in 0.8.09 that caused exception in media conversion
    </ul>	
 
    <h2><a name="0.8.09">Changes in 0.8.09</a></h2>
