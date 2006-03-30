@@ -549,6 +549,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         split.SetMinimumPaneSize(20)
         self.mainwindow=mainwindow
         self._data={}
+        self.parent=parent
         self.categories=[]
         self.modified=False
         self.table_panel=wx.Panel(split)
@@ -741,6 +742,14 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                     # found it, update the name
                     self._data[k][main_key][i][element_key]=_new_name
                     self.modified=True
+
+    def HasColumnSelector(self):
+        return True
+
+    def OnViewColumnSelector(self):
+        dlg=ColumnSelectorDialog(self.parent, self.config, self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def HasPreviewPane(self):
         return True

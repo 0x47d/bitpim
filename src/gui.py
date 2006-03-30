@@ -888,8 +888,8 @@ class MainWindow(wx.Frame):
         wx.EVT_UPDATE_UI(self, guihelper.ID_EDITDELETEENTRY, self.tree.DataDeleteItemUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_EDITADDENTRY, self.tree.DataAddItemUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_DATAHISTORICAL, self.tree.HistoricalDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.tree.ViewColumnsandPreviewDataUpdateUIEvent)
-        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.tree.ViewColumnsandPreviewDataUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWCOLUMNS, self.tree.ViewColumnsUpdateUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWPREVIEW, self.tree.ViewPreviewDataUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_FILEPRINT, self.tree.FilePrintDataUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_EDITSELECTALL, self.tree.SelectAllDataUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_EDITCOPY, self.tree.EditCopyUpdateUIEvent)
@@ -968,6 +968,9 @@ class MainWindow(wx.Frame):
 
     def GetCurrentActiveWidget(self):
         return self.tree.GetActiveWidget()
+
+    def GetActiveDatabase(self):
+        return self.tree.GetActivePhone().GetDatabase()
 
     def UpdateToolbarOnPanelChange(self, add_image, add_help, delete_image, delete_help):
         sz=self.tb.GetToolBitmapSize()

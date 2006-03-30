@@ -204,9 +204,12 @@ class PhoneTree(wx.TreeCtrl):
     def HistoricalDataUpdateUIEvent(self, event):
         event.Enable(self.active_panel.HasHistoricalData())
 
-    def ViewColumnsandPreviewDataUpdateUIEvent(self, event):
+    def ViewPreviewDataUpdateUIEvent(self, event):
         event.Enable(self.active_panel.HasPreviewPane())
         event.Check(self.active_panel.IsPreviewPaneEnabled())
+
+    def ViewColumnsUpdateUIEvent(self, event):
+        event.Enable(self.active_panel.HasColumnSelector())
 
     def FilePrintDataUpdateUIEvent(self, event):
         enable_print=hasattr(self.active_panel, "OnPrintDialog")
@@ -245,9 +248,7 @@ class PhoneTree(wx.TreeCtrl):
             self.lwdata.Clear()
 
     def OnViewColumns(self, _):
-        dlg=phonebook.ColumnSelectorDialog(self, self.config, self.phonewidget)
-        dlg.ShowModal()
-        dlg.Destroy()
+        self.active_panel.OnViewColumnSelector()
 
     def OnViewPreview(self, evt):
         if not self.active_panel.IsPreviewPaneEnabled():

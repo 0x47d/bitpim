@@ -406,7 +406,7 @@ class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
         self._main_window.database.savemajordict(self._data_key, db_rr)
 
     def populatefs(self, dict):
-        if self._stats.read_only:
+        if self.read_only:
             wx.MessageBox('You are viewing historical data which cannot be changed or saved',
                              'Cannot Save Call History Data',
                              style=wx.OK|wx.ICON_ERROR)

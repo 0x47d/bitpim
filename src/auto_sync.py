@@ -36,7 +36,7 @@ _filter_keys=['start_offset', 'end_offset', 'no_alarm', 'rpt_events', "alarm_val
 
 def _getsettings(mw, profile):
     settings=AutoSyncSettingsEntry()
-    dict=mw.tree.GetActivePhone().GetDatabase().getmajordictvalues(_data_key, autosyncsettingsobjectfactory)
+    dict=mw.GetActiveDatabase().getmajordictvalues(_data_key, autosyncsettingsobjectfactory)
     if profile in dict:
         settings.set_db_dict(dict[profile])
     return settings

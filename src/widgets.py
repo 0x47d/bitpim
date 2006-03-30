@@ -151,6 +151,12 @@ class BitPimWidget:
     def OnViewPreview(self, on):
         pass
 
+    def HasColumnSelector(self):
+        return False
+
+    def OnViewColumnSelector(self):
+        pass
+
 class RootWidget(bphtml.HTMLWindow, BitPimWidget):
     welcome_text="""
 <html>

@@ -429,7 +429,7 @@ class FilterDialog(FilterDialogBase):
         self._get_from_fs()
 
     def _get_from_fs(self):
-        _db_data=self.GetParent().GetParent().database.getmajordictvalues('calendar_filter',
+        _db_data=self.GetParent().GetParent().GetActiveDatabase().getmajordictvalues('calendar_filter',
                                                            filterobjectfactory)
         _data={}
         _data.update(_db_data.get('filter', {}))
