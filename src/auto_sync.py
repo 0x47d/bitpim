@@ -344,7 +344,7 @@ class AutoSyncSettingsDialog(wx.Dialog):
                         else:
                             filter[setting]=self.settings._data[setting]
                 res, temp=entry[1](self.mw, self.settings.calender_id, filter)
-                if res==wx.ID_OK:
+                if res==wx.ID_OK and res != None:
                     # temp is a tuple of the calender_id and the filter settings
                     self.settings.calender_id=temp[0]
                     for setting in _filter_keys:

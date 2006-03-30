@@ -83,6 +83,18 @@ def GetCalenderAutoSyncImports():
     
     return res
 
+def TestOutlookIsInstalled():
+    import native.outlook
+    try:
+        native.outlook.getmapinamespace()
+    except:
+        dlg=wx.MessageDialog(None, 'Unable to initialise Outlook, Check that it is installed correctly.',
+                              'Outlook Error', wx.OK|wx.ICON_ERROR)
+        dlg.ShowModal()
+        dlg.Destroy()
+        return False
+    return True
+
 class PreviewGrid(wx.grid.Grid):
 
     def __init__(self, parent, id):
@@ -1757,6 +1769,8 @@ def OnFileImportQtopiaDesktopContacts(parent):
         
 def OnFileImportOutlookContacts(parent):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return
     dlg=ImportOutlookDialog(parent, -1, "Import Outlook Contacts", native.outlook)
     data=None
     if dlg.ShowModal()==wx.ID_OK:
@@ -1813,6 +1827,8 @@ def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
 
 def OnFileImportOutlookCalendar(parent):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return
     import outlook_calendar
     import pubsub
     OnFileImportCommon(parent, outlook_calendar.OutlookImportCalDialog,
@@ -1822,6 +1838,8 @@ def OnFileImportOutlookCalendar(parent):
 
 def OnFileImportOutlookNotes(parent):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return
     import outlook_notes
     OnFileImportCommon(parent, outlook_notes.OutlookImportNotesDialog,
                        'Import Outlook Notes', parent.GetActiveMemoWidget(),
@@ -1830,6 +1848,8 @@ def OnFileImportOutlookNotes(parent):
 
 def OnFileImportOutlookTasks(parent):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return
     import outlook_tasks
     OnFileImportCommon(parent, outlook_tasks.OutlookImportTasksDialog,
                        'Import Outlook Tasks', parent.GetActiveTodoWidget(),
@@ -1854,6 +1874,8 @@ def OnFileImportCSVCalendar(parent):
 
 def AutoConfOutlookCalender(parent, folder, filters):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return None, None
     import outlook_calendar
     config=()
     dlg=outlook_calendar.OutlookAutoConfCalDialog(parent, -1,
@@ -1886,6 +1908,8 @@ def AutoConfCommon(dlg):
 
 def AutoImportOutlookCalendar(parent, folder, filters):
     import native.outlook
+    if not TestOutlookIsInstalled():
+        return 0
     import outlook_calendar
     calendar_r=outlook_calendar.ImportCal(folder, filters)
     return AutoImportCalCommon(parent, calendar_r)
