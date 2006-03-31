@@ -222,7 +222,7 @@ def getdata(folder, keys=None, preset_dict={}, client=None, post_func=None):
     import_errors=[]
     if not folder.Items.Count:
         # empty folder, just return
-        return res
+        return res, import_errors
     # prefill keys if necessary
     if keys is None:
         keys=[]
