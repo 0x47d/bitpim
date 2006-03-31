@@ -1,5 +1,12 @@
 #include "pagestart.h"
 
+   <h2><a name="0.8.11">Changes in 0.8.11</a></h2>
+    <ul>
+      <li>Fixed bugs with new GUI, getting call history, phonebook column picker and outlook import filter.
+      <li>Fixed exception when outlook is not installed for Windows.
+      <li>Fixed exception when trying to access blocked files.
+   </ul>	
+
    <h2><a name="0.8.10">Changes in 0.8.10</a></h2>
     <ul>
       <li>New look and feel for BitPim main screen
