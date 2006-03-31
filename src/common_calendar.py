@@ -467,7 +467,7 @@ class FilterDialog(FilterDialogBase):
             _data['end']=_date
         _dict={ 'filter': _data }
         database.ensurerecordtype(_dict, filterobjectfactory)
-        self.GetParent().GetParent().database.savemajordict('calendar_filter',
+        self.GetParent().GetParent().GetActiveDatabase().savemajordict('calendar_filter',
                                                             _dict)
 
     def SetDateControls(self, fgs, fgs1):
