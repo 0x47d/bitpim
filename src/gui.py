@@ -1558,6 +1558,11 @@ class MainWindow(wx.Frame):
             title="Communications Error - "+exception.device
             style=wx.OK|wx.ICON_EXCLAMATION
             help=lambda _: wx.GetApp().displayhelpid(helpids.ID_COMMSDATAERROR)
+        elif isinstance(exception, com_brew.BrewAccessDeniedException):
+            text="Access to the file/directory has been blocked on this phone by the phone provider"
+            title="Access Denied"
+            style=wx.OK|wx.ICON_EXCLAMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_LG_INTEGRITYCHECKFAILED)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)

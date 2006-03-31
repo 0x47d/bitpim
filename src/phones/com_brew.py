@@ -56,6 +56,18 @@ class BrewDirectoryExistsException(BrewCommandException):
     def __init__(self, errnum=0x07):
         BrewCommandException.__init__(self, errnum, "Directory already exists")
 
+class BrewBadBrewCommandException(BrewCommandException):
+    def __init__(self, errnum=0x100):
+        BrewCommandException.__init__(self, errnum, "The phone did not recognise the brew command")
+
+class BrewMalformedBrewCommandException(BrewCommandException):
+    def __init__(self, errnum=0x101):
+        BrewCommandException.__init__(self, errnum, "The parameters in the last brew command were invalid")
+
+class BrewAccessDeniedException(BrewCommandException):
+    def __init__(self, errnum=0x04):
+        BrewCommandException.__init__(self, errnum, "Access Denied. Access to the file/directory may be blocked on this phone")
+
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
@@ -686,21 +698,26 @@ class RealBrewProtocol:
         # turn it back to normal
         data=common.pppunescape(data)
 
-        # sometimes there is other crap at the begining
-        d=data.find(firsttwo)
-        if d>0:
-            self.log("Junk at begining of packet, data at "+`d`)
-            self.logdata("Original data", origdata, None)
-            self.logdata("Working on data", data, None)
-            data=data[d:]
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
+        # check the CRC at this point to see if we might have crap at the beginning
         calccrc=common.crcs(data)
         if calccrc!=crc:
-            self.logdata("Original data", origdata, None)
-            self.logdata("Working on data", data, None)
-            raise common.CommsDataCorruption("Brew packet failed CRC check", self.desc)
+            # sometimes there is other crap at the begining
+            d=data.find(firsttwo)
+            if d>0:
+                self.log("Junk at begining of packet, data at "+`d`)
+                self.logdata("Original data", origdata, None)
+                self.logdata("Working on data", data, None)
+                data=data[d:]
+                # recalculate CRC without the crap
+                calccrc=common.crcs(data)
+            # see if the crc matches now
+            if calccrc!=crc:
+                self.logdata("Original data", origdata, None)
+                self.logdata("Working on data", data, None)
+                raise common.CommsDataCorruption("Brew packet failed CRC check", self.desc)
         
         # log it
         self.logdata("brew response", data, responseclass)
@@ -727,7 +744,18 @@ class RealBrewProtocol:
                     raise BrewNameTooLongException()
                 if err==0x07:
                     raise BrewDirectoryExistsException()
+                if err==0x04:
+                    raise BrewAccessDeniedException()
                 raise BrewCommandException(err)
+        # Starting with the vx8100/9800 verizon started to block access to some file and directories
+        # it reports a bad command packet as the error when it really means access denied
+        if ord(data[0])==0x13:
+            if firsttwo[0]=="Y": # brew command
+                raise BrewAccessDeniedException()
+            else:
+                raise BrewBadBrewCommandException()
+        if ord(data[0])==0x14:
+            raise BrewMalformedBrewCommandException()
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
