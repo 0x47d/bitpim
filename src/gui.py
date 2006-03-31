@@ -1562,7 +1562,7 @@ class MainWindow(wx.Frame):
             text="Access to the file/directory has been blocked on this phone by the phone provider"
             title="Access Denied"
             style=wx.OK|wx.ICON_EXCLAMATION
-            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_LG_INTEGRITYCHECKFAILED)
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_BREW_ACCESS_DENIED)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)

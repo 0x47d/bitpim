@@ -5,6 +5,7 @@
       <li>Fixed bugs with new GUI, getting call history, phonebook column picker and outlook import filter.
       <li>Fixed exception when outlook is not installed for Windows.
       <li>Fixed exception when trying to access blocked files.
+      <li><b>LG VX7000</b>: Cope gracefully when updating ringtones and the index says a file exists that doesn't actually exist.
    </ul>	
 
    <h2><a name="0.8.10">Changes in 0.8.10</a></h2>

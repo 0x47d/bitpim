@@ -65,7 +65,7 @@ class BrewMalformedBrewCommandException(BrewCommandException):
         BrewCommandException.__init__(self, errnum, "The parameters in the last brew command were invalid")
 
 class BrewAccessDeniedException(BrewCommandException):
-    def __init__(self, errnum=0x04):
+    def __init__(self, errnum=0x04, filename=None):
         BrewCommandException.__init__(self, errnum, "Access Denied. Access to the file/directory may be blocked on this phone")
 
 
