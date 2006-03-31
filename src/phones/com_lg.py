@@ -547,7 +547,10 @@ class LGNewIndexedMedia:
             for item in self.getindex(indexfile):
                 if basename(item.filename) not in names:
                     self.log(item.filename+" is being deleted")
-                    dircache.rmfile(item.filename)
+                    try:
+                        dircache.rmfile(item.filename)
+                    except com_brew.BrewNoSuchFileException:
+                        self.log("Hmm, it didn't exist!")
             # fixup the indices
             fixups=[k for k in init[type].keys() if k<lowestindex]
             fixups.sort()
