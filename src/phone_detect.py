@@ -80,14 +80,14 @@ class DetectPhone(object):
                 self.__q_log.put_nowait(log_str)
             else:
                 self.__log.log(log_str)
-    def logdata(self, log_str, log_data, klass=None):
+    def logdata(self, log_str, log_data, klass=None, data_type=None):
         if self.__log is None:
             print log_str,log_data, klass
         else:
             if self.__q_on:
-                self.__q_log.put_nowait((log_str, log_data, klass))
+                self.__q_log.put_nowait((log_str, log_data, klass, data_type))
             else:
-                self.__log.logdata(log_str, log_data, klass)
+                self.__log.logdata(log_str, log_data, klass, data_type)
 
     def progress(self, pos, max, desc=""):
         if self.__log:

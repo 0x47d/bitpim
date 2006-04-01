@@ -14,6 +14,8 @@ import sys
 import common
 import time
 import threading
+import data_recording
+
 try:
     import native.usb as usb
 except:
@@ -166,9 +168,10 @@ class CommConnection:
         if self.logtarget:
             self.logtarget.log(self.port+": "+str)
 
-    def logdata(self, str, data):
+    def logdata(self, str, data, data_type=None):
         if self.logtarget:
-            self.logtarget.logdata(self.port+": "+str, data)
+            self.logtarget.logdata(self.port+": "+str, data,
+                                   None, data_type)
 
     def setbaudrate(self, rate):
         """Change to the specified baud rate
@@ -215,8 +218,8 @@ class CommConnection:
 
     def _write(self, data, log=True):
         self.writerequests+=1
-        if log:
-            self.logdata("Writing", data)
+        if log or data_recording.DR_On:
+            self.logdata("Writing", data, data_recording.DR_Type_Write)
         self.ser.write(data)
         self.writebytes+=len(data)
 
@@ -308,8 +311,9 @@ class CommConnection:
             raise CommTimeout()
 
         self.readbytes+=len(res)
-        if log:
-            self.logdata("Reading remaining data", res)
+        if log or data_recording.DR_On:
+            self.logdata("Reading remaining data", res,
+                         data_recording.DR_Type_Read_ATResponse)
         self.readahead=res
         return
 
@@ -344,8 +348,9 @@ class CommConnection:
             if not self._isbrokendriver(e):
                 raise
             res=self._brokendriverread(numchars)
-        if log:
-            self.logdata("Reading exact data - requested "+`numchars`, res)
+        if log or data_recording.DR_On:
+            self.logdata("Reading exact data - requested "+`numchars`, res,
+                         data_recording.DR_Type_Read)
         self.readbytes+=len(res)
         return res
 
@@ -384,8 +389,9 @@ class CommConnection:
         if len(res)==0:
             raise CommTimeout()
         self.readbytes+=len(res)
-        if log:
-            self.logdata("Reading remaining data", res)
+        if log or data_recording.DR_On:
+            self.logdata("Reading remaining data", res,
+                         data_recording.DR_Type_Read_Some)
         return res
 
     def readuntil(self, char, log=True, logsuccess=True, numfailures=0):
@@ -420,8 +426,9 @@ class CommConnection:
             res=res+res2
 
         self.readbytes+=len(res)
-        if logsuccess:
-            self.logdata("Read completed", res)
+        if logsuccess or data_recording.DR_On:
+            self.logdata("Read completed", res,
+                         data_recording.DR_Type_Read_Until)
         return res
 
     # these methods here consolidate calls, which makes the BitFling stuff a lot faster due

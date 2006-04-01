@@ -1636,3 +1636,41 @@ class BitPimListCtrl(wx.ListCtrl, listmix.ColumnSorterMixin):
             sels_idx[index]=self.GetNextSelected(sels_idx[index-1])
         del sels_idx[index]
         return sels_idx
+
+class DRRecFileDialog(wx.Dialog):
+    """
+    A dialog to ask for and provide the file name for a Data Recording file
+    """
+    def __init__(self, parent):
+        super(DRRecFileDialog, self).__init__(parent, -1,
+                                           'BitPim Data Recording File')
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        fgs=wx.FlexGridSizer(0, 3, 5, 5)
+        fgs.Add(wx.StaticText(self, -1, 'File Name:'), 0, wx.EXPAND|wx.ALL, 5)
+        self._file_name=wx.TextCtrl(self, -1, 'bitpim.dat')
+        fgs.Add(self._file_name, 0, wx.EXPAND|wx.ALL, 5)
+        _brw_btn=wx.Button(self, -1, 'Browse')
+        fgs.Add(_brw_btn, 0, wx.EXPAND|wx.ALL, 5)
+        wx.EVT_BUTTON(self, _brw_btn.GetId(), self.OnBrowse)
+        fgs.Add(wx.StaticText(self, -1, 'Open Mode:'), 0, wx.EXPAND|wx.ALL, 5)
+##        self._choice=wx.RadioBox(self, -1, '',
+##                                 choices=['Recording', 'Playback'])
+##        fgs.Add(self._choice, 0, wx.EXPAND|wx.ALL, 5)
+        self._append=wx.CheckBox(self, -1, 'Append to existing file')
+        fgs.Add(self._append, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(fgs, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0,
+                wx.ALIGN_CENTER|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def OnBrowse(self, _):
+        _dlg=wx.FileDialog(self)
+        _dlg.SetPath(self._file_name.GetValue())
+        if _dlg.ShowModal()==wx.ID_OK:
+            self._file_name.SetValue(_dlg.GetPath())
+
+    def get(self):
+        return self._file_name.GetValue(), self._append.IsChecked()
