@@ -6,6 +6,7 @@
       <li>Fixed exception when outlook is not installed for Windows.
       <li>Fixed exception when trying to access blocked files.
       <li><b>LG VX7000</b>: Cope gracefully when updating ringtones and the index says a file exists that doesn't actually exist.
+      <li>Add support for <B>LG6190</B> (Bell Mobility).
    </ul>	
 
    <h2><a name="0.8.10">Changes in 0.8.10</a></h2>
@@ -25,7 +26,7 @@
       <li>Added Call History export to CSV format.
       <li>Add phonebook read/write support for <b>LG VI-5225</b> (STI-Mobile).
       <li><b>Import Outlook Contacts:</b>Added contact category priority filter.
-      <li>Add support for <B>LG6200 (Bell Mobility)</B>.
+      <li>Add support for <B>LG6200</B> (Bell Mobility).
       <li>Added Phone Setting Wizard feature.
       <li><b>Windows</b> libusb is no longer looked for on Windows.  (To use libusb on Windows, 
       you had to have a device driver first.  And if you had a device driver, you'd have no need for libusb.)
