@@ -356,7 +356,7 @@ class pbappendentryrequest(BaseProtogenClass):
 
 
 class pbentry(BaseProtogenClass):
-    __fields=['serial1', 'entrysize', 'entrynumber', 'unknown1', 'name', 'group', 'unknown2', 'secret', 'memo', 'emails', 'url', 'numberspeeds', 'numbertypes', 'numbers', 'EndOfRecord', 'ringtone', 'wallpaper']
+    __fields=['serial1', 'entrysize', 'entrynumber', 'name', 'group', 'unknown2', 'secret', 'memo', 'emails', 'url', 'numberspeeds', 'numbertypes', 'numbers', 'EndOfRecord', 'ringtone', 'wallpaper']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -399,10 +399,6 @@ class pbentry(BaseProtogenClass):
             self.__field_entrysize=UINT(**{'sizeinbytes': 2, 'constant': 0x0270})
         self.__field_entrysize.writetobuffer(buf)
         self.__field_entrynumber.writetobuffer(buf)
-        try: self.__field_unknown1
-        except:
-            self.__field_unknown1=UINT(**{'sizeinbytes': 2, 'default': 0})
-        self.__field_unknown1.writetobuffer(buf)
         self.__field_name.writetobuffer(buf)
         self.__field_group.writetobuffer(buf)
         try: self.__field_unknown2
@@ -413,20 +409,20 @@ class pbentry(BaseProtogenClass):
         self.__field_memo.writetobuffer(buf)
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_126, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_125, 'length': NUMEMAILS})
         self.__field_emails.writetobuffer(buf)
         self.__field_url.writetobuffer(buf)
         try: self.__field_numberspeeds
         except:
-            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_129, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_128, 'length': NUMPHONENUMBERS})
         self.__field_numberspeeds.writetobuffer(buf)
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_131, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_130, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.writetobuffer(buf)
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_132, 'length': NUMPHONENUMBERS})
         self.__field_numbers.writetobuffer(buf)
         try: self.__field_EndOfRecord
         except:
@@ -444,10 +440,8 @@ class pbentry(BaseProtogenClass):
         self.__field_serial1.readfrombuffer(buf)
         self.__field_entrysize=UINT(**{'sizeinbytes': 2, 'constant': 0x0270})
         self.__field_entrysize.readfrombuffer(buf)
-        self.__field_entrynumber=UINT(**{'sizeinbytes': 2})
+        self.__field_entrynumber=UINT(**{'sizeinbytes': 4})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_unknown1=UINT(**{'sizeinbytes': 2, 'default': 0})
-        self.__field_unknown1.readfrombuffer(buf)
         self.__field_name=STRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 2})
@@ -458,15 +452,15 @@ class pbentry(BaseProtogenClass):
         self.__field_secret.readfrombuffer(buf)
         self.__field_memo=STRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
-        self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_126, 'length': NUMEMAILS})
+        self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_125, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
         self.__field_url=STRING(**{'sizeinbytes': 75, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
-        self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_129, 'length': NUMPHONENUMBERS})
+        self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_128, 'length': NUMPHONENUMBERS})
         self.__field_numberspeeds.readfrombuffer(buf)
-        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_131, 'length': NUMPHONENUMBERS})
+        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_130, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.readfrombuffer(buf)
-        self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_133, 'length': NUMPHONENUMBERS})
+        self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_132, 'length': NUMPHONENUMBERS})
         self.__field_numbers.readfrombuffer(buf)
         self.__field_EndOfRecord=UINT(**{'sizeinbytes': 1, 'constant': 0x7A})
         self.__field_EndOfRecord.readfrombuffer(buf)
@@ -509,27 +503,11 @@ class pbentry(BaseProtogenClass):
         if isinstance(value,UINT):
             self.__field_entrynumber=value
         else:
-            self.__field_entrynumber=UINT(value,**{'sizeinbytes': 2})
+            self.__field_entrynumber=UINT(value,**{'sizeinbytes': 4})
 
     def __delfield_entrynumber(self): del self.__field_entrynumber
 
     entrynumber=property(__getfield_entrynumber, __setfield_entrynumber, __delfield_entrynumber, None)
-
-    def __getfield_unknown1(self):
-        try: self.__field_unknown1
-        except:
-            self.__field_unknown1=UINT(**{'sizeinbytes': 2, 'default': 0})
-        return self.__field_unknown1.getvalue()
-
-    def __setfield_unknown1(self, value):
-        if isinstance(value,UINT):
-            self.__field_unknown1=value
-        else:
-            self.__field_unknown1=UINT(value,**{'sizeinbytes': 2, 'default': 0})
-
-    def __delfield_unknown1(self): del self.__field_unknown1
-
-    unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -602,14 +580,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_emails(self):
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_126, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lgpm225_125, 'length': NUMEMAILS})
         return self.__field_emails.getvalue()
 
     def __setfield_emails(self, value):
         if isinstance(value,LIST):
             self.__field_emails=value
         else:
-            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lgpm225_126, 'length': NUMEMAILS})
+            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lgpm225_125, 'length': NUMEMAILS})
 
     def __delfield_emails(self): del self.__field_emails
 
@@ -631,14 +609,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numberspeeds(self):
         try: self.__field_numberspeeds
         except:
-            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_129, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lgpm225_128, 'length': NUMPHONENUMBERS})
         return self.__field_numberspeeds.getvalue()
 
     def __setfield_numberspeeds(self, value):
         if isinstance(value,LIST):
             self.__field_numberspeeds=value
         else:
-            self.__field_numberspeeds=LIST(value,**{'elementclass': _gen_p_lgpm225_129, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(value,**{'elementclass': _gen_p_lgpm225_128, 'length': NUMPHONENUMBERS})
 
     def __delfield_numberspeeds(self): del self.__field_numberspeeds
 
@@ -647,14 +625,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbertypes(self):
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_131, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgpm225_130, 'length': NUMPHONENUMBERS})
         return self.__field_numbertypes.getvalue()
 
     def __setfield_numbertypes(self, value):
         if isinstance(value,LIST):
             self.__field_numbertypes=value
         else:
-            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lgpm225_131, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lgpm225_130, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbertypes(self): del self.__field_numbertypes
 
@@ -663,14 +641,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbers(self):
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lgpm225_132, 'length': NUMPHONENUMBERS})
         return self.__field_numbers.getvalue()
 
     def __setfield_numbers(self, value):
         if isinstance(value,LIST):
             self.__field_numbers=value
         else:
-            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lgpm225_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lgpm225_132, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbers(self): del self.__field_numbers
 
@@ -731,7 +709,6 @@ class pbentry(BaseProtogenClass):
         yield ('serial1', self.__field_serial1, None)
         yield ('entrysize', self.__field_entrysize, None)
         yield ('entrynumber', self.__field_entrynumber, None)
-        yield ('unknown1', self.__field_unknown1, None)
         yield ('name', self.__field_name, None)
         yield ('group', self.__field_group, None)
         yield ('unknown2', self.__field_unknown2, None)
@@ -748,7 +725,7 @@ class pbentry(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_126(BaseProtogenClass):
+class _gen_p_lgpm225_125(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
 
@@ -757,8 +734,8 @@ class _gen_p_lgpm225_126(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_126,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_126:
+        super(_gen_p_lgpm225_125,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_125:
             self._update(args,dict)
 
 
@@ -767,7 +744,7 @@ class _gen_p_lgpm225_126(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_126,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_125,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -775,7 +752,7 @@ class _gen_p_lgpm225_126(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_126,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_125,kwargs)
         if len(args):
             dict2={'sizeinbytes': 73, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -822,7 +799,7 @@ class _gen_p_lgpm225_126(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_129(BaseProtogenClass):
+class _gen_p_lgpm225_128(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numberspeed']
 
@@ -831,8 +808,8 @@ class _gen_p_lgpm225_129(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_129,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_129:
+        super(_gen_p_lgpm225_128,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_128:
             self._update(args,dict)
 
 
@@ -841,7 +818,7 @@ class _gen_p_lgpm225_129(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_129,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_128,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -849,7 +826,7 @@ class _gen_p_lgpm225_129(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_129,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_128,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -896,7 +873,7 @@ class _gen_p_lgpm225_129(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_131(BaseProtogenClass):
+class _gen_p_lgpm225_130(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
 
@@ -905,8 +882,8 @@ class _gen_p_lgpm225_131(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_131,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_131:
+        super(_gen_p_lgpm225_130,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_130:
             self._update(args,dict)
 
 
@@ -915,7 +892,7 @@ class _gen_p_lgpm225_131(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_131,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_130,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -923,7 +900,7 @@ class _gen_p_lgpm225_131(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_131,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_130,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -970,7 +947,7 @@ class _gen_p_lgpm225_131(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_133(BaseProtogenClass):
+class _gen_p_lgpm225_132(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
 
@@ -979,8 +956,8 @@ class _gen_p_lgpm225_133(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_133,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_133:
+        super(_gen_p_lgpm225_132,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_132:
             self._update(args,dict)
 
 
@@ -989,7 +966,7 @@ class _gen_p_lgpm225_133(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_133,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_132,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -997,7 +974,7 @@ class _gen_p_lgpm225_133(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_133,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_132,kwargs)
         if len(args):
             dict2={'sizeinbytes': 49, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -4057,7 +4034,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(SMSINBOXMSGFRAGMENT,kwargs)
         if len(args):
-            dict2={'elementclass': _gen_p_lgpm225_346, 'length': 181}
+            dict2={'elementclass': _gen_p_lgpm225_345, 'length': 181}
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_msg=LIST(*args,**dict2)
@@ -4069,7 +4046,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_346, 'length': 181})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_345, 'length': 181})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if self._bufferstartoffset==0: self.autologwrite(buf)
@@ -4079,7 +4056,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if self._bufferstartoffset==0: self.autologread(buf)
-        self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_346, 'length': 181})
+        self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_345, 'length': 181})
         self.__field_msg.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -4087,14 +4064,14 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     def __getfield_msg(self):
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_346, 'length': 181})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgpm225_345, 'length': 181})
         return self.__field_msg.getvalue()
 
     def __setfield_msg(self, value):
         if isinstance(value,LIST):
             self.__field_msg=value
         else:
-            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgpm225_346, 'length': 181})
+            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgpm225_345, 'length': 181})
 
     def __delfield_msg(self): del self.__field_msg
 
@@ -4108,7 +4085,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_346(BaseProtogenClass):
+class _gen_p_lgpm225_345(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
 
@@ -4117,8 +4094,8 @@ class _gen_p_lgpm225_346(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_346,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_346:
+        super(_gen_p_lgpm225_345,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_345:
             self._update(args,dict)
 
 
@@ -4127,7 +4104,7 @@ class _gen_p_lgpm225_346(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_346,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_345,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -4135,7 +4112,7 @@ class _gen_p_lgpm225_346(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_346,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_345,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -4226,7 +4203,7 @@ class sms_in(BaseProtogenClass):
         self.__field_sender_length.writetobuffer(buf)
         try: self.__field_sender
         except:
-            self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_358, 'length': 38})
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_357, 'length': 38})
         self.__field_sender.writetobuffer(buf)
         self.__field_unknown4.writetobuffer(buf)
         self.__field_lg_time.writetobuffer(buf)
@@ -4261,7 +4238,7 @@ class sms_in(BaseProtogenClass):
         self.__field_callback.readfrombuffer(buf)
         self.__field_sender_length=UINT(**{'sizeinbytes': 1})
         self.__field_sender_length.readfrombuffer(buf)
-        self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_358, 'length': 38})
+        self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_357, 'length': 38})
         self.__field_sender.readfrombuffer(buf)
         self.__field_unknown4=DATA(**{'sizeinbytes': 15})
         self.__field_unknown4.readfrombuffer(buf)
@@ -4391,14 +4368,14 @@ class sms_in(BaseProtogenClass):
     def __getfield_sender(self):
         try: self.__field_sender
         except:
-            self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_358, 'length': 38})
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lgpm225_357, 'length': 38})
         return self.__field_sender.getvalue()
 
     def __setfield_sender(self, value):
         if isinstance(value,LIST):
             self.__field_sender=value
         else:
-            self.__field_sender=LIST(value,**{'elementclass': _gen_p_lgpm225_358, 'length': 38})
+            self.__field_sender=LIST(value,**{'elementclass': _gen_p_lgpm225_357, 'length': 38})
 
     def __delfield_sender(self): del self.__field_sender
 
@@ -4546,7 +4523,7 @@ class sms_in(BaseProtogenClass):
 
 
 
-class _gen_p_lgpm225_358(BaseProtogenClass):
+class _gen_p_lgpm225_357(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
 
@@ -4555,8 +4532,8 @@ class _gen_p_lgpm225_358(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgpm225_358,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgpm225_358:
+        super(_gen_p_lgpm225_357,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgpm225_357:
             self._update(args,dict)
 
 
@@ -4565,7 +4542,7 @@ class _gen_p_lgpm225_358(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgpm225_358,self)._update(args,kwargs)
+        super(_gen_p_lgpm225_357,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -4573,7 +4550,7 @@ class _gen_p_lgpm225_358(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgpm225_358,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgpm225_357,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)

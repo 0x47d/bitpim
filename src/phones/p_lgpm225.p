@@ -115,8 +115,7 @@ PACKET pbappendentryrequest:
 PACKET pbentry:
     4  UINT serial1
     2  UINT {'constant': 0x0270} +entrysize
-    2  UINT entrynumber                 
-    2  UINT {'default': 0} +unknown1		
+    4  UINT entrynumber                 
     33 STRING {'raiseonunterminatedread': False} name
     2  UINT group
     2  UINT {'default': 0} +unknown2 #ringtone ??

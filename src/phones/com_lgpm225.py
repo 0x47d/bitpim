@@ -99,7 +99,7 @@ class Phone(com_lgvx4400.Phone):
         groups={}
         for i in range(len(g.groups)):
             if len(g.groups[i].name): # sometimes have zero length names
-                groups[i]={ 'group_id': g.groups[i].group_id, 'name': g.groups[i].name }
+                groups[g.groups[i].group_id]={'name': g.groups[i].name }
         results['groups']=groups
         self.getwallpaperindices(results)
         self.getringtoneindices(results)
@@ -251,6 +251,7 @@ class Phone(com_lgvx4400.Phone):
                         other things
                         """
         e=self.protocolclass.pbentry()
+
         e.entrynumber=counter
 
         for k in entry:
@@ -314,7 +315,7 @@ class Phone(com_lgvx4400.Phone):
         g=self.protocolclass.pbgroups()
         for k in keys:
             e=self.protocolclass.pbgroup()
-            e.group_id=groups[k]['group_id']
+            e.group_id=k
             e.rectype = 0x30
             e.name=groups[k]['name']
             g.groups.append(e)
@@ -413,8 +414,6 @@ class Phone(com_lgvx4400.Phone):
             # also remove them from existingpbook
             del existingpbook[i]
 
-        # counter to keep track of record number (otherwise appends don't work)
-        counter=0
         # Now rewrite out existing entries
         self.log("Rewrite existing entries")
         keys=existingpbook.keys()
@@ -425,8 +424,7 @@ class Phone(com_lgvx4400.Phone):
             ii=pbook[self._findserial(existingpbook[i]['serial1'], pbook)]
             self.log("Rewriting entry "+`i`+" - "+ii['name'])
             self.progress(progresscur, progressmax, "Rewriting "+ii['name'])
-            entry=self.makeentry(counter, ii, data)
-            counter+=1
+            entry=self.makeentry(existingpbook[i]['serial1'], ii, data)
             existingserials.append(existingpbook[i]['serial1'])
             req=self.protocolclass.pbupdateentryrequest()
             req.entry=entry
@@ -439,6 +437,7 @@ class Phone(com_lgvx4400.Phone):
             pb_entries[res.serial1]=entry
 
         # Finally write out new entries
+        counter=0
         keys=pbook.keys()
         self.log("Write new entries")
         keys.sort()
@@ -446,9 +445,14 @@ class Phone(com_lgvx4400.Phone):
             ii=pbook[i]
             if ii['serial1'] in existingserials:
                 continue # already wrote this one out
+            # find an unused serial number
+            while True:
+                if counter in existingserials:
+                    counter+=1
+                else:
+                    break
             progresscur+=1
             entry=self.makeentry(counter, ii, data)
-            counter+=1
             self.log("Appending entry "+ii['name'])
             self.progress(progresscur, progressmax, "Writing "+ii['name'])
             req=self.protocolclass.pbappendentryrequest()
@@ -459,6 +463,7 @@ class Phone(com_lgvx4400.Phone):
                                       'serial1': res.newserial,
                                      'sourceuniqueid': data['uniqueserial']}))
             pb_entries[res.newserial]=entry
+            counter+=1
         # update the media file
         data['serialupdates']=serialupdates
 
