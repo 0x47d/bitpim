@@ -62,11 +62,13 @@ class ringtone(BaseProtogenClass):
         self.__field_file_name_len.writetobuffer(buf)
         self.__field_c3.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_c0=UINT(**{'sizeinbytes': 1})
         self.__field_c0.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 1})
@@ -277,11 +279,13 @@ class ringtones(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_entry=LIST(**{ 'length': max_ringtone_entries, 'elementclass': ringtone })
         self.__field_entry.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -352,11 +356,13 @@ class image(BaseProtogenClass):
         self.__field_file_name_len.writetobuffer(buf)
         self.__field_c2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_c0=UINT(**{'sizeinbytes': 1})
         self.__field_c0.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 1})
@@ -551,11 +557,13 @@ class images(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_entry=LIST(**{ 'length': max_image_entries, 'elementclass': image })
         self.__field_entry.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()

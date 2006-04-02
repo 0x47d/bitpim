@@ -67,11 +67,13 @@ class pbentry(BaseProtogenClass):
             self.__field_numbers=LIST(**{'elementclass': phonenumber})
         self.__field_numbers.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=CSVINT()
         self.__field_slot.readfrombuffer(buf)
         self.__field_name=CSVSTRING()
@@ -237,11 +239,13 @@ class phonenumber(BaseProtogenClass):
                 self.__field_number=CSVSTRING(**{'quotechar': None, 'default': "", 'terminator': None})
             self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_numbertype=CSVINT()
         self.__field_numbertype.readfrombuffer(buf)
         if not self.last_number:
@@ -373,11 +377,13 @@ class phonebookslotrequest(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -463,11 +469,13 @@ class phonebookslotresponse(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_entry=pbentry()
@@ -550,11 +558,13 @@ class phonebookslotupdaterequest(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_entry=pbentry()

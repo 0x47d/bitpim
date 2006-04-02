@@ -52,11 +52,13 @@ class getphonestatus(BaseProtogenClass):
             self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x0c})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x0c})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -126,11 +128,13 @@ class getphoneresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -200,11 +204,13 @@ class firmwarerequest(BaseProtogenClass):
             self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x00})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x00})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -276,11 +282,13 @@ class firmwareresponse(BaseProtogenClass):
         self.__field_string1.writetobuffer(buf)
         self.__field_dunno1.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1})
         self.__field_command.readfrombuffer(buf)
         self.__field_date1=STRING(**{'sizeinbytes': 11, 'terminator': None})
@@ -446,11 +454,13 @@ class esnrequest(BaseProtogenClass):
             self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x01})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x01})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -520,11 +530,13 @@ class beginendupdaterequest(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_beginend.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x29})
         self.__field_command.readfrombuffer(buf)
         self.__field_beginend=UINT(**{'sizeinbytes': 1})
@@ -609,11 +621,13 @@ class samheader(BaseProtogenClass):
         self.__field_readwrite.writetobuffer(buf)
         self.__field_attribute.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_readwrite=UINT(**{'sizeinbytes': 1})
         self.__field_readwrite.readfrombuffer(buf)
         self.__field_attribute=UINT(**{'sizeinbytes': 2})
@@ -700,11 +714,13 @@ class phonebooknamerequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 129})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=samheader(**{'attribute': 0x026B})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -815,11 +831,13 @@ class phonebookname(BaseProtogenClass):
         self.__field_pad2.writetobuffer(buf)
         self.__field_sometimesfive.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_pad1.readfrombuffer(buf)
         self.__field_nonzeroifused=UINT(**{'sizeinbytes': 2})
@@ -1047,11 +1065,13 @@ class _gen_p_samsungsphn400_62(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pnumber.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pnumber=UINT(**{'sizeinbytes': 2})
         self.__field_pnumber.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1117,11 +1137,13 @@ class phonebooknameresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=samheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -1240,11 +1262,13 @@ class phonebooknumbersrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 129})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=samheader(**{'attribute': 0x026A})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -1347,11 +1371,13 @@ class phonebooknumbers(BaseProtogenClass):
         self.__field_number_len.writetobuffer(buf)
         self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 2})
         self.__field_pad.readfrombuffer(buf)
         self.__field_number_len=UINT(**{'sizeinbytes': 1})
@@ -1449,11 +1475,13 @@ class phonebooknumbersresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=samheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -1572,11 +1600,13 @@ class attributerequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 259})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0x26})
         self.__field_command.readfrombuffer(buf)
         self.__field_attribute=UINT(**{'sizeinbytes': 2})

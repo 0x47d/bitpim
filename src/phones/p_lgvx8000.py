@@ -58,11 +58,13 @@ class indexentry(BaseProtogenClass):
         self.__field_date.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self.__field_type=UINT(**{'sizeinbytes': 2})
@@ -200,11 +202,13 @@ class indexfile(BaseProtogenClass):
             self.__field_items=LIST(**{'elementclass': indexentry, 'createdefault': True})
         self.__field_items.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_items=LIST(**{'elementclass': indexentry, 'createdefault': True})
         self.__field_items.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -278,11 +282,13 @@ class msg_record(BaseProtogenClass):
             self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx8000_79, 'length': 220})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_binary=UINT(**{'sizeinbytes': 1})
         self.__field_binary.readfrombuffer(buf)
         self.__field_unknown3=UINT(**{'sizeinbytes': 1})
@@ -433,11 +439,13 @@ class _gen_p_lgvx8000_79(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_byte.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_byte=UINT(**{'sizeinbytes': 1})
         self.__field_byte.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -506,11 +514,13 @@ class recipient_record(BaseProtogenClass):
         self.__field_unknown2.writetobuffer(buf)
         self.__field_unknown3.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_unknown1=DATA(**{'sizeinbytes': 33})
         self.__field_unknown1.readfrombuffer(buf)
         self.__field_number=STRING(**{'sizeinbytes': 49})
@@ -674,11 +684,13 @@ class sms_saved(BaseProtogenClass):
         if not self.outboxmsg:
             self.__field_inbox.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_outboxmsg=UINT(**{'sizeinbytes': 4})
         self.__field_outboxmsg.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 4})
@@ -813,11 +825,13 @@ class sms_out(BaseProtogenClass):
         self.__field_recipients.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_index=UINT(**{'sizeinbytes': 4})
         self.__field_index.readfrombuffer(buf)
         self.__field_locked=UINT(**{'sizeinbytes': 1})
@@ -1117,11 +1131,13 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
             self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx8000_117, 'length': 181})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx8000_117, 'length': 181})
         self.__field_msg.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1192,11 +1208,13 @@ class _gen_p_lgvx8000_117(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_byte.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_byte=UINT(**{'sizeinbytes': 1})
         self.__field_byte.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1294,11 +1312,13 @@ class sms_in(BaseProtogenClass):
         self.__field_msgs.writetobuffer(buf)
         self.__field_unknown9.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_unknown1=UNKNOWN(**{'sizeinbytes': 10})
         self.__field_unknown1.readfrombuffer(buf)
         self.__field_timesent=SMSDATE(**{'sizeinbytes': 6})
@@ -1791,11 +1811,13 @@ class _gen_p_lgvx8000_127(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_byte.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_byte=UINT(**{'sizeinbytes': 1})
         self.__field_byte.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1863,11 +1885,13 @@ class _gen_p_lgvx8000_145(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_msglength.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_msglength=UINT(**{'sizeinbytes': 1})
         self.__field_msglength.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()

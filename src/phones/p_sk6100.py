@@ -49,11 +49,13 @@ class wholebook(BaseProtogenClass):
         self.__field_filename.writetobuffer(buf)
         self.__field_pbentries.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbentries=LIST(**{'elementclass': pbentry, 'length': NUM_PBENTRIES})
@@ -139,11 +141,13 @@ class pbentry(BaseProtogenClass):
         self.__field_name.writetobuffer(buf)
         self.__field_unk2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_unk1=UNKNOWN(**{'sizeinbytes': 3})
@@ -319,11 +323,13 @@ class groups(BaseProtogenClass):
         self.__field_filename.writetobuffer(buf)
         self.__field_pbgroups.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbgroups=LIST(**{'elementclass': pbgroup, 'length': NUM_PBGROUPS})
@@ -406,11 +412,13 @@ class pbgroup(BaseProtogenClass):
         self.__field_unk3.writetobuffer(buf)
         self.__field_unk2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_group_id=UINT(**{'sizeinbytes': 1})
         self.__field_group_id.readfrombuffer(buf)
         self.__field_unk1=UNKNOWN(**{'sizeinbytes': 3})
@@ -538,11 +546,13 @@ class phones(BaseProtogenClass):
         self.__field_filename.writetobuffer(buf)
         self.__field_records.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_records=LIST(**{'elementclass': phone, 'length': NUM_PHONES})
@@ -625,11 +635,13 @@ class phone(BaseProtogenClass):
         self.__field_type.writetobuffer(buf)
         self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_others=UINT(**{'sizeinbytes': 4})

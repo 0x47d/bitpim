@@ -59,11 +59,13 @@ class phonenumber(BaseProtogenClass):
             self.__field_secret=CSVINT(**{'default': 0})
         self.__field_secret.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_number=CSVSTRING(**{'quotechar': None, 'default': ""})
         self.__field_number.readfrombuffer(buf)
         self.__field_secret=CSVINT(**{'default': 0})
@@ -155,11 +157,13 @@ class phonebookslotrequest(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -251,11 +255,13 @@ class phonebooksloterase(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -344,11 +350,13 @@ class phonebookslotupdateresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -418,11 +426,13 @@ class groupnamerequest(BaseProtogenClass):
             self.__field_gid=CSVINT(**{'terminator': None})
         self.__field_gid.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_gid=CSVINT(**{'terminator': None})
@@ -522,11 +532,13 @@ class groupnamesetrequest(BaseProtogenClass):
             self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_gid=CSVINT()
@@ -664,11 +676,13 @@ class groupnamesetrequest(BaseProtogenClass):
             self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_gid=CSVINT()
@@ -798,11 +812,13 @@ class eventrequest(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PISHR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -894,11 +910,13 @@ class eventresponse(BaseProtogenClass):
         self.__field_dunno.writetobuffer(buf)
         self.__field_eventname.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'constant': '#PISHR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -1082,11 +1100,13 @@ class eventupdaterequest(BaseProtogenClass):
         self.__field_alarm.writetobuffer(buf)
         self.__field_eventname.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PISHW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -1255,11 +1275,13 @@ class eventsloterase(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PISHW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -1348,11 +1370,13 @@ class eventupdateresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1422,11 +1446,13 @@ class todorequest(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PITDR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -1517,11 +1543,13 @@ class todoresponse(BaseProtogenClass):
         self.__field_status.writetobuffer(buf)
         self.__field_subject.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'default': '#PITDR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -1688,11 +1716,13 @@ class todoupdaterequest(BaseProtogenClass):
         self.__field_timestamp.writetobuffer(buf)
         self.__field_subject.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PITDW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -1842,11 +1872,13 @@ class todoerase(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PITDW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -1932,11 +1964,13 @@ class todoupdateresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2006,11 +2040,13 @@ class memorequest(BaseProtogenClass):
             self.__field_slot=CSVINT(**{'terminator': None})
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PIMMR='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -2099,11 +2135,13 @@ class memoresponse(BaseProtogenClass):
         self.__field_status.writetobuffer(buf)
         self.__field_text.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'default': '#PIMMR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -2236,11 +2274,13 @@ class memoupdaterequest(BaseProtogenClass):
         self.__field_timestamp.writetobuffer(buf)
         self.__field_text.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PIMMW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT()
@@ -2358,11 +2398,13 @@ class memoerase(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PIMMW='})
         self.__field_command.readfrombuffer(buf)
         self.__field_slot=CSVINT(**{'terminator': None})
@@ -2448,11 +2490,13 @@ class memoupdateresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2522,11 +2566,13 @@ class esnrequest(BaseProtogenClass):
             self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '+GSN'})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '+GSN'})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2593,11 +2639,13 @@ class esnresponse(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_esn.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'})
         self.__field_command.readfrombuffer(buf)
         self.__field_esn=CSVSTRING(**{'quotechar': None, 'terminator': None})

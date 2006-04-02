@@ -56,11 +56,13 @@ class SMSInboxFile(BaseProtogenClass):
         self.__field_callback.writetobuffer(buf)
         self.__field_unknown7.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_unknown=UNKNOWN(**{'sizeinbytes': 14})
         self.__field_unknown.readfrombuffer(buf)
         self.__field_sent=SMSDATE(**{'sizeinbytes': 6})
@@ -321,11 +323,13 @@ class pbheader(BaseProtogenClass):
         self.__field_sequence.writetobuffer(buf)
         self.__field_flag.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbmode=UINT(**{'sizeinbytes': 1, 'constant': 0xff})
         self.__field_pbmode.readfrombuffer(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1})
@@ -446,11 +450,13 @@ class pbstartsyncrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 250})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x00, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 250})
@@ -536,11 +542,13 @@ class pbstartsyncresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_unknown.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_unknown=UNKNOWN()
@@ -626,11 +634,13 @@ class pbendsyncrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x07, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
@@ -716,11 +726,13 @@ class pbendsyncresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_unknown.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_unknown=UNKNOWN()
@@ -807,11 +819,13 @@ class pbinforequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x15, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
@@ -906,11 +920,13 @@ class pbinforesponse(BaseProtogenClass):
         self.__field_esn.writetobuffer(buf)
         self.__field_phonesoftware.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 4})
@@ -1141,11 +1157,13 @@ class pbinitrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x11, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
@@ -1231,11 +1249,13 @@ class pbinitresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_dunno=UNKNOWN()
@@ -1321,11 +1341,13 @@ class pbreadentryrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x13, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
@@ -1417,11 +1439,13 @@ class pbnextentryrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x12, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 6})
@@ -1510,11 +1534,13 @@ class pbnextentryresponse(BaseProtogenClass):
         self.__field_data.writetobuffer(buf)
         self.__field_randomgunk.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_serial=UINT(**{'sizeinbytes': 4})
@@ -1651,11 +1677,13 @@ class pbdeleteentryrequest(BaseProtogenClass):
         self.__field_serial2.writetobuffer(buf)
         self.__field_entrynumber.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader(**{'command': 0x05, 'flag': 0x01})
         self.__field_header.readfrombuffer(buf)
         self.__field_serial1=UINT(**{'sizeinbytes': 4})
@@ -1789,11 +1817,13 @@ class pbdeleteentryresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_dunno=UNKNOWN()
@@ -1874,11 +1904,13 @@ class pbupdateentryresponse(BaseProtogenClass):
         self.__field_serial1.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_serial1=UINT(**{'sizeinbytes': 4})
@@ -1976,11 +2008,13 @@ class pbappendentryresponse(BaseProtogenClass):
         self.__field_dunno.writetobuffer(buf)
         self.__field_dunno2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=pbheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_newserial=UINT(**{'sizeinbytes': 4})

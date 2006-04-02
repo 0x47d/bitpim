@@ -61,11 +61,13 @@ class sanyofaheader(BaseProtogenClass):
         self.__field_fa.writetobuffer(buf)
         self.__field_faset.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_fa=UINT(**{'sizeinbytes': 2, 'constant': 0x00fa})
         self.__field_fa.readfrombuffer(buf)
         self.__field_faset=UINT(**{'sizeinbytes': 1})
@@ -152,11 +154,13 @@ class sanyoheader(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_packettype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_preamble=sanyofaheader(**{'faset': 0x02})
         self.__field_preamble.readfrombuffer(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1})
@@ -259,11 +263,13 @@ class sanyowriteheader(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_packettype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_preamble=sanyofaheader(**{'faset': 0x03})
         self.__field_preamble.readfrombuffer(buf)
         self.__field_command=UINT(**{'sizeinbytes': 1})
@@ -369,11 +375,13 @@ class study(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 1024})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
@@ -475,11 +483,13 @@ class studyresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_data.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_data=UNKNOWN()
@@ -566,11 +576,13 @@ class phonebookslotrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 512})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0c,                   'command': 0x28})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
@@ -679,11 +691,13 @@ class phonebookslotupdaterequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 569})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command': 0x28})
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=phonebookentry()
@@ -791,11 +805,13 @@ class phonenumber(BaseProtogenClass):
             self.__field_number=STRING(**{'sizeinbytes': 33, 'default': ""})
         self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_number_len=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_number_len.readfrombuffer(buf)
         self.__field_number=STRING(**{'sizeinbytes': 33, 'default': ""})
@@ -911,11 +927,13 @@ class phonebookentry(BaseProtogenClass):
             self.__field_secret=BOOL(**{'sizeinbytes': 1})
         self.__field_secret.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_slotdup=UINT(**{'sizeinbytes': 2})
@@ -1161,11 +1179,13 @@ class phonebookslotresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=phonebookentry()
@@ -1268,11 +1288,13 @@ class eventrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0c,		'command': 0x23})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -1405,11 +1427,13 @@ class evententry(BaseProtogenClass):
         self.__field_pad4.writetobuffer(buf)
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_flag=UINT(**{'sizeinbytes': 1})
@@ -1761,11 +1785,13 @@ class eventresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=evententry()
@@ -1868,11 +1894,13 @@ class eventupdaterequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 436})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x23})
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=evententry()
@@ -1981,11 +2009,13 @@ class callalarmrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0c,		'command': 0x24})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -2114,11 +2144,13 @@ class callalarmentry(BaseProtogenClass):
         self.__field_pad2.writetobuffer(buf)
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_flag=UINT(**{'sizeinbytes': 1})
@@ -2451,11 +2483,13 @@ class callalarmresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=callalarmentry()
@@ -2558,11 +2592,13 @@ class callalarmupdaterequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 417})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x24})
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=callalarmentry()
@@ -2672,11 +2708,13 @@ class bufferpartrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 1026})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0f})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 1026})
@@ -2779,11 +2817,13 @@ class bufferpartresponse(BaseProtogenClass):
         self.__field_data.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_data=DATA(**{'sizeinbytes': self.bufpartsize})
@@ -2902,11 +2942,13 @@ class bufferpartupdaterequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 2})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyowriteheader(**{'packettype': 0x0f})
         self.__field_header.readfrombuffer(buf)
         self.__field_data=DATA(**{'sizeinbytes': self.bufpartsize})
@@ -3038,11 +3080,13 @@ class calleridbuffer(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 666})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_numentries=UINT(**{'sizeinbytes': 2})
         self.__field_numentries.readfrombuffer(buf)
         self.__field_items=LIST(**{'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True})
@@ -3224,11 +3268,13 @@ class ringerpicbuffer(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 424})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_ringtones=LIST(**{'elementclass': _gen_p_sanyonewer_212, 'length': _NUMPBSLOTS})
         self.__field_ringtones.readfrombuffer(buf)
         self.__field_wallpapers=LIST(**{'elementclass': _gen_p_sanyonewer_214, 'length': _NUMPBSLOTS})
@@ -3410,11 +3456,13 @@ class _gen_p_sanyonewer_212(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 1})
         self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -3482,11 +3530,13 @@ class _gen_p_sanyonewer_214(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_wallpaper.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_wallpaper=UINT(**{'sizeinbytes': 1})
         self.__field_wallpaper.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -3598,11 +3648,13 @@ class pbsortbuffer(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 162})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyonewer_235, 'length': _NUMPBSLOTS, 'createdefault': True})
         self.__field_usedflags.readfrombuffer(buf)
         self.__field_slotsused=UINT(**{'sizeinbytes': 2})
@@ -3982,11 +4034,13 @@ class _gen_p_sanyonewer_235(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_used.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_used=UINT(**{'sizeinbytes': 1})
         self.__field_used.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4054,11 +4108,13 @@ class _gen_p_sanyonewer_241(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_firsttype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_firsttype=UINT(**{'sizeinbytes': 1})
         self.__field_firsttype.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4126,11 +4182,13 @@ class _gen_p_sanyonewer_243(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslot=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslot.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4198,11 +4256,13 @@ class _gen_p_sanyonewer_246(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslot=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslot.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4270,11 +4330,13 @@ class _gen_p_sanyonewer_248(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslotandtype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslotandtype=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslotandtype.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4342,11 +4404,13 @@ class _gen_p_sanyonewer_250(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslotandtype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslotandtype=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslotandtype.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4414,11 +4478,13 @@ class _gen_p_sanyonewer_252(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslot=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslot.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4486,11 +4552,13 @@ class _gen_p_sanyonewer_255(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_pbslot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_pbslot=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pbslot.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4569,11 +4637,13 @@ class wallpaperbuffer(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 548})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_wallpapers=LIST(**{'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo})
         self.__field_wallpapers.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 548})
@@ -4725,11 +4795,13 @@ class messagerequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0c,                   'command': 0xe1})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -4858,11 +4930,13 @@ class messageentry(BaseProtogenClass):
         self.__field_dunno7.writetobuffer(buf)
         self.__field_dunno8.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_read=UINT(**{'sizeinbytes': 1})
@@ -5375,11 +5449,13 @@ class messageresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=messageentry()
@@ -5482,11 +5558,13 @@ class foldernamerequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0b, 'command': 0xef})
         self.__field_header.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 1})
@@ -5597,11 +5675,13 @@ class foldernameentry(BaseProtogenClass):
         self.__field_pad.writetobuffer(buf)
         self.__field_keyword.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_index=UINT(**{'sizeinbytes': 1})
         self.__field_index.readfrombuffer(buf)
         self.__field_flag=UINT(**{'sizeinbytes': 1})
@@ -5781,11 +5861,13 @@ class foldernameresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=foldernameentry()
@@ -5888,11 +5970,13 @@ class todorequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader(**{'packettype': 0x0c,'command': 0x25})
         self.__field_header.readfrombuffer(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
@@ -6006,11 +6090,13 @@ class todoentry(BaseProtogenClass):
         self.__field_dunno.writetobuffer(buf)
         self.__field_order.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_flag=UINT(**{'sizeinbytes': 1})
@@ -6193,11 +6279,13 @@ class todoresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=todoentry()
@@ -6313,11 +6401,13 @@ class historyrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         if self.type==OUTGOING:
             self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command': 0x3d})
             self.__field_header.readfrombuffer(buf)
@@ -6497,11 +6587,13 @@ class historymiscrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 501})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         if self.type==OUTGOING:
             self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command': 0x60})
             self.__field_header.readfrombuffer(buf)
@@ -6667,11 +6759,13 @@ class historyentry(BaseProtogenClass):
         self.__field_dunno2.writetobuffer(buf)
         self.__field_dunno3.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 1})
@@ -6848,11 +6942,13 @@ class historyresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=historyentry()
@@ -6952,11 +7048,13 @@ class historymiscentry(BaseProtogenClass):
         self.__field_dunno3.writetobuffer(buf)
         self.__field_dunno4.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_pbslotandtype=UINT(**{'sizeinbytes': 2})
@@ -7101,11 +7199,13 @@ class historymiscresponse(BaseProtogenClass):
         self.__field_entry.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_header=sanyoheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=historymiscentry()

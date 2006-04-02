@@ -52,11 +52,13 @@ class echo_off(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': 'E0V1' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': 'E0V1' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -129,11 +131,13 @@ class esnrequest(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+GSN' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+GSN' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -200,11 +204,13 @@ class esnresponse(BaseProtogenClass):
         self.__field_command.writetobuffer(buf)
         self.__field_esn.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'})
         self.__field_command.readfrombuffer(buf)
         self.__field_esn=CSVSTRING(**{'quotechar': None, 'terminator': None})
@@ -290,11 +296,13 @@ class SIM_ID_Req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+CIMI' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CIMI' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -364,11 +372,13 @@ class single_value_resp(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_value.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_value=STRING(**{ 'terminator': None })
         self.__field_value.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -438,11 +448,13 @@ class manufacturer_id_req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMI'})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMI'})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -515,11 +527,13 @@ class model_id_req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMM' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMM' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -592,11 +606,13 @@ class firmware_version_req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMR' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologwrite(buf)
 
 
     def readfrombuffer(self,buf):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        if self._bufferstartoffset==0: self.autologread(buf)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMR' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
