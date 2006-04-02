@@ -39,7 +39,7 @@ class sanyomediaheader(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_fa
@@ -56,13 +56,13 @@ class sanyomediaheader(BaseProtogenClass):
             self.__field_pad=UINT(**{'sizeinbytes': 2, 'default': 0xffff})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_fa=UINT(**{'sizeinbytes': 2, 'constant': 0xfa})
         self.__field_fa.readfrombuffer(buf)
         self.__field_faset=UINT(**{'sizeinbytes': 1, 'default': 0x09})
@@ -177,7 +177,7 @@ class sanyochangedir(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -190,13 +190,13 @@ class sanyochangedir(BaseProtogenClass):
         self.__field_pad.writetobuffer(buf)
         self.__field_dirindex.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0x71})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 170})
@@ -292,7 +292,7 @@ class sanyochangedirresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
@@ -303,13 +303,13 @@ class sanyochangedirresponse(BaseProtogenClass):
         self.__field_status.writetobuffer(buf)
         self.__field_dirindex.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 169})
@@ -418,7 +418,7 @@ class sanyonumfilesrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -430,13 +430,13 @@ class sanyonumfilesrequest(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 172})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0x72})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 172})
@@ -516,7 +516,7 @@ class sanyonumfilesresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
@@ -530,13 +530,13 @@ class sanyonumfilesresponse(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_pad2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 165})
@@ -648,7 +648,7 @@ class sanyomediafilenamerequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -665,13 +665,13 @@ class sanyomediafilenamerequest(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 10})
         self.__field_pad2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0x73})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 161})
@@ -786,7 +786,7 @@ class sanyomediafilenameresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
@@ -801,13 +801,13 @@ class sanyomediafilenameresponse(BaseProtogenClass):
         self.__field_num4.writetobuffer(buf)
         self.__field_pad5.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UINT(**{'sizeinbytes': 1})
@@ -1025,7 +1025,7 @@ class sanyomediafragmentrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1042,13 +1042,13 @@ class sanyomediafragmentrequest(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 16})
         self.__field_pad2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0x74})
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 155})
@@ -1163,7 +1163,7 @@ class sanyomediafragmentresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
@@ -1175,13 +1175,13 @@ class sanyomediafragmentresponse(BaseProtogenClass):
         self.__field_pad3.writetobuffer(buf)
         self.__field_more.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 1})
@@ -1351,7 +1351,7 @@ class sanyomediafilegragment(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1372,13 +1372,13 @@ class sanyomediafilegragment(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 21})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_word=UINT(**{'sizeinbytes': 2, 'constant': 0})
@@ -1512,19 +1512,19 @@ class sanyomediaresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
         self.__field_UNKNOWN.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_UNKNOWN=UNKNOWN()
@@ -1598,7 +1598,7 @@ class sanyosendfilename(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1618,13 +1618,13 @@ class sanyosendfilename(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 21})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0xffa1, 'pad': 0, 'faset': 0x05})
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1, 'constant': 0x96})
@@ -1742,7 +1742,7 @@ class sanyosendfilesize(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1763,13 +1763,13 @@ class sanyosendfilesize(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 168})
         self.__field_pad2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0xffc1, 'pad': 0, 'faset': 0x05})
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1, 'constant': 0x96})
@@ -1903,7 +1903,7 @@ class sanyosendfilefragment(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1920,13 +1920,13 @@ class sanyosendfilefragment(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 21})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'pad': 0, 'faset': 0x05})
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1, 'constant': 0x96})
@@ -2041,7 +2041,7 @@ class sanyosendfileterminator(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2057,13 +2057,13 @@ class sanyosendfileterminator(BaseProtogenClass):
             self.__field_pad=UNKNOWN(**{'sizeinbytes': 171})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader(**{'command': 0xffe1, 'pad': 0, 'faset': 0x05})
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1, 'constant': 0x96})
@@ -2162,7 +2162,7 @@ class sanyosendfileresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2172,13 +2172,13 @@ class sanyosendfileresponse(BaseProtogenClass):
         self.__field_payloadsize.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=sanyomediaheader()
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1})
@@ -2271,7 +2271,7 @@ class sanyomediathingyrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_fa
@@ -2284,13 +2284,13 @@ class sanyomediathingyrequest(BaseProtogenClass):
             self.__field_value=UINT(**{'sizeinbytes': 2, 'default': 0x0})
         self.__field_value.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_fa=UINT(**{'sizeinbytes': 2, 'constant': 0xfa})
         self.__field_fa.readfrombuffer(buf)
         self.__field_faset=UINT(**{'sizeinbytes': 1})
@@ -2386,20 +2386,20 @@ class sanyomediathingyresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_fa.writetobuffer(buf)
         self.__field_faset.writetobuffer(buf)
         self.__field_value.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_fa=UINT(**{'sizeinbytes': 2})
         self.__field_fa.readfrombuffer(buf)
         self.__field_faset=UINT(**{'sizeinbytes': 1})

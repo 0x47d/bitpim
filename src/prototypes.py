@@ -147,7 +147,7 @@ class BaseProtogenClass(object):
         self._update(args, kwargs)
 
     # help with logging
-    def autologwrite(self, buf):
+    def autologwrite(self, buf, logtitle="<written data>"):
         f=sys._getframe() # my frame
         f=f.f_back # my caller
         if f:
@@ -156,11 +156,11 @@ class BaseProtogenClass(object):
                 caller=f.f_locals.get("self", None)
                 if caller:
                     try:
-                        caller.logdata("<written data>", buf.getvalue(), self)
+                        caller.logdata(logtitle, buf.getvalue(), self)
                     except:
                         pass
 
-    def autologread(self, buf):
+    def autologread(self, buf, logtitle="<read data>"):
         f=sys._getframe() # my frame
         f=f.f_back # my caller
         if f:
@@ -169,7 +169,7 @@ class BaseProtogenClass(object):
                 caller=f.f_locals.get("self", None)
                 if caller:
                     try:
-                        caller.logdata("<read data>", buf.getdata(), self)
+                        caller.logdata(logtitle, buf.getdata(), self)
                     except:
                         pass
 

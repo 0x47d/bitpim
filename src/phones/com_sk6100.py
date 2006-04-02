@@ -29,8 +29,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def getfundamentals(self, results):
         grbuf = prototypes.buffer(self.getfilecontents('SKY/PBK/group.pbk'))
         groups = self.protocolclass.groups()
-        groups.readfrombuffer(grbuf)
-        self.logdata("Groups read", grbuf.getdata(), groups)
+        groups.readfrombuffer(grbuf, logtitle="Groups read")
 		
         # decode caharachters to unicode - should use some global setting,
         # hard-coding is bad for you :-)
@@ -54,8 +53,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         pbook={}
         bookbuf = prototypes.buffer(self.getfilecontents('SKY/PBK/book.pbk'))
         entries = self.protocolclass.wholebook()
-        entries.readfrombuffer(bookbuf)
-        self.logdata("Names read", bookbuf.getdata(), entries)
+        entries.readfrombuffer(bookbuf, logtitle="Names read")
 		
         for entry in entries.pbentries:
             # Ignore deleted records

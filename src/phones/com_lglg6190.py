@@ -146,8 +146,7 @@ class Phone(com_lgvx4400.Phone):
             # file may not exist
             return index
         g=self.protocolclass.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Index file %s read" % (indexfile,))
         for i in g.items:
             if i.index!=0xffff and len(i.name):
                 # read the .desc file
@@ -157,8 +156,7 @@ class Phone(com_lgvx4400.Phone):
                     self.log("No .desc file in "+location+"/"+i.name+" - ignoring directory")
                     continue
                 desc=self.protocolclass.mediadesc()
-                desc.readfrombuffer(buf)
-                self.logdata(".desc file %s/.desc read" % (location+"/"+i.name,), buf.getdata(), desc)
+                desc.readfrombuffer(buf, logtitle=".desc file %s/.desc read" % (location+"/"+i.name,))
                 filename=self._createnamewithmimetype(i.name, desc.mimetype)
                 if not getmedia:
                     index[i.index]=filename

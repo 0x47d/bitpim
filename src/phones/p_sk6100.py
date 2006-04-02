@@ -43,19 +43,19 @@ class wholebook(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_filename.writetobuffer(buf)
         self.__field_pbentries.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbentries=LIST(**{'elementclass': pbentry, 'length': NUM_PBENTRIES})
@@ -129,7 +129,7 @@ class pbentry(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_slot.writetobuffer(buf)
@@ -141,13 +141,13 @@ class pbentry(BaseProtogenClass):
         self.__field_name.writetobuffer(buf)
         self.__field_unk2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
         self.__field_unk1=UNKNOWN(**{'sizeinbytes': 3})
@@ -317,19 +317,19 @@ class groups(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_filename.writetobuffer(buf)
         self.__field_pbgroups.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbgroups=LIST(**{'elementclass': pbgroup, 'length': NUM_PBGROUPS})
@@ -403,7 +403,7 @@ class pbgroup(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_group_id.writetobuffer(buf)
@@ -412,13 +412,13 @@ class pbgroup(BaseProtogenClass):
         self.__field_unk3.writetobuffer(buf)
         self.__field_unk2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_group_id=UINT(**{'sizeinbytes': 1})
         self.__field_group_id.readfrombuffer(buf)
         self.__field_unk1=UNKNOWN(**{'sizeinbytes': 3})
@@ -540,19 +540,19 @@ class phones(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_filename.writetobuffer(buf)
         self.__field_records.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_filename=STRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_records=LIST(**{'elementclass': phone, 'length': NUM_PHONES})
@@ -626,7 +626,7 @@ class phone(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_slot.writetobuffer(buf)
@@ -635,13 +635,13 @@ class phone(BaseProtogenClass):
         self.__field_type.writetobuffer(buf)
         self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_others=UINT(**{'sizeinbytes': 4})

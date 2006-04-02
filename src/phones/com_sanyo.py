@@ -181,18 +181,16 @@ class SanyoPhonebook:
         data=data.getvalue()
         self.log("expected size "+`buffersize`+"  actual "+`len(data)`)
         assert buffersize==len(data)
-        #self.logdata("Sanyo buffer response", data, responseclass)
         buffer=prototypes.buffer(data)
-        bufres.readfrombuffer(buffer)
+        bufres.readfrombuffer(buffer, logtitle="Sanyo buffer response")
         return bufres
 
     def sendsanyobuffer(self, bufreq):
         comment=bufreq.comment
         buffer=prototypes.buffer()
-        bufreq.writetobuffer(buffer)
+        bufreq.writetobuffer(buffer, logtitle="Send sanyo buffer")
         buffer=buffer.getvalue()
         self.log("Writing "+comment+" "+` len(buffer) `+" bytes")
-        #self.logdata("Write "+comment, buffer, bufreq)
         desc="Writing "+comment
         req=self.protocolclass.bufferpartupdaterequest()
         bufpartsize=req.bufpartsize
@@ -221,9 +219,8 @@ class SanyoPhonebook:
             self.setmode(self.MODEPHONEBOOK)
         buffer=prototypes.buffer()
 
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="Sanyo phonebook request")
         data=buffer.getvalue()
-        self.logdata("Sanyo phonebook request", data, request)
         firsttwo=data[:2]
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         isendretry=numsendretry
@@ -292,12 +289,9 @@ class SanyoPhonebook:
             
         data=trydata
 
-        # log it
-        self.logdata("sanyo phonebook response", data, responseclass)
-
         # parse data
         buffer=prototypes.buffer(data)
-        res.readfrombuffer(buffer)
+        res.readfrombuffer(buffer, logtitle="sanyo phonebook response")
         return res
 
     def getfundamentals(self, results):

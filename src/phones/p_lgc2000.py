@@ -144,7 +144,7 @@ class calendar_read_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -160,13 +160,13 @@ class calendar_read_req(BaseProtogenClass):
             self.__field_end_index=CSVINT(**{ 'terminator': None })
         self.__field_end_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
@@ -265,7 +265,7 @@ class calendar_read_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -276,13 +276,13 @@ class calendar_read_resp(BaseProtogenClass):
         self.__field_time.writetobuffer(buf)
         self.__field_description.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'constant': '+CXDR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -440,7 +440,7 @@ class calendar_write_check_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -448,13 +448,13 @@ class calendar_write_check_req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -515,19 +515,19 @@ class calendar_write_check_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CXDW:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
@@ -601,7 +601,7 @@ class calendar_write_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -633,13 +633,13 @@ class calendar_write_req(BaseProtogenClass):
             self.__field_description=CSVSTRING(**{ 'terminator': None,                  'maxsizeinbytes': CAL_DESC_LEN,                  'raiseontruncate': False })
         self.__field_description.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -814,7 +814,7 @@ class calendar_del_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -826,13 +826,13 @@ class calendar_del_req(BaseProtogenClass):
             self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
@@ -916,7 +916,7 @@ class media_selector_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -924,13 +924,13 @@ class media_selector_req(BaseProtogenClass):
             self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS?' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS?' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -991,19 +991,19 @@ class media_selector_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
         self.__field_media_type.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+DDLS:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_media_type=CSVINT(**{ 'terminator': None })
@@ -1077,7 +1077,7 @@ class media_selector_set(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -1089,13 +1089,13 @@ class media_selector_set(BaseProtogenClass):
             self.__field_media_type=CSVINT(**{ 'terminator': None })
         self.__field_media_type.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_media_type=CSVINT(**{ 'terminator': None })
@@ -1175,7 +1175,7 @@ class media_list_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -1191,13 +1191,13 @@ class media_list_req(BaseProtogenClass):
             self.__field_end_index=CSVINT(**{ 'terminator': None })
         self.__field_end_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
@@ -1296,7 +1296,7 @@ class media_list_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -1305,13 +1305,13 @@ class media_list_resp(BaseProtogenClass):
         self.__field_media_name.writetobuffer(buf)
         self.__field_size.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'constant': '+DDLR:'})
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -1433,7 +1433,7 @@ class del_media_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -1445,13 +1445,13 @@ class del_media_req(BaseProtogenClass):
             self.__field_file_name=CSVSTRING(**{ 'terminator': None })
         self.__field_file_name.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_file_name=CSVSTRING(**{ 'terminator': None })
@@ -1531,7 +1531,7 @@ class write_media_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -1569,13 +1569,13 @@ class write_media_req(BaseProtogenClass):
             self.__field_dunno4=CSVINT(**{ 'default': 0, 'terminator': ord('\r') })
         self.__field_dunno4.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -1801,7 +1801,7 @@ class list_group_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -1817,13 +1817,13 @@ class list_group_req(BaseProtogenClass):
             self.__field_end_index=CSVINT(**{ 'terminator': None })
         self.__field_end_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPGR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
@@ -1922,20 +1922,20 @@ class list_group_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self.__field_group_name.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPGR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -2025,7 +2025,7 @@ class charset_set_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -2037,13 +2037,13 @@ class charset_set_req(BaseProtogenClass):
             self.__field_charset=CSVSTRING(**{ 'terminator': None })
         self.__field_charset.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CSCS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_charset=CSVSTRING(**{ 'terminator': None })
@@ -2123,7 +2123,7 @@ class select_storage_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -2135,13 +2135,13 @@ class select_storage_req(BaseProtogenClass):
             self.__field_storage=CSVSTRING(**{ 'terminator': None })
         self.__field_storage.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_storage=CSVSTRING(**{ 'terminator': None })
@@ -2221,7 +2221,7 @@ class select_storage_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -2230,13 +2230,13 @@ class select_storage_resp(BaseProtogenClass):
         self.__field_total_slots_count.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBS:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_storage=CSVSTRING()
@@ -2358,7 +2358,7 @@ class read_phonebook_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -2374,13 +2374,13 @@ class read_phonebook_req(BaseProtogenClass):
             self.__field_end_index=CSVINT(**{ 'terminator': None })
         self.__field_end_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
@@ -2481,7 +2481,7 @@ class read_phonebook_resp(BaseProtogenClass):
             self.__field_sim=BOOL(**{ 'default': False })
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -2497,13 +2497,13 @@ class read_phonebook_resp(BaseProtogenClass):
         self.__field_email.writetobuffer(buf)
         self.__field_memo.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -2764,7 +2764,7 @@ class read_sim_phonebook_resp(BaseProtogenClass):
             self.__field_sim=BOOL(**{ 'default': True })
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -2774,13 +2774,13 @@ class read_sim_phonebook_resp(BaseProtogenClass):
         self.__field_mobile_type.writetobuffer(buf)
         self.__field_name.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -3003,7 +3003,7 @@ class del_phonebook_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3015,13 +3015,13 @@ class del_phonebook_req(BaseProtogenClass):
             self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
@@ -3101,19 +3101,19 @@ class update_phonebook_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBW:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
@@ -3187,7 +3187,7 @@ class write_phonebook_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3235,13 +3235,13 @@ class write_phonebook_req(BaseProtogenClass):
             self.__field_memo=CSVSTRING(**{ 'terminator': None, 'default': '',                  'maxsizeinbytes': PB_MEMO_LEN,                  'raiseontruncate': False })
         self.__field_memo.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_group=CSVINT()
@@ -3492,7 +3492,7 @@ class write_sim_phonebook_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3516,13 +3516,13 @@ class write_sim_phonebook_req(BaseProtogenClass):
             self.__field_name=CSVSTRING(**{ 'terminator': None,                  'maxsizeinbytes': PB_SIM_NAME_LEN,                  'raiseontruncate': False })
         self.__field_name.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_group=CSVINT(**{ 'default': 0 })
@@ -3659,7 +3659,7 @@ class memo_read_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3675,13 +3675,13 @@ class memo_read_req(BaseProtogenClass):
             self.__field_end_index=CSVINT(**{ 'terminator': None,               'default': MEMO_MAX_INDEX })
         self.__field_end_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT(**{ 'default': MEMO_MIN_INDEX })
@@ -3780,20 +3780,20 @@ class memo_read_resp(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self.__field_text.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '),               'constant': MEMO_READ_CMD+':' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
@@ -3883,7 +3883,7 @@ class memo_write_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3895,13 +3895,13 @@ class memo_write_req(BaseProtogenClass):
             self.__field_text=CSVSTRING(**{ 'terminator': None })
         self.__field_text.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_text=CSVSTRING(**{ 'terminator': None })
@@ -3981,7 +3981,7 @@ class memo_del_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -3993,13 +3993,13 @@ class memo_del_req(BaseProtogenClass):
             self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
@@ -4079,7 +4079,7 @@ class sms_format_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -4091,13 +4091,13 @@ class sms_format_req(BaseProtogenClass):
             self.__field_format=CSVINT(**{ 'terminator': None,               'default': SMS_FORMAT_TEXT })
         self.__field_format.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_format=CSVINT(**{ 'terminator': None,               'default': SMS_FORMAT_TEXT })
@@ -4177,7 +4177,7 @@ class sms_memory_select_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -4189,13 +4189,13 @@ class sms_memory_select_req(BaseProtogenClass):
             self.__field_list_memory=CSVSTRING(**{ 'terminator': None })
         self.__field_list_memory.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_list_memory=CSVSTRING(**{ 'terminator': None })
@@ -4275,7 +4275,7 @@ class sms_msg_list_req(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
@@ -4287,13 +4287,13 @@ class sms_msg_list_req(BaseProtogenClass):
             self.__field_msg_type=CSVSTRING(**{ 'terminator': None,                  'default': SMS_MSG_ALL })
         self.__field_msg_type.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_msg_type=CSVSTRING(**{ 'terminator': None,                  'default': SMS_MSG_ALL })
@@ -4373,7 +4373,7 @@ class sms_msg_list_header(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_command.writetobuffer(buf)
@@ -4385,13 +4385,13 @@ class sms_msg_list_header(BaseProtogenClass):
         self.__field_address_type.writetobuffer(buf)
         self.__field_data_len.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=STRING(**{ 'terminator': ord(' '),               'constant': SMS_MSG_LIST_CMD+':' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()

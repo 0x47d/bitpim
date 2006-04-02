@@ -146,8 +146,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         self.log("Reading group information")
         buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
         g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf)
-        self.logdata("Groups read", buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Groups read")
         groups={}
         for i in range(len(g.groups)):
             if len(g.groups[i].name): # sometimes have zero length names
@@ -168,8 +167,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
-        g.writetobuffer(buffer)
-        self.logdata("New group file", buffer.getvalue(), g)
+        g.writetobuffer(buffer, "New group file")
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def getmemo(self, result):
@@ -218,8 +216,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         try:
             buf=prototypes.buffer(self.getfilecontents(self.calendarexceptionlocation))
             ex=self.protocolclass.scheduleexceptionfile()
-            ex.readfrombuffer(buf)
-            self.logdata("Calendar exceptions", buf.getdata(), ex)
+            ex.readfrombuffer(buf, logtitle="Calendar exceptions")
             exceptions={}
             for i in ex.items:
                 try:
@@ -236,8 +233,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 # file is empty, and hence same as non-existent
                 raise com_brew.BrewNoSuchFileException()
             sc=self.protocolclass.schedulefile()
-            self.logdata("Calendar", buf.getdata(), sc)
-            sc.readfrombuffer(buf)
+            sc.readfrombuffer(buf, logtitle="Calendar")
             for event in sc.events:
                 # the vx8100 has a bad entry when the calender is empty
                 # stop processing the calender when we hit this record
@@ -369,11 +365,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             eventsf.events.append(data)
 
         buf=prototypes.buffer()
-        eventsf.writetobuffer(buf)
+        eventsf.writetobuffer(buf, logtitle="New Calendar")
         # We check the existing calender as changes require a reboot for the alarms
         # to work properly, also no point writing the file if it is not changing
         if buf.getvalue()!=self.getfilecontents(self.calendarlocation):
-            self.logdata("Writing calendar", buf.getvalue(), eventsf)
             self.writefile(self.calendarlocation, buf.getvalue())
             if contains_alarms or self.calenderrequiresreboot:
                 self.log("Your phone has to be rebooted due to the calendar changing")
@@ -382,8 +377,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             self.log("Phone calendar unchanged, no update required")
 
         buf=prototypes.buffer()
-        exceptionsf.writetobuffer(buf)
-        self.logdata("Writing calendar exceptions", buf.getvalue(), exceptionsf)
+        exceptionsf.writetobuffer(buf, "Writing calendar exceptions")
         self.writefile(self.calendarexceptionlocation, buf.getvalue())
 
         # fix passed in dict
@@ -592,8 +586,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             if not self._is_rs_file(idx):
                 _file_size+=_fs_size
         buf=prototypes.buffer()
-        ifile.writetobuffer(buf)
-        self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+        ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
         self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(_res_list)`+" entries.")
         self.writefile(indexfile, buf.getvalue())
         # writing the size file

@@ -154,9 +154,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
         buffer=prototypes.buffer()
         
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="Samsung phonebook request")
         data=buffer.getvalue()
-        self.logdata("Samsung phonebook request", data, request)
 
         try:
             response_lines=self.comm.sendatcommand(data, ignoreerror=ignoreerror)
@@ -171,10 +170,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for line in response_lines:
             if fixup:
                 line=fixup(line)
-            self.logdata("Samsung phonebook response", line, responseclass)
             res=responseclass()
             buffer=prototypes.buffer(line)
-            res.readfrombuffer(buffer)
+            res.readfrombuffer(buffer, logtitle="Samsung phonebook response")
             reslist.append(res)
 
         return reslist

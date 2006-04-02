@@ -96,8 +96,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self.log("Reading group information")
         buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
         g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf)
-        self.logdata("Groups read", buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Groups read")
         groups={}
         for i in range(len(g.groups)):
             if len(g.groups[i].name): # sometimes have zero length names
@@ -126,8 +125,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         if count!=0:
             # don't create the file if there are no entries 
             buf=prototypes.buffer()
-            sf.writetobuffer(buf)
-            self.logdata("Writing calendar", buf.getvalue(), sf)
+            sf.writetobuffer(buf, "Writing calendar")
             self.writefile(self.protocolclass.SMS_CANNED_FILENAME, buf.getvalue())
         return
 
@@ -175,8 +173,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         try:
             buf=prototypes.buffer(self.getfilecontents("sms/mediacan000.dat"))
             sf=self.protocolclass.sms_quick_text()
-            sf.readfrombuffer(buf)
-            self.logdata("SMS quicktext file sms/mediacan000.dat", buf.getdata(), sf)
+            sf.readfrombuffer(buf, logtitle="SMS quicktext file sms/mediacan000.dat")
             for rec in sf.msgs:
                 if rec.msg!="":
                     quicks.append({ 'text': rec.msg, 'type': sms.CannedMsgEntry.user_type })
@@ -291,8 +288,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         try:
             buf=prototypes.buffer(self.getfilecontents(fname))
             ch=self.protocolclass.callhistory()
-            ch.readfrombuffer(buf)
-            self.logdata("Call History", buf.getdata(), ch)
+            ch.readfrombuffer(buf, logtitle="Call History")
             for call_idx in range(ch.numcalls):
                 call=ch.calls[call_idx]
                 if call.number=='' and call.name=='':
@@ -414,8 +410,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
-        g.writetobuffer(buffer)
-        self.logdata("New group file", buffer.getvalue(), g)
+        g.writetobuffer(buffer, "New group file")
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def savephonebook(self, data):
@@ -609,12 +604,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     sd.number=newspeeds[i][1]
                 req.speeddials.append(sd)
             buffer=prototypes.buffer()
-            req.writetobuffer(buffer)
+            req.writetobuffer(buffer, logtitle="New speed dials")
 
             # We check the existing speed dial file as changes require a reboot
             self.log("Checking existing speed dials")
             if buffer.getvalue()!=self.getfilecontents("pim/pbspeed.dat"):
-                self.logdata("New speed dial file", buffer.getvalue(), req)
                 self.writefile("pim/pbspeed.dat", buffer.getvalue())
                 self.log("Your phone has to be rebooted due to the speed dials changing")
                 self.progress(progressmax, progressmax, "Rebooting phone")
@@ -912,8 +906,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             buf=prototypes.buffer(self.getfilecontents(
                 self.protocolclass.cal_exception_file_name))
             ex=self.protocolclass.scheduleexceptionfile()
-            ex.readfrombuffer(buf)
-            self.logdata("Calendar exceptions", buf.getdata(), ex)
+            ex.readfrombuffer(buf, logtitle="Calendar exceptions")
             exceptions={}
             for i in ex.items:
                 exceptions.setdefault(i.pos, []).append( (i.year,i.month,i.day) )
@@ -928,8 +921,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 # file is empty, and hence same as non-existent
                 raise com_brew.BrewNoSuchFileException()
             sc=self.protocolclass.schedulefile()
-            self.logdata("Calendar", buf.getdata(), sc)
-            sc.readfrombuffer(buf)
+            sc.readfrombuffer(buf, logtitle="Calendar")
             res=self.get_cal(sc, exceptions, result.get('ringtone-index', {}))
         except com_brew.BrewNoSuchFileException:
             res={}

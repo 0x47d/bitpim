@@ -109,8 +109,7 @@ class Phone(com_lgvx4400.Phone):
                 # file may not exist
                 return index
             g=self.protocolclass.indexfile()
-            g.readfrombuffer(buf)
-            self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+            g.readfrombuffer(buf, logtitle="Read index file "+indexfile)
             for i in g.items:
                 if i.index!=0xffff:
                     ifile=re.sub("\.mid|\.MID", "", i.name)
@@ -315,7 +314,7 @@ class Phone(com_lgvx4400.Phone):
             while len(ifile.items)<maxentries:
                 ifile.items.append(self.protocolclass.indexentry())
             buffer=prototypes.buffer()
-            ifile.writetobuffer(buffer)
+            ifile.writetobuffer(buffer, autolog=False)
             if type!="images":
                 # The images index file on the LG-VX3200 is a noop - don't write
                 self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)

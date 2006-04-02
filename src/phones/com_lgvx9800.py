@@ -147,8 +147,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         self.log("Reading group information")
         buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
         g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf)
-        self.logdata("Groups read", buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Groups read")
         groups={}
         for i in range(len(g.groups)):
             if len(g.groups[i].name): # sometimes have zero length names
@@ -254,8 +253,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             if not self._is_rs_file(idx):
                 _file_size+=_fs_size
         buf=prototypes.buffer()
-        ifile.writetobuffer(buf)
-        self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+        ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
         self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(_res_list)`+" entries.")
         self.writefile(indexfile, buf.getvalue())
         # writing the size file

@@ -335,9 +335,8 @@ class RealBrewProtocol:
         self.log("Attempting to put phone in modem mode")
         req=p_brew.setmodemmoderequest()
         buffer=prototypes.buffer()
-        req.writetobuffer(buffer)
+        req.writetobuffer(buffer, logtitle="modem mode request")
         data=buffer.getvalue()
-        self.logdata("brew request", data, req)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         self.comm.write(data)
         # Response could be text or a packet
@@ -675,9 +674,8 @@ class RealBrewProtocol:
         if callsetmode:
             self.setmode(self.MODEBREW)
         buffer=prototypes.buffer()
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="sendbrewcommand")
         data=buffer.getvalue()
-        self.logdata("brew request", data, request)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         firsttwo=data[:2]
         try:
@@ -766,7 +764,7 @@ class RealBrewProtocol:
         buffer=prototypes.buffer(data)
         res=responseclass()
         try:
-            res.readfrombuffer(buffer)
+            res.readfrombuffer(buffer, autolog=False)
         except:
             # we had an exception so log the data even if protocol log
             # view is not available

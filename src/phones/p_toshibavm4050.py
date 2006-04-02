@@ -49,7 +49,7 @@ class pbnumber(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_valid
@@ -89,13 +89,13 @@ class pbnumber(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 48})
         self.__field_pad2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_valid=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_valid.readfrombuffer(buf)
         self.__field_type=UINT(**{'sizeinbytes': 1, 'default': 0})
@@ -308,7 +308,7 @@ class pbemail(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_valid
@@ -336,13 +336,13 @@ class pbemail(BaseProtogenClass):
             self.__field_email=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_email.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_valid=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_valid.readfrombuffer(buf)
         self.__field_dunno1=UINT(**{'sizeinbytes': 1, 'default': 1})
@@ -498,7 +498,7 @@ class pbentry(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_slot.writetobuffer(buf)
@@ -532,13 +532,13 @@ class pbentry(BaseProtogenClass):
             self.__field_pad5=UNKNOWN(**{'sizeinbytes': 81})
         self.__field_pad5.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_slot=UINT(**{'sizeinbytes': 2})
         self.__field_slot.readfrombuffer(buf)
         self.__field_pad2=UINT(**{'sizeinbytes': 2, 'default': 0x0101})
@@ -745,7 +745,7 @@ class setphoneattribrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_cmd
@@ -769,13 +769,13 @@ class setphoneattribrequest(BaseProtogenClass):
             self.__field_data=UINT(**{'sizeinbytes': 129, 'constant': 0x00})
         self.__field_data.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0x27})
         self.__field_cmd.readfrombuffer(buf)
         self.__field_cmd2=UINT(**{'sizeinbytes': 1, 'constant': 0xF0})
@@ -912,7 +912,7 @@ class setphoneattribresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_cmd
@@ -933,13 +933,13 @@ class setphoneattribresponse(BaseProtogenClass):
             self.__field_pad=DATA()
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0x27})
         self.__field_cmd.readfrombuffer(buf)
         self.__field_cmd2=UINT(**{'sizeinbytes': 1, 'constant': 0xF0})
@@ -1074,7 +1074,7 @@ class tosh_swapheaderrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_cmd
@@ -1087,13 +1087,13 @@ class tosh_swapheaderrequest(BaseProtogenClass):
         self.__field_cmd2.writetobuffer(buf)
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0xF1})
         self.__field_cmd.readfrombuffer(buf)
         self.__field_cmd2=UINT(**{'sizeinbytes': 1, 'constant': 0x0F})
@@ -1190,7 +1190,7 @@ class tosh_swapheaderresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_cmd
@@ -1202,13 +1202,13 @@ class tosh_swapheaderresponse(BaseProtogenClass):
             self.__field_cmd2=UINT(**{'sizeinbytes': 1, 'constant': 0x0F})
         self.__field_cmd2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0xF1})
         self.__field_cmd.readfrombuffer(buf)
         self.__field_cmd2=UINT(**{'sizeinbytes': 1, 'constant': 0x0F})
@@ -1291,7 +1291,7 @@ class tosh_getpbentryrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1316,13 +1316,13 @@ class tosh_getpbentryrequest(BaseProtogenClass):
             self.__field_pad=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 2, 'constant': 0x03})
@@ -1475,7 +1475,7 @@ class tosh_getpbentryresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1496,13 +1496,13 @@ class tosh_getpbentryresponse(BaseProtogenClass):
         self.__field_data_type.writetobuffer(buf)
         self.__field_swap_ok.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0x02})
@@ -1639,7 +1639,7 @@ class tosh_setpbentryrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1664,13 +1664,13 @@ class tosh_setpbentryrequest(BaseProtogenClass):
             self.__field_pad=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 2, 'constant': 0x03})
@@ -1823,7 +1823,7 @@ class tosh_setpbentryresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1836,13 +1836,13 @@ class tosh_setpbentryresponse(BaseProtogenClass):
         self.__field_cmd.writetobuffer(buf)
         self.__field_swap_ok.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0x02})
@@ -1943,7 +1943,7 @@ class tosh_modifypbentryrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -1968,13 +1968,13 @@ class tosh_modifypbentryrequest(BaseProtogenClass):
             self.__field_pad=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 2, 'constant': 0x03})
@@ -2127,7 +2127,7 @@ class tosh_modifypbentryresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2140,13 +2140,13 @@ class tosh_modifypbentryresponse(BaseProtogenClass):
         self.__field_cmd.writetobuffer(buf)
         self.__field_swap_ok.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd=UINT(**{'sizeinbytes': 1, 'constant': 0x02})
@@ -2246,7 +2246,7 @@ class tosh_enableswapdatarequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2254,13 +2254,13 @@ class tosh_enableswapdatarequest(BaseProtogenClass):
             self.__field_header=tosh_swapheaderrequest(**{'command': 0x00})
         self.__field_header.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x00})
         self.__field_header.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2321,7 +2321,7 @@ class tosh_enableswapdataresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2337,13 +2337,13 @@ class tosh_enableswapdataresponse(BaseProtogenClass):
             self.__field_cmd4=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_cmd4.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd3=UINT(**{'sizeinbytes': 1, 'constant': 0x00})
@@ -2446,7 +2446,7 @@ class tosh_disableswapdatarequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2454,13 +2454,13 @@ class tosh_disableswapdatarequest(BaseProtogenClass):
             self.__field_header=tosh_swapheaderrequest(**{'command': 0x01})
         self.__field_header.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x01})
         self.__field_header.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2521,7 +2521,7 @@ class tosh_disableswapdataresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2537,13 +2537,13 @@ class tosh_disableswapdataresponse(BaseProtogenClass):
             self.__field_cmd4=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_cmd4.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_cmd3=UINT(**{'sizeinbytes': 1, 'constant': 0x01})
@@ -2642,7 +2642,7 @@ class tosh_getunknownrecordrequest(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2664,13 +2664,13 @@ class tosh_getunknownrecordrequest(BaseProtogenClass):
             self.__field_pad=UINT(**{'sizeinbytes': 2, 'constant': 0x00})
         self.__field_pad.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderrequest(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
         self.__field_data_type=UINT(**{'sizeinbytes': 2})
@@ -2820,7 +2820,7 @@ class tosh_getunknownrecordresponse(BaseProtogenClass):
         # Make all P fields that haven't already been constructed
 
 
-    def writetobuffer(self,buf):
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
@@ -2832,13 +2832,13 @@ class tosh_getunknownrecordresponse(BaseProtogenClass):
             self.__field_data=DATA()
         self.__field_data.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologwrite(buf)
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
 
-    def readfrombuffer(self,buf):
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._bufferstartoffset==0: self.autologread(buf)
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=tosh_swapheaderresponse()
         self.__field_header.readfrombuffer(buf)
         self.__field_data=DATA()

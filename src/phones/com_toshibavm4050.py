@@ -381,9 +381,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def sendpbcommand(self, request, responseclass):
         self.setmode(self.MODEBREW)
         buffer=prototypes.buffer()
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="toshiba vm4050 phonebook request")
         data=buffer.getvalue()
-        self.logdata("toshiba vm4050 phonebook request", data, request)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         first=data[0]
         try:
@@ -422,13 +421,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             self.logdata("Working on pb data", data, None)
             raise common.CommsDataCorruption("toshiba phonebook packet failed CRC check", self.desc)
         
-        # log it
-        self.logdata("toshiba phonebook response", data, responseclass)
-
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
-        res.readfrombuffer(buffer)
+        res.readfrombuffer(buffer, logtitle="toshiba phonebook response")
         return res
 
     def get_detect_data(self, res):

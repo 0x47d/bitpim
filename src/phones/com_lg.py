@@ -78,9 +78,8 @@ class LGPhonebook:
         self.pbseq+=1
         if self.pbseq>0xff:
             self.pbseq=0
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="lg phonebook request")
         data=buffer.getvalue()
-        self.logdata("lg phonebook request", data, request)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         firsttwo=data[:2]
         try:
@@ -120,13 +119,10 @@ class LGPhonebook:
             self.logdata("Working on LG data", data, None)
             raise common.CommsDataCorruption("LG packet failed CRC check", self.desc)
         
-        # log it
-        self.logdata("lg phonebook response", data, responseclass)
-
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
-        res.readfrombuffer(buffer)
+        res.readfrombuffer(buffer, logtitle="lg phonebook response")
         return res
 
 def cleanupstring(str):
@@ -197,8 +193,7 @@ class LGIndexedMedia:
             # file may not exist
             return index
         g=self.protocolclass.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Index file %s read" % (indexfile,))
         for i in g.items:
             if i.index!=0xffff and len(i.name):
                 index[i.index]=i.name
@@ -356,8 +351,7 @@ class LGIndexedMedia:
             while len(ifile.items)<maxentries:
                 ifile.items.append(self.protocolclass.indexentry())
             buffer=prototypes.buffer()
-            ifile.writetobuffer(buffer)
-            self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
+            ifile.writetobuffer(buffer, logtitle="Updated index file "+indexfile)
             self.writefile(indexfile, buffer.getvalue())
             # Write out files - we compare against existing dir listing and don't rewrite if they
             # are the same size
@@ -450,8 +444,7 @@ class LGNewIndexedMedia:
             return []
 
         g=self.protocolclass.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Index file %s read with %d entries" % (filename, len(g.items)), buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Index file "+filename)
         return g.items
 
     def getmedia(self, maps, results, key):
@@ -607,8 +600,7 @@ class LGNewIndexedMedia:
                 ie.dunno=0 # mmmm
                 ifile.items.append(ie)
             buf=prototypes.buffer()
-            ifile.writetobuffer(buf)
-            self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+            ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
             self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
             dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
             # write out size file
@@ -865,8 +857,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
                 ie.icon=icon
                 ifile.items.append(ie)
             buf=prototypes.buffer()
-            ifile.writetobuffer(buf)
-            self.logdata("Index file "+indexfile, buf.getvalue(), ifile)
+            ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
             self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
             dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
             # write out size file, if it is required
@@ -968,8 +959,7 @@ class LGDirectoryMedia:
                 self.log("No .desc file in "+dirlisting[item]['name']+" - ignoring directory")
                 continue
             desc=self.protocolclass.mediadesc()
-            desc.readfrombuffer(buf)
-            self.logdata(".desc file %s/.desc read" % (dirlisting[item]['name'],), buf.getdata(), desc)
+            desc.readfrombuffer(buf, logtitle=".desc file %s/.desc read" % (dirlisting[item]['name'],))
             filename=self._createnamewithmimetype(dirlisting[item]['name'], desc.mimetype)
             if not getmedia:
                 index[desc.index]=filename
@@ -1131,9 +1121,8 @@ class LGDirectoryMedia:
                 desc.totalsize=0
                 desc.totalsize=desc.packetsize()+len(content)
                 buf=prototypes.buffer()
-                desc.writetobuffer(buf)
                 descfile="%s/%s/.desc" % (location, dirname)
-                self.logdata("Desc file at "+descfile, buf.getvalue(), desc)
+                desc.writetobuffer(buf, logtitle="Desc file at "+descfile)
                 try:
                     self.mkdir("%s/%s" % (location,dirname))
                 except com_brew.BrewDirectoryExistsException:

@@ -103,11 +103,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             self.setmode(self.MODEPHONEBOOK)
         buffer=prototypes.buffer()
 
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="N400 phonebook request")
         data=buffer.getvalue()
         firsttwo=data[:2]
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
-        self.logdata("N400 phonebook request", data, request)
         isendretry=numsendretry
         while isendretry>=0:
             try:
@@ -174,12 +173,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
             
         data=trydata
 
-        # log it
-        self.logdata("sanyo phonebook response", data, responseclass)
-
         # parse data
         buffer=prototypes.buffer(data)
-        res.readfrombuffer(buffer)
+        res.readfrombuffer(buffer, logtitle="sanyo phonebook response")
         return res
 
     def getphonebook(self, result):

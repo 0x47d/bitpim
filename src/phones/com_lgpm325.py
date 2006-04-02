@@ -94,8 +94,7 @@ class Phone(com_lgvx4400.Phone):
         self.log("Reading group information")
         buf=prototypes.buffer(self.getfilecontents("pim/pbookgroup.dat"))
         g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf)
-        self.logdata("Groups read", buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Groups read")
         groups={}
         for i in range(len(g.groups)):
             if len(g.groups[i].name): # sometimes have zero length names
@@ -177,8 +176,7 @@ class Phone(com_lgvx4400.Phone):
         the regular packets so we have to read the filesystem directly """
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.phonebook_media))
         g=self.protocolclass.pb_contact_media_file()
-        g.readfrombuffer(buf)
-        self.logdata("PB Media read", buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="PB Media read")
         for i in range(len(g.contacts)):
             # adjust wallpaper for stock
             if (g.contacts[i].wallpaper & 0xFF00)==0x100:
@@ -314,8 +312,7 @@ class Phone(com_lgvx4400.Phone):
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
-        g.writetobuffer(buffer)
-        self.logdata("New group file", buffer.getvalue(), g)
+        g.writetobuffer(buffer, logtitle="New group file")
         self.writefile("pim/pbookgroup.dat", buffer.getvalue())
 
     def savephonebook(self, data):
@@ -491,13 +488,12 @@ class Phone(com_lgvx4400.Phone):
                     sd.number=newspeeds[i][1]
                 req.speeddials.append(sd)
             buffer=prototypes.buffer()
-            req.writetobuffer(buffer)
+            req.writetobuffer(buffer, logtitle="New speed dial file")
 
             # We check the existing speed dial file as changes require a reboot
             self.log("Checking existing speed dials")
             try:
                 if buffer.getvalue()!=self.getfilecontents("pim/pbooksdial.dat"):
-                    self.logdata("New speed dial file", buffer.getvalue(), req)
                     self.writefile("pim/pbooksdial.dat", buffer.getvalue())
                     self.log("Your phone has to be rebooted due to the speed dials changing")
                     self.progress(progressmax, progressmax, "Rebooting phone")
@@ -527,8 +523,7 @@ class Phone(com_lgvx4400.Phone):
             # don't create the file if there are no entries 
             sf.num_active=count
             buf=prototypes.buffer()
-            sf.writetobuffer(buf)
-            self.logdata("Writing quicktext", buf.getvalue(), sf)
+            sf.writetobuffer(buf, logtitle="Writing quicktext")
             self.writefile(self.protocolclass.SMS_CANNED_FILENAME, buf.getvalue())
         return
 
@@ -537,8 +532,7 @@ class Phone(com_lgvx4400.Phone):
         try:
             buf=prototypes.buffer(self.getfilecontents(self.protocolclass.SMS_CANNED_FILENAME))
             sf=self.protocolclass.sms_canned_file()
-            sf.readfrombuffer(buf)
-            self.logdata("SMS quicktext file sms/canned_msg.dat", buf.getdata(), sf)
+            sf.readfrombuffer(buf, logtitle="SMS quicktext file sms/canned_msg.dat")
             for rec in sf.msgs:
                 if rec.msg!="":
                     quicks.append({ 'text': rec.msg, 'type': sms.CannedMsgEntry.user_type })
@@ -629,8 +623,7 @@ class Phone(com_lgvx4400.Phone):
             # file may not exist
             return index
         g=self.protocolclass.indexfile()
-        g.readfrombuffer(buf)
-        self.logdata("Index file %s read with %d entries" % (indexfile,g.numactiveitems), buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Read index file "+indexfile)
         for i in g.items:
             if i.index!=0xffff and len(i.name):
                 index[i.index]=i.name
@@ -640,8 +633,7 @@ class Phone(com_lgvx4400.Phone):
         index={}
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
         g=self.protocolclass.content_file()
-        g.readfrombuffer(buf)
-        self.logdata("Content file %s read with %d entries" % (self.protocolclass.content_file_name,len(g.items)), buf.getdata(), g)
+        g.readfrombuffer(buf, logtitle="Content file "+self.protocolclass.content_file_name)
         if key=='ringtone' or key=='ringtone-index':
             type='Ringers'
             index_const=self.protocolclass.ringerconst*0x100
@@ -669,7 +661,7 @@ class Phone(com_lgvx4400.Phone):
                         except:
                             pass
                     if not found:
-                        self.logdata("Unable to find index entry for "+i.name1+". Index : "+`i.index1`)
+                        self.log("Unable to find index entry for "+i.name1+". Index : "+`i.index1`)
                 except:
                     pass
         return index, indexfile, index_const
@@ -891,15 +883,13 @@ class Phone(com_lgvx4400.Phone):
         entry.type='!F'
         cfile.items.append(entry)
         buffer=prototypes.buffer()
-        cfile.writetobuffer(buffer)
-        self.logdata("Updated content file "+self.protocolclass.content_file_name, buffer.getvalue(), cfile)
+        cfile.writetobuffer(buffer, logtitle="Updated content file "+self.protocolclass.content_file_name)
         self.writefile(self.protocolclass.content_file_name, buffer.getvalue())
 
         countfile=self.protocolclass.content_count()
         countfile.count=`content_count`            
         buffer=prototypes.buffer()
-        countfile.writetobuffer(buffer)
-        self.logdata("Updated content count file "+self.protocolclass.content_count_file_name, buffer.getvalue(), countfile)
+        countfile.writetobuffer(buffer, logtitle="Updated content count file "+self.protocolclass.content_count_file_name)
         self.writefile(self.protocolclass.content_count_file_name, buffer.getvalue())
 
         # now write out the index file (this is like the verizon LG phones)
@@ -922,8 +912,7 @@ class Phone(com_lgvx4400.Phone):
             entry.const=index_const
             ifile.items.append(entry)
         buffer=prototypes.buffer()
-        ifile.writetobuffer(buffer)
-        self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
+        ifile.writetobuffer(buffer, logtitle="Updated index file "+indexfile)
         self.writefile(indexfile, buffer.getvalue())
 
         # Write out files - we compare against existing dir listing and don't rewrite if they
