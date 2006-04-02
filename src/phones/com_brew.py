@@ -68,6 +68,10 @@ class BrewAccessDeniedException(BrewCommandException):
     def __init__(self, errnum=0x04, filename=None):
         BrewCommandException.__init__(self, errnum, "Access Denied. Access to the file/directory may be blocked on this phone")
 
+class BrewFileSystemFullException(BrewCommandException):
+    def __init__(self, errnum=0x16, filename=None):
+        BrewCommandException.__init__(self, errnum, "The phone has run out of space to store any more files")
+
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
@@ -746,6 +750,8 @@ class RealBrewProtocol:
                     raise BrewDirectoryExistsException()
                 if err==0x04:
                     raise BrewAccessDeniedException()
+                if err==0x16:
+                    raise BrewFileSystemFullException()
                 raise BrewCommandException(err)
         # Starting with the vx8100/9800 verizon started to block access to some file and directories
         # it reports a bad command packet as the error when it really means access denied
