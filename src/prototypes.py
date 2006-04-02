@@ -40,6 +40,7 @@ containerelements method:
   
     
 """
+import sys
 import calendar
 import cStringIO
 import re
@@ -144,6 +145,33 @@ class BaseProtogenClass(object):
 
     def update(self, *args, **kwargs):
         self._update(args, kwargs)
+
+    # help with logging
+    def autologwrite(self, buf):
+        f=sys._getframe() # my frame
+        f=f.f_back # my caller
+        if f:
+            f=f.f_back # their caller
+            if f:
+                caller=f.f_locals.get("self", None)
+                if caller:
+                    try:
+                        caller.logdata("<written data>", buf.getvalue(), self)
+                    except:
+                        pass
+
+    def autologread(self, buf):
+        f=sys._getframe() # my frame
+        f=f.f_back # my caller
+        if f:
+            f=f.f_back # their caller
+            if f:
+                caller=f.f_locals.get("self", None)
+                if caller:
+                    try:
+                        caller.logdata("<read data>", buf.getdata(), self)
+                    except:
+                        pass
 
 class UINTlsb(BaseProtogenClass):
     "An integer in Least Significant Byte first order"

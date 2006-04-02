@@ -546,6 +546,7 @@ class codegen:
                 i-=1
         assert i==2
         print >>out, indent(2)+"self._bufferendoffset=buf.getcurrentoffset()"
+        print >>out, indent(2)+"if self._bufferstartoffset==0: self.autologwrite(buf)"
         print >>out, "\n"
                 
         # Read from a buffer
@@ -553,6 +554,7 @@ class codegen:
         print >>out, indent(2)+"'Reads this packet from the supplied buffer'"
         i=2
         print >>out, indent(2)+"self._bufferstartoffset=buf.getcurrentoffset()"
+        print >>out, indent(2)+"if self._bufferstartoffset==0: self.autologread(buf)"
         for f in fields:
             if f[0]==tokens.FIELD:
                 if f[2]=='P':
