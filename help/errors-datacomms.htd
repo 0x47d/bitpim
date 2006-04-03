@@ -22,4 +22,30 @@ a different host port.  Try reseating your cable at the phone
 end.  If none of these solve the problem, then the problem may be
 your cable.
 
+<p><b>Multi-processor machines:</b>  Sometimes this problem is caused
+by poor driver behaviour on multi-processor machines. Your machine is 
+multi processor if you have hyper-threading turned on, or it is dual-core.
+You can also tell by running the Task Manager (press ctrl-alt-delete) 
+and looking in the View menu.  If there is a submenu labelled
+CPU History that lets you choose one graph or one graph per CPU then
+you have a multi-processor machine.
+
+<blockquote><p><b>Editting your <tt>boot.ini</tt> could result in your machine
+not booting if you make mistakes.  If you run <tt>bootcfg</tt> from a
+command prompt, it will list the current operating settings.</b></p></blockquote>
+
+<p>You can reboot your machine and tell Windows to only use one cpu
+even if there is more than one in your machine.  To do so you will 
+need to add a line to <tt>boot.ini</tt> and specify the <tt><b>/onecpu</b></tt>
+switch.  Microsoft has a guide for editting <tt>boot.ini</tt> in 
+URL(http://support.microsoft.com/?kbid=289022,KB289022).  In general
+you should copy the first line in the <tt>[operating systems]</tt>
+section, add <tt>/onecpu</tt> on the end and edit the text between quotes
+to say it is the onecpu line.  You may also want to increase the timeout 
+(seconds) in the <tt>[boot loader]</tt> section. When you reboot, you'll 
+have that many seconds to pick the onecpu line.  You can tell if it worked
+by running Task Manager as detailed in the previous paragraph and looking
+for the View &gt; CPU History sub-menu.
+
+
 #include "pageend.h"
