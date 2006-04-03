@@ -34,9 +34,9 @@ BEGIN_TOC
             TOCITEM_2(Calendar Import,dialog-calendarimport.htm)
             TOCITEM_2(Image Preview,dialog-imagepreview.htm)
             ENDTOC_2
-        TOCITEM_1(Tabs,tabs.htm)
+        TOCITEM_1(Tree Items,tabs.htm)
             TOC_2
-            TOCITEM_2(Today,tab-today.htm)
+            TOCITEM_2(Phone,tab-today.htm)
             TOCITEM_2(Phonebook,tab-phonebook.htm)
             TOCITEM_2(Wallpaper,tab-wallpaper.htm)
             TOCITEM_2(Ringers,tab-ringers.htm)

@@ -38,6 +38,7 @@ ID_NOT_A_ZIPFILE=error-zipfilerequired.htm
 ID_NO_PVCONV=error-nopvconv.htm
 ID_PHONEBOOKBUSY=error-phonebookbusy.htm
 ID_COMMSDATAERROR=errors-datacomms.htm
+ID_BREW_ACCESS_DENIED=errors-access-blocked.htm
 ID_BITFLING=bitfling.htm
 ID_LG_INTEGRITYCHECKFAILED=phones-lg-integritycheckfailed.htm
 ID_UPGRADING=upgrading.htm
