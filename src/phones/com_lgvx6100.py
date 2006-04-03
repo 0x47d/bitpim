@@ -89,7 +89,7 @@ class Phone(com_lgvx4400.Phone):
         try:
             buf=prototypes.buffer(self.getfilecontents("cam/pics.dat"))
             g=self.protocolclass.campicsdat()
-            g.readfrombuffer(buf)
+            g.readfrombuffer(buf, logtitle="Read camera index")
             for i in g.items:
                 if len(i.name):
                     # index[i.index]={'name': i.name, 'date': i.taken, 'origin': 'camera' }

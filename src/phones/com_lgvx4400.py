@@ -125,7 +125,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         if count!=0:
             # don't create the file if there are no entries 
             buf=prototypes.buffer()
-            sf.writetobuffer(buf, "Writing calendar")
+            sf.writetobuffer(buf, logtitle="Writing calendar")
             self.writefile(self.protocolclass.SMS_CANNED_FILENAME, buf.getvalue())
         return
 
@@ -149,17 +149,17 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 self.logdata("SMS message file " +item['name'], buf.getdata())
             if folder=='Inbox':
                 sf=self.protocolclass.sms_in()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS inbox item")
                 entry=self._getinboxmessage(sf)
                 res[entry.id]=entry
             elif folder=='Sent':
                 sf=self.protocolclass.sms_out()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS sent item")
                 entry=self._getoutboxmessage(sf)
                 res[entry.id]=entry
             elif folder=='Saved':
                 sf=self.protocolclass.sms_saved()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS saved item")
                 if sf.outboxmsg:
                     entry=self._getoutboxmessage(sf.outbox)
                 else:
@@ -325,7 +325,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 self.log("Reading speed dials")
                 buf=prototypes.buffer(self.getfilecontents("pim/pbspeed.dat"))
                 sd=self.protocolclass.speeddials()
-                sd.readfrombuffer(buf)
+                sd.readfrombuffer(buf, logtitle="Read speed dials")
                 for i in range(self.protocolclass.FIRSTSPEEDDIAL, self.protocolclass.LASTSPEEDDIAL+1):
                     if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass.NUMPHONEBOOKENTRIES:
                         continue
@@ -410,7 +410,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
-        g.writetobuffer(buffer, "New group file")
+        g.writetobuffer(buffer, logtitle="New group file")
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def savephonebook(self, data):
@@ -946,7 +946,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                            dict.get('ringtone-index', {}),
                            voice_files)
         buf=prototypes.buffer()
-        sc.writetobuffer(buf)
+        sc.writetobuffer(buf, logtitle="Calendar data")
         self.writefile(self.protocolclass.cal_data_file_name,
                          buf.getvalue())
         # build the exceptions
@@ -958,7 +958,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 _ex.year, _ex.month, _ex.day=x
                 exceptions_file.items.append(_ex)
         buf=prototypes.buffer()
-        exceptions_file.writetobuffer(buf)
+        exceptions_file.writetobuffer(buf, logtitle="calendar exceptions")
         self.writefile(self.protocolclass.cal_exception_file_name,
                          buf.getvalue())
         # clear out any alarm voice files that may have been deleted
@@ -1173,7 +1173,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             buf=prototypes.buffer(self.getfilecontents(
                 self.protocolclass.text_memo_file))
             text_memo=self.protocolclass.textmemofile()
-            text_memo.readfrombuffer(buf)
+            text_memo.readfrombuffer(buf, logtitle="Read text memo")
             res={}
             for i in range(text_memo.itemcount):
                 entry=memo.MemoEntry()
@@ -1195,7 +1195,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             entry.text=memo_dict[k].text
             text_memo.items.append(entry)
         buf=prototypes.buffer()
-        text_memo.writetobuffer(buf)
+        text_memo.writetobuffer(buf, logtitle="text memo "+self.protocolclass.text_memo_file)
         self.writefile(self.protocolclass.text_memo_file, buf.getvalue())
         return result
 

@@ -231,9 +231,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def sendpbcommand(self, request, responseclass):
         self.setmode(self.MODEBREW)
         buffer=prototypes.buffer()
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="audiovox cdm8900 phonebook request")
         data=buffer.getvalue()
-        self.logdata("audiovox cdm8900 phonebook request", data, request)
         data=common.pppescape(data+common.crcs(data))+common.pppterminator
         first=data[0]
         try:
@@ -272,13 +271,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             self.logdata("Working on pb data", data, None)
             raise common.CommsDataCorruption("Audiovox phonebook packet failed CRC check", self.desc)
         
-        # log it
-        self.logdata("Audiovox phonebook response", data, responseclass)
-
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
-        res.readfrombuffer(buffer)
+        res.readfrombuffer(buffer, logtitle="Audiovox phonebook response")
         return res
 
 

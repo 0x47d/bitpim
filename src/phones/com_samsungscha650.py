@@ -767,7 +767,7 @@ class RingtoneIndex:
             rt_idx=self.__phone.protocolclass.ringtones()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.ringtone_index_file_name))
-            rt_idx.readfrombuffer(buf)
+            rt_idx.readfrombuffer(buf, logtitle="Read ringtone index file")
             idx=len(self.__builtin_ringtones)
             l=len(self.__phone.protocolclass.ringtone_file_path)+1
             for i in range(self.__phone.protocolclass.max_ringtone_entries):
@@ -790,7 +790,7 @@ class RingtoneIndex:
             rt_idx=self.__phone.protocolclass.ringtones()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.ringtone_index_file_name))
-            rt_idx.readfrombuffer(buf)
+            rt_idx.readfrombuffer(buf, logtitle="Read ringtone download index")
             l=len(self.__phone.protocolclass.ringtone_file_path)+1
             for i in range(self.__phone.protocolclass.max_ringtone_entries):
                 e=rt_idx.entry[i]
@@ -820,7 +820,7 @@ class ImageIndex:
             img_idx=self.__phone.protocolclass.images()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.image_index_file_name))
-            img_idx.readfrombuffer(buf)
+            img_idx.readfrombuffer(buf, logtitle="Read image download index")
             idx=len(self.__builtin_images)
             l=len(self.__phone.protocolclass.image_file_path)+1
             for i in range(self.__phone.protocolclass.max_image_entries):
@@ -843,7 +843,7 @@ class ImageIndex:
             img_idx=self.__phone.protocolclass.images()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.image_index_file_name))
-            img_idx.readfrombuffer(buf)
+            img_idx.readfrombuffer(buf, logtitle="Read image download index")
             l=len(self.__phone.protocolclass.image_file_path)+1
             for i in range(self.__phone.protocolclass.max_image_entries):
                 e=img_idx.entry[i]
@@ -864,7 +864,7 @@ class PhoneNumbers:
             buf=prototypes.buffer(self.__phone.getfilecontents(\
                 self.__phone.protocolclass.number_file_name))
             self.__numbers=self.__phone.protocolclass.numbers()
-            self.__numbers.readfrombuffer(buf)
+            self.__numbers.readfrombuffer(buf, logtitle="Read number file "+self.__phone.protocolclass.number_file_name)
         except:
             self.__phone.log('Failed to read numbers file')
             self.__numbers=[]
@@ -899,7 +899,7 @@ class PhoneBook:
             buf=prototypes.buffer(self.__phone.getfilecontents(\
                 self.__phone.protocolclass.pb_file_name))
             self.__pb=self.__phone.protocolclass.pbbook()
-            self.__pb.readfrombuffer(buf)
+            self.__pb.readfrombuffer(buf, logtitle="Read "+self.__phone.protocolclass.pb_file_name)
         except:
             self.__pb=[]
             self.__phone.log('Failed to read phonebook')
@@ -1005,7 +1005,7 @@ class PBSlot:
             buf=prototypes.buffer(self.__phone.getfilecontents(\
                 self.__phone.protocolclass.slot_file_name))
             self.__slots=self.__phone.protocolclass.pbslots()
-            self.__slots.readfrombuffer(buf)
+            self.__slots.readfrombuffer(buf, logtitle="Read slots file "+self.__phone.protocolclass.slot_file_name)
         except:
             self.__slots=[]
             self.__phone.log('Failed to read slot file')

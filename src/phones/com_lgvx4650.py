@@ -198,7 +198,7 @@ class Phone(com_lgvx4400.Phone):
         buf=prototypes.buffer(self.getfilecontents(
             self.protocolclass.pb_file_name))
         pb=self.protocolclass.pbfile()
-        pb.readfrombuffer(buf)
+        pb.readfrombuffer(buf, logtitle="Read "+self.protocolclass.pb_file_name)
         update_flg=False
         for e in pb.items:
             _info=wpi.get(e.serial1, None)
@@ -214,7 +214,7 @@ class Phone(com_lgvx4400.Phone):
         if update_flg:
             self.log('Updating wallpaper index')
             buf=prototypes.buffer()
-            pb.writetobuffer(buf)
+            pb.writetobuffer(buf, logtitle="Updated index "+self.protocolclass.pb_file_name)
             self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
         return update_flg
 
@@ -237,7 +237,7 @@ class Phone(com_lgvx4400.Phone):
             try:
                 buf=prototypes.buffer(self.getfilecontents(_file_name))
                 hist_file=self.protocolclass.callhistoryfile()
-                hist_file.readfrombuffer(buf)
+                hist_file.readfrombuffer(buf, logtitle="Read call history")
                 for i in range(hist_file.itemcount):
                     hist_call=hist_file.items[i]
                     entry=call_history.CallHistoryEntry()
@@ -258,7 +258,7 @@ class Phone(com_lgvx4400.Phone):
         canned_file=Phone.SMSCannedFile()
         canned_file.set_sms_canned_data(result.get('canned_msg', []))
         buf=prototypes.buffer()
-        canned_file.writetobuffer(buf)
+        canned_file.writetobuffer(buf, logtitle="Updated "+self.protocolclass.sms_canned_file)
         self.writefile(self.protocolclass.sms_canned_file, buf.getvalue())
 
     def _getquicktext(self):
@@ -266,7 +266,7 @@ class Phone(com_lgvx4400.Phone):
             buf=prototypes.buffer(self.getfilecontents(
                 self.protocolclass.sms_canned_file))
             canned_file=Phone.SMSCannedFile()
-            canned_file.readfrombuffer(buf)
+            canned_file.readfrombuffer(buf, logtitle="Read SMS canned text")
             return canned_file.get_sms_canned_data()
         except:
             if __debug__:

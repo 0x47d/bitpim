@@ -336,7 +336,7 @@ class Phone(com_lgvx4400.Phone):
                 req.entry=entry
                 req.header.sequence=counter
                 buffer=prototypes.buffer()
-                req.writetobuffer(buffer)
+                req.writetobuffer(buffer, logtitle="New contents for pim/pb"+`counter`+".dat")
                 self.writefile("pim/pb"+`counter`+".dat", buffer.getvalue())
                 pb_entries[counter]=entry
             self.save_phonebook_media(pb_entries)
@@ -658,7 +658,7 @@ class Phone(com_lgvx4400.Phone):
 #                    # see if it is really an mp3, we will need to rename it
 #                    try:
 #                        qcp_header=self.protocolclass.qcp_media_header()
-#                        qcp_header.readfrombuffer(buf)
+#                        qcp_header.readfrombuffer(buf, logtitle="qcp header")
 #                    except: # exception will be thrown if header does not match
 #                        _fname=common.stripext(index[i])+'.'+'qcp'
                 media[_fname]=buf.getdata()
@@ -752,7 +752,7 @@ class Phone(com_lgvx4400.Phone):
         try:
             buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
             g=self.protocolclass.content_file()
-            g.readfrombuffer(buf)
+            g.readfrombuffer(buf, logtitle="Read content file")
             for i in g.items:
                 # type !C always appears first
                 if i.type=='!C':

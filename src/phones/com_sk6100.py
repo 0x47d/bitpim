@@ -44,7 +44,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # Get a list of phone numbers:
         phonebuf = prototypes.buffer(self.getfilecontents('SKY/PBK/number.pbk'))
         phones = self.protocolclass.phones()
-        phones.readfrombuffer(phonebuf)
+        phones.readfrombuffer(phonebuf, logtitle="Phonenumbers")
 		
         # Drop empty phone records, listify:
         phones = [phone for phone in phones.records if phone.owner_id]

@@ -692,7 +692,7 @@ class Phone(com_gsm.Phone):
             try:
                 _entry=self.protocolclass.sms_msg_list_header()
                 _buf=prototypes.buffer(_resp[i])
-                _entry.readfrombuffer(_buf)
+                _entry.readfrombuffer(_buf, logtitle="SMS #"+i)
                 _sms=sms.SMSEntry()
                 if _entry.msg_type==self.protocolclass.SMS_MSG_REC_UNREAD or \
                    _entry.msg_type==self.protocolclass.SMS_MSG_REC_READ:

@@ -167,7 +167,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             e.name=groups[k]['name']
             g.groups.append(e)
         buffer=prototypes.buffer()
-        g.writetobuffer(buffer, "New group file")
+        g.writetobuffer(buffer, logtitle="New group file")
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def getmemo(self, result):
@@ -175,7 +175,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         try:
             buf=prototypes.buffer(self.getfilecontents(self.memolocation))
             text_memo=self.protocolclass.textmemofile()
-            text_memo.readfrombuffer(buf)
+            text_memo.readfrombuffer(buf, logtitle="Read memo file"+self.memolocation)
             res={}
             for m in text_memo.items:
                 entry=memo.MemoEntry()
@@ -206,7 +206,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 entry.GPStime = (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)    
             text_memo.items.append(entry)
         buf=prototypes.buffer()
-        text_memo.writetobuffer(buf)
+        text_memo.writetobuffer(buf, logtitle="Updated memo "+self.memolocation)
         self.writefile(self.memolocation, buf.getvalue())
         return result
 
@@ -377,7 +377,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             self.log("Phone calendar unchanged, no update required")
 
         buf=prototypes.buffer()
-        exceptionsf.writetobuffer(buf, "Writing calendar exceptions")
+        exceptionsf.writetobuffer(buf, logtitle="Writing calendar exceptions")
         self.writefile(self.calendarexceptionlocation, buf.getvalue())
 
         # fix passed in dict
@@ -594,7 +594,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             szfile=self.protocolclass.sizefile()
             szfile.size=_file_size
             buf=prototypes.buffer()
-            szfile.writetobuffer(buf)
+            szfile.writetobuffer(buf, logtitle="Updated size file for "+type)
             self.log("You are using a total of "+`_file_size`+" bytes for "+type)
             self.writefile(sizefile, buf.getvalue())
 

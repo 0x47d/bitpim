@@ -113,7 +113,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
             result['intermediate'] = index
 	    return
         g=self.protocolclass.ringindex()
-        g.readfrombuffer(buf)
+        g.readfrombuffer(buf, logtitle="ringer index")
         for i in g.items:
             if i.name != "default":
                 index[i.index+1]=i.name[len('ringer/'):]
@@ -229,10 +229,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 	    if i in ringindex: ringerentry.name = 'ringer/'+ringindex[i]
 	    ringidxfile.items.append(ringerentry)
 	buf=prototypes.buffer()
-	ringidxfile.writetobuffer(buf)
+	ringidxfile.writetobuffer(buf, logtitle="Custom ringer index")
 
+        # ::TODO:: this code looks wrong.  Why isn't the if before the loop above?
+        # and if the user deleted all ringers then shouldn't the file be truncated
+        # rather than ignored?
 	if len(ringindex) > 0:
-	    self.logdata("Writing custom ringer index", buf.getvalue(), ringidxfile)
 	    self.writefile("pim/midiringer.dat", buf.getvalue())
 
         #self.mode=self.MODENONE
@@ -348,7 +350,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
         # Now read schedule
         buf=prototypes.buffer(self.getfilecontents("sch/sch_00.dat"))
         sc=self.protocolclass.schedulefile()
-        sc.readfrombuffer(buf)
+        sc.readfrombuffer(buf, logtitle="Calendar")
         self.logdata("Calendar", buf.getdata(), sc)
         for event in sc.events:
             entry={}
@@ -449,8 +451,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook):
 
         # scribble everything out
         buf=prototypes.buffer()
-        eventsf.writetobuffer(buf)
-        self.logdata("Writing calendar", buf.getvalue(), eventsf)
+        eventsf.writetobuffer(buf, logtitle="Writing calendar")
         self.writefile("sch/sch_00.dat", buf.getvalue())
 
         # fix passed in dict

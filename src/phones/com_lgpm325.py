@@ -123,7 +123,7 @@ class Phone(com_lgvx4400.Phone):
                 self.log("Reading speed dials")
                 buf=prototypes.buffer(self.getfilecontents("pim/pbooksdial.dat"))
                 sd=self.protocolclass.speeddials()
-                sd.readfrombuffer(buf)
+                sd.readfrombuffer(buf, logtitle="Read spead dials")
                 for i in range(self.protocolclass.FIRSTSPEEDDIAL, self.protocolclass.LASTSPEEDDIAL+1):
                     if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass.NUMPHONEBOOKENTRIES:
                         continue
@@ -692,7 +692,7 @@ class Phone(com_lgvx4400.Phone):
 #                    # see if it is really an mp3, we will need to rename it
 #                    try:
 #                        qcp_header=self.protocolclass.qcp_media_header()
-#                        qcp_header.readfrombuffer(buf)
+#                        qcp_header.readfrombuffer(buf, logtitle="qcp header")
 #                    except: # exception will be thrown if header does not match
 #                        _fname=common.stripext(index[i])+'.'+'qcp'
                 media[_fname]=buf.getdata()
@@ -784,7 +784,7 @@ class Phone(com_lgvx4400.Phone):
         content={}
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.content_file_name))
         g=self.protocolclass.content_file()
-        g.readfrombuffer(buf)
+        g.readfrombuffer(buf, logtitle="Contents file")
         for i in g.items:
             # type !C always appears first
             if i.type=='!C':

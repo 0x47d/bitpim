@@ -76,7 +76,7 @@ class Phone(com_samsung_packet.Phone):
     def amsanalyze(self,results):
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.AMSREGISTRY))
         ams=self.protocolclass.amsregistry()
-        ams.readfrombuffer(buf)
+        ams.readfrombuffer(buf, logtitle="Read AMS registry")
         rt={}   #Todd added for ringtone index
         nrt=0     #Todd added for ringtone index
         wp={}

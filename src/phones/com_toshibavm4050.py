@@ -160,7 +160,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 if __debug__:
                     open("c:/projects/temp/record_in"+`i`, "wb").write(raw)
                 buf=prototypes.buffer(raw)
-                entry.readfrombuffer(buf)
+                entry.readfrombuffer(buf, logtitle="phonebook data record")
             else:
                 continue
             self.log("Read entry "+`i`+" - "+entry.name)
@@ -362,7 +362,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def sendpbentrytophone(self, entry):
         # write out the new one
         buf=prototypes.buffer()
-        entry.writetobuffer(buf)
+        entry.writetobuffer(buf, logtitle="Sending pbentrytophone")
         data=buf.getvalue()
         self.writedatarecord(data)
         req=self.protocolclass.tosh_setpbentryrequest()

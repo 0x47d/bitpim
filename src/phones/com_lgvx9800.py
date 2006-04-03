@@ -261,7 +261,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             szfile=self.protocolclass.sizefile()
             szfile.size=_file_size
             buf=prototypes.buffer()
-            szfile.writetobuffer(buf)
+            szfile.writetobuffer(buf, logtitle="Updated size file for "+type)
             self.log("You are using a total of "+`_file_size`+" bytes for "+type)
             self.writefile(sizefile, buf.getvalue())
 
@@ -401,7 +401,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         _buf=prototypes.buffer(self.getfilecontents(
             self.protocolclass.pb_file_name))
         _pb_entries=self.protocolclass.pbfile()
-        _pb_entries.readfrombuffer(_buf)
+        _pb_entries.readfrombuffer(_buf, logtitle="Read phonebook file "+self.protocolclass.pb_file_name)
         _wp_index=res.get('wallpaper-index', {})
         for _entry in _pb_entries.items:
             try:
@@ -419,7 +419,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 if __debug__:
                     raise
         _buf=prototypes.buffer()
-        _wp_paths.writetobuffer(_buf)
+        _wp_paths.writetobuffer(_buf, logtitle="Updated wallpaper ids "+self.protocolclass.wallpaper_id_file_name)
         self.writefile(self.protocolclass.wallpaper_id_file_name,
                        _buf.getvalue())
 
@@ -438,17 +438,17 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 self.logdata("SMS message file " +item['name'], buf.getdata())
             if folder=='Inbox':
                 sf=self.protocolclass.sms_in()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS inbox item")
                 entry=self._getinboxmessage(sf)
                 res[entry.id]=entry
             elif folder=='Sent':
                 sf=self.protocolclass.sms_out()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS sent item")
                 entry=self._getoutboxmessage(sf)
                 res[entry.id]=entry
             elif folder=='Saved':
                 sf=self.protocolclass.sms_saved()
-                sf.readfrombuffer(buf)
+                sf.readfrombuffer(buf, logtitle="SMS saved item")
                 if sf.inboxmsg:
                     entry=self._getinboxmessage(sf.inbox)
                 else:
@@ -461,7 +461,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
     def _read_pl_list(self, file_name):
         _buf=prototypes.buffer(self.getfilecontents(file_name))
         _pl_index=self.protocolclass.playlistfile()
-        _pl_index.readfrombuffer(_buf)
+        _pl_index.readfrombuffer(_buf, logtitle="Read playlist "+file_name)
         _songs=[x.name[self.protocolclass.mp3_dir_len:] for x in _pl_index.items]
         _entry=playlist.PlaylistEntry()
         if file_name.endswith(self.protocolclass.pl_extension):
@@ -512,9 +512,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                 if len(_pl_file.items):
                     # don't write out an empty list
                     _buf=prototypes.buffer()
-                    _pl_file.writetobuffer(_buf)
                     _file_name=self.protocolclass.pl_dir+'/'+_pl_item.name+\
                                 self.protocolclass.pl_extension
+                    _pl_file.writetobuffer(_buf, logtitle="Updating playlist "+_file_name)
                     self.writefile(_file_name, _buf.getvalue())
             except:
                 if __debug__:

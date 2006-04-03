@@ -1049,7 +1049,7 @@ class RingtoneIndex:
             rt_idx=self.__phone.protocolclass.ringtones()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.ringtone_index_file_name))
-            rt_idx.readfrombuffer(buf)
+            rt_idx.readfrombuffer(buf, logtitle="Read ringtone download index")
             idx=len(self.__builtin_ringtones)
             l=len(self.__phone.protocolclass.ringtone_file_path)+1
             for i in range(self.__phone.protocolclass.max_ringtone_entries):
@@ -1072,7 +1072,7 @@ class RingtoneIndex:
             rt_idx=self.__phone.protocolclass.ringtones()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.ringtone_index_file_name))
-            rt_idx.readfrombuffer(buf)
+            rt_idx.readfrombuffer(buf, logtitle="Read ringtone download index")
             l=len(self.__phone.protocolclass.ringtone_file_path)+1
             for i in range(self.__phone.protocolclass.max_ringtone_entries):
                 e=rt_idx.entry[i]
@@ -1094,7 +1094,7 @@ class ImageIndex:
             img_idx=self.__phone.protocolclass.images()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.image_index_file_name))
-            img_idx.readfrombuffer(buf)
+            img_idx.readfrombuffer(buf, logtitle="Read image download index")
             l=len(self.__phone.protocolclass.image_file_path)+1
             mms_img_path=self.__phone.protocolclass.mms_image_path
             mms_img_len=len(mms_img_path)
@@ -1135,7 +1135,7 @@ class ImageIndex:
             img_idx=self.__phone.protocolclass.images()
             buf=prototypes.buffer(self.__phone.getfilecontents( \
                 self.__phone.protocolclass.image_index_file_name))
-            img_idx.readfrombuffer(buf)
+            img_idx.readfrombuffer(buf, logtitle="Read image download index")
             l=len(self.__phone.protocolclass.image_file_path)+1
             mms_img_path=self.__phone.protocolclass.mms_image_path
             mms_img_len=len(mms_img_path)

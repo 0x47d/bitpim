@@ -145,7 +145,7 @@ class Analyser(wx.Frame):
                 return
 
             try:
-                obj.readfrombuffer(b)
+                obj.readfrombuffer(b, autolog=False)
             except Exception,e:
                 self.errorme("Reading from buffer",e)
                 # no return, we persevere

@@ -611,7 +611,7 @@ class LGNewIndexedMedia:
             szfile=self.protocolclass.sizefile()
             szfile.size=size
             buf=prototypes.buffer()
-            szfile.writetobuffer(buf)
+            szfile.writetobuffer(buf, logtitle="size file for "+type)
             self.log("You are using a total of "+`size`+" bytes for "+type)
             dircache.writefile(sizefile, buf.getvalue())
         return reindexfunction(results)
@@ -869,7 +869,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
                 szfile=self.protocolclass.sizefile()
                 szfile.size=size
                 buf=prototypes.buffer()
-                szfile.writetobuffer(buf)
+                szfile.writetobuffer(buf, logtitle="Writing size file "+sizefile)
                 self.log("You are using a total of "+`size`+" bytes for "+type)
                 dircache.writefile(sizefile, buf.getvalue())
         return reindexfunction(results)

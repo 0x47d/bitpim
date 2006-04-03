@@ -34,7 +34,7 @@ class Phone(com_phone.Phone):
 
         buffer=prototypes.buffer()
         
-        request.writetobuffer(buffer)
+        request.writetobuffer(buffer, logtitle="GSM sendATcommand")
         data=buffer.getvalue()
 
         try:
@@ -55,7 +55,7 @@ class Phone(com_phone.Phone):
         for line in response_lines:
             res=responseclass()
             buffer=prototypes.buffer(line)
-            res.readfrombuffer(buffer)
+            res.readfrombuffer(buffer, logtitle="GSM receive AT response")
             reslist.append(res)
         return reslist
         

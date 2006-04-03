@@ -120,7 +120,7 @@ class Phone(com_lgvx4400.Phone):
             # file may not exist
             return index
         g=self.protocolclass.camindexfile()
-        g.readfrombuffer(buf)
+        g.readfrombuffer(buf, logtitle="Camera index file")
         self.log("Cam index file read")
         for i in g.items:
             if len(i.name):
@@ -348,8 +348,7 @@ class Phone(com_lgvx4400.Phone):
             while len(ifile.items)<maxentries:
                 ifile.items.append(self.protocolclass.indexentry())
             buffer=prototypes.buffer()
-            ifile.writetobuffer(buffer)
-            self.logdata("Updated index file "+indexfile, buffer.getvalue(), ifile)
+            ifile.writetobuffer(buffer, logtitle="Updated index file "+indexfile)
             self.writefile(indexfile, buffer.getvalue())
             # Write out files - we compare against existing dir listing and don't rewrite if they
             # are the same size
@@ -385,9 +384,8 @@ class Phone(com_lgvx4400.Phone):
                 desc.totalsize=0
                 desc.totalsize=desc.packetsize()+len(data)
                 buf=prototypes.buffer()
-                desc.writetobuffer(buf)
                 descfile="%s/%s/.desc" % (location, dirname)
-                self.logdata("Desc file at "+descfile, buf.getvalue(), desc)
+                desc.writetobuffer(buf, logtitle="Desc file at "+descfile)
                 self.writefile(descfile, buf.getvalue())
 
         # did we have too many
