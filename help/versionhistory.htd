@@ -8,6 +8,7 @@
       <li><b>LG VX7000</b>: Cope gracefully when updating ringtones and the index says a file exists that doesn't actually exist.
       <li>Add support for <B>LG6190</B> (Bell Mobility).
       <li>Fix bug writing phonebook on LG-PM225.
+      <li>Added Data Recording feature.
    </ul>	
 
    <h2><a name="0.8.10">Changes in 0.8.10</a></h2>
