@@ -80,6 +80,10 @@ class CommConnection:
             self.ser=None
 
     def _openport(self, port, baud, timeout, hardwareflow, softwareflow, description=None):
+        if data_recording.DR_Play:
+            # we're doing playback, ignore this
+            self.log('Open of comm port ignored')
+            return
         self.close()
         self.log("Opening port %s, %d baud, timeout %f, hardwareflow %d, softwareflow %d" %
                  (port, baud, float(timeout), hardwareflow, softwareflow) )
@@ -218,6 +222,9 @@ class CommConnection:
 
     def _write(self, data, log=True):
         self.writerequests+=1
+        # if we're doing data play back, just ignore this, for now!
+        if data_recording.DR_Play:
+            return
         if log or data_recording.DR_On:
             self.logdata("Writing", data, data_recording.DR_Type_Write)
         self.ser.write(data)
@@ -241,7 +248,7 @@ class CommConnection:
 
     def sendatcommand(self, atcommand, ignoreerror=False):
         #print "sendatcommand: "+atcommand
-        
+       
         # Flush leftover characters
         b=self.ser.inWaiting()
         if b:
@@ -290,6 +297,8 @@ class CommConnection:
     def readatresponse(self, ignoreerror, log=True):
         """Read until OK, ERROR or a timeout"""
         self.readrequests+=1
+        if data_recording.DR_Play:
+            return data_recording.get_data(data_recording.DR_Type_Read_ATResponse)
         res=""
         while True:
             b=self.ser.inWaiting()
@@ -342,6 +351,8 @@ class CommConnection:
 
     def _read(self, numchars=1, log=True):
         self.readrequests+=1
+        if data_recording.DR_Play:
+            return data_recording.get_data(data_recording.DR_Type_Read)
         try:
             res=self.ser.read(numchars)
         except Exception,e:
@@ -373,6 +384,8 @@ class CommConnection:
 
     def readsome(self, log=True, numchars=None):
         self.readrequests+=1
+        if data_recording.DR_Play:
+            return data_recording.get_data(data_recording.DR_Type_Read_Some)
         res=""
         while True:
             if numchars is not None and len(res)>= numchars:
@@ -397,6 +410,8 @@ class CommConnection:
     def readuntil(self, char, log=True, logsuccess=True, numfailures=0):
         # Keeps reading until it hits char
         self.readrequests+=1
+        if data_recording.DR_Play:
+            return data_recording.get_data(data_recording.DR_Type_Read_Until)
         if False: # don't log this anymore
             self.logdata("Begin reading until 0x%02x" % (ord(char),), None)
 

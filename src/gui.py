@@ -748,22 +748,6 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
         menu.Append(guihelper.ID_DATAHISTORICAL, "&Historical Data ...", "View Current & Historical Data")
         menuBar.Append(menu, "&Data")
-        # data recording menu
-        menu=wx.Menu()
-        menu.Append(guihelper.ID_DR_SETTINGS, 'Settings',
-                    'Edit Data Recording Settings')
-        menu.Append(guihelper.ID_DR_START, 'Start',
-                    'Start Data Recording')
-        menu.Append(guihelper.ID_DR_STOP, 'Stop',
-                    'Stop Data Recording')
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_DR_VIEW, 'View',
-                    'View Data Recording')
-        if __debug__:
-            menu.AppendSeparator()
-            menu.Append(guihelper.ID_DR_PLAY, 'Play Back',
-                        'Play back Data Recording')
-        menuBar.Append(menu, 'Data Recording')
 
         menu=wx.Menu()
         menu.Append(guihelper.ID_AUTOSYNCSETTINGS, "&Configure AutoSync Settings...", "Configures Schedule Auto-Synchronisation")
@@ -778,6 +762,9 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_VIEWCLEARLOGS, "Clear &Logs", "Clears the contents of the log panes")
         menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View &Filesystem", "View filesystem on the phone")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_DR_SETTINGS, 'Data Recording',
+                    'Data Recording Settings')
         menuBar.Append(menu, "&View")
 
         menu=wx.Menu()
@@ -874,12 +861,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_EDITDETECT, self.OnDetectPhone)
         wx.EVT_MENU(self, guihelper.ID_AUTOSYNCSETTINGS, self.OnAutoSyncSettings)
         wx.EVT_MENU(self, guihelper.ID_AUTOSYNCEXECUTE, self.OnAutoSyncExecute)
-        wx.EVT_MENU(self, guihelper.ID_DR_SETTINGS, self.OnDRRecSettings)
-        wx.EVT_MENU(self, guihelper.ID_DR_START, self.OnDRStart)
-        wx.EVT_MENU(self, guihelper.ID_DR_STOP, self.OnDRStop)
-        wx.EVT_MENU(self, guihelper.ID_DR_VIEW, self.OnDRView)
-        if __debug__:
-            wx.EVT_MENU(self, guihelper.ID_DR_PLAY, self.OnDRPlay)
+        wx.EVT_MENU(self, guihelper.ID_DR_SETTINGS, self.OnDataRecording)
         wx.EVT_CLOSE(self, self.OnClose)
 
         ### Double check our size is meaningful, and make bigger
@@ -1517,7 +1499,7 @@ class MainWindow(wx.Frame):
             return
         str=common.strorunicode(str)
         if data_recording.DR_On:
-            self._dr_rec.record(data_recording.DR_Type_Note, str)
+            data_recording.record(data_recording.DR_Type_Note, str)
         self.tree.lw.log(str)
         if self.tree.lwdata is not None:
             self.tree.lwdata.log(str)
@@ -1530,8 +1512,8 @@ class MainWindow(wx.Frame):
     log=OnLog
     def OnLogData(self, str, data, klass=None, data_type=None):
         if data_recording.DR_On:
-            self._dr_rec.record(data_recording.DR_Type_Note, str)
-            self._dr_rec.record(data_type or data_recording.DR_Type_Data,
+            data_recording.record(data_recording.DR_Type_Note, str)
+            data_recording.record(data_type or data_recording.DR_Type_Data,
                                 data, klass)
         if self.tree.lwdata is not None:
             self.tree.lwdata.logdata(str,data, klass)
@@ -1649,34 +1631,10 @@ class MainWindow(wx.Frame):
         print _timer_val,'seconds till midnight'
 
     # Data Recording stuff
-    def OnDRRecSettings(self, _):
+    def OnDataRecording(self, _):
         _dlg=guiwidgets.DRRecFileDialog(self)
-        if _dlg.ShowModal()==wx.ID_OK:
-            _file_name, _append_flg=_dlg.get()
-            self._dr_rec=data_recording.DR_Rec_File(_file_name, _append_flg)
+        _dlg.ShowModal()
         _dlg.Destroy()
-
-    def OnDRStart(self, _):
-        if self._dr_rec and self._dr_rec.can_record():
-            self._dr_rec.start()
-
-    def OnDRStop(self, _):
-        if self._dr_rec:
-            self._dr_rec.stop()
-        if self._dr_play:
-            self._dr_play.stop()
-
-    def OnDRView(self, _):
-        _dlg=wx.FileDialog(self, message='Select a BitPim Data Recording file')
-        if _dlg.ShowModal()==wx.ID_OK:
-            _dr_file=data_recording.DR_Read_File(_dlg.GetPath())
-            _analyser=analyser.Analyser(data=_dr_file.get_string_data())
-            _analyser.Show()
-        _dlg.Destroy()
-
-    if __debug__:
-        def OnDRPlay(self, _):
-            pass
 
     # plumbing for the multi-threading
 

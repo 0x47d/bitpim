@@ -51,6 +51,7 @@ import pubsub
 import widgets
 import phones
 import setphone_wizard
+import data_recording
 
 ###
 ### BitFling cert stuff
@@ -1643,28 +1644,65 @@ class DRRecFileDialog(wx.Dialog):
     """
     def __init__(self, parent):
         super(DRRecFileDialog, self).__init__(parent, -1,
-                                           'BitPim Data Recording File')
+                                           'BitPim Data Recording')
         vbs=wx.BoxSizer(wx.VERTICAL)
-        fgs=wx.FlexGridSizer(0, 3, 5, 5)
-        fgs.Add(wx.StaticText(self, -1, 'File Name:'), 0, wx.EXPAND|wx.ALL, 5)
+        fgs=wx.GridBagSizer(5, 5)
+        fgs.Add(wx.StaticText(self, -1, 'File Name:'), pos=(0,0),
+                flag=wx.EXPAND|wx.ALL)
         self._file_name=wx.TextCtrl(self, -1, 'bitpim.dat')
-        fgs.Add(self._file_name, 0, wx.EXPAND|wx.ALL, 5)
+        fgs.Add(self._file_name, pos=(0, 1), flag=wx.EXPAND|wx.ALL)
         _brw_btn=wx.Button(self, -1, 'Browse')
-        fgs.Add(_brw_btn, 0, wx.EXPAND|wx.ALL, 5)
+        fgs.Add(_brw_btn, pos=(0, 2), flag=wx.EXPAND|wx.ALL)
         wx.EVT_BUTTON(self, _brw_btn.GetId(), self.OnBrowse)
-        fgs.Add(wx.StaticText(self, -1, 'Open Mode:'), 0, wx.EXPAND|wx.ALL, 5)
-##        self._choice=wx.RadioBox(self, -1, '',
-##                                 choices=['Recording', 'Playback'])
-##        fgs.Add(self._choice, 0, wx.EXPAND|wx.ALL, 5)
+        fgs.Add(wx.StaticText(self, -1, 'Open Mode:'), pos=(1,0),
+                flag=wx.EXPAND|wx.ALL)
         self._append=wx.CheckBox(self, -1, 'Append to existing file')
-        fgs.Add(self._append, 0, wx.EXPAND|wx.ALL, 5)
+        fgs.Add(self._append, pos=(1, 1), flag=wx.EXPAND|wx.ALL)
+        fgs.Add(wx.StaticText(self, -1, 'Status:'), pos=(2,0),
+                              flag=wx.EXPAND|wx.ALL)
+        self._status=wx.StaticText(self, -1, 'None')
+        fgs.Add(self._status, pos=(2,1), flag=wx.EXPAND|wx.ALL)
         vbs.Add(fgs, 0, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL), 0,
-                wx.ALIGN_CENTER|wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        if __debug__:
+            _btn=wx.Button(self, -1, 'View')
+            wx.EVT_BUTTON(self,_btn.GetId(), self.OnView)
+            hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Record')
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnRecord)
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        if __debug__:
+            _btn=wx.Button(self, -1, 'Play')
+            wx.EVT_BUTTON(self, _btn.GetId(), self.OnPlay)
+            hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Stop')
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnStop)
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, wx.ID_CANCEL, 'Close')
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+
+        self._update_status()
+
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
+
+    def _update_status(self):
+        _stat='None'
+        _fname=None
+        if data_recording.DR_On:
+            _stat='Recording ...'
+            _fname=data_recording.filename()
+        elif data_recording.DR_Play:
+            _stat='Playing back ...'
+            _fname=data_recording.filename()
+        else:
+            _stat='None'
+        self._status.SetLabel(_stat)
+        if _fname:
+            self._file_name.SetValue(_fname)
 
     def OnBrowse(self, _):
         _dlg=wx.FileDialog(self)
@@ -1672,5 +1710,18 @@ class DRRecFileDialog(wx.Dialog):
         if _dlg.ShowModal()==wx.ID_OK:
             self._file_name.SetValue(_dlg.GetPath())
 
-    def get(self):
-        return self._file_name.GetValue(), self._append.IsChecked()
+    def OnView(self, _):
+        _dr_file=data_recording.DR_Read_File(self._file_name.GetValue())
+        analyser.Analyser(data=_dr_file.get_string_data()).Show()
+
+    def OnRecord(self, _):
+        data_recording.record_to_file(self._file_name.GetValue())
+        self._update_status()
+
+    def OnPlay(self, _):
+        data_recording.playback_from_file(self._file_name.GetValue())
+        self._update_status()
+
+    def OnStop(self, _):
+        data_recording.stop()
+        self._update_status()

@@ -27,6 +27,7 @@ import pubsub
 DR_Version=(0, 0, 1, 0) # 00.10
 DR_Signature='BitPimDR'
 DR_Rec_Marker='<-->'
+DR_Type_All=0xff
 DR_Type_Note=0x01
 DR_Type_Write=0x02
 DR_Type_Read=0x04
@@ -44,12 +45,43 @@ DR_Type_Name={
     DR_Type_Data: 'Data',
     }
 
+# exceptions
+class DataRecordingError(Exception):
+    def __init__(self, value):
+        Exception.__init__(self, value)
+
 # global varaibales
 DR_On=False
 DR_Play=False
+_the_recorder=None
+_the_player=None
 
-# common routines
+# public routines
 
+def record_to_file(file_name, append=False):
+    "start a data recording session into the specified file"
+    global DR_On, _the_recorder
+    if DR_On and _the_recorder:
+        _the_recorder.stop()
+    _rec=DR_Rec_File(file_name, append)
+    _rec.start()
+
+def playback_from_file(file_name):
+    "start a playback session from the specified file"
+    global DR_Play, _the_player
+    if DR_Play and _the_player:
+        _the_player.stop()
+    _player=DR_Read_File(file_name)
+    _player.start()
+
+def stop():
+    "stop a recording and/or playback session"
+    global DR_Play, DR_On, _the_recorder, _the_player
+    if DR_On and _the_recorder:
+        _the_recorder.stop()
+    if DR_Play and _the_player:
+        _the_player.stop()
+    
 def register(start_recording=None, start_playback=None, stop=None):
     if start_recording:
         pubsub.subscribe(start_recording, pubsub.DR_RECORD)
@@ -65,6 +97,27 @@ def unregister(start_recording=None, start_playback=None, stop=None):
         pubsub.unsubscribe(start_playback)
     if stop:
         pubsub.unsubscribe(stop)
+
+def get_data(data_type):
+    global DR_Play, _the_player
+    # return the next data packet of the type data_type
+    if DR_Play and _the_player:
+        return _the_player.get_data(data_type)
+    raise DataRecordingError('Data Playback not active')
+
+def record(dr_type, dr_data, dr_class=None):
+    global DR_On, _the_recorder
+    if DR_On and _the_recorder:
+        _the_recorder.record(dr_type, dr_data, dr_class)
+    elif __debug__:
+        raise DataRecordingError('Data Recording not active')
+
+def filename():
+    "return the current file name being used for recording or playback"
+    if _the_recorder:
+        return _the_recorder._file_name
+    elif _the_player:
+        return _the_player._file_name
 
 #-------------------------------------------------------------------------------
 class DR_Record(object):
@@ -133,6 +186,7 @@ class DR_File(object):
 class DR_Rec_File(DR_File):
     def __init__(self, file_name, append=False):
         super(DR_Rec_File, self).__init__(file_name)
+        self._pause=None
         if not append:
             self._file=file(self._file_name, 'wb')
             self._write_header()
@@ -157,6 +211,9 @@ class DR_Rec_File(DR_File):
 
 
     def record(self, dr_type, dr_data, dr_class=None):
+        if self._pause and (self._pause & dr_type):
+            # not recording this type
+            return
         if self._file:
             _t=threading.Thread(target=self._write_record,
                                 args=(dr_type, dr_data, dr_class))
@@ -168,21 +225,28 @@ class DR_Rec_File(DR_File):
         self._file.write(DR_Rec_Marker+struct.pack('L', len(_s))+_s)
 
     def stop(self):
-        global DR_On
+        global DR_On, _the_recorder
         self._file.close()
         self._file=None
         self._valid=False
         DR_On=False
+        _the_recorder=None
         pubsub.publish(pubsub.DR_STOP, data=self)
 
     def start(self):
-        global DR_On
+        global DR_On, _the_recorder
         if self._file is None and self._file_name:
             self._file=file(self._file_name, 'ab')
             self._valid=True
         DR_On=True
+        _the_recorder=self
         # send a notice to all
         pubsub.publish(pubsub.DR_RECORD, data=self)
+
+    def pause(self, data_type=DR_Type_All):
+        self._pause_type=data_type
+    def unpause(self):
+        self._pause=None
 
 #-------------------------------------------------------------------------------
 class DR_Read_File(DR_File):
@@ -195,6 +259,9 @@ class DR_Read_File(DR_File):
             self._valid=False
         self._data=[]
         self._read_data()
+        self._start_index=0
+        self._end_index=len(self._data)
+        self._current_index=0
 
     def _read_rec(self):
         # read one DR record and return
@@ -230,3 +297,27 @@ class DR_Read_File(DR_File):
         for e in self._data:
             _s+=`e`
         return _s
+
+    def start(self):
+        global DR_Play, _the_player
+        self._current_index=self._start_index
+        DR_Play=True
+        _the_player=self
+
+    def stop(self):
+        global DR_Play, _the_player
+        DR_Play=False
+        _the_player=None
+
+    def get_data(self, data_type):
+        # return the data of the type 'data_type'
+        if self._current_index>=self._end_index:
+            # end of data
+            raise DataRecordingError('No more data available for playback')
+        _idx=self._current_index
+        for i,e in enumerate(self._data[_idx:]):
+            if e._type==data_type:
+                self._current_index+=i+1
+                return e.get()
+        # no such data
+        raise DataRecordingError('Failed to find playback data type')
