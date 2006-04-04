@@ -1578,6 +1578,11 @@ class MainWindow(wx.Frame):
             title="Access Denied"
             style=wx.OK|wx.ICON_EXCLAMATION
             help=lambda _: wx.GetApp().displayhelpid(helpids.ID_BREW_ACCESS_DENIED)
+        elif isinstance(exception, common.PhoneStringEncodeException):
+            text="Unable to convert the text <%s> into a format your phone can understand, change the text to contain only %s characters" % (exception.string, `exception.codec`)
+            title="Text Conversion Error"
+            style=wx.OK|wx.ICON_EXCLAMATION
+            help=lambda _: wx.GetApp().displayhelpid(helpids.ID_BREW_ACCESS_DENIED)
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)

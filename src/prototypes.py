@@ -45,6 +45,7 @@ import calendar
 import cStringIO
 import re
 import time
+import unicodedata
 
 import common
 
@@ -286,7 +287,6 @@ class BOOLlsb(UINTlsb):
         UINTlsb.readfrombuffer(self,buf)
         self._boolme()
     
-
 class STRING(BaseProtogenClass):
     "A text string"
     def __init__(self, *args, **kwargs):
@@ -310,6 +310,9 @@ class STRING(BaseProtogenClass):
         @keyword value: (Optional) Value
         @keyword pascal: (Default False) The string is preceded with one byte giving the length
                          of the string (including terminator if there is one)
+        @keyword encoding: (Default 'ascii') The charset to use when reading/writing to a buffer
+        @keyword read_encoding: (Default keyword:encoding) The charset to use when reading from a buffer
+        @keyword write_encoding: (Default keyword:encoding) The charset to use when writing to a buffer
         """
         super(STRING, self).__init__(*args, **kwargs)
         
@@ -322,6 +325,9 @@ class STRING(BaseProtogenClass):
         self._raiseontruncate=True
         self._value=None
         self._pascal=False
+        self._encoding='ascii'
+        self._read_encoding=None
+        self._write_encoding=None
 
         if self._ismostderived(STRING):
             self._update(args,kwargs)
@@ -330,14 +336,24 @@ class STRING(BaseProtogenClass):
         super(STRING,self)._update(args, kwargs)
 
         self._consumekw(kwargs, ("constant", "terminator", "pad", "pascal",
-        "sizeinbytes", "default", "raiseonunterminatedread", "value", "raiseontruncate"))
+        "sizeinbytes", "default", "raiseonunterminatedread", "value", "raiseontruncate",
+        "encoding", "read_encoding", "write_encoding"))
         self._complainaboutunusedargs(STRING,kwargs)
+        if self._read_encoding==None:
+            self._read_encoding=self._encoding
+        if self._write_encoding==None:
+            self._write_encoding=self._encoding
 
         # Set our value if one was specified
         if len(args)==0:
             pass
         elif len(args)==1:
-            self._value=common.forceascii(args[0])
+            # we should only receive unicode strings from bitpim, but...
+            if not isinstance(args[0], unicode):
+                # there is a bug, the docs say this should work on unicode strings but it does not
+                self._value=unicode(args[0], 'ascii', 'replace')
+            else:
+                self._value=args[0]
             if self._constant is not None and self._constant!=self._value:
                 raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         else:
@@ -345,24 +361,34 @@ class STRING(BaseProtogenClass):
         if self._value is None and self._default is not None:
             self._value=self._default
 
+        # test that we can convert the string, also needed for "sizeinbytes" 
+        try:
+            test=self.convert_for_write()
+        except UnicodeEncodeError:
+            raise common.PhoneStringEncodeException(self._value, uni_string_codec) 
+
         if self._value is not None:
-            self._value=str(self._value) # no unicode here!
             if self._sizeinbytes is not None:
-                l=len(self._value)
+                l=len(test)
                 if self._terminator is not None:
                     l+=1
                 if l>self._sizeinbytes:
                     if self._raiseontruncate:
                         raise ValueLengthException(l, self._sizeinbytes)
-                    
+                    # truncate, but the number of bytes might be larger than the number of
+                    # unicode characters depending on conversion
                     self._value=self._value[:self._sizeinbytes]
-                    if len(self._value) and self._terminator is not None:
+                    while len(self.convert_for_write())>self._sizeinbytes:
+                        self._value=self._value[:-1]
+                    # allow for null terminator, we may already have space due to encode
+                    if len(self.convert_for_write())==self._sizeinbytes and self._terminator is not None:
                         self._value=self._value[:-1]
 
     def readfrombuffer(self, buf):
         self._bufferstartoffset=buf.getcurrentoffset()
         
         flush=0
+        _value=''
         if self._pascal: 
             if self._sizeinbytes is None:
                 self._sizeinbytes=buf.getnextbyte()
@@ -376,36 +402,36 @@ class STRING(BaseProtogenClass):
 
         if self._sizeinbytes is not None:
             # fixed size
-            self._value=buf.getnextbytes(self._sizeinbytes)
+            _value=buf.getnextbytes(self._sizeinbytes)
             if self._terminator is not None:
                 # using a terminator
-                pos=self._value.find(chr(self._terminator))
+                pos=_value.find(chr(self._terminator))
                 if pos>=0:
-                    self._value=self._value[:pos]
+                    _value=_value[:pos]
                 elif self._raiseonunterminatedread:
                     raise NotTerminatedException()
             elif self._pad is not None:
                 # else remove any padding
-                while len(self._value) and self._value[-1]==chr(self._pad):
-                    self._value=self._value[:-1]
+                while len(_value) and _value[-1]==chr(self._pad):
+                    _value=_value[:-1]
         else:
             if self._terminator is None:
                 # read in entire rest of packet
-                self._value=buf.getremainingbytes()
+                _value=buf.getremainingbytes()
             else:
                 # read up to terminator
-                self._value=""
+                _value=""
                 while buf.hasmore():
-                    self._value+=chr(buf.getnextbyte())
-                    if self._value[-1]==chr(self._terminator):
+                    _value+=chr(buf.getnextbyte())
+                    if _value[-1]==chr(self._terminator):
                         break
-                if self._value[-1]!=chr(self._terminator):
+                if _value[-1]!=chr(self._terminator):
                     if self._raiseonunterminatedread:
                         raise NotTerminatedException()
                 else:
-                    self._value=self._value[:-1]
+                    _value=_value[:-1]
 
-        if self._constant is not None and self._value!=self._constant:
+        if self._constant is not None and _value!=self._constant:
             raise ValueException("The value read was not the constant")
 
         # for fixed size pascal strings flush the remainder of the buffer
@@ -413,27 +439,183 @@ class STRING(BaseProtogenClass):
             buf.getnextbytes(flush)
 
         self._bufferendoffset=buf.getcurrentoffset()
+        # convert to unicde
+        try:
+            self._value=_value.decode(self._read_encoding)
+        except UnicodeDecodeError:
+            # this means the codec is set wrong for this phone !!
+            raise common.PhoneStringDecodeException(_value, self._read_encoding) 
 
     def writetobuffer(self, buf):
         if self._value is None:
             raise ValueNotSetException()
-
         self._bufferstartoffset=buf.getcurrentoffset()
         # calculate length
-        l=len(self._value)
+        temp_str=self.convert_for_write()
+        l=len(temp_str)
         if self._terminator is not None:
             l+=1
         if self._pascal:
             buf.appendbyte(l)
             l+=1
-        buf.appendbytes(self._value)
+        buf.appendbytes(temp_str)
         if self._terminator is not None:
             buf.appendbyte(self._terminator)
         if self._sizeinbytes is not None:
             if l<self._sizeinbytes:
                 buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
-
         self._bufferendoffset=buf.getcurrentoffset()
+
+    def convert_for_write(self):
+        temp_str=''
+        if self._value is None:
+            return temp_str
+        try:
+            temp_str=self._value.encode(self._write_encoding)
+            return temp_str
+        except UnicodeError:
+            #if self._write_encoding=='ascii':
+            pass # we'll have another go with dumbing down    
+            #else:
+            #    raise common.PhoneStringEncodeException(self._value, self._write_encoding) 
+
+        temp_str=''
+        if self._write_encoding=='ascii':
+            temp_str=self.degrade_string(self._value)
+        else:
+            # go through all characters dumbing down the ones we cannot convert
+            # we could do all at once but we only want to degrade characters the encoding
+            # does not support
+            for i in range(len(self._value)):
+                try:
+                    temp_char=self._value[i].encode(self._write_encoding)
+                except UnicodeError:
+                    temp_char=self.degrade_string(self._value[i])
+                temp_str+=temp_char
+        return temp_str
+                
+    def degrade_string(self, uni_string):
+        # normalise the string
+        kd_str=unicodedata.normalize('NFKD', uni_string)
+        stripped_str=u''
+        # go through removing all accoutrements from the character and convert some other characters
+        # defined by unicode standard ver. 3.2.0
+        replace_chars= {
+            u"\N{COMBINING GRAVE ACCENT}": u"",
+            u"\N{COMBINING ACUTE ACCENT}": u"",
+            u"\N{COMBINING CIRCUMFLEX ACCENT}": u"",
+            u"\N{COMBINING TILDE}": u"",
+            u"\N{COMBINING MACRON}": u"",
+            u"\N{COMBINING OVERLINE}": u"",
+            u"\N{COMBINING BREVE}": u"",
+            u"\N{COMBINING DOT ABOVE}": u"",
+            u"\N{COMBINING DIAERESIS}": u"",
+            u"\N{COMBINING HOOK ABOVE}": u"",
+            u"\N{COMBINING RING ABOVE}": u"",
+            u"\N{COMBINING DOUBLE ACUTE ACCENT}": u"",
+            u"\N{COMBINING CARON}": u"",
+            u"\N{COMBINING VERTICAL LINE ABOVE}": u"",
+            u"\N{COMBINING DOUBLE VERTICAL LINE ABOVE}": u"",
+            u"\N{COMBINING DOUBLE GRAVE ACCENT}": u"",
+            u"\N{COMBINING CANDRABINDU}": u"",
+            u"\N{COMBINING INVERTED BREVE}": u"",
+            u"\N{COMBINING TURNED COMMA ABOVE}": u"",
+            u"\N{COMBINING COMMA ABOVE}": u"",
+            u"\N{COMBINING REVERSED COMMA ABOVE}": u"",
+            u"\N{COMBINING COMMA ABOVE RIGHT}": u"",
+            u"\N{COMBINING GRAVE ACCENT BELOW}": u"",
+            u"\N{COMBINING ACUTE ACCENT BELOW}": u"",
+            u"\N{COMBINING LEFT TACK BELOW}": u"",
+            u"\N{COMBINING RIGHT TACK BELOW}": u"",
+            u"\N{COMBINING LEFT ANGLE ABOVE}": u"",
+            u"\N{COMBINING HORN}": u"",
+            u"\N{COMBINING LEFT HALF RING BELOW}": u"",
+            u"\N{COMBINING UP TACK BELOW}": u"",
+            u"\N{COMBINING DOWN TACK BELOW}": u"",
+            u"\N{COMBINING PLUS SIGN BELOW}": u"",
+            u"\N{COMBINING MINUS SIGN BELOW}": u"",
+            u"\N{COMBINING PALATALIZED HOOK BELOW}": u"",
+            u"\N{COMBINING RETROFLEX HOOK BELOW}": u"",
+            u"\N{COMBINING DOT BELOW}": u"",
+            u"\N{COMBINING DIAERESIS BELOW}": u"",
+            u"\N{COMBINING RING BELOW}": u"",
+            u"\N{COMBINING COMMA BELOW}": u"",
+            u"\N{COMBINING CEDILLA}": u"",
+            u"\N{COMBINING OGONEK}": u"",
+            u"\N{COMBINING VERTICAL LINE BELOW}": u"",
+            u"\N{COMBINING BRIDGE BELOW}": u"",
+            u"\N{COMBINING INVERTED DOUBLE ARCH BELOW}": u"",
+            u"\N{COMBINING CARON BELOW}": u"",
+            u"\N{COMBINING CIRCUMFLEX ACCENT BELOW}": u"",
+            u"\N{COMBINING BREVE BELOW}": u"",
+            u"\N{COMBINING INVERTED BREVE BELOW}": u"",
+            u"\N{COMBINING TILDE BELOW}": u"",
+            u"\N{COMBINING MACRON BELOW}": u"",
+            u"\N{COMBINING LOW LINE}": u"",
+            u"\N{COMBINING DOUBLE LOW LINE}": u"",
+            u"\N{COMBINING TILDE OVERLAY}": u"",
+            u"\N{COMBINING SHORT STROKE OVERLAY}": u"",
+            u"\N{COMBINING LONG STROKE OVERLAY}": u"",
+            u"\N{COMBINING SHORT SOLIDUS OVERLAY}": u"",
+            u"\N{COMBINING LONG SOLIDUS OVERLAY}": u"",
+            u"\N{COMBINING RIGHT HALF RING BELOW}": u"",
+            u"\N{COMBINING INVERTED BRIDGE BELOW}": u"",
+            u"\N{COMBINING SQUARE BELOW}": u"",
+            u"\N{COMBINING SEAGULL BELOW}": u"",
+            u"\N{COMBINING X ABOVE}": u"",
+            u"\N{COMBINING VERTICAL TILDE}": u"",
+            u"\N{COMBINING DOUBLE OVERLINE}": u"",
+            u"\N{COMBINING GRAVE TONE MARK}": u"",
+            u"\N{COMBINING ACUTE TONE MARK}": u"",
+            u"\N{COMBINING GREEK PERISPOMENI}": u"",
+            u"\N{COMBINING GREEK KORONIS}": u"",
+            u"\N{COMBINING GREEK DIALYTIKA TONOS}": u"",
+            u"\N{COMBINING GREEK YPOGEGRAMMENI}": u"",
+            u"\N{COMBINING BRIDGE ABOVE}": u"",
+            u"\N{COMBINING EQUALS SIGN BELOW}": u"",
+            u"\N{COMBINING DOUBLE VERTICAL LINE BELOW}": u"",
+            u"\N{COMBINING LEFT ANGLE BELOW}": u"",
+            u"\N{COMBINING NOT TILDE ABOVE}": u"",
+            u"\N{COMBINING HOMOTHETIC ABOVE}": u"",
+            u"\N{COMBINING ALMOST EQUAL TO ABOVE}": u"",
+            u"\N{COMBINING LEFT RIGHT ARROW BELOW}": u"",
+            u"\N{COMBINING UPWARDS ARROW BELOW}": u"",
+            u"\N{COMBINING GRAPHEME JOINER}": u"",
+            u'\N{BROKEN BAR}': '|',
+            u'\N{CENT SIGN}': 'c',
+            u'\N{COPYRIGHT SIGN}': '(C)',
+            u'\N{DIVISION SIGN}': '/',
+            u'\N{INVERTED EXCLAMATION MARK}': '!',
+            u'\N{INVERTED QUESTION MARK}': '?',
+            u'\N{LATIN CAPITAL LETTER AE}': 'Ae',
+            u'\N{LATIN CAPITAL LETTER ETH}': 'Th',
+            u'\N{LATIN CAPITAL LETTER THORN}': 'Th',
+            u'\N{LATIN SMALL LETTER AE}': 'ae',
+            u'\N{LATIN SMALL LETTER ETH}': 'th',
+            u'\N{LATIN SMALL LETTER SHARP S}': 'ss',
+            u'\N{LATIN SMALL LETTER THORN}': 'th',
+            u'\N{LEFT-POINTING DOUBLE ANGLE QUOTATION MARK}': '<<',
+            u'\N{MIDDLE DOT}': '*',
+            u'\N{MULTIPLICATION SIGN}': '*',
+            u'\N{PLUS-MINUS SIGN}': '+/-',
+            u'\N{REGISTERED SIGN}': '(R)',
+            u'\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}': '>>',
+            u'\N{SOFT HYPHEN}': '-',
+            u'\N{VULGAR FRACTION ONE HALF}': '1/2',
+            u'\N{VULGAR FRACTION ONE QUARTER}': '1/4',
+            u'\N{VULGAR FRACTION THREE QUARTERS}': '3/4',
+            }
+        for i in range(len(kd_str)):
+            if kd_str[i] in replace_chars:
+                stripped_str+=replace_chars[kd_str[i]]
+            else:
+                stripped_str+=kd_str[i]
+        # now we have modified the string try converting again
+        try:
+            temp_str=stripped_str.encode('ascii')
+        except:
+            raise common.PhoneStringEncodeException(self._value, self._write_encoding) 
+        return temp_str
 
     def packetsize(self):
         if self._sizeinbytes is not None:
@@ -442,7 +624,7 @@ class STRING(BaseProtogenClass):
         if self._value is None:
             raise ValueNotSetException()
 
-        l=len(self._value)
+        l=len(self.convert_for_write())
         if self._terminator is not None:
             l+=1
 

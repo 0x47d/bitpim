@@ -105,6 +105,18 @@ class AutoPortsFailure(CommsException):
                self.message+="I couldn't detect any candidate ports"
           CommsException.__init__(self, self.message, self.device)
 
+class PhoneStringDecodeException(Exception):
+    def __init__(self, string=None, codec=None):
+        self.string=string
+        self.codec=codec
+        Exception.__init__(self, "Unable to decode <%s> using codec <%s>" % (`string`, codec))
+
+class PhoneStringEncodeException(Exception):
+    def __init__(self, string=None, codec=None):
+        self.string=string
+        self.codec=codec
+        Exception.__init__(self, "Unable to encode <%s> using codec <%s>" % (`string`, codec))
+
 def datatohexstring(data):
     """Returns a pretty printed hexdump of the data
 

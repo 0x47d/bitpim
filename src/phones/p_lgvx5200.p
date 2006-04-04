@@ -28,6 +28,8 @@ BOOL=BOOLlsb
 
 BREW_FILE_SYSTEM=0
 
+PHONE_ENCODING='iso-8859-1'
+
 %}
 
 PACKET indexentry:
@@ -108,7 +110,7 @@ PACKET sms_out:
     4 LGCALDATE timesent # time the message was sent
     2 UINT unknown2 # zero
     4 GPSDATE GPStime  # num seconds since 0h 1-6-80, time message received by phone
-    21 STRING subject
+    21 STRING {'encoding': PHONE_ENCODING} subject
     1 UNKNOWN unknown4
     1 UINT num_msg_elements # up to 7
     * LIST {'elementclass': msg_record, 'length': 7} +messages
@@ -141,7 +143,7 @@ PACKET sms_in:
     1 UINT locked # 1 if the message is locked, 0 otherwise
     8 UINT unknown6 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
-    21 STRING subject
+    21 STRING {'encoding': PHONE_ENCODING} subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     4 UINT unknown7 # zeros
@@ -161,8 +163,8 @@ PACKET sms_in:
     * UNKNOWN unknown9
 
 PACKET sms_quick_text:
-    * LIST {'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
-        101 STRING {'default': ""} +msg # include terminating NULL
+    * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
+        101 STRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
 
 # Text Memos. LG memo support is weak, it only supports the raw text and none of 
 # the features that other phones support, when you run bitpim you see loads of
@@ -171,7 +173,7 @@ PACKET textmemo:
     4 UINT { 'constant':1 } +dunno
     4 GPSDATE GPStime # time the memo was writen
     4 LGCALDATE memotime # time the memo was writen LG time
-    152 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    152 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount

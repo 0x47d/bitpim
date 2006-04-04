@@ -46,6 +46,9 @@ MEDIA_RINGTONE_DEFAULT_ICON=1
 MEDIA_IMAGE_DEFAULT_ICON=0
 MEDIA_VIDEO_DEFAULT_ICON=0
 
+PHONE_ENCODING='iso-8859-1'
+
+
 %}
     
 PACKET indexentry:
@@ -63,7 +66,7 @@ PACKET indexfile:
 
 PACKET pbgroup:
     "A single group"
-    23 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } name
+    23 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -93,7 +96,7 @@ PACKET scheduleexceptionfile:
 
 PACKET scheduleevent:
     4 UINT pos "position within file, used as an event id"
-    33 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    33 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } description
     4 LGCALDATE start
     4 LGCALDATE end
     4 LGCALREPEAT repeat # complicated bit mapped field
@@ -118,7 +121,7 @@ PACKET call:
     4 UINT unknown2 # different for each call
     4 UINT duration #seconds, not certain about length of this field
     49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    36 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     2 UINT numberlength # length of phone number
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
     3 UINT unknown2 # always seems to be 0
@@ -194,7 +197,7 @@ PACKET sms_out:
     4 LGCALDATE timesent # time the message was sent
     2 UINT unknown2 # zero
     4 GPSDATE GPStime  # num seconds since 0h 1-6-80, time message received by phone
-    21 STRING subject
+    21 STRING {'encoding': PHONE_ENCODING} subject
     1 UINT unknown4
     1 UINT num_msg_elements # up to 7
     * LIST {'elementclass': msg_record, 'length': 7} +messages
@@ -230,7 +233,7 @@ PACKET sms_in:
     2 UINT unknown8 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
     6 DATA unknown11 # zero
-    21 STRING subject
+    21 STRING {'encoding': PHONE_ENCODING} subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     2 UINT unknown6 # zeros
@@ -253,13 +256,13 @@ PACKET sms_in:
 
 PACKET sms_quick_text:
     * LIST {'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
-        101 STRING {'default': ""} +msg # include terminating NULL
+        101 STRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
 
 # Text Memos. LG memo support is weak, it only supports the raw text and none of 
 # the features that other phones support, when you run bitpim you see loads of
 # options that do not work in the vx8100 on the memo page
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 STRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen
 
 PACKET textmemofile:

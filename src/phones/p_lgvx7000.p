@@ -39,6 +39,8 @@ MAXCALENDARDESCRIPTION=38
 NUMEMAILS=2
 NUMPHONENUMBERS=5
 
+PHONE_ENCODING='iso-8859-1'
+
 # Text Memo const
 text_memo_file='sch/memo.dat'
 
@@ -96,10 +98,10 @@ PACKET pbentry:
    2  UINT {'constant': 0x181, 'constantexception': PhoneBookBusyException} +entrysize
    4  UINT serial2
    2  UINT entrynumber
-   23 STRING {'raiseonunterminatedread': False} name
+   23 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
    2  UINT group
    *  LIST {'length': NUMEMAILS} +emails:
-       49 STRING {'raiseonunterminatedread': False} email
+       49 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
    2  UINT ringtone                                     "ringtone index for a call"
    2  UINT msgringtone                                  "ringtone index for a text message"
    2  UINT wallpaper
@@ -144,7 +146,7 @@ PACKET scheduleevent:
    1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
    1 UINT ringtone
    4 UINT { 'default': 0 } +pad2
-   39 STRING {'raiseontruncate': False,
+   39 STRING {'encoding': PHONE_ENCODING, 'raiseontruncate': False,
               'raiseonunterminatedread': False } description
 
 PACKET schedulefile:
@@ -153,7 +155,7 @@ PACKET schedulefile:
 
 # Text Memos
 PACKET textmemo:
-   151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+   151 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
    4 UINT itemcount
@@ -164,7 +166,7 @@ PACKET callentry:
    4 GPSDATE GPStime
    4 UNKNOWN pad1
    4 UINT duration
-   49 STRING { 'raiseonunterminatedread': False } number
+   49 STRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False } number
    36 STRING { 'raiseonunterminatedread': False } name
    8 UNKNOWN pad2
 
@@ -173,42 +175,6 @@ PACKET callhistory:
    1 UNKNOWN pad1
    * LIST { 'elementclass': callentry } +calls
 
-# SMS stuff
-PACKET SMSInboxFile:
-   113 UNKNOWN pad1
-   4 LGCALDATE datetime
-   10 UNKNOWN pad2
-   1 UINT locked
-   9 UNKNOWN pad3
-   3770 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
-   57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _from
-   47 UNKNOWN pad4
-   57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
-   * UNKNOWN pad5
-
-PACKET SMSSavedFile:
-   4 UINT outboxmsg
-   4 UNKNOWN pad
-   if self.outboxmsg:
-       * SMSOutboxFile outbox
-   if not self.outboxmsg:
-       * SMSInboxFile inbox
-
-PACKET SMSOutboxFile:
-   4 UNKNOWN pad1
-   1 UINT locked
-   4 LGCALDATE datetime
-   1610 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
-   4 UNKNOWN pad2
-   35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
-   35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _to
-   * UNKNOWN pad3
-
-PACKET SMSCannedMsg:
-   101 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +text
-
-PACKET SMSCannedFile:
-   * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'elementclass': SMSCannedMsg } +items
 ###
 ### SMS
 ###
@@ -270,7 +236,7 @@ PACKET sms_out:
    1 UNKNOWN unknown2
    4 LGCALDATE timesent # time the message was sent
    6 UNKNOWN unknown2
-   21 STRING subject
+   21 STRING {'encoding': PHONE_ENCODING}subject
    1 UNKNOWN unknown4
    2 UINT num_msg_elements # up to 10
    * LIST {'elementclass': msg_record, 'length': 7} +messages
@@ -303,7 +269,7 @@ PACKET sms_in:
    1 UINT locked # 1 if the message is locked, 0 otherwise
    8 UINT unknown6 # zero
    1 UINT priority # 1 if the message is high priority, 0 otherwise
-   21 STRING subject
+   21 STRING {'encoding': PHONE_ENCODING} subject
    1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
    1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
    4 UINT unknown7 # zeros
