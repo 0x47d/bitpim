@@ -75,7 +75,7 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
 
     def OnPhoneReboot(self,_):
         mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.phonerebootgui.Request),
+        mw.MakeCall( gui.Request(mw.wt.phonerebootrequest),
                      gui.Callback(self.OnPhoneRebootResults) )
 
     def OnPhoneRebootResults(self, exception, _):
@@ -88,7 +88,7 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
 
     def OnPhoneOffline(self,_):
         mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.phoneofflinegui.Request),
+        mw.MakeCall( gui.Request(mw.wt.phoneofflinerequest),
                      gui.Callback(self.OnPhoneOfflineResults) )
 
     def OnPhoneOfflineResults(self, exception, _):
@@ -97,7 +97,7 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
 
     def OnModemMode(self,_):
         mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.modemmodegui.Request),
+        mw.MakeCall( gui.Request(mw.wt.modemmoderequest),
                      gui.Callback(self.OnModemModeResults) )
 
     def OnModemModeResults(self, exception, _):
