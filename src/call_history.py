@@ -577,4 +577,5 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
                 self._item_list.Select(item, 0)
             self.populate()
             self._stats._save_to_db(self._stats._data)
+            self._stats.CalculateStats()
 
