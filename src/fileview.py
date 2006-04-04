@@ -463,7 +463,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             # I'm the drag source, forget 'bout it !
             return
         target=self # fallback
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        t=self._tree.mw.GetCurrentActiveWidget()
         if isinstance(t, FileView):
             # changing target in dragndrop
             target=t

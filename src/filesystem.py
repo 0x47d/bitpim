@@ -172,7 +172,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
 
         self.__dragging=False
         self.add_files=[]
-        self.droptarget=fileview.MyFileDropTarget(self, True, True)
+        self.droptarget=fileview.MyFileDropTarget(self, True, False)
         self.SetDropTarget(self.droptarget)
 
     def OnPaint(self, evt):
@@ -198,7 +198,7 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             # I'm the drag source, forget 'bout it !
             return
         target=self # fallback
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        t=self.mainwindow.GetCurrentActiveWidget()
         if isinstance(t, FileSystemFileView):
             # changing target in dragndrop
             target=t
@@ -515,7 +515,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
 
     def OnDropFiles(self, x, y, filenames):
         target=self
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        t=self.mainwindow.GetCurrentActiveWidget()
         if isinstance(t, FileSystemDirectoryView):
             # changing target in dragndrop
             target=t
@@ -530,7 +530,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
 
     def OnDragOver(self, x, y, d):
         target=self
-        t=self.mainwindow.nb.GetPage(self.mainwindow.nb.GetSelection())
+        t=self.mainwindow.GetCurrentActiveWidget()
         if isinstance(t, FileSystemDirectoryView):
             # changing target in dragndrop
             target=t
