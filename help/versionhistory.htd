@@ -1,5 +1,11 @@
 #include "pagestart.h"
 
+   <h2><a name="0.8.12">Changes in 0.8.12</a></h2>
+    <ul>
+      <li>Fixed Task Bar Icon discrepancies.
+      <li>Improved Data Recording playback.
+    </ul>
+
    <h2><a name="0.8.11">Changes in 0.8.11</a></h2>
     <ul>
       <li>Fixed bugs with new GUI, getting call history, phonebook column picker and outlook import filter.

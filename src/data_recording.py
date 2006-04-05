@@ -65,6 +65,7 @@ def record_to_file(file_name, append=False):
         _the_recorder.stop()
     _rec=DR_Rec_File(file_name, append)
     _rec.start()
+    pubsub.publish(pubsub.DR_RECORD, data=_rec)
 
 def playback_from_file(file_name):
     "start a playback session from the specified file"
@@ -73,6 +74,7 @@ def playback_from_file(file_name):
         _the_player.stop()
     _player=DR_Read_File(file_name)
     _player.start()
+    pubsub.publish(pubsub.DR_PLAY, data=_player)
 
 def stop():
     "stop a recording and/or playback session"
@@ -81,7 +83,8 @@ def stop():
         _the_recorder.stop()
     if DR_Play and _the_player:
         _the_player.stop()
-    
+    pubsub.publish(pubsub.DR_STOP)
+
 def register(start_recording=None, start_playback=None, stop=None):
     if start_recording:
         pubsub.subscribe(start_recording, pubsub.DR_RECORD)
@@ -231,7 +234,6 @@ class DR_Rec_File(DR_File):
         self._valid=False
         DR_On=False
         _the_recorder=None
-        pubsub.publish(pubsub.DR_STOP, data=self)
 
     def start(self):
         global DR_On, _the_recorder
@@ -240,8 +242,6 @@ class DR_Rec_File(DR_File):
             self._valid=True
         DR_On=True
         _the_recorder=self
-        # send a notice to all
-        pubsub.publish(pubsub.DR_RECORD, data=self)
 
     def pause(self, data_type=DR_Type_All):
         self._pause_type=data_type

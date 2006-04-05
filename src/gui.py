@@ -75,7 +75,7 @@ if guihelper.IsMSWindows():
             super(TaskBarIcon, self).__init__()
             self.mw=mw
             self._set_icon()
-            wx.EVT_TASKBAR_LEFT_DCLICK(self, self.OnRestore)
+            wx.EVT_TASKBAR_LEFT_DCLICK(self, self.OnDclkRestore)
 
         def _create_menu(self):
             _menu=wx.Menu()
@@ -100,6 +100,9 @@ if guihelper.IsMSWindows():
 
         def CreatePopupMenu(self):
             return self._create_menu()
+        def OnDclkRestore(self, _):
+            self.mw.Iconize(False)
+            wx.PostEvent(self.mw, wx.IconizeEvent(self.mw.GetId(), False))
         def OnRestore(self, _):
             self.mw.Iconize(False)
         def OnMinimize(self, _):
@@ -927,7 +930,7 @@ class MainWindow(wx.Frame):
             self.oldwndproc = win32gui.SetWindowLong(self.GetHandle(),
                                                      win32con.GWL_WNDPROC,
                                                      self.MyWndProc)
-        if self._taskbar:
+        if self._taskbar and self._taskbar.IsOk():
             wx.EVT_ICONIZE(self, self.OnIconize)
 
         # response to pubsub request
@@ -1041,6 +1044,7 @@ class MainWindow(wx.Frame):
             self.Show(False)
         else:
             self.Show(True)
+            self.Raise()
 
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
@@ -1676,6 +1680,8 @@ class WorkerThread(WorkerThreadFramework):
     def __init__(self):
         WorkerThreadFramework.__init__(self)
         self.commphone=None
+        data_recording.register(self.OnDataRecording, self.OnDataRecording,
+                                self.OnDataRecording)
 
     def exit(self):
         if __debug__: self.checkthread()
@@ -2010,6 +2016,9 @@ class WorkerThread(WorkerThreadFramework):
             time.sleep(0.3)
 
         return results
+
+    def OnDataRecording(self, _=None):
+        self.clearcomm()
 
 #-------------------------------------------------------------------------------
 # For windows platform only
