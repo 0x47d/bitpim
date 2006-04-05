@@ -1980,7 +1980,7 @@ class WorkerThread(WorkerThreadFramework):
                 time.sleep(0.3)
                 # add to zip file
                 zi=zipfile.ZipInfo()
-                zi.filename=k[strip:]
+                zi.filename=k[strip:].encode('ascii', 'replace')
                 if files[k]['date'][0]==0:
                     zi.date_time=(0,0,0,0,0,0)
                 else:
