@@ -469,6 +469,31 @@ class Phone(com_lgvx4400.Phone):
 
 #----- SMS  ---------------------------------------------------------------------------
 
+    def _readsms(self):
+        res={}
+        # go through the sms directory looking for messages
+        for item in self.listfiles("sms").values():
+            folder=None
+            for f,pat in self.protocolclass.SMS_PATTERNS.items():
+                if pat.match(item['name']):
+                    folder=f
+                    break
+            if folder:
+                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
+                self.logdata("SMS message file " +item['name'], buf.getdata())
+            if folder=='Inbox':
+                sf=self.protocolclass.sms_in()
+                sf.readfrombuffer(buf, logtitle="SMS inbox item")
+                entry=self._getinboxmessage(sf)
+                res[entry.id]=entry
+            elif folder=='Sent':
+                sf=self.protocolclass.sms_out()
+                sf.readfrombuffer(buf, logtitle="SMS sent item")
+                entry=self._getoutboxmessage(sf)
+                res[entry.id]=entry
+        return res 
+
+
     def _setquicktext(self, result):
         sf=self.protocolclass.sms_canned_file()
         quicktext=result.get('canned_msg', [])
@@ -508,7 +533,7 @@ class Phone(com_lgvx4400.Phone):
         entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
         entry._from=self._getsender(sf.sender, sf.sender_length)
         entry.subject=sf.subject
-#        entry.locked=sf.locked
+        entry.locked=sf.locked
 #        if sf.priority==0:
 #            entry.priority=sms.SMSEntry.Priority_Normal
 #        else:
@@ -520,7 +545,10 @@ class Phone(com_lgvx4400.Phone):
 
     def _getoutboxmessage(self, sf):
         entry=sms.SMSEntry()
-        entry.folder=entry.Folder_Sent
+        if not sf.saved:
+            entry.folder=entry.Folder_Sent
+        else:
+            entry.folder=entry.Folder_Saved
         entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
         # add all the recipients
         for r in sf.recipients:
@@ -536,7 +564,7 @@ class Phone(com_lgvx4400.Phone):
 #            entry.priority=sms.SMSEntry.Priority_Normal
 #        else:
 #            entry.priority=sms.SMSEntry.Priority_High
-#        entry.locked=sf.locked
+        entry.locked=sf.locked
         entry.callback=sf.callback
         return entry
 

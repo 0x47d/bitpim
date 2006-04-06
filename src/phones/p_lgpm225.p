@@ -305,8 +305,7 @@ PACKET textmemofile:
 #   Inbox messages are in files called 'inbox000.dat', the number 000 varies for
 #   each message, typically there are no gaps in the numbering, but gaps can appear
 #   if a message is deleted.
-#   Outbox message are named 'outbox000.dat', unsent messages are named 'sf00.dat',
-#   only two digit file name that suggests a max of 100 message for this type.
+#   Outbox and draft message are named 'outbox000.dat'.
 #   Messages in the outbox get updated when the message is received by the recipient,
 #   they contain a delivery flag and a delivery time for all the possible 10 recipients.
 #   The pm225 stores SMS in plain text (unlike some other LG phones)
@@ -321,20 +320,12 @@ PACKET recipient_record:
     4 LGCALDATE time # sent if status=1, received when status=2
     12 DATA unknown2
 
-PACKET sms_saved:
-    4 UINT outboxmsg
-    4 GPSDATE GPStime   # num seconds since 0h 1-6-80
-    if self.outboxmsg:
-        * sms_out outbox
-    if not self.outboxmsg:
-        * sms_in inbox
-
 PACKET sms_out:
     4 UINT index # starting from 1, unique
     1 UINT locked # 1=locked
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
-    1 UINT unknown2 # zero
+    1 UINT saved # 0 for outbox, 1 for draft
     178 STRING msg
     1 UINT unknown3
     16 STRING callback 
@@ -359,8 +350,8 @@ PACKET sms_in:
     4 LGCALDATE lg_time # time the message was sent
     4 GPSDATE GPStime # num seconds since 0h 1-6-80, time message received by phone
     2 UINT read # 1 if message has been read, 0 otherwise (kind of a guess, not enough data to be sure)
-    9 UINT unknown5 # these are flags, not enough data to decode
-    #1 UINT locked # 1 if the message is locked, 0 otherwise
+    1 UINT locked # 1 if the message is locked, 0 otherwise
+    8 UINT unknown5 # these are flags, not enough data to decode
     #1 UINT priority # 1 if the message is high priority, 0 otherwise
     73 STRING subject 
     2 UINT msglength
