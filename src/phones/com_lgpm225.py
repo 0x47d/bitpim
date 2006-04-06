@@ -323,23 +323,23 @@ class Phone(com_lgvx4400.Phone):
         "Saves out the phonebook"
         self.savegroups(data)
         
-        if __debug__:
-            # for testing without a real phone, the packets are stored in a 
-            # file and can be examined
-            counter=0
-            pb_entries={}
-            for i in data['phonebook'].keys():
-                ii=data['phonebook'][i]
-                entry=self.makeentry(counter, ii, data)
-                counter+=1
-                req=self.protocolclass.pbupdateentryrequest()
-                req.entry=entry
-                req.header.sequence=counter
-                buffer=prototypes.buffer()
-                req.writetobuffer(buffer, logtitle="New contents for pim/pb"+`counter`+".dat")
-                self.writefile("pim/pb"+`counter`+".dat", buffer.getvalue())
-                pb_entries[counter]=entry
-            self.save_phonebook_media(pb_entries)
+#        if __debug__:
+#            # for testing without a real phone, the packets are stored in a 
+#            # file and can be examined
+#            counter=0
+#            pb_entries={}
+#            for i in data['phonebook'].keys():
+#                ii=data['phonebook'][i]
+#                entry=self.makeentry(counter, ii, data)
+#                counter+=1
+#                req=self.protocolclass.pbupdateentryrequest()
+#                req.entry=entry
+#               req.header.sequence=counter
+ #               buffer=prototypes.buffer()
+#                req.writetobuffer(buffer, logtitle="New contents for pim/pb"+`counter`+".dat")
+#                self.writefile("pim/pb"+`counter`+".dat", buffer.getvalue())
+#                pb_entries[counter]=entry
+#            self.save_phonebook_media(pb_entries)
 
         # set up progress bar on main window
         progressmax=len(data['phonebook'].keys())
@@ -514,7 +514,7 @@ class Phone(com_lgvx4400.Phone):
 #        else:
 #            entry.priority=sms.SMSEntry.Priority_High
         entry.read=sf.read
-        entry.text=unicode(sf.msg, errors='ignore')
+        entry.text=sf.msg
         entry.callback=sf.callback
         return entry
 
@@ -530,8 +530,8 @@ class Phone(com_lgvx4400.Phone):
                 if confirmed:
                     confirmed_date="%d%02d%02dT%02d%02d00" % r.time
                 entry.add_recipient(r.number, confirmed, confirmed_date)
-        entry.subject=unicode(sf.msg[:28], errors='ignore')
-        entry.text=unicode(sf.msg, errors='ignore')
+        entry.subject=sf.msg[:28]
+        entry.text=sf.msg
 #        if sf.priority==0:
 #            entry.priority=sms.SMSEntry.Priority_Normal
 #        else:

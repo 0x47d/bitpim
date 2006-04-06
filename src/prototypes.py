@@ -348,8 +348,14 @@ class STRING(BaseProtogenClass):
         if len(args)==0:
             pass
         elif len(args)==1:
+            # convert non-string objects to string representation
+            # allows strings to be initialised with integers etc.
+            if not isinstance(args[0], (str, unicode)):
+                # convert numbers into strings
+                temp=str(args[0])
+                self._value=unicode(temp, 'ascii', 'replace')
             # we should only receive unicode strings from bitpim, but...
-            if not isinstance(args[0], unicode):
+            elif not isinstance(args[0], unicode):
                 # there is a bug, the docs say this should work on unicode strings but it does not
                 self._value=unicode(args[0], 'ascii', 'replace')
             else:
