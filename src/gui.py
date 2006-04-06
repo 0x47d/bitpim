@@ -460,7 +460,7 @@ class MainApp(wx.App):
         # ensure various objects/functions are changed to not-safe
         objects={self.frame:
                     ( "dlgsendphone", "OnDataSendPhone", "OnDataSendPhoneGotFundamentals", "OnDataSendPhoneResults"),
-                 self.frame.filesystemwidget:
+                 self.frame.tree.filesystemwidget:
                     ( "OnFileDelete", "OnFileOverwrite", "OnNewSubdir", "OnNewFile", "OnDirDelete", "OnRestore"),
                  self.frame.wt:
                     ( "senddata", "writewallpaper", "writeringtone", "writephonebook", "writecalendar", "rmfile",
@@ -490,7 +490,7 @@ class MainApp(wx.App):
                    guihelper.ID_FV_RESTORE, guihelper.ID_FV_ADD)
         mb=self.frame.GetMenuBar()
         menus=[mb.GetMenu(i) for i in range(mb.GetMenuCount())]
-        fsw=self.frame.filesystemwidget
+        fsw=self.frame.tree.filesystemwidget
         if  fsw is not None:
             menus.extend( [fsw.list.filemenu, fsw.tree.dirmenu, fsw.list.genericmenu] )
         for menu in menus:
