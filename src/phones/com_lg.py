@@ -103,22 +103,33 @@ class LGPhonebook:
         # turn it back to normal
         data=common.pppunescape(data)
 
-        # sometimes there is other crap at the begining
-        d=data.find(firsttwo)
-        if d>0:
-            self.log("Junk at begining of LG packet, data at "+`d`)
-            self.logdata("Original LG data", origdata, None)
-            self.logdata("Working on LG data", data, None)
-            data=data[d:]
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
+        # check the CRC at this point to see if we might have crap at the beginning
         calccrc=common.crcs(data)
         if calccrc!=crc:
-            self.logdata("Original LG data", origdata, None)
-            self.logdata("Working on LG data", data, None)
-            raise common.CommsDataCorruption("LG packet failed CRC check", self.desc)
-        
+            # sometimes there is other crap at the begining
+            d=data.find(firsttwo)
+            if d>0:
+                self.log("Junk at begining of LG packet, data at "+`d`)
+                self.logdata("Original LG data", origdata, None)
+                self.logdata("Working on LG data", data, None)
+                data=data[d:]
+                # recalculate CRC without the crap
+                calccrc=common.crcs(data)
+            # see if the crc matches now
+            if calccrc!=crc:
+                self.logdata("Original LG data", origdata, None)
+                self.logdata("Working on LG data", data, None)
+                raise common.CommsDataCorruption("LG packet failed CRC check", self.desc)
+
+        # phone will respond with 0x13 and 0x14 if we send a bad or malformed command        
+        if ord(data[0])==0x13:
+            raise com_brew.BrewBadBrewCommandException()
+        if ord(data[0])==0x14:
+            raise com_brew.BrewMalformedBrewCommandException()
+
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()
