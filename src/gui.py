@@ -1305,8 +1305,8 @@ class MainWindow(wx.Frame):
         if results['sync'].has_key('todo'):
             v=results['sync']['todo']
             if v=='MERGE': raise NotImplementedError
-            self.tree.GetActiveTodoWidget().populatefs(results)
-            self.tree.GetActiveTodoWidget().populate(results)
+            self.GetActiveTodoWidget().populatefs(results)
+            self.GetActiveTodoWidget().populate(results)
         # SMS
         if results['sync'].has_key('sms'):
             v=results['sync']['sms']
@@ -1399,7 +1399,7 @@ class MainWindow(wx.Frame):
         v=dlg.GetTodoSetting()
         if v!=dlg.NOTREQUESTED:
             merge=v!=dlg.OVERWRITE
-            self.tree.GetActiveTodoWidget().getdata(data)
+            self.GetActiveTodoWidget().getdata(data)
             todo.append((self.wt.writetodo, "Todo", merge))
 
         ### SMS
