@@ -75,6 +75,11 @@ class BitPimWidget:
     def GetHelpID(self):
         return self.help_id
 
+    def ActivateSelf(self, id=None):
+        if id==None:
+            id=self.id
+        self._tree.SelectItem(id)
+
     # override these functions to access menu/toolbar items
     # each command has a "Can" function, this controls greying
     # out options that are not supported by the widget

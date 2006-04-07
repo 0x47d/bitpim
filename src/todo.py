@@ -578,6 +578,7 @@ class TodoWidget(wx.Panel, widgets.BitPimWidget):
         self._publish_thisweek_events()
 
     def OnTodaySelection(self, evt):
+        self.ActivateSelf()
         if evt.data:
             self._item_list.SetSelection(evt.data.get('index', wx.NOT_FOUND))
             self._populate_each(evt.data.get('key', None))

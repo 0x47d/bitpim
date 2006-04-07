@@ -916,6 +916,7 @@ class Calendar(calendarcontrol.Calendar):
             self.dialog.Show(True)
 
     def OnTodayItem(self, evt):
+        self.ActivateSelf()
         if evt.data:
             args=evt.data['datetime']+(evt.data['entry'],)
             self.OnEdit(*args)

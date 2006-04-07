@@ -348,6 +348,7 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
         today_event.broadcast()
 
     def OnTodaySelection(self, evt):
+        self.ActivateSelf()
         if evt.data:
             self._item_list.SetSelection(evt.data.get('index', wx.NOT_FOUND))
             self._populate_each(evt.data.get('key', None))

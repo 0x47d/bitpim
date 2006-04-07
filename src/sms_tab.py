@@ -380,6 +380,7 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         wx.EVT_LIST_ITEM_SELECTED(self, self._item_list.GetId(), self._OnSelChanged)
         pubsub.subscribe(self._OnPBLookup, pubsub.RESPONSE_PB_LOOKUP)
         # register for Today selection
+        self.today_data=None
         today.bind_notification_event(self.OnTodaySelection,
                                       today.Today_Group_IncomingSMS)
         # all done
@@ -403,6 +404,8 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
                     self._item_info.Clear()
                     self._item_text.Set(None)
                     self.populate()
+                self._on_today_selection()
+                return
 
     def GetRightClickMenuItems(self, node):
         result=[]
@@ -438,13 +441,21 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         today_event.broadcast()
 
     def OnTodaySelection(self, evt):
-        if evt.data and self._item_list.GetItemCount():
+        inbox_node=self._stats.sms_tree_nodes[sms.SMSEntry.Folder_Inbox]
+        self.today_data=evt.data
+        self.ActivateSelf(inbox_node)
+
+    def _on_today_selection(self):
+        if self.today_data and self._item_list.GetItemCount():
             item=self._item_list.GetTopItem()
-            while item>0:
-                if evt.data==self._item_list.GetItemData(item):
+            while item>=0:
+                if self.today_data['id']==self._item_list.GetItemData(item):
                     self._item_list.Select(item, 1)
-                    return
+                    self._item_list.EnsureVisible(item)
+                else:
+                    self._item_list.Select(item, 0)
                 item=self._item_list.GetNextItem(item)
+        self.today_data=None
 
     def OnSelectAll(self, _):
         item=self._item_list.GetTopItem()
@@ -485,17 +496,6 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
             e.callback=s
         self._item_info.Set(e)
         self._item_text.Set({'memo': e.text})
-
-#    def CanDelete(self):
-#        if self.read_only:
-#            return False
-#        return self._sms.can_delete()
-
-#    def OnDelete(self, _):
-#        if self.read_only:
-#            return
-#        if self._sms.delete_selection(self._data):
-#            self._save_to_db(sms_dict=self._data)
 
     def HasHistoricalData(self):
         return self._stats.HasHistoricalData()

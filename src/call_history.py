@@ -320,16 +320,15 @@ class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
         keys=[(x.datetime, k) for k,x in self._data.items()]
         keys.sort()
         keys.reverse()
-        today_event=today.TodayIncomingCallsEvent()
-        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for _,k in keys \
-                                    if self._data[k].folder==CallHistoryEntry.Folder_Incoming]
-        today_event.broadcast()
-        today_event=today.TodayMissedCallsEvent()
-        today_event.names=[self._data[k].summary(self._name_map.get(self._data[k].number, None))\
-                                    for _,k in keys \
-                                    if self._data[k].folder==CallHistoryEntry.Folder_Missed]
-        today_event.broadcast()
+        today_event_in=today.TodayIncomingCallsEvent()
+        today_event_miss=today.TodayMissedCallsEvent()
+        for _,k in keys:
+            if self._data[k].folder==CallHistoryEntry.Folder_Incoming:
+                today_event_in.append(self._data[k].summary(self._name_map.get(self._data[k].number, None)), {'id':k})
+            if self._data[k].folder==CallHistoryEntry.Folder_Missed:
+                today_event_miss.append(self._data[k].summary(self._name_map.get(self._data[k].number, None)), {'id':k})
+        today_event_in.broadcast()
+        today_event_miss.broadcast()
 
     def _populate(self):
         # lookup phone book for names
@@ -488,6 +487,11 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
         vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticText(self, -1, '  Note: Click column headings to sort data'), 0, wx.ALIGN_CENTRE|wx.BOTTOM, 10)
         # all done
+        today.bind_notification_event(self.OnTodaySelectionIncoming,
+                                      today.Today_Group_IncomingCalls)
+        today.bind_notification_event(self.OnTodaySelectionMissed,
+                                      today.Today_Group_MissedCalls)
+        self.today_data=None
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         vbs.Fit(self)
@@ -506,6 +510,30 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
                             self._item_list.Select(item, 0)
                             item=self._item_list.GetNextItem(item)
                     self.populate()
+                self._on_today_selection()
+                return
+
+    def OnTodaySelectionIncoming(self, evt):
+        node=self._stats.call_history_tree_nodes["Incoming"]
+        self.today_data=evt.data
+        self.ActivateSelf(node)
+
+    def OnTodaySelectionMissed(self, evt):
+        node=self._stats.call_history_tree_nodes["Missed"]
+        self.today_data=evt.data
+        self.ActivateSelf(node)
+
+    def _on_today_selection(self):
+        if self.today_data and self._item_list.GetItemCount():
+            item=self._item_list.GetTopItem()
+            while item!=-1:
+                if self.today_data['id']==self._item_list.GetItemData(item):
+                    self._item_list.Select(item, 1)
+                    self._item_list.EnsureVisible(item)
+                else:
+                    self._item_list.Select(item, 0)
+                item=self._item_list.GetNextItem(item)
+        self.today_data=None
 
     def GetRightClickMenuItems(self, node):
         result=[]
