@@ -430,8 +430,15 @@ class ConfigDialog(wx.Dialog):
             gs.Add(wx.StaticText(self, -1, 'Task Bar Icon'), pos=(_row,0),
                    flag=wx.ALIGN_CENTER_VERTICAL)
             self.taskbaricon=wx.CheckBox(self, wx.NewId(),
-                                         'Place BitPim Icon in the System Tray')
+                                         'Place BitPim Icon in the System Tray when Minimized')
             gs.Add(self.taskbaricon, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+            wx.EVT_CHECKBOX(self, self.taskbaricon.GetId(),
+                            self.OnTaskbarChkbox)
+            _row+=1
+            self.taskbaricon1=wx.CheckBox(self, wx.NewId(),
+                                         'Place BitPim Icon in the System Tray when Closed')
+            self.taskbaricon1.Enable(False)
+            gs.Add(self.taskbaricon1, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
             _row+=1
         else:
             self.taskbaricon=None
@@ -596,6 +603,13 @@ class ConfigDialog(wx.Dialog):
         # Don't destroy the dialong, just put it away...
         self.EndModal(wx.ID_CANCEL)
 
+    def OnTaskbarChkbox(self, evt):
+        if evt.IsChecked():
+            self.taskbaricon1.Enable(True)
+        else:
+            self.taskbaricon1.SetValue(False)
+            self.taskbaricon1.Enable(False)
+
     def setfromconfig(self):
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
@@ -609,7 +623,14 @@ class ConfigDialog(wx.Dialog):
                                                     self.update_choices[0]))
         self.startup.SetValue(self.mw.config.ReadInt("startwithtoday", 0))
         if self.taskbaricon:
-            self.taskbaricon.SetValue(self.mw.config.ReadInt('taskbaricon', 0))
+            if self.mw.config.ReadInt('taskbaricon', 0):
+                self.taskbaricon.SetValue(True)
+                self.taskbaricon1.Enable(True)
+                self.taskbaricon1.SetValue(self.mw.config.ReadInt('taskbaricon1', 0))
+            else:
+                self.taskbaricon.SetValue(False)
+                self.taskbaricon1.SetValue(False)
+                self.taskbaricon1.Enable(False)
         self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
 
     def setdefaults(self):
@@ -659,8 +680,10 @@ class ConfigDialog(wx.Dialog):
         # Task Bar Icon option
         if self.taskbaricon:
             self.mw.config.WriteInt('taskbaricon', self.taskbaricon.GetValue())
+            self.mw.config.WriteInt('taskbaricon1', self.taskbaricon1.GetValue())
         else:
             self.mw.config.WriteInt('taskbaricon', 0)
+            self.mw.config.WriteInt('taskbaricon1', 0)
         # startup autodetect option
         self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
         # ensure config is saved

@@ -109,7 +109,7 @@ if guihelper.IsMSWindows():
         def OnMinimize(self, _):
             self.mw.Iconize(True)
         def OnClose(self, _):
-            self.mw.Close()
+            self.mw.Close(True)
 
 ###
 ### Implements a nice flexible callback object
@@ -674,6 +674,7 @@ class MainWindow(wx.Frame):
         self.__owner_name=''
 
         self._taskbar=None
+        self._taskbar_on_closed=False
         self.__phone_detect_at_startup=False
         self._autodetect_delay=0
         self._dr_rec=None   # Data Recording
@@ -927,6 +928,7 @@ class MainWindow(wx.Frame):
         if guihelper.IsMSWindows():
             if self.config.ReadInt('taskbaricon', 0):
                 self._taskbar=TaskBarIcon(self)
+                self._taskbar_on_closed=self.config.ReadInt('taskbaricon1', 0)
             # save the old window proc
             self.oldwndproc = win32gui.SetWindowLong(self.GetHandle(),
                                                      win32con.GWL_WNDPROC,
@@ -1016,10 +1018,14 @@ class MainWindow(wx.Frame):
         event.Enable(self.autosyncsetting.IsConfigured())
 
     def OnExit(self,_=None):
-        self.Close()
+        self.Close(True)
 
     # It has been requested that we shutdown
     def OnClose(self, event):
+        if self._taskbar_on_closed and event.CanVeto():
+            event.Veto()
+            self.Iconize(True)
+            return
         if not self.IsIconized():
             self.saveSize()
         if not self.wt:
