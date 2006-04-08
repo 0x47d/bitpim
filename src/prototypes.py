@@ -445,12 +445,12 @@ class STRING(BaseProtogenClass):
             buf.getnextbytes(flush)
 
         self._bufferendoffset=buf.getcurrentoffset()
-        # convert to unicde
-        try:
-            self._value=_value.decode(self._read_encoding)
-        except UnicodeDecodeError:
-            # this means the codec is set wrong for this phone !!
-            raise common.PhoneStringDecodeException(_value, self._read_encoding) 
+
+        # we will convert to unicode when the value is retrieved.
+        # this prevents garbage that will never be used from causing an
+        # exception. e.g. A deleted calendar record on some LG phones may contain
+        # all f's, this causes an exception if we try to convert to unicode.
+        self._value=_value
 
     def writetobuffer(self, buf):
         if self._value is None:
@@ -473,6 +473,11 @@ class STRING(BaseProtogenClass):
         self._bufferendoffset=buf.getcurrentoffset()
 
     def convert_for_write(self):
+        # if we are not in unicode this means that we contain data read from the phone
+        # in this case just return this back, there is no need to convert twice.
+        if not isinstance(self._value, unicode):
+            return self._value
+
         temp_str=''
         if self._value is None:
             return temp_str
@@ -640,6 +645,13 @@ class STRING(BaseProtogenClass):
         """Returns the string we are"""
         if self._value is None:
             raise ValueNotSetException()
+        # convert to unicode if we are not already
+        if not isinstance(self._value, unicode):
+            try:
+                self._value=self._value.decode(self._read_encoding)
+            except UnicodeDecodeError:
+                # this means the codec is set wrong for this phone !!
+                raise common.PhoneStringDecodeException(_value, self._read_encoding) 
         return self._value
 
 class SEVENBITSTRING(BaseProtogenClass):
