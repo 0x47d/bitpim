@@ -1003,7 +1003,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         # general fields
         entry=bpcalendar.CalendarEntry()
         entry.start=event.start
-        entry.end=event.end
+        try:
+            entry.end=event.end
+        # some phones (e.g. lx5550) have unreliable end dates for "forever" events
+        except ValueError:
+            entry.end=self.protocolclass.CAL_REPEAT_DATE
         entry.desc_loc=event.description
         # check for allday event
         if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):

@@ -21,6 +21,7 @@ import tempfile
 import random
 import os
 import imp
+import unicodedata
 
 class FeatureNotAvailable(Exception):
      """The device doesn't support the feature"""
@@ -625,7 +626,155 @@ def decodecharacterbits(bytes, bitsperchar, charconv=chr, terminator=None):
             value.append(c)
             bits=bits[bitsperchar:]
      return "".join(value)
-            
+  
+
+def encode_with_degrade(uni_string, codec='ascii', error_handling='strict'):
+
+    temp_str=''
+    if uni_string is None:
+        return temp_str
+    try:
+        temp_str=uni_string.encode(codec)
+        return temp_str
+    except UnicodeError:
+        pass # we'll have another go with dumbing down    
+    
+    temp_str=''
+    if codec=='ascii':
+        temp_str=degrade_unicode_string_to_ascii(uni_string, error_handling)
+    else:
+        # go through all characters dumbing down the ones we cannot convert
+        # we could do all at once but we only want to degrade characters the encoding
+        # does not support
+        for i in range(len(uni_string)):
+            try:
+                temp_char=uni_string[i].encode(codec)
+            except UnicodeError:
+                temp_char=degrade_unicode_string_to_ascii(uni_string[i], error_handling)
+            temp_str+=temp_char
+    return temp_str
+        
+def degrade_unicode_string_to_ascii(uni_string, error_handling='strict'):
+    # normalise the string
+    kd_str=unicodedata.normalize('NFKD', uni_string)
+    stripped_str=u''
+    # go through removing all accoutrements from the character and convert some other characters
+    # defined by unicode standard ver. 3.2.0
+    replace_chars= {
+        u"\N{COMBINING GRAVE ACCENT}": u"",
+        u"\N{COMBINING ACUTE ACCENT}": u"",
+        u"\N{COMBINING CIRCUMFLEX ACCENT}": u"",
+        u"\N{COMBINING TILDE}": u"",
+        u"\N{COMBINING MACRON}": u"",
+        u"\N{COMBINING OVERLINE}": u"",
+        u"\N{COMBINING BREVE}": u"",
+        u"\N{COMBINING DOT ABOVE}": u"",
+        u"\N{COMBINING DIAERESIS}": u"",
+        u"\N{COMBINING HOOK ABOVE}": u"",
+        u"\N{COMBINING RING ABOVE}": u"",
+        u"\N{COMBINING DOUBLE ACUTE ACCENT}": u"",
+        u"\N{COMBINING CARON}": u"",
+        u"\N{COMBINING VERTICAL LINE ABOVE}": u"",
+        u"\N{COMBINING DOUBLE VERTICAL LINE ABOVE}": u"",
+        u"\N{COMBINING DOUBLE GRAVE ACCENT}": u"",
+        u"\N{COMBINING CANDRABINDU}": u"",
+        u"\N{COMBINING INVERTED BREVE}": u"",
+        u"\N{COMBINING TURNED COMMA ABOVE}": u"",
+        u"\N{COMBINING COMMA ABOVE}": u"",
+        u"\N{COMBINING REVERSED COMMA ABOVE}": u"",
+        u"\N{COMBINING COMMA ABOVE RIGHT}": u"",
+        u"\N{COMBINING GRAVE ACCENT BELOW}": u"",
+        u"\N{COMBINING ACUTE ACCENT BELOW}": u"",
+        u"\N{COMBINING LEFT TACK BELOW}": u"",
+        u"\N{COMBINING RIGHT TACK BELOW}": u"",
+        u"\N{COMBINING LEFT ANGLE ABOVE}": u"",
+        u"\N{COMBINING HORN}": u"",
+        u"\N{COMBINING LEFT HALF RING BELOW}": u"",
+        u"\N{COMBINING UP TACK BELOW}": u"",
+        u"\N{COMBINING DOWN TACK BELOW}": u"",
+        u"\N{COMBINING PLUS SIGN BELOW}": u"",
+        u"\N{COMBINING MINUS SIGN BELOW}": u"",
+        u"\N{COMBINING PALATALIZED HOOK BELOW}": u"",
+        u"\N{COMBINING RETROFLEX HOOK BELOW}": u"",
+        u"\N{COMBINING DOT BELOW}": u"",
+        u"\N{COMBINING DIAERESIS BELOW}": u"",
+        u"\N{COMBINING RING BELOW}": u"",
+        u"\N{COMBINING COMMA BELOW}": u"",
+        u"\N{COMBINING CEDILLA}": u"",
+        u"\N{COMBINING OGONEK}": u"",
+        u"\N{COMBINING VERTICAL LINE BELOW}": u"",
+        u"\N{COMBINING BRIDGE BELOW}": u"",
+        u"\N{COMBINING INVERTED DOUBLE ARCH BELOW}": u"",
+        u"\N{COMBINING CARON BELOW}": u"",
+        u"\N{COMBINING CIRCUMFLEX ACCENT BELOW}": u"",
+        u"\N{COMBINING BREVE BELOW}": u"",
+        u"\N{COMBINING INVERTED BREVE BELOW}": u"",
+        u"\N{COMBINING TILDE BELOW}": u"",
+        u"\N{COMBINING MACRON BELOW}": u"",
+        u"\N{COMBINING LOW LINE}": u"",
+        u"\N{COMBINING DOUBLE LOW LINE}": u"",
+        u"\N{COMBINING TILDE OVERLAY}": u"",
+        u"\N{COMBINING SHORT STROKE OVERLAY}": u"",
+        u"\N{COMBINING LONG STROKE OVERLAY}": u"",
+        u"\N{COMBINING SHORT SOLIDUS OVERLAY}": u"",
+        u"\N{COMBINING LONG SOLIDUS OVERLAY}": u"",
+        u"\N{COMBINING RIGHT HALF RING BELOW}": u"",
+        u"\N{COMBINING INVERTED BRIDGE BELOW}": u"",
+        u"\N{COMBINING SQUARE BELOW}": u"",
+        u"\N{COMBINING SEAGULL BELOW}": u"",
+        u"\N{COMBINING X ABOVE}": u"",
+        u"\N{COMBINING VERTICAL TILDE}": u"",
+        u"\N{COMBINING DOUBLE OVERLINE}": u"",
+        u"\N{COMBINING GRAVE TONE MARK}": u"",
+        u"\N{COMBINING ACUTE TONE MARK}": u"",
+        u"\N{COMBINING GREEK PERISPOMENI}": u"",
+        u"\N{COMBINING GREEK KORONIS}": u"",
+        u"\N{COMBINING GREEK DIALYTIKA TONOS}": u"",
+        u"\N{COMBINING GREEK YPOGEGRAMMENI}": u"",
+        u"\N{COMBINING BRIDGE ABOVE}": u"",
+        u"\N{COMBINING EQUALS SIGN BELOW}": u"",
+        u"\N{COMBINING DOUBLE VERTICAL LINE BELOW}": u"",
+        u"\N{COMBINING LEFT ANGLE BELOW}": u"",
+        u"\N{COMBINING NOT TILDE ABOVE}": u"",
+        u"\N{COMBINING HOMOTHETIC ABOVE}": u"",
+        u"\N{COMBINING ALMOST EQUAL TO ABOVE}": u"",
+        u"\N{COMBINING LEFT RIGHT ARROW BELOW}": u"",
+        u"\N{COMBINING UPWARDS ARROW BELOW}": u"",
+        u"\N{COMBINING GRAPHEME JOINER}": u"",
+        u'\N{BROKEN BAR}': '|',
+        u'\N{CENT SIGN}': 'c',
+        u'\N{COPYRIGHT SIGN}': '(C)',
+        u'\N{DIVISION SIGN}': '/',
+        u'\N{INVERTED EXCLAMATION MARK}': '!',
+        u'\N{INVERTED QUESTION MARK}': '?',
+        u'\N{LATIN CAPITAL LETTER AE}': 'Ae',
+        u'\N{LATIN CAPITAL LETTER ETH}': 'Th',
+        u'\N{LATIN CAPITAL LETTER THORN}': 'Th',
+        u'\N{LATIN SMALL LETTER AE}': 'ae',
+        u'\N{LATIN SMALL LETTER ETH}': 'th',
+        u'\N{LATIN SMALL LETTER SHARP S}': 'ss',
+        u'\N{LATIN SMALL LETTER THORN}': 'th',
+        u'\N{LEFT-POINTING DOUBLE ANGLE QUOTATION MARK}': '<<',
+        u'\N{MIDDLE DOT}': '*',
+        u'\N{MULTIPLICATION SIGN}': '*',
+        u'\N{PLUS-MINUS SIGN}': '+/-',
+        u'\N{REGISTERED SIGN}': '(R)',
+        u'\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}': '>>',
+        u'\N{SOFT HYPHEN}': '-',
+        u'\N{VULGAR FRACTION ONE HALF}': '1/2',
+        u'\N{VULGAR FRACTION ONE QUARTER}': '1/4',
+        u'\N{VULGAR FRACTION THREE QUARTERS}': '3/4',
+        }
+    for i in range(len(kd_str)):
+        if kd_str[i] in replace_chars:
+            stripped_str+=replace_chars[kd_str[i]]
+        else:
+            stripped_str+=kd_str[i]
+    # now we have removed all the stuff we can try converting
+    # error handling is managed by the calling routine
+    temp_str=stripped_str.encode('ascii', error_handling)
+    return temp_str
+
 ###
 ### Cache information against a file
 ###
