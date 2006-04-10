@@ -93,6 +93,10 @@ _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                              'carrier': [c_vzw],
                              'brand': b_lg,
                              },
+              'LG-VI125': { 'module': 'com_lgvi125',
+                            'carrier': [c_sprint],
+                            'brand': b_lg,
+                            },
               'LG-PM225': { 'module': 'com_lgpm225',
                             'carrier': [c_sprint],
                             'brand': b_lg,
@@ -220,10 +224,6 @@ if __debug__:
     _phonedata.update( {'Audiovox CDM-8900': { 'module': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
                                                'brand': b_audiovox,
                                                },
-                        'LG-VI125': { 'module': 'com_lgvi125',
-                                      'carrier': [c_sprint],
-                                      'brand': b_lg,
-                                      },
                         })
 # update the module path
 for k, e in _phonedata.items():

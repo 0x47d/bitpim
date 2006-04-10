@@ -8,6 +8,7 @@
       <li>Add support for iso-8859-1 characters on, LG-VX5200, LG-VX6100, LG-VX7000, LX-VX8100, LG-VX9800. 
           This will allow phonebooks with names with accented characters and other non-ascii characters supported by the phone to work.
       <li>Added System-Tray-On-Closed feature.
+      <li><b>LG VI125</b>: Add readonly phonebook support for this Sprint phone.
     </ul>
 
    <h2><a name="0.8.11">Changes in 0.8.11</a></h2>
