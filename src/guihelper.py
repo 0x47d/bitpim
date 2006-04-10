@@ -337,7 +337,9 @@ _ourart={
     "ART_EDITPHONEINFO": "editphoneinfo",
     "ART_EDITDETECT": "editdetect",
     "ART_EDITSETTINGS": "editsettings",
-    "ART_DATAHISTORICAL": "data_history"
+    "ART_DATAHISTORICAL": "data_history",
+    "ART_FOLDER_OPEN": "folder_open",
+    "ART_FOLDER": "folder"
     }
 
 # populate namespace

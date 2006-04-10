@@ -486,10 +486,10 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
         wx.EVT_RIGHT_UP(self, self.OnRightUp)
         self.image_list=wx.ImageList(16, 16)
-        self.img_dir=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,
+        self.img_dir=self.image_list.Add(wx.ArtProvider_GetBitmap(guihelper.ART_FOLDER,
                                                              wx.ART_OTHER,
                                                              (16, 16)))
-        self.img_dir_open=self.image_list.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER_OPEN,
+        self.img_dir_open=self.image_list.Add(wx.ArtProvider_GetBitmap(guihelper.ART_FOLDER_OPEN,
                                                              wx.ART_OTHER,
                                                              (16, 16)))
         self.SetImageList(self.image_list)
