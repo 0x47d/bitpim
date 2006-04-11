@@ -18,6 +18,7 @@ BEGIN_TOC
     TOCITEM_0(Failed to find PureVoice converter,error-nopvconv.htm)
     TOCITEM_0(Phonebook busy on phone,error-phonebookbusy.htm)
     TOCITEM_0(Data Communications Error,errors-datacomms.htm)
+    TOCITEM_0(Access has been blocked,errors-access-blocked.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->
