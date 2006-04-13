@@ -4194,7 +4194,7 @@ class sms_in(BaseProtogenClass):
         self.__field_msgs.readfrombuffer(buf)
         self.__field_unknown12=DATA(**{'sizeinbytes': 101})
         self.__field_unknown12.readfrombuffer(buf)
-        self.__field_senders_name=USTRING(**{'sizeinbytes': 59})
+        self.__field_senders_name=USTRING(**{'sizeinbytes': 59, 'encoding': PHONE_ENCODING})
         self.__field_senders_name.readfrombuffer(buf)
         self.__field_unknown9=DATA()
         self.__field_unknown9.readfrombuffer(buf)
@@ -4607,7 +4607,7 @@ class sms_in(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_senders_name=value
         else:
-            self.__field_senders_name=USTRING(value,**{'sizeinbytes': 59})
+            self.__field_senders_name=USTRING(value,**{'sizeinbytes': 59, 'encoding': PHONE_ENCODING})
 
     def __delfield_senders_name(self): del self.__field_senders_name
 
