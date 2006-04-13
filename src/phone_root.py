@@ -296,6 +296,7 @@ class Phone(today.TodayWidget):
     def __init__(self, parent):
         self.parent=parent
         today.TodayWidget.__init__(self, self, self.parent)
+        pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
 
     def Initialise(self, tree, mw, config, path, phone_id):
         self.tree=tree
@@ -375,6 +376,9 @@ class Phone(today.TodayWidget):
             if __debug__:
                 raise Exception, e 
             pass
+
+    def OnPhoneChanged(self, _):
+        self.phoneprofile=self.mw.phoneprofile
 
     # deal with the database
     def EnsureDatabase(self, newpath, oldpath):
