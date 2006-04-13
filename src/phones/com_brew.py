@@ -196,18 +196,21 @@ class DebugBrewProtocol:
         _pwd=os.path.join(self._fs_path, dir)
         for _root,_dir,_file in os.walk(_pwd):
             break
-        for f in _file:
-            _stat=os.stat(os.path.join(_pwd, f))
-            _date=_stat[8]
-            _name=dir+'/'+f
-            _timestr=''
-            try:
-                # date is not always present in filesystem
-                _timestr=time.strftime("%x %X", time.gmtime(_date))
-            except:
-                pass
-            results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
-                             'date': (_date, _timestr) }
+        try:
+            for f in _file:
+                _stat=os.stat(os.path.join(_pwd, f))
+                _date=_stat[8]
+                _name=dir+'/'+f
+                _timestr=''
+                try:
+                    # date is not always present in filesystem
+                    _timestr=time.strftime("%x %X", time.gmtime(_date))
+                except:
+                    pass
+                results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
+                                 'date': (_date, _timestr) }
+        except:
+            pass # will happen if the directory does not exist
         return results
         
     def listsubdirs(self, dir='', recurse=0):
@@ -252,12 +255,16 @@ class DebugBrewProtocol:
         return results
 
     def statfile(self, name):
-        _stat=os.stat(os.path.join(self._fs_path, name))
-        _date=_stat[8]
-        results={ 'name': name, 'type': 'file', 'size': _stat[6],
-                  'date': (_date,
-                           time.strftime("%x %X", time.gmtime(_date))) }
-        return results
+        try:
+            _stat=os.stat(os.path.join(self._fs_path, name))
+            _date=_stat[8]
+            results={ 'name': name, 'type': 'file', 'size': _stat[6],
+                      'date': (_date,
+                               time.strftime("%x %X", time.gmtime(_date))) }
+            return results
+        except:
+            # File does not exist, bail
+            return None
 
     def writefile(self, name, contents):
         self.log("Writing file '"+name+"' bytes "+`len(contents)`)
