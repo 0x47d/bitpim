@@ -449,11 +449,7 @@ def opentextfile(name):
 #     return str(s)
 
 def forceascii(s):
-     if s is None: return s
-     try:
-          return str(s)
-     except UnicodeEncodeError:
-          return s.encode("ascii", 'replace')
+     return get_ascii_string(s, 'replace')
 
 # The CRC and escaping mechanisms are the same as used in PPP, HDLC and
 # various other standards.
@@ -641,7 +637,7 @@ def encode_with_degrade(uni_string, codec='ascii', error_handling='strict'):
     
     temp_str=''
     if codec=='ascii':
-        temp_str=degrade_unicode_string_to_ascii(uni_string, error_handling)
+        temp_str=get_ascii_string(uni_string, error_handling)
     else:
         # go through all characters dumbing down the ones we cannot convert
         # we could do all at once but we only want to degrade characters the encoding
@@ -650,11 +646,21 @@ def encode_with_degrade(uni_string, codec='ascii', error_handling='strict'):
             try:
                 temp_char=uni_string[i].encode(codec)
             except UnicodeError:
-                temp_char=degrade_unicode_string_to_ascii(uni_string[i], error_handling)
+                temp_char=get_ascii_string(uni_string[i], error_handling)
             temp_str+=temp_char
     return temp_str
         
-def degrade_unicode_string_to_ascii(uni_string, error_handling='strict'):
+def get_ascii_string(uni_string, error_handling='strict'):
+    "converts any type into an ascii byte string, for unicode string it will degrade if possible"
+    if uni_string is None:
+        return None
+    if not isinstance(uni_string, (str, unicode)):
+        # convert numbers into strings
+        return str(uni_string)
+    if not isinstance(uni_string, unicode):
+        # we are already a byte string!
+        return uni_string
+
     # normalise the string
     kd_str=unicodedata.normalize('NFKD', uni_string)
     stripped_str=u''

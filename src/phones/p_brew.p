@@ -42,7 +42,7 @@ PACKET responseheader:
 PACKET readfilerequest:
     * requestheader {'command': 0x04} +header
     1 UINT {'constant': 0} +blocknumber
-    * STRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True} filename
 
 PACKET readfileresponse:
     * responseheader header
@@ -70,7 +70,7 @@ PACKET writefilerequest:
     1 UINT {'constant': 1} +unknown1
     4 UINT filesize
     4 UINT {'constant': 0x000100ff} +unknown2 "probably file attributes"
-    * STRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True} filename
     2 UINT {'value': len(self.data)} +*datalen
     * DATA data
         
@@ -84,7 +84,7 @@ PACKET writefileblockrequest:
 PACKET listdirectoriesrequest:
     "Lists the subdirectories of dirname"
     * requestheader {'command': 0x02} +header
-    * STRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET listdirectoriesresponse:
     * responseheader header
@@ -93,13 +93,13 @@ PACKET listdirectoriesresponse:
         # Samsung A620 has garbage from this point on if numentries==0
         2 UINT datalen
         * LIST {'length': self.numentries} items:
-            * STRING subdir
+            * USTRING subdir
     
 PACKET listfilerequest:
     "This gets one directory entry (files only) at a time"
     * requestheader {'command': 0x0b} +header
     4 UINT entrynumber
-    * STRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET listfileresponse:
     * responseheader header
@@ -110,24 +110,24 @@ PACKET listfileresponse:
     4 UNKNOWN unknown2
     * com_brew.SPURIOUSZERO spuriouszero  "on some models there is a zero here"
     1 UINT dirnamelen "which portion of the filename is the directory, including the last /"
-    * STRING {'terminator': None, 'pascal': True} filename 
+    * USTRING {'terminator': None, 'pascal': True} filename 
 
 PACKET listdirectoryrequest:
     "This gets one directory entry (directory only) at a time"
     * requestheader {'command': 0x0a} +header
     4 UINT entrynumber
-    * STRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET listdirectoryresponse:
     * responseheader header
     4 UINT entrynumber  
     17 UNKNOWN unknown1  "probably the directory attributes"
-    * STRING {'terminator': None, 'pascal': True} subdir 
+    * USTRING {'terminator': None, 'pascal': True} subdir 
 
 PACKET statfilerequest:
     "Get the status of the file"
     * requestheader { 'command': 7 } +header
-    * STRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True} filename
 
 PACKET statfileresponse:
     * responseheader header
@@ -137,15 +137,15 @@ PACKET statfileresponse:
     
 PACKET mkdirrequest:
     * requestheader {'command': 0x00} +header
-    * STRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET rmdirrequest:
     * requestheader {'command': 0x01} +header
-    * STRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True} dirname
 
 PACKET rmfilerequest:
     * requestheader {'command': 0x06} +header
-    * STRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True} filename
 
 PACKET memoryconfigrequest:
     * requestheader {'command': 0x0c} +header
@@ -159,21 +159,21 @@ PACKET firmwarerequest:
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  string1
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  string1
     1 UNKNOWN dunno1
-    11 STRING {'terminator': None}  date3
+    11 USTRING {'terminator': None}  date3
     1 UNKNOWN dunno2
-    8 STRING {'terminator': None}  time3
+    8 USTRING {'terminator': None}  time3
     11 UNKNOWN dunno3
-    10 STRING {'terminator': None}  firmware
+    10 USTRING {'terminator': None}  firmware
     # things differ from this point on depending on the model
     # 7 UNKNOWN dunno4
-    # 16 STRING {'terminator': None}  phonemodel
-    # 5 STRING {'terminator': None}  prl
+    # 16 USTRING {'terminator': None}  phonemodel
+    # 5 USTRING {'terminator': None}  prl
 
 PACKET ESN_req:
     1 UINT { 'default': 1, 'constant': 1 } +command
@@ -208,7 +208,7 @@ PACKET setfileattrrequest:
     * requestheader { 'command': 8 } +header
     4 UINT {'constant': 0x000100ff} +unknown "probably file attributes"
     4 UINT date  # in GPS time
-    * STRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True} filename
 
 # these "new" commands are for the RealBrewProtocol2 class, they are an
 # alternative way to talk to newer phones such as the lg vx8100
@@ -232,7 +232,7 @@ PACKET new_openfilerequest:
     * new_requestheader {'command': 0x02} +header
     4 UINT mode # 0=read, 0x41=write
     4 UINT flags # 0=open_existing, 1=create
-    * STRING {'terminator': 0} filename
+    * USTRING {'terminator': 0} filename
         
 PACKET new_openfileresponse:
     * new_responseheader header
@@ -281,7 +281,7 @@ PACKET new_rmfilerequest:
     but the root character / is not required at the start of the name.
     """
     * new_requestheader {'command': 0x08} +header
-    * STRING {'terminator': 0} filename
+    * USTRING {'terminator': 0} filename
     1 UINT {'constant':1} +dunno
 
 PACKET new_mkdirrequest:
@@ -290,18 +290,18 @@ PACKET new_mkdirrequest:
     """
     * new_requestheader {'command': 0x09} +header
     2 UINT {'constant': 0x01ff} +unknown
-    * STRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0} dirname
 
 PACKET new_rmdirrequest:
     """Remove directory, full path should be provided, but the
     root character / is not required at the start of the name.
     """
     * new_requestheader {'command': 0x0a} +header
-    * STRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0} dirname
 
 PACKET new_opendirectoryrequest:
     * new_requestheader {'command': 0x0b} +header
-    * STRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0} dirname
 
 PACKET new_opendirectoryresponse:
     * new_responseheader header
@@ -323,7 +323,7 @@ PACKET new_listentryresponse:
     4 UINT size # garbage for directories
     8 UINT pad2 # zero
     4 UINT date # LG date format, date file created
-    * STRING {'terminator': 0} entryname
+    * USTRING {'terminator': 0} entryname
 
 PACKET new_closedirectoryrequest:
     * new_requestheader {'command': 0x0d} +header
@@ -336,7 +336,7 @@ PACKET new_closedirectoryresponse:
 PACKET new_statfilerequest:
     "Get the status of the file"
     * new_requestheader { 'command': 0x0f } +header
-    * STRING {'terminator': 0} filename
+    * USTRING {'terminator': 0} filename
 
 PACKET new_statfileresponse:
     * new_responseheader header

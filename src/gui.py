@@ -25,7 +25,6 @@ import datetime
 import sha
 import codecs
 import locale
-import unicodedata
 
 # wx modules
 import wx
@@ -1989,8 +1988,8 @@ class WorkerThread(WorkerThreadFramework):
                 zi=zipfile.ZipInfo()
                 # zipfile does not like unicode. cp437 works on windows well, may be
                 # a better choice than ascii, but no phones currently support anything
-                # other than ascii
-                zi.filename=unicodedata.normalize('NFKD', k[strip:]).encode('ascii', 'ignore')
+                # other than ascii for filenames
+                zi.filename=common.get_ascii_string(k[strip:], 'ignore')
                 if files[k]['date'][0]==0:
                     zi.date_time=(0,0,0,0,0,0)
                 else:

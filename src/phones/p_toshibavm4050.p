@@ -29,6 +29,8 @@ MAXEMAILS=3
 
 numbertypetab=( 'phone', 'home', 'office','cell', 'pager', 'fax' )
 
+PHONE_ENCODING='iso-8859-1'
+
 %}
 
 PACKET pbnumber:
@@ -39,7 +41,7 @@ PACKET pbnumber:
     2 UINT {'default': 0} +ringer_index # index in the ringer_group
     2 UINT {'default': 0} +pad1 #zeros
     1 UINT {'default': 0} +secret # individual numbers are secret on this phone
-    33 STRING {'terminator': None, 'pascal': True, 'default': ""} +number
+    33 USTRING {'terminator': None, 'pascal': True, 'default': ""} +number
     48 UNKNOWN +pad2 # zeros
 
 PACKET pbemail:
@@ -48,17 +50,17 @@ PACKET pbemail:
     2 UINT {'default': 0} +dunno2
     1 UINT {'default': 5} +dunno3
     4 UINT {'default': 0} +dunno4
-    49 STRING {'terminator': None, 'pascal': True, 'default': ""} +email
+    49 USTRING {'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""} +email
 
 PACKET pbentry:
     2 UINT slot # 
     2 UINT {'default': 0x0101} +pad2  # 0x0101 
     1 UINT {'default': 0} +pad3 # zero
-    37 STRING {'terminator': None, 'pascal': True} name
+    37 USTRING {'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True} name
     * LIST {'length': MAXPHONENUMBERS, 'elementclass': pbnumber, 'createdefault': True} +numbers 
     * LIST {'length': MAXEMAILS, 'elementclass': pbemail, 'createdefault': True} +emails
     2 UINT {'default': 0x0001} +dunno 
-    49 STRING {'terminator': None, 'pascal': True, 'default': ""} +web_page
+    49 USTRING {'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""} +web_page
     81 UNKNOWN +pad5
 
 PACKET setphoneattribrequest:

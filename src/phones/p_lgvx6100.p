@@ -56,7 +56,7 @@ PACKET speeddials:
     
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    50 STRING {'default': ""} +name
+    50 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -69,7 +69,7 @@ PACKET indexfile:
 PACKET pbgroup:
     "A single group"
     1 UINT icon
-    23 STRING {'encoding': PHONE_ENCODING} name
+    23 USTRING {'encoding': PHONE_ENCODING} name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -87,20 +87,20 @@ PACKET pbentry:
     2  UINT entrysize
     4  UINT serial2
     2  UINT entrynumber 
-    23 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    23 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': NUMEMAILS} +emails:
-        49 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
-    49 STRING {'raiseonunterminatedread': False} url
+        49 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
+    49 USTRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    *  STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    *  USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 PACKET pbreadentryresponse:
@@ -149,7 +149,7 @@ PACKET scheduleevent:
     1 UINT alarmtype     "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes?"
     1 UINT ringtone
-    35 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} description
+    35 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} description
     2 UINT { 'default': 0 } +unknown1     "This seems to always be two zeros"
     2 UINT hasvoice     "This event has an associated voice memo if 1"
     2 UINT voiceid   "sch/schexxx.qcp is the voice memo (xxx = voiceid - 0x0f)"
@@ -161,7 +161,7 @@ PACKET schedulefile:
 
 PACKET camindexentry:
     1 UINT {'default': 0} +index
-    11 STRING {'default': ""} +name
+    11 USTRING {'default': ""} +name
     4 LGCALDATE +taken
     4 UINT {'default': 0x00ff0100} +dunno
 
@@ -173,8 +173,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT unknown2 # set to 1 on some calls
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
@@ -188,11 +188,11 @@ PACKET callhistory:
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  firmware
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  firmware
 
 ###
 ### SMS 
@@ -224,7 +224,7 @@ PACKET firmwareresponse:
 
 PACKET recipient_record:
     14 UINT unknown1
-    49 STRING number
+    49 USTRING number
     1 UINT status   # 1 when sent, 5 when received, 2 failed to send
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -243,7 +243,7 @@ PACKET sms_out:
     1 UINT locked # 1=locked
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
-    21 STRING {'encoding': PHONE_ENCODING} subject
+    21 USTRING {'encoding': PHONE_ENCODING} subject
     1 DATA unknown2
     1 UINT num_msg_elements # up to 7
     * LIST {'elementclass': msg_record, 'length': 7} +messages
@@ -251,7 +251,7 @@ PACKET sms_out:
     1 UINT priority # 0=normal, 1=high
     13 DATA unknown7
     3 DATA unknown8 # set to 01,00,00 
-    23 STRING callback 
+    23 USTRING callback 
     * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
@@ -266,7 +266,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -279,7 +279,7 @@ PACKET sms_in:
     2 UINT unknown8 
     1 UINT priority # 1 if the message is high priority, 0 otherwise
     6 DATA flags # message flags
-    21 STRING {'encoding': PHONE_ENCODING} subject
+    21 USTRING {'encoding': PHONE_ENCODING} subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     1 UINT multipartID # multi-part message ID, used for concatinated messages only
@@ -296,20 +296,20 @@ PACKET sms_in:
                 # text alway follows the header although the format it different
                 # than a simple SMS
     68 DATA unknown5
-    33 STRING senders_name
+    33 USTRING senders_name
     169 DATA unknown6   # ?? inlcudes senders phone number in ascii
 
 PACKET sms_quick_text:
 # the vx4400 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
-        * STRING {'encoding': PHONE_ENCODING} msg #
+        * USTRING {'encoding': PHONE_ENCODING} msg #
 
 # Text Memos. LG memo support is weak, it only supports the raw text and none of 
 # the features that other phones support, when you run bitpim you see loads of
 # options that do not work in the vx8100 on the memo page
 PACKET textmemo:
-    151 STRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount

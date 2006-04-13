@@ -267,7 +267,7 @@ class readfilerequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_blocknumber=UINT(**{'sizeinbytes': 1, 'constant': 0})
         self.__field_blocknumber.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -308,10 +308,10 @@ class readfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -791,7 +791,7 @@ class writefilerequest(BaseProtogenClass):
         self.__field_filesize.readfrombuffer(buf)
         self.__field_unknown2=UINT(**{'sizeinbytes': 4, 'constant': 0x000100ff})
         self.__field_unknown2.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self.__field_datalen=UINT(**{'sizeinbytes': 2})
         self.__field_datalen.readfrombuffer(buf)
@@ -897,10 +897,10 @@ class writefilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -1150,7 +1150,7 @@ class listdirectoriesrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1175,10 +1175,10 @@ class listdirectoriesrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1348,7 +1348,7 @@ class _gen_p_brew_96(BaseProtogenClass):
             dict2={}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_subdir=STRING(*args,**dict2)
+            self.__field_subdir=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -1364,7 +1364,7 @@ class _gen_p_brew_96(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_subdir=STRING()
+        self.__field_subdir=USTRING()
         self.__field_subdir.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1373,10 +1373,10 @@ class _gen_p_brew_96(BaseProtogenClass):
         return self.__field_subdir.getvalue()
 
     def __setfield_subdir(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_subdir=value
         else:
-            self.__field_subdir=STRING(value,)
+            self.__field_subdir=USTRING(value,)
 
     def __delfield_subdir(self): del self.__field_subdir
 
@@ -1443,7 +1443,7 @@ class listfilerequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 4})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1481,10 +1481,10 @@ class listfilerequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1567,7 +1567,7 @@ class listfileresponse(BaseProtogenClass):
         self.__field_spuriouszero.readfrombuffer(buf)
         self.__field_dirnamelen=UINT(**{'sizeinbytes': 1})
         self.__field_dirnamelen.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': None, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': None, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1680,10 +1680,10 @@ class listfileresponse(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': None, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': None, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -1758,7 +1758,7 @@ class listdirectoryrequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 4})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1796,10 +1796,10 @@ class listdirectoryrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1867,7 +1867,7 @@ class listdirectoryresponse(BaseProtogenClass):
         self.__field_entrynumber.readfrombuffer(buf)
         self.__field_unknown1=UNKNOWN(**{'sizeinbytes': 17})
         self.__field_unknown1.readfrombuffer(buf)
-        self.__field_subdir=STRING(**{'terminator': None, 'pascal': True})
+        self.__field_subdir=USTRING(**{'terminator': None, 'pascal': True})
         self.__field_subdir.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1915,10 +1915,10 @@ class listdirectoryresponse(BaseProtogenClass):
         return self.__field_subdir.getvalue()
 
     def __setfield_subdir(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_subdir=value
         else:
-            self.__field_subdir=STRING(value,**{'terminator': None, 'pascal': True})
+            self.__field_subdir=USTRING(value,**{'terminator': None, 'pascal': True})
 
     def __delfield_subdir(self): del self.__field_subdir
 
@@ -1985,7 +1985,7 @@ class statfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{ 'command': 7 })
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2010,10 +2010,10 @@ class statfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -2197,7 +2197,7 @@ class mkdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x00})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2222,10 +2222,10 @@ class mkdirrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -2289,7 +2289,7 @@ class rmdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x01})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2314,10 +2314,10 @@ class rmdirrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -2381,7 +2381,7 @@ class rmfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x06})
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2406,10 +2406,10 @@ class rmfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -2724,27 +2724,27 @@ class firmwareresponse(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=UINT(**{'sizeinbytes': 1})
         self.__field_command.readfrombuffer(buf)
-        self.__field_date1=STRING(**{'sizeinbytes': 11, 'terminator': None})
+        self.__field_date1=USTRING(**{'sizeinbytes': 11, 'terminator': None})
         self.__field_date1.readfrombuffer(buf)
-        self.__field_time1=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_time1=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_time1.readfrombuffer(buf)
-        self.__field_date2=STRING(**{'sizeinbytes': 11, 'terminator': None})
+        self.__field_date2=USTRING(**{'sizeinbytes': 11, 'terminator': None})
         self.__field_date2.readfrombuffer(buf)
-        self.__field_time2=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_time2=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_time2.readfrombuffer(buf)
-        self.__field_string1=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_string1=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_string1.readfrombuffer(buf)
         self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_dunno1.readfrombuffer(buf)
-        self.__field_date3=STRING(**{'sizeinbytes': 11, 'terminator': None})
+        self.__field_date3=USTRING(**{'sizeinbytes': 11, 'terminator': None})
         self.__field_date3.readfrombuffer(buf)
         self.__field_dunno2=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_dunno2.readfrombuffer(buf)
-        self.__field_time3=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_time3=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_time3.readfrombuffer(buf)
         self.__field_dunno3=UNKNOWN(**{'sizeinbytes': 11})
         self.__field_dunno3.readfrombuffer(buf)
-        self.__field_firmware=STRING(**{'sizeinbytes': 10, 'terminator': None})
+        self.__field_firmware=USTRING(**{'sizeinbytes': 10, 'terminator': None})
         self.__field_firmware.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2766,10 +2766,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_date1.getvalue()
 
     def __setfield_date1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_date1=value
         else:
-            self.__field_date1=STRING(value,**{'sizeinbytes': 11, 'terminator': None})
+            self.__field_date1=USTRING(value,**{'sizeinbytes': 11, 'terminator': None})
 
     def __delfield_date1(self): del self.__field_date1
 
@@ -2779,10 +2779,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_time1.getvalue()
 
     def __setfield_time1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_time1=value
         else:
-            self.__field_time1=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_time1=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_time1(self): del self.__field_time1
 
@@ -2792,10 +2792,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_date2.getvalue()
 
     def __setfield_date2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_date2=value
         else:
-            self.__field_date2=STRING(value,**{'sizeinbytes': 11, 'terminator': None})
+            self.__field_date2=USTRING(value,**{'sizeinbytes': 11, 'terminator': None})
 
     def __delfield_date2(self): del self.__field_date2
 
@@ -2805,10 +2805,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_time2.getvalue()
 
     def __setfield_time2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_time2=value
         else:
-            self.__field_time2=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_time2=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_time2(self): del self.__field_time2
 
@@ -2818,10 +2818,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_string1.getvalue()
 
     def __setfield_string1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_string1=value
         else:
-            self.__field_string1=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_string1=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_string1(self): del self.__field_string1
 
@@ -2844,10 +2844,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_date3.getvalue()
 
     def __setfield_date3(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_date3=value
         else:
-            self.__field_date3=STRING(value,**{'sizeinbytes': 11, 'terminator': None})
+            self.__field_date3=USTRING(value,**{'sizeinbytes': 11, 'terminator': None})
 
     def __delfield_date3(self): del self.__field_date3
 
@@ -2870,10 +2870,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_time3.getvalue()
 
     def __setfield_time3(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_time3=value
         else:
-            self.__field_time3=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_time3=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_time3(self): del self.__field_time3
 
@@ -2896,10 +2896,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_firmware.getvalue()
 
     def __setfield_firmware(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_firmware=value
         else:
-            self.__field_firmware=STRING(value,**{'sizeinbytes': 10, 'terminator': None})
+            self.__field_firmware=USTRING(value,**{'sizeinbytes': 10, 'terminator': None})
 
     def __delfield_firmware(self): del self.__field_firmware
 
@@ -3567,7 +3567,7 @@ class setfileattrrequest(BaseProtogenClass):
         self.__field_unknown.readfrombuffer(buf)
         self.__field_date=UINT(**{'sizeinbytes': 4})
         self.__field_date.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3621,10 +3621,10 @@ class setfileattrrequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -3916,7 +3916,7 @@ class new_openfilerequest(BaseProtogenClass):
         self.__field_mode.readfrombuffer(buf)
         self.__field_flags=UINT(**{'sizeinbytes': 4})
         self.__field_flags.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3967,10 +3967,10 @@ class new_openfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -4883,7 +4883,7 @@ class new_rmfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x08})
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0})
         self.__field_filename.readfrombuffer(buf)
         self.__field_dunno=UINT(**{'sizeinbytes': 1, 'constant':1})
         self.__field_dunno.readfrombuffer(buf)
@@ -4910,10 +4910,10 @@ class new_rmfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -5003,7 +5003,7 @@ class new_mkdirrequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_unknown=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
         self.__field_unknown.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5044,10 +5044,10 @@ class new_mkdirrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5115,7 +5115,7 @@ class new_rmdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x0a})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5140,10 +5140,10 @@ class new_rmdirrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5207,7 +5207,7 @@ class new_opendirectoryrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x0b})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=STRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0})
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5232,10 +5232,10 @@ class new_opendirectoryrequest(BaseProtogenClass):
         return self.__field_dirname.getvalue()
 
     def __setfield_dirname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=STRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0})
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5532,7 +5532,7 @@ class new_listentryresponse(BaseProtogenClass):
         self.__field_pad2.readfrombuffer(buf)
         self.__field_date=UINT(**{'sizeinbytes': 4})
         self.__field_date.readfrombuffer(buf)
-        self.__field_entryname=STRING(**{'terminator': 0})
+        self.__field_entryname=USTRING(**{'terminator': 0})
         self.__field_entryname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5658,10 +5658,10 @@ class new_listentryresponse(BaseProtogenClass):
         return self.__field_entryname.getvalue()
 
     def __setfield_entryname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_entryname=value
         else:
-            self.__field_entryname=STRING(value,**{'terminator': 0})
+            self.__field_entryname=USTRING(value,**{'terminator': 0})
 
     def __delfield_entryname(self): del self.__field_entryname
 
@@ -5912,7 +5912,7 @@ class new_statfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{ 'command': 0x0f })
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0})
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5937,10 +5937,10 @@ class new_statfilerequest(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0})
 
     def __delfield_filename(self): del self.__field_filename
 

@@ -24,7 +24,7 @@ NUM_PHONES=2400
 %}
 
 PACKET wholebook:
-    16 STRING filename
+    16 USTRING filename
     * LIST {'elementclass': pbentry, 'length': NUM_PBENTRIES}	pbentries
 
 PACKET pbentry:
@@ -34,22 +34,22 @@ PACKET pbentry:
     1 UNKNOWN	unk3	
     1 UINT	record		"Only nonzero if not deleted"
     5 UNKNOWN	unk4
-    20 STRING	name 		"The place until the zeroes end"
+    20 USTRING { 'encoding': 'iso-8859-8' } name 		"The place until the zeroes end"
     96 UNKNOWN	unk2	
 
 PACKET groups:
-    16 STRING	filename	"group file name"
+    16 USTRING	filename	"group file name"
     * LIST	{'elementclass': pbgroup, 'length': NUM_PBGROUPS}	pbgroups
 
 PACKET pbgroup:
     1 UINT	group_id	
     3 UNKNOWN	unk1
-    21 STRING	name
+    21 USTRING { 'encoding': 'iso-8859-8' } name
     1 UINT	unk3
     30 UNKNOWN	unk2
 
 PACKET phones:
-    16 STRING	filename
+    16 USTRING	filename
     * LIST {'elementclass': phone, 'length': NUM_PHONES} records
 
 # 44 total record length
@@ -58,4 +58,4 @@ PACKET phone:
     4 UINT	others
     4 UINT	owner_id
     1 UINT	type	"Home / Work / Cell / Fax"
-    33 STRING	number
+    33 USTRING	number

@@ -56,7 +56,7 @@ class wholebook(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_filename=STRING(**{'sizeinbytes': 16})
+        self.__field_filename=USTRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbentries=LIST(**{'elementclass': pbentry, 'length': NUM_PBENTRIES})
         self.__field_pbentries.readfrombuffer(buf)
@@ -67,10 +67,10 @@ class wholebook(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 16})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 16})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -160,7 +160,7 @@ class pbentry(BaseProtogenClass):
         self.__field_record.readfrombuffer(buf)
         self.__field_unk4=UNKNOWN(**{'sizeinbytes': 5})
         self.__field_unk4.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 20})
+        self.__field_name=USTRING(**{'sizeinbytes': 20,  'encoding': 'iso-8859-8' })
         self.__field_name.readfrombuffer(buf)
         self.__field_unk2=UNKNOWN(**{'sizeinbytes': 96})
         self.__field_unk2.readfrombuffer(buf)
@@ -249,10 +249,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 20})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 20,  'encoding': 'iso-8859-8' })
 
     def __delfield_name(self): del self.__field_name
 
@@ -330,7 +330,7 @@ class groups(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_filename=STRING(**{'sizeinbytes': 16})
+        self.__field_filename=USTRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pbgroups=LIST(**{'elementclass': pbgroup, 'length': NUM_PBGROUPS})
         self.__field_pbgroups.readfrombuffer(buf)
@@ -341,10 +341,10 @@ class groups(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 16})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 16})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -423,7 +423,7 @@ class pbgroup(BaseProtogenClass):
         self.__field_group_id.readfrombuffer(buf)
         self.__field_unk1=UNKNOWN(**{'sizeinbytes': 3})
         self.__field_unk1.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 21})
+        self.__field_name=USTRING(**{'sizeinbytes': 21,  'encoding': 'iso-8859-8' })
         self.__field_name.readfrombuffer(buf)
         self.__field_unk3=UINT(**{'sizeinbytes': 1})
         self.__field_unk3.readfrombuffer(buf)
@@ -462,10 +462,10 @@ class pbgroup(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 21})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 21,  'encoding': 'iso-8859-8' })
 
     def __delfield_name(self): del self.__field_name
 
@@ -553,7 +553,7 @@ class phones(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_filename=STRING(**{'sizeinbytes': 16})
+        self.__field_filename=USTRING(**{'sizeinbytes': 16})
         self.__field_filename.readfrombuffer(buf)
         self.__field_records=LIST(**{'elementclass': phone, 'length': NUM_PHONES})
         self.__field_records.readfrombuffer(buf)
@@ -564,10 +564,10 @@ class phones(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 16})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 16})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -650,7 +650,7 @@ class phone(BaseProtogenClass):
         self.__field_owner_id.readfrombuffer(buf)
         self.__field_type=UINT(**{'sizeinbytes': 1})
         self.__field_type.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 33})
+        self.__field_number=USTRING(**{'sizeinbytes': 33})
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -711,10 +711,10 @@ class phone(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 33})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 33})
 
     def __delfield_number(self): del self.__field_number
 

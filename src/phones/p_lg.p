@@ -19,24 +19,6 @@ BOOL=BOOLlsb
 
 %}
 
-PACKET SMSInboxFile:
-    14 UNKNOWN unknown
-    6  SMSDATE sent
-    4  UNKNOWN unknown2
-    38 STRING  phonenumber
-    54 UNKNOWN unknown3
-    20 UNKNOWN unknown4
-    22 STRING  subject
-    17 UNKNOWN unknown5
-    2280 SEVENBITSTRING body
-    59 STRING  sender
-    45 UNKNOWN unknown6
-    59 STRING  callback
-    6 UNKNOWN  unknown7
-    
-    
-
-
 PACKET pbheader:
     1 UINT {'constant': 0xff} +pbmode
     1 UINT command
@@ -75,7 +57,7 @@ PACKET pbinforesponse:
     4 UINT lastentry
     20 UNKNOWN dunno4
     4 UINT esn
-    * STRING phonesoftware
+    * USTRING phonesoftware
 
 PACKET pbinitrequest:
     "Moves cursor to begining of phonebook"

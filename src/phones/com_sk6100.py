@@ -39,7 +39,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         return results
 	
     def getphonebook(self, results):
-        encoding = 'iso-8859-8' # Should be some global setting
 		
         # Get a list of phone numbers:
         phonebuf = prototypes.buffer(self.getfilecontents('SKY/PBK/number.pbk'))
@@ -64,12 +63,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             group_name = "Group not recognised"
             for group in results['groups']:
                 if group.group_id == entry.group_id:
-                    group_name = group.name.decode(encoding)
+                    group_name = group.name
                     break
 			
             pbook[entry.slot] = {
                 'names': [{'title': '', 'first': '', 
-                           'last': '', 'full': entry.name.decode(encoding), 'nickname': ''}],
+                           'last': '', 'full': entry.name, 'nickname': ''}],
                 'categories': [{'category': group_name}],
                 'numbers': [{'number': phone.number, 
                              'type': self.phonetypes[phone.type - 1]}
@@ -79,7 +78,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             }
 		
         results['phonebook'] = pbook
-        results['categories'] = [group.name.decode(encoding) for group in results['groups']]
+        results['categories'] = [group.name for group in results['groups']]
         return pbook 
 	
     def getcalendar(self, results):

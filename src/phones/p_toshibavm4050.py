@@ -18,6 +18,8 @@ MAXEMAILS=3
 
 numbertypetab=( 'phone', 'home', 'office','cell', 'pager', 'fax' )
 
+PHONE_ENCODING='iso-8859-1'
+
 class pbnumber(BaseProtogenClass):
     __fields=['valid', 'type', 'ringer_group', 'pad0', 'ringer_index', 'pad1', 'secret', 'number', 'pad2']
 
@@ -82,7 +84,7 @@ class pbnumber(BaseProtogenClass):
         self.__field_secret.writetobuffer(buf)
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_number=USTRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_number.writetobuffer(buf)
         try: self.__field_pad2
         except:
@@ -110,7 +112,7 @@ class pbnumber(BaseProtogenClass):
         self.__field_pad1.readfrombuffer(buf)
         self.__field_secret=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_secret.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
+        self.__field_number=USTRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_number.readfrombuffer(buf)
         self.__field_pad2=UNKNOWN(**{'sizeinbytes': 48})
         self.__field_pad2.readfrombuffer(buf)
@@ -232,14 +234,14 @@ class pbnumber(BaseProtogenClass):
     def __getfield_number(self):
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_number=USTRING(**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 33, 'terminator': None, 'pascal': True, 'default': ""})
 
     def __delfield_number(self): del self.__field_number
 
@@ -333,7 +335,7 @@ class pbemail(BaseProtogenClass):
         self.__field_dunno4.writetobuffer(buf)
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_email=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_email.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -353,7 +355,7 @@ class pbemail(BaseProtogenClass):
         self.__field_dunno3.readfrombuffer(buf)
         self.__field_dunno4=UINT(**{'sizeinbytes': 4, 'default': 0})
         self.__field_dunno4.readfrombuffer(buf)
-        self.__field_email=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+        self.__field_email=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_email.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -441,14 +443,14 @@ class pbemail(BaseProtogenClass):
     def __getfield_email(self):
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_email=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
 
     def __delfield_email(self): del self.__field_email
 
@@ -525,7 +527,7 @@ class pbentry(BaseProtogenClass):
         self.__field_dunno.writetobuffer(buf)
         try: self.__field_web_page
         except:
-            self.__field_web_page=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_web_page=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_web_page.writetobuffer(buf)
         try: self.__field_pad5
         except:
@@ -545,7 +547,7 @@ class pbentry(BaseProtogenClass):
         self.__field_pad2.readfrombuffer(buf)
         self.__field_pad3=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_pad3.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 37, 'terminator': None, 'pascal': True})
+        self.__field_name=USTRING(**{'sizeinbytes': 37, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True})
         self.__field_name.readfrombuffer(buf)
         self.__field_numbers=LIST(**{'length': MAXPHONENUMBERS, 'elementclass': pbnumber, 'createdefault': True})
         self.__field_numbers.readfrombuffer(buf)
@@ -553,7 +555,7 @@ class pbentry(BaseProtogenClass):
         self.__field_emails.readfrombuffer(buf)
         self.__field_dunno=UINT(**{'sizeinbytes': 2, 'default': 0x0001})
         self.__field_dunno.readfrombuffer(buf)
-        self.__field_web_page=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+        self.__field_web_page=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         self.__field_web_page.readfrombuffer(buf)
         self.__field_pad5=UNKNOWN(**{'sizeinbytes': 81})
         self.__field_pad5.readfrombuffer(buf)
@@ -609,10 +611,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 37, 'terminator': None, 'pascal': True})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 37, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True})
 
     def __delfield_name(self): del self.__field_name
 
@@ -669,14 +671,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_web_page(self):
         try: self.__field_web_page
         except:
-            self.__field_web_page=STRING(**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_web_page=USTRING(**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
         return self.__field_web_page.getvalue()
 
     def __setfield_web_page(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_web_page=value
         else:
-            self.__field_web_page=STRING(value,**{'sizeinbytes': 49, 'terminator': None, 'pascal': True, 'default': ""})
+            self.__field_web_page=USTRING(value,**{'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'terminator': None, 'pascal': True, 'default': ""})
 
     def __delfield_web_page(self): del self.__field_web_page
 

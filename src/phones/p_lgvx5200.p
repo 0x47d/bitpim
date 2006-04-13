@@ -35,7 +35,7 @@ PHONE_ENCODING='iso-8859-1'
 PACKET indexentry:
     2 UINT index
     2 UINT type
-    60 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "includes full pathname"
+    60 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "includes full pathname"
     4 UINT {'default':0} +icon
     4 UINT {'default': 0} +date "i think this is bitfield of the date"
     4 UINT dunno
@@ -88,7 +88,7 @@ PACKET msg_record:
 
 PACKET recipient_record:
     33 DATA unknown1 # contains recipient name from phonebook on this phone
-    49 STRING number
+    49 USTRING number
     1 UINT status   # 1 when sent, 5 when received
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -110,14 +110,14 @@ PACKET sms_out:
     4 LGCALDATE timesent # time the message was sent
     2 UINT unknown2 # zero
     4 GPSDATE GPStime  # num seconds since 0h 1-6-80, time message received by phone
-    21 STRING {'encoding': PHONE_ENCODING} subject
+    21 USTRING {'encoding': PHONE_ENCODING} subject
     1 UNKNOWN unknown4
     1 UINT num_msg_elements # up to 7
     * LIST {'elementclass': msg_record, 'length': 7} +messages
     15 UNKNOWN unknown1
     1 UINT priority # 0=normal, 1=high
     1 UNKNOWN unknown5
-    35 STRING callback
+    35 USTRING callback
     * LIST {'elementclass': recipient_record,'length': 9} +recipients
     * UNKNOWN pad
 
@@ -130,7 +130,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown2
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -143,7 +143,7 @@ PACKET sms_in:
     1 UINT locked # 1 if the message is locked, 0 otherwise
     8 UINT unknown6 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
-    21 STRING {'encoding': PHONE_ENCODING} subject
+    21 USTRING {'encoding': PHONE_ENCODING} subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     4 UINT unknown7 # zeros
@@ -164,7 +164,7 @@ PACKET sms_in:
 
 PACKET sms_quick_text:
     * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
-        101 STRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
+        101 USTRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
 
 # Text Memos. LG memo support is weak, it only supports the raw text and none of 
 # the features that other phones support, when you run bitpim you see loads of
@@ -173,7 +173,7 @@ PACKET textmemo:
     4 UINT { 'constant':1 } +dunno
     4 GPSDATE GPStime # time the memo was writen
     4 LGCALDATE memotime # time the memo was writen LG time
-    152 STRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    152 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount
