@@ -1125,11 +1125,11 @@ class MainWindow(wx.Frame):
             self.queue.put((self.OnDetectPhone, (), {}), False)
             return
         self.__detect_phone()
-    def __detect_phone(self, using_port=None, check_auto_sync=0, delay=0):
+    def __detect_phone(self, using_port=None, check_auto_sync=0, delay=0, silent_fail=False):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
         self.MakeCall(Request(self.wt.detectphone, using_port, delay),
-                      Callback(self.OnDetectPhoneReturn, check_auto_sync))
+                      Callback(self.OnDetectPhoneReturn, check_auto_sync, silent_fail))
     def __get_owner_name(self, esn, style=wx.DEFAULT_DIALOG_STYLE):
         """ retrieve or ask user for the owner's name of this phone
         """
@@ -1156,17 +1156,18 @@ class MainWindow(wx.Frame):
             return s
         return phone_name
         
-    def OnDetectPhoneReturn(self, check_auto_sync, exception, r):
+    def OnDetectPhoneReturn(self, check_auto_sync, silent_fail, exception, r):
         self._autodetect_delay=0
         self.OnBusyEnd()
         if self.HandleException(exception): return
         if r is None:
-            self.__owner_name=''
-            _dlg=wx.MessageDialog(self, 'No phone detected/recognized.\nRun Settings?',
-                                  'Phone Detection Failed', wx.YES_NO)
-            if _dlg.ShowModal()==wx.ID_YES:
-                wx.CallAfter(self.OnEditSettings)
-            _dlg.Destroy()
+            if not silent_fail:
+                self.__owner_name=''
+                _dlg=wx.MessageDialog(self, 'No phone detected/recognized.\nRun Settings?',
+                                      'Phone Detection Failed', wx.YES_NO)
+                if _dlg.ShowModal()==wx.ID_YES:
+                    wx.CallAfter(self.OnEditSettings)
+                _dlg.Destroy()
         else:
             self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
             if self.__owner_name is None:
@@ -1208,7 +1209,7 @@ class MainWindow(wx.Frame):
             return
         # check the new device
         check_auto_sync=auto_sync.UpdateOnConnect(self)
-        self.__detect_phone(name, check_auto_sync, self._autodetect_delay)
+        self.__detect_phone(name, check_auto_sync, self._autodetect_delay, True)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
