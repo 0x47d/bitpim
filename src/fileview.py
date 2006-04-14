@@ -21,6 +21,7 @@ import guihelper
 import aggregatedisplay
 import common
 import widgets
+import shutil
 
 basename=common.basename
 stripext=common.stripext
