@@ -26,11 +26,22 @@ names:
 categories:
 
   - category    User defined category name
+  - ringtone    (optional) Ringtone name for this category
 
 emails:
 
   - email       Email address
   - type        (optional) 'home' or 'business'
+  - speeddial   (optional) Speed dial for this entry
+  - ringtone    (optional) ringtone name for this entry
+  - wallpaper   (optional) wallpaper name for this entry
+
+maillist:
+
+  - entry       string of '\x00\x00' separated of number or email entries.
+  - speeddial   (optional) Speed dial for this entry
+  - ringtone    (optional) ringtone name for this entry
+  - wallpaper   (optional) wallpaper name for this entry
 
 urls:
 
@@ -73,6 +84,8 @@ numbers:
   - type       'home', 'office', 'cell', 'fax', 'pager', 'data', 'none'  (if you have home2 etc, list
                them without the digits.  The second 'home' is implicitly home2 etc)
   - speeddial  (optional) Speed dial number
+  - ringtone   (optional) ringtone name for this entry
+  - wallpaper  (optional) wallpaper name for this entry
 
 serials:
 
