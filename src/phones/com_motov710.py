@@ -1,0 +1,342 @@
+### BITPIM
+###
+### Copyright (C) 2006 Joe Pham <djpham@bitpim.org>
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
+###
+### $Id: $
+
+"""Communicate with Motorola phones using AT commands"""
+# system modules
+import sha
+
+# BitPim modules
+import common
+import com_moto
+import nameparser
+import prototypes
+import p_motov710
+
+class Phone(com_moto.Phone):
+    """ Talk to a Motorola V710 phone"""
+    desc='Moto-V710'
+    protocolclass=p_motov710
+    serialsname='motov710'
+
+    builtinringtones=(
+        (0, ('Silent',)),
+        (5, ('Vibe Dot', 'Vibe Dash', 'Vibe Dot Dot', 'Vibe Dot Dash',
+             'Vibe Pulse')),
+        (11, ('Alert', 'Standard', 'Bells', 'Triads', 'Up and Down',
+              'Jitters', 'Upbeat')),
+        (22, ('Guitar Strings', 'High Impact')),
+        (30, ('Moonlit Haze', 'Nightlife', 'Wind Chime', 'Random',
+              'Bit & Bytes', 'Door Bell', 'Ding', 'One Moment', 'Provincial',
+              'Harmonics', 'Interlude', 'Snaggle', 'Cosmic', 'Gyroscope')),
+        (49, ('Chimes high', 'Chimes low', 'Ding', 'TaDa', 'Notify', 'Drum',
+              'Claps', 'Fanfare', 'Chord high', 'Chord low'))
+        )
+
+    def __init__(self, logtarget, commport):
+        com_moto.Phone.__init__(self, logtarget, commport)
+
+    # fundamentals stuff--------------------------------------------------------
+    def _get_groups(self):
+        _req=self.protocolclass.read_group_req()
+        _res=self.sendATcommand(_req, self.protocolclass.read_group_resp)
+        res={}
+        for e in _res:
+            res[e.index]={ 'name': e.name, 'ringtone': e.ringtone }
+        return res
+
+    def _save_groups(self, fundamentals):
+        """Save the Group(Category) data"""
+        _groups=fundamentals.get('groups', {})
+        _rt_name_index=fundamentals.get('ringtone-name-index', {})
+        # deleting existing group entries
+        _req=self.protocolclass.read_group_req()
+        _res=self.sendATcommand(_req, self.protocolclass.read_group_resp)
+        _req=self.protocolclass.del_group_req()
+        for e in _res:
+            if e.index==1:  # Group 'General': can't delete, add, or modify
+                continue
+            _req.index=e.index
+            self.sendATcommand(_req, None)
+        # and save the new ones
+        _req=self.protocolclass.write_group_req()
+        for _key,_entry in _groups.items():
+            if _key==1:
+                continue
+            _req.index=_key
+            _req.name=_entry['name']
+            _req.ringtone=_rt_name_index.get(_entry.get('ringtone', None), 255)
+            self.sendATcommand(_req, None)
+
+    def _get_ringtone_index(self):
+        res={}
+        # first the builtin ones
+        for _l in self.builtinringtones:
+            _idx=_l[0]
+            for _e in _l[1]:
+                res[_idx]={ 'name': _e, 'origin': 'builtin' }
+                _idx+=1
+        # now the custome one
+        _buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.RT_INDEX_FILE))
+        _idx_file=self.protocolclass.ringtone_index_file()
+        _idx_file.readfrombuffer(_buf, logtitle='Read ringtone index file')
+        _path_len=len(self.protocolclass.RT_PATH)+1
+        for _entry in _idx_file.items:
+            res[_entry.index]={ 'name': common.basename(
+                self.decode_utf16(_entry.name)),
+                                'origin': 'ringtone' }
+        return res
+
+    def _get_wallpaper_index(self):
+        res={}
+        _files=self.listfiles(self.protocolclass.WP_PATH).keys()
+        _files.sort()
+        _wp_path_len=len(self.protocolclass.WP_PATH)+1
+        for _index,_name in enumerate(_files):
+            res[_index]={ 'name': common.basename(_name),
+                          'origin': 'wallpaper' }
+        return res
+
+    # phonebook stuff-----------------------------------------------------------
+    def _populate_pb_misc(self, pb_entry, pb_sub_entry, key_name,
+                          entry, fundamentals):
+        """Populate ringtone, wallpaper to a number, email, or mail list
+        """
+        # any ringtones?
+        _rt_index=fundamentals.get('ringtone-index', {})
+        _rt_name=_rt_index.get(entry.ringtone, {}).get('name', None)
+        if _rt_name:
+            pb_sub_entry['ringtone']=_rt_name
+        # any wallpaper
+        if entry.picture_name:
+            pb_sub_entry['wallpaper']=common.basename(entry.picture_name)
+        if entry.is_primary:
+            # primary entry: insert it to the front
+            pb_entry[key_name]=[pb_sub_entry]+pb_entry.get(key_name, [])
+        else:
+            # append it to the end
+            pb_entry.setdefault(key_name, []).append(pb_sub_entry)
+        
+    def _populate_pb_number(self, pb_entry, entry, fundamentals):
+        """extract the number into BitPim phonebook entry"""
+        _number_type=self.protocolclass.NUMBER_TYPE_NAME.get(entry.number_type, None)
+        _number={ 'number': entry.number, 'type': _number_type,
+                  'speeddial': entry.index }
+        self._populate_pb_misc(pb_entry, _number, 'numbers', entry,
+                               fundamentals)
+        # and mark it
+        fundamentals['sd_dict'][entry.index]=entry.number
+
+    def _populate_pb_email(self, pb_entry, entry, fundamentals):
+        """Extract the email component"""
+        _email={ 'email': entry.number,
+                 'speeddial': entry.index }
+        self._populate_pb_misc(pb_entry, _email, 'emails', entry,
+                               fundamentals)
+        # and mark it
+        fundamentals['sd_dict'][entry.index]=entry.number
+
+    def _populate_pb_maillist(self, pb_entry, entry, fundamentals):
+        """Extract the mailing list component"""
+        _num_list=entry.number.split(' ')
+        for _idx,_entry in enumerate(_num_list):
+            _num_list[_idx]=int(_entry)
+        _maillist={ 'entry': _num_list,
+                    'speeddial': entry.index }
+        self._populate_pb_misc(pb_entry, _maillist, 'maillist', entry,
+                               fundamentals)
+        # and mark it
+        fundamentals['sd_dict'][entry.index]=entry.number
+
+    def _populate_pb_entry(self, pb_entry, entry, fundamentals):
+        """Populate a BitPim phonebook entry with one from the phone
+        """
+        # extract the number, email, or mailing list
+        _num_type=entry.number_type
+        if _num_type<self.protocolclass.NUMBER_TYPE_EMAIL:
+            self._populate_pb_number(pb_entry, entry, fundamentals)
+        elif _num_type==self.protocolclass.NUMBER_TYPE_EMAIL:
+            self._populate_pb_email(pb_entry, entry, fundamentals)
+        else:
+            self._populate_pb_maillist(pb_entry, entry, fundamentals)
+        
+    def _build_pb_entry(self, entry, pb_book, fundamentals):
+        """Build a BitPim phonebook entry based on phone data.
+        """
+        # check of this entry belong to an existing name
+        try:
+            _idx=fundamentals['pb_list'].index(entry.name)
+        except ValueError:
+            _idx=None
+        if _idx is None:
+            # new name entry
+            _idx=len(fundamentals['pb_list'])
+            fundamentals['pb_list'].append(entry.name)
+            _group=fundamentals.get('groups', {}).get(entry.group, None)
+            pb_book[_idx]={ 'names': [{ 'full': entry.name }] }
+            if _group.get('name', None):
+                pb_book[_idx]['categories']=[{'category': _group['name'] }]
+        self._populate_pb_entry(pb_book[_idx], entry, fundamentals)
+
+    def _update_a_mail_list(self, entry, sd_dict):
+        for _entry in entry['maillist']:
+            _name_list=[]
+            for m in _entry['entry']:
+                if sd_dict.has_key(m):
+                    _name_list.append(sd_dict[m])
+                _entry['entry']='\x00\x00'.join(_name_list)
+
+    def _update_mail_list(self, pb_book, fundamentals):
+        """Translate the contents of each mail list from speed-dial
+        into the corresponding names or numbers.
+        """
+        _sd_dict=fundamentals.get('sd_dict', {})
+        for _key,_entry in pb_book.items():
+            if _entry.has_key('maillist'):
+                self._update_a_mail_list(_entry, _sd_dict)
+
+    def _del_pb_entry(self, entry_index):
+        """Delete the phonebook entry index from the phone"""
+        _req=self.protocolclass.del_pb_req()
+        _req.index=entry_index
+        try:
+            self.sendATcommand(_req, None)
+        except:
+            self.log('Failed to delete contact index %d'%entry_index)
+            if __debug__:
+                raise
+
+    def _get_group_code(self, entry, fundamentals):
+        """Return the group index of the group.  Return 1(General) if none found
+        """
+        _grp_name=entry.get('categories', [{}])[0].get('category', None)
+        if not _grp_name:
+            return 1
+        for _key,_entry in fundamentals.get('groups', {}).items():
+            if _entry.get('name', None)==_grp_name:
+                return _key
+        return 1
+
+    def _get_ringtone_code(self, entry, fundamentals):
+        """Return the ringtone code of this entry"""
+        _ringtone_name=entry.get('ringtone', None)
+        if not _ringtone_name:
+            return 255
+        for _key,_entry in fundamentals.get('ringtone-index', {}).items():
+            if _entry['name']==_ringtone_name:
+                return _key
+        return 255
+
+    def _get_wallpaper_name(self, entry, fundamentals):
+        """Return the full path name for the wallpaper"""
+        _wp_name=entry.get('wallpaper', None)
+        if not _wp_name:
+            return ''
+        return '/a/'+self.protocolclass.WP_PATH+'/'+_wp_name
+
+    def _get_primary_code(self, fundamentals):
+        if fundamentals['primary']:
+            return 0
+        fundamentals['primary']=True
+        return 1
+
+    def _build_pb_maillist(self, entry, fundamentals):
+        """Translate the mail list from text name to indices"""
+        _sd_list=fundamentals.get('sd-slots', [])
+        _names_list=entry.get('entry', '').split('\x00\x00')
+        _codes_list=[]
+        for _name in _names_list:
+            try:
+                _codes_list.append('%d'%_sd_list.index(_name))
+            except ValueError:
+                pass
+        return ' '.join(_codes_list)
+
+    def _set_pb_entry_misc(self, req, entry, fundamentals):
+        """Set the ringtone, wallpaper, and primary parameters"""
+        req.ringtone=self._get_ringtone_code(entry, fundamentals)
+        req.is_primary=self._get_primary_code(fundamentals)
+        req.picture_name=self._get_wallpaper_name(entry, fundamentals)
+        
+    def _write_pb_entry_numbers(self, entry, req, fundamentals):
+        """Write all the numbers to the phone"""
+        req.local_type=self.protocolclass.LOCAL_TYPE_LOCAL
+        for _entry in entry.get('numbers', []):
+            req.index=_entry['speeddial']
+            if req.index>self.protocolclass.PB_TOTAL_ENTRIES:
+                # out of range
+                continue
+            req.number=_entry['number']
+            req.number_type=self.protocolclass.NUMBER_TYPE_CODE.get(
+                _entry['type'], self.protocolclass.NUMBER_TYPE_WORK)
+            self._set_pb_entry_misc(req, _entry, fundamentals)
+            self._del_pb_entry(req.index)
+            self.sendATcommand(req, None)
+
+    def _write_pb_entry_emails(self, entry, req, fundamentals):
+        """Write all emails to the phone"""
+        req.number_type=self.protocolclass.NUMBER_TYPE_EMAIL
+        req.local_type=self.protocolclass.LOCAL_TYPE_UNKNOWN
+        for _entry in entry.get('emails', []):
+            req.index=_entry['speeddial']
+            if req.index>self.protocolclass.PB_TOTAL_ENTRIES:
+                continue
+            req.number=_entry['email']
+            self._set_pb_entry_misc(req, _entry, fundamentals)
+            self._del_pb_entry(req.index)
+            self.sendATcommand(req, None)
+
+    def _write_pb_entry_maillist(self, entry, req, fundamentals):
+        """Write all the mail lists to the phone"""
+        req.number_type=self.protocolclass.NUMBER_TYPE_MAILING_LIST
+        req.local_type=self.protocolclass.LOCAL_TYPE_UNKNOWN
+        for _entry in entry.get('maillist', []):
+            req.index=_entry['speeddial']
+            if req.index>self.protcolclass.PB_TOTAL_ENTRIES:
+                continue
+            req.number=self._build_pb_maillist(_entry, fundamentals)
+            self._set_pb_entry_misc(req, _entry, fundamentals)
+            self._del_pb_entry(req.index)
+            self.sendATcommand(req, None)
+
+    def _write_pb_entry(self, entry, fundamentals):
+        """Write an phonebook entry to the phone"""
+        _req=self.protocolclass.write_pb_req()
+        _req.name=nameparser.getfullname(entry['names'][0])
+        _req.group=self._get_group_code(entry, fundamentals)
+        fundamentals['primary']=False
+        # first, write out the numbers
+        self._write_pb_entry_numbers(entry, _req, fundamentals)
+        # then email
+        self._write_pb_entry_emails(entry, _req, fundamentals)
+        # and mail list
+        self._write_pb_entry_maillist(entry, _req, fundamentals)
+        del fundamentals['primary']
+
+    def _write_pb_entries(self, fundamentals):
+        """Write out the phonebook to the phone"""
+        _pb_book=fundamentals.get('phonebook', {})
+        _total_entries=len(_pb_book)
+        _cnt=0
+        for _key,_entry in _pb_book.items():
+            _cnt+=1
+            self.progress(_cnt, _total_entries,
+                          'Writing contact number %d'%_cnt)
+            self._write_pb_entry(_entry, fundamentals)
+        # delete all unused slots
+        for _index,_entry in enumerate(fundamentals.get('sd-slots', [])):
+            if not _entry:
+                self.progress(_index, self.protocolclass.PB_TOTAL_ENTRIES,
+                              'Deleting contact slot %d'%_index)
+                self._del_pb_entry(_index)
+
+#------------------------------------------------------------------------------
+parentprofile=com_moto.Profile
+class Profile(parentprofile):
+    pass
