@@ -612,12 +612,13 @@ class USTRING(BaseProtogenClass):
                 # read up to terminator
                 _value=""
                 count=0
+                term=0
                 while buf.hasmore():
                     _value+=chr(buf.getnextbyte())
                     count+=1
                     if (count % self._terminator_length)==0:
-                        # see if we have a terminator
                         term=0
+                        # see if we have a terminator
                         for j in range(self._terminator_length):
                             term=(term<<8)+ord(_value[count-1-j])
                         if term==self._terminator:
