@@ -258,7 +258,7 @@ class DebugBrewProtocol:
         try:
             _stat=os.stat(os.path.join(self._fs_path, name))
             _date=_stat[8]
-            results={ 'name': name, 'type': 'file', 'size': _stat[6],
+            results={ 'name': name, 'type': 'file', 'size': _stat[6], 'datevalue': 0xDEB0DEB0,
                       'date': (_date,
                                time.strftime("%x %X", time.gmtime(_date))) }
             return results
