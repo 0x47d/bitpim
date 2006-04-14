@@ -12,6 +12,6 @@
 DESC(Add,Add the selected song to the current playlist.)
 DESC(Save,Save the changes made to the current playlist.)
 DESC(Help,Bring up this help page.)
-DESC(Revert,Dicard all changes.)
+DESC(Revert,Discard all changes.)
 
 #include "pageend.h"

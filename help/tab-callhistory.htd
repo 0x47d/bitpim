@@ -6,10 +6,10 @@
 phone.  Display information for each call includes the date and time when the
 call is made/received, and the phone number or contact name of the call.
 
-<p> Selecting the SMS item in the tree shows the total calls and duration of 
+<p>Selecting the Call History item in the tree shows the total calls and duration of 
 call history from your phone. Click on the "All", "Incoming", "Outgoing", "Missed" 
 and "Data" items in the tree to view the individual calls in the call history. You 
-can click on the column headings to sort the items by tpe, name, date, number and duration.
+can click on the column headings to sort the items by type, name, date, number and duration.
 
 <p align=center><img src="screen-callhistorytab2.png">
 
