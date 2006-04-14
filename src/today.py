@@ -187,6 +187,9 @@ class ItemHyperLink(HyperLinkCtrl):
         super(ItemHyperLink, self).__init__(*args, **kargs)
         self.client_data=None
     def SetLabel(self, label, client_data=None):
+        # if label contains linefeed truncate
+        if label.find('\n')>-1:
+            label=label.split('\n')[0]+self._postfix
         if len(label)>self._max_item_len:
             label=label[:self._max_client_len]+self._postfix
         super(ItemHyperLink, self).SetLabel(label)
@@ -217,7 +220,7 @@ class GroupWidget(wx.Panel, widgets.BitPimWidget):
         title=HyperLinkCtrl(self, -1, self.name)
         if self._title_font.Ok():
             title.SetFont(self._title_font)
-        hl.EVT_HYPERLINK_LEFT(self, title.GetId(), self.OnHyperlinkLeft)
+        hl.EVT_HYPERLINK_LEFT(self, title.GetId(), self.OnItemSelected)
         bs.Add(title, 0, wx.ALL, 5)
         vbs=wx.BoxSizer(wx.VERTICAL)
         for i in range(self.max_total_items):
