@@ -173,6 +173,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         write phonebook data.
         """
         self.log("Retrieving fundamental phone information")
+        self.progress(0, 100, 'Retrieving fundamental phone information')
         self.setmode(self.MODEPHONEBOOK)
         self.charset_ascii()
         self.log("Phone serial number")
@@ -232,7 +233,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             if _entry.get('speeddial', None) is None:
                 try:
                     _new_sd=sd_slots.index(False)
-                    entries[_index]['speedial']=_new_sd
+                    entries[_index]['speeddial']=_new_sd
                     sd_slots[_new_sd]=_entry[key_name]
                 except ValueError:
                     self.log('Failed to allocate speed dial value')
@@ -311,12 +312,16 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         self._update_mail_list(pb_book, result)
         self.setmode(self.MODEMODEM)
         del result['pb_list'], result['sd_dict']
+        _keys=result['groups'].keys()
+        result['categories']=[x['name'] for _,x in result['groups'].items()]
         result['phonebook']=pb_book
         return pb_book
 
     def savephonebook(self, result):
         "Saves out the phonebook"
         self.log('Writing phonebook')
+        print 'categories',result['categories']
+##        return result
         self.setmode(self.MODEPHONEBOOK)
         time.sleep(0.5)
         # setting up what we need

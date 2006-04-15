@@ -52,7 +52,28 @@ class Phone(com_moto.Phone):
 
     def _save_groups(self, fundamentals):
         """Save the Group(Category) data"""
+        # get the current group
         _groups=fundamentals.get('groups', {})
+        # remember the assigned ringtone name
+        _name2ringtone={}
+        for _key,_entry in _groups.items():
+            _name2ringtone[_entry['name']]=_entry['ringtone']
+        # setting up the list of existing group names
+        _keys=_groups.keys()
+        _keys.sort()
+        _group_list=[_groups[x]['name'] for x in _keys]
+        # new group names as reported by phonebook
+        _cats=fundamentals.get('categories', [])
+        if 'General' not in _cats:
+            # Make sure General is the 1st one in the list
+            _cats.append('General')
+        # build a new list of new group names
+        _new_list=[x for x in _group_list if x in _cats]
+        _new_list+=[x for x in _cats if x not in _group_list]
+        _new_group={}
+        for _idx,_entry in enumerate(_new_list):
+            _new_group[_idx+1]={ 'name': _entry,
+                                 'ringtone': _name2ringtone.get(_entry, None) }
         _rt_name_index=fundamentals.get('ringtone-name-index', {})
         # deleting existing group entries
         _req=self.protocolclass.read_group_req()
@@ -65,13 +86,14 @@ class Phone(com_moto.Phone):
             self.sendATcommand(_req, None)
         # and save the new ones
         _req=self.protocolclass.write_group_req()
-        for _key,_entry in _groups.items():
+        for _key,_entry in _new_group.items():
             if _key==1:
                 continue
             _req.index=_key
             _req.name=_entry['name']
             _req.ringtone=_rt_name_index.get(_entry.get('ringtone', None), 255)
             self.sendATcommand(_req, None)
+        fundamentals['groups']=_new_group
 
     def _get_ringtone_index(self):
         res={}
@@ -325,9 +347,13 @@ class Phone(com_moto.Phone):
         _total_entries=len(_pb_book)
         _cnt=0
         for _key,_entry in _pb_book.items():
+            try:
+                _name=nameparser.getfullname(_entry['names'][0])
+            except:
+                _name='<Unknown>'
             _cnt+=1
             self.progress(_cnt, _total_entries,
-                          'Writing contact number %d'%_cnt)
+                          'Writing contact %d: %s'%(_cnt, _name))
             self._write_pb_entry(_entry, fundamentals)
         # delete all unused slots
         for _index,_entry in enumerate(fundamentals.get('sd-slots', [])):
@@ -336,7 +362,32 @@ class Phone(com_moto.Phone):
                               'Deleting contact slot %d'%_index)
                 self._del_pb_entry(_index)
 
+    getcalendar=NotImplemented
+    getwallpapers=NotImplemented
+    getringtones=NotImplemented
+
 #------------------------------------------------------------------------------
-parentprofile=com_moto.Profile
-class Profile(parentprofile):
-    pass
+parent_profile=com_moto.Profile
+class Profile(parent_profile):
+    serialsname=Phone.serialsname
+
+    def __init__(self):
+        parent_profile.__init__(self)
+
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+##        ('calendar', 'read', None),   # all calendar reading
+##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+##        ('ringtone', 'read', None),   # all ringtone reading
+##        ('ringtone', 'write', 'OVERWRITE'),
+##        ('wallpaper', 'read', None),  # all wallpaper reading
+##        ('wallpaper', 'write', 'OVERWRITE'),
+##        ('memo', 'read', None),     # all memo list reading DJP
+##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+##        ('sms', 'read', None),     # all SMS list reading DJP
+##        ('call_history', 'read', None),
+        )
+
+    def convertphonebooktophone(self, helper, data):
+        return data

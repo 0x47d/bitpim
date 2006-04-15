@@ -29,6 +29,7 @@ b_sk='SK'
 b_toshiba='Toshiba'
 b_other='Other'
 b_audiovox='Audiovox'
+b_moto='Motorola'
 
 _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                             'carrier': [c_att],
@@ -214,6 +215,10 @@ _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                              'carrier': [c_sti],
                              'brand': b_lg,
                              },
+              'V710': { 'module': 'com_motov710',
+                        'brand': b_moto,
+                        'carrier': [c_vzw],
+                        },
               'Other CDMA phone': { 'module': 'com_othercdma',
                                     'carrier': [c_other],
                                     'brand': b_other,

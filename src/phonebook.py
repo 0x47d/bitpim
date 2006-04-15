@@ -132,14 +132,18 @@ class phonebookdataobject(database.basedataobject):
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     _knownlistproperties.update( {'names': ['title', 'first', 'middle', 'last', 'full', 'nickname'],
                                   'categories': ['category'],
-                                  'emails': ['email', 'type'],
+                                  'emails': ['email', 'type', 'speeddial',
+                                             'ringtone', 'wallpaper' ],
                                   'urls': ['url', 'type'],
                                   'ringtones': ['ringtone', 'use'],
                                   'addresses': ['type', 'company', 'street', 'street2', 'city', 'state', 'postalcode', 'country'],
                                   'wallpapers': ['wallpaper', 'use'],
                                   'flags': ['secret', 'sim'],
                                   'memos': ['memo'],
-                                  'numbers': ['number', 'type', 'speeddial'],
+                                  'numbers': ['number', 'type', 'speeddial',
+                                              'ringtone', 'wallpaper' ],
+                                  'maillist': ['entry', 'speeddia;',
+                                               'ringtone', 'wallpaper' ],
                                   # serials is in parent object
                                   })
 
