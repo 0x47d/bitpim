@@ -112,7 +112,7 @@ class Phone(com_moto.Phone):
         for _entry in _idx_file.items:
             res[_entry.index]={ 'name': common.basename(
                 self.decode_utf16(_entry.name)),
-                                'origin': 'ringtone' }
+                                'origin': 'ringers' }
         return res
 
     def _get_wallpaper_index(self):

@@ -20,6 +20,10 @@ import field_color
 
 """The dialog for editing a phonebook entry"""
 
+# global ringone & wallpaper list
+_ringtone_list=None
+_wallpaper_list=None
+
 # NavToolBar--------------------------------------------------------------------
 class NavToolBar(wx.ToolBar):
     _id_up=wx.NewId()
@@ -578,7 +582,9 @@ class NumberEditor(DirtyUIBase):
 
     choices=[ ("None", "none"), ("Home", "home"), ("Office",
     "office"), ("Cell", "cell"), ("Fax", "fax"), ("Pager", "pager"),
-    ("Data", "data")]
+    ("Data", "data"), ("Main", "main")]
+
+    _None_Value='None'
 
     def __init__(self, parent, _, navtoolbar=False):
 
@@ -591,39 +597,126 @@ class NumberEditor(DirtyUIBase):
                                                            (self, -1, "Number details"),
                                                            'details',
                                                            _field_color_dict),
-                             wx.HORIZONTAL)
-
+                             wx.VERTICAL)
+        _hs_top=wx.BoxSizer(wx.HORIZONTAL)
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "Type"),
                                            'type', _field_color_dict)
-        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _hs_top.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
         self.type=wx.ComboBox(self, -1, "Cell", choices=[desc for desc,name in self.choices], style=wx.CB_READONLY)
-        hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
+        _hs_top.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
 
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "SpeedDial"),
                                            'speeddial', _field_color_dict)
-        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _hs_top.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.speeddial=wx.TextCtrl(self, -1, "", size=(32,10))
-        hs.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
+        _hs_top.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
 
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "Number"),
                                            'number', _field_color_dict)
-        hs.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _hs_top.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.number=wx.TextCtrl(self, -1, "")
-        hs.Add(self.number, 1, wx.EXPAND|wx.ALL, 5)
+        _hs_top.Add(self.number, 1, wx.EXPAND|wx.ALL, 5)
 
         # add a toolbar w/ the Up/Down/Del buttons
         if navtoolbar:
-            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+            _hs_top.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+        hs.Add(_hs_top, 0, wx.EXPAND|wx.ALL, 0)
+        # the bottom section
+        _hs_bot=wx.BoxSizer(wx.HORIZONTAL)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Ringtone"),
+                                           'ringtone', _field_color_dict)
+        _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.ringtone=wx.ComboBox(self, -1)
+        _hs_bot.Add(self.ringtone, 0, wx.EXPAND|wx.ALL, 5)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Wallpaper"),
+                                           'wallpaper', _field_color_dict)
+        _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        
+        self.wallpaper=wx.ComboBox(self, -1)
+        _hs_bot.Add(self.wallpaper, 0, wx.EXPAND|wx.ALL, 5)
+        
+        hs.Add(_hs_bot, 0, wx.EXPAND|wx.ALL, 0)
+
+        global _wallpaper_list, _ringtone_list
+        pubsub.subscribe(self.OnWallpaperUpdates, pubsub.ALL_WALLPAPERS)
+        if _wallpaper_list is None:
+            pubsub.publish(pubsub.REQUEST_WALLPAPERS)
+        else:
+            self._populate_wallpaper()
+        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
+        if _ringtone_list is None:
+            pubsub.publish(pubsub.REQUEST_RINGTONES)
+        else:
+            self._populate_ringtone()
 
         wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
         wx.EVT_TEXT(self, self.speeddial.GetId(), self.OnDirtyUI)
         wx.EVT_TEXT(self, self.number.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.ringtone.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.wallpaper.GetId(), self.OnDirtyUI)
         self.SetSizer(hs)
         hs.Fit(self)
+
+    def __del__(self):
+        pubsub.unsubscribe(self.OnWallpaperUpdates)
+        pubsub.unsubscribe(self.OnRingtoneUpdates)
+        super(NumberEditor, self).__del__()
+
+    def _populate_cb(self, cb_widget, data):
+        cb_widget.Clear()
+        cb_widget.Append(self._None_Value)
+        for _entry in data:
+            cb_widget.Append(_entry)
+
+    def _set_cb_sel(self, cb_widget, str_sel):
+        if str_sel:
+            _sel=str_sel
+        else:
+            _sel=self._None_Value
+        try:
+            cb_widget.SetStringSelection(_sel)
+        except:
+            cb_widget.Append(sel)
+        cb_widget.SetStringSelection(_sel)
+
+    def _get_cb_sel(self, cb_widget):
+        _sel=cb_widget.GetStringSelection()
+        if not _sel or _sel==self._None_Value:
+            return None
+        return _sel
+
+    def _populate_ringtone(self):
+        """Populate the combo box with ringtone data"""
+        self.Ignore()
+        _str_sel=self.ringtone.GetStringSelection()
+        global _ringtone_list
+        self._populate_cb(self.ringtone, _ringtone_list)
+        self._set_cb_sel(self.ringtone, _str_sel)
+        self.Clean()
+
+    def _populate_wallpaper(self):
+        """Ppulate the combo box with wallpaper data"""
+        self.Ignore()
+        _str_sel=self.wallpaper.GetStringSelection()
+        global _wallpaper_list
+        self._populate_cb(self.wallpaper, _wallpaper_list)
+        self._set_cb_sel(self.wallpaper, _str_sel)
+        self.Clean()
+
+    def OnWallpaperUpdates(self, msg):
+        global _wallpaper_list
+        _wallpaper_list=msg.data[:]
+        self._populate_wallpaper()
+    def OnRingtoneUpdates(self, msg):
+        global _ringtone_list
+        _ringtone_list=msg.data[:]
+        self._populate_ringtone()
 
     def Set(self, data):
         self.Ignore()
@@ -632,7 +725,10 @@ class NumberEditor(DirtyUIBase):
             sd=`sd`
         self.speeddial.SetValue(sd)
         self.number.SetValue(data.get("number", ""))
-
+        # ringtone & wallpaper
+        self._set_cb_sel(self.ringtone, data.get('ringtone', None))
+        self._set_cb_sel(self.wallpaper, data.get('wallpaper', None))
+        # number of type
         v=data.get("type", "cell")
         for i in range(len(self.choices)):
             if self.choices[i][1]==v:
@@ -655,34 +751,144 @@ class NumberEditor(DirtyUIBase):
             except:
                 pass
         res['type']=self.choices[self.type.GetSelection()][1]
+        _sel=self._get_cb_sel(self.ringtone)
+        if _sel:
+            res['ringtone']=_sel
+        _sel=self._get_cb_sel(self.wallpaper)
+        if _sel:
+            res['wallpaper']=_sel
         return res
 
 # EmailEditor-------------------------------------------------------------------
 class EmailEditor(DirtyUIBase):
 
     ID_TYPE=wx.NewId()
+    _None_Value='None'
+
     def __init__(self, parent, _, navtoolbar=False):
         super(EmailEditor, self).__init__(parent)
 
         _box=field_color.build_color_field(self, wx.StaticBox,
                                            (self, -1, 'Email Address'),
                                            'email')
-        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
-
+        hs=wx.StaticBoxSizer(_box, wx.VERTICAL)
+        # top section
+        _hs_top=wx.BoxSizer(wx.HORIZONTAL)
         self.type=wx.ComboBox(self, self.ID_TYPE, "", choices=["", "Home", "Business"], style=wx.CB_READONLY)
-        hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
+        _hs_top.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
         self.email=wx.TextCtrl(self, -1, "")
-        hs.Add(self.email, 1, wx.EXPAND|wx.ALL, 5)
+        _hs_top.Add(self.email, 1, wx.EXPAND|wx.ALL, 5)
         if navtoolbar:
-            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+            _hs_top.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+        hs.Add(_hs_top, 0, wx.EXPAND|wx.ALL, 0)
+        # bottom section
+        _hs_bot=wx.BoxSizer(wx.HORIZONTAL)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "SpeedDial"),
+                                           'speeddial')
+        _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.speeddial=wx.TextCtrl(self, -1, "", size=(32,10))
+        _hs_bot.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Ringtone"),
+                                           'ringtone')
+        _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.ringtone=wx.ComboBox(self, -1)
+        _hs_bot.Add(self.ringtone, 0, wx.EXPAND|wx.ALL, 5)
+        _txt=field_color.build_color_field(self, wx.StaticText,
+                                           (self, -1, "Wallpaper"),
+                                           'wallpaper')
+        _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        
+        self.wallpaper=wx.ComboBox(self, -1)
+        _hs_bot.Add(self.wallpaper, 0, wx.EXPAND|wx.ALL, 5)
+        
+        hs.Add(_hs_bot, 0, wx.EXPAND|wx.ALL, 0)
+
+        global _wallpaper_list, _ringtone_list
+        pubsub.subscribe(self.OnWallpaperUpdates, pubsub.ALL_WALLPAPERS)
+        if _wallpaper_list is None:
+            pubsub.publish(pubsub.REQUEST_WALLPAPERS)
+        else:
+            self._populate_wallpaper()
+        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
+        if _ringtone_list is None:
+            pubsub.publish(pubsub.REQUEST_RINGTONES)
+        else:
+            self._populate_ringtone()
+
         wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
         wx.EVT_TEXT(self, self.email.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.speeddial.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.ringtone.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.wallpaper.GetId(), self.OnDirtyUI)
         self.SetSizer(hs)
         hs.Fit(self)
+
+    def __del__(self):
+        pubsub.unsubscribe(self.OnWallpaperUpdates)
+        pubsub.unsubscribe(self.OnRingtoneUpdates)
+        super(NumberEditor, self).__del__()
+
+    def _populate_cb(self, cb_widget, data):
+        cb_widget.Clear()
+        cb_widget.Append(self._None_Value)
+        for _entry in data:
+            cb_widget.Append(_entry)
+
+    def _set_cb_sel(self, cb_widget, str_sel):
+        if str_sel:
+            _sel=str_sel
+        else:
+            _sel=self._None_Value
+        try:
+            cb_widget.SetStringSelection(_sel)
+        except:
+            cb_widget.Append(sel)
+        cb_widget.SetStringSelection(_sel)
+
+    def _get_cb_sel(self, cb_widget):
+        _sel=cb_widget.GetStringSelection()
+        if not _sel or _sel==self._None_Value:
+            return None
+        return _sel
+
+    def _populate_ringtone(self):
+        """Populate the combo box with ringtone data"""
+        self.Ignore()
+        _str_sel=self.ringtone.GetStringSelection()
+        global _ringtone_list
+        self._populate_cb(self.ringtone, _ringtone_list)
+        self._set_cb_sel(self.ringtone, _str_sel)
+        self.Clean()
+
+    def _populate_wallpaper(self):
+        """Ppulate the combo box with wallpaper data"""
+        self.Ignore()
+        _str_sel=self.wallpaper.GetStringSelection()
+        global _wallpaper_list
+        self._populate_cb(self.wallpaper, _wallpaper_list)
+        self._set_cb_sel(self.wallpaper, _str_sel)
+        self.Clean()
+
+    def OnWallpaperUpdates(self, msg):
+        global _wallpaper_list
+        _wallpaper_list=msg.data[:]
+        self._populate_wallpaper()
+    def OnRingtoneUpdates(self, msg):
+        global _ringtone_list
+        _ringtone_list=msg.data[:]
+        self._populate_ringtone()
 
     def Set(self, data):
         self.Ignore()
         self.email.SetValue(data.get("email", ""))
+        sd=data.get("speeddial", "")
+        if isinstance(sd, int):
+            sd=`sd`
+        self.speeddial.SetValue(sd)
+        self._set_cb_sel(self.ringtone, data.get('ringtone', None))
+        self._set_cb_sel(self.wallpaper, data.get('wallpaper', None))
         v=data.get("type", "")
         if v=="home":
             self.type.SetSelection(1)
@@ -698,10 +904,22 @@ class EmailEditor(DirtyUIBase):
         if len(self.email.GetValue())==0:
             return res
         res['email']=self.email.GetValue()
+        if len(self.speeddial.GetValue()):
+            res['speeddial']=self.speeddial.GetValue()
+            try:
+                res['speeddial']=int(res['speeddial'])
+            except:
+                pass
         if self.type.GetSelection()==1:
             res['type']='home'
         elif self.type.GetSelection()==2:
             res['type']='business'
+        _sel=self._get_cb_sel(self.ringtone)
+        if _sel:
+            res['ringtone']=_sel
+        _sel=self._get_cb_sel(self.wallpaper)
+        if _sel:
+            res['wallpaper']=_sel
         return res
 
 # URLEditor---------------------------------------------------------------------
@@ -1282,9 +1500,11 @@ class Editor(wx.Dialog):
         @param dataindex: Which value within the tab specified by keytoopenon to set focus to
         @param readonly: Indicates read-only data.
         """
-        
+        global _ringtone_list, _wallpaper_list        
         wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         field_color.get_color_info_from_profile(self)
+        _ringtone_list=None
+        _wallpaper_list=None
         self._data_key=datakey
         if movement and datakey is None and __debug__:
             self.log('Movement and datakey is None')
