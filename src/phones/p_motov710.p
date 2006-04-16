@@ -30,6 +30,10 @@ RT_PATH='motorola/shared/audio'
 
 WP_PATH='motorola/shared/picture'
 
+# Calendar const
+
+CAL_MAX_ENTRIES=500
+
 %}
 
 PACKET read_group_req:
@@ -66,3 +70,37 @@ PACKET ringtone_index_entry:
 PACKET ringtone_index_file:
     * LIST { 'elementclass': ringtone_index_entry,
              'createdefault': True} +items
+
+# Calendar stuff
+PACKET calendar_lock_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+MDBL=' } +command
+    * CSVINT { 'terminator': None } lock
+
+PACKET calendar_read_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+MDBR=' } +command
+    * CSVINT { 'default': 1 } +start_index
+    * CSVINT { 'terminator': None,
+               'default': CAL_MAX_ENTRIES } +end_index
+
+PACKET calendar_req_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' '),
+                  'default': '+MDBR:' } command
+    * CSVINT index
+    if self.command=='+MDBR:':
+        * CSVSTRING title
+        * CSVINT alarm_timed
+        * CSVINT alarm_enabled
+        * CSVSTRING start_time
+        * CSVSTRING start_date
+        * SCVINT duration
+        * CSVSTRING alarm_time
+        * CSVSTRING alarm_date
+        * CSVINT { 'terminator': None } repeat_type
+    if self.command=='+MDBRE:':
+        * CSVINT ex_event
+        * CSVINT { 'terminator': None } ex_event_flag

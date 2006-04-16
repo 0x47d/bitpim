@@ -21,6 +21,10 @@ RT_PATH='motorola/shared/audio'
 
 WP_PATH='motorola/shared/picture'
 
+# Calendar const
+
+CAL_MAX_ENTRIES=500
+
 class read_group_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
@@ -699,6 +703,498 @@ class ringtone_index_file(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
+
+
+class calendar_lock_req(BaseProtogenClass):
+    __fields=['command', 'lock']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(calendar_lock_req,self).__init__(**dict)
+        if self.__class__ is calendar_lock_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(calendar_lock_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(calendar_lock_req,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBL=' })
+        self.__field_command.writetobuffer(buf)
+        self.__field_lock.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBL=' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_lock=CSVINT(**{ 'terminator': None })
+        self.__field_lock.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBL=' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBL=' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_lock(self):
+        return self.__field_lock.getvalue()
+
+    def __setfield_lock(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_lock=value
+        else:
+            self.__field_lock=CSVINT(value,**{ 'terminator': None })
+
+    def __delfield_lock(self): del self.__field_lock
+
+    lock=property(__getfield_lock, __setfield_lock, __delfield_lock, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('lock', self.__field_lock, None)
+
+
+
+class calendar_read_req(BaseProtogenClass):
+    __fields=['command', 'start_index', 'end_index']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(calendar_read_req,self).__init__(**dict)
+        if self.__class__ is calendar_read_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(calendar_read_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(calendar_read_req,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBR=' })
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_start_index
+        except:
+            self.__field_start_index=CSVINT(**{ 'default': 1 })
+        self.__field_start_index.writetobuffer(buf)
+        try: self.__field_end_index
+        except:
+            self.__field_end_index=CSVINT(**{ 'terminator': None,               'default': CAL_MAX_ENTRIES })
+        self.__field_end_index.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBR=' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_start_index=CSVINT(**{ 'default': 1 })
+        self.__field_start_index.readfrombuffer(buf)
+        self.__field_end_index=CSVINT(**{ 'terminator': None,               'default': CAL_MAX_ENTRIES })
+        self.__field_end_index.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBR=' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': None,                  'default': '+MDBR=' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_start_index(self):
+        try: self.__field_start_index
+        except:
+            self.__field_start_index=CSVINT(**{ 'default': 1 })
+        return self.__field_start_index.getvalue()
+
+    def __setfield_start_index(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_start_index=value
+        else:
+            self.__field_start_index=CSVINT(value,**{ 'default': 1 })
+
+    def __delfield_start_index(self): del self.__field_start_index
+
+    start_index=property(__getfield_start_index, __setfield_start_index, __delfield_start_index, None)
+
+    def __getfield_end_index(self):
+        try: self.__field_end_index
+        except:
+            self.__field_end_index=CSVINT(**{ 'terminator': None,               'default': CAL_MAX_ENTRIES })
+        return self.__field_end_index.getvalue()
+
+    def __setfield_end_index(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_end_index=value
+        else:
+            self.__field_end_index=CSVINT(value,**{ 'terminator': None,               'default': CAL_MAX_ENTRIES })
+
+    def __delfield_end_index(self): del self.__field_end_index
+
+    end_index=property(__getfield_end_index, __setfield_end_index, __delfield_end_index, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('start_index', self.__field_start_index, None)
+        yield ('end_index', self.__field_end_index, None)
+
+
+
+class calendar_req_resp(BaseProtogenClass):
+    __fields=['command', 'index', 'title', 'alarm_timed', 'alarm_enabled', 'start_time', 'start_date', 'duration', 'alarm_time', 'alarm_date', 'repeat_type', 'ex_event', 'ex_event_flag']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(calendar_req_resp,self).__init__(**dict)
+        if self.__class__ is calendar_req_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(calendar_req_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(calendar_req_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_index.writetobuffer(buf)
+        if self.command=='+MDBR:':
+            self.__field_title.writetobuffer(buf)
+            self.__field_alarm_timed.writetobuffer(buf)
+            self.__field_alarm_enabled.writetobuffer(buf)
+            self.__field_start_time.writetobuffer(buf)
+            self.__field_start_date.writetobuffer(buf)
+            self.__field_duration.writetobuffer(buf)
+            self.__field_alarm_time.writetobuffer(buf)
+            self.__field_alarm_date.writetobuffer(buf)
+            self.__field_repeat_type.writetobuffer(buf)
+        if self.command=='+MDBRE:':
+            self.__field_ex_event.writetobuffer(buf)
+            self.__field_ex_event_flag.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MDBR:' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_index=CSVINT()
+        self.__field_index.readfrombuffer(buf)
+        if self.command=='+MDBR:':
+            self.__field_title=CSVSTRING()
+            self.__field_title.readfrombuffer(buf)
+            self.__field_alarm_timed=CSVINT()
+            self.__field_alarm_timed.readfrombuffer(buf)
+            self.__field_alarm_enabled=CSVINT()
+            self.__field_alarm_enabled.readfrombuffer(buf)
+            self.__field_start_time=CSVSTRING()
+            self.__field_start_time.readfrombuffer(buf)
+            self.__field_start_date=CSVSTRING()
+            self.__field_start_date.readfrombuffer(buf)
+            self.__field_duration=SCVINT()
+            self.__field_duration.readfrombuffer(buf)
+            self.__field_alarm_time=CSVSTRING()
+            self.__field_alarm_time.readfrombuffer(buf)
+            self.__field_alarm_date=CSVSTRING()
+            self.__field_alarm_date.readfrombuffer(buf)
+            self.__field_repeat_type=CSVINT(**{ 'terminator': None })
+            self.__field_repeat_type.readfrombuffer(buf)
+        if self.command=='+MDBRE:':
+            self.__field_ex_event=CSVINT()
+            self.__field_ex_event.readfrombuffer(buf)
+            self.__field_ex_event_flag=CSVINT(**{ 'terminator': None })
+            self.__field_ex_event_flag.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MDBR:' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_index=value
+        else:
+            self.__field_index=CSVINT(value,)
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def __getfield_title(self):
+        return self.__field_title.getvalue()
+
+    def __setfield_title(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_title=value
+        else:
+            self.__field_title=CSVSTRING(value,)
+
+    def __delfield_title(self): del self.__field_title
+
+    title=property(__getfield_title, __setfield_title, __delfield_title, None)
+
+    def __getfield_alarm_timed(self):
+        return self.__field_alarm_timed.getvalue()
+
+    def __setfield_alarm_timed(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_alarm_timed=value
+        else:
+            self.__field_alarm_timed=CSVINT(value,)
+
+    def __delfield_alarm_timed(self): del self.__field_alarm_timed
+
+    alarm_timed=property(__getfield_alarm_timed, __setfield_alarm_timed, __delfield_alarm_timed, None)
+
+    def __getfield_alarm_enabled(self):
+        return self.__field_alarm_enabled.getvalue()
+
+    def __setfield_alarm_enabled(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_alarm_enabled=value
+        else:
+            self.__field_alarm_enabled=CSVINT(value,)
+
+    def __delfield_alarm_enabled(self): del self.__field_alarm_enabled
+
+    alarm_enabled=property(__getfield_alarm_enabled, __setfield_alarm_enabled, __delfield_alarm_enabled, None)
+
+    def __getfield_start_time(self):
+        return self.__field_start_time.getvalue()
+
+    def __setfield_start_time(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_start_time=value
+        else:
+            self.__field_start_time=CSVSTRING(value,)
+
+    def __delfield_start_time(self): del self.__field_start_time
+
+    start_time=property(__getfield_start_time, __setfield_start_time, __delfield_start_time, None)
+
+    def __getfield_start_date(self):
+        return self.__field_start_date.getvalue()
+
+    def __setfield_start_date(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_start_date=value
+        else:
+            self.__field_start_date=CSVSTRING(value,)
+
+    def __delfield_start_date(self): del self.__field_start_date
+
+    start_date=property(__getfield_start_date, __setfield_start_date, __delfield_start_date, None)
+
+    def __getfield_duration(self):
+        return self.__field_duration.getvalue()
+
+    def __setfield_duration(self, value):
+        if isinstance(value,SCVINT):
+            self.__field_duration=value
+        else:
+            self.__field_duration=SCVINT(value,)
+
+    def __delfield_duration(self): del self.__field_duration
+
+    duration=property(__getfield_duration, __setfield_duration, __delfield_duration, None)
+
+    def __getfield_alarm_time(self):
+        return self.__field_alarm_time.getvalue()
+
+    def __setfield_alarm_time(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_alarm_time=value
+        else:
+            self.__field_alarm_time=CSVSTRING(value,)
+
+    def __delfield_alarm_time(self): del self.__field_alarm_time
+
+    alarm_time=property(__getfield_alarm_time, __setfield_alarm_time, __delfield_alarm_time, None)
+
+    def __getfield_alarm_date(self):
+        return self.__field_alarm_date.getvalue()
+
+    def __setfield_alarm_date(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_alarm_date=value
+        else:
+            self.__field_alarm_date=CSVSTRING(value,)
+
+    def __delfield_alarm_date(self): del self.__field_alarm_date
+
+    alarm_date=property(__getfield_alarm_date, __setfield_alarm_date, __delfield_alarm_date, None)
+
+    def __getfield_repeat_type(self):
+        return self.__field_repeat_type.getvalue()
+
+    def __setfield_repeat_type(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_repeat_type=value
+        else:
+            self.__field_repeat_type=CSVINT(value,**{ 'terminator': None })
+
+    def __delfield_repeat_type(self): del self.__field_repeat_type
+
+    repeat_type=property(__getfield_repeat_type, __setfield_repeat_type, __delfield_repeat_type, None)
+
+    def __getfield_ex_event(self):
+        return self.__field_ex_event.getvalue()
+
+    def __setfield_ex_event(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_ex_event=value
+        else:
+            self.__field_ex_event=CSVINT(value,)
+
+    def __delfield_ex_event(self): del self.__field_ex_event
+
+    ex_event=property(__getfield_ex_event, __setfield_ex_event, __delfield_ex_event, None)
+
+    def __getfield_ex_event_flag(self):
+        return self.__field_ex_event_flag.getvalue()
+
+    def __setfield_ex_event_flag(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_ex_event_flag=value
+        else:
+            self.__field_ex_event_flag=CSVINT(value,**{ 'terminator': None })
+
+    def __delfield_ex_event_flag(self): del self.__field_ex_event_flag
+
+    ex_event_flag=property(__getfield_ex_event_flag, __setfield_ex_event_flag, __delfield_ex_event_flag, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('index', self.__field_index, None)
+        if self.command=='+MDBR:':
+            yield ('title', self.__field_title, None)
+            yield ('alarm_timed', self.__field_alarm_timed, None)
+            yield ('alarm_enabled', self.__field_alarm_enabled, None)
+            yield ('start_time', self.__field_start_time, None)
+            yield ('start_date', self.__field_start_date, None)
+            yield ('duration', self.__field_duration, None)
+            yield ('alarm_time', self.__field_alarm_time, None)
+            yield ('alarm_date', self.__field_alarm_date, None)
+            yield ('repeat_type', self.__field_repeat_type, None)
+        if self.command=='+MDBRE:':
+            yield ('ex_event', self.__field_ex_event, None)
+            yield ('ex_event_flag', self.__field_ex_event_flag, None)
 
 
 

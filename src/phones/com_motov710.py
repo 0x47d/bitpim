@@ -185,8 +185,9 @@ class Phone(com_moto.Phone):
             self._populate_pb_number(pb_entry, entry, fundamentals)
         elif _num_type==self.protocolclass.NUMBER_TYPE_EMAIL:
             self._populate_pb_email(pb_entry, entry, fundamentals)
-        else:
-            self._populate_pb_maillist(pb_entry, entry, fundamentals)
+        # this is a mail list, which is not currently supported
+##        else:
+##            self._populate_pb_maillist(pb_entry, entry, fundamentals)
         
     def _build_pb_entry(self, entry, pb_book, fundamentals):
         """Build a BitPim phonebook entry based on phone data.
@@ -212,6 +213,7 @@ class Phone(com_moto.Phone):
             for m in _entry['entry']:
                 if sd_dict.has_key(m):
                     _name_list.append(sd_dict[m])
+##                _entry['entry']=_name_list
                 _entry['entry']='\x00\x00'.join(_name_list)
 
     def _update_mail_list(self, pb_book, fundamentals):

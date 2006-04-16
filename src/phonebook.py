@@ -142,8 +142,8 @@ class phonebookdataobject(database.basedataobject):
                                   'memos': ['memo'],
                                   'numbers': ['number', 'type', 'speeddial',
                                               'ringtone', 'wallpaper' ],
-                                  'maillist': ['entry', 'speeddia;',
-                                               'ringtone', 'wallpaper' ],
+##                                  'maillist': ['entry', 'speeddial',
+##                                               'ringtone', 'wallpaper' ],
                                   # serials is in parent object
                                   })
 
