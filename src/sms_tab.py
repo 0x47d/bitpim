@@ -38,6 +38,12 @@ class StaticText(wx.StaticText):
     def __init__(self, parent, _=None):
         super(StaticText, self).__init__(parent, -1)
     def SetValue(self, v):
+        if v.find('subject') and (v.find('\n')>-1):
+            v=v.split('\n')[0]
+        if len(v)==10 and v.isdigit():
+                v='(%03d)-%03d-%04d'%(int(v[:3]),int(v[3:6]),int(v[6:10]))
+        elif len(v)==11 and v.isdigit() and v[0]=='1':
+                v='1-(%03d)-%03d-%04d'%(int(v[1:4]),int(v[4:7]),int(v[7:11]))
         self.SetLabel(v)
 
 #-------------------------------------------------------------------------------
@@ -46,7 +52,7 @@ class TimeStamp(wx.StaticText):
         super(TimeStamp, self).__init__(parent, -1)
     def SetValue(self, v):
         if v:
-            self.SetLabel('%04d-%02d-%2d %02d:%02d:%02d'%(
+            self.SetLabel('%04d-%02d-%02d %02d:%02d:%02d'%(
                 int(v[:4]), int(v[4:6]), int(v[6:8]),
                 int(v[9:11]), int(v[11:13]), int(v[13:])))
         else:
@@ -78,7 +84,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
             ['_from', 'From:', StaticText, None, None, None, 0],
             ['_to', 'To:', StaticText, None, None, None, 0],
             ['callback', 'Callback #:', StaticText, None, None, None, 0],
-            ['subject', 'Subj:', StaticText, None, None, None, 0],
+            ['subject', 'Subject:', StaticText, None, None, None, 0],
             ['datetime', 'Date:', TimeStamp, None, None, None, 0],
             ['priority_str', 'Priority:', StaticText, None, None, None, 0],
             ['read', 'Read?:', wx.CheckBox, None, None, None, 0],
