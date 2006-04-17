@@ -398,7 +398,7 @@ class Phone(com_moto.Phone):
     def _build_regular_cal_entry(self, entry, calendar, fundamentals):
         """ Build a regular BitPim entry frm phone data"""
         _bp_entry=bpcalendar.CalendarEntry()
-        _bp_entry.id=entry.index
+        _bp_entry.id=`entry.index`
         _bp_entry.desc_loc=entry.title
         _bp_entry.start=entry.start_date+entry.start_time
         _t0=datetime.datetime(*_bp_entry.start)
@@ -415,19 +415,19 @@ class Phone(com_moto.Phone):
             _bp_entry.repeat=_rep
             _bp_entry.end=bpcalendar.CalendarEntry.no_end_date+_bp_entry.end[3:]
 
-        calendar[entry.index]=_bp_entry
+        calendar[_bp_entry.id]=_bp_entry
 
     def _process_exceptions(self, calendar):
         """Process all exceptions"""
         for _idx,_exc in calendar.get('exceptions', []):
-            if not calendar.has_key(_idx):
+            if not calendar.has_key(`_idx`):
                 continue
-            _rep=calendar[_idx].repeat
+            _rep=calendar[`_idx`].repeat
             if _rep:
-                _date=calendar[_idx].start[:3]
+                _date=calendar[`_idx`].start[:3]
                 for _i in range(_exc):
                     _date=_rep.next_date(_date)
-                calendar[_idx].suppress_repeat_entry(*_date)
+                calendar[`_idx`].suppress_repeat_entry(*_date)
     
     def _build_cal_entry(self, entry, calendar, fundamentals):
         """Build a BitPim calendar object from phonebook data"""
