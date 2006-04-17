@@ -270,6 +270,15 @@ class RepeatEntry(object):
             s.append(bptime.BPTime(n['date']))
         self.suppressed=s
 
+    def get_nthweekday(self, date):
+        """Utility routine: return the nth weekday of the specified date"""
+        _wxmonth=date[1]-1
+        _year=date[0]
+        _day=date[2]
+        _dt=wx.DateTimeFromDMY(_day, _wxmonth, _year)
+        _dt.SetToWeekDay(_dt.GetWeekDay(), 1, _wxmonth, _year)
+        return (_day-_dt.GetDay())/7+1
+
     def _check_daily(self, s, d):
         if self.interval:
             # every nth day
@@ -277,6 +286,22 @@ class RepeatEntry(object):
         else:
             # every weekday
             return d.weekday()<5
+    def _next_daily(self, ymd):
+        """Return the date (y,m,d) of the next occurrence of this event"""
+        _d0=datetime.date(*ymd)
+        if self.interval:
+            # every nth day:
+            _delta=self.interval
+        else:
+            # every weekday
+            if _d0.isoweekday()<5:
+                # next weekday
+                _delta=1
+            else:
+                # the following Monday
+                _delta=3
+        _d1=_d0+datetime.timedelta(days=_delta)
+        return (_d1.year, _d1.month, _d1.day)
 
     def _check_weekly(self, s, d):
         # check if at least one day-of-week is specified, if not default to the
@@ -292,6 +317,12 @@ class RepeatEntry(object):
             return False
         # check for the right weekday
         return ((1<<day_of_week)&self.dow) != 0
+    def _next_weekly(self, ymd):
+        """Return the next occurrence of this event from ymd date"""
+        _d0=datetime.date(*ymd)
+        _delta=self.interval*7
+        _d1=_d0+datetime.timedelta(days=_delta)
+        return (_d1.year, _d1.month, _d1.day)
 
     def _check_monthly(self, s, d):
         if not self.interval2:
@@ -315,9 +346,37 @@ class RepeatEntry(object):
             return dt.SetToWeekDay(self._dow_num[self.dow], _nth,
                                    month=d.month-1, year=d.year) and \
                                    dt.GetDay()==d.day
+    def _next_monthly(self, ymd):
+        """Return the date of the next occurrence of this event"""
+        _day=ymd[2]
+        if ymd[1]<12:
+            _month=ymd[1]+1
+            _year=ymd[0]
+        else:
+            _month=1
+            _year=ymd[0]+1
+        _d1=datetime.date(_year, _month, _day)
+        if self.dow==0:
+            # nth day of the month
+            return (_d1.year, _d1.month, _d1.day)
+        else:
+            # every interval-th dow-day (ie 1st Mon) of the month
+            if self.interval<5:
+                # nth *day of the month
+                _nth=self.interval
+            else:
+                # last *day of the month
+                _nth=-1
+            _dt=wx.DateTime()
+            _dt.SetToWeekDay(self._dow_num[self.dow], _nth, month=_d1.month-1,
+                             year=_d1.year)
+            return (_dt.GetYear(), _dt.GetMonth()+1, _dt.GetDay())
 
     def _check_yearly(self, s, d):
         return d.month==s.month and d.day==s.day
+    def _next_yearly(self, ymd):
+        """Return the date of the next occurrence of this event"""
+        return (ymd[0]+1, ymd[1], ymd[0])
 
     def is_active(self, s, d):
         # check in the suppressed list
@@ -335,6 +394,17 @@ class RepeatEntry(object):
             return self._check_yearly(s, d)
         else:
             return False
+
+    def next_date(self, ymd):
+        """Return the date of the next occurrence of this event"""
+        if self.repeat_type==self.daily:
+            return self._next_daily(ymd)
+        elif self.repeat_type==self.weekly:
+            return self._next_weekly(ymd)
+        elif self.repeat_type==self.monthly:
+            return self._next_monthly(ymd)
+        else:
+            return self._next_yearly(ymd)
 
     def _get_type(self):
         return self._type

@@ -12,6 +12,7 @@
 """Various descriptions of data specific to Motorola phones"""
 
 from prototypes import *
+from prototypes_moto import *
 from p_gsm import *
 from p_moto import *
 
@@ -31,8 +32,20 @@ RT_PATH='motorola/shared/audio'
 WP_PATH='motorola/shared/picture'
 
 # Calendar const
+CAL_TOTAL_ENTRIES=500
+CAL_MAX_ENTRY=499
+CAL_TOTAL_ENTRY_EXCEPTIONS=8
+CAL_TITLE_LEN=64
 
-CAL_MAX_ENTRIES=500
+CAL_REP_NONE=0
+CAL_REP_DAILY=1
+CAL_REP_WEEKLY=2
+CAL_REP_MONTHLY=3
+CAL_REP_MONTHLY_NTH=4
+CAL_REP_YEARLY=5
+
+CAL_ALARM_NOTIME='00:00'
+CAL_ALARM_NODATE='00-00-2000'
 
 %}
 
@@ -82,9 +95,9 @@ PACKET calendar_read_req:
     * CSVSTRING { 'quotechar': None,
                   'terminator': None,
                   'default': '+MDBR=' } +command
-    * CSVINT { 'default': 1 } +start_index
+    * CSVINT { 'default': 0 } +start_index
     * CSVINT { 'terminator': None,
-               'default': CAL_MAX_ENTRIES } +end_index
+               'default': CAL_MAX_ENTRY } +end_index
 
 PACKET calendar_req_resp:
     * CSVSTRING { 'quotechar': None,
@@ -95,12 +108,37 @@ PACKET calendar_req_resp:
         * CSVSTRING title
         * CSVINT alarm_timed
         * CSVINT alarm_enabled
-        * CSVSTRING start_time
-        * CSVSTRING start_date
-        * SCVINT duration
-        * CSVSTRING alarm_time
-        * CSVSTRING alarm_date
+        * CAL_TIME start_time
+        * CAL_DATE start_date
+        * CSVINT duration
+        * CAL_TIME alarm_time
+        * CAL_DATE alarm_date
         * CSVINT { 'terminator': None } repeat_type
     if self.command=='+MDBRE:':
         * CSVINT ex_event
         * CSVINT { 'terminator': None } ex_event_flag
+
+PACKET calendar_write_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+MDBW=' } +command
+    * CSVINT index
+    * CSVSTRING {'maxsizeinbytes': CAL_TITLE_LEN } title
+    * CSVINT { 'default': 0 } +alarm_timed
+    * CSVINT { 'default': 0 } +alarm_enabled
+    * CAL_TIME start_time
+    * CAL_DATE start_date
+    * CSVINT duration
+    * CAL_TIME alarm_time
+    * CAL_DATE alarm_date
+    * CSVINT { 'terminator': None,
+               'default': 0 } +repeat_type
+    
+PACKET calendar_write_ex_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+MDBWE=' }  +command
+    * CSVINT index
+    * CSVINT nth_event
+    * CSVINT { 'terminator': None,
+               'default': 1 } +ex_event_flag

@@ -9,9 +9,11 @@
 
 """Communicate with Motorola phones using AT commands"""
 # system modules
+import datetime
 import sha
 
 # BitPim modules
+import bpcalendar
 import common
 import com_moto
 import nameparser
@@ -340,7 +342,7 @@ class Phone(com_moto.Phone):
         # then email
         self._write_pb_entry_emails(entry, _req, fundamentals)
         # and mail list
-        self._write_pb_entry_maillist(entry, _req, fundamentals)
+        # self._write_pb_entry_maillist(entry, _req, fundamentals)
         del fundamentals['primary']
 
     def _write_pb_entries(self, fundamentals):
@@ -364,7 +366,164 @@ class Phone(com_moto.Phone):
                               'Deleting contact slot %d'%_index)
                 self._del_pb_entry(_index)
 
-    getcalendar=NotImplemented
+    # Calendar stuff------------------------------------------------------------
+    def _dow(self, ymd):
+        """Return a bitmap dayofweek"""
+        return 1<<(datetime.date(*ymd).isoweekday()%7)
+        
+    def _build_repeat_part(self, entry, calendar, fundamentals):
+        """Build and return a repeat object of this entry"""
+        _rep=None
+        _repeat_type=entry.repeat_type
+        if _repeat_type==self.protocolclass.CAL_REP_DAILY:
+            _rep=bpcalendar.RepeatEntry()
+            _rep.interval=1
+        elif _repeat_type==self.protocolclass.CAL_REP_WEEKLY:
+            _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.weekly)
+            _rep.interval=1
+        elif _repeat_type==self.protocolclass.CAL_REP_MONTHLY:
+            _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.monthly)
+            _rep.interval2=1
+            _rep.dow=0
+        elif _repeat_type==self.protocolclass.CAL_REP_MONTHLY_NTH:
+            _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.monthly)
+            _rep.interval=_rep.get_nthweekday(entry.start_date)
+            _rep.interval2=1
+            _rep.dow=self._dow(entry.start_date)
+        elif _repeat_type==self.protocolclass.CAL_REP_YEARLY:
+            _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.yearly)
+
+        return _rep
+
+    def _build_regular_cal_entry(self, entry, calendar, fundamentals):
+        """ Build a regular BitPim entry frm phone data"""
+        _bp_entry=bpcalendar.CalendarEntry()
+        _bp_entry.desc_loc=entry.title
+        _bp_entry.start=entry.start_date+entry.start_time
+        _t0=datetime.datetime(*_bp_entry.start)
+        _t1=_t0+datetime.timedelta(minutes=entry.duration)
+        _bp_entry.end=(_t1.year, _t1.month, _t1.day, _t1.hour, _t1.minute)
+        if entry.alarm_timed and entry.alarm_enabled:
+            _t3=datetime.datetime(*(entry.alarm_date+entry.alarm_time))
+            if _t0>=_t3:
+                _bp_entry.alarm=(_t0-_t3).seconds/60
+        # repeat
+        _rep=self._build_repeat_part(entry, calendar, fundamentals)
+        if _rep:
+            # this is a recurrent event, adjust the end date
+            _bp_entry.repeat=_rep
+            _bp_entry.end=bpcalendar.CalendarEntry.no_end_date+_bp_entry.end[3:]
+
+        calendar[entry.index]=_bp_entry
+
+    def _process_exceptions(self, calendar):
+        """Process all exceptions"""
+        for _idx,_exc in calendar.get('exceptions', []):
+            if not calendar.has_key(_idx):
+                continue
+            _rep=calendar[_idx].repeat
+            if _rep:
+                _date=calendar[_idx].start[:3]
+                for _i in range(_exc):
+                    _date=_rep.next_date(_date)
+                calendar[_idx].suppress_repeat_entry(*_date)
+    
+    def _build_cal_entry(self, entry, calendar, fundamentals):
+        """Build a BitPim calendar object from phonebook data"""
+        if hasattr(entry, 'title'):
+            # this is a regular entry
+            self._build_regular_cal_entry(entry, calendar, fundamentals)
+        else:
+            # this is an exception to a regular entry
+            calendar['exceptions'].append((entry.index, entry.ex_event))
+
+    def _build_phone_repeat_entry(self, entry, calendar):
+        """Build the repeat part of this phone entry"""
+        _rep=calendar.repeat
+        if _rep:
+            #this is a repeat event
+            if _rep.repeat_type==_rep.daily:
+                entry.repeat_type=self.protocolclass.CAL_REP_DAILY
+            elif _rep.repeat_type==_rep.weekly:
+                entry.repeat_type=self.protocolclass.CAL_REP_WEEKLY
+            elif _rep.repeat_type==_rep.monthly:
+                if _rep.dow:
+                    entry.repeat_type=self.protocolclass.CAL_REP_MONTHLY_NTH
+                else:
+                    entry.repeat_type=self.protocolclass.CAL_REP_MONTHLY
+            else:
+                entry.repeat_type=self.protocolclass.CAL_REP_YEARLY
+        else:
+            entry.repeat_type=self.protocolclass.CAL_REP_NONE
+
+    def _build_phone_alarm_entry(self, entry, calendar):
+        _alarm=calendar.alarm
+        if _alarm is None or _alarm==-1:
+            entry.alarm_timed=1
+            entry.alarm_enabled=0
+            entry.alarm_time=(0,0)
+            entry.alarm_date=(2000,0,0)
+        else:
+            entry.alarm_timed=1
+            entry.alarm_enabled=1
+            _d1=datetime.datetime(*calendar.start)-datetime.timedelta(minutes=_alarm)
+            entry.alarm_date=(_d1.year, _d1.month, _d1.day)
+            entry.alarm_time=(_d1.hour, _d1.minute)
+
+    def _build_phone_entry(self, entry, calendar):
+        """Build a phone entry based on a BitPim calendar entry"""
+        entry.title=calendar.desc_loc
+        entry.start_time=calendar.start[3:]
+        entry.start_date=calendar.start[:3]
+        entry.duration=(datetime.datetime(*calendar.start[:3]+calendar.end[3:])-
+                        datetime.datetime(*calendar.start)).seconds/60
+        self._build_phone_repeat_entry(entry, calendar)
+        self._build_phone_alarm_entry(entry, calendar)
+
+    def _build_phone_exception_entry(self, entry, calendar, exceptions):
+        """Build a phone exception entry based on a BitPim entry"""
+        _rep=calendar.repeat
+        _end_date=calendar.end[:3]
+        _date=calendar.start[:3]
+        _ex_date=exceptions.get()[:3]
+        _cnt=0
+        while _date<=_end_date:
+            if _date==_ex_date:
+                entry.nth_event=_cnt
+                return True
+            _date=_rep.next_date(_date)
+            _cnt+=1
+        return False
+
+    def _write_calendar_entries(self, fundamentals):
+        """Write the calendar entries to the phone"""
+        _calendar=fundamentals.get('calendar', {})
+        _req=self.protocolclass.calendar_write_req()
+        _req_ex=self.protocolclass.calendar_write_ex_req()
+        _max_entry=self.protocolclass.CAL_MAX_ENTRY
+        _total_entries=len(_calendar)
+        _cal_cnt=0
+        for _,_cal in _calendar.items():
+            if _cal_cnt>_max_entry:\
+               # enough entries written
+                break
+            self._build_phone_entry(_req, _cal)
+            _req.index=_cal_cnt
+            self.progress(_cal_cnt, _total_entries,
+                          'Writing event: %s'%_cal.description)
+            self.sendATcommand(_req, None)
+            if _cal.repeat:
+                for _ex in _cal.repeat.suppressed[:self.protocolclass.CAL_TOTAL_ENTRY_EXCEPTIONS]:
+                    if self._build_phone_exception_entry(_req_ex, _cal, _ex):
+                        _req_ex.index=_cal_cnt
+                        self.sendATcommand(_req_ex, None)
+            _cal_cnt+=1
+        # and delete the rest
+        for _index in range(_cal_cnt, self.protocolclass.CAL_TOTAL_ENTRIES):
+            self.progress(_index, _total_entries,
+                          'Deleting event #%d'%_index)
+            self.del_calendar_entry(_index)
+
     getwallpapers=NotImplemented
     getringtones=NotImplemented
 
@@ -379,8 +538,8 @@ class Profile(parent_profile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-##        ('calendar', 'read', None),   # all calendar reading
-##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
 ##        ('ringtone', 'read', None),   # all ringtone reading
 ##        ('ringtone', 'write', 'OVERWRITE'),
 ##        ('wallpaper', 'read', None),  # all wallpaper reading

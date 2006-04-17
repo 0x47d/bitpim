@@ -39,6 +39,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         _req=self.protocolclass.modeset()
         _req.mode=mode
         self.sendATcommand(_req, None)
+        self.comm.sendatcommand('')
         
     def charset_ascii(self):
         """Set the charset to ASCII (default)"""
@@ -297,11 +298,9 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         result['sd_dict']={}
         # loop through and read 10 entries at a time
         _total_entries=self.protocolclass.PB_TOTAL_ENTRIES
+        _req=self.protocolclass.read_pb_req()
         for _start_idx in range(1, _total_entries+1, 10):
-            _end_idx=_start_idx+9
-            if _end_idx>_total_entries:
-                _end_idx=_total_entries
-            _req=self.protocolclass.read_pb_req()
+            _end_idx=min(_start_idx+9, _total_entries)
             _req.start_index=_start_idx
             _req.end_index=_end_idx
             self.progress(_total_entries, _end_idx,
@@ -320,10 +319,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
     def savephonebook(self, result):
         "Saves out the phonebook"
         self.log('Writing phonebook')
-        print 'categories',result['categories']
-##        return result
         self.setmode(self.MODEPHONEBOOK)
-        time.sleep(0.5)
         # setting up what we need
         result['ringtone-name-index']=self._setup_ringtone_name_dict(result)
         result['group-name-index']=self._setup_group_name_dict(result)
@@ -337,7 +333,62 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         self.setmode(self.MODEMODEM)
         return result
 
-        
+    # Calendar Stuff------------------------------------------------------------
+    def _build_cal_entry(self, entry, calendar, fundamentals):
+        """Build a BitPim calendar object from phonebook data"""
+        raise NotImplementedError
+
+    def del_calendar_entry(self, index):
+        _req=self.protocolclass.calendar_write_ex_req()
+        _req.index=index
+        _req.nth_event=0
+        _req.ex_event_flag=0
+        self.sendATcommand(_req, None)
+
+    def lock_calendar(self, lock=True):
+        """Lock the calendar to access it"""
+        _req=self.protocolclass.calendar_lock_req()
+        if lock:
+            _req.lock=1
+        else:
+            _req.lock=0
+        self.sendATcommand(_req, None)
+
+    def getcalendar(self,result):
+        """Read all calendars from the phone"""
+        self.log('Reading calendar entries')
+        self.setmode(self.MODEPHONEBOOK)
+        self.lock_calendar()
+        _total_entries=self.protocolclass.CAL_TOTAL_ENTRIES
+        _max_entry=self.protocolclass.CAL_MAX_ENTRY
+        _req=self.protocolclass.calendar_read_req()
+        _calendar={ 'exceptions': [] }
+        for _start_idx in range(0, _total_entries, 10):
+            _end_idx=min(_start_idx+9, _max_entry)
+            _req.start_index=_start_idx
+            _req.end_index=_end_idx
+            self.progress(_total_entries, _end_idx,
+                          'Reading calendar entry %d to %d'%(_start_idx, _end_idx))
+            _res=self.sendATcommand(_req, self.protocolclass.calendar_req_resp)
+            for _entry in _res:
+                self._build_cal_entry(_entry, _calendar, result)
+        self._process_exceptions(_calendar)
+        del _calendar['exceptions']
+        self.lock_calendar(False)
+        self.setmode(self.MODEMODEM)
+        result['calendar']=_calendar
+        return result
+
+    def savecalendar(self, result, merge):
+        """Save calendar entries to the phone"""
+        self.log('Writing calendar entries')
+        self.setmode(self.MODEPHONEBOOK)
+        self.lock_calendar()
+        self._write_calendar_entries(result)
+        self.lock_calendar(False)
+        self.setmode(self.MODEMODEM)
+        return result
+
 #------------------------------------------------------------------------------
 parentprofile=com_gsm.Profile
 class Profile(parentprofile):
