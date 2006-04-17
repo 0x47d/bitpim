@@ -398,6 +398,7 @@ class Phone(com_moto.Phone):
     def _build_regular_cal_entry(self, entry, calendar, fundamentals):
         """ Build a regular BitPim entry frm phone data"""
         _bp_entry=bpcalendar.CalendarEntry()
+        _bp_entry.id=entry.index
         _bp_entry.desc_loc=entry.title
         _bp_entry.start=entry.start_date+entry.start_time
         _t0=datetime.datetime(*_bp_entry.start)
