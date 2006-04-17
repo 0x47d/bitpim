@@ -278,9 +278,15 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def getcallhistory(self, result):
         res={}
         # read the incoming call history file
-        self._readhistoryfile("pim/missed_log.dat", 'Missed', res)
-        self._readhistoryfile("pim/outgoing_log.dat", 'Outgoing', res)
-        self._readhistoryfile("pim/incoming_log.dat", 'Incoming', res)
+        # the telus lg8100 programmers were on something when they wrote their code.
+        if hasattr(self.protocolclass, 'this_takes_the_prize_for_the_most_brain_dead_call_history_file_naming_ive_seen'):
+            self._readhistoryfile("pim/missed_log.dat", 'Incoming', res)
+            self._readhistoryfile("pim/outgoing_log.dat", 'Missed', res)
+            self._readhistoryfile("pim/incoming_log.dat", 'Outgoing', res)
+        else:
+            self._readhistoryfile("pim/missed_log.dat", 'Missed', res)
+            self._readhistoryfile("pim/outgoing_log.dat", 'Outgoing', res)
+            self._readhistoryfile("pim/incoming_log.dat", 'Incoming', res)
         result['call_history']=res
         return result
 
