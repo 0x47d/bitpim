@@ -1,0 +1,15 @@
+#include "pagestart.h"
+
+<H3>Phonebook</H3>
+<UL>
+<LI>BitPim supports all phonebook features except for Mailing List entries.  When reading contacts from the phone, BitPim will ignore all Mailing List entries.  Similarly, when writing contacts to the phone, BitPim will also ignore all Mailing List entries.  Support for Mailing List may be added to a future release as an improvement.
+</UL>
+
+<H3>Calendar</H3>
+<UL>
+<LI>All recurrent events are open-ended.
+<LI>All recurrent events are automatically converted to have an interval of 1 (ie. every day, every week, etc).
+
+</UL>
+
+#include "pageend.h"

@@ -97,6 +97,11 @@ BEGIN_TOC
         TOCITEM_1(Notes,phone-lgvx9800-notes.htm)
         TOCITEM_1(Howtos,phone-lgvx9800-howtos.htm)
         ENDTOC_1
+    TOCITEM_0(Motorola V710,phone-motov710.htm)
+        TOC_1
+        TOCITEM_1(Cables,phone-motov710-cables.htm)
+        TOCITEM_1(Notes,phone-motov710-notes.htm)
+        ENDTOC_1
     TOCITEM_0(Samsung Phones,phones-samsung.htm)
         TOC_1
         TOCITEM_1(Cables,phones-samsung-cables.htm)
