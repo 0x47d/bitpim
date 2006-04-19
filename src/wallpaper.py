@@ -396,6 +396,45 @@ class WallpaperView(fileview.FileView):
                 self.OnAddImage(img,file,refresh=False)
         self.OnRefresh()
 
+    def ReplaceContents(self, file_name, new_file_name):
+        """Replace the contents of 'file_name' by the contents of
+        'new_file_name' by going through the image converter dialog
+        """
+        fi=self.GetFileInfo(new_file_name)
+        if fi is not None and fi.format=='LGBIT':
+            img=conversions.convertfilelgbittobmp(new_file_name)
+        else:
+            img=wx.Image(new_file_name)
+        if not img.Ok():
+            dlg=wx.MessageDialog(self, "Failed to understand the image in '"+new_file_name+"'",
+                                "Image not understood", style=wx.OK|wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+        dlg=ImagePreviewDialog(self, img, new_file_name,
+                               self.mainwindow.phoneprofile)
+        if dlg.ShowModal()!=wx.ID_OK:
+            dlg.Destroy()
+            return
+
+        img=dlg.GetResultImage()
+        imgparams=dlg.GetResultParams()
+        origin=dlg.GetResultOrigin()
+        dlg.Destroy()
+        # ::TODO:: temporary hack - this should really be an imgparam
+        extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
+
+        res=getattr(self, "saveimage_"+imgparams['format'])(img, file_name,
+                                                            imgparams)
+        if not res:
+            try:
+                os.remove(file_name)
+            except:
+                pass
+            dlg=wx.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
+                                "Image not converted", style=wx.OK|wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
 
     def OnAddImage(self, img, file, refresh=True):
         # ::TODO:: if file is None, find next basename in our directory for

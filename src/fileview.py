@@ -163,6 +163,9 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         self.itemmenu.Append(guihelper.ID_FV_DELETE, "Delete")
         self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.AppendSeparator()
+        self.itemmenu.Append(guihelper.ID_FV_REPLACE, 'Replace')
+        self.itemmenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite")
+        self.itemmenu.AppendSeparator()
         # set origin menu
         if self.origin_list:
             _origin_menu=wx.Menu()
@@ -192,6 +195,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_COPY, self.OnCopy)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_RENAME, self.OnRename)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REPLACE, self.OnReplace)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OVERWRITE, self.OnOverwrite)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_ADD, self.OnAdd)
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
@@ -511,6 +516,30 @@ class FileView(wx.Panel, widgets.BitPimWidget):
     def OnAddFiles(self,_):
         raise Exception("not implemented")
 
+    def OnOverwrite(self, _=None):
+        items=self.GetSelectedItems()
+        if len(items)!=1:
+               # either none or more than 1 items selected
+               return
+        dlg=wx.FileDialog(self, "Choose file",
+                          style=wx.OPEN, wildcard=self.wildcard)
+        if dlg.ShowModal()==wx.ID_OK:
+            file(items[0].filename, 'wb').write(file(dlg.GetPath(), 'rb').read())
+            items[0].Refresh()
+        dlg.Destroy()
+
+    def OnReplace(self, _=None):
+        items=self.GetSelectedItems()
+        if len(items)!=1:
+               # either none or more than 1 items selected
+               return
+        dlg=wx.FileDialog(self, "Choose file",
+                          style=wx.OPEN, wildcard=self.wildcard)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.ReplaceContents(items[0].filename, dlg.GetPath())
+            items[0].Refresh()
+        dlg.Destroy()
+
     def decodefilename(self, filename):
         path,filename=os.path.split(filename)
         decoded_file=str(filename).decode(media_codec)
@@ -649,5 +678,10 @@ class FileViewDisplayItem(object):
     def SetOrigin(self, new_origin):
         # set the origin of this item
         self.view._data[self.datakey][self.key]['origin']=new_origin
+        self.view.modified=True
+        self.view.OnRefresh()
+
+    def Refresh(self):
+        self.setvals()
         self.view.modified=True
         self.view.OnRefresh()

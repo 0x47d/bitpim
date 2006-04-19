@@ -223,7 +223,41 @@ class RingerView(fileview.FileView):
                 if wp[k]['name']==name:
                     del wp[k]
                     self.modified=True
-            
+
+    def ReplaceContents(self, file_name, new_file_name):
+        """Replace the contents of 'file_name' by the contents of
+        'new_file_name' by going through the image converter dialog
+        """
+        afi=fileinfo.identify_audiofile(new_file_name)
+        if afi.size<=0:
+            return # zero length file or other issues
+        newext,convertinfo=self.mainwindow.phoneprofile.QueryAudio(
+            None, common.getext(new_file_name), afi)
+        if convertinfo is not afi:
+            filedata=None
+            try:
+                filedata=self.ConvertFormat(new_file_name, convertinfo)
+            except:
+                pass
+            if filedata is None:
+                return
+        else:
+            filedata=open(new_file_name, "rb").read()
+        # check for the size limit on the file, if specified
+        max_size=getattr(convertinfo, 'MAXSIZE', None)
+        if max_size is not None and len(filedata)>max_size:
+            # the data is too big
+            self.log('ringtone %s is too big!'%common.basename(file))
+            dlg=wx.MessageDialog(self,
+                                 'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
+                                 'Warning',
+                                 style=wx.YES_NO|wx.ICON_ERROR)
+            dlg_resp=dlg.ShowModal()
+            dlg.Destroy()
+            if dlg_resp==wx.ID_NO:
+                return
+        file(file_name, 'wb').write(filedata)
+        
     def OnAddFiles(self, filenames):
         self.thedir=self.mainwindow.ringerpath
         for file in filenames:

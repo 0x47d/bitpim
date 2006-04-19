@@ -75,10 +75,14 @@ PACKET write_group_req:
     * CSVINT { 'terminator': None, 'default': 255 } +ringtone
 
 PACKET ringtone_index_entry:
-    508 DATA { 'pad': None } name
+    P BOOL { 'default': True } +read_mode
+    if self.read_mode:
+        508 DATA { 'pad': None } name
+    if not self.read_mode:
+        508 DATA name
     1 UINT index
     1 UINT ringtone_type
-    6 DATA dunno
+    6 DATA { 'default': '' } +dunno
 
 PACKET ringtone_index_file:
     * LIST { 'elementclass': ringtone_index_entry,

@@ -15,7 +15,9 @@ import sha
 # BitPim modules
 import bpcalendar
 import common
+import com_brew
 import com_moto
+import fileinfo
 import nameparser
 import prototypes
 import p_motov710
@@ -529,47 +531,115 @@ class Phone(com_moto.Phone):
             self.del_calendar_entry(_index)
 
     # Ringtones stuff----------------------------------------------------------
-    def _get_del_new_list(self, index_key, media_key, fundamentals):
-        """Return a list of media being deleted and being added"""
+    def _get_new_list(self, index_key, media_key, fundamentals):
+        """Return a list of media being replaced"""
         _index=fundamentals.get(index_key, {})
         _media=fundamentals.get(media_key, {})
-        _index_file_list=[_entry['name'] for _key,_entry in _index.items() \
+        _index_file_list=[_entry['name'] for _,_entry in _index.items() \
                           if _entry.has_key('filename')]
-        _bp_file_list=_media.keys()
-        _del_list=[x for x in _index_file_list if x not in _bp_file_list]
-        _new_list=[x for x in _bp_file_list if x not in _index_file_list]
-        return _del_list, _new_list
+        _bp_file_list=[_entry['name'] for _,_entry in _media.items()]
+        return [x for x in _bp_file_list if x in _index_file_list]
+
+    def _item_from_index(self, name, item_key, index_dict):
+        for _key,_entry in index_dict.items():
+            if _entry.get('name', None)==name:
+                if item_key:
+                    # return a field
+                    return _entry.get(item_key, None)
+                else:
+                    # return the key
+                    return _key
+
+    def _replace_files(self, index_key, media_key,
+                   new_list, fundamentals):
+        """Replace existing media files with new contents"""
+        _index=fundamentals.get(index_key, {})
+        _media=fundamentals.get(media_key, {})
+        for _file in new_list:
+            _data=self._item_from_index(_file, 'data', _media)
+            if not _data:
+                self.log('Failed to write file %s due to no data'%_file)
+                continue
+            _file_name=self._item_from_index(_file, 'filename', _index)
+            if _file_name:
+                # existing file, check if the same one
+                _stat=self.statfile(_file_name)
+                if _stat and _stat['size']!=len(_data):
+                    # and write out the data
+                    try:
+                        self.writefile(_file_name, _data)
+                    except:
+                        self.log('Failed to write file '+_file_name)
+                        if __debug__:
+                            raise
         
     def saveringtones(self, fundamentals, merge):
         """Save ringtones to the phone"""
-##        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
         self.log('Writing ringtones to the phone')
         self.setmode(self.MODEPHONEBOOK)
         self.setmode(self.MODEBREW)
-        try:
-            _del_list, _new_list=self._get_del_new_list('ringtone-index',
-                                                        'ringtone',
-                                                        fundamentals)
-            if merge:
-                _del_list=[]
-            # delete files
-            self._del_files(_del_list, fundamentals)
-            # and add new files
-            self._add_files(_new_list, fundamentals)
-            # update the index file
-            self._update_index_file(_del_list, _new_list, fundamentals)
+        try: 
+            _new_list=self._get_new_list('ringtone-index', 'ringtone',
+                                         fundamentals)
+            # replace files
+            self._replace_files('ringtone-index', 'ringtone',
+                                _new_list, fundamentals)
         except:
             if __debug__:
+                self.setmode(self.MODEMODEM)
                 raise
+        self.setmode(self.MODEMODEM)
+        return fundamentals
+
+    def savewallpapers(self, fundamentals, merge):
+        """Save wallpapers to the phone"""
+        self.log('Writing wallpapers to the phone')
+        self.setmode(self.MODEPHONEBOOK)
+        self.setmode(self.MODEBREW)
+        try: 
+            _new_list=self._get_new_list('wallpaper-index', 'wallpapers',
+                                         fundamentals)
+            # replace files
+            self._replace_files('wallpaper-index', 'wallpapers',
+                                _new_list, fundamentals)
+        except:
+            if __debug__:
+                self.setmode(self.MODEMODEM)
+                raise
+        self.setmode(self.MODEMODEM)
         return fundamentals
 
 #------------------------------------------------------------------------------
-parent_profile=com_moto.Profile
-class Profile(parent_profile):
+parentprofile=com_moto.Profile
+class Profile(parentprofile):
+
     serialsname=Phone.serialsname
 
+    WALLPAPER_WIDTH=176
+    WALLPAPER_HEIGHT=220
+    MAX_WALLPAPER_BASENAME_LENGTH=37
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
+    WALLPAPER_CONVERT_FORMAT="jpg"
+
+    # all dumped in "images"
+    imageorigins={}
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 176, 'height': 200, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
+                                      {'width': 176, 'height': 198, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 176, 'height': 140, 'format': "JPEG"}))
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+
     def __init__(self):
-        parent_profile.__init__(self)
+        parentprofile.__init__(self)
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
@@ -577,9 +647,9 @@ class Profile(parent_profile):
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
-##        ('ringtone', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
-##        ('wallpaper', 'write', 'OVERWRITE'),
+        ('wallpaper', 'write', 'OVERWRITE'),
 ##        ('memo', 'read', None),     # all memo list reading DJP
 ##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
 ##        ('sms', 'read', None),     # all SMS list reading DJP
@@ -588,3 +658,14 @@ class Profile(parent_profile):
 
     def convertphonebooktophone(self, helper, data):
         return data
+
+    def QueryAudio(self, origin, currentextension, afi):
+        # we don't modify any of these
+        if afi.format in ("MIDI", "QCP", "PMD"):
+            return currentextension, afi
+        # examine mp3
+        if afi.format=="MP3":
+            if afi.channels==1 and 8<=afi.bitrate<=64 and 16000<=afi.samplerate<=22050:
+                return currentextension, afi
+        # convert it
+        return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 48, 'samplerate': 44100}))

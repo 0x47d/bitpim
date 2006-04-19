@@ -521,7 +521,7 @@ class write_group_req(BaseProtogenClass):
 
 
 class ringtone_index_entry(BaseProtogenClass):
-    __fields=['name', 'index', 'ringtone_type', 'dunno']
+    __fields=['read_mode', 'name', 'name', 'index', 'ringtone_type', 'dunno']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -549,14 +549,22 @@ class ringtone_index_entry(BaseProtogenClass):
             self._complainaboutunusedargs(ringtone_index_entry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        if getattr(self, '__field_read_mode', None) is None:
+            self.__field_read_mode=BOOL(**{ 'default': True })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_name.writetobuffer(buf)
+        if self.read_mode:
+            self.__field_name.writetobuffer(buf)
+        if not self.read_mode:
+            self.__field_name.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self.__field_ringtone_type.writetobuffer(buf)
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=DATA(**{'sizeinbytes': 6,  'default': '' })
         self.__field_dunno.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -566,16 +574,36 @@ class ringtone_index_entry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=DATA(**{'sizeinbytes': 508,  'pad': None })
-        self.__field_name.readfrombuffer(buf)
+        if self.read_mode:
+            self.__field_name=DATA(**{'sizeinbytes': 508,  'pad': None })
+            self.__field_name.readfrombuffer(buf)
+        if not self.read_mode:
+            self.__field_name=DATA(**{'sizeinbytes': 508})
+            self.__field_name.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 1})
         self.__field_index.readfrombuffer(buf)
         self.__field_ringtone_type=UINT(**{'sizeinbytes': 1})
         self.__field_ringtone_type.readfrombuffer(buf)
-        self.__field_dunno=DATA(**{'sizeinbytes': 6})
+        self.__field_dunno=DATA(**{'sizeinbytes': 6,  'default': '' })
         self.__field_dunno.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
+
+    def __getfield_read_mode(self):
+        try: self.__field_read_mode
+        except:
+            self.__field_read_mode=BOOL(**{ 'default': True })
+        return self.__field_read_mode.getvalue()
+
+    def __setfield_read_mode(self, value):
+        if isinstance(value,BOOL):
+            self.__field_read_mode=value
+        else:
+            self.__field_read_mode=BOOL(value,**{ 'default': True })
+
+    def __delfield_read_mode(self): del self.__field_read_mode
+
+    read_mode=property(__getfield_read_mode, __setfield_read_mode, __delfield_read_mode, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -585,6 +613,19 @@ class ringtone_index_entry(BaseProtogenClass):
             self.__field_name=value
         else:
             self.__field_name=DATA(value,**{'sizeinbytes': 508,  'pad': None })
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,DATA):
+            self.__field_name=value
+        else:
+            self.__field_name=DATA(value,**{'sizeinbytes': 508})
 
     def __delfield_name(self): del self.__field_name
 
@@ -617,13 +658,16 @@ class ringtone_index_entry(BaseProtogenClass):
     ringtone_type=property(__getfield_ringtone_type, __setfield_ringtone_type, __delfield_ringtone_type, None)
 
     def __getfield_dunno(self):
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=DATA(**{'sizeinbytes': 6,  'default': '' })
         return self.__field_dunno.getvalue()
 
     def __setfield_dunno(self, value):
         if isinstance(value,DATA):
             self.__field_dunno=value
         else:
-            self.__field_dunno=DATA(value,**{'sizeinbytes': 6})
+            self.__field_dunno=DATA(value,**{'sizeinbytes': 6,  'default': '' })
 
     def __delfield_dunno(self): del self.__field_dunno
 
@@ -633,7 +677,11 @@ class ringtone_index_entry(BaseProtogenClass):
         return True
 
     def containerelements(self):
-        yield ('name', self.__field_name, None)
+        yield ('read_mode', self.__field_read_mode, None)
+        if self.read_mode:
+            yield ('name', self.__field_name, None)
+        if not self.read_mode:
+            yield ('name', self.__field_name, None)
         yield ('index', self.__field_index, None)
         yield ('ringtone_type', self.__field_ringtone_type, None)
         yield ('dunno', self.__field_dunno, None)

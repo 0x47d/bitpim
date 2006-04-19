@@ -158,6 +158,9 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             return v.decode('utf_16le')
         else:
             return v[:_idx+1].decode('utf_16le')
+    def encode_utf16(self, v):
+        """Encode a unicode/string into a Motorola unicode"""
+        return (v+'\x00').encode('utf_16le')
         
     # fundamentals
     def getfundamentals(self, results):
