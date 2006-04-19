@@ -112,8 +112,10 @@ class Phone(com_moto.Phone):
         _idx_file.readfrombuffer(_buf, logtitle='Read ringtone index file')
         _path_len=len(self.protocolclass.RT_PATH)+1
         for _entry in _idx_file.items:
-            res[_entry.index]={ 'name': common.basename(
-                self.decode_utf16(_entry.name)),
+            _filename=self.decode_utf16(_entry.name)
+            res[_entry.index]={ 'name': common.basename(_filename),
+                                'filename': _filename,
+                                'type': _entry.ringtone_type,
                                 'origin': 'ringers' }
         return res
 
@@ -124,6 +126,7 @@ class Phone(com_moto.Phone):
         _wp_path_len=len(self.protocolclass.WP_PATH)+1
         for _index,_name in enumerate(_files):
             res[_index]={ 'name': common.basename(_name),
+                          'filename': _name,
                           'origin': 'wallpaper' }
         return res
 
@@ -525,8 +528,40 @@ class Phone(com_moto.Phone):
                           'Deleting event #%d'%_index)
             self.del_calendar_entry(_index)
 
-    getwallpapers=NotImplemented
-    getringtones=NotImplemented
+    # Ringtones stuff----------------------------------------------------------
+    def _get_del_new_list(self, index_key, media_key, fundamentals):
+        """Return a list of media being deleted and being added"""
+        _index=fundamentals.get(index_key, {})
+        _media=fundamentals.get(media_key, {})
+        _index_file_list=[_entry['name'] for _key,_entry in _index.items() \
+                          if _entry.has_key('filename')]
+        _bp_file_list=_media.keys()
+        _del_list=[x for x in _index_file_list if x not in _bp_file_list]
+        _new_list=[x for x in _bp_file_list if x not in _index_file_list]
+        return _del_list, _new_list
+        
+    def saveringtones(self, fundamentals, merge):
+        """Save ringtones to the phone"""
+##        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
+        self.log('Writing ringtones to the phone')
+        self.setmode(self.MODEPHONEBOOK)
+        self.setmode(self.MODEBREW)
+        try:
+            _del_list, _new_list=self._get_del_new_list('ringtone-index',
+                                                        'ringtone',
+                                                        fundamentals)
+            if merge:
+                _del_list=[]
+            # delete files
+            self._del_files(_del_list, fundamentals)
+            # and add new files
+            self._add_files(_new_list, fundamentals)
+            # update the index file
+            self._update_index_file(_del_list, _new_list, fundamentals)
+        except:
+            if __debug__:
+                raise
+        return fundamentals
 
 #------------------------------------------------------------------------------
 parent_profile=com_moto.Profile
@@ -541,9 +576,9 @@ class Profile(parent_profile):
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-##        ('ringtone', 'read', None),   # all ringtone reading
+        ('ringtone', 'read', None),   # all ringtone reading
 ##        ('ringtone', 'write', 'OVERWRITE'),
-##        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
 ##        ('wallpaper', 'write', 'OVERWRITE'),
 ##        ('memo', 'read', None),     # all memo list reading DJP
 ##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP

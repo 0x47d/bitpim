@@ -389,6 +389,50 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         self.setmode(self.MODEMODEM)
         return result
 
+    # Ringtones & wallpaper sutff------------------------------------------------------------
+    def _read_media(self, index_key, fundamentals):
+        """Read the contents of media files and return"""
+        _media={}
+        for _key,_entry in fundamentals.get(index_key, {}).items():
+            if _entry.get('filename', None):
+                # this one associates with a file, try to read it
+                try:
+                    _media[_entry['name']]=self.getfilecontents(_entry['filename'])
+                except (com_brew.BrewNoSuchFileException,
+                        com_brew.BrewBadPathnameException,
+                        com_brew.BrewNameTooLongException,
+                        ValueError):
+                    self.log("Failed to read media file: %s"%_entry['name'])
+        return _media
+
+    def getringtones(self, fundamentals):
+        """Retrieve ringtones data"""
+        self.log('Reading ringtones')
+        self.setmode(self.MODEPHONEBOOK)
+        self.setmode(self.MODEBREW)
+        try:
+            fundamentals['ringtone']=self._read_media('ringtone-index',
+                                                      fundamentals)
+        except:
+            if __debug__:
+                raise
+        self.setmode(self.MODEMODEM)
+        return fundamentals
+
+    def getwallpapers(self, fundamentals):
+        """Retrieve wallpaper data"""
+        self.log('Reading wallpapers')
+        self.setmode(self.MODEPHONEBOOK)
+        self.setmode(self.MODEBREW)
+        try:
+            fundamentals['wallpapers']=self._read_media('wallpaper-index',
+                                                        fundamentals)
+        except:
+            if __debug__:
+                raise
+        self.setmode(self.MODEMODEM)
+        return fundamentals
+
 #------------------------------------------------------------------------------
 parentprofile=com_gsm.Profile
 class Profile(parentprofile):
