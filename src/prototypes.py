@@ -521,28 +521,25 @@ class USTRING(BaseProtogenClass):
         if len(args)==0:
             pass
         elif len(args)==1:
-            # convert non-string objects to string representation
-            # allows strings to be initialised with integers etc.
-            if not isinstance(args[0], (str, unicode)):
-                # convert numbers into strings
-                temp=str(args[0])
-                self._value=unicode(temp, 'ascii', 'replace')
-            # we should only receive unicode strings from bitpim, but...
-            elif not isinstance(args[0], unicode):
-                # there is a bug, the docs say this should work on unicode strings but it does not
-                self._value=unicode(args[0], 'ascii', 'replace')
-            else:
-                self._value=args[0]
-            if self._constant is not None and self._constant!=self._value:
-                raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+            self._value=args[0]
         else:
             raise TypeError("Unexpected arguments "+`args`)
         if self._value is None and self._default is not None:
-            if not isinstance(self._default, unicode):
-                self._value=unicode(self._default, 'ascii', 'replace')
-            else:
-                self._value=self._default
+            self._value=self._default
 
+        # convert _value to unicode, non-string objects convert to string representation
+        # allows strings to be initialised with integers etc.
+        if not isinstance(self._value, (str, unicode)):
+            # convert numbers into strings
+            temp=str(self._value)
+            self._value=unicode(temp, 'ascii', 'replace')
+        # we should only receive unicode strings from bitpim, but...
+        elif not isinstance(self._value, unicode):
+            # there is a bug, the docs say this should work on unicode strings but it does not
+            self._value=unicode(self._value, 'ascii', 'replace')
+
+        if self._constant is not None and self._constant!=self._value:
+            raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
         # test that we can convert the string, also needed for "sizeinbytes" 
         try:
             test=self.convert_for_write()
