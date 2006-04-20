@@ -19,6 +19,7 @@ import com_brew
 import com_gsm
 import prototypes
 import p_moto
+import sms
 
 class Phone(com_gsm.Phone, com_brew.BrewProtocol):
     """Talk to a generic Motorola phone.
@@ -434,6 +435,71 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             if __debug__:
                 raise
         self.setmode(self.MODEMODEM)
+        return fundamentals
+
+    # SMS stuff----------------------------------------------------------------
+    def select_default_SMS(self):
+        """Select the default SMS storage"""
+        _req=self.protocolclass.sms_sel_req()
+        self.sendATcommand(_req, None)
+
+    def _process_sms_header(self, _header, _entry):
+        _entry._to=_header.sms_addr.strip(' ').replace('"', '')
+        if _header.has_date:
+            _entry.datetime=_header.sms_date
+        if _header.sms_type==self.protocolclass.SMS_REC_UNREAD:
+            _entry.read=False
+            _entry.folder=entry.Folder_Inbox
+        elif _header.sms_type==self.protocolclass.SMS_REC_READ:
+            _entry.read=True
+            _entry.folder=entry.Folder_Inbox
+        elif _header.sms_type==self.protocolclass.SMS_STO_UNSENT:
+            _entry.folder=_entry.Folder_Saved
+        else:
+            _entry.folder=_entry.Folder_Sent
+
+    def _process_sms_text(self, res, entry):
+        _s=res[1]
+        _open_p=_s.find('(')
+        _close_p=_s.find(')')
+        if _open_p==0 and _close_p!=-1:
+            # extract the subj
+            entry.subject=_s[1:_close_p]
+            res[1]=_s[_close_p+1:]
+        entry.text='\n'.join(res[1:])
+
+    def _process_sms_result(self, _res, _sms, fundamentals):
+        """Process an SMS result as returned from the phone"""
+        _buf=prototypes.buffer(_res[0])
+        _header=self.protocolclass.sms_m_read_resp()
+        _header.has_date=len(_res[0].split(','))==3
+        _header.readfrombuffer(_buf, logtitle='Reading SMS Response')
+        _entry=sms.SMSEntry()
+        self._process_sms_header(_header, _entry)
+        self._process_sms_text(_res, _entry)
+        _sms[_entry.id]=_entry
+
+    def getsms(self, fundamentals):
+        """Read SMS messages from the phone"""
+        self.log('Reading SMS messages')
+        self.setmode(self.MODEPHONEBOOK)
+        _sms={}
+        try:
+            self.select_default_SMS()
+            for _idx in self.protocolclass.SMS_INDEX_RANGE:
+                # read each index
+                try:
+                    _res=self.comm.sendatcommand('+MMGR=%d'%_idx)
+                    self._process_sms_result(_res, _sms, fundamentals)
+                except commport.ATError:
+                    pass
+        except:
+            if __debug__:
+                self.setmode(self.MODEMODEM)
+                raise
+        self.setmode(self.MODEMODEM)
+        fundamentals['canned_msg']=[]
+        fundamentals['sms']=_sms
         return fundamentals
 
 #------------------------------------------------------------------------------

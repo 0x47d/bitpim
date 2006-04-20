@@ -652,7 +652,7 @@ class Profile(parentprofile):
         ('wallpaper', 'write', 'OVERWRITE'),
 ##        ('memo', 'read', None),     # all memo list reading DJP
 ##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
-##        ('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'read', None),     # all SMS list reading DJP
 ##        ('call_history', 'read', None),
         )
 
@@ -669,3 +669,58 @@ class Profile(parentprofile):
                 return currentextension, afi
         # convert it
         return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 48, 'samplerate': 44100}))
+
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                # not sure what the limit on these numbers
+                'type': True, 'speeddial': True, 'number': True,
+                'details': True,
+                'ringtone': True, 'wallpaper': True },
+            'email': True,
+            'email_details': {
+                'emailspeeddial': True, 'emailringtone': True,
+                'emailwallpaper': True },
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 0,
+            'memo': 0,
+            'category': 1,
+            'wallpaper': 0,
+            'ringtone': 0,
+            'storage': 0,
+            },
+        'calendar': {
+            'description': True, 'location': True, 'allday': False,
+            'start': True, 'end': True, 'priority': False,
+            'alarm': True, 'vibrate': False,
+            'repeat': True,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': False,
+            },
+        'memo': {
+            'subject': False,
+            'date': False,
+            'secret': False,
+            'category': False,
+            'memo': False,
+            },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
+        }

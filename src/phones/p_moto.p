@@ -13,6 +13,7 @@
 
 from prototypes import *
 from p_gsm import *
+from prototypeslg import SMSDATETIME
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -74,6 +75,9 @@ PB_MAX_EMAIL_LEN=48
 
 PB_TOTAL_ENTRIES=500
 PB_RANGE=xrange(1,PB_TOTAL_ENTRIES+1)
+PB_TOTAL_MISSED_CALLS=60
+PB_TOTAL_DIALED_CALLS=60
+PB_TOTAL_RECEIVED_CALLS=60
 
 PB_TOTAL_GROUP=30
 PB_GROUP_RANGE=xrange(1, PB_TOTAL_GROUP+1)
@@ -82,6 +86,19 @@ PB_GROUP_NAME_LEN=24
 RT_BUILTIN=0x0C
 RT_CUSTOM=0x0D
 RT_INDEX_FILE='/MyToneDB.db'
+
+# SMS Stuff
+SMS_INBOX="IM"
+SMS_OUTBOX="OM"
+SMS_INFO="BM"
+SMS_DRAFTS="DM"
+SMS_COMBINE="MT"
+
+SMS_REC_UNREAD="REC UNREAD"
+SMS_REC_READ="REC READ"
+SMS_STO_UNSENT="STO UNSENT"
+SMS_STO_SENT="STO SENT"
+SMS_INDEX_RANGE=xrange(1, 353)
 
 %}
 
@@ -202,3 +219,25 @@ PACKET del_pb_req:
     * CSVSTRING { 'quotechar': None, 'terminator': None,
                   'default': '+MPBW=' } +command
     * CSVINT { 'terminator': None } index
+
+# SMS Stuff
+PACKET sms_sel_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+CPMS=' } +command
+    * CSVSTRING { 'default': SMS_COMBINE } +mem1
+    * CSVSTRING { 'default': SMS_OUTBOX } +mem2
+    * CSVSTRING { 'terminator': None,
+                  'default': SMS_INBOX } +mem3
+
+PACKET sms_m_read_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' '),
+                  'default': '+MMGR:' } command
+    P BOOL { 'default': True } +has_date
+    * CSVSTRING sms_type
+    if self.has_date:
+        * CSVSTRING { 'quotechar': None } sms_addr
+        * SMSDATETIME { 'terminator': None } sms_date
+    if not self.has_date:
+        * CSVSTRING { 'quotechar': None,
+                      'terminator': None } sms_addr

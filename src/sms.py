@@ -111,6 +111,8 @@ class SMSEntry(object):
     _priority_name={
         Priority_Normal: 'Normal',
         Priority_High: 'High' }
+    _unknown_datetime='YYYY-MM-DD hh:mm:ss'
+
     def __init__(self):
         self._data={ 'serials': [] }
         self._create_id()

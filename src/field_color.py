@@ -39,8 +39,12 @@ default_field_info={
             'first': None, 'middle': None, 'last': None, 'full': None,
             'nickname': None },
         'number': {
-            'type': None, 'speeddial': None, 'number': None },
+            'type': None, 'speeddial': None, 'number': None,
+            'ringtone': None, 'wallpaper': None },
         'email': None,
+        'email_details': {
+            'emailspeeddial': None, 'emailringtone': None,
+            'emailwallpaper': None },
         'address': {
             'type': None, 'company': None, 'street': None, 'street2': None,
             'city': None, 'state': None, 'postalcode': None, 'country': None },
@@ -132,6 +136,7 @@ def get_color_info_from_profile(widget):
 def color(widget, name, tree=None):
     """Return the appropriate color for this field
     """
+    global current_field_info, default_field_info
     if tree:
         _dict=tree
     else:
@@ -140,7 +145,10 @@ def color(widget, name, tree=None):
     _val=_dict.get(name, None)
     _cnt=get_children_count(widget)
     if _val is None:
-        return dunno_color
+        if current_field_info==default_field_info:
+            return dunno_color
+        else:
+            return notapplicable_color
     elif _val is False or not isinstance(_val, bool) and _cnt>_val:
         return notapplicable_color
     else:

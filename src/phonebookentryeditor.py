@@ -768,6 +768,8 @@ class EmailEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(EmailEditor, self).__init__(parent)
 
+        _field_color_dict=field_color.build_field_info(self, 'email_details')
+
         _box=field_color.build_color_field(self, wx.StaticBox,
                                            (self, -1, 'Email Address'),
                                            'email')
@@ -785,19 +787,19 @@ class EmailEditor(DirtyUIBase):
         _hs_bot=wx.BoxSizer(wx.HORIZONTAL)
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "SpeedDial"),
-                                           'speeddial')
+                                           'emailspeeddial', _field_color_dict)
         _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.speeddial=wx.TextCtrl(self, -1, "", size=(32,10))
         _hs_bot.Add(self.speeddial, 0, wx.EXPAND|wx.ALL, 5)
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "Ringtone"),
-                                           'ringtone')
+                                           'emailringtone', _field_color_dict)
         _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.ringtone=wx.ComboBox(self, -1)
         _hs_bot.Add(self.ringtone, 0, wx.EXPAND|wx.ALL, 5)
         _txt=field_color.build_color_field(self, wx.StaticText,
                                            (self, -1, "Wallpaper"),
-                                           'wallpaper')
+                                           'emailwallpaper', _field_color_dict)
         _hs_bot.Add(_txt, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         
         self.wallpaper=wx.ComboBox(self, -1)

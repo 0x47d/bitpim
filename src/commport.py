@@ -436,7 +436,6 @@ class CommConnection:
                     raise CommTimeout(partial=res)
                 else:
                     numfailures-=1
-                    self.ser.flushInput()
                     self.log("Timed out - flushing and trying again")
             res=res+res2
 
@@ -448,7 +447,7 @@ class CommConnection:
 
     # these methods here consolidate calls, which makes the BitFling stuff a lot faster due
     # to fewer roundtrips
-    def writethenreaduntil(self, data, logwrite, char, logreaduntil=True, logreaduntilsuccess=True, numfailures=0):
+    def writethenreaduntil(self, data, logwrite, char, logreaduntil=True, logreaduntilsuccess=True, numfailures=1):
         self.write(data, logwrite)
         return self.readuntil(char, logreaduntil, logreaduntilsuccess, numfailures)
 

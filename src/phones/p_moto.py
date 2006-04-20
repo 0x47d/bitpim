@@ -4,6 +4,7 @@
 
 from prototypes import *
 from p_gsm import *
+from prototypeslg import SMSDATETIME
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -65,6 +66,9 @@ PB_MAX_EMAIL_LEN=48
 
 PB_TOTAL_ENTRIES=500
 PB_RANGE=xrange(1,PB_TOTAL_ENTRIES+1)
+PB_TOTAL_MISSED_CALLS=60
+PB_TOTAL_DIALED_CALLS=60
+PB_TOTAL_RECEIVED_CALLS=60
 
 PB_TOTAL_GROUP=30
 PB_GROUP_RANGE=xrange(1, PB_TOTAL_GROUP+1)
@@ -73,6 +77,19 @@ PB_GROUP_NAME_LEN=24
 RT_BUILTIN=0x0C
 RT_CUSTOM=0x0D
 RT_INDEX_FILE='/MyToneDB.db'
+
+# SMS Stuff
+SMS_INBOX="IM"
+SMS_OUTBOX="OM"
+SMS_INFO="BM"
+SMS_DRAFTS="DM"
+SMS_COMBINE="MT"
+
+SMS_REC_UNREAD="REC UNREAD"
+SMS_REC_READ="REC READ"
+SMS_STO_UNSENT="STO UNSENT"
+SMS_STO_SENT="STO SENT"
+SMS_INDEX_RANGE=xrange(1, 353)
 
 class esnrequest(BaseProtogenClass):
     __fields=['command']
@@ -2244,6 +2261,312 @@ class del_pb_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
+
+
+
+class sms_sel_req(BaseProtogenClass):
+    __fields=['command', 'mem1', 'mem2', 'mem3']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_sel_req,self).__init__(**dict)
+        if self.__class__ is sms_sel_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_sel_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_sel_req,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CPMS=' })
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_mem1
+        except:
+            self.__field_mem1=CSVSTRING(**{ 'default': SMS_COMBINE })
+        self.__field_mem1.writetobuffer(buf)
+        try: self.__field_mem2
+        except:
+            self.__field_mem2=CSVSTRING(**{ 'default': SMS_OUTBOX })
+        self.__field_mem2.writetobuffer(buf)
+        try: self.__field_mem3
+        except:
+            self.__field_mem3=CSVSTRING(**{ 'terminator': None,                  'default': SMS_INBOX })
+        self.__field_mem3.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CPMS=' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_mem1=CSVSTRING(**{ 'default': SMS_COMBINE })
+        self.__field_mem1.readfrombuffer(buf)
+        self.__field_mem2=CSVSTRING(**{ 'default': SMS_OUTBOX })
+        self.__field_mem2.readfrombuffer(buf)
+        self.__field_mem3=CSVSTRING(**{ 'terminator': None,                  'default': SMS_INBOX })
+        self.__field_mem3.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CPMS=' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+CPMS=' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_mem1(self):
+        try: self.__field_mem1
+        except:
+            self.__field_mem1=CSVSTRING(**{ 'default': SMS_COMBINE })
+        return self.__field_mem1.getvalue()
+
+    def __setfield_mem1(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_mem1=value
+        else:
+            self.__field_mem1=CSVSTRING(value,**{ 'default': SMS_COMBINE })
+
+    def __delfield_mem1(self): del self.__field_mem1
+
+    mem1=property(__getfield_mem1, __setfield_mem1, __delfield_mem1, None)
+
+    def __getfield_mem2(self):
+        try: self.__field_mem2
+        except:
+            self.__field_mem2=CSVSTRING(**{ 'default': SMS_OUTBOX })
+        return self.__field_mem2.getvalue()
+
+    def __setfield_mem2(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_mem2=value
+        else:
+            self.__field_mem2=CSVSTRING(value,**{ 'default': SMS_OUTBOX })
+
+    def __delfield_mem2(self): del self.__field_mem2
+
+    mem2=property(__getfield_mem2, __setfield_mem2, __delfield_mem2, None)
+
+    def __getfield_mem3(self):
+        try: self.__field_mem3
+        except:
+            self.__field_mem3=CSVSTRING(**{ 'terminator': None,                  'default': SMS_INBOX })
+        return self.__field_mem3.getvalue()
+
+    def __setfield_mem3(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_mem3=value
+        else:
+            self.__field_mem3=CSVSTRING(value,**{ 'terminator': None,                  'default': SMS_INBOX })
+
+    def __delfield_mem3(self): del self.__field_mem3
+
+    mem3=property(__getfield_mem3, __setfield_mem3, __delfield_mem3, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('mem1', self.__field_mem1, None)
+        yield ('mem2', self.__field_mem2, None)
+        yield ('mem3', self.__field_mem3, None)
+
+
+
+class sms_m_read_resp(BaseProtogenClass):
+    __fields=['command', 'has_date', 'sms_type', 'sms_addr', 'sms_date', 'sms_addr']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_m_read_resp,self).__init__(**dict)
+        if self.__class__ is sms_m_read_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_m_read_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_m_read_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+        if getattr(self, '__field_has_date', None) is None:
+            self.__field_has_date=BOOL(**{ 'default': True })
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_sms_type.writetobuffer(buf)
+        if self.has_date:
+            self.__field_sms_addr.writetobuffer(buf)
+            self.__field_sms_date.writetobuffer(buf)
+        if not self.has_date:
+            self.__field_sms_addr.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MMGR:' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_sms_type=CSVSTRING()
+        self.__field_sms_type.readfrombuffer(buf)
+        if self.has_date:
+            self.__field_sms_addr=CSVSTRING(**{ 'quotechar': None })
+            self.__field_sms_addr.readfrombuffer(buf)
+            self.__field_sms_date=SMSDATETIME(**{ 'terminator': None })
+            self.__field_sms_date.readfrombuffer(buf)
+        if not self.has_date:
+            self.__field_sms_addr=CSVSTRING(**{ 'quotechar': None,                      'terminator': None })
+            self.__field_sms_addr.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MMGR:' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_has_date(self):
+        try: self.__field_has_date
+        except:
+            self.__field_has_date=BOOL(**{ 'default': True })
+        return self.__field_has_date.getvalue()
+
+    def __setfield_has_date(self, value):
+        if isinstance(value,BOOL):
+            self.__field_has_date=value
+        else:
+            self.__field_has_date=BOOL(value,**{ 'default': True })
+
+    def __delfield_has_date(self): del self.__field_has_date
+
+    has_date=property(__getfield_has_date, __setfield_has_date, __delfield_has_date, None)
+
+    def __getfield_sms_type(self):
+        return self.__field_sms_type.getvalue()
+
+    def __setfield_sms_type(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_sms_type=value
+        else:
+            self.__field_sms_type=CSVSTRING(value,)
+
+    def __delfield_sms_type(self): del self.__field_sms_type
+
+    sms_type=property(__getfield_sms_type, __setfield_sms_type, __delfield_sms_type, None)
+
+    def __getfield_sms_addr(self):
+        return self.__field_sms_addr.getvalue()
+
+    def __setfield_sms_addr(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_sms_addr=value
+        else:
+            self.__field_sms_addr=CSVSTRING(value,**{ 'quotechar': None })
+
+    def __delfield_sms_addr(self): del self.__field_sms_addr
+
+    sms_addr=property(__getfield_sms_addr, __setfield_sms_addr, __delfield_sms_addr, None)
+
+    def __getfield_sms_date(self):
+        return self.__field_sms_date.getvalue()
+
+    def __setfield_sms_date(self, value):
+        if isinstance(value,SMSDATETIME):
+            self.__field_sms_date=value
+        else:
+            self.__field_sms_date=SMSDATETIME(value,**{ 'terminator': None })
+
+    def __delfield_sms_date(self): del self.__field_sms_date
+
+    sms_date=property(__getfield_sms_date, __setfield_sms_date, __delfield_sms_date, None)
+
+    def __getfield_sms_addr(self):
+        return self.__field_sms_addr.getvalue()
+
+    def __setfield_sms_addr(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_sms_addr=value
+        else:
+            self.__field_sms_addr=CSVSTRING(value,**{ 'quotechar': None,                      'terminator': None })
+
+    def __delfield_sms_addr(self): del self.__field_sms_addr
+
+    sms_addr=property(__getfield_sms_addr, __setfield_sms_addr, __delfield_sms_addr, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('has_date', self.__field_has_date, None)
+        yield ('sms_type', self.__field_sms_type, None)
+        if self.has_date:
+            yield ('sms_addr', self.__field_sms_addr, None)
+            yield ('sms_date', self.__field_sms_date, None)
+        if not self.has_date:
+            yield ('sms_addr', self.__field_sms_addr, None)
 
 
 
