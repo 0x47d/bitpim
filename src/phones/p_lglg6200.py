@@ -85,6 +85,7 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_has_voice_id=False
 
+PHONE_ENCODING='iso-8859-1'
 
 class pbreadentryresponse(BaseProtogenClass):
     "Results of reading one entry"
@@ -415,20 +416,20 @@ class pbentry(BaseProtogenClass):
         self.__field_memo.writetobuffer(buf)
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_128, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_129, 'length': NUMEMAILS})
         self.__field_emails.writetobuffer(buf)
         self.__field_url.writetobuffer(buf)
         try: self.__field_numberspeeds
         except:
-            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_131, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_132, 'length': NUMPHONENUMBERS})
         self.__field_numberspeeds.writetobuffer(buf)
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_134, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.writetobuffer(buf)
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_135, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_136, 'length': NUMPHONENUMBERS})
         self.__field_numbers.writetobuffer(buf)
         try: self.__field_EndOfRecord
         except:
@@ -450,7 +451,7 @@ class pbentry(BaseProtogenClass):
         self.__field_entrynumber.readfrombuffer(buf)
         self.__field_unknown1=UINT(**{'sizeinbytes': 2, 'default': 0})
         self.__field_unknown1.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 2})
         self.__field_group.readfrombuffer(buf)
@@ -458,17 +459,17 @@ class pbentry(BaseProtogenClass):
         self.__field_unknown2.readfrombuffer(buf)
         self.__field_secret=BOOL(**{'sizeinbytes': 1})
         self.__field_secret.readfrombuffer(buf)
-        self.__field_memo=STRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+        self.__field_memo=USTRING(**{'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
-        self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_128, 'length': NUMEMAILS})
+        self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_129, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
-        self.__field_url=STRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+        self.__field_url=USTRING(**{'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
-        self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_131, 'length': NUMPHONENUMBERS})
+        self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_132, 'length': NUMPHONENUMBERS})
         self.__field_numberspeeds.readfrombuffer(buf)
-        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_133, 'length': NUMPHONENUMBERS})
+        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_134, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.readfrombuffer(buf)
-        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_135, 'length': NUMPHONENUMBERS})
+        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_136, 'length': NUMPHONENUMBERS})
         self.__field_numbers.readfrombuffer(buf)
         self.__field_EndOfRecord=UINT(**{'sizeinbytes': 2, 'constant': 0x0278})
         self.__field_EndOfRecord.readfrombuffer(buf)
@@ -537,10 +538,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -592,10 +593,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=STRING(value,**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+            self.__field_memo=USTRING(value,**{'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
 
     def __delfield_memo(self): del self.__field_memo
 
@@ -604,14 +605,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_emails(self):
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_128, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglg6200_129, 'length': NUMEMAILS})
         return self.__field_emails.getvalue()
 
     def __setfield_emails(self, value):
         if isinstance(value,LIST):
             self.__field_emails=value
         else:
-            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglg6200_128, 'length': NUMEMAILS})
+            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglg6200_129, 'length': NUMEMAILS})
 
     def __delfield_emails(self): del self.__field_emails
 
@@ -621,10 +622,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_url.getvalue()
 
     def __setfield_url(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_url=value
         else:
-            self.__field_url=STRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+            self.__field_url=USTRING(value,**{'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
 
     def __delfield_url(self): del self.__field_url
 
@@ -633,14 +634,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numberspeeds(self):
         try: self.__field_numberspeeds
         except:
-            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_131, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(**{'elementclass': _gen_p_lglg6200_132, 'length': NUMPHONENUMBERS})
         return self.__field_numberspeeds.getvalue()
 
     def __setfield_numberspeeds(self, value):
         if isinstance(value,LIST):
             self.__field_numberspeeds=value
         else:
-            self.__field_numberspeeds=LIST(value,**{'elementclass': _gen_p_lglg6200_131, 'length': NUMPHONENUMBERS})
+            self.__field_numberspeeds=LIST(value,**{'elementclass': _gen_p_lglg6200_132, 'length': NUMPHONENUMBERS})
 
     def __delfield_numberspeeds(self): del self.__field_numberspeeds
 
@@ -649,14 +650,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbertypes(self):
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglg6200_134, 'length': NUMPHONENUMBERS})
         return self.__field_numbertypes.getvalue()
 
     def __setfield_numbertypes(self, value):
         if isinstance(value,LIST):
             self.__field_numbertypes=value
         else:
-            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglg6200_133, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglg6200_134, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbertypes(self): del self.__field_numbertypes
 
@@ -665,14 +666,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbers(self):
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_135, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglg6200_136, 'length': NUMPHONENUMBERS})
         return self.__field_numbers.getvalue()
 
     def __setfield_numbers(self, value):
         if isinstance(value,LIST):
             self.__field_numbers=value
         else:
-            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglg6200_135, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglg6200_136, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbers(self): del self.__field_numbers
 
@@ -750,7 +751,7 @@ class pbentry(BaseProtogenClass):
 
 
 
-class _gen_p_lglg6200_128(BaseProtogenClass):
+class _gen_p_lglg6200_129(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
 
@@ -759,8 +760,8 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglg6200_128,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglg6200_128:
+        super(_gen_p_lglg6200_129,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglg6200_129:
             self._update(args,dict)
 
 
@@ -769,7 +770,7 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglg6200_128,self)._update(args,kwargs)
+        super(_gen_p_lglg6200_129,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -777,12 +778,12 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglg6200_128,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglg6200_129,kwargs)
         if len(args):
-            dict2={'sizeinbytes': 73, 'raiseonunterminatedread': False}
+            dict2={'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_email=STRING(*args,**dict2)
+            self.__field_email=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -798,7 +799,7 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_email=STRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+        self.__field_email=USTRING(**{'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
         self.__field_email.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -807,10 +808,10 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
 
     def __delfield_email(self): del self.__field_email
 
@@ -824,7 +825,7 @@ class _gen_p_lglg6200_128(BaseProtogenClass):
 
 
 
-class _gen_p_lglg6200_131(BaseProtogenClass):
+class _gen_p_lglg6200_132(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numberspeed']
 
@@ -833,8 +834,8 @@ class _gen_p_lglg6200_131(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglg6200_131,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglg6200_131:
+        super(_gen_p_lglg6200_132,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglg6200_132:
             self._update(args,dict)
 
 
@@ -843,7 +844,7 @@ class _gen_p_lglg6200_131(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglg6200_131,self)._update(args,kwargs)
+        super(_gen_p_lglg6200_132,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -851,7 +852,7 @@ class _gen_p_lglg6200_131(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglg6200_131,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglg6200_132,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -898,7 +899,7 @@ class _gen_p_lglg6200_131(BaseProtogenClass):
 
 
 
-class _gen_p_lglg6200_133(BaseProtogenClass):
+class _gen_p_lglg6200_134(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
 
@@ -907,8 +908,8 @@ class _gen_p_lglg6200_133(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglg6200_133,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglg6200_133:
+        super(_gen_p_lglg6200_134,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglg6200_134:
             self._update(args,dict)
 
 
@@ -917,7 +918,7 @@ class _gen_p_lglg6200_133(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglg6200_133,self)._update(args,kwargs)
+        super(_gen_p_lglg6200_134,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -925,7 +926,7 @@ class _gen_p_lglg6200_133(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglg6200_133,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglg6200_134,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -972,7 +973,7 @@ class _gen_p_lglg6200_133(BaseProtogenClass):
 
 
 
-class _gen_p_lglg6200_135(BaseProtogenClass):
+class _gen_p_lglg6200_136(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
 
@@ -981,8 +982,8 @@ class _gen_p_lglg6200_135(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglg6200_135,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglg6200_135:
+        super(_gen_p_lglg6200_136,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglg6200_136:
             self._update(args,dict)
 
 
@@ -991,7 +992,7 @@ class _gen_p_lglg6200_135(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglg6200_135,self)._update(args,kwargs)
+        super(_gen_p_lglg6200_136,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -999,12 +1000,12 @@ class _gen_p_lglg6200_135(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglg6200_135,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglg6200_136,kwargs)
         if len(args):
             dict2={'sizeinbytes': 49, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_number=STRING(*args,**dict2)
+            self.__field_number=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -1020,7 +1021,7 @@ class _gen_p_lglg6200_135(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+        self.__field_number=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1029,10 +1030,10 @@ class _gen_p_lglg6200_135(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
 
     def __delfield_number(self): del self.__field_number
 
@@ -1108,7 +1109,7 @@ class pbgroup(BaseProtogenClass):
         self.__field_unknown2.readfrombuffer(buf)
         self.__field_unknown3=UNKNOWN(**{'sizeinbytes': 3})
         self.__field_unknown3.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1175,10 +1176,10 @@ class pbgroup(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1333,7 +1334,7 @@ class pb_contact_media_entry(BaseProtogenClass):
         self.__field_dont_care1.readfrombuffer(buf)
         self.__field_ringer=UINT(**{'sizeinbytes': 2})
         self.__field_ringer.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 33})
+        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING})
         self.__field_name.readfrombuffer(buf)
         self.__field_dont_care2=DATA(**{'sizeinbytes': 182})
         self.__field_dont_care2.readfrombuffer(buf)
@@ -1387,10 +1388,10 @@ class pb_contact_media_entry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 33})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1566,7 +1567,7 @@ class indexentry(BaseProtogenClass):
         self.__field_const.writetobuffer(buf)
         try: self.__field_name
         except:
-            self.__field_name=STRING(**{'sizeinbytes': 80, 'default': ""})
+            self.__field_name=USTRING(**{'sizeinbytes': 80, 'default': ""})
         self.__field_name.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1580,7 +1581,7 @@ class indexentry(BaseProtogenClass):
         self.__field_index.readfrombuffer(buf)
         self.__field_const=UINT(**{'sizeinbytes': 1})
         self.__field_const.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 80, 'default': ""})
+        self.__field_name=USTRING(**{'sizeinbytes': 80, 'default': ""})
         self.__field_name.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1614,14 +1615,14 @@ class indexentry(BaseProtogenClass):
     def __getfield_name(self):
         try: self.__field_name
         except:
-            self.__field_name=STRING(**{'sizeinbytes': 80, 'default': ""})
+            self.__field_name=USTRING(**{'sizeinbytes': 80, 'default': ""})
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 80, 'default': ""})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 80, 'default': ""})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1770,7 +1771,7 @@ class content_entry(BaseProtogenClass):
             self.__field_name1.writetobuffer(buf)
             try: self.__field_unknown1
             except:
-                self.__field_unknown1=STRING(**{'terminator': 0xA, 'default': '-1'})
+                self.__field_unknown1=USTRING(**{'terminator': 0xA, 'default': '-1'})
             self.__field_unknown1.writetobuffer(buf)
             try: self.__field_unknown2
             except:
@@ -1780,7 +1781,7 @@ class content_entry(BaseProtogenClass):
             self.__field_content_type.writetobuffer(buf)
             try: self.__field_url
             except:
-                self.__field_url=STRING(**{'terminator': 0xA, 'default':'bitpim.org'})
+                self.__field_url=USTRING(**{'terminator': 0xA, 'default':'bitpim.org'})
             self.__field_url.writetobuffer(buf)
             try: self.__field_unknown_int1
             except:
@@ -1788,7 +1789,7 @@ class content_entry(BaseProtogenClass):
             self.__field_unknown_int1.writetobuffer(buf)
             try: self.__field_unknown3
             except:
-                self.__field_unknown3=STRING(**{'terminator': 0xA, 'default':''})
+                self.__field_unknown3=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown3.writetobuffer(buf)
             try: self.__field_unknown_int2
             except:
@@ -1796,23 +1797,23 @@ class content_entry(BaseProtogenClass):
             self.__field_unknown_int2.writetobuffer(buf)
             try: self.__field_unknown4
             except:
-                self.__field_unknown4=STRING(**{'terminator': 0xA, 'default':''})
+                self.__field_unknown4=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown4.writetobuffer(buf)
             try: self.__field_unknown5
             except:
-                self.__field_unknown5=STRING(**{'terminator': 0xA, 'default':'0'})
+                self.__field_unknown5=USTRING(**{'terminator': 0xA, 'default':'0'})
             self.__field_unknown5.writetobuffer(buf)
             self.__field_size.writetobuffer(buf)
         if self.type=='!E':
             try: self.__field_location_maybe
             except:
-                self.__field_location_maybe=STRING(**{'terminator': 0xA, 'default':'ams:'})
+                self.__field_location_maybe=USTRING(**{'terminator': 0xA, 'default':'ams:'})
             self.__field_location_maybe.writetobuffer(buf)
             self.__field_index2.writetobuffer(buf)
             self.__field_name2.writetobuffer(buf)
             try: self.__field_unknown6
             except:
-                self.__field_unknown6=STRING(**{'terminator': 0xA, 'default':''})
+                self.__field_unknown6=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown6.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1822,43 +1823,43 @@ class content_entry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_type=STRING(**{'sizeinbytes': 3, 'terminator': 0xA})
+        self.__field_type=USTRING(**{'sizeinbytes': 3, 'terminator': 0xA})
         self.__field_type.readfrombuffer(buf)
         if self.type=='!C':
-            self.__field_index1=STRING(**{'terminator': 0xA})
+            self.__field_index1=USTRING(**{'terminator': 0xA})
             self.__field_index1.readfrombuffer(buf)
-            self.__field_name1=STRING(**{'terminator': 0xA})
+            self.__field_name1=USTRING(**{'terminator': 0xA})
             self.__field_name1.readfrombuffer(buf)
-            self.__field_unknown1=STRING(**{'terminator': 0xA, 'default': '-1'})
+            self.__field_unknown1=USTRING(**{'terminator': 0xA, 'default': '-1'})
             self.__field_unknown1.readfrombuffer(buf)
             self.__field_unknown2=UINT(**{'sizeinbytes': 8, 'default' :0})
             self.__field_unknown2.readfrombuffer(buf)
-            self.__field_mime_type=STRING(**{'terminator': 0xA})
+            self.__field_mime_type=USTRING(**{'terminator': 0xA})
             self.__field_mime_type.readfrombuffer(buf)
-            self.__field_content_type=STRING(**{'terminator': 0xA})
+            self.__field_content_type=USTRING(**{'terminator': 0xA})
             self.__field_content_type.readfrombuffer(buf)
-            self.__field_url=STRING(**{'terminator': 0xA, 'default':'bitpim.org'})
+            self.__field_url=USTRING(**{'terminator': 0xA, 'default':'bitpim.org'})
             self.__field_url.readfrombuffer(buf)
             self.__field_unknown_int1=UINT(**{'sizeinbytes': 2, 'default':0x08AA})
             self.__field_unknown_int1.readfrombuffer(buf)
-            self.__field_unknown3=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown3=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown3.readfrombuffer(buf)
             self.__field_unknown_int2=UINT(**{'sizeinbytes': 2, 'default':0x08AA})
             self.__field_unknown_int2.readfrombuffer(buf)
-            self.__field_unknown4=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown4=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown4.readfrombuffer(buf)
-            self.__field_unknown5=STRING(**{'terminator': 0xA, 'default':'0'})
+            self.__field_unknown5=USTRING(**{'terminator': 0xA, 'default':'0'})
             self.__field_unknown5.readfrombuffer(buf)
-            self.__field_size=STRING(**{'terminator': 0xA})
+            self.__field_size=USTRING(**{'terminator': 0xA})
             self.__field_size.readfrombuffer(buf)
         if self.type=='!E':
-            self.__field_location_maybe=STRING(**{'terminator': 0xA, 'default':'ams:'})
+            self.__field_location_maybe=USTRING(**{'terminator': 0xA, 'default':'ams:'})
             self.__field_location_maybe.readfrombuffer(buf)
-            self.__field_index2=STRING(**{'terminator': 0xA})
+            self.__field_index2=USTRING(**{'terminator': 0xA})
             self.__field_index2.readfrombuffer(buf)
-            self.__field_name2=STRING(**{'terminator': 0xA})
+            self.__field_name2=USTRING(**{'terminator': 0xA})
             self.__field_name2.readfrombuffer(buf)
-            self.__field_unknown6=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown6=USTRING(**{'terminator': 0xA, 'default':''})
             self.__field_unknown6.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1867,10 +1868,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_type.getvalue()
 
     def __setfield_type(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_type=value
         else:
-            self.__field_type=STRING(value,**{'sizeinbytes': 3, 'terminator': 0xA})
+            self.__field_type=USTRING(value,**{'sizeinbytes': 3, 'terminator': 0xA})
 
     def __delfield_type(self): del self.__field_type
 
@@ -1880,10 +1881,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_index1.getvalue()
 
     def __setfield_index1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_index1=value
         else:
-            self.__field_index1=STRING(value,**{'terminator': 0xA})
+            self.__field_index1=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_index1(self): del self.__field_index1
 
@@ -1893,10 +1894,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_name1.getvalue()
 
     def __setfield_name1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name1=value
         else:
-            self.__field_name1=STRING(value,**{'terminator': 0xA})
+            self.__field_name1=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_name1(self): del self.__field_name1
 
@@ -1905,14 +1906,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_unknown1(self):
         try: self.__field_unknown1
         except:
-            self.__field_unknown1=STRING(**{'terminator': 0xA, 'default': '-1'})
+            self.__field_unknown1=USTRING(**{'terminator': 0xA, 'default': '-1'})
         return self.__field_unknown1.getvalue()
 
     def __setfield_unknown1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_unknown1=value
         else:
-            self.__field_unknown1=STRING(value,**{'terminator': 0xA, 'default': '-1'})
+            self.__field_unknown1=USTRING(value,**{'terminator': 0xA, 'default': '-1'})
 
     def __delfield_unknown1(self): del self.__field_unknown1
 
@@ -1938,10 +1939,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_mime_type.getvalue()
 
     def __setfield_mime_type(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_mime_type=value
         else:
-            self.__field_mime_type=STRING(value,**{'terminator': 0xA})
+            self.__field_mime_type=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_mime_type(self): del self.__field_mime_type
 
@@ -1951,10 +1952,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_content_type.getvalue()
 
     def __setfield_content_type(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_content_type=value
         else:
-            self.__field_content_type=STRING(value,**{'terminator': 0xA})
+            self.__field_content_type=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_content_type(self): del self.__field_content_type
 
@@ -1963,14 +1964,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_url(self):
         try: self.__field_url
         except:
-            self.__field_url=STRING(**{'terminator': 0xA, 'default':'bitpim.org'})
+            self.__field_url=USTRING(**{'terminator': 0xA, 'default':'bitpim.org'})
         return self.__field_url.getvalue()
 
     def __setfield_url(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_url=value
         else:
-            self.__field_url=STRING(value,**{'terminator': 0xA, 'default':'bitpim.org'})
+            self.__field_url=USTRING(value,**{'terminator': 0xA, 'default':'bitpim.org'})
 
     def __delfield_url(self): del self.__field_url
 
@@ -1995,14 +1996,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_unknown3(self):
         try: self.__field_unknown3
         except:
-            self.__field_unknown3=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown3=USTRING(**{'terminator': 0xA, 'default':''})
         return self.__field_unknown3.getvalue()
 
     def __setfield_unknown3(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_unknown3=value
         else:
-            self.__field_unknown3=STRING(value,**{'terminator': 0xA, 'default':''})
+            self.__field_unknown3=USTRING(value,**{'terminator': 0xA, 'default':''})
 
     def __delfield_unknown3(self): del self.__field_unknown3
 
@@ -2027,14 +2028,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_unknown4(self):
         try: self.__field_unknown4
         except:
-            self.__field_unknown4=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown4=USTRING(**{'terminator': 0xA, 'default':''})
         return self.__field_unknown4.getvalue()
 
     def __setfield_unknown4(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_unknown4=value
         else:
-            self.__field_unknown4=STRING(value,**{'terminator': 0xA, 'default':''})
+            self.__field_unknown4=USTRING(value,**{'terminator': 0xA, 'default':''})
 
     def __delfield_unknown4(self): del self.__field_unknown4
 
@@ -2043,14 +2044,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_unknown5(self):
         try: self.__field_unknown5
         except:
-            self.__field_unknown5=STRING(**{'terminator': 0xA, 'default':'0'})
+            self.__field_unknown5=USTRING(**{'terminator': 0xA, 'default':'0'})
         return self.__field_unknown5.getvalue()
 
     def __setfield_unknown5(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_unknown5=value
         else:
-            self.__field_unknown5=STRING(value,**{'terminator': 0xA, 'default':'0'})
+            self.__field_unknown5=USTRING(value,**{'terminator': 0xA, 'default':'0'})
 
     def __delfield_unknown5(self): del self.__field_unknown5
 
@@ -2060,10 +2061,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_size.getvalue()
 
     def __setfield_size(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_size=value
         else:
-            self.__field_size=STRING(value,**{'terminator': 0xA})
+            self.__field_size=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_size(self): del self.__field_size
 
@@ -2072,14 +2073,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_location_maybe(self):
         try: self.__field_location_maybe
         except:
-            self.__field_location_maybe=STRING(**{'terminator': 0xA, 'default':'ams:'})
+            self.__field_location_maybe=USTRING(**{'terminator': 0xA, 'default':'ams:'})
         return self.__field_location_maybe.getvalue()
 
     def __setfield_location_maybe(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_location_maybe=value
         else:
-            self.__field_location_maybe=STRING(value,**{'terminator': 0xA, 'default':'ams:'})
+            self.__field_location_maybe=USTRING(value,**{'terminator': 0xA, 'default':'ams:'})
 
     def __delfield_location_maybe(self): del self.__field_location_maybe
 
@@ -2089,10 +2090,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_index2.getvalue()
 
     def __setfield_index2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_index2=value
         else:
-            self.__field_index2=STRING(value,**{'terminator': 0xA})
+            self.__field_index2=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_index2(self): del self.__field_index2
 
@@ -2102,10 +2103,10 @@ class content_entry(BaseProtogenClass):
         return self.__field_name2.getvalue()
 
     def __setfield_name2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name2=value
         else:
-            self.__field_name2=STRING(value,**{'terminator': 0xA})
+            self.__field_name2=USTRING(value,**{'terminator': 0xA})
 
     def __delfield_name2(self): del self.__field_name2
 
@@ -2114,14 +2115,14 @@ class content_entry(BaseProtogenClass):
     def __getfield_unknown6(self):
         try: self.__field_unknown6
         except:
-            self.__field_unknown6=STRING(**{'terminator': 0xA, 'default':''})
+            self.__field_unknown6=USTRING(**{'terminator': 0xA, 'default':''})
         return self.__field_unknown6.getvalue()
 
     def __setfield_unknown6(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_unknown6=value
         else:
-            self.__field_unknown6=STRING(value,**{'terminator': 0xA, 'default':''})
+            self.__field_unknown6=USTRING(value,**{'terminator': 0xA, 'default':''})
 
     def __delfield_unknown6(self): del self.__field_unknown6
 
@@ -2266,7 +2267,7 @@ class content_count(BaseProtogenClass):
             dict2={'terminator': None}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_count=STRING(*args,**dict2)
+            self.__field_count=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -2282,7 +2283,7 @@ class content_count(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_count=STRING(**{'terminator': None})
+        self.__field_count=USTRING(**{'terminator': None})
         self.__field_count.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2291,10 +2292,10 @@ class content_count(BaseProtogenClass):
         return self.__field_count.getvalue()
 
     def __setfield_count(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_count=value
         else:
-            self.__field_count=STRING(value,**{'terminator': None})
+            self.__field_count=USTRING(value,**{'terminator': None})
 
     def __delfield_count(self): del self.__field_count
 
@@ -2336,10 +2337,10 @@ class textmemo(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(textmemo,kwargs)
         if len(args):
-            dict2={'sizeinbytes': 151,  'raiseonunterminatedread': False, 'raiseontruncate': False }
+            dict2={'sizeinbytes': 151,  'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_text=STRING(*args,**dict2)
+            self.__field_text=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -2355,7 +2356,7 @@ class textmemo(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_text=STRING(**{'sizeinbytes': 151,  'raiseonunterminatedread': False, 'raiseontruncate': False })
+        self.__field_text=USTRING(**{'sizeinbytes': 151,  'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
         self.__field_text.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2364,10 +2365,10 @@ class textmemo(BaseProtogenClass):
         return self.__field_text.getvalue()
 
     def __setfield_text(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_text=value
         else:
-            self.__field_text=STRING(value,**{'sizeinbytes': 151,  'raiseonunterminatedread': False, 'raiseontruncate': False })
+            self.__field_text=USTRING(value,**{'sizeinbytes': 151,  'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
 
     def __delfield_text(self): del self.__field_text
 

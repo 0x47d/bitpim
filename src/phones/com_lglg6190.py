@@ -412,7 +412,7 @@ class Phone(com_lgvx4400.Phone):
 #        else:
 #            entry.priority=sms.SMSEntry.Priority_High
         entry.read=sf.read
-        entry.text=unicode(sf.msg, errors='ignore')
+        entry.text=sf.msg
         entry.callback=sf.callback
         return entry
 
@@ -428,8 +428,8 @@ class Phone(com_lgvx4400.Phone):
                 if confirmed:
                     confirmed_date="%d%02d%02dT%02d%02d00" % r.time
                 entry.add_recipient(r.number, confirmed, confirmed_date)
-        entry.subject=unicode(sf.msg[:28], errors='ignore')
-        entry.text=unicode(sf.msg, errors='ignore')
+        entry.subject=sf.msg[:28]
+        entry.text=sf.msg
 #        if sf.priority==0:
 #            entry.priority=sms.SMSEntry.Priority_Normal
 #        else:

@@ -93,6 +93,7 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_has_voice_id=False
 
+PHONE_ENCODING='iso-8859-1'
 
 %}
 
@@ -119,20 +120,20 @@ PACKET pbentry:
     2  UINT {'constant': 0x026e} +entrysize
     2  UINT entrynumber                 
     2  UINT {'default': 0} +unknown1		
-    33 STRING {'raiseonunterminatedread': False} name
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     2  UINT group
     2  UINT {'default': 0x10} +unknown2 #ringtone ??
     1  BOOL secret
-    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    *  USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     *  LIST {'length': NUMEMAILS} +emails:
-        73 STRING {'raiseonunterminatedread': False} email
-    73 STRING {'raiseonunterminatedread': False} url
+        73 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
+    73 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} url
     * LIST {'length': NUMPHONENUMBERS} +numberspeeds:
         1 UINT numberspeed
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     *  LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     2  UINT {'constant': 0x0278} +EndOfRecord # size of packet
     P  UINT {'default': 0x600} +ringtone
     P  UINT {'default': 0x100} +wallpaper
@@ -143,7 +144,7 @@ PACKET pbgroup:
     1 UINT rectype 	# 0x30 or 0xFF if deleted
     3 UNKNOWN +unknown2
     3 UNKNOWN +unknown3
-    33 STRING {'raiseonunterminatedread': False} name
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -155,7 +156,7 @@ PACKET pb_contact_media_entry:
     2 UINT index # matches serial1 in pbentry despite being a different size
     18 DATA dont_care1
     2 UINT ringer
-    33 STRING name # this is null terminated
+    33 USTRING {'encoding': PHONE_ENCODING} name # this is null terminated
     182 DATA dont_care2
     2 UINT wallpaper
     4 DATA dont_care3
@@ -176,7 +177,7 @@ PACKET pb_contact_media_file:
 PACKET indexentry:
     1 UINT index
     1 UINT const
-    80 STRING {'default': ""} +name
+    80 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -187,26 +188,26 @@ PACKET indexfile:
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 PACKET content_entry:
-    3 STRING {'terminator': 0xA} type
+    3 USTRING {'terminator': 0xA} type
     if self.type=='!C':
-        * STRING {'terminator': 0xA} index1
-        * STRING {'terminator': 0xA} name1
-        * STRING {'terminator': 0xA, 'default': '-1'} +unknown1 
+        * USTRING {'terminator': 0xA} index1
+        * USTRING {'terminator': 0xA} name1
+        * USTRING {'terminator': 0xA, 'default': '-1'} +unknown1 
         8 UINT {'default' :0} +unknown2
-        * STRING {'terminator': 0xA} mime_type
-        * STRING {'terminator': 0xA} content_type # 'Games', 'Screen Savers', 'Ringers'
-        * STRING {'terminator': 0xA, 'default':'bitpim.org'} +url
+        * USTRING {'terminator': 0xA} mime_type
+        * USTRING {'terminator': 0xA} content_type # 'Games', 'Screen Savers', 'Ringers'
+        * USTRING {'terminator': 0xA, 'default':'bitpim.org'} +url
         2 UINT {'default':0x08AA} + unknown_int1
-        * STRING {'terminator': 0xA, 'default':''} +unknown3 
+        * USTRING {'terminator': 0xA, 'default':''} +unknown3 
         2 UINT {'default':0x08AA} + unknown_int2
-        * STRING {'terminator': 0xA, 'default':''} +unknown4
-        * STRING {'terminator': 0xA, 'default':'0'} +unknown5 
-        * STRING {'terminator': 0xA} size
+        * USTRING {'terminator': 0xA, 'default':''} +unknown4
+        * USTRING {'terminator': 0xA, 'default':'0'} +unknown5 
+        * USTRING {'terminator': 0xA} size
     if self.type=='!E':
-        * STRING {'terminator': 0xA, 'default':'ams:'} +location_maybe
-        * STRING {'terminator': 0xA} index2
-        * STRING {'terminator': 0xA} name2
-        * STRING {'terminator': 0xA, 'default':''} +unknown6
+        * USTRING {'terminator': 0xA, 'default':'ams:'} +location_maybe
+        * USTRING {'terminator': 0xA} index2
+        * USTRING {'terminator': 0xA} name2
+        * USTRING {'terminator': 0xA, 'default':''} +unknown6
 
 PACKET content_file:
     "Used to store all content on the phone, apps, ringers and images (with the exception of the camera)"
@@ -214,14 +215,14 @@ PACKET content_file:
 
 PACKET content_count:
     "Stores the number of items in the content file"
-    * STRING {'terminator': None} count
+    * USTRING {'terminator': None} count
 
 ###
 ### Text Memos
 ###
 
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount

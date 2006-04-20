@@ -97,6 +97,7 @@ cal_dir='sch'
 cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 
+PHONE_ENCODING='iso-8859-1'
 
 %}
 
@@ -130,27 +131,27 @@ PACKET pbentry:
     2  UINT {'constant': 0x0222}  +entrysize
     4  UINT serial2
     2  UINT entrynumber 
-    23 STRING {'raiseonunterminatedread': False} name
+    23 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': NUMEMAILS} +emails:
-        49 STRING {'raiseonunterminatedread': False} email
-    49 STRING {'raiseonunterminatedread': False} url
+        49 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
+    49 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    *  USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 
 PACKET pbgroup:
     "A single group"
     1 UINT icon
-    23 STRING name
+    23 USTRING {'encoding': PHONE_ENCODING} name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -160,8 +161,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT unknown2 # set to 1 on some calls
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
@@ -179,7 +180,7 @@ PACKET callhistory:
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    50 STRING {'default': ""} +name
+    50 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -193,7 +194,7 @@ PACKET indexfile:
 PACKET camindexentry:
     1 UINT index
     1 UINT {'default' : 80} +unknown1
-    10 STRING {'default': ""} +name
+    10 USTRING {'default': ""} +name
     4 LGCALDATE taken
     4 UINT unkown2
 
@@ -212,21 +213,21 @@ PACKET mediadesc:
     4 UINT {'default': 0x7824c97a} +magic2 "probably the file date (accessed)"
     4 UINT {'default': 0x7824c97a} +magic3 "probably the file date (modified)"
     4 UINT {'constant': 0} +dunno2
-    32 STRING {'default': 'body'} +filename
-    32 STRING {'default': 'identity'} +whoknows "set to iso-8859-1 in some cases??"
-    32 STRING mimetype
-    32 STRING {'default': ""} +whoknows2
+    32 USTRING {'default': 'body'} +filename
+    32 USTRING {'default': 'identity'} +whoknows "set to iso-8859-1 in some cases??"
+    32 USTRING mimetype
+    32 USTRING {'default': ""} +whoknows2
 
 ###
 ### Text Memos
 ###
 
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount
-    * LIST { 'elementclass': textmemo } +items
+    * LIST {'elementclass': textmemo } +items
 
 ###
 ### The calendar
@@ -263,7 +264,7 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    35 STRING {'raiseonunterminatedread': False} description
+    35 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} description
     2 UINT { 'default': 0 } +unknown1     "This seems to always be two zeros"
     2 UINT hasvoice     "This event has an associated voice memo if 1"
     2 UINT voiceid   "sch/schexxx.qcp is the voice memo (xxx = voiceid - 0x0f)"
@@ -291,8 +292,8 @@ PACKET schedulefile:
 
 PACKET recipient_record:
     20 UINT unknown1
-    P STRING {'default':'', 'raiseonunterminatedread': False} name
-    49 STRING number
+    P USTRING {'encoding': PHONE_ENCODING, 'default':'', 'raiseonunterminatedread': False} name
+    49 USTRING number
     24 UINT unknown2
     1 UINT status   # 1 when sent, 2 when received
     4 LGCALDATE time # sent if status=1, received when status=2
@@ -310,9 +311,9 @@ PACKET sms_out:
     1 UINT locked # 1=locked
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
-    500 STRING {'raiseonunterminatedread': False} msg # uncertain about max length
+    500 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} msg # uncertain about max length
     1250 DATA unknown2
-    16 STRING callback 
+    16 USTRING callback 
     * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
@@ -326,7 +327,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -338,11 +339,11 @@ PACKET sms_in:
     9 UINT unknown5 # these are flags, not enough data to decode
     #1 UINT locked # 1 if the message is locked, 0 otherwise
     #1 UINT priority # 1 if the message is high priority, 0 otherwise
-    21 STRING {'raiseonunterminatedread': False} subject 
+    21 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} subject 
     8 UINT unknown6 # these are flags, not enough data to decode
     2 UINT msglength
     18 UINT unknown7 # these are flags, not enough data to decode
-    200 STRING {'raiseonunterminatedread': False} msg
+    200 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} msg
     * DATA unknown8   # ?? inlcudes senders phone number and name in ascii
 
 
@@ -350,5 +351,5 @@ PACKET sms_quick_text:
 # the 6190 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, max length 101 including terminator 
     * LIST {} +msgs:
-        * STRING {} msg #
+        * USTRING {'encoding': PHONE_ENCODING} msg #
 
