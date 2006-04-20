@@ -101,6 +101,7 @@ BEGIN_TOC
         TOC_1
         TOCITEM_1(Cables,phone-motov710-cables.htm)
         TOCITEM_1(Notes,phone-motov710-notes.htm)
+        TOCITEM_1(Howtos,phone-motov710-howtos.htm)
         ENDTOC_1
     TOCITEM_0(Samsung Phones,phones-samsung.htm)
         TOC_1
