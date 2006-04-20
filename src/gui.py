@@ -1102,8 +1102,10 @@ class MainWindow(wx.Frame):
     def SetPhoneModelStatus(self):
         phone=self.config.Read('phonetype', 'None')
         port=self.config.Read('lgvx4400port', 'None')
-        self.GetStatusBar().set_phone_model(
-            '%s %s/%s'%(self.__owner_name, phone, port))
+        if self.__owner_name=='':
+            self.GetStatusBar().set_phone_model('%s on %s'%(phone, port))
+        else:
+            self.GetStatusBar().set_phone_model('%s %s on %s'%(self.__owner_name, phone, port))
 
     def OnPhoneInfo(self, _):
         self.MakeCall(Request(self.wt.getphoneinfo),
@@ -1170,7 +1172,7 @@ class MainWindow(wx.Frame):
                 _dlg.Destroy()
         else:
             self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
-            if self.__owner_name is None:
+            if self.__owner_name is None or self.__owner_name=='':
                 self.__owner_name=''
             else:
                 self.__owner_name+="'s"
@@ -1182,10 +1184,15 @@ class MainWindow(wx.Frame):
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
             self.SetPhoneModelStatus()
-            wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
-                                               r['phone_name'],
-                                               r['port']),
-                          'Phone Detection', wx.OK)
+            if self.__owner_name =='':
+                wx.MessageBox('Found %s on %s'%(r['phone_name'],
+                                                r['port']),
+                                                'Phone Detection', wx.OK)
+            else:
+                wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
+                                                   r['phone_name'],
+                                                   r['port']),
+                                                   'Phone Detection', wx.OK)
             if check_auto_sync:
                 # see if we should re-sync the calender on connect, do it silently
                 self.__autosync_phone(silent=1)
