@@ -70,7 +70,7 @@ group and put the users that will use BitPim in that group.
 <li><b>Create <code>/etc/udev/rules.d/60-cell.rules</code></b>
 
 <pre>
-SUBSYSTEM!="usb_device", ACTION!="add", GOTO="call_rules_end"
+SUBSYSTEM!="usb_device", ACTION!="add", GOTO="cell_rules_end"
 # LG Phone
 SYSFS{idVendor}=="1004", SYSFS{idProduct}=="6000", GROUP="cellusers", MODE="0660"
 LABEL="cell_rules_end"
