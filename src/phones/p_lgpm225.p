@@ -91,6 +91,7 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_has_voice_id=False
 
+PHONE_ENCODING='iso-8859-1'
 
 %}
 
@@ -116,20 +117,20 @@ PACKET pbentry:
     4  UINT serial1
     2  UINT {'constant': 0x0270} +entrysize
     4  UINT entrynumber                 
-    33 STRING {'raiseonunterminatedread': False} name
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     2  UINT group
     2  UINT {'default': 0} +unknown2 #ringtone ??
     1  BOOL secret
-    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    *  USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     *  LIST {'length': NUMEMAILS} +emails:
-        73 STRING {'raiseonunterminatedread': False} email
-    75 STRING {'raiseonunterminatedread': False} url
+        73 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
+    75 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} url
     * LIST {'length': NUMPHONENUMBERS} +numberspeeds:
         1 UINT numberspeed
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     *  LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     1  UINT {'constant': 0x7A} +EndOfRecord
     P  UINT {'default': 0x600} +ringtone
     P  UINT {'default': 0x100} +wallpaper
@@ -140,7 +141,7 @@ PACKET pbgroup:
     1 UINT rectype 	# 0x30 or 0xFF if deleted
     3 UNKNOWN +unknown2
     3 UNKNOWN +unknown3
-    33 STRING {'raiseonunterminatedread': False} name
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -152,7 +153,7 @@ PACKET pb_contact_media_entry:
     2 UINT index # matches serial1 in pbentry despite being a different size
     18 DATA dont_care1
     2 UINT ringer
-    33 STRING name # this is null terminated
+    33 USTRING {'encoding': PHONE_ENCODING} name # this is null terminated
     182 DATA dont_care2
     2 UINT wallpaper
     4 DATA dont_care3
@@ -196,7 +197,7 @@ PACKET scheduleevent:
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
     1 UINT { 'default': 0 } +pad3
-    42 STRING {'raiseontruncate': False,
+    42 USTRING {'encoding': PHONE_ENCODING, 'raiseontruncate': False,
                'raiseonunterminatedread': False } description
 
 PACKET schedulefile:
@@ -211,8 +212,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT unknown2 # set to 1 on some calls
     1 UINT pbnumbertype # 0=, 1=, 2=, 3=, 4=, 5=, 0xFF=not in phone book
@@ -236,7 +237,7 @@ PACKET callhistory:
 PACKET indexentry:
     1 UINT index
     1 UINT const
-    40 STRING {'default': ""} +name
+    40 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -247,26 +248,26 @@ PACKET indexfile:
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 PACKET content_entry:
-    3 STRING {'terminator': 0xA} type
+    3 USTRING {'terminator': 0xA} type
     if self.type=='!C':
-        * STRING {'terminator': 0xA} index1
-        * STRING {'terminator': 0xA} name1
-        * STRING {'terminator': 0xA, 'default': '-1'} +unknown1 
+        * USTRING {'terminator': 0xA} index1
+        * USTRING {'terminator': 0xA} name1
+        * USTRING {'terminator': 0xA, 'default': '-1'} +unknown1 
         8 UINT {'default' :0} +unknown2
-        * STRING {'terminator': 0xA} mime_type
-        * STRING {'terminator': 0xA} content_type # 'Games', 'Screen Savers', 'Ringers'
-        * STRING {'terminator': 0xA, 'default':'bitpim.org'} +url
+        * USTRING {'terminator': 0xA} mime_type
+        * USTRING {'terminator': 0xA} content_type # 'Games', 'Screen Savers', 'Ringers'
+        * USTRING {'terminator': 0xA, 'default':'bitpim.org'} +url
         1 UINT {'default':0x14} + unknown_int1
-        * STRING {'terminator': 0xA, 'default':''} +unknown3 
+        * USTRING {'terminator': 0xA, 'default':''} +unknown3 
         1 UINT {'default':0x14} + unknown_int2
-        * STRING {'terminator': 0xA, 'default':''} +unknown4
-        * STRING {'terminator': 0xA, 'default':'0'} +unknown5 
-        * STRING {'terminator': 0xA} size
+        * USTRING {'terminator': 0xA, 'default':''} +unknown4
+        * USTRING {'terminator': 0xA, 'default':'0'} +unknown5 
+        * USTRING {'terminator': 0xA} size
     if self.type=='!E':
-        * STRING {'terminator': 0xA, 'default':'ams:'} +location_maybe
-        * STRING {'terminator': 0xA} index2
-        * STRING {'terminator': 0xA} name2
-        * STRING {'terminator': 0xA, 'default':''} +unknown6
+        * USTRING {'terminator': 0xA, 'default':'ams:'} +location_maybe
+        * USTRING {'terminator': 0xA} index2
+        * USTRING {'terminator': 0xA} name2
+        * USTRING {'terminator': 0xA, 'default':''} +unknown6
 
 PACKET content_file:
     "Used to store all content on the phone, apps, ringers and images (with the exception of the camera)"
@@ -274,13 +275,13 @@ PACKET content_file:
 
 PACKET content_count:
     "Stores the number of items in the content file"
-    * STRING {'terminator': None} count
+    * USTRING {'terminator': None} count
 
 PACKET qcp_media_header:
     "Start of a qcp format file, used to determine if a file is qcp or mp3 format"
-    4 STRING {'constant': 'RIFF', 'terminator': None} riff
+    4 USTRING {'constant': 'RIFF', 'terminator': None} riff
     4 UINT riff_size
-    8 STRING {'constant': 'QLCMfmt ', 'terminator': None} qcp_format
+    8 USTRING {'constant': 'QLCMfmt ', 'terminator': None} qcp_format
     # rest of the header is not interesting 
     * DATA stuff
 
@@ -289,7 +290,7 @@ PACKET qcp_media_header:
 ###
 
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount
@@ -312,8 +313,8 @@ PACKET textmemofile:
 
 PACKET recipient_record:
     8 UINT unknown1
-    33 STRING {'raiseonunterminatedread': False} name
-    49 STRING number
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    49 USTRING number
     24 UINT unknown2
     1 UINT status   # 1 when sent, 2 when received
     1 UINT unknown3 
@@ -326,9 +327,9 @@ PACKET sms_out:
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
     1 UINT saved # 0 for outbox, 1 for draft
-    178 STRING msg
+    178 USTRING {'encoding': PHONE_ENCODING} msg
     1 UINT unknown3
-    16 STRING callback 
+    16 USTRING callback 
     * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
@@ -342,7 +343,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -353,14 +354,14 @@ PACKET sms_in:
     1 UINT locked # 1 if the message is locked, 0 otherwise
     8 UINT unknown5 # these are flags, not enough data to decode
     #1 UINT priority # 1 if the message is high priority, 0 otherwise
-    73 STRING subject 
+    73 USTRING {'encoding': PHONE_ENCODING} subject 
     2 UINT msglength
-    200 STRING msg
+    200 USTRING {'encoding': PHONE_ENCODING} msg
     * DATA unknown8   # ?? inlcudes senders phone number and name in ascii
 
 PACKET sms_quick_text:
     4 UINT {'default': 0} +dunno
-    104 STRING {'default': ""} +msg # include terminating NULL
+    104 USTRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
 
 PACKET sms_canned_file:
     4 UINT num_active
