@@ -57,4 +57,30 @@ fi
 
 </ol>
 
+<h3>Direct USB access - udev</h3>
+<p>Recent Linux distributions (based on 2.6 kernel) may use "udev" instead of
+hotplug.  With udev, the usb device ownership and permission can be set by a
+method that is similar in concept, but different in implementation.
+The following will work on Fedora Core 5.  A similar procedure should work on
+other distributions that use udev.</p>
+
+<ol>
+<li>As done with the hotplug method above, create a <code>cellusers</code>
+group and put the users that will use BitPim in that group.
+<li><b>Create <code>/etc/udev/rules.d/60-cell.rules</code></b>
+
+<pre>
+SUBSYSTEM!="usb_device", ACTION!="add", GOTO="call_rules_end"
+# LG Phone
+SYSFS{idVendor}=="1004", SYSFS{idProduct}=="6000", GROUP="cellusers", MODE="0660"
+LABEL="cell_rules_end"
+</pre>
+
+<p>1004 and 6000 should of course be replaced with the relevant <i>VID</i>
+and <i>PID</i>.</p>
+<p>If you have a single user machine, you may find it easier to use a
+mode of 0666 and leave off the <code>GROUP</code> item.
+</ol>
+
+
 #include "pageend.h"
