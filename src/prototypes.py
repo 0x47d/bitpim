@@ -527,16 +527,17 @@ class USTRING(BaseProtogenClass):
         if self._value is None and self._default is not None:
             self._value=self._default
 
-        # convert _value to unicode, non-string objects convert to string representation
-        # allows strings to be initialised with integers etc.
-        if not isinstance(self._value, (str, unicode)):
-            # convert numbers into strings
-            temp=str(self._value)
-            self._value=unicode(temp, 'ascii', 'replace')
-        # we should only receive unicode strings from bitpim, but...
-        elif not isinstance(self._value, unicode):
-            # there is a bug, the docs say this should work on unicode strings but it does not
-            self._value=unicode(self._value, 'ascii', 'replace')
+        if self._value is not None:
+            # convert _value to unicode, non-string objects convert to string representation
+            # allows strings to be initialised with integers etc.
+            if not isinstance(self._value, (str, unicode)):
+                # convert numbers into strings
+                temp=str(self._value)
+                self._value=unicode(temp, 'ascii', 'replace')
+            # we should only receive unicode strings from bitpim, but...
+            elif not isinstance(self._value, unicode):
+                # there is a bug, the docs say this should work on unicode strings but it does not
+                self._value=unicode(self._value, 'ascii', 'replace')
 
         if self._constant is not None and self._constant!=self._value:
             raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
