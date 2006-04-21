@@ -609,6 +609,11 @@ class Phone(com_moto.Phone):
         self.setmode(self.MODEMODEM)
         return fundamentals
 
+    # Phone Detection routine
+    def _detectphone(coms, likely_ports, res, _module, _log):
+        pass
+    detectphone=staticmethod(_detectphone)
+    
 #------------------------------------------------------------------------------
 parentprofile=com_moto.Profile
 class Profile(parentprofile):
@@ -620,6 +625,13 @@ class Profile(parentprofile):
     MAX_WALLPAPER_BASENAME_LENGTH=37
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
     WALLPAPER_CONVERT_FORMAT="jpg"
+
+    # Motorola OEM USB Cable
+    usbids=( ( 0x22B8, 0x2A22, 1),)
+    deviceclasses=("modem",)
+    # use for auto-detection
+    phone_manufacturer='Motorola'
+    phone_model='Motorola CDMA v710 Phone'
 
     # all dumped in "images"
     imageorigins={}
