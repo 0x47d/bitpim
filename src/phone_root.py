@@ -411,4 +411,7 @@ class Phone(today.TodayWidget):
     def OnBusyEnd(self):
         return self.mw.OnBusyEnd()
 
+    def log(self, str):
+        self.mw.log(str)
+
 
