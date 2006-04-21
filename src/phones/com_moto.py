@@ -17,6 +17,7 @@ import time
 import commport
 import com_brew
 import com_gsm
+import phoneinfo
 import prototypes
 import p_moto
 import sms
@@ -162,7 +163,38 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
     def encode_utf16(self, v):
         """Encode a unicode/string into a Motorola unicode"""
         return (v+'\x00').encode('utf_16le')
-        
+
+    # Phone info routines
+    def get_model(self):
+        _req=self.protocolclass.model_req()
+        return self.sendATcommand(_req, self.protocolclass.string_resp)[0].value
+    def get_manufacturer(self):
+        _req=self.protocolclass.manufacturer_req()
+        return self.sendATcommand(_req, self.protocolclass.string_resp)[0].value
+    def get_phone_number(self):
+        self.setmode(self.MODEPHONEBOOK)
+        _req=self.protocolclass.number_req()
+        _s=self.sendATcommand(_req, self.protocolclass.string_resp)[0].value
+        self.setmode(self.MODEMODEM)
+        return _s.replace(',', '')
+    def get_firmware_version(self):
+        _req=self.protocolclass.firmware_req()
+        return self.sendATcommand(_req, self.protocolclass.string_resp)[0].value
+    def get_signal_quality(self):
+        _req=self.protocolclass.signal_req()
+        _res=self.sendATcommand(_req, self.protocolclass.signal_resp)[0]
+        return str(100*int(_res.rssi)/31)+'%'
+    def get_battery_level(self):
+        _req=self.protocolclass.battery_req()
+        _res=self.sendATcommand(_req, self.protocolclass.battery_resp)[0]
+        return '%d%%'%_res.level
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        self.setmode(self.MODEMODEM)
+        for e in phoneinfo.PhoneInfo.standard_keys:
+            f=getattr(self, 'get_'+e[0])
+            setattr(phone_info, e[0], f())
+
     # fundamentals
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.

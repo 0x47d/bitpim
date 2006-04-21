@@ -102,6 +102,7 @@ SMS_INDEX_RANGE=xrange(1, 353)
 
 %}
 
+# Misc Phone Info stuff
 PACKET esnrequest:
     * CSVSTRING { 'quotechar': None, 'terminator': None,
                   'default': '+CGSN' } +command
@@ -111,6 +112,41 @@ PACKET esnresponse:
                   'default': '+CGSN:' } command
     3 DATA esnlabel
     * CSVSTRING { 'quotechar': None, 'terminator': None } esn
+
+PACKET string_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' ') } command
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None } value
+
+PACKET manufacturer_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+GMI' } +command
+PACKET model_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+GMM' } +command
+PACKET number_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+CNUM' } +command
+PACKET firmware_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+GMR' } +command
+PACKET signal_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+CSQ?' } +command
+PACKET signal_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' ') } command
+    * CSVINT rssi
+    * CSVINT { 'terminator': None } ber
+PACKET battery_req:
+    * CSVSTRING { 'quotechar': None, 'terminator': None,
+                  'default': '+CBC' } +command
+PACKET battery_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' ') } command
+    * CSVINT status
+    * CSVINT { 'terminator': None } level
 
 PACKET modereq:
     * CSVSTRING { 'quotechar': None,
@@ -148,6 +184,8 @@ PACKET featureresp:
     * CSVINT has_voicetag
     * CSVSTRING { 'quotechar': None,
                   'terminator': None } +dunno
+
+# Phonebook stuff
 
 PACKET select_phonebook_req:
     * CSVSTRING { 'quotechar': None,

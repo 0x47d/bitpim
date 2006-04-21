@@ -273,6 +273,772 @@ class esnresponse(BaseProtogenClass):
 
 
 
+class string_resp(BaseProtogenClass):
+    __fields=['command', 'value']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(string_resp,self).__init__(**dict)
+        if self.__class__ is string_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(string_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(string_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_value.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' ') })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_value=CSVSTRING(**{ 'quotechar': None,                  'terminator': None })
+        self.__field_value.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' ') })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_value(self):
+        return self.__field_value.getvalue()
+
+    def __setfield_value(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_value=value
+        else:
+            self.__field_value=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': None })
+
+    def __delfield_value(self): del self.__field_value
+
+    value=property(__getfield_value, __setfield_value, __delfield_value, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('value', self.__field_value, None)
+
+
+
+class manufacturer_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(manufacturer_req,self).__init__(**dict)
+        if self.__class__ is manufacturer_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(manufacturer_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(manufacturer_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+GMI' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMI' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMI' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMI' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+GMI' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class model_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(model_req,self).__init__(**dict)
+        if self.__class__ is model_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(model_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(model_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+GMM' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMM' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMM' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMM' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+GMM' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class number_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(number_req,self).__init__(**dict)
+        if self.__class__ is number_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(number_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(number_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+CNUM' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CNUM' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CNUM' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CNUM' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+CNUM' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class firmware_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(firmware_req,self).__init__(**dict)
+        if self.__class__ is firmware_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(firmware_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(firmware_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+GMR' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMR' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMR' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+GMR' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+GMR' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class signal_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(signal_req,self).__init__(**dict)
+        if self.__class__ is signal_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(signal_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(signal_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+CSQ?' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CSQ?' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CSQ?' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CSQ?' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+CSQ?' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class signal_resp(BaseProtogenClass):
+    __fields=['command', 'rssi', 'ber']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(signal_resp,self).__init__(**dict)
+        if self.__class__ is signal_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(signal_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(signal_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_rssi.writetobuffer(buf)
+        self.__field_ber.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' ') })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_rssi=CSVINT()
+        self.__field_rssi.readfrombuffer(buf)
+        self.__field_ber=CSVINT(**{ 'terminator': None })
+        self.__field_ber.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' ') })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_rssi(self):
+        return self.__field_rssi.getvalue()
+
+    def __setfield_rssi(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_rssi=value
+        else:
+            self.__field_rssi=CSVINT(value,)
+
+    def __delfield_rssi(self): del self.__field_rssi
+
+    rssi=property(__getfield_rssi, __setfield_rssi, __delfield_rssi, None)
+
+    def __getfield_ber(self):
+        return self.__field_ber.getvalue()
+
+    def __setfield_ber(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_ber=value
+        else:
+            self.__field_ber=CSVINT(value,**{ 'terminator': None })
+
+    def __delfield_ber(self): del self.__field_ber
+
+    ber=property(__getfield_ber, __setfield_ber, __delfield_ber, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('rssi', self.__field_rssi, None)
+        yield ('ber', self.__field_ber, None)
+
+
+
+class battery_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(battery_req,self).__init__(**dict)
+        if self.__class__ is battery_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(battery_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(battery_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None, 'terminator': None,                  'default': '+CBC' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CBC' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CBC' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': None,                  'default': '+CBC' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': None,                  'default': '+CBC' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+class battery_resp(BaseProtogenClass):
+    __fields=['command', 'status', 'level']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(battery_resp,self).__init__(**dict)
+        if self.__class__ is battery_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(battery_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(battery_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_status.writetobuffer(buf)
+        self.__field_level.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' ') })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_status=CSVINT()
+        self.__field_status.readfrombuffer(buf)
+        self.__field_level=CSVINT(**{ 'terminator': None })
+        self.__field_level.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' ') })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_status(self):
+        return self.__field_status.getvalue()
+
+    def __setfield_status(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_status=value
+        else:
+            self.__field_status=CSVINT(value,)
+
+    def __delfield_status(self): del self.__field_status
+
+    status=property(__getfield_status, __setfield_status, __delfield_status, None)
+
+    def __getfield_level(self):
+        return self.__field_level.getvalue()
+
+    def __setfield_level(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_level=value
+        else:
+            self.__field_level=CSVINT(value,**{ 'terminator': None })
+
+    def __delfield_level(self): del self.__field_level
+
+    level=property(__getfield_level, __setfield_level, __delfield_level, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('status', self.__field_status, None)
+        yield ('level', self.__field_level, None)
+
+
+
 class modereq(BaseProtogenClass):
     __fields=['command']
 
