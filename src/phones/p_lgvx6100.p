@@ -149,7 +149,7 @@ PACKET scheduleevent:
     1 UINT alarmtype     "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes?"
     1 UINT ringtone
-    35 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} description
+    35 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } description
     2 UINT { 'default': 0 } +unknown1     "This seems to always be two zeros"
     2 UINT hasvoice     "This event has an associated voice memo if 1"
     2 UINT voiceid   "sch/schexxx.qcp is the voice memo (xxx = voiceid - 0x0f)"

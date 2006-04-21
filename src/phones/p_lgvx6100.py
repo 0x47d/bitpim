@@ -1696,7 +1696,7 @@ class scheduleevent(BaseProtogenClass):
         self.__field_snoozedelay.readfrombuffer(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 1})
         self.__field_ringtone.readfrombuffer(buf)
-        self.__field_description=USTRING(**{'sizeinbytes': 35, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
+        self.__field_description=USTRING(**{'sizeinbytes': 35, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
         self.__field_description.readfrombuffer(buf)
         self.__field_unknown1=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_unknown1.readfrombuffer(buf)
@@ -1849,7 +1849,7 @@ class scheduleevent(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_description=value
         else:
-            self.__field_description=USTRING(value,**{'sizeinbytes': 35, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
+            self.__field_description=USTRING(value,**{'sizeinbytes': 35, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
 
     def __delfield_description(self): del self.__field_description
 

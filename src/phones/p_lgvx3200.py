@@ -1711,7 +1711,7 @@ class scheduleevent(BaseProtogenClass):
         self.__field_snoozedelay.readfrombuffer(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 1})
         self.__field_ringtone.readfrombuffer(buf)
-        self.__field_description=STRING(**{'sizeinbytes': 39, 'raiseonunterminatedread': False})
+        self.__field_description=STRING(**{'sizeinbytes': 39, 'raiseonunterminatedread': False, 'raiseontruncate': False })
         self.__field_description.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1872,7 +1872,7 @@ class scheduleevent(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_description=value
         else:
-            self.__field_description=STRING(value,**{'sizeinbytes': 39, 'raiseonunterminatedread': False})
+            self.__field_description=STRING(value,**{'sizeinbytes': 39, 'raiseonunterminatedread': False, 'raiseontruncate': False })
 
     def __delfield_description(self): del self.__field_description
 
