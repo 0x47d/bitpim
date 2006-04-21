@@ -23,4 +23,12 @@
 <LI>BitPim can only replace the contents of existing wallpapers on the phone.  BitPim can neither add new wallpapers to the phone, nor delete existing ones from the phone.  See the <a href="phone-motov710-howtos.htm">Howtos</a> section for more details.
 </UL>
 
+<H3>SMS</H3>
+<UL>
+<LI>BitPim retrieves and classifies SMS incoming messages as <B>Inbox</B>, sent outgoing messages as <B>Sent</B>, and unsent outgoing messages as <B>Saved</B>.
+<LI>BitPim does not retrieve draft messages.
+<LI>Some <B>Saved</B> messages may not have date time info.
+<LI>BitPim does not save any SMS messages to the phone, or send messages through the phone.
+</UL>
+
 #include "pageend.h"

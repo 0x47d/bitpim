@@ -191,7 +191,10 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
     def getphoneinfo(self, phone_info):
         self.log('Getting Phone Info')
         self.setmode(self.MODEMODEM)
-        for e in phoneinfo.PhoneInfo.standard_keys:
+        _total_keys=len(phoneinfo.PhoneInfo.standard_keys)
+        for _cnt,e in enumerate(phoneinfo.PhoneInfo.standard_keys):
+            self.progress(_cnt, _total_keys,
+                          'Retrieving Phone '+e[1])
             f=getattr(self, 'get_'+e[0])
             setattr(phone_info, e[0], f())
 
