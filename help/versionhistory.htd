@@ -7,6 +7,7 @@
       <li>Add support for iso-8859-1 characters on, LG-VX4400, LG-LX5450, Toshiba VM4050.
           This will allow phonebooks with names with accented characters and other non-ascii characters supported by the phone to work.
       <li>Added support for the Motorola V710 phone.  Supported features include phonebook, calendar, ringtones, wallpapers, and SMS.  See the Help section for more details.
+      <li>Add support for <B>LG-LX5550</B> (Telus Mobility).
     </ul>
 
    <h2><a name="0.8.12">Changes in 0.8.12</a></h2>

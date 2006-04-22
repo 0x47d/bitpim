@@ -164,6 +164,9 @@ class Profile:
     # delay auto-detection when the phone is plugged in (in seconds)
     autodetect_delay=0
 
+    # delay in rebooting the phone after a send data and delay between offline and reboot in seconds.
+    reboot_delay=0
+
     # which usb ids correspond to us
     usbids=( 
         )
@@ -270,7 +273,7 @@ class NoFilesystem:
     def getfirmwareinformation(self):
         self.__raisefna("getfirmwareinformation")
 
-    def offlinerequest(self, reset=False):
+    def offlinerequest(self, reset=False, delay=0):
         self.__raisefna("offlinerequest")
 
     def modemmoderequest(self):

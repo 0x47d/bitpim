@@ -1429,6 +1429,7 @@ class MainWindow(wx.Frame):
             self.GetActivePlaylistWidget().getdata(data)
             todo.append((self.wt.writeplaylist, "Playlist", merge))
 
+        data['reboot_delay']=self.phoneprofile.reboot_delay
         self._autodetect_delay=self.phoneprofile.autodetect_delay
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
         self.MakeCall(Request(self.wt.getfundamentals),
@@ -1827,7 +1828,10 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         if results.has_key('rebootphone'):
             self.log("BitPim is rebooting your phone for changes to take effect")
-            self.phonerebootrequest()
+            delay=0
+            if results.has_key('reboot_delay'):
+                delay=results['reboot_delay']
+            self.phonerebootrequest(delay)
             self.clearcomm()
             
     def writecalendar(self, data, merge):
@@ -1865,7 +1869,6 @@ class WorkerThread(WorkerThreadFramework):
 
     def detectphone(self, using_port=None, delay=0):
         self.clearcomm()
-        print 'detectphone:sleeping',delay
         time.sleep(delay)
         return phone_detect.DetectPhone(self).detect(using_port)
 
@@ -1948,10 +1951,10 @@ class WorkerThread(WorkerThreadFramework):
         return self.commphone.rmdirs(path)
 
     # offline/reboot/modemmode
-    def phonerebootrequest(self):
+    def phonerebootrequest(self, reboot_delay=0):
         if __debug__: self.checkthread()
         self.setupcomm()
-        return self.commphone.offlinerequest(reset=True)
+        return self.commphone.offlinerequest(reset=True, delay=reboot_delay)
 
     def phoneofflinerequest(self):
         if __debug__: self.checkthread()

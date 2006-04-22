@@ -149,7 +149,7 @@ class DebugBrewProtocol:
         self.log("Getting firmware information")
     def explore0c(self):
         self.log("Trying stuff with command 0x0c")
-    def offlinerequest(self, reset=False):
+    def offlinerequest(self, reset=False, delay=0):
         self.log("Taking phone offline")
         if reset:
             self.log("Resetting phone")
@@ -325,11 +325,13 @@ class RealBrewProtocol:
         req=p_brew.testing0crequest()
         res=self.sendbrewcommand(req, p_brew.testing0cresponse)
 
-    def offlinerequest(self, reset=False):
+    def offlinerequest(self, reset=False, delay=0):
+        time.sleep(delay)
         req=p_brew.setmoderequest()
         req.request=1
         self.log("Taking phone offline")
         self.sendbrewcommand(req, p_brew.setmoderesponse)
+        time.sleep(delay)
         if reset:
             req=p_brew.setmoderequest()
             req.request=2
