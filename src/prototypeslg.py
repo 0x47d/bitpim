@@ -344,3 +344,131 @@ class SMSDATETIME(prototypes.CSVSTRING):
             _s=self._value.split(',')
             return '20%sT%s00'%(_s[0].replace('/', ''),
                                 _s[1].replace(':', ''))
+
+class TELUSLGCALREPEAT(prototypes.UINTlsb):
+    def __init__(self, *args, **kwargs):
+        """A 32-bit bitmapped value used to store repeat info for events in the LG calendar"""
+        super(TELUSLGCALREPEAT,self).__init__(*args, **kwargs)
+        
+        # The meaning of the bits in this field
+        # MSB                          LSB
+        #  3         2         1         
+        # 10987654321098765432109876543210
+        #                              210  repeat_type
+        #                            0      exceptions, set to 1 if there are exceptions
+        #                     6543210       dow_weekly (weekly repeat type)
+        #                         210       dow (monthly repeat type)
+        #             543210                interval
+        #               3210                month_index
+        # 6543210                           day_index    
+
+        # repeat_type: 0=none, 1=daily, 2=weekdays, 3=weekly, 4=Month Nth Xday, 5=monthly on date, 6=yearly Nth Xday in month, 7=yearly on date 
+        # dow_weekly: Weekly repeat type only. Identical to bpcalender dow bits, multiple selections allowed(Bit0=sun,Bit1=mon,Bit2=tue,Bit3=wed,Bit4=thur,Bit5=fri,Bit6=sat)  
+        # dow_monthly: Monthly repeat type 6 only. (0=sun,1=mon,2=tue,3=wed,4=thur,5=fri,6=sat)
+        # interval: repeat interval, eg. every 1 week, 2 weeks 4 weeks etc. Also be used for months, but bp does not support this.
+        # month_index: For type 4 this is the month the event starts in
+        # day_index: For type 6 this represents the number of the day that is the repeat, e.g. "2"nd tuesday
+        #            For type 3&4 this is the day of the month that the repeat occurs, usually the same as the start date.
+        #            For type 0&2 set to 0x7F
+        #            For type 1&3 set to 0
+
+        dict={'sizeinbytes': 4}
+        dict.update(kwargs)
+
+        if self._ismostderived(TELUSLGCALREPEAT):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._converttoint(kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args=(self._converttoint(args[0]),)
+        else:
+            raise TypeError("expected (type, dow, interval) as arg")
+
+        super(TELUSLGCALREPEAT,self)._update(args, kwargs) # we want the args
+        self._complainaboutunusedargs(TELUSLGCALREPEAT,kwargs)
+        assert self._sizeinbytes==4
+
+    def getvalue(self):
+        val=super(TELUSLGCALREPEAT,self).getvalue()
+        type=val&0x7 # 3 bits
+        val>>=4
+        exceptions=val&0x1
+        val>>=1
+        #get day of week, only valid for some repeat types
+        #format of data is also different for different repeat types
+        interval2=(val>>9)&0x3f
+        if type==4: # for monthly repeats
+            dow=self._to_bp_dow[val&7] #day of month, valid for monthly repeat types, need to convert to bitpim format
+        elif type==3: #weekly 
+            dow=val&0x7f # 7 bits, already matched bpcalender format
+        else:
+            dow=0
+        # get interval
+        if type==4:
+            val>>=20
+            interval=val&0x1f # day_index
+        else:
+            val>>=9
+            interval=val&0x3f
+        return (type, dow, interval, interval2, exceptions)
+
+    _caldomvalues={
+        0x01: 0x0, #sun
+        0x02: 0x1, #mon
+        0x04: 0x2, #tue
+        0x08: 0x3, #wed
+        0x10: 0x4, #thur
+        0x20: 0x5, #fri
+        0x40: 0x6  #sat
+        }
+    _to_bp_dow={
+        0: 0x01,    # Sun
+        1: 0x02,    # Mon
+        2: 0x04,    # Tue
+        3: 0x08,    # Wed
+        4: 0x10,    # Thu
+        5: 0x20,    # Fri
+        6: 0x40,    # Sat
+        }
+        
+    def _converttoint(self, repeat):
+        if not isinstance(repeat, (tuple, list)):
+            if __debug__:
+                raise TypeError
+            else:
+                return 0
+        if len(repeat)!=5:
+            if __debug__:
+                raise ValueError
+            else:
+                return 0
+        type,dow,interval,interval2,exceptions=repeat
+        val=0
+        # construct bitmapped value for repeat
+        val=interval
+        if type==0 or type==2:
+            val=0x7F
+            val<<=11
+            val|=interval
+        if type==4 or type==5:
+            val<<=11
+            val|=interval2
+        if type==7: #yearly
+            val<<=11
+            val|=dow
+        val<<=9
+        if type==2:
+            val|=dow
+        elif type==4:
+            val|=self._caldomvalues[dow]
+        val<<=1
+        val|=exceptions
+        val<<=4
+        val|=type
+        return val
+
