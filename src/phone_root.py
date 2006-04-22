@@ -90,6 +90,8 @@ class PhoneTree(wx.TreeCtrl):
         self.filesystemwidget=None
 
         wx.EVT_RIGHT_UP(self, self.OnRightUp)
+        wx.EVT_KEY_DOWN(self, self.OnKeyDown)
+        wx.EVT_KEY_UP(self, self.OnKeyUp)
 
         # add shared tabs
         self.lw=guiwidgets.LogWindow(self.parent)
@@ -104,6 +106,14 @@ class PhoneTree(wx.TreeCtrl):
         if fv:
             self.OnViewFilesystem(None)
             wx.Yield()
+
+    def OnKeyUp(self, evt):
+        self.active_panel.OnKeyUp(evt)
+        # pass onto widget
+
+    def OnKeyDown(self, evt):
+        self.active_panel.OnKeyDown(evt)
+        # pass onto widget
 
     def CreatePhone(self, name, config, database):
         phone=Phone(self.parent)

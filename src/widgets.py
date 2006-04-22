@@ -93,6 +93,12 @@ class BitPimWidget:
         result=[]
         return result
 
+    def OnKeyDown(self, evt):
+        pass
+
+    def OnKeyUp(self, evt):
+        pass
+
     def CanCopy(self):
         return False
 

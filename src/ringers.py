@@ -92,6 +92,14 @@ class RingerView(fileview.FileView):
             self.populatefs(self._data)
             self.OnListRequest() # broadcast changes
 
+    def OnKeyDown(self, evt):
+        self._OnKey(evt)
+        pass
+
+    def OnKeyUp(self, evt):
+        self._OnKey(evt)
+        pass
+
     def _OnKey(self, evt):
         self._shift_down=evt.ShiftDown()
         evt.Skip()
