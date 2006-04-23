@@ -2089,7 +2089,7 @@ class ImportDialog(wx.Dialog):
             row=self.table.GetRowData(event.GetRow())
         else:
             gcr=self.grid.GetGridCursorRow()
-            if gcr>=0:
+            if gcr>=0 and gcr<self.grid.GetNumberRows():
                 row=self.table.GetRowData(gcr)
             else: # table is empty
                 row=None,None,None,None
