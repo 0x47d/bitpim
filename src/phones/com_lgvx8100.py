@@ -172,22 +172,25 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
 
     def getmemo(self, result):
         # read the memo file
+        res={}
         try:
-            buf=prototypes.buffer(self.getfilecontents(self.memolocation))
-            text_memo=self.protocolclass.textmemofile()
-            text_memo.readfrombuffer(buf, logtitle="Read memo file"+self.memolocation)
-            res={}
-            for m in text_memo.items:
-                entry=memo.MemoEntry()
-                entry.text=m.text
-                try:
-                    entry.set_date_isostr("%d%02d%02dT%02d%02d00" % ((m.memotime)))
-                except ValueError:
-                    # deleted memos can remain in file but have a bogus date
-                    continue
-                res[entry.id]=entry
+            stat_res=self.statfile(self.memolocation)
+            # allow for zero length file
+            if stat_res!=None and stat_res['size']!=0:
+                buf=prototypes.buffer(self.getfilecontents(self.memolocation))
+                text_memo=self.protocolclass.textmemofile()
+                text_memo.readfrombuffer(buf, logtitle="Read memo file"+self.memolocation)
+                for m in text_memo.items:
+                    entry=memo.MemoEntry()
+                    entry.text=m.text
+                    try:
+                        entry.set_date_isostr("%d%02d%02dT%02d%02d00" % ((m.memotime)))
+                    except ValueError:
+                        # deleted memos can remain in file but have a bogus date
+                        continue
+                    res[entry.id]=entry
         except com_brew.BrewNoSuchFileException:
-            res={}
+            pass
         result['memo']=res
         return result
 
