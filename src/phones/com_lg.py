@@ -455,7 +455,12 @@ class LGNewIndexedMedia:
             return []
 
         g=self.protocolclass.indexfile()
-        g.readfrombuffer(buf, logtitle="Index file "+filename)
+        # some media indexes have crap appended to the end, prevent this error from messing up everything
+        # valid entries at the start of the file will still get read OK. 
+        try:
+            g.readfrombuffer(buf, logtitle="Index file "+filename)
+        except:
+            self.log("Corrupt index file "+`filename`+", this might cause you all sorts of problems.")
         return g.items
 
     def getmedia(self, maps, results, key):
