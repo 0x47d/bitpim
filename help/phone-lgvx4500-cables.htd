@@ -7,7 +7,7 @@ a USB to serial cable marked for this phone.
 
 <p>Available from Verizon Wireless in store or 
 URL(http://www.verizonwireless.com,on the web).  It is also sold 
-by a number of other stores and on eBay.  A Prolofic PL2303 chip
+by a number of other stores and on eBay.  A Prolific PL2303 chip
 is used to perform USB to serial.
 
 <p align=center><img src="vx4500-vmo-cable.jpg">
@@ -25,7 +25,8 @@ Windows.
 
 <h4>Mac</h4>
 
-<p>Drivers are available at the URL(http://tech.prolific.com.tw/visitor/v_filebrw_result.asp?CateID=138583,Prolific Support Site).
+<p>You will need to get drivers from the Prolific web site at
+URL(http://www.prolific.com.tw/eng/downloads.asp?ID=31,http://www.prolific.com.tw/eng/downloads.asp?ID=31)
 
 </blockquote>
 
@@ -55,9 +56,8 @@ cable.  This has been fixed in the kernel versions 2.4.23 and 2.6.
 
 <h4>Mac</h4>
 
-<p>You will need to get drivers.  There aren't any at the Prolific website,
-but you can find them elsewhere through Google.  One known good set of
-drivers has the filename <code>md_pl2303_v106.zip</code>
+<p>You will need to get drivers from the Prolific web site at
+URL(http://www.prolific.com.tw/eng/downloads.asp?ID=31,http://www.prolific.com.tw/eng/downloads.asp?ID=31)
 
 </blockquote>
 

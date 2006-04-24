@@ -25,9 +25,8 @@ Windows.
 
 <h4>Mac</h4>
 
-<p>You will need to get drivers.  There aren't any at the Prolific website,
-but you can find them elsewhere through Google.  One known good set of
-drivers has the filename <code>md_pl2303_v106.zip</code>
+<p>You will need to get drivers from the Prolific web site at
+URL(http://www.prolific.com.tw/eng/downloads.asp?ID=31,http://www.prolific.com.tw/eng/downloads.asp?ID=31)
 
 </blockquote>
 
@@ -64,9 +63,9 @@ cable.  This has been fixed in the kernel versions 2.4.23 and 2.6.
 
 <h4>Mac</h4>
 
-<p>You will need to get drivers.  There aren't any at the Prolific website,
-but you can find them elsewhere through Google.  One known good set of
-drivers has the filename <code>md_pl2303_v106.zip</code>
+<p>You will need to get drivers from the Prolific web site at
+URL(http://www.prolific.com.tw/eng/downloads.asp?ID=31,http://www.prolific.com.tw/eng/downloads.asp?ID=31)
+
 
 </blockquote>
 
