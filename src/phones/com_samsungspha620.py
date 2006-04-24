@@ -414,7 +414,7 @@ class Profile(com_samsung_packet.Profile):
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
     RINGTONE_LIMITS= {
-        'MAXSIZE': 30000
+        'MAXSIZE': 250000
     }
     phone_manufacturer='SAMSUNG'
     phone_model='SPH-A620/152'
