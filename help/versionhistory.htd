@@ -4,11 +4,14 @@
     <ul>
       <li>Fixed bug saving wallpaper and ringtones in rightclick menu.
       <li>Fixed bug requiring restart after phone model change.
-      <li>Add support for iso-8859-1 characters on, LG-VX4400, LG-LX5450, Toshiba VM4050, LG-PM225, PG-PM325.
+      <li><b>LG-PM325</b> Add write support for phonebook, calendar, wallpaper
+	and ringtones.
+      <li>Add support for iso-8859-1 characters on, LG-VX4400, LG-LX5450, Toshiba VM4050, LG-PM225, LG-PM325.
           This will allow phonebooks with names with accented characters and other non-ascii characters supported by the phone to work.
       <li>Added support for the Motorola V710 phone.  Supported features include phonebook, calendar, ringtones, wallpapers, and SMS.  See the Help section for more details.
       <li>Add support for <B>LG-LX5550</B> (Alltel).
       <li>Add support for <B>LG8100</B> (Telus Mobility).
+      <li><b>Sprint Samsung phones</b> Increase limit on ringers to 250K.
     </ul>
 
    <h2><a name="0.8.12">Changes in 0.8.12</a></h2>
