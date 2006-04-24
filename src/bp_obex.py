@@ -12,6 +12,8 @@
 import struct
 import xml.dom.minidom
 
+module_debug=False
+
 # Header Codes
 Header_Count=0xC
 Header_Name=0x01
@@ -246,8 +248,8 @@ class OBEXFolderListingObject(object):
         dom=xml.dom.minidom.parseString(data)
         _folder_listing=dom.getElementsByTagName('folder-listing')[0]
         self.data={}
-        if len(_folder_listing.getElementsByTagName('parent-folder')):
-            self.data['..']=True
+##        if len(_folder_listing.getElementsByTagName('parent-folder')):
+##            self.data['..']=True
         for _f in _folder_listing.getElementsByTagName('file'):
             _file_dict={ 'name': _f.getAttribute('name'),
                          'size': int(_f.getAttribute('size')),
@@ -294,14 +296,10 @@ class OBEXHeader(object):
         return struct.pack('B', self.code)+'\x00\x03'
 
     def _encode_1(self):
-        return struct.pack('B', self.code)+\
-               struct.pack('B', self.data&0xff)
+        return struct.pack('BB', self.code, self.data and self.data&0xff or 0)
 
     def _encode_4(self):
-        _code=struct.pack('B', self.code)
-        if self.data:
-            return _code+struct.pack('!I', self.data)
-        return _code+'\x00\x00\x00\x00'
+        return struct.pack('!BI', self.code, self.data or 0)
 
     encode_list=(_encode_unicode, _encode_bytes, _encode_1, _encode_4)
     def encode(self):
@@ -427,7 +425,7 @@ class OBEXPacketConnectResp(OBEXPacket):
             _idx+=_h.len()
             self._headers.append(_h)
 
-# Class FolderBrowsingService
+# Class FolderBrowsingService---------------------------------------------------
 class FolderBrowsingService(object):
     def __init__(self, logtarget, commport):
         if logtarget and hasattr(logtarget, 'log'):
@@ -439,16 +437,20 @@ class FolderBrowsingService(object):
         self.max_packet_length=0x2000
         self.server_max_packet_length=255
         self.version_number=0x10
+        self.data_block_length=0x07E0   # default length of a data block
 
     def _log(self, str):
         print str
 
     def _send_packet(self, packet):
+        global module_debug
         _s=packet.encode()
-        self.log('Sending Packet: '+' '.join(['0x%02X'%ord(x) for x in _s]))
+        if module_debug:
+            self.log('Sending Packet: '+' '.join(['0x%02X'%ord(x) for x in _s]))
         self.comm.write(_s)
 
     def _get_response(self):
+        global module_debug
         _code=self.comm.read(1)
         _len_str=self.comm.read(2)
         _len=struct.unpack('!H', _len_str)[0]
@@ -457,7 +459,8 @@ class FolderBrowsingService(object):
         else:
             _data=''
         _s=_code+_len_str+_data
-        self.log('Receiving Packet: '+' '.join(['0x%02X'%ord(x) for x in _s]))
+        if module_debug:
+            self.log('Receiving Packet: '+' '.join(['0x%02X'%ord(x) for x in _s]))
         return _s
 
     def _send_and_check_return(self, packet, expected_code=[Packet_Resp_OK]):
@@ -493,9 +496,9 @@ class FolderBrowsingService(object):
         _resp=self._send_and_check_return(packet, [Packet_Resp_Continue])
         _len_data=len(data)
         _pkt=OBEXPacket(Packet_Put)
-        for _block in range(0, _len_data, 0x07E0):
+        for _block in range(0, _len_data, self.data_block_length):
             _start_idx=_block
-            _end_idx=min(_start_idx+0x07E0, _len_data)
+            _end_idx=min(_start_idx+self.data_block_length, _len_data)
             _pkt.clear()
             _pkt.append(Header_Body, data[_start_idx:_end_idx])
             self._send_and_check_return(_pkt, [Packet_Resp_Continue])
@@ -521,9 +524,10 @@ class FolderBrowsingService(object):
             if _pkt_dict.has_key(Header_ConnectionID):
                 self.connection_id=_pkt_dict[Header_ConnectionID]
             return True
-        except:
+        except Exception, e:
             if __debug__:
                 raise
+            self.log('Exception raise: '+`e`)
             return False
 
     def disconnect(self):
@@ -532,9 +536,10 @@ class FolderBrowsingService(object):
             _pkt.append(Header_ConnectionID, self.connection_id)
             self._send_packet(_pkt)
             self._get_response()
-        except:
+        except Exception, e:
             if __debug__:
                 raise
+            self.log('Exception raise: '+`e`)
 
     def _setpath(self, dirname=''):
         # go to the root first
@@ -547,12 +552,15 @@ class FolderBrowsingService(object):
 
     def _set_path_root(self):
         # go back to root
+        # The V710 OBEX firmware SetPath to root has a bug
+        # this is a work-around for it but also works with other device too.
         _pkt=OBEXPacket(Packet_SetPath)
         _pkt.flags=3    # go up one, don't create
         _pkt.constants=0
         _pkt.append(Header_ConnectionID, self.connection_id)
         _pkt.append(Header_Name)
         while True:
+            # keep going one dir up until no further
             try:
                 self._send_and_check_return(_pkt)
             except OBEXBadResponse:
@@ -576,12 +584,14 @@ class FolderBrowsingService(object):
         try:
             self.setpath(dir)
             return self._list_current_folder()
-        except:
+        except Exception, e:
             if __debug__:
                 raise
+            self.log('Exception raised: '+`e`)
             return {}
 
     def writefile(self, name, data):
+        self.log('Writing OBEX file: '+name)
         _name_list=name.split('/')
         _dir_name='/'.join(_name_list[:-1])
         _file_name=_name_list[-1]
@@ -593,6 +603,7 @@ class FolderBrowsingService(object):
         self._send_body(_pkt, data)
 
     def rmfile(self, name):
+        self.log('Deleting OBEX file: '+name)
         _name_list=name.split('/')
         _dir_name='/'.join(_name_list[:-1])
         _file_name=_name_list[-1]
@@ -603,6 +614,7 @@ class FolderBrowsingService(object):
         self._send_and_check_return(_pkt)
 
     def getfilecontents(self, name):
+        self.log('Reading OBEX file: '+name)
         _name_list=name.split('/')
         _dir_name='/'.join(_name_list[:-1])
         _file_name=_name_list[-1]

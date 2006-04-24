@@ -9,6 +9,7 @@
       <li>Add support for iso-8859-1 characters on, LG-VX4400, LG-LX5450, Toshiba VM4050, LG-PM225, LG-PM325.
           This will allow phonebooks with names with accented characters and other non-ascii characters supported by the phone to work.
       <li>Added support for the Motorola V710 phone.  Supported features include phonebook, calendar, ringtones, wallpapers, and SMS.  See the Help section for more details.
+      <li>Added support to the Motorola V710m, which is the V710+OBEX.
       <li>Add support for <B>LG-LX5550</B> (Alltel).
       <li>Add support for <B>LG8100</B> (Telus Mobility).
       <li><b>Sprint Samsung phones</b> Increase limit on ringers to 250K.

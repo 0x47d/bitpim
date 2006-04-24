@@ -129,7 +129,7 @@ class Phone(com_moto.Phone):
         for _index,_name in enumerate(_files):
             res[_index]={ 'name': common.basename(_name),
                           'filename': _name,
-                          'origin': 'wallpaper' }
+                          'origin': 'images' }
         return res
 
     # phonebook stuff-----------------------------------------------------------
@@ -644,9 +644,9 @@ class Profile(parentprofile):
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
                                       {'width': 176, 'height': 200, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
-                                      {'width': 176, 'height': 198, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
                                       {'width': 176, 'height': 140, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 176, 'height': 220, 'format': "JPEG"}))
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 
