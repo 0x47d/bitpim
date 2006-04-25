@@ -237,30 +237,36 @@ def finalize(destdir):
                 print "skipping help file",name
         # the idiots at apple decided to make it impossible to automate the help indexer
         # how about giving it command line options?
-        res=os.system("open -a \"Apple Help Indexing Tool\" \""+helpdir+"\"")
-        assert res==0
-        # we do this stupid loop monitoring cpu consumption and once it is
-        # unchanged for 2 seconds, assume that the indexing is complete
-        print "Waiting for indexing tool to stop by monitoring CPU consumption"
-        import time
-        lastval=""
-        val="x"
-        pid=0
-        while val!=lastval:
-            print ".",
-            sys.stdout.flush()
-            time.sleep(2)
-            for line in os.popen("ps cx", "r"):
-                line=line.split()
-                line=line[:4]+[" ".join(line[4:])]
-                if line[4]!="Apple Help Indexing Tool":
-                    continue
-                pid=line[0]
-                lastval=val
-                val=line[3]
-                break
-        print "\nIt would appear to be done"
-        os.system("kill "+pid)
+        v=os.popen("sw_vers -productVersion", "r").read()
+        if v.startswith("10.3"):
+            res=os.system("open -a \"Apple Help Indexing Tool\" \""+helpdir+"\"")
+            assert res==0
+            # we do this stupid loop monitoring cpu consumption and once it is
+            # unchanged for 2 seconds, assume that the indexing is complete
+            print "Waiting for indexing tool to stop by monitoring CPU consumption"
+            import time
+            lastval=""
+            val="x"
+            pid=0
+            while val!=lastval:
+                print ".",
+                sys.stdout.flush()
+                time.sleep(2)
+                for line in os.popen("ps cx", "r"):
+                    line=line.split()
+                    line=line[:4]+[" ".join(line[4:])]
+                    if line[4]!="Apple Help Indexing Tool":
+                        continue
+                    pid=line[0]
+                    lastval=val
+                    val=line[3]
+                    break
+            print "\nIt would appear to be done"
+            os.system("kill "+pid)
+        elif v.startswith("10.4"):
+            #use Help Indexer
+            res=os.system("\"/Developer/Applications/Utilities/Help Indexer.app/Contents/MacOS/Help Indexer\" \""+helpdir+"\" -PantherIndexing YES -Tokenizer 1 -ShowProgress YES -TigerIndexing YES")
+            assert res==0
         # copy the css file in
         shutil.copy2(os.path.join(destdir, "resources", "bitpim.css"), os.path.join(helpdir, ".."))
         # don't need the wx style help any more
