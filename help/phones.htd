@@ -103,6 +103,10 @@ BEGIN_TOC
         TOCITEM_1(Notes,phone-motov710-notes.htm)
         TOCITEM_1(Howtos,phone-motov710-howtos.htm)
         ENDTOC_1
+    TOCITEM_0(Motorola V710m,phone-motov710m.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-motov710m-notes.htm)
+        ENDTOC_1
     TOCITEM_0(Samsung Phones,phones-samsung.htm)
         TOC_1
         TOCITEM_1(Cables,phones-samsung-cables.htm)

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">296</long>
+    <long name="name_counter">301</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">244</long>
+    <long name="doc_count">248</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
     <string name="quote-symbol">"\"</string>
     <string name="custom-preprocessor-options">""</string>
-    <double name="version">1.1700</double>
+    <double name="version">1.1800</double>
     <string name="page-header">"&lt;HTML&gt;
 &lt;head&gt;&lt;title&gt;_HELP_TITLE&lt;/title&gt;&lt;/head&gt;
 
@@ -2377,6 +2377,42 @@
             </document>
           </document>
           <document>
+            <string name="title">"Motorola V710m"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-motov710m.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/4/2006"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-motov710m-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"24/4/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
             <string name="title">"Samsung Phones"</string>
             <string name="type">"text-editor-document"</string>
             <string name="filename">"phones-samsung.htd"</string>
@@ -2818,6 +2854,42 @@
             <long name="title-mode">0</long>
             <long name="locked">0</long>
             <string name="created">"3/5/2006"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What do those colors of the color-coded field names mean?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-colorcodedfields.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/4/2006"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"When saving ringtones/wallpapers to the phone, what are the differences between the Replace All and Add option?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-mediaoptions.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"24/4/2006"</string>
             <long name="is-folder">0</long>
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>

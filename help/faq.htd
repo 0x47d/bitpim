@@ -14,7 +14,9 @@ BEGIN_TOC
     TOCITEM_0(Why do you do this stupid thing with my phone?,faq-stupidformat.htm)
     TOCITEM_0(I get an IntegrityCheckFailed exception on my LG phone,phones-lg-integritycheckfailed.htm)
     TOCITEM_0(How do I bypass the Image Preview/Conversion Dialog?,faq-bypassimagepreview.htm)
-    TOCITEM_0(I do not have the Send Phone Data memu item?,faq-donthavesendphonedata.htm)
+    TOCITEM_0(I do not have the Send Phone Data menu item?,faq-donthavesendphonedata.htm)
+    TOCITEM_0(What do those colors of the color-coded field names mean?,faq-colorcodedfields.htm)
+    TOCITEM_0(What are the differences between the Replace All and Add option?,faq-mediaoptions.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->

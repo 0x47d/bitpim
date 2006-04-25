@@ -15,6 +15,7 @@ import sha
 # BitPim modules
 import bpcalendar
 import common
+import commport
 import com_brew
 import com_moto
 import fileinfo
@@ -611,7 +612,29 @@ class Phone(com_moto.Phone):
 
     # Phone Detection routine
     def _detectphone(coms, likely_ports, res, _module, _log):
-        pass
+        for port in likely_ports:
+            _model=res.get(port, {}).get('model', None)
+            if _model==_module.Profile.phone_model:
+                return port
+            elif _model==_module.Profile.generic_phone_model:
+                # this is a V710, try to get the actual model
+                try:
+                    _comm=commport.CommConnection(_log, port)
+                    _comm.sendatcommand('+MODE=2')
+                    _comm.sendatcommand('')
+                    _s=_comm.sendatcommand('+GMM')[0]
+                    _comm.sendatcommand('+MODE=0')
+                    _comm.close()
+                    _model=_s.split(': ')[1].split(',')[-1].replace('"', '').split('=')[1]
+                    if _model=='V710':
+                        _model='V710 '
+                    res[port]['model']=_model
+                    if _model==_module.Profile.phone_model:
+                        return port
+                except:
+                    _comm.close()
+                    if __debug__:
+                        raise
     detectphone=staticmethod(_detectphone)
     
 #------------------------------------------------------------------------------
@@ -631,7 +654,8 @@ class Profile(parentprofile):
     deviceclasses=("modem",)
     # use for auto-detection
     phone_manufacturer='Motorola'
-    phone_model='Motorola CDMA v710 Phone'
+    phone_model='V710 '
+    generic_phone_model='Motorola CDMA v710 Phone'
 
     # all dumped in "images"
     imageorigins={}

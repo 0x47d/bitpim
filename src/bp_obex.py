@@ -9,8 +9,13 @@
 
 """Provide support to OBEX protocol"""
 
+# System Modules
+import time
 import struct
 import xml.dom.minidom
+
+# BitPim modules
+import bptime
 
 module_debug=False
 
@@ -235,6 +240,10 @@ class OBEXBadResponse(Exception):
     def __init__(self, code):
         Exception.__init__(self, 'Bad response code: %d (%s)'%(code, Packet_Name_Dict.get(code, 'Unknown code')))
         self.bad_code=code
+class OBEXNoResponse(Exception):
+    def __init__(self):
+        Exception.__init__(self, 'No response received from device')
+
 
 # OBEX FolderListingObject
 class OBEXFolderListingObject(object):
@@ -244,17 +253,19 @@ class OBEXFolderListingObject(object):
         else:
             self.data=None
 
+    def _decode_date(self, dt_str):
+        _date=bptime.BPTime(dt_str).mktime()
+        return _date, time.strftime("%x %X", time.gmtime(_date))
+
     def decode(self, data):
         dom=xml.dom.minidom.parseString(data)
         _folder_listing=dom.getElementsByTagName('folder-listing')[0]
         self.data={}
-##        if len(_folder_listing.getElementsByTagName('parent-folder')):
-##            self.data['..']=True
         for _f in _folder_listing.getElementsByTagName('file'):
             _file_dict={ 'name': _f.getAttribute('name'),
                          'size': int(_f.getAttribute('size')),
                          'type': 'file',
-                         'date':  (0, '') }
+                         'date':  self._decode_date(_f.getAttribute('modified')) }
             self.data[_file_dict['name']]=_file_dict
         for _f in _folder_listing.getElementsByTagName('folder'):
             _file_dict={ 'name': _f.getAttribute('name'),
@@ -452,6 +463,8 @@ class FolderBrowsingService(object):
     def _get_response(self):
         global module_debug
         _code=self.comm.read(1)
+        if not _code:
+            raise OBEXNoResponse()
         _len_str=self.comm.read(2)
         _len=struct.unpack('!H', _len_str)[0]
         if _len>3:
@@ -527,7 +540,7 @@ class FolderBrowsingService(object):
         except Exception, e:
             if __debug__:
                 raise
-            self.log('Exception raise: '+`e`)
+            self.log('Exception raise: '+str(e))
             return False
 
     def disconnect(self):
@@ -539,7 +552,7 @@ class FolderBrowsingService(object):
         except Exception, e:
             if __debug__:
                 raise
-            self.log('Exception raise: '+`e`)
+            self.log('Exception raise: '+str(e))
 
     def _setpath(self, dirname=''):
         # go to the root first
@@ -579,15 +592,33 @@ class FolderBrowsingService(object):
             if _path:
                 self._setpath(_path)
 
+    def _update_filesystem_dict(self, fs_dict, dir):
+        _res={}
+        for _,_entry in fs_dict.items():
+            if dir:
+                _name=dir+'/'+_entry['name']
+            else:
+                _name=_entry['name']
+            _res[_name]=_entry
+            _res[_name]['name']=_name
+        return _res
+
     def getfilesystem(self, dir='', recurse=0):
-        # Todo: Implement recursive listing, similar to com_brew
+        self.log('Listing OBEX dir '+dir)
         try:
             self.setpath(dir)
-            return self._list_current_folder()
+            _res=self._update_filesystem_dict(self._list_current_folder(),
+                                              dir)
+            if recurse:
+                _subdir_list=[_key for _key,_entry in _res.items() \
+                              if _entry.get('type', None)=='directory']
+                for _subdir in _subdir_list:
+                    _res.update(self.getfilesystem(_subdir, recurse-1))
+            return _res
         except Exception, e:
             if __debug__:
                 raise
-            self.log('Exception raised: '+`e`)
+            self.log('Exception raised: '+str(e))
             return {}
 
     def writefile(self, name, data):

@@ -11,7 +11,6 @@
 
 # system modules
 import sha
-import time
 
 # BitPim modules
 import commport

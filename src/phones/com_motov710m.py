@@ -188,7 +188,7 @@ parentprofile=com_motov710.Profile
 class Profile(parentprofile):
 
     serialsname=Phone.serialsname
-    phone_model='Motorola CDMA v710 Phone'
+    phone_model='V710M'
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

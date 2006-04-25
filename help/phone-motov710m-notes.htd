@@ -1,0 +1,13 @@
+#include "pagestart.h"
+<H3>Ringtone</H3>
+<UL>
+<LI>BitPim can read, add, delete, and replace ringtones on the phone.
+</UL>
+
+<H3>Wallpaper</H3>
+<UL>
+<LI>BitPim can read, add, delete, and replace wallpapers on the phone.
+<LI>The image currentled selected as the phone's wallpaper may not be updated properly.
+</UL>
+
+#include "pageend.h"
