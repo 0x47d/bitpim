@@ -67,13 +67,13 @@ def sanitycheck():
 
     print "apsw",
     import apsw
-    ver="3.2.7-r1"
+    ver="3.3.5-r1"
     if apsw.apswversion()!=ver:
         raise Exception("Should be apsw version %s - you have %s" % (ver, apsw.apswversion()))
     print "  OK"
 
     print "sqlite",
-    ver="3.2.7"
+    ver="3.3.5"
     if apsw.sqlitelibversion()!=ver:
         raise Exception("Should be sqlite version %s - you have %s" % (ver, apsw.sqlitelibversion()))
     print "  OK"
