@@ -51,9 +51,9 @@ class Phone(com_lgvx8100.Phone):
                       ('No Ring',)
 
     ringtonelocations= (
-        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon
+        # type       index-file   size-file directory-to-use lowest-index-to-use maximum-entries type-major icon idx_offset
         ( 'ringers', 'dload/ringtone.dat', '', 'user/sound/ringer', 100, 150, 0x201, 1, 0),
-        #( 'sounds', 'dload/sound.dat', 'dload/soundsize.dat', 'dload/snd', 100, 150, 2, 0, 0),
+        ( 'sounds', 'dload/sound.dat', 'dload/soundsize.dat', 'dload/snd', 100, 150, 0x402, 0, 151),
         )
 
     calendarlocation="sch/schedule.dat"
@@ -92,14 +92,14 @@ class Profile(parentprofile):
     WALLPAPER_WIDTH=275
     WALLPAPER_HEIGHT=175
     MAX_WALLPAPER_BASENAME_LENGTH=32
-    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_() ."
     WALLPAPER_CONVERT_FORMAT="jpg"
    
     # the 5200 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
 
     MAX_RINGTONE_BASENAME_LENGTH=32
-    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ."
+    RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_() ."
 
     # the 5200 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}

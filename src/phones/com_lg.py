@@ -753,11 +753,11 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
 
         # build up list into init
         init={}
-        for type,_,_,_,lowestindex,_,typemajor,_,_ in maps:
+        for type,_,_,_,lowestindex,_,typemajor,_,idx_ofs in maps:
             init[type]={}
             for k in wpi.keys():
                 if wpi[k]['origin']==type:
-                    index=k
+                    index=k-idx_ofs
                     name=wpi[k]['name']
                     fullname=wpi[k]['filename']
                     vtype=wpi[k]['vtype']
