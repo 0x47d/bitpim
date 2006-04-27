@@ -50,8 +50,9 @@ class Phone(com_lgpm225.Phone):
         (0x1100, "setas/voicememoRingerIndex.map", "VoiceDB/All/Memos", "voice_memo", 50, 11),
         )
 
-    builtinimages=('Starfish', 'Goldfish', 'Leaves', 'Bicycle', 'Speed',
-                   'Autumn', 'Island', 'Winter', 'Bamboo', 'Yellow Flowers', 'Snow')
+    # builtinimages=('Starfish', 'Goldfish', 'Leaves', 'Bicycle', 'Speed',
+    #                'Autumn', 'Island', 'Winter', 'Bamboo', 'Yellow Flowers', 'Snow')
+    builtinimages=( )
 
     builtinringtones=( 'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5', 'Tone 6',
                        'Alert 1', 'Alert 2', 'Alert 3', 'Alert 4', 'Alert 5', 'Alert 6',
