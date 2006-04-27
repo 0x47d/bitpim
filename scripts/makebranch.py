@@ -82,6 +82,8 @@ for src,dest,rev,path in copies:
 # subversion doesn't allow setting properties against a URL - it has to be against local copy
 branchdirname=tempfile.mkdtemp(prefix="__branch__")
 externalsfile=tempfile.mkstemp(prefix="__externals__")
+os.close(externalsfile[0])
+externalsfile=externalsfile[1]
 
 try:
     open(externalsfile, "wt").write("\n".join(["   ".join([d,url]) for d,url in externals]))
