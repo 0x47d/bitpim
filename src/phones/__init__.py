@@ -241,6 +241,10 @@ if __debug__:
     _phonedata.update( {'Audiovox CDM-8900': { 'module': 'com_audiovoxcdm8900',     # phone is too fragile for normal use
                                                'brand': b_audiovox,
                                                },
+                        'SPH-A790': { 'module': 'com_samsungspha790',
+                                      'brand': b_samsung,
+                                      'carrier': [c_sprint],
+                                      },
                         })
 # update the module path
 for k, e in _phonedata.items():
