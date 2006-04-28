@@ -435,7 +435,8 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             if _entry.get('filename', None):
                 # this one associates with a file, try to read it
                 try:
-                    _media[_entry['name']]=self.getfilecontents(_entry['filename'])
+                    _media[_entry['name']]=self.getfilecontents(_entry['filename'],
+                                                                True)
                 except (com_brew.BrewNoSuchFileException,
                         com_brew.BrewBadPathnameException,
                         com_brew.BrewNameTooLongException,

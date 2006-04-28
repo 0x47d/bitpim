@@ -1285,7 +1285,7 @@ class FileCache(object):
         try:
             e=self._entry(file_name)
             if e:
-                return e['datetime'] and e['datetime']==datetime and \
+                return e['datetime']==datetime and \
                        e['size']==data_len
             return False
         except:
