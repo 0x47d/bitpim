@@ -407,7 +407,7 @@ class RealBrewProtocol:
         try:
             res=self.sendbrewcommand(req,p_brew.listfileresponse)
         except (BrewBadPathnameException, BrewNoSuchDirectoryException,
-                ValueError):
+                BrewAccessDeniedException):
             return False
         except:
             if __debug__:
@@ -436,7 +436,7 @@ class RealBrewProtocol:
                 results[subdir]={ 'name': subdir, 'type': 'directory' }
             except BrewNoMoreEntriesException:
                 break
-            except (BrewBadPathnameException, ValueError):
+            except (BrewBadPathnameException, BrewAccessDeniedException):
                 self.log('Failed to list dir '+dir)
                 return {}
         if recurse:
@@ -484,7 +484,7 @@ class RealBrewProtocol:
                         results[res.filename]['date']=(0, "")
             except BrewNoMoreEntriesException:
                 break
-            except (BrewBadPathnameException, ValueError):
+            except (BrewBadPathnameException, BrewAccessDeniedException):
                 self.log('Failed to list files in dir '+dir)
                 return {}
         return results
