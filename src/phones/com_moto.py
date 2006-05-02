@@ -440,7 +440,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
                 except (com_brew.BrewNoSuchFileException,
                         com_brew.BrewBadPathnameException,
                         com_brew.BrewNameTooLongException,
-                        ValueError):
+                        com_brew.BrewAccessDeniedException):
                     self.log("Failed to read media file: %s"%_entry['name'])
         return _media
 
