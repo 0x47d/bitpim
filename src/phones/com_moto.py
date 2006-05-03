@@ -442,6 +442,10 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
                         com_brew.BrewNameTooLongException,
                         com_brew.BrewAccessDeniedException):
                     self.log("Failed to read media file: %s"%_entry['name'])
+                except:
+                    self.log('Failed to read media file.')
+                    if __debug__:
+                        raise
         return _media
 
     def getringtones(self, fundamentals):
