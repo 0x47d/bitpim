@@ -389,6 +389,8 @@ class Profile(parentprofile):
     WALLPAPER_HEIGHT=220
     # 128x96: outside LCD
     autodetect_delay=3
+    usbids=( ( 0x04e8, 0x6640, 1),)
+    deviceclasses=("serial",)
 
     def __init__(self):
         parentprofile.__init__(self)
@@ -431,9 +433,9 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 176, 'height': 200, 'format': "JPEG"}))
+                                      {'width': 176, 'height': 186, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
-                                      {'width': 176, 'height': 140, 'format': "JPEG"}))
+                                      {'width': 128, 'height': 96, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
                                       {'width': 176, 'height': 220, 'format': "JPEG"}))
     def GetTargetsForImageOrigin(self, origin):
