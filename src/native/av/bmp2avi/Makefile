@@ -7,54 +7,12 @@
 ###
 ### $Id$
 
-ifeq ($(PLATFORM),)
-$(error PLATFORM not defined.  Valid PLATFORM are windows, linux, mac)
-endif
-
-CXXFLAGS=
-LDFLAGS=
-
-ifeq ($(PLATFORM), windows)
-EXT=exe
-# define this for cygwin/mingw
-CXXFLAGS+=-mno-cygwin
-LDFLAGS+=-mno-cygwin
-endif
-
-ifeq ($(PLATFORM), linux)
-EXT=lbin
-endif
-
-ifeq ($(PLATFORM), mac)
-EXT=mbin
-# define this for non-Intel(Big Endian) plaforms
-CXXFLAGS+=-D__BIG_ENDIAN__
-endif
-
-ifeq ($(EXT),)
-$(error PLATFORM $(PLATFORM) is invalid.  Valid PLATFORM are windows, linux, mac)
-endif
+# There used to be a fairly elegant makefile.  Replaced with something
+# more trivial but easier to use while packaging.  Note that we deliberately
+# do not specify $CXX, $LDFLAGS etc as the distro will provide them
 
 SRC=avi_file.cxx bmp_file.cxx b2a.cxx
-OBJ=$(SRC:.cxx=.o)
-EXE=bmp2avi.$(EXT)
-CXX=g++
 
-all: $(EXE)
+bmp2avi.lbin bmp2avi.mbin bmp2avi.exe: $(SRC)
+	$(CXX) $(EXTRADEFINES) -O2 -o $@ $(SRC)
 
-$(EXE): $(OBJ)
-	@echo Building for PLATFORM $(PLATFORM)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJ) $(LOADLIBES) $(LDLIBS)
-
-%.o: %.cxx
-	$(CXX) $(CPPFLAGS) -c $< $(CXXFLAGS)
-
-o:	$(OBJ)
-
-clean:
-	rm -f $(EXE) $(OBJ) depend
-
-depend:
-	$(CXX) -MM $(CXXFLAGS) $(SRC) > depend
-
--include depend

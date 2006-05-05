@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ### BITPIM
 ###
 ### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
