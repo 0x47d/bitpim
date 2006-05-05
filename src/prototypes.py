@@ -698,7 +698,7 @@ class USTRING(BaseProtogenClass):
                 self._value=self._value.decode(self._read_encoding)
             except UnicodeDecodeError:
                 # this means the codec is set wrong for this phone !!
-                raise common.PhoneStringDecodeException(_value, self._read_encoding) 
+                raise common.PhoneStringDecodeException(self._value, self._read_encoding) 
         return self._value
 
 class SEVENBITSTRING(BaseProtogenClass):
