@@ -12,6 +12,7 @@
 """Various descriptions of data specific to the Samsung SCH-A950 Phone"""
 
 from prototypes import *
+from prototypes_samsung import *
 from p_brew import *
 
 # We use LSB for all integer like fields
@@ -27,8 +28,20 @@ SND_EXCLUDED_FILES=('MsInfo.db', 'ExInfo.db')
 PIC_PATH='brew/16452/mp'
 PIC_INDEX_FILE_NAME=PIC_PATH+'/Default Album.alb'
 PIC_EXCLUDED_FILES=('Default Album.alb', 'Graphics.alb')
+PREF_DB_FILE_NAME='current_prefs.db'
 
 GROUP_INDEX_FILE_NAME='pb/pbgroups_'
+
+# Calendar stuff
+CAL_PATH='sch_event'
+CAL_INDEX_FILE_NAME=CAL_PATH+'/usr_tsk'
+CAL_FILE_NAME_PREFIX=CAL_PATH+'/usr_tsk_'
+CAL_MAX_EVENTS=100
+
+NP_MAX_ENTRIES=30
+NP_MAX_LEN=130
+NP_PATH=CAL_PATH
+NP_FILE_NAME_PREFIX=CAL_FILE_NAME_PREFIX
 
 %}
 
@@ -90,3 +103,66 @@ PACKET GroupIndexFile:
     4 UNKNOWN dunno1
     79 UNKNOWN No_Group
     * LIST { 'elementclass': GroupEntry } + items
+
+PACKET CalIndexEntry:
+    2 UINT { 'default': 0 } +index
+PACKET CalIndexFile:
+    2 UINT next_index
+    12 UNKNOWN { 'pad': 0 } +zero1
+    2 UINT numofevents
+    6 UNKNOWN { 'pad': 0 } +zero2
+    2 UINT numofnotes
+    2 UNKNOWN { 'pad': 0 } +zero3
+    2 UINT numofactiveevents
+    112 UNKNOWN { 'pad': 0 } +zero4
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 103,
+             'createdefault': True } +events
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 30,
+             'createdefault': True } +notes
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 324,
+             'createdefault': True } +activeevents
+
+PACKET CalEntry:
+    2 UINT titlelen
+    * STRING { 'sizeinbytes': self.titlelen,
+               'terminator': None } title
+    4 DateTime start
+    4 UNKNOWN { 'pad': 0 } +zero1
+    4 DateTime { 'default': self.start } +start2
+    4 UNKNOWN { 'pad': 0 } +zero2
+    4 ExpiringTime exptime
+    4 UNKNOWN { 'pad': 0 } +zero3
+    1 UINT { 'default': 1 } +one
+    1 UINT repeat
+    1 UINT { 'default': 3 } +three
+    1 UINT alarm
+    1 UINT alert
+    6 UNKNOWN { 'pad': 0 } +zero4
+    4 UINT duration
+    1 UINT timezone
+    4 DateTime creationtime
+    4 UNKNOWN { 'pad': 0 } +zero5
+    4 DateTime modifiedtime
+    4 UNKNOWN { 'pad': 0 } +zero6
+    2 UINT ringtonelen
+    * STRING { 'sizeinbytes': self.ringtonelen,
+               'terminator': None } ringtone
+    2 UNKNOWN { 'pad': 0 } +zero7
+
+PACKET NotePadEntry:
+    2 UINT textlen
+    * STRING { 'terminator': None,
+               'sizeinbytes': self.textlen } text
+    4 DateTime creation
+    4 UNKNOWN { 'pad': 0 } +zero1
+    4 DateTime { 'default': self.creation } +creation2
+    14 UNKNOWN { 'pad': 0 } +zero2
+    1 UINT { 'default': 5 } +five
+    13 UNKNOWN { 'pad': 0 } +zero3
+    4 DateTime { 'default': self.creation } +modified
+    4 UNKNOWN { 'pad': 0 } +zero4
+    4 DateTime { 'default': self.modified } +modified2
+    8 UNKNOWN { 'pad': 0 } +zero5
