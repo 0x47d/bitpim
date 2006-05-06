@@ -16,14 +16,6 @@ import bp_obex
 import com_motov710
 import p_motov710
 
-##import bpcalendar
-##import common
-##import com_brew
-##import com_moto
-##import fileinfo
-##import nameparser
-##import prototypes
-
 parentphone=com_motov710.Phone
 class Phone(parentphone):
     """ Talk to a Motorola V710 phone"""

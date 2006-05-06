@@ -341,11 +341,19 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             _end_idx=min(_start_idx+9, _total_entries)
             _req.start_index=_start_idx
             _req.end_index=_end_idx
-            self.progress(_total_entries, _end_idx,
-                          'Reading conatct entry %d to %d'%(_start_idx, _end_idx))
-            _res=self.sendATcommand(_req, self.protocolclass.read_pb_resp)
-            for _entry in _res:
-                self._build_pb_entry(_entry, pb_book, result)
+            for _retry_cnt in range(2):
+                try:
+                    self.progress(_total_entries, _end_idx,
+                                  'Reading conatct entry %d to %d'%(_start_idx, _end_idx))
+                    _res=self.sendATcommand(_req, self.protocolclass.read_pb_resp)
+                    for _entry in _res:
+                        self._build_pb_entry(_entry, pb_book, result)
+                    break
+                except:
+                    if _retry_cnt:
+                        self.log('Failed to read phonebook data')
+                    else:
+                        self.log('Failed to read phonebook data, retrying...')
         self._update_mail_list(pb_book, result)
         self.setmode(self.MODEMODEM)
         del result['pb_list'], result['sd_dict']
@@ -405,11 +413,18 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             _end_idx=min(_start_idx+9, _max_entry)
             _req.start_index=_start_idx
             _req.end_index=_end_idx
-            self.progress(_total_entries, _end_idx,
-                          'Reading calendar entry %d to %d'%(_start_idx, _end_idx))
-            _res=self.sendATcommand(_req, self.protocolclass.calendar_req_resp)
-            for _entry in _res:
-                self._build_cal_entry(_entry, _calendar, result)
+            for _retry in range(2):
+                try:
+                    self.progress(_total_entries, _end_idx,
+                                  'Reading calendar entry %d to %d'%(_start_idx, _end_idx))
+                    _res=self.sendATcommand(_req, self.protocolclass.calendar_req_resp)
+                    for _entry in _res:
+                        self._build_cal_entry(_entry, _calendar, result)
+                except:
+                    if _retry:
+                        self.log('Failed to read calendar data')
+                    else:
+                        self.log('Failed to read calendar data, retrying ...')
         self._process_exceptions(_calendar)
         del _calendar['exceptions']
         self.lock_calendar(False)
