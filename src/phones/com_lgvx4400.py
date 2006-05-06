@@ -823,7 +823,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 # read this file
                 s=self.getfilecontents(self.brew_version_file)
                 res[self.brew_version_txt_key]=s
-            except (com_brew.BrewNoSuchFileException, ValueError):
+            except (com_brew.BrewNoSuchFileException,
+                    com_brew.BrewBadBrewCommandException):
                 res[self.brew_version_txt_key]=None
             except:
                 if __debug__:
@@ -836,6 +837,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 req=self.protocolclass.pbinforequest()
                 resp=self.sendpbcommand(req, self.protocolclass.pbstartsyncresponse)
                 res[self.lgpbinfo_key]=resp.unknown
+            except com_brew.BrewBadBrewCommandException:
+                res[self.lgpbinfo_key]=None
             except:
                 if __debug__:
                     raise
@@ -868,8 +871,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         found=False
         if res.get(self.brew_version_txt_key, None) is not None:
             found=res[self.brew_version_txt_key][:len(self.my_model)]==self.my_model
-        if not found:
-            found=res.get(self.lgpbinfo_key, '').find(self.my_model)!=-1
+        if not found and res.get(self.lgpbinfo_key, None):
+            found=res[self.lgpbinfo_key].find(self.my_model)!=-1
         if found:
             res['model']=self.my_model
             res['manufacturer']='LG Electronics Inc'

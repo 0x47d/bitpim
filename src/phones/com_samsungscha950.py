@@ -17,6 +17,7 @@ import time
 # BitPim modules
 import bpcalendar
 import common
+import commport
 import com_brew
 import com_phone
 import datetime
@@ -608,6 +609,66 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         fundamentals['rebootphone']=True
         return fundamentals
 
+    # Phone Detection-----------------------------------------------------------
+    my_model='SCH-A950/DM'
+    my_manufacturer='SAMSUNG'
+    def is_mode_brew(self):
+        # Borrowed from the VX4400
+        req=self.protocolclass.memoryconfigrequest()
+        respc=self.protocolclass.memoryconfigresponse
+        for baud in 0, 38400, 115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
+    def check_my_phone(self, res):
+        # check if this is an A950
+        try:
+            _req=self.protocolclass.firmwarerequest()
+            _resp=self.sendbrewcommand(_req, self.protocolclass.DefaultReponse)
+            if _resp.data[31:35]=='A950':
+                # yup, this's it!
+                res['model']=self.my_model
+                res['manufacturer']=self.my_manufacturer
+                res['esn']=self.get_esn()
+        except:
+            if __debug__:
+                raise
+
+    def detectphone(coms, likely_ports, res, _module, _log):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                if res[port]['mode_brew']==False or \
+                   res[port]['model']:
+                    # either phone is not in BREW, or a model has already
+                    # been found, not much we can do now
+                    continue
+                p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
+                if res[port]['mode_brew'] is None:
+                    res[port]['mode_brew']=p.is_mode_brew()
+                if res[port]['mode_brew']:
+                    p.check_my_phone(res[port])
+                p.comm.close()
+            except:
+                if __debug__:
+                    raise
+    
+    detectphone=staticmethod(detectphone)
+    #---------------------------------------------------------------------------
+
     getphonebook=NotImplemented
 
 # CalendarEntry class-----------------------------------------------------------
@@ -791,6 +852,9 @@ class Profile(parentprofile):
     usbids=( ( 0x04e8, 0x6640, 1),)
     deviceclasses=("serial",)
     BP_Calendar_Version=3
+    # For phone detection
+    phone_manufacturer=Phone.my_manufacturer
+    phone_model=Phone.my_model
 
     def __init__(self):
         parentprofile.__init__(self)

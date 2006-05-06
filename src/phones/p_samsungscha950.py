@@ -34,6 +34,79 @@ NP_MAX_LEN=130
 NP_PATH=CAL_PATH
 NP_FILE_NAME_PREFIX=CAL_FILE_NAME_PREFIX
 
+class DefaultReponse(BaseProtogenClass):
+    __fields=['data']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(DefaultReponse,self).__init__(**dict)
+        if self.__class__ is DefaultReponse:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(DefaultReponse,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(DefaultReponse,kwargs)
+        if len(args):
+            dict2={}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_data=DATA(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_data.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_data=DATA()
+        self.__field_data.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_data(self):
+        return self.__field_data.getvalue()
+
+    def __setfield_data(self, value):
+        if isinstance(value,DATA):
+            self.__field_data=value
+        else:
+            self.__field_data=DATA(value,)
+
+    def __delfield_data(self): del self.__field_data
+
+    data=property(__getfield_data, __setfield_data, __delfield_data, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('data', self.__field_data, None)
+
+
+
 class WRingtoneIndexEntry(BaseProtogenClass):
     __fields=['path', 'name', 'eor']
 
