@@ -4,6 +4,7 @@
     <ul>
       <li>Allow access to 'My Sounds' on LG-VX5200.
       <li>Added suport for the <B>SCH-A950</B> phone.  See the Help section for more details.
+      <li>Added phone detection for Motorola V3c/V3cm phones.  Support for V3c/V3cm is indentical to the V710/V710m phones.
     </ul>
 
    <h2><a name="0.8.13">Changes in 0.8.13</a></h2>
