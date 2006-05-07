@@ -1,0 +1,5 @@
+#include "pagestart.h"
+
+<P>This phone was successfully tested with a Samsung OEM straight USB data cable (Model: <B>PCB113VBE</B>)
+
+#include "pageend.h"

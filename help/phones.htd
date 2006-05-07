@@ -97,6 +97,14 @@ BEGIN_TOC
         TOCITEM_1(Notes,phone-lgvx9800-notes.htm)
         TOCITEM_1(Howtos,phone-lgvx9800-howtos.htm)
         ENDTOC_1
+    TOCITEM_0(Motorola V3c,phone-motov3c.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-motov3c-notes.htm)
+        ENDTOC_1
+    TOCITEM_0(Motorola V3cm,phone-motov3cm.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-motov3cm-notes.htm)
+        ENDTOC_1
     TOCITEM_0(Motorola V710,phone-motov710.htm)
         TOC_1
         TOCITEM_1(Cables,phone-motov710-cables.htm)
@@ -107,11 +115,15 @@ BEGIN_TOC
         TOC_1
         TOCITEM_1(Notes,phone-motov710m-notes.htm)
         ENDTOC_1
+    TOCITEM_0(Samsung SCH-A950,phone-samsungscha950.htm)
+        TOC_1
+        TOCITEM_1(Cables,phone-samsungscha950-cables.htm)
+        TOCITEM_1(Notes,phone-samsungscha950-notes.htm)
+        ENDTOC_1
     TOCITEM_0(Samsung Phones,phones-samsung.htm)
         TOC_1
         TOCITEM_1(Cables,phones-samsung-cables.htm)
         TOCITEM_1(Notes,phones-samsung-notes.htm)
-        TOCITEM_1(Model Specific Notes,phones-samsung-model-specific-notes.htm)
         ENDTOC_1
     TOCITEM_0(Sanyo Phones,phones-sanyo.htm)
         TOC_1

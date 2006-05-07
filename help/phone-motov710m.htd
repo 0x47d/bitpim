@@ -2,7 +2,7 @@
 
 <h2>What works</h2>
 
-<p>Phonebook, calendar, ringtones, wallpapers, SMS support, phone info.  This model is the same as the V710 with the OBEX capability turned on, which allows transferring and deleting of ringtones and wallpapers.  Phone detection of this model is not yet working properly, and the phone will need to be selected manually.
+<p>Phonebook, calendar, ringtones, wallpapers, SMS support, phone info.  This model is the same as the V710 with the OBEX capability turned on, which allows transferring and deleting of ringtones and wallpapersvia the USB interface.  Phone detection of this model requires appropriate changes to the model name ,ie V710M vice V710; otherwise, it must be selected manually.
 
 <h2>Contents</h2>
 
