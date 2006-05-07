@@ -855,6 +855,10 @@ class Profile(parentprofile):
     # For phone detection
     phone_manufacturer=Phone.my_manufacturer
     phone_model=Phone.my_model
+    # arbitrary ringtone file size limit
+    RINGTONE_LIMITS= {
+        'MAXSIZE': 100000
+    }
 
     def __init__(self):
         parentprofile.__init__(self)
@@ -874,6 +878,8 @@ class Profile(parentprofile):
         )
 
     def QueryAudio(self, origin, currentextension, afi):
+        _max_size=self.RINGTONE_LIMITS['MAXSIZE']
+        setattr(afi, 'MAXSIZE', _max_size)
         # we don't modify any of these
         if afi.format in ("MIDI", "QCP", "PMD"):
             return currentextension, afi
@@ -882,7 +888,11 @@ class Profile(parentprofile):
             if afi.channels==1 and 8<=afi.bitrate<=64 and 16000<=afi.samplerate<=22050:
                 return currentextension, afi
         # convert it
-        return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 2, 'bitrate': 48, 'samplerate': 44100}))
+        return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3',
+                                                      'channels': 2,
+                                                      'bitrate': 48,
+                                                      'samplerate': 44100,
+                                                      'MAXSIZE': _max_size }))
 
     # all dumped in "images"
     imageorigins={}
