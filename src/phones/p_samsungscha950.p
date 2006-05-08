@@ -43,7 +43,29 @@ NP_MAX_LEN=130
 NP_PATH=CAL_PATH
 NP_FILE_NAME_PREFIX=CAL_FILE_NAME_PREFIX
 
+# Phonebook stuff
+PB_PATH='pb'
+PB_JRNL_FILE_PREFIX=PB_PATH+'/jrnl_'
+PB_ENTRY_FILE_PREFIX=PB_PATH+'/recs_'
+PB_MAIN_FILE_PREFIX=PB_PATH+'/main_'
+
+PB_FLG_NONE=0x0401
+PB_FLG_FAX=0x0080
+PB_FLG_CELL=0x0020
+PB_FLG_WORK=0x0010
+PB_FLG_HOME=0X0008
+PB_FLG_EMAIL2=0X0004
+PB_FLG_EMAIL=0X0002
+PB_FLG_WP=0X8000
+PB_FLG_GROUP=0X0800
+PB_FLG_CELL2=0X0100
+PB_FLG_SPEEDDIAL=0x01
+PB_FLG_RINGTONE=0x10
+
 %}
+
+PACKET DefaultResponse:
+    * DATA data
 
 PACKET WRingtoneIndexEntry:
     * STRING { 'terminator': None,
@@ -96,13 +118,17 @@ PACKET RPictureIndexFile:
 
 PACKET GroupEntry:
     1 UINT index
-    8 UNKNOWN dunno1
-    70 STRING { 'terminator': 0 } name
+    4 UNKNOWN dunno1
+    4 DateTime datetime
+    68 STRING { 'terminator': 0 } name
+    2 UINT numofmembers
+    if self.numofmembers:
+        * LIST { 'length': self.numofmembers } members:
+            2 UINT index
+    
 PACKET GroupIndexFile:
     1 UINT num_of_entries
-    4 UNKNOWN dunno1
-    79 UNKNOWN No_Group
-    * LIST { 'elementclass': GroupEntry } + items
+    * LIST { 'elementclass': GroupEntry } +items
 
 PACKET CalIndexEntry:
     2 UINT { 'default': 0 } +index
@@ -166,3 +192,70 @@ PACKET NotePadEntry:
     4 UNKNOWN { 'pad': 0 } +zero4
     4 DateTime { 'default': self.modified } +modified2
     8 UNKNOWN { 'pad': 0 } +zero5
+
+PACKET JournalEntry:
+    3 DATA { 'default': '\x01\x30\x00' } +data1
+    2 UINT index
+    1 DATA { 'default': '\x00' } +data2
+    2 UINT { 'default': self.index-1 } +previndex
+    4 DATA { 'default': '\xff\xff\xff\xff' } +data3
+    2 UINT { 'default': self.previndex } +previndex2
+    if self.index==1:
+        1 UINT { 'default': 0xff } +data4
+    if self.index>1:
+        1 UINT { 'default': 0xfd } +data4
+    19 DATA { 'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' } +data5
+    2 UINT { 'default': self.previndex } +previndex3
+    2 UINT { 'default': self.previndex } +previndex4
+    10 DATA { 'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' } +data6
+
+PACKET JournalFile:
+    * LIST { 'elementclass': JournalEntry } +items
+
+PACKET NumberEntry:
+    * STRING { 'terminator': None,
+               'pascal': True } number
+    1 UINT option
+    if self.option & PB_FLG_SPEEDDIAL:
+        2 UINT speeddial
+    if self.option & PB_FLG_RINGTONE:
+        * STRING { 'terminator': None,
+                   'pascal': True } ringtone
+
+PACKET PBEntry:
+    2 UINT info
+    2 UINT { 'default': 0 } +zero1
+    * STRING { 'terminator': None,
+               'pascal': True } name
+    if self.info & PB_FLG_EMAIL:
+        * STRING { 'terminator': None,
+                   'pascal': True } email
+    if self.info & PB_FLG_EMAIL2:
+        * STRING { 'terminator': None,
+                   'pascal': True } email2
+    if self.info & PB_FLG_HOME:
+        * NumberEntry home
+    if self.info & PB_FLG_WORK:
+        * NumberEntry work
+    if self.info & PB_FLG_CELL:
+        * NumberEntry cell
+    if self.info & PB_FLG_FAX:
+        * NumberEntry fax
+    if self.info & PB_FLG_CELL2:
+        * NumberEntry cell2
+    4 DateTime datetime
+    if self.info & PB_FLG_GROUP:
+        1 UINT group
+    if self.info & PB_FLG_WP:
+        * STRING { 'terminator': None,
+                   'pascal': True } wallpaper
+        4 UINT wallpaper_range
+
+PACKET LenEntry:
+    2 UINT { 'default': 0 } +itemlen
+
+PACKET PBFile:
+    * LIST { 'elementclass': LenEntry,
+             'length': 8,
+             'createdefault': True } +lens
+    * LIST { 'elementclass': PBEntry } +items
