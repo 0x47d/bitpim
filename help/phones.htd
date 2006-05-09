@@ -124,6 +124,7 @@ BEGIN_TOC
         TOC_1
         TOCITEM_1(Cables,phones-samsung-cables.htm)
         TOCITEM_1(Notes,phones-samsung-notes.htm)
+        TOCITEM_1(Model Specific Notes,phones-samsung-model-specific-notes.htm)
         ENDTOC_1
     TOCITEM_0(Sanyo Phones,phones-sanyo.htm)
         TOC_1

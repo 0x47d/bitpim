@@ -542,6 +542,26 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Motorola V3c">
+        <param name="Local" value="phone-motov3c.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-motov3c-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Motorola V3cm">
+        <param name="Local" value="phone-motov3cm.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-motov3cm-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Motorola V710">
         <param name="Local" value="phone-motov710.htm">
         </OBJECT>
@@ -557,6 +577,30 @@
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Howtos">
           <param name="Local" value="phone-motov710-howtos.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Motorola V710m">
+        <param name="Local" value="phone-motov710m.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-motov710m-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Samsung SCH-A950">
+        <param name="Local" value="phone-samsungscha950.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Cables">
+          <param name="Local" value="phone-samsungscha950-cables.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-samsungscha950-notes.htm">
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
@@ -668,6 +712,14 @@
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="I do not have the Send Phone Data memu item?">
         <param name="Local" value="faq-donthavesendphonedata.htm">
+        </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="What do those colors of the color-coded field names mean?">
+        <param name="Local" value="faq-colorcodedfields.htm">
+        </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="When saving ringtones/wallpapers to the phone, what are the differences between the Replace All and Add option?">
+        <param name="Local" value="faq-mediaoptions.htm">
         </OBJECT>
   </UL>
   <LI><OBJECT type="text/sitemap">
