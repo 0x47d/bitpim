@@ -60,5 +60,4 @@ then
     mkdir -p "$webhelp"
     $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
     rm -rf "$webhelp/../testhelp"
-    cp -rp "$webhelp" "$webhelp/../testhelp"
 fi
