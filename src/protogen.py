@@ -46,6 +46,9 @@ class protogentokenizer:
     # Start of an 'if' section. Followed by condition as string including trailing ':'
     CONDITIONALSTART="CONDITIONALSTART"
 
+    # start if an 'else' or 'elif' section.
+    CONDITIONALRESTART="CONDITIONALRESTART"
+
     # End of an 'if' section.  Nothing follows
     CONDITIONALEND="CONDITIONALEND"
 
@@ -317,8 +320,14 @@ class protogentokenizer:
             # pop a packet
             x=self.state.pop()
             if x==self.STATE_CONDITIONAL:
-                return (self.CONDITIONALEND,)
-            return (self.PACKETEND,)
+                # check if this is an else if elif
+                t=self._lookahead()
+                if t[0]=='NAME' and t[1] in ('else', 'elif'):
+                    self.state.append(self.STATE_CONDITIONAL)
+                else:
+                    return (self.CONDITIONALEND,)
+            else:
+                return (self.PACKETEND,)
 
         # Size
         if t[0]=='NUMBER':
@@ -341,6 +350,15 @@ class protogentokenizer:
                 raise protoerror("Expecting an indent after if ...: statement", t)
             self.state.append(self.STATE_CONDITIONAL)
             return (self.CONDITIONALSTART, str)
+        elif t[0]=='NAME' and t[1] in ('elif', 'else'):
+            str=self._getuptoeol()
+            self._consumenl()
+            t=self._next()
+            if t[0]!='INDENT':
+                raise protoerror("Expecting an indent after else: or elif ...: statement", t)
+            if self.state[-1]!=self.STATE_CONDITIONAL:
+                raise protoerror('An if must precede an else or elif.', t)
+            return (self.CONDITIONALRESTART, str)
         else:
             raise protoerror("Expecting field size as an integer, *, P, A or 'if' statement", t)
 
@@ -542,6 +560,8 @@ class codegen:
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
+            elif f[0]==tokens.CONDITIONALRESTART:
+                print >>out, indent(i-1)+f[1]
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
@@ -564,6 +584,8 @@ class codegen:
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
+            elif f[0]==tokens.CONDITIONALRESTART:
+                print >>out, indent(i-1)+f[1]
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
@@ -609,6 +631,8 @@ class codegen:
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
+            elif f[0]==tokens.CONDITIONALRESTART:
+                print >>out, indent(i-1)+f[1]
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
