@@ -303,9 +303,8 @@ class RealBrewProtocol:
     MODEBREW="modebrew"
     brewterminator="\x7e"
 
-    # phone uses Jan 1, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
-    # plus a fudge factor of 4 days, 17 hours for no reason I can find
-    _brewepochtounix=315532800+406800
+    # phone uses Jan 6, 1980 as epoch.  Python uses Jan 1, 1970.  This is difference
+    _brewepochtounix=315964800
 
     def __init__(self):
         pass
@@ -478,7 +477,7 @@ class RealBrewProtocol:
                 else:
                     try:
                         date=res.date+self._brewepochtounix
-                        results[res.filename]['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                        results[res.filename]['date']=(date, time.strftime("%x %X", time.localtime(date)))
                     except:
                         # invalid date - see SF bug #833517
                         results[res.filename]['date']=(0, "")
@@ -513,7 +512,7 @@ class RealBrewProtocol:
             else:
                 try:
                     date=res.date+self._brewepochtounix
-                    results['date']=(date, time.strftime("%x %X", time.gmtime(date)))
+                    results['date']=(date, time.strftime("%x %X", time.localtime(date)))
                 except:
                     # invalid date - see SF bug #833517
                     results['date']=(0, '')
@@ -1034,10 +1033,10 @@ class BrewProtocol(RealBrewProtocol):
             self._update_base_class(self.__class__)
             # define BREW_FILE_SYSTEM=2 in protocol class to enable 
             # new brew filesystem support. Debug mode only
-        elif __debug__ and getattr(self, "protocolclass", 0) and \
-                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
-            print '_set_new_brew', self.protocolclass
-         ##   self._set_new_brew(self.__class__)
+##        elif __debug__ and getattr(self, "protocolclass", 0) and \
+##                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
+##            print '_set_new_brew', self.protocolclass
+##            self._set_new_brew(self.__class__)
 
     def _update_base_class(self, klass):
         # update the RealBrewProtocol class to DebugBrewProtocol one.
