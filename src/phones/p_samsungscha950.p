@@ -61,6 +61,7 @@ PB_FLG_GROUP=0X0800
 PB_FLG_CELL2=0X0100
 PB_FLG_SPEEDDIAL=0x01
 PB_FLG_RINGTONE=0x10
+PB_FLG_PRIMARY=0x02
 
 %}
 
@@ -193,24 +194,75 @@ PACKET NotePadEntry:
     4 DateTime { 'default': self.modified } +modified2
     8 UNKNOWN { 'pad': 0 } +zero5
 
-PACKET JournalEntry:
-    3 DATA { 'default': '\x01\x30\x00' } +data1
+PACKET JournalNumber:
     2 UINT index
-    1 DATA { 'default': '\x00' } +data2
+    2 UINT bitmap
+PACKET JournalSpeeddial:
+    2 UINT index
+    2 UINT speeddial
+    2 UINT bitmap
+PACKET JournalEntry:
+    P UINT { 'default': 0 } +number_info
+    P UINT { 'default': 0 } +speeddial_info
+    2 UINT index
+    1 DATA { 'default': '\x00' } +data1
     2 UINT { 'default': self.index-1 } +previndex
-    4 DATA { 'default': '\xff\xff\xff\xff' } +data3
+    if self.number_info & PB_FLG_HOME:
+        * JournalNumber home
+    else:
+        2 UINT { 'default': 0xffff } +nohome
+    if self.number_info & PB_FLG_WORK:
+        * JournalNumber work
+    else:
+        2 UINT { 'default': 0xffff } +nowork
+    if self.number_info & PB_FLG_CELL:
+        * JournalNumber cell
+    else:
+        2 UINT { 'default': 0xffff } +nocell
+    2 UINT { 'default': 0xffff } +data2
+    if self.number_info & PB_FLG_FAX:
+        * JournalNumber fax
+    else:
+        2 UINT { 'default': 0xffff } +nofax
+    if self.number_info&PB_FLG_CELL2:
+        * JournalNumber cell2
+    else:
+        2 UINT { 'default': 0xffff } +nocell2
+    if self.speeddial_info & PB_FLG_HOME:
+        * JournalSpeeddial homesd
+    else:
+        2 UINT { 'default': 0xffff } +nohomesd
+    if self.speeddial_info & PB_FLG_WORK:
+        * JournalSpeeddial worksd
+    else:
+        2 UINT { 'default': 0xffff } +noworksd
+    if self.speeddial_info&PB_FLG_CELL:
+        * JournalSpeeddial cellsd
+    else:
+        2 UINT { 'default': 0xffff } +nocellsd
+    2 UINT { 'default': 0xffff } +data3
+    if self.speeddial_info&PB_FLG_FAX:
+        * JournalSpeeddial faxsd
+    else:
+        2 UINT { 'default': 0xffff } +nofaxsd
+    if self.speeddial_info&PB_FLG_CELL2:
+        * JournalSpeeddial cell2sd
+    else:
+        2 UINT { 'default': 0xffff } +nocell2sd
     2 UINT { 'default': self.previndex } +previndex2
-    if self.index==1:
-        1 UINT { 'default': 0xff } +data4
-    if self.index>1:
-        1 UINT { 'default': 0xfd } +data4
-    19 DATA { 'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' } +data5
     2 UINT { 'default': self.previndex } +previndex3
-    2 UINT { 'default': self.previndex } +previndex4
-    10 DATA { 'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' } +data6
+    4 DATA { 'default': '\x10\x00\x0C\x04' } +data4
+    2 UINT { 'default': 0xffff } +email
+    2 UINT { 'default': 0xffff } +email2
+    2 UINT { 'default': 0xffff } +wallpaper
+
+PACKET JournalRec:
+    1 UINT { 'default': 1 } +command
+    2 UINT { 'default': 0 } +blocklen
+    * JournalEntry entry
 
 PACKET JournalFile:
-    * LIST { 'elementclass': JournalEntry } +items
+    * LIST { 'elementclass': JournalRec } +items
 
 PACKET NumberEntry:
     * STRING { 'terminator': None,

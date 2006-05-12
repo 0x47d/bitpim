@@ -52,6 +52,7 @@ PB_FLG_GROUP=0X0800
 PB_FLG_CELL2=0X0100
 PB_FLG_SPEEDDIAL=0x01
 PB_FLG_RINGTONE=0x10
+PB_FLG_PRIMARY=0x02
 
 class DefaultResponse(BaseProtogenClass):
     __fields=['data']
@@ -1322,7 +1323,7 @@ class GroupEntry(BaseProtogenClass):
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
         if self.numofmembers:
-            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_127,  'length': self.numofmembers })
+            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_128,  'length': self.numofmembers })
             self.__field_members.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1399,7 +1400,7 @@ class GroupEntry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_members=value
         else:
-            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_127,  'length': self.numofmembers })
+            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_128,  'length': self.numofmembers })
 
     def __delfield_members(self): del self.__field_members
 
@@ -1419,7 +1420,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungscha950_127(BaseProtogenClass):
+class _gen_p_samsungscha950_128(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
 
@@ -1428,8 +1429,8 @@ class _gen_p_samsungscha950_127(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungscha950_127,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungscha950_127:
+        super(_gen_p_samsungscha950_128,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungscha950_128:
             self._update(args,dict)
 
 
@@ -1438,7 +1439,7 @@ class _gen_p_samsungscha950_127(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungscha950_127,self)._update(args,kwargs)
+        super(_gen_p_samsungscha950_128,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1446,7 +1447,7 @@ class _gen_p_samsungscha950_127(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungscha950_127,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungscha950_128,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2}
             dict2.update(kwargs)
@@ -2758,8 +2759,197 @@ class NotePadEntry(BaseProtogenClass):
 
 
 
+class JournalNumber(BaseProtogenClass):
+    __fields=['index', 'bitmap']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(JournalNumber,self).__init__(**dict)
+        if self.__class__ is JournalNumber:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(JournalNumber,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(JournalNumber,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_index.writetobuffer(buf)
+        self.__field_bitmap.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_index=UINT(**{'sizeinbytes': 2})
+        self.__field_index.readfrombuffer(buf)
+        self.__field_bitmap=UINT(**{'sizeinbytes': 2})
+        self.__field_bitmap.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_index=value
+        else:
+            self.__field_index=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def __getfield_bitmap(self):
+        return self.__field_bitmap.getvalue()
+
+    def __setfield_bitmap(self, value):
+        if isinstance(value,UINT):
+            self.__field_bitmap=value
+        else:
+            self.__field_bitmap=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_bitmap(self): del self.__field_bitmap
+
+    bitmap=property(__getfield_bitmap, __setfield_bitmap, __delfield_bitmap, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('index', self.__field_index, None)
+        yield ('bitmap', self.__field_bitmap, None)
+
+
+
+class JournalSpeeddial(BaseProtogenClass):
+    __fields=['index', 'speeddial', 'bitmap']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(JournalSpeeddial,self).__init__(**dict)
+        if self.__class__ is JournalSpeeddial:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(JournalSpeeddial,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(JournalSpeeddial,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_index.writetobuffer(buf)
+        self.__field_speeddial.writetobuffer(buf)
+        self.__field_bitmap.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_index=UINT(**{'sizeinbytes': 2})
+        self.__field_index.readfrombuffer(buf)
+        self.__field_speeddial=UINT(**{'sizeinbytes': 2})
+        self.__field_speeddial.readfrombuffer(buf)
+        self.__field_bitmap=UINT(**{'sizeinbytes': 2})
+        self.__field_bitmap.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_index=value
+        else:
+            self.__field_index=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def __getfield_speeddial(self):
+        return self.__field_speeddial.getvalue()
+
+    def __setfield_speeddial(self, value):
+        if isinstance(value,UINT):
+            self.__field_speeddial=value
+        else:
+            self.__field_speeddial=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_speeddial(self): del self.__field_speeddial
+
+    speeddial=property(__getfield_speeddial, __setfield_speeddial, __delfield_speeddial, None)
+
+    def __getfield_bitmap(self):
+        return self.__field_bitmap.getvalue()
+
+    def __setfield_bitmap(self, value):
+        if isinstance(value,UINT):
+            self.__field_bitmap=value
+        else:
+            self.__field_bitmap=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_bitmap(self): del self.__field_bitmap
+
+    bitmap=property(__getfield_bitmap, __setfield_bitmap, __delfield_bitmap, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('index', self.__field_index, None)
+        yield ('speeddial', self.__field_speeddial, None)
+        yield ('bitmap', self.__field_bitmap, None)
+
+
+
 class JournalEntry(BaseProtogenClass):
-    __fields=['data1', 'index', 'data2', 'previndex', 'data3', 'previndex2', 'data4', 'data4', 'data5', 'previndex3', 'previndex4', 'data6']
+    __fields=['number_info', 'speeddial_info', 'index', 'data1', 'previndex', 'home', 'nohome', 'work', 'nowork', 'cell', 'nocell', 'data2', 'fax', 'nofax', 'cell2', 'nocell2', 'homesd', 'nohomesd', 'worksd', 'noworksd', 'cellsd', 'nocellsd', 'data3', 'faxsd', 'nofaxsd', 'cell2sd', 'nocell2sd', 'previndex2', 'previndex3', 'data4', 'email', 'email2', 'wallpaper']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -2787,58 +2977,126 @@ class JournalEntry(BaseProtogenClass):
             self._complainaboutunusedargs(JournalEntry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        if getattr(self, '__field_number_info', None) is None:
+            self.__field_number_info=UINT(**{ 'default': 0 })
+        if getattr(self, '__field_speeddial_info', None) is None:
+            self.__field_speeddial_info=UINT(**{ 'default': 0 })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_index.writetobuffer(buf)
         try: self.__field_data1
         except:
-            self.__field_data1=DATA(**{'sizeinbytes': 3,  'default': '\x01\x30\x00' })
+            self.__field_data1=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
         self.__field_data1.writetobuffer(buf)
-        self.__field_index.writetobuffer(buf)
-        try: self.__field_data2
-        except:
-            self.__field_data2=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
-        self.__field_data2.writetobuffer(buf)
         try: self.__field_previndex
         except:
             self.__field_previndex=UINT(**{'sizeinbytes': 2,  'default': self.index-1 })
         self.__field_previndex.writetobuffer(buf)
+        if self.number_info & PB_FLG_HOME:
+            self.__field_home.writetobuffer(buf)
+        else:
+            try: self.__field_nohome
+            except:
+                self.__field_nohome=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nohome.writetobuffer(buf)
+        if self.number_info & PB_FLG_WORK:
+            self.__field_work.writetobuffer(buf)
+        else:
+            try: self.__field_nowork
+            except:
+                self.__field_nowork=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nowork.writetobuffer(buf)
+        if self.number_info & PB_FLG_CELL:
+            self.__field_cell.writetobuffer(buf)
+        else:
+            try: self.__field_nocell
+            except:
+                self.__field_nocell=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell.writetobuffer(buf)
+        try: self.__field_data2
+        except:
+            self.__field_data2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_data2.writetobuffer(buf)
+        if self.number_info & PB_FLG_FAX:
+            self.__field_fax.writetobuffer(buf)
+        else:
+            try: self.__field_nofax
+            except:
+                self.__field_nofax=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nofax.writetobuffer(buf)
+        if self.number_info&PB_FLG_CELL2:
+            self.__field_cell2.writetobuffer(buf)
+        else:
+            try: self.__field_nocell2
+            except:
+                self.__field_nocell2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell2.writetobuffer(buf)
+        if self.speeddial_info & PB_FLG_HOME:
+            self.__field_homesd.writetobuffer(buf)
+        else:
+            try: self.__field_nohomesd
+            except:
+                self.__field_nohomesd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nohomesd.writetobuffer(buf)
+        if self.speeddial_info & PB_FLG_WORK:
+            self.__field_worksd.writetobuffer(buf)
+        else:
+            try: self.__field_noworksd
+            except:
+                self.__field_noworksd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_noworksd.writetobuffer(buf)
+        if self.speeddial_info&PB_FLG_CELL:
+            self.__field_cellsd.writetobuffer(buf)
+        else:
+            try: self.__field_nocellsd
+            except:
+                self.__field_nocellsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocellsd.writetobuffer(buf)
         try: self.__field_data3
         except:
-            self.__field_data3=DATA(**{'sizeinbytes': 4,  'default': '\xff\xff\xff\xff' })
+            self.__field_data3=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
         self.__field_data3.writetobuffer(buf)
+        if self.speeddial_info&PB_FLG_FAX:
+            self.__field_faxsd.writetobuffer(buf)
+        else:
+            try: self.__field_nofaxsd
+            except:
+                self.__field_nofaxsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nofaxsd.writetobuffer(buf)
+        if self.speeddial_info&PB_FLG_CELL2:
+            self.__field_cell2sd.writetobuffer(buf)
+        else:
+            try: self.__field_nocell2sd
+            except:
+                self.__field_nocell2sd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell2sd.writetobuffer(buf)
         try: self.__field_previndex2
         except:
             self.__field_previndex2=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
         self.__field_previndex2.writetobuffer(buf)
-        if self.index==1:
-            try: self.__field_data4
-            except:
-                self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xff })
-            self.__field_data4.writetobuffer(buf)
-        if self.index>1:
-            try: self.__field_data4
-            except:
-                self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xfd })
-            self.__field_data4.writetobuffer(buf)
-        try: self.__field_data5
-        except:
-            self.__field_data5=DATA(**{'sizeinbytes': 19,  'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' })
-        self.__field_data5.writetobuffer(buf)
         try: self.__field_previndex3
         except:
             self.__field_previndex3=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
         self.__field_previndex3.writetobuffer(buf)
-        try: self.__field_previndex4
+        try: self.__field_data4
         except:
-            self.__field_previndex4=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
-        self.__field_previndex4.writetobuffer(buf)
-        try: self.__field_data6
+            self.__field_data4=DATA(**{'sizeinbytes': 4,  'default': '\x10\x00\x0C\x04' })
+        self.__field_data4.writetobuffer(buf)
+        try: self.__field_email
         except:
-            self.__field_data6=DATA(**{'sizeinbytes': 10,  'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' })
-        self.__field_data6.writetobuffer(buf)
+            self.__field_email=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_email.writetobuffer(buf)
+        try: self.__field_email2
+        except:
+            self.__field_email2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_email2.writetobuffer(buf)
+        try: self.__field_wallpaper
+        except:
+            self.__field_wallpaper=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_wallpaper.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -2847,50 +3105,122 @@ class JournalEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_data1=DATA(**{'sizeinbytes': 3,  'default': '\x01\x30\x00' })
-        self.__field_data1.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
-        self.__field_data2=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
-        self.__field_data2.readfrombuffer(buf)
+        self.__field_data1=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
+        self.__field_data1.readfrombuffer(buf)
         self.__field_previndex=UINT(**{'sizeinbytes': 2,  'default': self.index-1 })
         self.__field_previndex.readfrombuffer(buf)
-        self.__field_data3=DATA(**{'sizeinbytes': 4,  'default': '\xff\xff\xff\xff' })
+        if self.number_info & PB_FLG_HOME:
+            self.__field_home=JournalNumber()
+            self.__field_home.readfrombuffer(buf)
+        else:
+            self.__field_nohome=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nohome.readfrombuffer(buf)
+        if self.number_info & PB_FLG_WORK:
+            self.__field_work=JournalNumber()
+            self.__field_work.readfrombuffer(buf)
+        else:
+            self.__field_nowork=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nowork.readfrombuffer(buf)
+        if self.number_info & PB_FLG_CELL:
+            self.__field_cell=JournalNumber()
+            self.__field_cell.readfrombuffer(buf)
+        else:
+            self.__field_nocell=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell.readfrombuffer(buf)
+        self.__field_data2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_data2.readfrombuffer(buf)
+        if self.number_info & PB_FLG_FAX:
+            self.__field_fax=JournalNumber()
+            self.__field_fax.readfrombuffer(buf)
+        else:
+            self.__field_nofax=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nofax.readfrombuffer(buf)
+        if self.number_info&PB_FLG_CELL2:
+            self.__field_cell2=JournalNumber()
+            self.__field_cell2.readfrombuffer(buf)
+        else:
+            self.__field_nocell2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell2.readfrombuffer(buf)
+        if self.speeddial_info & PB_FLG_HOME:
+            self.__field_homesd=JournalSpeeddial()
+            self.__field_homesd.readfrombuffer(buf)
+        else:
+            self.__field_nohomesd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nohomesd.readfrombuffer(buf)
+        if self.speeddial_info & PB_FLG_WORK:
+            self.__field_worksd=JournalSpeeddial()
+            self.__field_worksd.readfrombuffer(buf)
+        else:
+            self.__field_noworksd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_noworksd.readfrombuffer(buf)
+        if self.speeddial_info&PB_FLG_CELL:
+            self.__field_cellsd=JournalSpeeddial()
+            self.__field_cellsd.readfrombuffer(buf)
+        else:
+            self.__field_nocellsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocellsd.readfrombuffer(buf)
+        self.__field_data3=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
         self.__field_data3.readfrombuffer(buf)
+        if self.speeddial_info&PB_FLG_FAX:
+            self.__field_faxsd=JournalSpeeddial()
+            self.__field_faxsd.readfrombuffer(buf)
+        else:
+            self.__field_nofaxsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nofaxsd.readfrombuffer(buf)
+        if self.speeddial_info&PB_FLG_CELL2:
+            self.__field_cell2sd=JournalSpeeddial()
+            self.__field_cell2sd.readfrombuffer(buf)
+        else:
+            self.__field_nocell2sd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+            self.__field_nocell2sd.readfrombuffer(buf)
         self.__field_previndex2=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
         self.__field_previndex2.readfrombuffer(buf)
-        if self.index==1:
-            self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xff })
-            self.__field_data4.readfrombuffer(buf)
-        if self.index>1:
-            self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xfd })
-            self.__field_data4.readfrombuffer(buf)
-        self.__field_data5=DATA(**{'sizeinbytes': 19,  'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' })
-        self.__field_data5.readfrombuffer(buf)
         self.__field_previndex3=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
         self.__field_previndex3.readfrombuffer(buf)
-        self.__field_previndex4=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
-        self.__field_previndex4.readfrombuffer(buf)
-        self.__field_data6=DATA(**{'sizeinbytes': 10,  'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' })
-        self.__field_data6.readfrombuffer(buf)
+        self.__field_data4=DATA(**{'sizeinbytes': 4,  'default': '\x10\x00\x0C\x04' })
+        self.__field_data4.readfrombuffer(buf)
+        self.__field_email=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_email.readfrombuffer(buf)
+        self.__field_email2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_email2.readfrombuffer(buf)
+        self.__field_wallpaper=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_wallpaper.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
-    def __getfield_data1(self):
-        try: self.__field_data1
+    def __getfield_number_info(self):
+        try: self.__field_number_info
         except:
-            self.__field_data1=DATA(**{'sizeinbytes': 3,  'default': '\x01\x30\x00' })
-        return self.__field_data1.getvalue()
+            self.__field_number_info=UINT(**{ 'default': 0 })
+        return self.__field_number_info.getvalue()
 
-    def __setfield_data1(self, value):
-        if isinstance(value,DATA):
-            self.__field_data1=value
+    def __setfield_number_info(self, value):
+        if isinstance(value,UINT):
+            self.__field_number_info=value
         else:
-            self.__field_data1=DATA(value,**{'sizeinbytes': 3,  'default': '\x01\x30\x00' })
+            self.__field_number_info=UINT(value,**{ 'default': 0 })
 
-    def __delfield_data1(self): del self.__field_data1
+    def __delfield_number_info(self): del self.__field_number_info
 
-    data1=property(__getfield_data1, __setfield_data1, __delfield_data1, None)
+    number_info=property(__getfield_number_info, __setfield_number_info, __delfield_number_info, None)
+
+    def __getfield_speeddial_info(self):
+        try: self.__field_speeddial_info
+        except:
+            self.__field_speeddial_info=UINT(**{ 'default': 0 })
+        return self.__field_speeddial_info.getvalue()
+
+    def __setfield_speeddial_info(self, value):
+        if isinstance(value,UINT):
+            self.__field_speeddial_info=value
+        else:
+            self.__field_speeddial_info=UINT(value,**{ 'default': 0 })
+
+    def __delfield_speeddial_info(self): del self.__field_speeddial_info
+
+    speeddial_info=property(__getfield_speeddial_info, __setfield_speeddial_info, __delfield_speeddial_info, None)
 
     def __getfield_index(self):
         return self.__field_index.getvalue()
@@ -2905,21 +3235,21 @@ class JournalEntry(BaseProtogenClass):
 
     index=property(__getfield_index, __setfield_index, __delfield_index, None)
 
-    def __getfield_data2(self):
-        try: self.__field_data2
+    def __getfield_data1(self):
+        try: self.__field_data1
         except:
-            self.__field_data2=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
-        return self.__field_data2.getvalue()
+            self.__field_data1=DATA(**{'sizeinbytes': 1,  'default': '\x00' })
+        return self.__field_data1.getvalue()
 
-    def __setfield_data2(self, value):
+    def __setfield_data1(self, value):
         if isinstance(value,DATA):
-            self.__field_data2=value
+            self.__field_data1=value
         else:
-            self.__field_data2=DATA(value,**{'sizeinbytes': 1,  'default': '\x00' })
+            self.__field_data1=DATA(value,**{'sizeinbytes': 1,  'default': '\x00' })
 
-    def __delfield_data2(self): del self.__field_data2
+    def __delfield_data1(self): del self.__field_data1
 
-    data2=property(__getfield_data2, __setfield_data2, __delfield_data2, None)
+    data1=property(__getfield_data1, __setfield_data1, __delfield_data1, None)
 
     def __getfield_previndex(self):
         try: self.__field_previndex
@@ -2937,21 +3267,327 @@ class JournalEntry(BaseProtogenClass):
 
     previndex=property(__getfield_previndex, __setfield_previndex, __delfield_previndex, None)
 
+    def __getfield_home(self):
+        return self.__field_home.getvalue()
+
+    def __setfield_home(self, value):
+        if isinstance(value,JournalNumber):
+            self.__field_home=value
+        else:
+            self.__field_home=JournalNumber(value,)
+
+    def __delfield_home(self): del self.__field_home
+
+    home=property(__getfield_home, __setfield_home, __delfield_home, None)
+
+    def __getfield_nohome(self):
+        try: self.__field_nohome
+        except:
+            self.__field_nohome=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nohome.getvalue()
+
+    def __setfield_nohome(self, value):
+        if isinstance(value,UINT):
+            self.__field_nohome=value
+        else:
+            self.__field_nohome=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nohome(self): del self.__field_nohome
+
+    nohome=property(__getfield_nohome, __setfield_nohome, __delfield_nohome, None)
+
+    def __getfield_work(self):
+        return self.__field_work.getvalue()
+
+    def __setfield_work(self, value):
+        if isinstance(value,JournalNumber):
+            self.__field_work=value
+        else:
+            self.__field_work=JournalNumber(value,)
+
+    def __delfield_work(self): del self.__field_work
+
+    work=property(__getfield_work, __setfield_work, __delfield_work, None)
+
+    def __getfield_nowork(self):
+        try: self.__field_nowork
+        except:
+            self.__field_nowork=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nowork.getvalue()
+
+    def __setfield_nowork(self, value):
+        if isinstance(value,UINT):
+            self.__field_nowork=value
+        else:
+            self.__field_nowork=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nowork(self): del self.__field_nowork
+
+    nowork=property(__getfield_nowork, __setfield_nowork, __delfield_nowork, None)
+
+    def __getfield_cell(self):
+        return self.__field_cell.getvalue()
+
+    def __setfield_cell(self, value):
+        if isinstance(value,JournalNumber):
+            self.__field_cell=value
+        else:
+            self.__field_cell=JournalNumber(value,)
+
+    def __delfield_cell(self): del self.__field_cell
+
+    cell=property(__getfield_cell, __setfield_cell, __delfield_cell, None)
+
+    def __getfield_nocell(self):
+        try: self.__field_nocell
+        except:
+            self.__field_nocell=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nocell.getvalue()
+
+    def __setfield_nocell(self, value):
+        if isinstance(value,UINT):
+            self.__field_nocell=value
+        else:
+            self.__field_nocell=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nocell(self): del self.__field_nocell
+
+    nocell=property(__getfield_nocell, __setfield_nocell, __delfield_nocell, None)
+
+    def __getfield_data2(self):
+        try: self.__field_data2
+        except:
+            self.__field_data2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_data2.getvalue()
+
+    def __setfield_data2(self, value):
+        if isinstance(value,UINT):
+            self.__field_data2=value
+        else:
+            self.__field_data2=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_data2(self): del self.__field_data2
+
+    data2=property(__getfield_data2, __setfield_data2, __delfield_data2, None)
+
+    def __getfield_fax(self):
+        return self.__field_fax.getvalue()
+
+    def __setfield_fax(self, value):
+        if isinstance(value,JournalNumber):
+            self.__field_fax=value
+        else:
+            self.__field_fax=JournalNumber(value,)
+
+    def __delfield_fax(self): del self.__field_fax
+
+    fax=property(__getfield_fax, __setfield_fax, __delfield_fax, None)
+
+    def __getfield_nofax(self):
+        try: self.__field_nofax
+        except:
+            self.__field_nofax=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nofax.getvalue()
+
+    def __setfield_nofax(self, value):
+        if isinstance(value,UINT):
+            self.__field_nofax=value
+        else:
+            self.__field_nofax=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nofax(self): del self.__field_nofax
+
+    nofax=property(__getfield_nofax, __setfield_nofax, __delfield_nofax, None)
+
+    def __getfield_cell2(self):
+        return self.__field_cell2.getvalue()
+
+    def __setfield_cell2(self, value):
+        if isinstance(value,JournalNumber):
+            self.__field_cell2=value
+        else:
+            self.__field_cell2=JournalNumber(value,)
+
+    def __delfield_cell2(self): del self.__field_cell2
+
+    cell2=property(__getfield_cell2, __setfield_cell2, __delfield_cell2, None)
+
+    def __getfield_nocell2(self):
+        try: self.__field_nocell2
+        except:
+            self.__field_nocell2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nocell2.getvalue()
+
+    def __setfield_nocell2(self, value):
+        if isinstance(value,UINT):
+            self.__field_nocell2=value
+        else:
+            self.__field_nocell2=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nocell2(self): del self.__field_nocell2
+
+    nocell2=property(__getfield_nocell2, __setfield_nocell2, __delfield_nocell2, None)
+
+    def __getfield_homesd(self):
+        return self.__field_homesd.getvalue()
+
+    def __setfield_homesd(self, value):
+        if isinstance(value,JournalSpeeddial):
+            self.__field_homesd=value
+        else:
+            self.__field_homesd=JournalSpeeddial(value,)
+
+    def __delfield_homesd(self): del self.__field_homesd
+
+    homesd=property(__getfield_homesd, __setfield_homesd, __delfield_homesd, None)
+
+    def __getfield_nohomesd(self):
+        try: self.__field_nohomesd
+        except:
+            self.__field_nohomesd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nohomesd.getvalue()
+
+    def __setfield_nohomesd(self, value):
+        if isinstance(value,UINT):
+            self.__field_nohomesd=value
+        else:
+            self.__field_nohomesd=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nohomesd(self): del self.__field_nohomesd
+
+    nohomesd=property(__getfield_nohomesd, __setfield_nohomesd, __delfield_nohomesd, None)
+
+    def __getfield_worksd(self):
+        return self.__field_worksd.getvalue()
+
+    def __setfield_worksd(self, value):
+        if isinstance(value,JournalSpeeddial):
+            self.__field_worksd=value
+        else:
+            self.__field_worksd=JournalSpeeddial(value,)
+
+    def __delfield_worksd(self): del self.__field_worksd
+
+    worksd=property(__getfield_worksd, __setfield_worksd, __delfield_worksd, None)
+
+    def __getfield_noworksd(self):
+        try: self.__field_noworksd
+        except:
+            self.__field_noworksd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_noworksd.getvalue()
+
+    def __setfield_noworksd(self, value):
+        if isinstance(value,UINT):
+            self.__field_noworksd=value
+        else:
+            self.__field_noworksd=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_noworksd(self): del self.__field_noworksd
+
+    noworksd=property(__getfield_noworksd, __setfield_noworksd, __delfield_noworksd, None)
+
+    def __getfield_cellsd(self):
+        return self.__field_cellsd.getvalue()
+
+    def __setfield_cellsd(self, value):
+        if isinstance(value,JournalSpeeddial):
+            self.__field_cellsd=value
+        else:
+            self.__field_cellsd=JournalSpeeddial(value,)
+
+    def __delfield_cellsd(self): del self.__field_cellsd
+
+    cellsd=property(__getfield_cellsd, __setfield_cellsd, __delfield_cellsd, None)
+
+    def __getfield_nocellsd(self):
+        try: self.__field_nocellsd
+        except:
+            self.__field_nocellsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nocellsd.getvalue()
+
+    def __setfield_nocellsd(self, value):
+        if isinstance(value,UINT):
+            self.__field_nocellsd=value
+        else:
+            self.__field_nocellsd=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nocellsd(self): del self.__field_nocellsd
+
+    nocellsd=property(__getfield_nocellsd, __setfield_nocellsd, __delfield_nocellsd, None)
+
     def __getfield_data3(self):
         try: self.__field_data3
         except:
-            self.__field_data3=DATA(**{'sizeinbytes': 4,  'default': '\xff\xff\xff\xff' })
+            self.__field_data3=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
         return self.__field_data3.getvalue()
 
     def __setfield_data3(self, value):
-        if isinstance(value,DATA):
+        if isinstance(value,UINT):
             self.__field_data3=value
         else:
-            self.__field_data3=DATA(value,**{'sizeinbytes': 4,  'default': '\xff\xff\xff\xff' })
+            self.__field_data3=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
 
     def __delfield_data3(self): del self.__field_data3
 
     data3=property(__getfield_data3, __setfield_data3, __delfield_data3, None)
+
+    def __getfield_faxsd(self):
+        return self.__field_faxsd.getvalue()
+
+    def __setfield_faxsd(self, value):
+        if isinstance(value,JournalSpeeddial):
+            self.__field_faxsd=value
+        else:
+            self.__field_faxsd=JournalSpeeddial(value,)
+
+    def __delfield_faxsd(self): del self.__field_faxsd
+
+    faxsd=property(__getfield_faxsd, __setfield_faxsd, __delfield_faxsd, None)
+
+    def __getfield_nofaxsd(self):
+        try: self.__field_nofaxsd
+        except:
+            self.__field_nofaxsd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nofaxsd.getvalue()
+
+    def __setfield_nofaxsd(self, value):
+        if isinstance(value,UINT):
+            self.__field_nofaxsd=value
+        else:
+            self.__field_nofaxsd=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nofaxsd(self): del self.__field_nofaxsd
+
+    nofaxsd=property(__getfield_nofaxsd, __setfield_nofaxsd, __delfield_nofaxsd, None)
+
+    def __getfield_cell2sd(self):
+        return self.__field_cell2sd.getvalue()
+
+    def __setfield_cell2sd(self, value):
+        if isinstance(value,JournalSpeeddial):
+            self.__field_cell2sd=value
+        else:
+            self.__field_cell2sd=JournalSpeeddial(value,)
+
+    def __delfield_cell2sd(self): del self.__field_cell2sd
+
+    cell2sd=property(__getfield_cell2sd, __setfield_cell2sd, __delfield_cell2sd, None)
+
+    def __getfield_nocell2sd(self):
+        try: self.__field_nocell2sd
+        except:
+            self.__field_nocell2sd=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_nocell2sd.getvalue()
+
+    def __setfield_nocell2sd(self, value):
+        if isinstance(value,UINT):
+            self.__field_nocell2sd=value
+        else:
+            self.__field_nocell2sd=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_nocell2sd(self): del self.__field_nocell2sd
+
+    nocell2sd=property(__getfield_nocell2sd, __setfield_nocell2sd, __delfield_nocell2sd, None)
 
     def __getfield_previndex2(self):
         try: self.__field_previndex2
@@ -2969,54 +3605,6 @@ class JournalEntry(BaseProtogenClass):
 
     previndex2=property(__getfield_previndex2, __setfield_previndex2, __delfield_previndex2, None)
 
-    def __getfield_data4(self):
-        try: self.__field_data4
-        except:
-            self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xff })
-        return self.__field_data4.getvalue()
-
-    def __setfield_data4(self, value):
-        if isinstance(value,UINT):
-            self.__field_data4=value
-        else:
-            self.__field_data4=UINT(value,**{'sizeinbytes': 1,  'default': 0xff })
-
-    def __delfield_data4(self): del self.__field_data4
-
-    data4=property(__getfield_data4, __setfield_data4, __delfield_data4, None)
-
-    def __getfield_data4(self):
-        try: self.__field_data4
-        except:
-            self.__field_data4=UINT(**{'sizeinbytes': 1,  'default': 0xfd })
-        return self.__field_data4.getvalue()
-
-    def __setfield_data4(self, value):
-        if isinstance(value,UINT):
-            self.__field_data4=value
-        else:
-            self.__field_data4=UINT(value,**{'sizeinbytes': 1,  'default': 0xfd })
-
-    def __delfield_data4(self): del self.__field_data4
-
-    data4=property(__getfield_data4, __setfield_data4, __delfield_data4, None)
-
-    def __getfield_data5(self):
-        try: self.__field_data5
-        except:
-            self.__field_data5=DATA(**{'sizeinbytes': 19,  'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' })
-        return self.__field_data5.getvalue()
-
-    def __setfield_data5(self, value):
-        if isinstance(value,DATA):
-            self.__field_data5=value
-        else:
-            self.__field_data5=DATA(value,**{'sizeinbytes': 19,  'default': '\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff' })
-
-    def __delfield_data5(self): del self.__field_data5
-
-    data5=property(__getfield_data5, __setfield_data5, __delfield_data5, None)
-
     def __getfield_previndex3(self):
         try: self.__field_previndex3
         except:
@@ -3033,56 +3621,242 @@ class JournalEntry(BaseProtogenClass):
 
     previndex3=property(__getfield_previndex3, __setfield_previndex3, __delfield_previndex3, None)
 
-    def __getfield_previndex4(self):
-        try: self.__field_previndex4
+    def __getfield_data4(self):
+        try: self.__field_data4
         except:
-            self.__field_previndex4=UINT(**{'sizeinbytes': 2,  'default': self.previndex })
-        return self.__field_previndex4.getvalue()
+            self.__field_data4=DATA(**{'sizeinbytes': 4,  'default': '\x10\x00\x0C\x04' })
+        return self.__field_data4.getvalue()
 
-    def __setfield_previndex4(self, value):
-        if isinstance(value,UINT):
-            self.__field_previndex4=value
-        else:
-            self.__field_previndex4=UINT(value,**{'sizeinbytes': 2,  'default': self.previndex })
-
-    def __delfield_previndex4(self): del self.__field_previndex4
-
-    previndex4=property(__getfield_previndex4, __setfield_previndex4, __delfield_previndex4, None)
-
-    def __getfield_data6(self):
-        try: self.__field_data6
-        except:
-            self.__field_data6=DATA(**{'sizeinbytes': 10,  'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' })
-        return self.__field_data6.getvalue()
-
-    def __setfield_data6(self, value):
+    def __setfield_data4(self, value):
         if isinstance(value,DATA):
-            self.__field_data6=value
+            self.__field_data4=value
         else:
-            self.__field_data6=DATA(value,**{'sizeinbytes': 10,  'default': '\x10\x00\x0C\x04\xff\xff\xff\xff\xff\xff' })
+            self.__field_data4=DATA(value,**{'sizeinbytes': 4,  'default': '\x10\x00\x0C\x04' })
 
-    def __delfield_data6(self): del self.__field_data6
+    def __delfield_data4(self): del self.__field_data4
 
-    data6=property(__getfield_data6, __setfield_data6, __delfield_data6, None)
+    data4=property(__getfield_data4, __setfield_data4, __delfield_data4, None)
+
+    def __getfield_email(self):
+        try: self.__field_email
+        except:
+            self.__field_email=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_email.getvalue()
+
+    def __setfield_email(self, value):
+        if isinstance(value,UINT):
+            self.__field_email=value
+        else:
+            self.__field_email=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_email(self): del self.__field_email
+
+    email=property(__getfield_email, __setfield_email, __delfield_email, None)
+
+    def __getfield_email2(self):
+        try: self.__field_email2
+        except:
+            self.__field_email2=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_email2.getvalue()
+
+    def __setfield_email2(self, value):
+        if isinstance(value,UINT):
+            self.__field_email2=value
+        else:
+            self.__field_email2=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_email2(self): del self.__field_email2
+
+    email2=property(__getfield_email2, __setfield_email2, __delfield_email2, None)
+
+    def __getfield_wallpaper(self):
+        try: self.__field_wallpaper
+        except:
+            self.__field_wallpaper=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_wallpaper.getvalue()
+
+    def __setfield_wallpaper(self, value):
+        if isinstance(value,UINT):
+            self.__field_wallpaper=value
+        else:
+            self.__field_wallpaper=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_wallpaper(self): del self.__field_wallpaper
+
+    wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, None)
 
     def iscontainer(self):
         return True
 
     def containerelements(self):
-        yield ('data1', self.__field_data1, None)
+        yield ('number_info', self.__field_number_info, None)
+        yield ('speeddial_info', self.__field_speeddial_info, None)
         yield ('index', self.__field_index, None)
-        yield ('data2', self.__field_data2, None)
+        yield ('data1', self.__field_data1, None)
         yield ('previndex', self.__field_previndex, None)
+        if self.number_info & PB_FLG_HOME:
+            yield ('home', self.__field_home, None)
+        else:
+            yield ('nohome', self.__field_nohome, None)
+        if self.number_info & PB_FLG_WORK:
+            yield ('work', self.__field_work, None)
+        else:
+            yield ('nowork', self.__field_nowork, None)
+        if self.number_info & PB_FLG_CELL:
+            yield ('cell', self.__field_cell, None)
+        else:
+            yield ('nocell', self.__field_nocell, None)
+        yield ('data2', self.__field_data2, None)
+        if self.number_info & PB_FLG_FAX:
+            yield ('fax', self.__field_fax, None)
+        else:
+            yield ('nofax', self.__field_nofax, None)
+        if self.number_info&PB_FLG_CELL2:
+            yield ('cell2', self.__field_cell2, None)
+        else:
+            yield ('nocell2', self.__field_nocell2, None)
+        if self.speeddial_info & PB_FLG_HOME:
+            yield ('homesd', self.__field_homesd, None)
+        else:
+            yield ('nohomesd', self.__field_nohomesd, None)
+        if self.speeddial_info & PB_FLG_WORK:
+            yield ('worksd', self.__field_worksd, None)
+        else:
+            yield ('noworksd', self.__field_noworksd, None)
+        if self.speeddial_info&PB_FLG_CELL:
+            yield ('cellsd', self.__field_cellsd, None)
+        else:
+            yield ('nocellsd', self.__field_nocellsd, None)
         yield ('data3', self.__field_data3, None)
+        if self.speeddial_info&PB_FLG_FAX:
+            yield ('faxsd', self.__field_faxsd, None)
+        else:
+            yield ('nofaxsd', self.__field_nofaxsd, None)
+        if self.speeddial_info&PB_FLG_CELL2:
+            yield ('cell2sd', self.__field_cell2sd, None)
+        else:
+            yield ('nocell2sd', self.__field_nocell2sd, None)
         yield ('previndex2', self.__field_previndex2, None)
-        if self.index==1:
-            yield ('data4', self.__field_data4, None)
-        if self.index>1:
-            yield ('data4', self.__field_data4, None)
-        yield ('data5', self.__field_data5, None)
         yield ('previndex3', self.__field_previndex3, None)
-        yield ('previndex4', self.__field_previndex4, None)
-        yield ('data6', self.__field_data6, None)
+        yield ('data4', self.__field_data4, None)
+        yield ('email', self.__field_email, None)
+        yield ('email2', self.__field_email2, None)
+        yield ('wallpaper', self.__field_wallpaper, None)
+
+
+
+class JournalRec(BaseProtogenClass):
+    __fields=['command', 'blocklen', 'entry']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(JournalRec,self).__init__(**dict)
+        if self.__class__ is JournalRec:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(JournalRec,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(JournalRec,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=UINT(**{'sizeinbytes': 1,  'default': 1 })
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_blocklen
+        except:
+            self.__field_blocklen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_blocklen.writetobuffer(buf)
+        self.__field_entry.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=UINT(**{'sizeinbytes': 1,  'default': 1 })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_blocklen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_blocklen.readfrombuffer(buf)
+        self.__field_entry=JournalEntry()
+        self.__field_entry.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=UINT(**{'sizeinbytes': 1,  'default': 1 })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,UINT):
+            self.__field_command=value
+        else:
+            self.__field_command=UINT(value,**{'sizeinbytes': 1,  'default': 1 })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_blocklen(self):
+        try: self.__field_blocklen
+        except:
+            self.__field_blocklen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_blocklen.getvalue()
+
+    def __setfield_blocklen(self, value):
+        if isinstance(value,UINT):
+            self.__field_blocklen=value
+        else:
+            self.__field_blocklen=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_blocklen(self): del self.__field_blocklen
+
+    blocklen=property(__getfield_blocklen, __setfield_blocklen, __delfield_blocklen, None)
+
+    def __getfield_entry(self):
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,JournalEntry):
+            self.__field_entry=value
+        else:
+            self.__field_entry=JournalEntry(value,)
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('blocklen', self.__field_blocklen, None)
+        yield ('entry', self.__field_entry, None)
 
 
 
@@ -3114,7 +3888,7 @@ class JournalFile(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(JournalFile,kwargs)
         if len(args):
-            dict2={ 'elementclass': JournalEntry }
+            dict2={ 'elementclass': JournalRec }
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_items=LIST(*args,**dict2)
@@ -3126,7 +3900,7 @@ class JournalFile(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_items
         except:
-            self.__field_items=LIST(**{ 'elementclass': JournalEntry })
+            self.__field_items=LIST(**{ 'elementclass': JournalRec })
         self.__field_items.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -3136,7 +3910,7 @@ class JournalFile(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_items=LIST(**{ 'elementclass': JournalEntry })
+        self.__field_items=LIST(**{ 'elementclass': JournalRec })
         self.__field_items.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3144,14 +3918,14 @@ class JournalFile(BaseProtogenClass):
     def __getfield_items(self):
         try: self.__field_items
         except:
-            self.__field_items=LIST(**{ 'elementclass': JournalEntry })
+            self.__field_items=LIST(**{ 'elementclass': JournalRec })
         return self.__field_items.getvalue()
 
     def __setfield_items(self, value):
         if isinstance(value,LIST):
             self.__field_items=value
         else:
-            self.__field_items=LIST(value,**{ 'elementclass': JournalEntry })
+            self.__field_items=LIST(value,**{ 'elementclass': JournalRec })
 
     def __delfield_items(self): del self.__field_items
 
