@@ -3,6 +3,7 @@
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>
     <ul>
       <li>Fixed BREW file timestamp issue.
+      <li>Fix bug writing the phonebook to the LG-VX9800.
     </ul>
 
    <h2><a name="0.8.14">Changes in 0.8.14</a></h2>

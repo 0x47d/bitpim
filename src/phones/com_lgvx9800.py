@@ -410,8 +410,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                     continue
                 _filename=_wp_index[_entry.wallpaper]['filename']
                 if _filename:
-                    _path_str=_filename+'\x00'+'\xff'*\
-                               (self.protocolclass.WALLPAPER_ID_PATH_MAX_LEN-len(_filename)-1)
+                    _path_str=_filename+'\x00'
                     _path=self.protocolclass.wallpaper_id()
                     _path.path=_path_str
                     _wp_paths.items[_entry.entrynumber]=_path

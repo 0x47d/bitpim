@@ -32,7 +32,6 @@ NUMPHONENUMBERS=5
 pb_file_name='pim/pbentry.dat'
 wallpaper_id_file_name='pim/pbPictureIdSetAsPath.dat'
 WALLPAPER_ID_PATH_MAX_LEN=80
-EMPTY_WALLPAPER_ID_PATH='\xff'*WALLPAPER_ID_PATH_MAX_LEN
 
 # Media type
 MEDIA_TYPE_RINGTONE=0x0201
@@ -144,8 +143,7 @@ PACKET pbfile:
     * LIST { 'elementclass': pbfileentry } items
 
 PACKET wallpaper_id:
-    80 USTRING { 'terminator': None,
-                'default': EMPTY_WALLPAPER_ID_PATH } +path
+    80 USTRING { 'terminator': None, 'pad': 0xFF, 'default': "" } +path
 PACKET wallpaper_id_file:
     * LIST { 'length': NUMPHONEBOOKENTRIES,
              'elementclass': wallpaper_id,
