@@ -28,4 +28,4 @@ class Phone(parentphone):
 parentprofile=com_motov710m.Profile
 class Profile(parentprofile):
     serialsname=Phone.serialsname
-    phone_model='Motorola CDMA V3cM Phone'
+    phone_model='Motorola CDMA V3cM'

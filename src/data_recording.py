@@ -269,12 +269,12 @@ class DR_Read_File(DR_File):
         if _marker!=DR_Rec_Marker:
             # marker not found
             return None
-        _slen=self._file.read(struct.calcsize('L'))
-        _data_len=struct.unpack('L', _slen)[0]
-        _sdata=self._file.read(_data_len)
         try:
+            _slen=self._file.read(struct.calcsize('L'))
+            _data_len=struct.unpack('L', _slen)[0]
+            _sdata=self._file.read(_data_len)
             return cPickle.loads(_sdata)
-        except UnpicklingError:
+        except (MemoryError, cPickle.UnpicklingError):
             return None
         except:
             if __debug__:

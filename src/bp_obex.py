@@ -439,10 +439,13 @@ class OBEXPacketConnectResp(OBEXPacket):
 # Class FolderBrowsingService---------------------------------------------------
 class FolderBrowsingService(object):
     def __init__(self, logtarget, commport):
-        if logtarget and hasattr(logtarget, 'log'):
-            self.log=logtarget.log
-        else:
-            self.log=self._log
+        self.log=self._log
+        self.progress=self._progress
+        if logtarget:
+            if hasattr(logtarget, 'log'):
+                self.log=logtarget.log
+            if hasattr(logtarget, 'progress'):
+                self.progress=logtarget.progress
         self.comm=commport
         self.connection_id=0
         self.max_packet_length=0x2000
@@ -452,6 +455,8 @@ class FolderBrowsingService(object):
 
     def _log(self, str):
         print str
+    def _progress(self, pos, max, desc):
+        print desc,pos,'out of',max
 
     def _send_packet(self, packet):
         global module_debug
@@ -468,7 +473,7 @@ class FolderBrowsingService(object):
         _len_str=self.comm.read(2)
         _len=struct.unpack('!H', _len_str)[0]
         if _len>3:
-            _data=self.comm.read(_len)
+            _data=self.comm.read(_len-3)
         else:
             _data=''
         _s=_code+_len_str+_data
@@ -483,7 +488,7 @@ class FolderBrowsingService(object):
             raise OBEXBadResponse(_resp.code)
         return _resp
 
-    def _get_body(self, packet):
+    def _get_body(self, packet, totallen=None, filename=None):
         _resp=self._send_and_check_return(packet,
                                           [Packet_Resp_OK, Packet_Resp_Continue])
         _s=''
@@ -499,13 +504,15 @@ class FolderBrowsingService(object):
             _resp=self._send_and_check_return(_pkt,
                                               [Packet_Resp_OK,
                                                Packet_Resp_Continue])
+            if totallen and filename:
+                self.progress(len(_s), totallen, 'Reading file: '+filename)
         if _resp.code==Packet_Resp_OK:
             _dict=_resp.get()
             if _dict.get(Header_BodyEnd, None):
                 _s+=_dict[Header_BodyEnd]
         return _s
 
-    def _send_body(self, packet, data):
+    def _send_body(self, packet, data, filename=None):
         _resp=self._send_and_check_return(packet, [Packet_Resp_Continue])
         _len_data=len(data)
         _pkt=OBEXPacket(Packet_Put)
@@ -515,6 +522,8 @@ class FolderBrowsingService(object):
             _pkt.clear()
             _pkt.append(Header_Body, data[_start_idx:_end_idx])
             self._send_and_check_return(_pkt, [Packet_Resp_Continue])
+            if filename:
+                self.progress(_end_idx, _len_data, 'Writing file: '+filename)
         _pkt=OBEXPacket(Packet_PutEnd)
         _pkt.append(Header_BodyEnd)
         self._send_and_check_return(_pkt, [Packet_Resp_OK])
@@ -621,6 +630,20 @@ class FolderBrowsingService(object):
             self.log('Exception raised: '+str(e))
             return {}
 
+    def listfiles(self, dir=''):
+        _res={}
+        for _key,_entry in self.getfilesystem(dir).items():
+            if _entry['type']=='file':
+                _res[_key]=_entry
+        return _res
+
+    def listsubdirs(self, dir='', recurse=0):
+        _res={}
+        for _key,_entry in self.getfilesystem(dir, recurse).items():
+            if _entry['type']=='directory':
+                _res[_key]=_entry
+        return _res
+
     def writefile(self, name, data):
         self.log('Writing OBEX file: '+name)
         _name_list=name.split('/')
@@ -631,7 +654,7 @@ class FolderBrowsingService(object):
         _pkt.append(Header_ConnectionID, self.connection_id)
         _pkt.append(Header_Length, len(data))
         _pkt.append(Header_Name, _file_name)
-        self._send_body(_pkt, data)
+        self._send_body(_pkt, data, _file_name)
 
     def rmfile(self, name):
         self.log('Deleting OBEX file: '+name)
@@ -644,13 +667,18 @@ class FolderBrowsingService(object):
         _pkt.append(Header_Name, _file_name)
         self._send_and_check_return(_pkt)
 
-    def getfilecontents(self, name):
+    def getfilecontents(self, name, size=None):
         self.log('Reading OBEX file: '+name)
         _name_list=name.split('/')
         _dir_name='/'.join(_name_list[:-1])
         _file_name=_name_list[-1]
-        self.setpath('/'.join(name.split('/')[:-1]))
+        if size:
+            self.setpath('/'.join(name.split('/')[:-1]))
+            _totallen=size
+        else:
+            _file_list=self.listfiles(_dir_name)
+            _totallen=_file_list.get(name, {}).get('size', None)
         _pkt=OBEXPacket(Packet_GetEnd)
         _pkt.append(Header_ConnectionID, self.connection_id)
         _pkt.append(Header_Name, _file_name)
-        return self._get_body(_pkt)
+        return self._get_body(_pkt, _totallen, _file_name)

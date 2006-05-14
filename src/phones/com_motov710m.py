@@ -13,6 +13,7 @@ import time
 
 # BitPim modules
 import bp_obex
+import common
 import com_motov710
 import p_motov710
 
@@ -52,6 +53,50 @@ class Phone(parentphone):
         return True
 
     # Ringtones stuff----------------------------------------------------------
+    def _read_obex_media(self, index_key, media_key, media_path,
+                         fundamentals):
+        # read media files through OBEX in case BREW fails
+        # need to be in OBEX mode
+        _media=fundamentals.get(media_key, {})
+        _dir_list=fundamentals.get(media_path, {})
+        for _key,_entry in fundamentals.get(index_key, {}).items():
+            if _entry.get('filename', None) and \
+               not _media.has_key(_entry['name']):
+                # this one associates with a file AND has not been read
+                try:
+                    _filename=media_path+'/'+common.basename(_entry['filename'])
+                    _filesize=_dir_list.get(_entry['filename'], {}).get('size', None)
+                    _media[_entry['name']]=self.obex.getfilecontents(_filename,
+                                                                     _filesize)
+                except:
+                    self.log('Failed to read media file.')
+                    if __debug__:
+                        raise
+        return _media
+
+    def getringtones(self, fundamentals):
+        """Retrieve ringtones data"""
+        self.log('Reading ringtones')
+        self.setmode(self.MODEPHONEBOOK)
+        self.setmode(self.MODEBREW)
+        try:
+            fundamentals['audio']=self.listfiles(self.protocolclass.RT_PATH)
+        except:
+            fundamentals['audio']={}
+        self.setmode(self.MODEOBEX)
+        try:
+            fundamentals['ringtone']=self._read_obex_media('ringtone-index',
+                                                           'ringtone',
+                                                           'audio',
+                                                           fundamentals)
+        except:
+            if __debug__:
+                self.setmode(self.MODEMODEM)
+                raise
+        self.setmode(self.MODEMODEM)
+        del fundamentals['audio']
+        return fundamentals
+
     def _get_del_new_list(self, index_key, media_key, merge, fundamentals):
         """Return a list of media being deleted and being added"""
         _index=fundamentals.get(index_key, {})

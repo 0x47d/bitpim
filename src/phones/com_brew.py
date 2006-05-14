@@ -1349,7 +1349,6 @@ class FileCache(object):
 
     def set_path(self, bitpim_path):
         try:
-            print 'setting path to',`bitpim_path`
             if not bitpim_path:
                 raise ValueError
             # set the paths
@@ -1361,5 +1360,4 @@ class FileCache(object):
             self._read_index()
             self._write_index()
         except:
-            raise
             self.__class__=EmptyFileCache
