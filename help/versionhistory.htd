@@ -5,6 +5,8 @@
       <li>Fixed BREW file timestamp issue.
       <li>Fix bug writing the phonebook to the LG-VX9800.
       <li>Got around V3cm reading ringtones issue.
+      <li>Fixed A950 reading non-existing index file issue.
+      <li>Organized-by-size GUI update.
     </ul>
 
    <h2><a name="0.8.14">Changes in 0.8.14</a></h2>

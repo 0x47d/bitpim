@@ -264,8 +264,10 @@ class SummaryPage(MyPage):
         self._port.SetLabel(self._com_port)
         _module=common.importas(phones.module(self._model_name))
         self._det_btn.Enable(bool(self._model_name and \
-                                  hasattr(_module.Phone,
-                                         'detectphone'))) 
+                                  (hasattr(_module.Phone,
+                                           'detectphone') or \
+                                   hasattr(_module.Profile,
+                                           'phone_model'))))
 
     def OnDetect(self, _):
         if self._com_port=='auto':
