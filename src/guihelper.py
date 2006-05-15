@@ -304,7 +304,6 @@ _ourart={
     "ART_DEL_FIELD": "delete_field",
     "ART_ADD_CONTACT": "add_contact",
     "ART_DEL_CONTACT": "delete_contact",
-    "ART_ADD_WALLPAPER": "add_picture",
     "ART_ADD_RINGER": "add_ringer",
     "ART_DEL_RINGER": "delete_ringer",
     "ART_ADD_MEMO": "add_memo",

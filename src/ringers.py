@@ -194,14 +194,14 @@ class RingerView(fileview.FileView):
         
     def organizeby_FileSize(self, items):
         
-        sizes={0: ('Less than 8kb', []),
-               8192: ('8 kilobytes', []),
-               16384: ('16 kilobytes', []),
-               32768: ('32 kilobytes', []),
-               65536: ('64 kilobytes', []),
-               131052: ('128 kilobytes', []),
-               524208: ('512 kilobytes', []),
-               1024*1024: ('One megabyte', [])}
+        sizes={0: ('<8KB', []),
+               8192: ('8KB - 16KB', []),
+               16384: ('16KB - 32KB', []),
+               32768: ('32KB - 64KB', []),
+               65536: ('64KB - 128KB', []),
+               131052: ('128KB -512KB', []),
+               524208: ('512KB - 1MB', []),
+               1024*1024: ('>1MB', [])}
 
         keys=sizes.keys()
         keys.sort()
