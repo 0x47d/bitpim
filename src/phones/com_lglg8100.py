@@ -223,32 +223,32 @@ class Phone(com_lgvx8100.Phone):
             entry.alarm=10080
             data.alarmminutes=0
             data.alarmhours=168 # 1 week
-            data.alarmindex_vibrate=0x10
+            data.alarmindex_vibrate=0xe
         elif entry.alarm>=4320:
             entry.alarm=4320
             data.alarmminutes=0
             data.alarmhours=72 # 3 days
-            data.alarmindex_vibrate=0xe
+            data.alarmindex_vibrate=0xc
         elif entry.alarm>=1440:
             entry.alarm=1440
             data.alarmminutes=0
             data.alarmhours=24 # 1 day
-            data.alarmindex_vibrate=0xe
+            data.alarmindex_vibrate=0xa
         elif entry.alarm>=60:
             entry.alarm=60
             data.alarmminutes=0
             data.alarmhours=1 # 1 hour
-            data.alarmindex_vibrate=0xa
+            data.alarmindex_vibrate=0x8
         elif entry.alarm>=30:
             entry.alarm=30
-            data.alarmminutes=0
-            data.alarmhours=1 # 30 mins
-            data.alarmindex_vibrate=0xa
+            data.alarmminutes=30
+            data.alarmhours=0 # 30 mins
+            data.alarmindex_vibrate=0x6
         elif entry.alarm>=15:
             entry.alarm=15
             data.alarmminutes=15
             data.alarmhours=0
-            data.alarmindex_vibrate=0x8
+            data.alarmindex_vibrate=0x4
         elif entry.alarm>=0:
             entry.alarm=0
             data.alarmminutes=0
@@ -453,7 +453,7 @@ class Profile(parentprofile):
         ('sms', 'read', None),         # all SMS list reading
         ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
