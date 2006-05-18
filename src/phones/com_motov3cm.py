@@ -11,11 +11,13 @@
 
 # BitPim modules
 import com_motov710m
+import p_motov3c
 
 parentphone=com_motov710m.Phone
 class Phone(parentphone):
     desc='Moto-V3cm'
     serialsname='motov3cm'
+    protocolclass=p_motov3c
 
     def __init__(self, logtarget, commport):
         parentphone.__init__(self, logtarget, commport)
