@@ -1,4 +1,11 @@
 #include "pagestart.h"
+
+<H3>OBEX File Transfer Capability</H3>
+<P>The V710m is basically the V710 with the OBEX feature enabled (Seem 041A, record 0001, bytes 007A, offset 006A, bit 0=1).  This allows BitPim to transfer files from/to the phone using OBEX protocol via the USB data cable.
+
+<H3>Phone Detection</H3>
+<P>To enable automatic detection, the internal phone ID must be updated (Seem 04FF, record 0001, bytes 0022, offset 0008="M"=0x4D).  Otherwise, this model must be selected manually.
+
 <H3>Ringtone</H3>
 <UL>
 <LI>BitPim can read, add, delete, and replace ringtones on the phone.

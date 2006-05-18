@@ -2,7 +2,12 @@
 
    <h2><a name="0.9.01">Changes in 0.9.01</a></h2>
     <ul>
-      <li>
+      <li>Fixed A950 Phonebook reading problem.
+      <LI>Added phone detection for the Motorola E815.
+      <LI>Increased the size of the phonebook from 500 to 1000 entries for the V3c and E815.
+      <LI>Fixed V170(m) SMS reading problem.
+      <LI>Fixed Data Recording playback bug.
+      <LI>Fixed Linux Unicode alias error for the Motorola phones.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>
