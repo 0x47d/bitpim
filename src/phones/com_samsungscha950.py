@@ -76,6 +76,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
     # common stuff
     def get_esn(self):
+        if hasattr(self, '_fs_path'):
+            # we're debugging, just return something
+            return '12345678'
         _req=self.protocolclass.ESN_req()
         _resp=self.sendbrewcommand(_req, self.protocolclass.ESN_resp)
         return '%08X'%_resp.esn
@@ -100,8 +103,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _index_file.readfrombuffer(_buf)
             _idx=1
             for _entry in _index_file.items[1:]:
-                _res[_entry.index]={ 'name': _entry.name }
-                _idx+=1
+                if _entry.name:
+                    _res[_entry.index]={ 'name': _entry.name }
+                    _idx+=1
         except IndexError:
             pass
         except:
@@ -705,13 +709,13 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
     def _extract_entries(self, filename, res, fundamentals):
         _buf=prototypes.buffer(self.getfilecontents(filename))
-        _rec_file=self.protocolclass.PBFile()
+        _rec_file=self.protocolclass.PBFileHeader()
         _rec_file.readfrombuffer(_buf)
-        _idx=0
         for _len in _rec_file.lens:
             if _len.itemlen:
-                _pbentry=PBEntry(self, _rec_file.items[_idx], fundamentals).getvalue()
-                _idx+=1
+                _entry=self.protocolclass.PBEntry()
+                _entry.readfrombuffer(_buf)
+                _pbentry=PBEntry(self, _entry, fundamentals).getvalue()
                 res[len(res)]=_pbentry
 
     def getphonebook(self, fundamentals):
@@ -1212,8 +1216,8 @@ class PBEntry(object):
 ##                        _num_entry.ringtone, self.fundamentals)
                     _ringtone=self.phone.ringtone_name_from_range(
                         _num_entry.ringtone, self.fundamentals)
-                    entry['ringones']=[{ 'ringtone': _ringtone,
-                                         'use': 'call' }]
+                    entry['ringtones']=[{ 'ringtone': _ringtone,
+                                          'use': 'call' }]
                 if _num_entry.option & p_class.PB_FLG_PRIMARY:
                     # this is the primary number, insert to the beginning
                     entry['numbers']=[_number]+entry['numbers']

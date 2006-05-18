@@ -311,3 +311,8 @@ PACKET PBFile:
              'length': 8,
              'createdefault': True } +lens
     * LIST { 'elementclass': PBEntry } +items
+
+PACKET PBFileHeader:
+    * LIST { 'elementclass': LenEntry,
+             'length': 8,
+             'createdefault': True } +lens

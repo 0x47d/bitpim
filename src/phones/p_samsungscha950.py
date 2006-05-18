@@ -4565,3 +4565,82 @@ class PBFile(BaseProtogenClass):
 
 
 
+class PBFileHeader(BaseProtogenClass):
+    __fields=['lens']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PBFileHeader,self).__init__(**dict)
+        if self.__class__ is PBFileHeader:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PBFileHeader,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PBFileHeader,kwargs)
+        if len(args):
+            dict2={ 'elementclass': LenEntry,             'length': 8,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_lens=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_lens(self):
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        return self.__field_lens.getvalue()
+
+    def __setfield_lens(self, value):
+        if isinstance(value,LIST):
+            self.__field_lens=value
+        else:
+            self.__field_lens=LIST(value,**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+
+    def __delfield_lens(self): del self.__field_lens
+
+    lens=property(__getfield_lens, __setfield_lens, __delfield_lens, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('lens', self.__field_lens, None)
+
+
+
