@@ -239,6 +239,8 @@ class Phone(com_moto.Phone):
         _req.index=entry_index
         try:
             self.sendATcommand(_req, None)
+        except commport.ATError:
+            self.log('Failed to delete contact index %d'%entry_index)
         except:
             self.log('Failed to delete contact index %d'%entry_index)
             if __debug__:

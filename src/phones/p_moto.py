@@ -3,8 +3,8 @@
 """Various descriptions of data specific to Motorola phones"""
 
 from prototypes import *
+from prototypes_moto import *
 from p_gsm import *
-from prototypeslg import SMSDATETIME
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -89,6 +89,9 @@ SMS_REC_UNREAD="REC UNREAD"
 SMS_REC_READ="REC READ"
 SMS_STO_UNSENT="STO UNSENT"
 SMS_STO_SENT="STO SENT"
+SMS_ALL="ALL"
+SMS_HEADER_ONLY="HEADER ONLY"
+
 SMS_INDEX_RANGE=xrange(1, 353)
 
 class esnrequest(BaseProtogenClass):
@@ -3215,7 +3218,7 @@ class sms_m_read_resp(BaseProtogenClass):
         if self.has_date:
             self.__field_sms_addr.writetobuffer(buf)
             self.__field_sms_date.writetobuffer(buf)
-        if not self.has_date:
+        else:
             self.__field_sms_addr.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -3232,10 +3235,10 @@ class sms_m_read_resp(BaseProtogenClass):
         if self.has_date:
             self.__field_sms_addr=CSVSTRING(**{ 'quotechar': None })
             self.__field_sms_addr.readfrombuffer(buf)
-            self.__field_sms_date=SMSDATETIME(**{ 'terminator': None })
+            self.__field_sms_date=M_SMSDATETIME(**{ 'quotechar': None,                          'terminator': None })
             self.__field_sms_date.readfrombuffer(buf)
-        if not self.has_date:
-            self.__field_sms_addr=CSVSTRING(**{ 'quotechar': None,                      'terminator': None })
+        else:
+            self.__field_sms_addr=CSVSTRING(**{ 'terminator': None,                      'quotechar': None })
             self.__field_sms_addr.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3299,10 +3302,10 @@ class sms_m_read_resp(BaseProtogenClass):
         return self.__field_sms_date.getvalue()
 
     def __setfield_sms_date(self, value):
-        if isinstance(value,SMSDATETIME):
+        if isinstance(value,M_SMSDATETIME):
             self.__field_sms_date=value
         else:
-            self.__field_sms_date=SMSDATETIME(value,**{ 'terminator': None })
+            self.__field_sms_date=M_SMSDATETIME(value,**{ 'quotechar': None,                          'terminator': None })
 
     def __delfield_sms_date(self): del self.__field_sms_date
 
@@ -3315,7 +3318,7 @@ class sms_m_read_resp(BaseProtogenClass):
         if isinstance(value,CSVSTRING):
             self.__field_sms_addr=value
         else:
-            self.__field_sms_addr=CSVSTRING(value,**{ 'quotechar': None,                      'terminator': None })
+            self.__field_sms_addr=CSVSTRING(value,**{ 'terminator': None,                      'quotechar': None })
 
     def __delfield_sms_addr(self): del self.__field_sms_addr
 
@@ -3331,8 +3334,209 @@ class sms_m_read_resp(BaseProtogenClass):
         if self.has_date:
             yield ('sms_addr', self.__field_sms_addr, None)
             yield ('sms_date', self.__field_sms_date, None)
-        if not self.has_date:
+        else:
             yield ('sms_addr', self.__field_sms_addr, None)
+
+
+
+class sms_list_req(BaseProtogenClass):
+    __fields=['command', 'listtype']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_list_req,self).__init__(**dict)
+        if self.__class__ is sms_list_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_list_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_list_req,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MMGL=' })
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_listtype
+        except:
+            self.__field_listtype=CSVSTRING(**{ 'terminator': None,                  'default': SMS_HEADER_ONLY })
+        self.__field_listtype.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MMGL=' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_listtype=CSVSTRING(**{ 'terminator': None,                  'default': SMS_HEADER_ONLY })
+        self.__field_listtype.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None,                  'default': '+MMGL=' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': None,                  'default': '+MMGL=' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_listtype(self):
+        try: self.__field_listtype
+        except:
+            self.__field_listtype=CSVSTRING(**{ 'terminator': None,                  'default': SMS_HEADER_ONLY })
+        return self.__field_listtype.getvalue()
+
+    def __setfield_listtype(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_listtype=value
+        else:
+            self.__field_listtype=CSVSTRING(value,**{ 'terminator': None,                  'default': SMS_HEADER_ONLY })
+
+    def __delfield_listtype(self): del self.__field_listtype
+
+    listtype=property(__getfield_listtype, __setfield_listtype, __delfield_listtype, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('listtype', self.__field_listtype, None)
+
+
+
+class sms_list_resp(BaseProtogenClass):
+    __fields=['command', 'index', 'dontcare']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_list_resp,self).__init__(**dict)
+        if self.__class__ is sms_list_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_list_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_list_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_index.writetobuffer(buf)
+        self.__field_dontcare.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MMGL:' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_index=CSVINT()
+        self.__field_index.readfrombuffer(buf)
+        self.__field_dontcare=DATA()
+        self.__field_dontcare.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': ord(' '),                  'default': '+MMGL:' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_index=value
+        else:
+            self.__field_index=CSVINT(value,)
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def __getfield_dontcare(self):
+        return self.__field_dontcare.getvalue()
+
+    def __setfield_dontcare(self, value):
+        if isinstance(value,DATA):
+            self.__field_dontcare=value
+        else:
+            self.__field_dontcare=DATA(value,)
+
+    def __delfield_dontcare(self): del self.__field_dontcare
+
+    dontcare=property(__getfield_dontcare, __setfield_dontcare, __delfield_dontcare, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('index', self.__field_index, None)
+        yield ('dontcare', self.__field_dontcare, None)
 
 
 

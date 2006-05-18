@@ -12,8 +12,8 @@
 """Various descriptions of data specific to Motorola phones"""
 
 from prototypes import *
+from prototypes_moto import *
 from p_gsm import *
-from prototypeslg import SMSDATETIME
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -98,6 +98,9 @@ SMS_REC_UNREAD="REC UNREAD"
 SMS_REC_READ="REC READ"
 SMS_STO_UNSENT="STO UNSENT"
 SMS_STO_SENT="STO SENT"
+SMS_ALL="ALL"
+SMS_HEADER_ONLY="HEADER ONLY"
+
 SMS_INDEX_RANGE=xrange(1, 353)
 
 %}
@@ -275,7 +278,22 @@ PACKET sms_m_read_resp:
     * CSVSTRING sms_type
     if self.has_date:
         * CSVSTRING { 'quotechar': None } sms_addr
-        * SMSDATETIME { 'terminator': None } sms_date
-    if not self.has_date:
-        * CSVSTRING { 'quotechar': None,
-                      'terminator': None } sms_addr
+        * M_SMSDATETIME { 'quotechar': None,
+                          'terminator': None } sms_date
+    else:
+        * CSVSTRING { 'terminator': None,
+                      'quotechar': None } sms_addr
+
+PACKET sms_list_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+MMGL=' } +command
+    * CSVSTRING { 'terminator': None,
+                  'default': SMS_HEADER_ONLY } +listtype
+
+PACKET sms_list_resp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' '),
+                  'default': '+MMGL:' } command
+    * CSVINT index
+    * DATA dontcare

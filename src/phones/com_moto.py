@@ -56,7 +56,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
     def select_phonebook(self, phonebook=None):
         _req=self.protocolclass.select_phonebook_req()
         if phonebook:
-            _req.pb_type=phoneboook
+            _req.pb_type=phonebook
         self.sendATcommand(_req, None)
 
     def ucs2_to_ascii(self, v):
@@ -156,12 +156,12 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         _idx=v.find('\x00\x00')
         # decode the string
         if _idx==-1:
-            return v.decode('utf_16le')
+            return v.decode('utf_16_le')
         else:
-            return v[:_idx+1].decode('utf_16le')
+            return v[:_idx+1].decode('utf_16_le')
     def encode_utf16(self, v):
         """Encode a unicode/string into a Motorola unicode"""
-        return (v+'\x00').encode('utf_16le')
+        return (v+'\x00').encode('utf_16_le')
 
     # Phone info routines
     def get_model(self):
@@ -498,18 +498,22 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         self.sendATcommand(_req, None)
 
     def _process_sms_header(self, _header, _entry):
-        _entry._to=_header.sms_addr.strip(' ').replace('"', '')
+        _addr=_header.sms_addr.strip(' ').replace('"', '')
         if _header.has_date:
             _entry.datetime=_header.sms_date
         if _header.sms_type==self.protocolclass.SMS_REC_UNREAD:
             _entry.read=False
-            _entry.folder=entry.Folder_Inbox
+            _entry.folder=_entry.Folder_Inbox
+            _entry._from=_addr
         elif _header.sms_type==self.protocolclass.SMS_REC_READ:
             _entry.read=True
-            _entry.folder=entry.Folder_Inbox
+            _entry.folder=_entry.Folder_Inbox
+            _entry._from=_addr
         elif _header.sms_type==self.protocolclass.SMS_STO_UNSENT:
+            _entry._to=_addr
             _entry.folder=_entry.Folder_Saved
         else:
+            _entry._to=_addr
             _entry.folder=_entry.Folder_Sent
 
     def _process_sms_text(self, res, entry):
@@ -526,7 +530,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         """Process an SMS result as returned from the phone"""
         _buf=prototypes.buffer(_res[0])
         _header=self.protocolclass.sms_m_read_resp()
-        _header.has_date=len(_res[0].split(','))==3
+        _header.has_date=len(_res[0].split(','))>2
         _header.readfrombuffer(_buf, logtitle='Reading SMS Response')
         _entry=sms.SMSEntry()
         self._process_sms_header(_header, _entry)
@@ -540,10 +544,15 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         _sms={}
         try:
             self.select_default_SMS()
-            for _idx in self.protocolclass.SMS_INDEX_RANGE:
-                # read each index
+            _req=self.protocolclass.sms_list_req()
+            _sms_list=self.sendATcommand(_req, None)
+            _sms_item=self.protocolclass.sms_list_resp()
+            for _entry in _sms_list:
+                _buf=prototypes.buffer(_entry)
+                _sms_item.readfrombuffer(_buf,
+                                         logtitle='Reading an SMS List Item')
                 try:
-                    _res=self.comm.sendatcommand('+MMGR=%d'%_idx)
+                    _res=self.comm.sendatcommand('+MMGR=%d'%_sms_item.index)
                     self._process_sms_result(_res, _sms, fundamentals)
                 except commport.ATError:
                     pass
