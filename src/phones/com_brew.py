@@ -142,6 +142,7 @@ class DebugBrewProtocol:
     when you may not have access to a physical phone, but have a copy of its
     file system.
     """
+    MODEBREW="modebrew"
     _fs_path=''
     def __init__(self):
         pass
