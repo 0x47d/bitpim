@@ -9,6 +9,8 @@
 
 """Implement specific prototypes class for Motorola phones"""
 
+import re
+
 import prototypes
 
 class CAL_DATE(prototypes.CSVSTRING):
@@ -86,3 +88,35 @@ class CAL_TIME(prototypes.CSVSTRING):
         if len(val)==2:
             return (int(val[0]), int(val[1]))
         return (0, 0)
+
+class M_SMSDATETIME(prototypes.CSVSTRING):
+    """ Represent date time with the format 'yyyy/M+/d+,h+:m+:s+' used
+    by Motorola SMS messages.
+    Currently works only 1 way: SMS Date Time -> ISO String
+    """
+    _re_pattern='^\d\d+/\d+/\d+,\d+:\d+:\d+$'
+    _re_compiled_pattern=None
+    def __init__(self, *args, **kwargs):
+        if M_SMSDATETIME._re_compiled_pattern is None:
+            M_SMSDATETIME._re_compiled_pattern=re.compile(M_SMSDATETIME._re_pattern)
+        super(M_SMSDATETIME, self).__init__(*args, **kwargs)
+        if self._ismostderived(M_SMSDATETIME):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(M_SMSDATETIME, self)._update(args, kwargs)
+        # strip blanks, and replace quotechar
+        if self._value:
+            self._value=self._value.strip(' ').replace('"', '')
+        if self._value and \
+           not re.match(M_SMSDATETIME._re_compiled_pattern, self._value):
+            raise ValueError('Correct Format: [yy]yy/[M]M/[d]d,[h]h:[m]m:[s]s')
+
+    def getvalue(self):
+        """Returns the ISO Format 'yyyyMMddThhmmss"""
+        if self._value:
+            _d,_t=self._value.strip(' ').replace('"', '').split(',')
+            _d=_d.split('/')
+            _t=_t.split(':')
+            return '%s%s%sT%s%s%s'%(_d[0].zfill(4), _d[1].zfill(2), _d[2].zfill(2),
+                                    _t[0].zfill(2), _t[1].zfill(2), _t[2].zfill(2))
