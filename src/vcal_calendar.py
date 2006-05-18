@@ -28,18 +28,18 @@ module_debug=False
 #-------------------------------------------------------------------------------
 class vCalendarFile(object):
     def __init__(self, file_name=None):
-        self.__data=[]
-        self.__file_name=file_name
+        self._data=[]
+        self._file_name=file_name
 
     def read(self, file_name=None):
-        self.__data=[]
+        self._data=[]
         if file_name is not None:
-            self.__file_name=file_name
-        if self.__file_name is None:
+            self._file_name=file_name
+        if self._file_name is None:
             # no file name specified
             return
         try:
-            f=open(self.__file_name)
+            f=open(self._file_name)
             vfile=vcard.VFile(f)
             has_data=False
             for n,l in vfile:
@@ -48,7 +48,7 @@ class vCalendarFile(object):
                     d={}
                     has_data=True
                 elif n[0]=='END' and l=='VEVENT':
-                    self.__data.append(d)
+                    self._data.append(d)
                     d={}
                     has_data=False
                 elif has_data:
@@ -57,14 +57,14 @@ class vCalendarFile(object):
         except:
             pass
 
-    def __get_data(self):
-        return copy.deepcopy(self.__data)
-    data=property(fget=__get_data)
+    def _get_data(self):
+        return copy.deepcopy(self._data)
+    data=property(fget=_get_data)
         
 #-------------------------------------------------------------------------------
 class VCalendarImportData(object):
 
-    __default_filter={
+    _default_filter={
         'start': None,
         'end': None,
         'categories': None,
@@ -75,43 +75,43 @@ class VCalendarImportData(object):
         'vibrate':False,
         'alarm_value':0
         }
-    __rrule_dow={
+    _rrule_dow={
         'SU': 0x01, 'MO': 0x02, 'TU': 0x04, 'WE': 0x08, 'TH': 0x10,
         'FR': 0x20, 'SA': 0x40 }
-    __rrule_weekday=__rrule_dow['MO']|__rrule_dow['TU']|\
-                  __rrule_dow['WE']|__rrule_dow['TH']|\
-                  __rrule_dow['FR']
+    _rrule_weekday=_rrule_dow['MO']|_rrule_dow['TU']|\
+                  _rrule_dow['WE']|_rrule_dow['TH']|\
+                  _rrule_dow['FR']
 
     def __init__(self, file_name=None):
-        self.__calendar_keys=[
-            ('CATEGORIES', 'categories', self.__conv_cat),
-            ('DESCRIPTION', 'notes', None),
-            ('DTEND', 'end', self.__conv_date),
-            ('LOCATION', 'location', None),
-            ('PRIORITY', 'priority', self.__conv_priority),
-            ('DTSTART', 'start', self.__conv_date),
-            ('SUMMARY', 'description', None),
-            ('AALARM', 'alarm', self.__conv_alarm),
-            ('DALARM', 'alarm', self.__conv_alarm),
-            ('RRULE', 'repeat', self.__conv_repeat),
-            ('EXDATE', 'exceptions', self.__conv_exceptions),
-            ]
-        self.__file_name=file_name
-        self.__data=[]
-        self.__filter=self.__default_filter
+##        self._calendar_keys=[
+##            ('CATEGORIES', 'categories', self._conv_cat),
+##            ('DESCRIPTION', 'notes', None),
+##            ('DTEND', 'end', self._conv_date),
+##            ('LOCATION', 'location', None),
+##            ('PRIORITY', 'priority', self._conv_priority),
+##            ('DTSTART', 'start', self._conv_date),
+##            ('SUMMARY', 'description', None),
+##            ('AALARM', 'alarm', self._conv_alarm),
+##            ('DALARM', 'alarm', self._conv_alarm),
+##            ('RRULE', 'repeat', self._conv_repeat),
+##            ('EXDATE', 'exceptions', self._conv_exceptions),
+##            ]
+        self._file_name=file_name
+        self._data=[]
+        self._filter=self._default_filter
         self.read()
 
-    def __accept(self, entry):
+    def _accept(self, entry):
         # start & end time within specified filter
-        if self.__filter['start'] is not None and \
-           entry['start'][:3]<self.__filter['start'][:3]:
+        if self._filter['start'] is not None and \
+           entry['start'][:3]<self._filter['start'][:3]:
             return False
-        if self.__filter['end'] is not None and \
-           entry['end'][:3]>self.__filter['end'][:3] and \
+        if self._filter['end'] is not None and \
+           entry['end'][:3]>self._filter['end'][:3] and \
            entry['end'][:3]!=common_calendar.no_end_date[:3]:
             return False
         # check the catefory
-        c=self.__filter['categories']
+        c=self._filter['categories']
         if c is None or not len(c):
             # no categories specified => all catefories allowed.
             return True
@@ -119,7 +119,7 @@ class VCalendarImportData(object):
             return True
         return False
 
-    def __populate_repeat_entry(self, e, ce):
+    def _populate_repeat_entry(self, e, ce):
         # populate repeat entry data
         if not e.get('repeat', False) or e.get('repeat_type', None) is None:
             #  not a repeat event
@@ -176,24 +176,24 @@ class VCalendarImportData(object):
         # all done
         ce.repeat=rp
             
-    def __populate_entry(self, e, ce):
+    def _populate_entry(self, e, ce):
         # populate an calendar entry with data
         ce.description=e.get('description', None)
         ce.location=e.get('location', None)
         v=e.get('priority', None)
         if v is not None:
             ce.priority=v
-        if not self.__filter.get('no_alarm', False) and \
-               not self.__filter.get('alarm_override', False) and \
+        if not self._filter.get('no_alarm', False) and \
+               not self._filter.get('alarm_override', False) and \
                e.get('alarm', False):
             ce.alarm=e.get('alarm_value', 0)
-            ce.ringtone=self.__filter.get('ringtone', "")
-            ce.vibrate=self.__filter.get('vibrate', False)
-        elif not self.__filter.get('no_alarm', False) and \
-               self.__filter.get('alarm_override', False):
-            ce.alarm=self.__filter.get('alarm_value', 0)
-            ce.ringtone=self.__filter.get('ringtone', "")
-            ce.vibrate=self.__filter.get('vibrate', False)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
+        elif not self._filter.get('no_alarm', False) and \
+               self._filter.get('alarm_override', False):
+            ce.alarm=self._filter.get('alarm_value', 0)
+            ce.ringtone=self._filter.get('ringtone', "")
+            ce.vibrate=self._filter.get('vibrate', False)
         ce_start=e.get('start', None)
         ce_end=e.get('end', None)
         if ce_start is None and ce_end is None:
@@ -212,20 +212,20 @@ class VCalendarImportData(object):
             v.append({ 'category': k })
         ce.categories=v
         # look at repeat
-        self.__populate_repeat_entry(e, ce)
+        self._populate_repeat_entry(e, ce)
 
-    def __generate_repeat_events(self, e):
+    def _generate_repeat_events(self, e):
         # generate multiple single events from this repeat event
         ce=bpcalendar.CalendarEntry()
-        self.__populate_entry(e, ce)
+        self._populate_entry(e, ce)
         l=[]
         new_e=e.copy()
         new_e['repeat']=False
         for k in ('repeat_type', 'repeat_interval', 'repeat_dow'):
             if new_e.has_key(k):
                 del new_e[k]
-        s_date=datetime.datetime(*self.__filter['start'])
-        e_date=datetime.datetime(*self.__filter['end'])
+        s_date=datetime.datetime(*self._filter['start'])
+        e_date=datetime.datetime(*self._filter['end'])
         one_day=datetime.timedelta(1)
         this_date=s_date
         while this_date<=e_date:
@@ -239,17 +239,17 @@ class VCalendarImportData(object):
         
     def get(self):
         res={}
-        single_rpt=self.__filter.get('rpt_events', False)
-        for k in self.__data:
+        single_rpt=self._filter.get('rpt_events', False)
+        for k in self._data:
             try:
-                if self.__accept(k):
+                if self._accept(k):
                     if k.get('repeat', False) and single_rpt:
-                        d=self.__generate_repeat_events(k)
+                        d=self._generate_repeat_events(k)
                     else:
                         d=[k]
                     for n in d:
                         ce=bpcalendar.CalendarEntry()
-                        self.__populate_entry(n, ce)
+                        self._populate_entry(n, ce)
                         res[ce.id]=ce
             except:
                 if module_debug:
@@ -258,20 +258,20 @@ class VCalendarImportData(object):
 
     def get_category_list(self):
         l=[]
-        for e in self.__data:
+        for e in self._data:
             l+=[x for x in e.get('categories', []) if x not in l]
         return l
             
     def set_filter(self, filter):
-        self.__filter=filter
+        self._filter=filter
 
     def get_filter(self):
-        return self.__filter
+        return self._filter
 
-    def __conv_cat(self, v, _):
+    def _conv_cat(self, v, _):
         return [x.strip() for x in v['value'].split(",") if len(x)]
 
-    def __conv_alarm(self, v, dd):
+    def _conv_alarm(self, v, dd):
         try:
             alarm_date=bptime.BPTime(v['value'].split(';')[0])
             start_date=bptime.BPTime(dd['start'])
@@ -282,14 +282,14 @@ class VCalendarImportData(object):
         except:
             return False
 
-    def __conv_date(self, v, _):
+    def _conv_date(self, v, _):
         return bptime.BPTime(v['value']).get()
-    def __conv_priority(self, v, _):
+    def _conv_priority(self, v, _):
         try:
             return int(v['value'])
         except:
             return None
-    def __process_daily_rule(self, v, dd):
+    def _process_daily_rule(self, v, dd):
         # the rule is Dx #y or Dx YYYYMMDDTHHMM
         s=v['value'].split(' ')
         dd['repeat_interval']=int(s[0][1:])
@@ -305,7 +305,7 @@ class VCalendarImportData(object):
         dd['repeat_type']='daily'
         return True
 
-    def __process_weekly_rule(self, v, dd):
+    def _process_weekly_rule(self, v, dd):
         # the rule is Wx | Wx <#y|YYYYMMDDTHHMMSS> | Wx MO TU
         s=v['value'].split(' ')
         dd['repeat_interval']=int(s[0][1:])
@@ -318,13 +318,13 @@ class VCalendarImportData(object):
                 dd['repeat_num']=int(n[1:])
             else:
                 # day-of-week
-                dow=dow|self.__rrule_dow.get(n, 0)
+                dow=dow|self._rrule_dow.get(n, 0)
         if dow:
             dd['repeat_dow']=dow
         dd['repeat_type']='weekly'
         return True
 
-    def __process_monthly_rule(self, v, dd):
+    def _process_monthly_rule(self, v, dd):
         try:
             # acceptable format: MD1 <day number> <end date | #duration>
             # or MP1 <[1-4]+ | 1-> <SU-SA> <end date | #duration>
@@ -342,7 +342,7 @@ class VCalendarImportData(object):
                         dd['repeat_interval']=int(n[0])
                 else:
                     return False
-                dd['repeat_dow']=self.__rrule_dow.get(s[2], 0)
+                dd['repeat_dow']=self._rrule_dow.get(s[2], 0)
             else:
                 dd['repeat_interval']=dd['repeat_dow']=0
             dd['repeat_type']='monthly'
@@ -356,7 +356,7 @@ class VCalendarImportData(object):
         except:
             if module_debug: raise
             return False
-    def __process_yearly_rule(self, v, dd):
+    def _process_yearly_rule(self, v, dd):
         try:
             # acceptable format YM1 <Month number> <end date | #duration>
             s=v['value'].split(' ')
@@ -374,16 +374,16 @@ class VCalendarImportData(object):
             if module_debug: raise
             return False
     
-    def __conv_repeat(self, v, dd):
+    def _conv_repeat(self, v, dd):
         func_dict={
-            'D': self.__process_daily_rule,
-            'W': self.__process_weekly_rule,
-            'M': self.__process_monthly_rule,
-            'Y': self.__process_yearly_rule
+            'D': self._process_daily_rule,
+            'W': self._process_weekly_rule,
+            'M': self._process_monthly_rule,
+            'Y': self._process_yearly_rule
             }
         c=v['value'][0]
         return func_dict.get(c, lambda *arg: False)(v, dd)
-    def __conv_exceptions(self, v, _):
+    def _conv_exceptions(self, v, _):
         try:
             l=v['value'].split(';')
             r=[]
@@ -392,15 +392,28 @@ class VCalendarImportData(object):
             return r
         except:
             return []
-    def __convert(self, vcal, d):
+    _calendar_keys=[
+        ('CATEGORIES', 'categories', _conv_cat),
+        ('DESCRIPTION', 'notes', None),
+        ('DTEND', 'end', _conv_date),
+        ('LOCATION', 'location', None),
+        ('PRIORITY', 'priority', _conv_priority),
+        ('DTSTART', 'start', _conv_date),
+        ('SUMMARY', 'description', None),
+        ('AALARM', 'alarm', _conv_alarm),
+        ('DALARM', 'alarm', _conv_alarm),
+        ('RRULE', 'repeat', _conv_repeat),
+        ('EXDATE', 'exceptions', _conv_exceptions),
+        ]
+    def _convert(self, vcal, d):
         for i in vcal:
             try:
                 dd={'start': None, 'end': None }
-                for j in self.__calendar_keys:
+                for j in self._calendar_keys:
                     if i.has_key(j[0]):
                         k=i[j[0]]
                         if j[2] is not None:
-                            dd[j[1]]=j[2](k, dd)
+                            dd[j[1]]=j[2](self, k, dd)
                         else:
                             dd[j[1]]=k['value']
                 if dd['start'] is None and dd['end'] is None:
@@ -418,38 +431,38 @@ class VCalendarImportData(object):
     def get_display_data(self):
         cnt=0
         res={}
-        single_rpt=self.__filter.get('rpt_events', False)
-        for k in self.__data:
-            if self.__accept(k):
+        single_rpt=self._filter.get('rpt_events', False)
+        for k in self._data:
+            if self._accept(k):
                 if k.get('repeat', False) and single_rpt:
-                    d=self.__generate_repeat_events(k)
+                    d=self._generate_repeat_events(k)
                 else:
                     d=[k.copy()]
                 for n in d:
-                    if self.__filter.get('no_alarm', False):
+                    if self._filter.get('no_alarm', False):
                         n['alarm']=False
                     res[cnt]=n
                     cnt+=1
         return res
 
     def get_file_name(self):
-        if self.__file_name is not None:
-            return self.__file_name
+        if self._file_name is not None:
+            return self._file_name
         return ''
 
     def read(self, file_name=None):
         if file_name is not None:
-            self.__file_name=file_name
-        if self.__file_name is None:
+            self._file_name=file_name
+        if self._file_name is None:
             # no file name specified
             return
-        v=vCalendarFile(self.__file_name)
+        v=vCalendarFile(self._file_name)
         v.read()
-        self.__convert(v.data, self.__data)
+        self._convert(v.data, self._data)
 
 #-------------------------------------------------------------------------------
 class VcalImportCalDialog(common_calendar.PreviewDialog):
-    __column_labels=[
+    _column_labels=[
         ('description', 'Description', 400, None),
         ('start', 'Start', 150, common_calendar.bp_date_str),
         ('end', 'End', 150, common_calendar.bp_date_str),
@@ -459,10 +472,10 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         ]
     ID_ADD=wx.NewId()
     def __init__(self, parent, id, title):
-        self.__oc=VCalendarImportData()
+        self._oc=VCalendarImportData()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
-                               self.__column_labels,
-                               self.__oc.get_display_data(),
+                               self._column_labels,
+                               self._oc.get_display_data(),
                                config_name='import/calendar/vcaldialog')
         
     def getcontrols(self, main_bs):
@@ -471,7 +484,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         hbs.Add(wx.StaticText(self, -1, "VCalendar File:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
         self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-        self.folderctrl.SetValue(self.__oc.get_file_name())
+        self.folderctrl.SetValue(self._oc.get_file_name())
         hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
         # browse button
         id_browse=wx.NewId()
@@ -502,8 +515,8 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         dlg=wx.ProgressDialog('VCalendar Import',
                               'Importing vCalendar Data, please wait ...',
                               parent=self)
-        self.__oc.read(self.folderctrl.GetValue())
-        self.populate(self.__oc.get_display_data())
+        self._oc.read(self.folderctrl.GetValue())
+        self.populate(self._oc.get_display_data())
         dlg.Destroy()
         wx.EndBusyCursor()
 
@@ -518,20 +531,20 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         dlg.Destroy()
 
     def OnFilter(self, evt):
-        cat_list=self.__oc.get_category_list()
+        cat_list=self._oc.get_category_list()
         dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
         if dlg.ShowModal()==wx.ID_OK:
-            self.__oc.set_filter(dlg.get())
-            self.populate(self.__oc.get_display_data())
+            self._oc.set_filter(dlg.get())
+            self.populate(self._oc.get_display_data())
 
     def OnAdd(self, evt):
         self.EndModal(self.ID_ADD)
 
     def get(self):
-        return self.__oc.get()
+        return self._oc.get()
 
     def get_categories(self):
-        return self.__oc.get_category_list()
+        return self._oc.get_category_list()
             
 #-------------------------------------------------------------------------------
 def ImportCal(folder, filters):
@@ -548,7 +561,7 @@ class VCalAutoConfCalDialog(wx.Dialog):
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
         self._oc=VCalendarImportData()
         self._oc.set_filter(filters)
-        self.__read=False
+        self._read=False
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
         main_bs=wx.BoxSizer(wx.VERTICAL)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
@@ -584,14 +597,14 @@ class VCalAutoConfCalDialog(wx.Dialog):
             dlg.Destroy()
             return
         self.folderctrl.SetValue(dlg.GetPath())
-        self.__read=False
+        self._read=False
         dlg.Destroy()
 
     def OnFilter(self, evt):
         # read the calender to get the category list
-        if not self.__read:
+        if not self._read:
             self._oc.read(self.folderctrl.GetValue())
-            self.__read=True
+            self._read=True
         cat_list=self._oc.get_category_list()
         dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
         dlg.set(self._oc.get_filter())
