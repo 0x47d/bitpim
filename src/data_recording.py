@@ -108,6 +108,21 @@ def get_data(data_type):
         return _the_player.get_data(data_type)
     raise DataRecordingError('Data Playback not active')
 
+def get_headers():
+    # return a list of headers used for setting the start point
+    global DR_Play, _the_player
+    if DR_Play and _the_player:
+        return _the_player.get_headers()
+    raise DataRecordingError('Data Playback not active')
+
+def set_start(start):
+    # set/reset the start point of the recording file
+    global DR_Play, _the_player
+    if DR_Play and _the_player:
+        _the_player.set_start(start)
+    else:
+        raise DataRecordingError('Data Playback not active')
+
 def record(dr_type, dr_data, dr_class=None):
     global DR_On, _the_recorder
     if DR_On and _the_recorder:
@@ -160,6 +175,19 @@ class DR_Record(object):
                 _s+="<#! %s.%s !#>\n" % (self._class_module, self._class_name)
             _s+=common.datatohexstring(self._data)
         _s+='\n'
+        return _s
+    def summary(self):
+        # return a summary string of this record
+        global DR_Type_Name
+        t=time.localtime(self._time)
+        _s="%d:%02d:%02d.%03d " % (t[3], t[4], t[5],
+                                   int((self._time-int(self._time))*1000))
+        if self._type==DR_Type_Note:
+            _s+=self._data
+        else:
+            _s+=DR_Type_Name.get(self._type, '<Unknown>')
+        if len(_s)>80:
+            _s=_s[:75]+'<...>'
         return _s
 
 #-------------------------------------------------------------------------------
@@ -297,6 +325,13 @@ class DR_Read_File(DR_File):
         for e in self._data:
             _s+=`e`
         return _s
+    def get_headers(self):
+        # return a list of headers
+        return [x.summary() for x in self._data]
+
+    def set_start(self, start_idx):
+        self._start_index=start_idx
+        self._current_index=start_idx
 
     def start(self):
         global DR_Play, _the_player

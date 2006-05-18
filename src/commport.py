@@ -248,11 +248,12 @@ class CommConnection:
 
     def sendatcommand(self, atcommand, ignoreerror=False):
         #print "sendatcommand: "+atcommand
-       
-        # Flush leftover characters
-        b=self.ser.inWaiting()
-        if b:
-            self.read(b,0)
+
+        if not data_recording.DR_Play:
+            # Flush leftover characters
+            b=self.ser.inWaiting()
+            if b:
+                self.read(b,0)
 
         fullline="AT"+atcommand
         self.write(str(fullline+"\r\n"))
@@ -298,7 +299,8 @@ class CommConnection:
         """Read until OK, ERROR or a timeout"""
         self.readrequests+=1
         if data_recording.DR_Play:
-            return data_recording.get_data(data_recording.DR_Type_Read_ATResponse)
+            self.readahead=data_recording.get_data(data_recording.DR_Type_Read_ATResponse)
+            return
         res=""
         while True:
             b=self.ser.inWaiting()
@@ -320,10 +322,10 @@ class CommConnection:
             raise CommTimeout()
 
         self.readbytes+=len(res)
+        self.readahead=res
         if log or data_recording.DR_On:
             self.logdata("Reading remaining data", res,
                          data_recording.DR_Type_Read_ATResponse)
-        self.readahead=res
         return
 
     def readline(self):

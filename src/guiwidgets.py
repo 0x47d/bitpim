@@ -1681,6 +1681,9 @@ class DRRecFileDialog(wx.Dialog):
                 flag=wx.EXPAND|wx.ALL)
         self._append=wx.CheckBox(self, -1, 'Append to existing file')
         fgs.Add(self._append, pos=(1, 1), flag=wx.EXPAND|wx.ALL)
+        _setstart_btn=wx.Button(self, -1, 'Set Start')
+        wx.EVT_BUTTON(self, _setstart_btn.GetId(), self.OnSetStart)
+        fgs.Add(_setstart_btn, pos=(1, 2), flag=wx.EXPAND|wx.ALL)
         fgs.Add(wx.StaticText(self, -1, 'Status:'), pos=(2,0),
                               flag=wx.EXPAND|wx.ALL)
         self._status=wx.StaticText(self, -1, 'None')
@@ -1741,10 +1744,21 @@ class DRRecFileDialog(wx.Dialog):
         data_recording.record_to_file(self._file_name.GetValue())
         self._update_status()
 
-    def OnPlay(self, _):
+    def OnPlay(self, _=None):
         data_recording.playback_from_file(self._file_name.GetValue())
         self._update_status()
 
     def OnStop(self, _):
         data_recording.stop()
         self._update_status()
+
+    def OnSetStart(self, _):
+        if not data_recording.DR_Play:
+            # not playing back, start playing
+            self.OnPlay()
+        _dlg=wx.SingleChoiceDialog(self, 'Select the Starting Point',
+                                   'Data Recording Set Start',
+                                   choices=data_recording.get_headers())
+        if _dlg.ShowModal()==wx.ID_OK:
+            data_recording.set_start(_dlg.GetSelection())
+        _dlg.Destroy()
