@@ -8,6 +8,9 @@
       <LI>Fixed V170(m) SMS reading problem.
       <LI>Fixed Data Recording playback bug.
       <LI>Fixed Linux Unicode alias error for the Motorola phones.
+      <li>Added support for Sanyo SCP-3100 (Sprint). See the <a
+href="phones-sanyo-model-notes.htm#scp3100">SCP-3100 model notes</a>
+for driver information.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>

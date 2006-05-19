@@ -77,7 +77,7 @@ LABEL="cell_rules_end"
 </pre>
 
 <p>1004 and 6000 should of course be replaced with the relevant <i>VID</i>
-and <i>PID</i>.</p>
+and <i>PID</i>.  (For the Sanyo SCP-3100 the VID/PID is 0474/071f).</p>
 <p>If you have a single user machine, you may find it easier to use a
 mode of 0666 and leave off the <code>GROUP</code> item.
 </ol>

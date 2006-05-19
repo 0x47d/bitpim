@@ -1,7 +1,7 @@
 #include "pagestart.h"
 
-<p>The Sanyo SCP-4900, SCP-5300, SCP-5400 (RL2500), SCP-5500 (VM4500),
-SCP-7200 (RL2000), SCP-7300 (RL7300) and SCP-8100 all use the same
+<p>The Sanyo VI-2300, SCP-3100, SCP-4900, SCP-5300, SCP-5400 (RL2500), SCP-5500 (VM4500),
+SCP-7200 (RL2000), SCP-7300 (RL7300), SCP-8100, PM-8200 and MM8300 all use the same
 straight through USB cable.  The following cables have been tested by
 the BitPim developers and work with BitPim.  Other straight through
 USB cables for Sanyo phones may also work.
@@ -23,17 +23,22 @@ id CSAYM03-03.
 <blockquote>
 <h3>Windows</h3>
 <p>These cables require a driver.  Drivers may be downloaded either from
-URL(http://www.sanyo.com/consumer/communications/usb_driver_install.htm,Sanyo)
-or
-URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial).
-
+URL(http://www.sanyo.com/consumer/communications/usb_driver_install.htm,Sanyo),
+URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial),
+or 
+URL(http://support.susteen.com/ics/support/DLSplash.asp?task=download,DataPilot)
+(Motorola/Sanyo driver).  Most phones will work with any of these
+drivers, but the SCP-3100 only works with the DataPilot driver.</p>
 <h3>Linux</h3>
 <p>The Sanyo phones use the Linux "acm" driver with this cable.  This
 driver will automatically install with most modern Linux distributions
 will show up as the device <tt>/dev/usb/ttyACM0</tt>.  If the acm
 driver does not automatically get loaded, load it with <code>/sbin/insmod acm</code>
 while logged on as root.
-
+</p>
+<p>The SCP-3100 requirs direct <a href="howto-linuxusb.htm">Direct
+USB access</a> instead of the acm driver.
+</p>
 <h3>Mac</h3>
 <p>Mac OS X has drivers builtin.
 </blockquote>

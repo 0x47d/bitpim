@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+<h4><a name="scp3100">SCP-3100</h4>
+<p>This phone only is known to work with the driver from URL(http://support.susteen.com/ics/support/DLSplash.asp?task=download,DataPilot).</p>
+<p>The filesystem is not available on this phone and BitPim currently
+does not support downloading of photos from the phone.
+</p>
 <h4>SCP-4900</h4>
 <p>
 To transfer wallpaper and ringers to this phone, the
@@ -125,7 +130,7 @@ ReadyLink.
 <h4>MM-8300</h4>
 
 <p>The MM-8300 is a flip phone with a built-in still/video camera that supports
-ReadyLink.
+ReadyLink.  The filesystem is not available on this phone.
 
 <ul>
 <li>URL(http://www.sanyo.com/wireless/handsets/downloads/MM-8300UsersGuide.pdf,MM-8300 User's Guide)

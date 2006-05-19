@@ -48,6 +48,10 @@ To force the newer tiff library to be used, do the following:
 cd /usr/lib
 ln -s libtiff.so.4 libtiff.so.3
 </pre>
+Fedora Core 5 also is missing libstdc++.so.5 by default.  This library can be installed with:
+<pre>
+yum install compat-libstdc++-33
+</pre>
 <h3>USB Device Permissions</h3>
 When a user logs into an X window session on the console of a Linux
 machine, the system changes the ownership of many devices to the user
