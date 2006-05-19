@@ -11,12 +11,15 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 RT_PATH='brew/16452/mr'
+RT_PATH2='brew/16452/lk/mr'
 RT_INDEX_FILE_NAME=RT_PATH+'/MrInfo.db'
 RT_EXCLUDED_FILES=('MrInfo.db',)
 SND_PATH='brew/16452/ms'
+SND_PATH2='brew/16452/lk/ms'
 SND_INDEX_FILE_NAME=SND_PATH+'/MsInfo.db'
 SND_EXCLUDED_FILES=('MsInfo.db', 'ExInfo.db')
 PIC_PATH='brew/16452/mp'
+PIC_PATH2='brew/16452/lk/mp'
 PIC_INDEX_FILE_NAME=PIC_PATH+'/Default Album.alb'
 PIC_EXCLUDED_FILES=('Default Album.alb', 'Graphics.alb')
 PREF_DB_FILE_NAME='current_prefs.db'
@@ -128,7 +131,7 @@ class DefaultResponse(BaseProtogenClass):
 
 
 class WRingtoneIndexEntry(BaseProtogenClass):
-    __fields=['path', 'name', 'eor']
+    __fields=['name', 'path_prefix', 'pathname', 'eor']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -156,16 +159,18 @@ class WRingtoneIndexEntry(BaseProtogenClass):
             self._complainaboutunusedargs(WRingtoneIndexEntry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        if getattr(self, '__field_name', None) is None:
+            self.__field_name=STRING()
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_path
+        try: self.__field_path_prefix
         except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/mr/' })
-        self.__field_path.writetobuffer(buf)
-        self.__field_name.writetobuffer(buf)
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix.writetobuffer(buf)
+        self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
             self.__field_eor=STRING(**{ 'terminator': None,               'default': '|2\x0A' })
@@ -178,30 +183,14 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/mr/' })
-        self.__field_path.readfrombuffer(buf)
-        self.__field_name=STRING(**{ 'terminator': None })
-        self.__field_name.readfrombuffer(buf)
+        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix.readfrombuffer(buf)
+        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname.readfrombuffer(buf)
         self.__field_eor=STRING(**{ 'terminator': None,               'default': '|2\x0A' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
-
-    def __getfield_path(self):
-        try: self.__field_path
-        except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/mr/' })
-        return self.__field_path.getvalue()
-
-    def __setfield_path(self, value):
-        if isinstance(value,STRING):
-            self.__field_path=value
-        else:
-            self.__field_path=STRING(value,**{ 'terminator': None,               'default': '/ff/brew/16452/mr/' })
-
-    def __delfield_path(self): del self.__field_path
-
-    path=property(__getfield_path, __setfield_path, __delfield_path, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -210,11 +199,40 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None })
+            self.__field_name=STRING(value,)
 
     def __delfield_name(self): del self.__field_name
 
     name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_path_prefix(self):
+        try: self.__field_path_prefix
+        except:
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        return self.__field_path_prefix.getvalue()
+
+    def __setfield_path_prefix(self, value):
+        if isinstance(value,STRING):
+            self.__field_path_prefix=value
+        else:
+            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '/ff/' })
+
+    def __delfield_path_prefix(self): del self.__field_path_prefix
+
+    path_prefix=property(__getfield_path_prefix, __setfield_path_prefix, __delfield_path_prefix, None)
+
+    def __getfield_pathname(self):
+        return self.__field_pathname.getvalue()
+
+    def __setfield_pathname(self, value):
+        if isinstance(value,STRING):
+            self.__field_pathname=value
+        else:
+            self.__field_pathname=STRING(value,**{ 'terminator': None })
+
+    def __delfield_pathname(self): del self.__field_pathname
+
+    pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
 
     def __getfield_eor(self):
         try: self.__field_eor
@@ -236,8 +254,9 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         return True
 
     def containerelements(self):
-        yield ('path', self.__field_path, None)
         yield ('name', self.__field_name, None)
+        yield ('path_prefix', self.__field_path_prefix, None)
+        yield ('pathname', self.__field_pathname, None)
         yield ('eor', self.__field_eor, None)
 
 
@@ -487,7 +506,7 @@ class RRingtoneIndexFile(BaseProtogenClass):
 
 
 class WSoundsIndexEntry(BaseProtogenClass):
-    __fields=['path', 'name', 'eor']
+    __fields=['name', 'path_prefix', 'pathname', 'eor']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -515,16 +534,18 @@ class WSoundsIndexEntry(BaseProtogenClass):
             self._complainaboutunusedargs(WSoundsIndexEntry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        if getattr(self, '__field_name', None) is None:
+            self.__field_name=STRING()
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_path
+        try: self.__field_path_prefix
         except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/ms/' })
-        self.__field_path.writetobuffer(buf)
-        self.__field_name.writetobuffer(buf)
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix.writetobuffer(buf)
+        self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
             self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
@@ -537,30 +558,14 @@ class WSoundsIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/ms/' })
-        self.__field_path.readfrombuffer(buf)
-        self.__field_name=STRING(**{ 'terminator': None })
-        self.__field_name.readfrombuffer(buf)
+        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix.readfrombuffer(buf)
+        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname.readfrombuffer(buf)
         self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
-
-    def __getfield_path(self):
-        try: self.__field_path
-        except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '/ff/brew/16452/ms/' })
-        return self.__field_path.getvalue()
-
-    def __setfield_path(self, value):
-        if isinstance(value,STRING):
-            self.__field_path=value
-        else:
-            self.__field_path=STRING(value,**{ 'terminator': None,               'default': '/ff/brew/16452/ms/' })
-
-    def __delfield_path(self): del self.__field_path
-
-    path=property(__getfield_path, __setfield_path, __delfield_path, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -569,11 +574,40 @@ class WSoundsIndexEntry(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None })
+            self.__field_name=STRING(value,)
 
     def __delfield_name(self): del self.__field_name
 
     name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_path_prefix(self):
+        try: self.__field_path_prefix
+        except:
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        return self.__field_path_prefix.getvalue()
+
+    def __setfield_path_prefix(self, value):
+        if isinstance(value,STRING):
+            self.__field_path_prefix=value
+        else:
+            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '/ff/' })
+
+    def __delfield_path_prefix(self): del self.__field_path_prefix
+
+    path_prefix=property(__getfield_path_prefix, __setfield_path_prefix, __delfield_path_prefix, None)
+
+    def __getfield_pathname(self):
+        return self.__field_pathname.getvalue()
+
+    def __setfield_pathname(self, value):
+        if isinstance(value,STRING):
+            self.__field_pathname=value
+        else:
+            self.__field_pathname=STRING(value,**{ 'terminator': None })
+
+    def __delfield_pathname(self): del self.__field_pathname
+
+    pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
 
     def __getfield_eor(self):
         try: self.__field_eor
@@ -595,8 +629,9 @@ class WSoundsIndexEntry(BaseProtogenClass):
         return True
 
     def containerelements(self):
-        yield ('path', self.__field_path, None)
         yield ('name', self.__field_name, None)
+        yield ('path_prefix', self.__field_path_prefix, None)
+        yield ('pathname', self.__field_pathname, None)
         yield ('eor', self.__field_eor, None)
 
 
@@ -846,7 +881,7 @@ class RSoundsIndexFile(BaseProtogenClass):
 
 
 class WPictureIndexEntry(BaseProtogenClass):
-    __fields=['name', 'path', 'name2', 'eor']
+    __fields=['name', 'path_prefix', 'pathname', 'eor']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -880,14 +915,11 @@ class WPictureIndexEntry(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_name.writetobuffer(buf)
-        try: self.__field_path
+        try: self.__field_path_prefix
         except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '|/ff/brew/16452/mp/' })
-        self.__field_path.writetobuffer(buf)
-        try: self.__field_name2
-        except:
-            self.__field_name2=STRING(**{ 'terminator': None,               'default': self.name })
-        self.__field_name2.writetobuffer(buf)
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+        self.__field_path_prefix.writetobuffer(buf)
+        self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
             self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
@@ -902,10 +934,10 @@ class WPictureIndexEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_name=STRING(**{ 'terminator': None })
         self.__field_name.readfrombuffer(buf)
-        self.__field_path=STRING(**{ 'terminator': None,               'default': '|/ff/brew/16452/mp/' })
-        self.__field_path.readfrombuffer(buf)
-        self.__field_name2=STRING(**{ 'terminator': None,               'default': self.name })
-        self.__field_name2.readfrombuffer(buf)
+        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+        self.__field_path_prefix.readfrombuffer(buf)
+        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname.readfrombuffer(buf)
         self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -924,37 +956,34 @@ class WPictureIndexEntry(BaseProtogenClass):
 
     name=property(__getfield_name, __setfield_name, __delfield_name, None)
 
-    def __getfield_path(self):
-        try: self.__field_path
+    def __getfield_path_prefix(self):
+        try: self.__field_path_prefix
         except:
-            self.__field_path=STRING(**{ 'terminator': None,               'default': '|/ff/brew/16452/mp/' })
-        return self.__field_path.getvalue()
+            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+        return self.__field_path_prefix.getvalue()
 
-    def __setfield_path(self, value):
+    def __setfield_path_prefix(self, value):
         if isinstance(value,STRING):
-            self.__field_path=value
+            self.__field_path_prefix=value
         else:
-            self.__field_path=STRING(value,**{ 'terminator': None,               'default': '|/ff/brew/16452/mp/' })
+            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '|/ff/' })
 
-    def __delfield_path(self): del self.__field_path
+    def __delfield_path_prefix(self): del self.__field_path_prefix
 
-    path=property(__getfield_path, __setfield_path, __delfield_path, None)
+    path_prefix=property(__getfield_path_prefix, __setfield_path_prefix, __delfield_path_prefix, None)
 
-    def __getfield_name2(self):
-        try: self.__field_name2
-        except:
-            self.__field_name2=STRING(**{ 'terminator': None,               'default': self.name })
-        return self.__field_name2.getvalue()
+    def __getfield_pathname(self):
+        return self.__field_pathname.getvalue()
 
-    def __setfield_name2(self, value):
+    def __setfield_pathname(self, value):
         if isinstance(value,STRING):
-            self.__field_name2=value
+            self.__field_pathname=value
         else:
-            self.__field_name2=STRING(value,**{ 'terminator': None,               'default': self.name })
+            self.__field_pathname=STRING(value,**{ 'terminator': None })
 
-    def __delfield_name2(self): del self.__field_name2
+    def __delfield_pathname(self): del self.__field_pathname
 
-    name2=property(__getfield_name2, __setfield_name2, __delfield_name2, None)
+    pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
 
     def __getfield_eor(self):
         try: self.__field_eor
@@ -977,8 +1006,8 @@ class WPictureIndexEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('name', self.__field_name, None)
-        yield ('path', self.__field_path, None)
-        yield ('name2', self.__field_name2, None)
+        yield ('path_prefix', self.__field_path_prefix, None)
+        yield ('pathname', self.__field_pathname, None)
         yield ('eor', self.__field_eor, None)
 
 
@@ -1323,7 +1352,7 @@ class GroupEntry(BaseProtogenClass):
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
         if self.numofmembers:
-            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_128,  'length': self.numofmembers })
+            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_132,  'length': self.numofmembers })
             self.__field_members.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1400,7 +1429,7 @@ class GroupEntry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_members=value
         else:
-            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_128,  'length': self.numofmembers })
+            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_132,  'length': self.numofmembers })
 
     def __delfield_members(self): del self.__field_members
 
@@ -1420,7 +1449,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungscha950_128(BaseProtogenClass):
+class _gen_p_samsungscha950_132(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
 
@@ -1429,8 +1458,8 @@ class _gen_p_samsungscha950_128(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungscha950_128,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungscha950_128:
+        super(_gen_p_samsungscha950_132,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungscha950_132:
             self._update(args,dict)
 
 
@@ -1439,7 +1468,7 @@ class _gen_p_samsungscha950_128(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungscha950_128,self)._update(args,kwargs)
+        super(_gen_p_samsungscha950_132,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1447,7 +1476,7 @@ class _gen_p_samsungscha950_128(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungscha950_128,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungscha950_132,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2}
             dict2.update(kwargs)

@@ -281,7 +281,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                     _media[_entry['name']]=self.getfilecontents(_entry['filename'],
                                                                 True)
                 except:
-                    self.log('Failed to read file %s'%_file_name)
+                    self.log('Failed to read file %s'%_entry['filename'])
         fundamentals[media_key]=_media
         return fundamentals
 
@@ -385,7 +385,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                             index_file_name):
         # Update the index file
         _index_file=index_file_class()
-        _files=self.listfiles(media_path).keys()
+        _filelists={}
+        for _path in media_path:
+            _filelists.update(self.listfiles(_path))
+        _files=_filelists.keys()
         _files.sort()
         for _f in _files:
             _file_name=common.basename(_f)
@@ -394,10 +397,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 continue
             _entry=index_entry_class()
             _entry.name=_file_name
+            _entry.pathname=_f
             _index_file.items.append(_entry)
         _buf=prototypes.buffer()
         _index_file.writetobuffer(_buf)
         self.writefile(index_file_name, _buf.getvalue())
+##        file(common.basename(index_file_name), 'wb').write(_buf.getvalue())
 
     def saveringtones(self, fundamentals, merge):
         """Save ringtones to the phone"""
@@ -418,12 +423,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                             _new_list, fundamentals)
             self._update_media_index(self.protocolclass.WRingtoneIndexFile,
                                      self.protocolclass.WRingtoneIndexEntry,
-                                     self.protocolclass.RT_PATH,
+                                     [self.protocolclass.RT_PATH,
+                                      self.protocolclass.RT_PATH2],
                                      self.protocolclass.RT_EXCLUDED_FILES,
                                      self.protocolclass.RT_INDEX_FILE_NAME)
             self._update_media_index(self.protocolclass.WSoundsIndexFile,
                                      self.protocolclass.WSoundsIndexEntry,
-                                     self.protocolclass.SND_PATH,
+                                     [self.protocolclass.SND_PATH,
+                                      self.protocolclass.SND_PATH2],
                                      self.protocolclass.SND_EXCLUDED_FILES,
                                      self.protocolclass.SND_INDEX_FILE_NAME)
             fundamentals['rebootphone']=True
@@ -458,7 +465,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                             _new_list, fundamentals)
             self._update_media_index(self.protocolclass.WPictureIndexFile,
                                      self.protocolclass.WPictureIndexEntry,
-                                     self.protocolclass.PIC_PATH,
+                                     [self.protocolclass.PIC_PATH,
+                                      self.protocolclass.PIC_PATH2],
                                      self.protocolclass.PIC_EXCLUDED_FILES,
                                      self.protocolclass.PIC_INDEX_FILE_NAME)
             fundamentals['rebootphone']=True

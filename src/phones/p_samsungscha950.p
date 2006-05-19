@@ -20,12 +20,15 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 RT_PATH='brew/16452/mr'
+RT_PATH2='brew/16452/lk/mr'
 RT_INDEX_FILE_NAME=RT_PATH+'/MrInfo.db'
 RT_EXCLUDED_FILES=('MrInfo.db',)
 SND_PATH='brew/16452/ms'
+SND_PATH2='brew/16452/lk/ms'
 SND_INDEX_FILE_NAME=SND_PATH+'/MsInfo.db'
 SND_EXCLUDED_FILES=('MsInfo.db', 'ExInfo.db')
 PIC_PATH='brew/16452/mp'
+PIC_PATH2='brew/16452/lk/mp'
 PIC_INDEX_FILE_NAME=PIC_PATH+'/Default Album.alb'
 PIC_EXCLUDED_FILES=('Default Album.alb', 'Graphics.alb')
 PREF_DB_FILE_NAME='current_prefs.db'
@@ -69,9 +72,10 @@ PACKET DefaultResponse:
     * DATA data
 
 PACKET WRingtoneIndexEntry:
+    P STRING name
     * STRING { 'terminator': None,
-               'default': '/ff/brew/16452/mr/' } +path
-    * STRING { 'terminator': None } name
+               'default': '/ff/' } +path_prefix
+    * STRING { 'terminator': None } pathname
     * STRING { 'terminator': None,
                'default': '|2\x0A' } +eor
 PACKET WRingtoneIndexFile:
@@ -84,9 +88,10 @@ PACKET RRingtoneIndexFile:
     * LIST { 'elementclass': RRingtoneIndexEntry } +items
 
 PACKET WSoundsIndexEntry:
+    P STRING name
     * STRING { 'terminator': None,
-               'default': '/ff/brew/16452/ms/' } +path
-    * STRING { 'terminator': None } name
+               'default': '/ff/' } +path_prefix
+    * STRING { 'terminator': None } pathname
     * STRING { 'terminator': None,
                'default': '|0|7\x0A' } +eor
 PACKET WSoundsIndexFile:
@@ -100,9 +105,8 @@ PACKET RSoundsIndexFile:
 PACKET WPictureIndexEntry:
     * STRING { 'terminator': None } name
     * STRING { 'terminator': None,
-               'default': '|/ff/brew/16452/mp/' } +path
-    * STRING { 'terminator': None,
-               'default': self.name } +name2
+               'default': '|/ff/' } +path_prefix
+    * STRING { 'terminator': None } pathname
     * STRING { 'terminator': None,
                'default': '|0|0|3|>\x0A\xF4' } +eor
 PACKET WPictureIndexFile:
