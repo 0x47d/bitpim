@@ -545,7 +545,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         try:
             self.select_default_SMS()
             _req=self.protocolclass.sms_list_req()
-            _sms_list=self.sendATcommand(_req, None)
+            _sms_list=self.sendATcommand(_req, None, True)
             _sms_item=self.protocolclass.sms_list_resp()
             for _entry in _sms_list:
                 _buf=prototypes.buffer(_entry)

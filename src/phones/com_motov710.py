@@ -628,8 +628,8 @@ class Phone(com_moto.Phone):
                     _comm.sendatcommand('+MODE=0')
                     _comm.close()
                     _model=_s.split(': ')[1].split(',')[-1].replace('"', '').split('=')[1]
-                    if _model=='V710':
-                        _model='V710 '
+                    if _model==_module.Profile.common_model_name:
+                        _model=_module.Profile.phone_model
                     res[port]['model']=_model
                     if _model==_module.Profile.phone_model:
                         return port
@@ -657,6 +657,7 @@ class Profile(parentprofile):
     # use for auto-detection
     phone_manufacturer='Motorola'
     phone_model='V710 '
+    common_model_name='V710'
     generic_phone_model='Motorola CDMA v710 Phone'
 
     # all dumped in "images"
