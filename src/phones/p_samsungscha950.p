@@ -51,6 +51,7 @@ PB_PATH='pb'
 PB_JRNL_FILE_PREFIX=PB_PATH+'/jrnl_'
 PB_ENTRY_FILE_PREFIX=PB_PATH+'/recs_'
 PB_MAIN_FILE_PREFIX=PB_PATH+'/main_'
+PB_WP_CACHE_PATH='cache/pb'
 
 PB_FLG_NONE=0x0401
 PB_FLG_FAX=0x0080
@@ -65,6 +66,18 @@ PB_FLG_CELL2=0X0100
 PB_FLG_SPEEDDIAL=0x01
 PB_FLG_RINGTONE=0x10
 PB_FLG_PRIMARY=0x02
+
+# Samsung command code
+SS_CMD_SW_VERSION=0
+SS_CMD_HW_VERSION=1
+SS_CMD_PB_COUNT=2
+SS_CMD_PB_VOICEMAIL_READ=5
+SS_CMD_PB_VOICEMAIL_WRITE=6
+SS_CMD_PB_READ=0x14
+SS_CMD_PB_WRITE=0x15
+SS_CMD_PB_CLEAR=0x1D
+SS_CMD_PB_VOICEMAIL_PARAM=0x19
+PB_DEFAULT_VOICEMAIL_NUMBER='*86'
 
 %}
 
@@ -320,3 +333,96 @@ PACKET PBFileHeader:
     * LIST { 'elementclass': LenEntry,
              'length': 8,
              'createdefault': True } +lens
+
+PACKET ss_cmd_hdr:
+    4 UINT { 'default': 0xfa4b } +commandcode
+    1 UINT command
+
+PACKET ss_cmd_resp:
+    * ss_cmd_hdr cmd_hdr
+    * DATA data
+
+PACKET ss_sw_req:
+    * ss_cmd_hdr { 'command': SS_CMD_SW_VERSION } +hdr
+PACKET ss_sw_resp:
+    * ss_cmd_hdr hdr
+    * STRING { 'terminator': 0 } sw_version
+PACKET ss_hw_req:
+    * ss_cmd_hdr { 'command': SS_CMD_HW_VERSION } +hdr
+PACKET ss_hw_resp:
+    * ss_cmd_hdr hdr
+    * STRING { 'terminator': 0 } hw_version
+
+PACKET ss_pb_count_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_COUNT } +hdr
+PACKET ss_pb_count_resp:
+    * ss_cmd_hdr hdr
+    1 UINT zero
+    2 UINT count
+PACKET ss_pb_read_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_READ } +hdr
+    1 UINT { 'default': 0 } +zero
+    2 UINT index
+PACKET ss_pb_read_resp:
+    * ss_cmd_hdr hdr
+    1 UINT dunno1
+    2 UINT index
+    1 UINT dunno2
+    * DATA data
+PACKET ss_pb_voicemail_read_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_VOICEMAIL_READ } +hdr
+    1 UINT { 'constant': SS_CMD_PB_VOICEMAIL_PARAM } +param
+PACKET ss_pb_voicemail_resp:
+    * ss_cmd_hdr hdr
+    1 UINT param
+    * STRING { 'terminator': 0 } number
+PACKET ss_pb_voicemail_write_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_VOICEMAIL_WRITE } +hdr
+    1 UINT { 'constant': SS_CMD_PB_VOICEMAIL_PARAM } +param
+    * STRING { 'terminator': 0,
+               'default': PB_DEFAULT_VOICEMAIL_NUMBER } +number
+PACKET ss_pb_clear_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_CLEAR } +hdr
+PACKET ss_pb_clear_resp:
+    * ss_cmd_hdr hdr
+    2 UINT flg
+
+PACKET ss_number_entry:
+    * STRING { 'terminator': 0,
+               'default': ''} +number
+    2 UINT { 'default': 0 } +speeddial
+    1 UINT { 'default': 0 } +primary
+    8 STRING { 'pad': 0,
+               'default': '' } +zero
+    * STRING { 'terminator': 0,
+               'default': '' } +ringtone
+
+PACKET ss_pb_entry:
+    * STRING { 'terminator': 0 } name
+    * STRING { 'terminator': 0,
+               'default': '' } +email
+    * STRING { 'terminator': 0,
+               'default': '' } +email2
+    4 UINT { 'default': 0 } +zero1
+    * STRING { 'terminator': 0,
+               'default': '' } +wallpaper
+    1 UINT { 'default': 0 } +zero2
+    * ss_number_entry +home
+    * ss_number_entry +work
+    * ss_number_entry +cell
+    * ss_number_entry +dummy
+    * ss_number_entry +fax
+    * ss_number_entry +cell2
+    4 UINT { 'default': 0 } +zero3
+    1 UINT { 'default': 0 } +group
+    2 UINT { 'default': 0 } +zero4
+    
+PACKET ss_pb_write_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_WRITE } +hdr
+    1 UINT { 'default': 0 } +zero
+    * ss_pb_entry entry
+
+PACKET ss_pb_write_resp:
+    * ss_cmd_hdr hdr
+    1 UINT zero
+    2 UINT index

@@ -5,6 +5,11 @@
 <LI>The hardware version is <B>A950.08</B>
 </UL>
 
+<H3>Phonebook</H3>
+<UL>
+<LI><B>Groups (Categories)</B> cannot be changed from BitPim, it must be done from the phone.
+</UL>
+
 <H3>Calendar</H3>
 <UL>
 <LI>BitPim supports up to 100 calendar events.

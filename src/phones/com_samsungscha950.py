@@ -14,6 +14,8 @@ import datetime
 import sha
 import time
 
+import wx
+
 # BitPim modules
 import bpcalendar
 import common
@@ -198,8 +200,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         return idx
     def get_wallpaper_index(self):
         _res={}
-        _idx=self._get_builtin_wallpaper_index(0, _res)
-        _idx=self._get_file_wallpaper_index(_idx, _res)
+        _idx=self._get_file_wallpaper_index(0, _res)
         return _res
     def _read_ringtone_range(self, fundamentals):
         _res={}
@@ -216,7 +217,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def get_ringtone_range(self, name, fundamentals):
         if not name:
             # return No Rings
-            return self.ringtone_noring_range
+            return self.ringtone_default_range
         # check the builtin ringtones
         if self.builtin_ringtones.has_key(name):
             return self.builtin_ringtones[name]
@@ -242,10 +243,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for _key,_value in fundamentals['ringtone-range'].items():
             if _value==range:
                 return _key
-
-    def get_wallpaper_range(self, wallpaper, fundamentals):
-        # return the wallpaper range for the specified WP name
-        return fundamentals.get('wallpaper-range', {}).get(wallpaper, None)
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -710,8 +707,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     #Phonebook stuff------------------------------------------------------------
     def _del_private_dicts(self, fundamentals):
         # delete the stuff that we created
-        for _key in ('ringtone-range', 'wallpaper-range', 'numberlist',
-                     'emaillist', 'wplist', 'sdlist'):
+        for _key in ('ringtone-range', 'wallpaper-range'):
             if fundamentals.has_key(_key):
                 del fundamentals[_key]
 
@@ -744,172 +740,93 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         self._del_private_dicts(fundamentals)
         return fundamentals
 
-    def _write_pb_rec(self, pb_list, rec_cnt, fundamentals):
-        # write out this group
-        _filename='%s%04d'%(self.protocolclass.PB_ENTRY_FILE_PREFIX,
-                            rec_cnt)
-        _rec_file=self.protocolclass.PBFile()
-        for _rec in pb_list:
-            _item_len=self.protocolclass.LenEntry()
-            if _rec:
-                _buf=prototypes.buffer()
-                _rec.writetobuffer(_buf)
-                _item_len.itemlen=len(_buf.getvalue())
-                _rec_file.items.append(_rec.pb)
-            _rec_file.lens.append(_item_len)
-        _buf=prototypes.buffer()
-        _rec_file.writetobuffer(_buf)
-        self.writefile(_filename, _buf.getvalue())
-##        file(common.basename(_filename), 'wb').write(_buf.getvalue())
+    def _get_wp_filename(self, wp, wp_index):
+        # return the filename associated with this wallpaper
+        for _,_entry in wp_index.items():
+            if _entry.get('name', None)==wp:
+                return _entry.get('filename', None)
+    def _rescale_and_cache(self, wp, filename,
+                           fundamentals):
+        # rescale the wp and add it to the cache dir
+        try:
+            _data=self.getfilecontents(filename, True)
+            _tmpname=common.gettempfilename('tmp')
+            file(_tmpname, 'wb').write(_data)
+            _img=wx.Image(_tmpname)
+            if not _img.Ok():
+                self.log('Failed to understand image: '+filename)
+                return
+            _img.Rescale(128, 96)
+            _img.SaveFile(_tmpname, wx.BITMAP_TYPE_JPEG)
+            _newfilename=self.protocolclass.PB_WP_CACHE_PATH+'/$'+filename.replace('/', '$')
+            _data=file(_tmpname, 'rb').read()
+            self.writefile(_newfilename, _data)
+            return _newfilename
+        except:
+            if __debug__:
+                self.log('Failed to add cache image: '+wp)
+                raise
 
-    _main_data='\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    def _write_journal_file(self, journal_file):
-        # write out the journal file
-        _file_postfix=None
-        for _cnt in range(256):
-            _filename='%s%d'%(self.protocolclass.PB_MAIN_FILE_PREFIX, _cnt)
-            if self.statfile(_filename):
-                _file_postfix=_cnt
-##                self.writefile(_filename, self._main_data)
-                break
-        if _file_postfix is None:
-            self.log('Failed to find main_ postfix')
+    def _add_wp_cache(self, wp, fundamentals):
+        # check to see if it already exists
+        _wp_range=fundamentals.get('wallpaper-range', {})
+        if _wp_range.has_key(wp):
+            # already in there
             return
-        _filename='%s%d'%(self.protocolclass.PB_JRNL_FILE_PREFIX,
-                          _file_postfix)
-        _buf=prototypes.buffer()
-        journal_file.writetobuffer(_buf)
-        self.writefile(_filename, _buf.getvalue())
-##        file(common.basename(_filename), 'wb').write(_buf.getvalue())
+        # add this wallpaper into the cache dir
+        _wp_index=fundamentals.get('wallpaper-index', {})
+        # look for the file name
+        _filename=self._get_wp_filename(wp, _wp_index)
+        if not _filename:
+            # couldn't find the filename
+            return
+        # copy the image file, rescale, and put it in the cache dir
+        _newfilename=self._rescale_and_cache(wp, _filename, fundamentals)
+        if _newfilename:
+            # rescale successful, update the dict
+            _wp_range[wp]='/ff/'+_newfilename
+            fundamentals['wallpaper-range']=_wp_range
 
-    def _collect_wp_range(self, filename, res):
-        _buf=prototypes.buffer(self.getfilecontents(filename))
-        _rec=self.protocolclass.PBFile()
-        _rec.readfrombuffer(_buf)
-        for _entry in _rec.items:
-            if _entry.info&self.protocolclass.PB_FLG_WP:
-                _idx=_entry.wallpaper.rfind('$')+1
-                _wp=_entry.wallpaper[_idx:]
-                res[_wp]={ 'filename': _entry.wallpaper,
-                           'range': _entry.wallpaper_range }
+    def get_wallpaper_range(self, wallpaper, fundamentals):
+        # return the wallpaper cache name for the specific wallpaper
+        return fundamentals.get('wallpaper-range', {}).get(wallpaper, None)
 
-    def _get_wallpaper_range(self, fundamentals):
-        # go through all the contacts
-        _idx=0
-        _res={}
-        while True:
-            _filename='%s%04d'%(self.protocolclass.PB_ENTRY_FILE_PREFIX,
-                                _idx)
-            if self.statfile(_filename):
-                self._collect_wp_range(_filename, _res)
-                _idx+=1
-            else:
-                break
-        fundamentals['wallpaper-range']=_res
-
-    _journal_numbers_list=(
-        ('cell', protocolclass.PB_FLG_CELL, 'cellsd'),
-        ('work', protocolclass.PB_FLG_WORK, 'worksd'),
-        ('home', protocolclass.PB_FLG_HOME, 'homesd'),
-        ('fax', protocolclass.PB_FLG_FAX, 'faxsd'),
-        ('cell2', protocolclass.PB_FLG_CELL2, 'cell2sd'))
-    _journal_others_list=(
-        ('email', protocolclass.PB_FLG_EMAIL, 'emaillist'),
-        ('email2', protocolclass.PB_FLG_EMAIL2, 'emaillist'),
-        ('wallpaper', protocolclass.PB_FLG_WP, 'wplist'))
-    def _insert_order_lists(self, item, lst):
-        # insert and sort this item into the list
-        for _idx,_entry in enumerate(lst):
-            if item<_entry:
-                return _idx, lst[:_idx]+[item]+lst[_idx:]
-        return len(lst), lst+[item]
-    def _gen_bitmap(self, numstr):
-        _res=0
-        for ch in numstr:
-            _res|=(1<<int(ch))
-        return _res
-    def _write_journal_number(self, pbentry, numtype, sdtype, flg,
-                              journal_entry, fundamentals):
-        # update the number slot
-        _num_entry=getattr(pbentry, numtype)
-        _number=_num_entry.number
-        _j_number=self.protocolclass.JournalNumber()
-        _j_number.index, fundamentals['numberlist']=self._insert_order_lists(_number,
-                                                    fundamentals['numberlist'])
-        _j_number.bitmap=self._gen_bitmap(_number)
-        setattr(journal_entry, numtype, _j_number)
-        if _num_entry.option & self.protocolclass.PB_FLG_SPEEDDIAL:
-            # this one has speeddial
-            _j_sd=self.protocolclass.JournalSpeeddial()
-            _j_sd.index=len(fundamentals['sdlist'])
-            fundamentals['sdlist'].append(_number)
-            _j_sd.speeddial=_num_entry.speeddial
-            _j_sd.bitmap=self._gen_bitmap('%03d'%_num_entry.speeddial)
-            journal_entry.speeddial_info|=flg
-            setattr(journal_entry, sdtype, _j_sd)
-    def _write_journal_others(self, pbentry, keytype, listtype,
-                             journal_entry, fundamentals):
-        _item=getattr(pbentry, keytype)
-        _index, fundamentals[listtype]=self._insert_order_lists(_item,
-                                                                fundamentals[listtype])
-        setattr(journal_entry, keytype, _index)
-        
-    def _update_journal_file(self, journal_file, entry, index,
-                             fundamentals):
-        # write a new Journal Record to the journal file based on this entry
-        _j_entry=self.protocolclass.JournalEntry()
-        _j_entry.index=index
-        _j_entry.number_info=entry.pb.info
-        _j_entry.speeddial_info=0
-        for _key,_flg,_sdkey in self._journal_numbers_list:
-            if entry.pb.info & _flg:
-                self._write_journal_number(entry.pb, _key, _sdkey, _flg,
-                                           _j_entry, fundamentals)
-        for _key,_flg,_list in self._journal_others_list:
-            if entry.pb.info & _flg:
-                self._write_journal_others(entry.pb, _key, _list,
-                                           _j_entry, fundamentals)
-        _j_rec=self.protocolclass.JournalRec()
-        _j_rec.entry=_j_entry
-        _j_rec.blocklen=_j_rec.packetsize()
-        journal_file.items.append(_j_rec)
-        
     def savephonebook(self, fundamentals):
         self.log('Writing phonebook contacts')
-        self._get_wallpaper_range(fundamentals)
+        self._read_ringtone_range(fundamentals)
         _pb_dict=fundamentals.get('phonebook', {})
-        _rec_cnt=0
-        _entry_cnt=1
-        _total_cnt=0
-        _pbentry_list=[None]
-        # setting the lists for sorting
-        fundamentals['numberlist']=[]
-        fundamentals['emaillist']=[]
-        fundamentals['wplist']=[]
-        fundamentals['sdlist']=[]
         # alphabetize the list based on name
         _pb_list=[(nameparser.getfullname(_entry['names'][0]), _key) \
                   for _key,_entry in _pb_dict.items()]
         _pb_list.sort()
-        _journal_file=self.protocolclass.JournalFile()
+        _req=self.protocolclass.ss_pb_clear_req()
+        _rp=self.sendbrewcommand(_req, self.protocolclass.ss_pb_clear_resp)
+        if _rp.flg:
+            self.log('Failed to clear phonebook')
+            self._del_private_dicts(fundamentals)
+            return fundamentals
+        _req=self.protocolclass.ss_pb_write_req()
+        _total_cnt=len(_pb_list)
+        _cnt=0
         for _name,_key in _pb_list:
-            _entry=_pb_dict[_key]
-            _pbentry=PBEntry(self, _entry, fundamentals)
-            _pbentry_list.append(_pbentry)
-            _entry_cnt+=1
-            _total_cnt+=1
-            self._update_journal_file(_journal_file, _pbentry, _total_cnt,
-                                      fundamentals)
-            if _entry_cnt>7:
-                # save out the group
-                self._write_pb_rec(_pbentry_list, _rec_cnt, fundamentals)
-                _pbentry_list=[]
-                _rec_cnt+=1
-                _entry_cnt=0
-        if _entry_cnt:
-            # write out the last group:
-            self._write_pb_rec(_pbentry_list, _rec_cnt, fundamentals)
-        self._write_journal_file(_journal_file)
+            try:
+                _entry=_pb_dict[_key]
+                # set up all the picture ID (wallpaper) images
+                _wp=_entry.get('wallpapers', [{}])[0].get('wallpaper', None)
+                if _wp:
+                    self._add_wp_cache(_wp, fundamentals)
+                # setting up a new contact to send over
+                _pbentry=PBEntry(self, _entry, fundamentals)
+                _req.entry=_pbentry.pb
+                _cnt+=1
+                self.progress(_cnt, _total_cnt,
+                              'Writing entry" %s'%_req.entry.name)
+                _resp=self.sendbrewcommand(_req,
+                                           self.protocolclass.ss_pb_write_resp)
+            except:
+                self.log('Failed to write entry')
+                if __debug__:
+                    raise
         fundamentals['rebootphone']=True
         self._del_private_dicts(fundamentals)
         return fundamentals
@@ -1094,7 +1011,7 @@ class PBEntry(object):
             self.pb=data
         elif isinstance(data, dict):
             # assume it's a phonebook dict
-            self.pb=phone.protocolclass.PBEntry()
+            self.pb=phone.protocolclass.ss_pb_entry()
             self._build(data)
         else:
             raise TypeError('Should be PBEntry or phone dict')
@@ -1104,53 +1021,44 @@ class PBEntry(object):
 
     # Building a phonebook rec from a bp phone dict-----------------------------
     _pb_type_dict={
-        'home': (Phone.protocolclass.PB_FLG_HOME, 'home'),
-        'office': (Phone.protocolclass.PB_FLG_WORK, 'work'),
-        'cell': (Phone.protocolclass.PB_FLG_CELL, 'cell'),
-        'fax': (Phone.protocolclass.PB_FLG_FAX, 'fax'),
+        'home': 'home',
+        'office': 'work',
+        'cell': 'cell',
+        'fax': 'fax',
         }
     def _build_number(self, number, ringtone, primary):
         # build a number rec
-        _info_list=self._pb_type_dict.get(number['type'], None)
-        if not _info_list:
+        _num_type=self._pb_type_dict.get(number['type'], None)
+        if not _num_type:
             # we don's support this type
             return
         # check for cell2
-        if (_info_list[0]==self.phone.protocolclass.PB_FLG_CELL) and \
-           (self.pb.info&self.phone.protocolclass.PB_FLG_CELL):
-            _info_list=(self.phone.protocolclass.PB_FLG_CELL2,
-                        'cell2')
+        if _num_type=='cell' and self.pb.cell.number:
+            _num_type='cell2'
         # build a number entry
-        _entry=self.phone.protocolclass.NumberEntry()
+        _entry=self.phone.protocolclass.ss_number_entry()
         _entry.number=number['number']
         _sd=number.get('speeddial', None)
-##        _rt=number.get('ringtone', None)
-##        if _rt is None:
-##            _rt=ringtone
-        _rt=ringtone
-        _entry.option=0
+        if ringtone:
+            _rt=self.phone.get_ringtone_range(ringtone, self.fundamentals)
+        else:
+            _rt=None
         if _sd is not None:
-            _entry.option|=self.phone.protocolclass.PB_FLG_SPEEDDIAL
             _entry.speeddial=_sd
         if _rt is not None:
-            _entry.option|=self.phone.protocolclass.PB_FLG_RINGTONE
-            _entry.ringtone=self.phone.get_ringtone_range(_rt,
-                                                          self.fundamentals)
+            _entry.ringtone=_rt
         if primary:
-            _entry.option|=self.phone.protocolclass.PB_FLG_PRIMARY
+            _entry.primary=1
         # add it to the contact
-        self.pb.info|=_info_list[0]
-        setattr(self.pb, _info_list[1], _entry)
+        setattr(self.pb, _num_type, _entry)
 
     def _build_email(self, emails):
         # build an email rec
         if len(emails) and emails[0].get('email', None):
             # at least 1 email
-            self.pb.info|=self.phone.protocolclass.PB_FLG_EMAIL
             self.pb.email=emails[0]['email']
         if len(emails)>1 and emails[1].get('email', None):
             # 2 or more emails
-            self.pb.info|=self.phone.protocolclass.PB_FLG_EMAIL2
             self.pb.email2=emails[1]['email']
 
     def _build_group(self, cat):
@@ -1160,7 +1068,6 @@ class PBEntry(object):
         _cat_list=self.fundamentals.get('groups', {})
         for _key,_cat in _cat_list.items():
             if _key and _cat.get('name', None)==cat:
-                self.pb.info|=self.phone.protocolclass.PB_FLG_GROUP
                 self.pb.group=_key
                 break
 
@@ -1170,9 +1077,7 @@ class PBEntry(object):
             return
         _wp=self.phone.get_wallpaper_range(wallpaper, self.fundamentals)
         if _wp:
-            self.pb.info|=self.phone.protocolclass.PB_FLG_WP
-            self.pb.wallpaper=_wp['filename']
-            self.pb.wallpaper_range=_wp['range']
+            self.pb.wallpaper=_wp
         
     def _build(self, entry):
         # Build a phone dict base on the phone data
@@ -1187,8 +1092,6 @@ class PBEntry(object):
             _primary=False
         # build the email
         self._build_email(entry.get('emails', []))
-        # current time
-        self.pb.datetime=self.phone._time_now()
         # group
         self._build_group(entry.get('categories', [{}])[0].get('category', None))
         # wallpaper
@@ -1220,8 +1123,6 @@ class PBEntry(object):
                     _number['speeddial']=_num_entry.speeddial
                 if _num_entry.option&p_class.PB_FLG_RINGTONE and \
                    not entry.has_key('ringtones'):
-##                    _number['ringtone']=self.phone.ringtone_name_from_range(
-##                        _num_entry.ringtone, self.fundamentals)
                     _ringtone=self.phone.ringtone_name_from_range(
                         _num_entry.ringtone, self.fundamentals)
                     entry['ringtones']=[{ 'ringtone': _ringtone,
@@ -1279,7 +1180,7 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-##        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
