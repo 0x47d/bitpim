@@ -25,4 +25,4 @@ class Profile(parentprofile):
     phone_manufacturer='Motorola'
     phone_model='E815M'
     common_model_name='E815'
-    generic_phone_model='Motorola CDMA e815'
+    generic_phone_model='Motorola CDMA e815 Phone'
