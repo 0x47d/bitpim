@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2006 Joe Pham <djpham@netzero.com>
+### Copyright (C) 2006 Joe Pham <djpham@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -17,9 +17,7 @@
 import bpcalendar
 import bptime
 import common_calendar
-import helpids
 import vcal_calendar as vcal
-import vcard
 
 module_debug=False
 
@@ -57,78 +55,6 @@ class Duration(object):
         return self._duration
 
 #-------------------------------------------------------------------------------
-class RRule(object):
-    # convert a iCal recurrence rule into a RepeatEntry object
-    def __init__(self, data):
-        self._rep=None
-        self._count=None
-        self._until=None
-        self._extract_data(data)
-
-    def _build_value_dict(self, data):
-        _value={}
-        for _item in data.get('value', '').split(';'):
-            _l=_item.split('=')
-            if len(_l)>1:
-                _value[_l[0]]=_l[1].split(',')
-            else:
-                _value[_l[0]]=[]
-        return _value
-
-    _sorted_weekdays=['FR', 'MO', 'TH', 'TU', 'WE']
-    _dow_bitmap={
-        'SU': 1,
-        'MO': 2,
-        'TU': 4,
-        'WE': 8,
-        'TH': 0x10,
-        'FR': 0x20,
-        'SA': 0x40
-        }
-    def _build_daily(self, value):
-        # build a daily repeat event
-        _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.daily)
-        # only support either every nth day or every weekday
-        # is this every weekday?
-        _days=value.get('BYDAY', [])
-        _days.sort()
-        if _days==self._sorted_weekdays:
-            _rep.interval=0
-        else:
-            _rep.interval=_value.get('INTERVAL', [1])[0]
-        return _rep
-
-    def _build_weekly(self, value):
-        # build a weekly repeat event
-        _rep=bpcalendar.RepeatEntry(bpcalendar.RepeatEntry.weekly)
-        _rep.interval=_value.get('INTERVAL', [1])[0]
-        _dow=0
-        for _day in _value.get('BYDAY', []):
-            _dow|=self._dow_bitmap.get(_day, 0)
-        _rep.dow=_dow
-        return _rep
-
-    def _build_monthly(self, value):
-        return
-    def _build_yearly(self, value):
-        return
-        
-    _funcs={
-        'DAILY': _build_daily,
-        'WEEKLY': _build_weekly,
-        'MONTHLY': _build_monthly,
-        'YEARLY': _build_yearly,
-        }
-    def _extract_data(self, data):
-        _params=data.get('params', {})
-        _value=self._build_value_dict(data)
-        self._rep=self._funcs.get(
-            _value.get('FREQ', [None])[0], lambda _: None)(_value)
-        if self._rep:
-            self._count=_value.get('COUNT', [None])[0]
-            self._until=_value.get('UNTIL', [None])[0]
-
-#-------------------------------------------------------------------------------
 parentclass=vcal.VCalendarImportData
 class iCalendarImportData(parentclass):
 
@@ -160,16 +86,149 @@ class iCalendarImportData(parentclass):
         return (datetime.datetime(*dd['start'])+\
                 datetime.timedelta(seconds=Duration(v).get())).timetuple()[:5]
 
+    def _conv_date(self, v, dd):
+        if v.get('params', {}).get('VALUE', None)=='DATE':
+            # allday event
+            dd['allday']=True
+        return bptime.BPTime(v['value']).get()
+
+    # building repeat data
+    def _build_value_dict(self, data):
+        _value={}
+        for _item in data.get('value', '').split(';'):
+            _l=_item.split('=')
+            if len(_l)>1:
+                _value[_l[0]]=_l[1].split(',')
+            else:
+                _value[_l[0]]=[]
+        return _value
+
+    _sorted_weekdays=['FR', 'MO', 'TH', 'TU', 'WE']
+    _dow_bitmap={
+        'SU': 1,
+        'MO': 2,
+        'TU': 4,
+        'WE': 8,
+        'TH': 0x10,
+        'FR': 0x20,
+        'SA': 0x40
+        }
+
+    def _build_daily(self, value, dd):
+        # build a daily repeat event
+        dd['repeat_type']='daily'
+        # only support either every nth day or every weekday
+        # is this every weekday?
+        _days=value.get('BYDAY', [])
+        _days.sort()
+        if _days==self._sorted_weekdays:
+            _interval=0
+        else:
+            try:
+                _interval=int(value.get('INTERVAL', [1])[0])
+            except ValueError:
+                _interval=1
+        dd['repeat_interval']=_interval
+        return True
+
+    def _build_weekly(self, value, dd):
+        # build a weekly repeat event
+        dd['repeat_type']='weekly'
+        try:
+            _interval=int(value.get('INTERVAL', [1])[0])
+        except ValueError:
+            _interval=1
+        dd['repeat_interval']=_interval
+        _dow=0
+        for _day in value.get('BYDAY', []):
+            _dow|=self._dow_bitmap.get(_day, 0)
+        dd['repeat_dow']=_dow
+        return True
+
+    def _build_monthly(self, value, dd):
+        dd['repeat_type']='monthly'
+        try:
+            _interval2=int(value.get('INTERVAL', [1])[0])
+        except ValueError:
+            _interval2=1
+        dd['repeat_interval2']=_interval2
+        # nth day of the month by default
+        _nth=0
+        _dow=0
+        _daystr=value.get('BYDAY', [None])[0]
+        if _daystr:
+            # every nth day-of-week ie 1st Monday
+            _dow=self._dow_bitmap.get(_daystr[-2:], 0)
+            _nth=1
+            try:
+                if len(_daystr)>2:
+                    _nth=int(_daystr[:-2])
+                elif value.get('BYSETPOS', [None])[0]:
+                    _nth=int(value['BYSETPOS'][0])
+            except ValueError:
+                pass
+            if _nth==-1:
+                _nth=5
+            if _nth<1 or _nth>5:
+                _nth=1
+        dd['repeat_dow']=_dow
+        dd['repeat_interval']=_nth
+        return True
+
+    def _build_yearly(self, value, dd):
+        dd['repeat_type']='yearly'
+        return True
+
+    _funcs={
+        'DAILY': _build_daily,
+        'WEEKLY': _build_weekly,
+        'MONTHLY': _build_monthly,
+        'YEARLY': _build_yearly,
+        }
+    def _conv_repeat(self, v, dd):
+        _params=v.get('params', {})
+        _value=self._build_value_dict(v)
+        _rep=self._funcs.get(
+            _value.get('FREQ', [None])[0], lambda *_: False)(self, _value, dd)
+        if _rep:
+            if _value.get('COUNT', [None])[0]:
+                dd['repeat_num']=int(_value['COUNT'][0])
+            elif _value.get('UNTIL', [None])[0]:
+                dd['repeat_end']=bptime.BPTime(_value['UNTIL'][0]).get()
+        return _rep
+
+    def _conv_exceptions(self, v, _):
+        try:
+            l=v['value'].split(',')
+            r=[]
+            for n in l:
+                r.append(bptime.BPTime(n).get())
+            return r
+        except:
+            if __debug__:
+                raise
+            return []
+
     _calendar_keys=[
         ('CATEGORIES', 'categories', parentclass._conv_cat),
         ('DESCRIPTION', 'notes', None),
-        ('DTEND', 'end', parentclass._conv_date),
+        ('DTEND', 'end', _conv_date),
         ('DURATION', 'end', _conv_duration),
         ('LOCATION', 'location', None),
         ('PRIORITY', 'priority', parentclass._conv_priority),
-        ('DTSTART', 'start', parentclass._conv_date),
+        ('DTSTART', 'start', _conv_date),
         ('SUMMARY', 'description', None),
         ('TRIGGER', 'alarm', _conv_alarm),
-        ('RRULE', 'repeat', parentclass._conv_repeat),
-        ('EXDATE', 'exceptions', parentclass._conv_exceptions),
+        ('RRULE', 'repeat', _conv_repeat),
+        ('EXDATE', 'exceptions', _conv_exceptions),
         ]
+
+#-------------------------------------------------------------------------------
+class iCalImportCalDialog(vcal.VcalImportCalDialog):
+    _filetype_label='iCalendar File:'
+    def __init__(self, parent, id, title):
+        self._oc=iCalendarImportData()
+        common_calendar.PreviewDialog.__init__(self, parent, id, title,
+                               self._column_labels,
+                               self._oc.get_display_data(),
+                               config_name='import/calendar/vcaldialog')

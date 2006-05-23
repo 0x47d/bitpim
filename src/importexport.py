@@ -44,6 +44,10 @@ def GetPhonebookImports():
     res.append( (guihelper.ID_IMPORT_VCARDS,"vCards...", "Import vCards for the phonebook", OnFileImportVCards) )
     # Vcal - always possible
     res.append((guihelper.ID_IMPORT_VCALENDAR,'vCalendar...', 'Import vCalendar data for the calendar', OnFileImportVCal))
+    # iCal - always possible
+    res.append((guihelper.ID_IMPORT_ICALENDAR, 'iCalendar...',
+                'Import iCalendar data for the calendar',
+                OnFileImportiCal))
     # Outlook
     try:
         import native.outlook
@@ -1860,6 +1864,12 @@ def OnFileImportVCal(parent):
     import vcal_calendar
     OnFileImportCommon(parent, vcal_calendar.VcalImportCalDialog,
                        'Import vCalendar', parent.GetActiveCalendarWidget(),
+                       'calendar')
+
+def OnFileImportiCal(parent):
+    import ical_calendar
+    OnFileImportCommon(parent, ical_calendar.iCalImportCalDialog,
+                       'Import iCalendar', parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportCSVCalendar(parent):

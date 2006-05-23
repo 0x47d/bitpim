@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2004 Joe Pham <djpham@netzero.com>
+### Copyright (C) 2004 Joe Pham <djpham@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -145,24 +145,12 @@ class VCalendarImportData(object):
         if rp_end is not None:
             # end date specified
             ce.end=rp_end[:3]+ce.end[3:]
-        elif rp_num is not None and rp_num:
+        elif rp_num:
             # num of occurrences specified
-            if rp_type=='daily':
-                bp_t=bptime.BPTime(ce.start)+ \
-                      datetime.timedelta(rp_interval*(rp_num-1))
-                ce.end=bp_t.get()[:3]+ce.end[3:]
-            elif rp_type=='weekly':
-                bp_t=bptime.BPTime(ce.start)+ \
-                      datetime.timedelta(7*rp_interval*(rp_num-1))
-                ce.end=bp_t.get()[:3]+ce.end[3:]
-            elif rp_type=='monthly':
-                bp_t=bptime.BPTime(ce.start)+ \
-                      datetime.timedelta(30*(rp_num-1))
-                ce.end=bp_t.get()[:2]+ce.end[2:]
-            else:                    
-                bp_t=bptime.BPTime(ce.start)+ \
-                      datetime.timedelta(365*(rp_num-1))
-                ce.end=bp_t.get()[:1]+ce.end[1:]
+            _dt=ce.start[:3]
+            for i in range(rp_num-1):
+                _dt=rp.next_date(_dt)
+            ce.end=_dt[:3]+ce.end[3:]
         else:
             # forever duration
             ce.end=common_calendar.no_end_date[:3]+ce.end[3:]
@@ -209,6 +197,7 @@ class VCalendarImportData(object):
         ce.categories=v
         # look at repeat
         self._populate_repeat_entry(e, ce)
+        ce.allday=e.get('allday', False)
 
     def _generate_repeat_events(self, e):
         # generate multiple single events from this repeat event
@@ -387,6 +376,8 @@ class VCalendarImportData(object):
                 r.append(bptime.BPTime(n).get())
             return r
         except:
+            if __debug__:
+                raise
             return []
     _calendar_keys=[
         ('CATEGORIES', 'categories', _conv_cat),
@@ -467,6 +458,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         ('categories', 'Category', 150, common_calendar.category_str)
         ]
     ID_ADD=wx.NewId()
+    _filetype_label="VCalendar File:"
     def __init__(self, parent, id, title):
         self._oc=VCalendarImportData()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
@@ -477,7 +469,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
     def getcontrols(self, main_bs):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # label
-        hbs.Add(wx.StaticText(self, -1, "VCalendar File:"), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
+        hbs.Add(wx.StaticText(self, -1, self._filetype_label), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
         self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
         self.folderctrl.SetValue(self._oc.get_file_name())
