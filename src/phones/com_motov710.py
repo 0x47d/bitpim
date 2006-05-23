@@ -652,7 +652,8 @@ class Profile(parentprofile):
     WALLPAPER_CONVERT_FORMAT="jpg"
 
     # Motorola OEM USB Cable
-    usbids=( ( 0x22B8, 0x2A22, 1),)
+    usbids=( ( 0x22B8, 0x2A22, 1),
+             ( 0x22B8, 0x2A62, 1))
     deviceclasses=("modem",)
     # use for auto-detection
     phone_manufacturer='Motorola'
