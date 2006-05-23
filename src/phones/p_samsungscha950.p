@@ -52,6 +52,9 @@ PB_JRNL_FILE_PREFIX=PB_PATH+'/jrnl_'
 PB_ENTRY_FILE_PREFIX=PB_PATH+'/recs_'
 PB_MAIN_FILE_PREFIX=PB_PATH+'/main_'
 PB_WP_CACHE_PATH='cache/pb'
+PB_MAX_NAME_LEN=32
+PB_MAX_EMAIL_LEN=48
+PB_MAX_NUMBER_LEN=48
 
 PB_FLG_NONE=0x0401
 PB_FLG_FAX=0x0080
@@ -389,7 +392,9 @@ PACKET ss_pb_clear_resp:
 
 PACKET ss_number_entry:
     * STRING { 'terminator': 0,
-               'default': ''} +number
+               'default': '',
+               'maxsizeinbytes': PB_MAX_NUMBER_LEN,
+               'raiseontruncate': False } +number
     2 UINT { 'default': 0 } +speeddial
     1 UINT { 'default': 0 } +primary
     8 STRING { 'pad': 0,
@@ -398,11 +403,17 @@ PACKET ss_number_entry:
                'default': '' } +ringtone
 
 PACKET ss_pb_entry:
-    * STRING { 'terminator': 0 } name
     * STRING { 'terminator': 0,
-               'default': '' } +email
+               'maxsizeinbytes': PB_MAX_NAME_LEN,
+               'raiseontruncate': False } name
     * STRING { 'terminator': 0,
-               'default': '' } +email2
+               'default': '',
+               'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+               'raiseontruncate': False } +email
+    * STRING { 'terminator': 0,
+               'default': '',
+               'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+               'raiseontruncate': False } +email2
     4 UINT { 'default': 0 } +zero1
     * STRING { 'terminator': 0,
                'default': '' } +wallpaper

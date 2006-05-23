@@ -68,6 +68,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         'Wallpaper 8': 'range_f_wallpaper_preloaded_el_08',
         'Wallpaper 9': 'range_f_wallpaper_preloaded_el_09',
         }
+    builtin_groups={
+        1: 'Business',
+        2: 'Colleague',
+        3: 'Family',
+        4: 'Friends'
+        }
 
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
@@ -103,11 +109,11 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _buf=prototypes.buffer(self.getfilecontents(_file_name))
             _index_file=self.protocolclass.GroupIndexFile()
             _index_file.readfrombuffer(_buf)
-            _idx=1
             for _entry in _index_file.items[1:]:
                 if _entry.name:
                     _res[_entry.index]={ 'name': _entry.name }
-                    _idx+=1
+                elif self.builtin_groups.get(_entry.index, None):
+                    _res[_entry.index]={ 'name': self.builtin_groups[_entry.index] }
         except IndexError:
             pass
         except:
@@ -226,7 +232,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         if not fundamentals.has_key('ringtone-range'):
             self._read_ringtone_range(fundamentals)
         _rt_range=fundamentals['ringtone-range']
-        return _rt_range.get(name, self.ringtone_default_range)
+        return _rt_range.get(name, None)
 
     def ringtone_name_from_range(self, range, fundamentals):
         # check for builtin ringtones
@@ -1228,3 +1234,57 @@ class Profile(parentprofile):
 
     def convertphonebooktophone(self, helper, data):
         return data
+
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                'type': 5, 'speeddial': 5, 'number': 5,
+                'details': 5,
+                'ringtone': False, 'wallpaper': False },
+            'email': 2,
+            'email_details': {
+                'emailspeeddial': False, 'emailringtone': False,
+                'emailwallpaper': False },
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 0,
+            'memo': 0,
+            'category': 1,
+            'wallpaper': 1,
+            'ringtone': 1,
+            'storage': 0,
+            },
+        'calendar': {
+            'description': True, 'location': True, 'allday': False,
+            'start': True, 'end': True, 'priority': False,
+            'alarm': True, 'vibrate': True,
+            'repeat': True,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': True,
+            },
+        'memo': {
+            'subject': False,
+            'date': False,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
+        }
