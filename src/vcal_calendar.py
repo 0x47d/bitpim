@@ -52,10 +52,19 @@ class vCalendarFile(object):
                     d={}
                     has_data=False
                 elif has_data:
-                    d[n[0]]={ 'value': l }
+                    _params={}
+                    for _item in n[1:]:
+                        _l=_item.split('=')
+                        if len(_l)==1:
+                            _params[_l[0]]=None
+                        else:
+                            _params[_l[0]]=_l[1]
+                    d[n[0]]={ 'value': l,
+                              'params': _params }
             f.close()
         except:
-            pass
+            if __debug__:
+                raise
 
     def _get_data(self):
         return copy.deepcopy(self._data)
@@ -83,19 +92,6 @@ class VCalendarImportData(object):
                   _rrule_dow['FR']
 
     def __init__(self, file_name=None):
-##        self._calendar_keys=[
-##            ('CATEGORIES', 'categories', self._conv_cat),
-##            ('DESCRIPTION', 'notes', None),
-##            ('DTEND', 'end', self._conv_date),
-##            ('LOCATION', 'location', None),
-##            ('PRIORITY', 'priority', self._conv_priority),
-##            ('DTSTART', 'start', self._conv_date),
-##            ('SUMMARY', 'description', None),
-##            ('AALARM', 'alarm', self._conv_alarm),
-##            ('DALARM', 'alarm', self._conv_alarm),
-##            ('RRULE', 'repeat', self._conv_repeat),
-##            ('EXDATE', 'exceptions', self._conv_exceptions),
-##            ]
         self._file_name=file_name
         self._data=[]
         self._filter=self._default_filter
