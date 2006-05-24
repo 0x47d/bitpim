@@ -10,6 +10,7 @@
 "Deals with iCalendar calendar import stuff"
 
 # system modules
+import datetime
 
 # site modules
 
@@ -212,11 +213,11 @@ class iCalendarImportData(parentclass):
     _calendar_keys=[
         ('CATEGORIES', 'categories', parentclass._conv_cat),
         ('DESCRIPTION', 'notes', None),
+        ('DTSTART', 'start', _conv_date),
         ('DTEND', 'end', _conv_date),
         ('DURATION', 'end', _conv_duration),
         ('LOCATION', 'location', None),
         ('PRIORITY', 'priority', parentclass._conv_priority),
-        ('DTSTART', 'start', _conv_date),
         ('SUMMARY', 'description', None),
         ('TRIGGER', 'alarm', _conv_alarm),
         ('RRULE', 'repeat', _conv_repeat),
