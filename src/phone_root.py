@@ -222,7 +222,6 @@ class PhoneTree(wx.TreeCtrl):
         event.Enable(self.active_panel.HasColumnSelector())
 
     def FilePrintDataUpdateUIEvent(self, event):
-        enable_print=hasattr(self.active_panel, "OnPrintDialog")
         event.Enable(self.active_panel.CanPrint())
 
     def SelectAllDataUpdateUIEvent(self, event):

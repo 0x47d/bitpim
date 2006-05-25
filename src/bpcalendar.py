@@ -847,6 +847,8 @@ class Calendar(calendarcontrol.Calendar):
         dlg=CalendarPrintDialog(self, mainwindow, config)
         dlg.ShowModal()
         dlg.Destroy()
+    def CanPrint(self):
+        return True
 
     def OnMediaNameChanged(self, msg):
         d=msg.data
