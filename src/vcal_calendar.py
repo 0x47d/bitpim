@@ -31,6 +31,9 @@ class vCalendarFile(object):
         self._data=[]
         self._file_name=file_name
 
+    def _open(self, name):
+        return file(name, 'rt')
+
     def read(self, file_name=None):
         self._data=[]
         if file_name is not None:
@@ -39,7 +42,7 @@ class vCalendarFile(object):
             # no file name specified
             return
         try:
-            f=open(self._file_name)
+            f=self._open(self._file_name)
             vfile=vcard.VFile(f)
             has_data=False
             for n,l in vfile:
@@ -274,6 +277,9 @@ class VCalendarImportData(object):
             return int(v['value'])
         except:
             return None
+    def _conv_str(self, v, _):
+        return v['value'].replace('\,', ',')
+
     def _process_daily_rule(self, v, dd):
         # the rule is Dx #y or Dx YYYYMMDDTHHMM
         s=v['value'].split(' ')
@@ -381,12 +387,12 @@ class VCalendarImportData(object):
             return []
     _calendar_keys=[
         ('CATEGORIES', 'categories', _conv_cat),
-        ('DESCRIPTION', 'notes', None),
-        ('DTEND', 'end', _conv_date),
-        ('LOCATION', 'location', None),
-        ('PRIORITY', 'priority', _conv_priority),
+        ('DESCRIPTION', 'notes', _conv_str),
         ('DTSTART', 'start', _conv_date),
-        ('SUMMARY', 'description', None),
+        ('DTEND', 'end', _conv_date),
+        ('LOCATION', 'location', _conv_str),
+        ('PRIORITY', 'priority', _conv_priority),
+        ('SUMMARY', 'description', _conv_str),
         ('AALARM', 'alarm', _conv_alarm),
         ('DALARM', 'alarm', _conv_alarm),
         ('RRULE', 'repeat', _conv_repeat),
@@ -437,7 +443,7 @@ class VCalendarImportData(object):
             return self._file_name
         return ''
 
-    def read(self, file_name=None):
+    def read(self, file_name=None, update_dlg=None):
         if file_name is not None:
             self._file_name=file_name
         if self._file_name is None:
@@ -459,6 +465,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         ]
     ID_ADD=wx.NewId()
     _filetype_label="VCalendar File:"
+    _data_type='vCalendar'
     def __init__(self, parent, id, title):
         self._oc=VCalendarImportData()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
@@ -471,7 +478,7 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         # label
         hbs.Add(wx.StaticText(self, -1, self._filetype_label), 0, wx.ALL|wx.ALIGN_CENTRE, 2)
         # where the folder name goes
-        self.folderctrl=wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        self.folderctrl=wx.TextCtrl(self, -1, "") #, style=wx.TE_READONLY)
         self.folderctrl.SetValue(self._oc.get_file_name())
         hbs.Add(self.folderctrl, 1, wx.EXPAND|wx.ALL, 2)
         # browse button
@@ -500,22 +507,29 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
 
     def OnImport(self, evt):
         wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog('VCalendar Import',
-                              'Importing vCalendar Data, please wait ...',
+        dlg=wx.ProgressDialog('%s Import'%self._data_type,
+                              'Importing %s Data, please wait ...'%self._data_type,
                               parent=self)
-        self._oc.read(self.folderctrl.GetValue())
-        self.populate(self._oc.get_display_data())
+        try:
+            self._oc.read(self.folderctrl.GetValue())
+            self.populate(self._oc.get_display_data())
+        except (ValueError, IOError):
+            _err_dlg=wx.MessageDialog(self, 'Failed to get import data',
+                                      'Import Error',
+                                      style=wx.OK|wx.ICON_ERROR)
+            _err_dlg.ShowModal()
+            _err_dlg.Destroy()
+        except:
+            if __debug__:
+                raise
         dlg.Destroy()
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a VCalendar File",
+        dlg=wx.FileDialog(self, "Pick a %s File"%self._data_type,
                           wildcard='*.vcs;*.ics')
-        id=dlg.ShowModal()
-        if id==wx.ID_CANCEL:
-            dlg.Destroy()
-            return
-        self.folderctrl.SetValue(dlg.GetPath())
+        if dlg.ShowModal()==wx.ID_OK:
+            self.folderctrl.SetValue(dlg.GetPath())
         dlg.Destroy()
 
     def OnFilter(self, evt):

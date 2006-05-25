@@ -13,6 +13,7 @@ href="phones-sanyo-model-notes.htm#scp3100">SCP-3100 model notes</a>
 for driver information.
       <li>Added A950 Phonebook write.
       <li>Added iCalendar import feature.
+      <li>Added Google Calendar import feature.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>

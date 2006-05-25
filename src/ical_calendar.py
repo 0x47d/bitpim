@@ -75,7 +75,7 @@ class iCalendarImportData(parentclass):
             _d=Duration(v)
             if _d.get()>0:
                 return False
-            dd['alarm_value']=-_d.get()/60
+            dd['alarm_value']=abs(_d.get()/60)
             return True
         except:
             if __debug__:
@@ -212,13 +212,13 @@ class iCalendarImportData(parentclass):
 
     _calendar_keys=[
         ('CATEGORIES', 'categories', parentclass._conv_cat),
-        ('DESCRIPTION', 'notes', None),
+        ('DESCRIPTION', 'notes', parentclass._conv_str),
         ('DTSTART', 'start', _conv_date),
         ('DTEND', 'end', _conv_date),
         ('DURATION', 'end', _conv_duration),
-        ('LOCATION', 'location', None),
+        ('LOCATION', 'location', parentclass._conv_str),
         ('PRIORITY', 'priority', parentclass._conv_priority),
-        ('SUMMARY', 'description', None),
+        ('SUMMARY', 'description', parentclass._conv_str),
         ('TRIGGER', 'alarm', _conv_alarm),
         ('RRULE', 'repeat', _conv_repeat),
         ('EXDATE', 'exceptions', _conv_exceptions),
@@ -227,6 +227,7 @@ class iCalendarImportData(parentclass):
 #-------------------------------------------------------------------------------
 class iCalImportCalDialog(vcal.VcalImportCalDialog):
     _filetype_label='iCalendar File:'
+    _data_type='iCalendar'
     def __init__(self, parent, id, title):
         self._oc=iCalendarImportData()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,

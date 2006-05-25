@@ -48,6 +48,10 @@ def GetPhonebookImports():
     res.append((guihelper.ID_IMPORT_ICALENDAR, 'iCalendar...',
                 'Import iCalendar data for the calendar',
                 OnFileImportiCal))
+    # Google Calendar - always possible
+    res.append((guihelper.ID_IMPORT_GCALENDAR, 'Google Calendar...',
+                'Import Google Calendar data for the calendar',
+                OnFileImportgCal))
     # Outlook
     try:
         import native.outlook
@@ -1870,6 +1874,13 @@ def OnFileImportiCal(parent):
     import ical_calendar
     OnFileImportCommon(parent, ical_calendar.iCalImportCalDialog,
                        'Import iCalendar', parent.GetActiveCalendarWidget(),
+                       'calendar')
+
+def OnFileImportgCal(parent):
+    import gcal_calendar as gcal
+    OnFileImportCommon(parent, gcal.gCalImportDialog,
+                       'Import Google Calendar',
+                       parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportCSVCalendar(parent):
