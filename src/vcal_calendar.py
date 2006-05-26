@@ -93,7 +93,8 @@ class VCalendarImportData(object):
     _rrule_weekday=_rrule_dow['MO']|_rrule_dow['TU']|\
                   _rrule_dow['WE']|_rrule_dow['TH']|\
                   _rrule_dow['FR']
-
+    _source_data_class=vCalendarFile
+    
     def __init__(self, file_name=None):
         self._file_name=file_name
         self._data=[]
@@ -102,13 +103,28 @@ class VCalendarImportData(object):
 
     def _accept(self, entry):
         # start & end time within specified filter
-        if self._filter['start'] is not None and \
-           entry['start'][:3]<self._filter['start'][:3]:
-            return False
-        if self._filter['end'] is not None and \
-           entry['end'][:3]>self._filter['end'][:3] and \
-           entry['end'][:3]!=common_calendar.no_end_date[:3]:
-            return False
+        if entry.get('repeat', False):
+            # repeat event
+            # need to populate to get an accurate end date
+            ce=bpcalendar.CalendarEntry()
+            self._populate_entry(entry, ce)
+            if self._filter['start'] is not None and \
+               ce.end[:3]<self._filter['start'][:3]:
+                # event ends before our rannge
+                return False
+            if self._filter['end'] is not None and \
+               ce.start[:3]>self._filter['end'][:3]:
+                # event starts after our range
+                return False
+        else:
+            # single event
+            if self._filter['start'] is not None and \
+               entry['start'][:3]<self._filter['start'][:3]:
+                return False
+            if self._filter['end'] is not None and \
+               entry['end'][:3]>self._filter['end'][:3] and \
+               entry['end'][:3]!=common_calendar.no_end_date[:3]:
+                return False
         # check the catefory
         c=self._filter['categories']
         if c is None or not len(c):
@@ -449,7 +465,7 @@ class VCalendarImportData(object):
         if self._file_name is None:
             # no file name specified
             return
-        v=vCalendarFile(self._file_name)
+        v=self._source_data_class(self._file_name)
         v.read()
         self._convert(v.data, self._data)
 
@@ -466,8 +482,9 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
     ID_ADD=wx.NewId()
     _filetype_label="VCalendar File:"
     _data_type='vCalendar'
+    _import_data_class=VCalendarImportData
     def __init__(self, parent, id, title):
-        self._oc=VCalendarImportData()
+        self._oc=self._import_data_class()
         common_calendar.PreviewDialog.__init__(self, parent, id, title,
                                self._column_labels,
                                self._oc.get_display_data(),

@@ -10,16 +10,12 @@
 "Deals with Google Calendar (gCalendar) import stuff"
 
 # system modules
-import copy
-import datetime
 import urllib2
 
 # site modules
 import wx
 
 # local modules
-import bpcalendar
-import bptime
 import common_calendar
 import database
 import ical_calendar as ical
@@ -48,17 +44,10 @@ class gCalendarServer(vcal.vCalendarFile):
 #-------------------------------------------------------------------------------
 parentclass=ical.iCalendarImportData
 class gCalendarImportData(parentclass):
-    
+    _source_data_class=gCalendarServer
     def read(self, file_name=None, update_dlg=None):
         try:
-            if file_name is not None:
-                self._file_name=file_name
-            if self._file_name is None:
-                # no file name specified
-                return
-            v=gCalendarServer(self._file_name)
-            v.read()
-            self._convert(v.data, self._data)
+            super(gCalendarImportData, self).read(file_name, update_dlg)
         except urllib2.URLError:
             raise IOError
 
@@ -66,13 +55,10 @@ class gCalendarImportData(parentclass):
 class gCalImportDialog(ical.iCalImportCalDialog):
     _filetype_label='Google Calendar iCal URL:'
     _data_type='Google Calendar'
+    _import_data_class=gCalendarImportData
     def __init__(self, parent, id, title):
         self._db=parent.GetActiveDatabase()
-        self._oc=gCalendarImportData()
-        common_calendar.PreviewDialog.__init__(self, parent, id, title,
-                               self._column_labels,
-                               self._oc.get_display_data(),
-                               config_name='import/calendar/vcaldialog')
+        super(gCalImportDialog, self).__init__(parent, id, title)
 
     def OnBrowseFolder(self, _):
         dlg=SelectURLDialog(self, 'Select a Google Calendar iCal URL', self._db)
@@ -93,9 +79,7 @@ class SelectURLDialog(wx.Dialog):
         wx.EVT_LISTBOX_DCLICK(self, self._choices.GetId(), self.OnOK)
         vbs.Add(self._choices, 0, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.Button(self, wx.ID_OK, 'OK'), 0, wx.EXPAND|wx.ALL, 5)
-        hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.EXPAND|wx.ALL, 5)
+        hbs=self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL)
         _btn=wx.Button(self, -1, 'New')
         wx.EVT_BUTTON(self, _btn.GetId(), self.OnNew)
         hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)

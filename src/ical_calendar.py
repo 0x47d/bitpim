@@ -228,9 +228,4 @@ class iCalendarImportData(parentclass):
 class iCalImportCalDialog(vcal.VcalImportCalDialog):
     _filetype_label='iCalendar File:'
     _data_type='iCalendar'
-    def __init__(self, parent, id, title):
-        self._oc=iCalendarImportData()
-        common_calendar.PreviewDialog.__init__(self, parent, id, title,
-                               self._column_labels,
-                               self._oc.get_display_data(),
-                               config_name='import/calendar/vcaldialog')
+    _import_data_class=iCalendarImportData
