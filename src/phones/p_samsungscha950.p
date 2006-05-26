@@ -56,7 +56,9 @@ PB_MAX_NAME_LEN=32
 PB_MAX_EMAIL_LEN=48
 PB_MAX_NUMBER_LEN=48
 
-PB_FLG_NONE=0x0401
+PB_FLG_NONE=0x0000
+PB_FLG_NAME=0x0001
+PB_FLG_DATE=0x0400
 PB_FLG_FAX=0x0080
 PB_FLG_CELL=0x0020
 PB_FLG_WORK=0x0010
@@ -297,8 +299,9 @@ PACKET NumberEntry:
 PACKET PBEntry:
     2 UINT info
     2 UINT { 'default': 0 } +zero1
-    * STRING { 'terminator': None,
-               'pascal': True } name
+    if self.info & PB_FLG_NAME:
+        * STRING { 'terminator': None,
+                   'pascal': True } name
     if self.info & PB_FLG_EMAIL:
         * STRING { 'terminator': None,
                    'pascal': True } email
@@ -315,7 +318,8 @@ PACKET PBEntry:
         * NumberEntry fax
     if self.info & PB_FLG_CELL2:
         * NumberEntry cell2
-    4 DateTime datetime
+    if self.info & PB_FLG_DATE:
+        4 DateTime datetime
     if self.info & PB_FLG_GROUP:
         1 UINT group
     if self.info & PB_FLG_WP:

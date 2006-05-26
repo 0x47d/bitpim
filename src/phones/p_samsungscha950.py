@@ -47,7 +47,9 @@ PB_MAX_NAME_LEN=32
 PB_MAX_EMAIL_LEN=48
 PB_MAX_NUMBER_LEN=48
 
-PB_FLG_NONE=0x0401
+PB_FLG_NONE=0x0000
+PB_FLG_NAME=0x0001
+PB_FLG_DATE=0x0400
 PB_FLG_FAX=0x0080
 PB_FLG_CELL=0x0020
 PB_FLG_WORK=0x0010
@@ -1368,7 +1370,7 @@ class GroupEntry(BaseProtogenClass):
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
         if self.numofmembers:
-            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_148,  'length': self.numofmembers })
+            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_150,  'length': self.numofmembers })
             self.__field_members.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1445,7 +1447,7 @@ class GroupEntry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_members=value
         else:
-            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_148,  'length': self.numofmembers })
+            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_150,  'length': self.numofmembers })
 
     def __delfield_members(self): del self.__field_members
 
@@ -1465,7 +1467,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungscha950_148(BaseProtogenClass):
+class _gen_p_samsungscha950_150(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
 
@@ -1474,8 +1476,8 @@ class _gen_p_samsungscha950_148(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungscha950_148,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungscha950_148:
+        super(_gen_p_samsungscha950_150,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungscha950_150:
             self._update(args,dict)
 
 
@@ -1484,7 +1486,7 @@ class _gen_p_samsungscha950_148(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungscha950_148,self)._update(args,kwargs)
+        super(_gen_p_samsungscha950_150,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1492,7 +1494,7 @@ class _gen_p_samsungscha950_148(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungscha950_148,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungscha950_150,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2}
             dict2.update(kwargs)
@@ -4149,7 +4151,8 @@ class PBEntry(BaseProtogenClass):
         except:
             self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_zero1.writetobuffer(buf)
-        self.__field_name.writetobuffer(buf)
+        if self.info & PB_FLG_NAME:
+            self.__field_name.writetobuffer(buf)
         if self.info & PB_FLG_EMAIL:
             self.__field_email.writetobuffer(buf)
         if self.info & PB_FLG_EMAIL2:
@@ -4164,7 +4167,8 @@ class PBEntry(BaseProtogenClass):
             self.__field_fax.writetobuffer(buf)
         if self.info & PB_FLG_CELL2:
             self.__field_cell2.writetobuffer(buf)
-        self.__field_datetime.writetobuffer(buf)
+        if self.info & PB_FLG_DATE:
+            self.__field_datetime.writetobuffer(buf)
         if self.info & PB_FLG_GROUP:
             self.__field_group.writetobuffer(buf)
         if self.info & PB_FLG_WP:
@@ -4182,8 +4186,9 @@ class PBEntry(BaseProtogenClass):
         self.__field_info.readfrombuffer(buf)
         self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_zero1.readfrombuffer(buf)
-        self.__field_name=STRING(**{ 'terminator': None,               'pascal': True })
-        self.__field_name.readfrombuffer(buf)
+        if self.info & PB_FLG_NAME:
+            self.__field_name=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_name.readfrombuffer(buf)
         if self.info & PB_FLG_EMAIL:
             self.__field_email=STRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_email.readfrombuffer(buf)
@@ -4205,8 +4210,9 @@ class PBEntry(BaseProtogenClass):
         if self.info & PB_FLG_CELL2:
             self.__field_cell2=NumberEntry()
             self.__field_cell2.readfrombuffer(buf)
-        self.__field_datetime=DateTime(**{'sizeinbytes': 4})
-        self.__field_datetime.readfrombuffer(buf)
+        if self.info & PB_FLG_DATE:
+            self.__field_datetime=DateTime(**{'sizeinbytes': 4})
+            self.__field_datetime.readfrombuffer(buf)
         if self.info & PB_FLG_GROUP:
             self.__field_group=UINT(**{'sizeinbytes': 1})
             self.__field_group.readfrombuffer(buf)
@@ -4254,7 +4260,7 @@ class PBEntry(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None,               'pascal': True })
+            self.__field_name=STRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_name(self): del self.__field_name
 
@@ -4409,7 +4415,8 @@ class PBEntry(BaseProtogenClass):
     def containerelements(self):
         yield ('info', self.__field_info, None)
         yield ('zero1', self.__field_zero1, None)
-        yield ('name', self.__field_name, None)
+        if self.info & PB_FLG_NAME:
+            yield ('name', self.__field_name, None)
         if self.info & PB_FLG_EMAIL:
             yield ('email', self.__field_email, None)
         if self.info & PB_FLG_EMAIL2:
@@ -4424,7 +4431,8 @@ class PBEntry(BaseProtogenClass):
             yield ('fax', self.__field_fax, None)
         if self.info & PB_FLG_CELL2:
             yield ('cell2', self.__field_cell2, None)
-        yield ('datetime', self.__field_datetime, None)
+        if self.info & PB_FLG_DATE:
+            yield ('datetime', self.__field_datetime, None)
         if self.info & PB_FLG_GROUP:
             yield ('group', self.__field_group, None)
         if self.info & PB_FLG_WP:
