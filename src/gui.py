@@ -108,7 +108,7 @@ if guihelper.IsMSWindows():
         def OnMinimize(self, _):
             self.mw.Iconize(True)
         def OnClose(self, _):
-            self.mw.Close(True)
+            self.mw.Close()
 
 ###
 ### Implements a nice flexible callback object
@@ -674,6 +674,7 @@ class MainWindow(wx.Frame):
 
         self._taskbar=None
         self._taskbar_on_closed=False
+        self._close_button=False
         self.__phone_detect_at_startup=False
         self._autodetect_delay=0
         self._dr_rec=None   # Data Recording
@@ -940,6 +941,11 @@ class MainWindow(wx.Frame):
         # setup the midnight timer
         self._setup_midnight_timer()
 
+        if self.IsIconized() and self._taskbar:
+            # Ugly work-around to force the icon onto the system tray!!
+            self.Iconize(False)
+            self.Iconize(True)
+
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()
         self.config.WriteInt("mainwindowsplitterpos", pos)        
@@ -1021,7 +1027,9 @@ class MainWindow(wx.Frame):
 
     # It has been requested that we shutdown
     def OnClose(self, event):
-        if self._taskbar_on_closed and event.CanVeto():
+        if self._taskbar_on_closed and self._close_button and \
+           event.CanVeto():
+            self._close_button=False
             event.Veto()
             self.Iconize(True)
             return
@@ -1031,9 +1039,6 @@ class MainWindow(wx.Frame):
             # worker thread doesn't exist yet
             self.Destroy()
             return
-        if event.CanVeto():
-            # should we close? dirty data? prompt to save?
-            pass # yup close for now
         # Shutdown helper thread
         self.MakeCall( Request(self.wt.exit), Callback(self.OnCloseResults) )
 
@@ -1221,9 +1226,14 @@ class MainWindow(wx.Frame):
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
         if msg==win32con.WM_DEVICECHANGE:
-            type,params=DeviceChanged(wparam, lparam).GetEventInfo()
-            self.OnDeviceChanged(type, **params)
-            return True
+            try:
+                type,params=DeviceChanged(wparam, lparam).GetEventInfo()
+                self.OnDeviceChanged(type, **params)
+                return True
+            except:
+                # something bad happened! Bail and let Windows handle it
+                return win32gui.CallWindowProc(self.oldwndproc, hwnd, msg,
+                                               wparam, lparam)
 
         # Restore the old WndProc.  Notice the use of win32api
         # instead of win32gui here.  This is to avoid an error due to
@@ -1232,6 +1242,11 @@ class MainWindow(wx.Frame):
             win32api.SetWindowLong(self.GetHandle(),
                                    win32con.GWL_WNDPROC,
                                    self.oldwndproc)
+        if self._taskbar_on_closed and \
+           msg==win32con.WM_NCLBUTTONDOWN and \
+           wparam==win32con.HTCLOSE:
+            # The system Close Box was clicked!
+            self._close_button=True
 
         # Pass all messages (in this case, yours may be different) on
         # to the original WndProc
