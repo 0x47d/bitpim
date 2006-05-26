@@ -14,6 +14,8 @@ for driver information.
       <li>Added A950 Phonebook write.
       <li>Added iCalendar import feature.
       <li>Added Google Calendar import feature.
+      <li>Fixed bug: cannot shutdown PC while BitPim is in the System Tray.
+      <li>Fixed bug: undocking laptop crashes BitPim.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>
