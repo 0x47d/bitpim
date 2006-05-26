@@ -942,9 +942,9 @@ class MainWindow(wx.Frame):
         self._setup_midnight_timer()
 
         if self.IsIconized() and self._taskbar:
-            # Ugly work-around to force the icon onto the system tray!!
-            self.Iconize(False)
-            self.Iconize(True)
+            # Ugly hack to force the icon onto the system tray when
+            # the app is started minimized !!
+            wx.CallAfter(self.Show, False)
 
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()

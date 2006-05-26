@@ -16,6 +16,7 @@ for driver information.
       <li>Added Google Calendar import feature.
       <li>Fixed bug: cannot shutdown PC while BitPim is in the System Tray.
       <li>Fixed bug: undocking laptop crashes BitPim.
+      <li>Fixed bug: run minimized does not go to System Tray.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>
