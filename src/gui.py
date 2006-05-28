@@ -945,6 +945,7 @@ class MainWindow(wx.Frame):
             # Ugly hack to force the icon onto the system tray when
             # the app is started minimized !!
             wx.CallAfter(self.Show, False)
+        self.GetStatusBar().set_app_status_ready()
 
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()
@@ -1176,7 +1177,10 @@ class MainWindow(wx.Frame):
                     wx.CallAfter(self.OnEditSettings)
                 _dlg.Destroy()
         else:
-            self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
+            if silent_fail:
+                self.__owner_name=None
+            else:
+                self.__owner_name=self.__get_owner_name(r.get('phone_esn', None))
             if self.__owner_name is None or self.__owner_name=='':
                 self.__owner_name=''
             else:
@@ -1189,15 +1193,16 @@ class MainWindow(wx.Frame):
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
             self.SetPhoneModelStatus()
-            if self.__owner_name =='':
-                wx.MessageBox('Found %s on %s'%(r['phone_name'],
-                                                r['port']),
-                                                'Phone Detection', wx.OK)
-            else:
-                wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
-                                                   r['phone_name'],
-                                                   r['port']),
-                                                   'Phone Detection', wx.OK)
+            if not silent_fail:
+                if self.__owner_name =='':
+                    wx.MessageBox('Found %s on %s'%(r['phone_name'],
+                                                    r['port']),
+                                                    'Phone Detection', wx.OK)
+                else:
+                    wx.MessageBox('Found %s %s on %s'%(self.__owner_name,
+                                                       r['phone_name'],
+                                                       r['port']),
+                                                       'Phone Detection', wx.OK)
             if check_auto_sync:
                 # see if we should re-sync the calender on connect, do it silently
                 self.__autosync_phone(silent=1)
@@ -1509,12 +1514,12 @@ class MainWindow(wx.Frame):
 
     # Busy handling
     def OnBusyStart(self):
-        self.GetStatusBar().set_app_status("BUSY")
+        self.GetStatusBar().set_app_status_busy()
         wx.BeginBusyCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
 
     def OnBusyEnd(self):
         wx.EndBusyCursor()
-        self.GetStatusBar().set_app_status("Ready")
+        self.GetStatusBar().set_app_status_ready()
         self.OnProgressMajor(0,1)
         # fire the next one in the queue
         if not self.queue.empty():

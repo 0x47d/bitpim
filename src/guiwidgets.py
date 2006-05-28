@@ -1151,6 +1151,7 @@ class MyStatusBar(wx.StatusBar):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
+        self._status=wx.StaticText(self, -1, '')
         self.SetFieldsCount(self.__total_panes)
         self.SetStatusWidths(self.__pane_width)
         self.Reposition()
@@ -1175,6 +1176,9 @@ class MyStatusBar(wx.StatusBar):
         rect=self.GetFieldRect(self.__gauge_index)
         self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+2))
         self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
+        rect=self.GetFieldRect(self.__app_status_index)
+        self._status.SetPosition(wx.Point(rect.x+2, rect.y+2))
+        self._status.SetSize(wx.Size(rect.width-4, rect.height-4))
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
@@ -1196,8 +1200,12 @@ class MyStatusBar(wx.StatusBar):
 
     def GetHelpPane(self):
         return self.__help_str_index
-    def set_app_status(self, str=''):
-        self.SetStatusText(str, self.__app_status_index)
+    def set_app_status_ready(self):
+        self._status.SetBackgroundColour(wx.GREEN)
+        self._status.SetLabel('Ready')
+    def set_app_status_busy(self):
+        self._status.SetBackgroundColour(wx.RED)
+        self._status.SetLabel('BUSY')
     def set_phone_model(self, str=''):
         self.__phone_text=str
         self.__set_version_phone_text()
