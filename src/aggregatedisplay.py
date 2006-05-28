@@ -67,11 +67,12 @@ class Display(wx.ScrolledWindow):
     ITEMPADDING=5   # how many pixels we pad items by
     
     def __init__(self, parent, datasource, watermark=None):
-        wx.ScrolledWindow.__init__(self, parent, id=wx.NewId(), style=wx.FULL_REPAINT_ON_RESIZE)
+        wx.ScrolledWindow.__init__(self, parent, id=wx.NewId(), style=wx.FULL_REPAINT_ON_RESIZE|wx.SUNKEN_BORDER)
         self.exceptioncount=0
         self.EnableScrolling(False, False)
         self.datasource=datasource
         self._bufbmp=None
+        self.active_section=None
         self._w, self._h=-1,-1
         self.vheight, self.maxheight=self._h,self._h
         self.sections=[]
@@ -105,6 +106,12 @@ class Display(wx.ScrolledWindow):
 
     def OnEraseBackground(self, _):
         pass
+
+    def SetActiveSection(self, section):
+        if self.active_section!=section:
+            self.active_section=section
+            self.ReLayout()
+            self.Refresh(False)
 
     def OnPaint(self, event):
         # Getting this drawing right involved hours of fighting wxPython/wxWidgets.
@@ -172,9 +179,11 @@ class Display(wx.ScrolledWindow):
             # place in bottom right:
             dc.DrawBitmap(self.watermark, self._w-self.watermark.GetWidth(), origin+self._h-self.watermark.GetHeight(), True)
 
-        # draw each section
+        # draw active section
         cury=0
         for i, section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             if relayout or _isvisible(cury, cury+self.sectionheights[i], firstvisible, lastvisible):
                 dc.SetDeviceOrigin(0, cury )
                 section.Draw(dc, self._w)
@@ -210,7 +219,7 @@ class Display(wx.ScrolledWindow):
                 except:
                     print "bb is",bb
                     print "should be within",(self.itemsize[i][0]+extrawidth,self.itemsize[i][1])
-            
+        
                 self.boundingboxes[i][num]=bb
                 num+=1
             cury+=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]*(self.itemsize[i][1]+self.ITEMPADDING)
@@ -219,6 +228,7 @@ class Display(wx.ScrolledWindow):
         dc.SetDeviceOrigin(0,0)
 
     def OnLeftDown(self, evt):
+        self.SetFocus()
         actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
         res=self.HitTest(actualx, actualy)
         if res.item is None:
@@ -249,6 +259,7 @@ class Display(wx.ScrolledWindow):
         wx.PostEvent(self, ActivateEvent(self.GetId(), item=res.item))
 
     def OnRightDown(self, evt):
+        self.SetFocus()
         actualx,actualy=self.CalcUnscrolledPosition(evt.GetX(), evt.GetY())
         res=self.HitTest(actualx, actualy)
         if res.item is None:
@@ -265,6 +276,8 @@ class Display(wx.ScrolledWindow):
         (sectionnumber, sectionobject, itemnumber, itemobject)"""
         res=[]
         for s,section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             for i,item in enumerate(self.items[s]):
                 res.append( (s,section,i,item) )
         return res
@@ -276,6 +289,8 @@ class Display(wx.ScrolledWindow):
     def IsSelectedByObject(self, itemobj):
         "Returns if the itemobject is selected"
         for s,section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             for i,item in enumerate(self.items[s]):
                 if item is itemobj:
                     return self.IsSelectedByNum(s,i)
@@ -288,6 +303,8 @@ class Display(wx.ScrolledWindow):
         (sectionnumber, sectionobject, itemnumber, itemobject)"""
         res=[]
         for s,section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             for i,item in enumerate(self.items[s]):
                 if self.selected[s][i]:
                     res.append( (s,section,i,item) )
@@ -311,6 +328,8 @@ class Display(wx.ScrolledWindow):
         if not add:
             self.ClearSelection()
         for s,section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             for i,item in enumerate(self.items[s]):
                 if item is itemobj:
                     self.selected[s][i]=True
@@ -324,6 +343,8 @@ class Display(wx.ScrolledWindow):
         origin=self.GetViewStart()[1]*self.VSCROLLPIXELS # used later
         cury=0
         for i, section in enumerate(self.sections):
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
             if cury<=pointy<=cury+self.sectionheights[i]:
                 # in the section
                 return self.HitTestResult(location=self.HitTestResult.IN_SECTION,
@@ -373,8 +394,10 @@ class Display(wx.ScrolledWindow):
         self.itemsperrow=[]
         self.vheight=0
         for i,section in enumerate(self.sections):
-            self.vheight+=self.sectionheights[-1]
             self.itemsperrow.append(max((self._w-6)/(self.itemsize[i][0]+self.ITEMPADDING),1))
+            if self.active_section!=None and section.label!=self.active_section:
+                continue
+            self.vheight+=self.sectionheights[-1]
             rows=(len(self.items[i])+self.itemsperrow[i]-1)/self.itemsperrow[i]
             self.vheight+=rows*(self.itemsize[i][1]+self.ITEMPADDING)
 

@@ -887,7 +887,7 @@ class MainWindow(wx.Frame):
 
         # multiple phones can be added here, although we have to figure out which phone
         # to use in send/get phone data.
-        self.tree.CreatePhone("Phone", self.config, self.configpath)
+        self.tree.CreatePhone("Phone", self.config, self.configpath, "bitpim.db")
         #self.tree.CreatePhone("Different database", self.config, "C:/Documents and Settings/Simon/My Documents/bitpim_old")
 
         ### Set autosync settings dialog
@@ -963,11 +963,14 @@ class MainWindow(wx.Frame):
     def GetActiveMemoWidget(self):
         return self.tree.GetActivePhone().memowidget
 
+    def GetActiveMediaWidget(self):
+        return self.tree.GetActivePhone().mediawidget
+
     def GetActiveRingerWidget(self):
-        return self.tree.GetActivePhone().ringerwidget
+        return self.tree.GetActivePhone().mediawidget.GetRinger()
 
     def GetActiveWallpaperWidget(self):
-        return self.tree.GetActivePhone().wallpaperwidget
+        return self.tree.GetActivePhone().mediawidget.GetWallpaper()
 
     def GetActiveTodoWidget(self):
         return self.tree.GetActivePhone().todowidget
@@ -1309,7 +1312,7 @@ class MainWindow(wx.Frame):
             self.GetActiveWallpaperWidget().populate(results)
         # wallpaper-index
         if not updwp and results.has_key('wallpaper-index'):
-            self.GetActiveWallpaperWidget().updateindex(results['wallpaper-index'])
+            self.GetActiveWallpaperWidget().updateindex(results)
         # ringtone
         updrng=False # did we update ringtones
         if results['sync'].has_key('ringtone'):
@@ -1320,7 +1323,7 @@ class MainWindow(wx.Frame):
             self.GetActiveRingerWidget().populate(results)
         # ringtone-index
         if not updrng and results.has_key('ringtone-index'):
-            self.GetActiveRingerWidget().updateindex(results['ringtone-index'])            
+            self.GetActiveRingerWidget().updateindex(results)            
         # calendar
         if results['sync'].has_key('calendar'):
             v=results['sync']['calendar']

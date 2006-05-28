@@ -185,12 +185,25 @@ class Profile:
             return True
         return False
 
+    # fill in the list of ringtone/sound origins on your phone
+    ringtoneorigins=()
+    #e.g.
+    #ringtoneorigins=('ringers', 'sounds')
+
+    # ringtone origins that are not available for the contact assignment
+    excluded_ringtone_origins=()
+
+    # wallpaper origins that are not available for the contact assignment
+    excluded_wallpaper_origins=('video')
+
     # fill in your own image origins using these
     stockimageorigins={
         "images": {'meta-help': 'General images'},
         "mms": {'meta-help': 'Multimedia Messages'},
         "drm": {'meta-help': 'DRM protected images'},
         "camera": {'meta-help': 'Camera images'},
+        "camera-fullsize": {'meta-help': 'Fullsize camera images'},
+        "video": {'meta-help': 'Video clips'},
         }
 
     stockimagetargets={

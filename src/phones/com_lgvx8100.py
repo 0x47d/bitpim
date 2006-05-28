@@ -498,22 +498,32 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         return filename.startswith(self._rs_path)
 
     def getmedia(self, maps, results, key):
-        media={}
+        origins={}
+        # signal that we are using the new media storage that includes the origin and timestamp
+        origins['new_media_version']=1
 
         for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon, idx_ofs  in maps:
+            media={}
             for item in self.getindex(indexfile):
+                data=None
+                timestamp=None
                 try:
+                    stat_res=self.statfile(item.filename)
+                    if stat_res!=None:
+                        timestamp=stat_res['date'][0]
                     if not self._is_rs_file(item.filename):
-                        media[common.basename(item.filename)]=self.getfilecontents(
-                            item.filename, True)
+                        data=self.getfilecontents(item.filename, True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
                 except com_brew.BrewAccessDeniedException:
                     # firmware wouldn't let us read this file, just mark it then
                     self.log('Failed to read file: '+item.filename)
-                    media[common.basename(item.filename)]=''
+                    data=''
+                if data!=None:
+                    media[common.basename(item.filename)]={ 'data': data, 'timestamp': timestamp}
+            origins[type]=media
 
-        results[key]=media
+        results[key]=origins
         return results
 
     def _write_index_file(self, type):
@@ -636,7 +646,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                     del wpi[k]
                     for w in wp.keys():
                         # does wp contain a reference to this same item?
-                        if wp[w]['name']==name:
+                        if wp[w]['name']==name and wp[w]['origin']==type:
                             data=wp[w]['data']
                             del wp[w]
                     if not merge and data is None:
@@ -736,8 +746,8 @@ class Profile(parentprofile):
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX8100'
 
-    WALLPAPER_WIDTH=160
-    WALLPAPER_HEIGHT=120
+    WALLPAPER_WIDTH=176
+    WALLPAPER_HEIGHT=184
     MAX_WALLPAPER_BASENAME_LENGTH=32
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
     WALLPAPER_CONVERT_FORMAT="jpg"
@@ -760,16 +770,24 @@ class Profile(parentprofile):
     # see http://standards.ieee.org/regauth/oui/index.shtml for more info
     bluetooth_mfg_id="001256"
 
+    ringtoneorigins=('ringers', 'sounds')
+    excluded_ringtone_origins=('sounds')
+    excluded_wallpaper_origins=('video')
+
+
     # the 8100 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
     def GetImageOrigins(self):
         return self.imageorigins
 
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 320, 'height': 240, 'format': "JPEG"}))
+                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
+                                      {'width': 128, 'height': 112, 'format': "JPEG"}))
 
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets

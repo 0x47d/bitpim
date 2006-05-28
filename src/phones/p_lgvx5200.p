@@ -30,6 +30,8 @@ BREW_FILE_SYSTEM=0
 
 PHONE_ENCODING='iso-8859-1'
 
+# need to call stat to get the file time/data
+broken_filelist_date=True
 %}
 
 PACKET indexentry:

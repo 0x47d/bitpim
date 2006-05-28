@@ -1571,9 +1571,11 @@ class BitPimListCtrl(wx.ListCtrl, listmix.ColumnSorterMixin):
         self.lcparent=parent
         wx.ListCtrl.__init__(self, self.lcparent, wx.NewId(), style=wx.LC_REPORT|wx.LC_VIRTUAL)
         index=0
+        self.column_type=[]
         for info in column_info:
-            text, width=info
+            text, width, int_sort=info
             self.InsertColumn(index, text, width=width)
+            self.column_type.append(int_sort)
             index+=1
         self.handle_paint=False
         listmix.ColumnSorterMixin.__init__(self, index)
@@ -1592,7 +1594,7 @@ class BitPimListCtrl(wx.ListCtrl, listmix.ColumnSorterMixin):
         #creating pairs [column item defined by col, key]
         items=[]
         for k,v in self.itemDataMap.items():
-            if col==3:
+            if self.column_type[col]:
                 items.append([int(v[col]),k])
             else:
                 items.append([v[col],k])
@@ -1629,6 +1631,12 @@ class BitPimListCtrl(wx.ListCtrl, listmix.ColumnSorterMixin):
     def GetItemData(self, item):
         index=self.itemIndexMap[item]
         return self.itemPyDataMap[index]
+
+    def SelectAll(self):
+        item=self.GetTopItem()
+        while item!=-1:
+            self.Select(item)
+            item=self.GetNextItem(item)
 
     def ResetView(self, display_data, data_keys):
         self.itemDataMap = display_data

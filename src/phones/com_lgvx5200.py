@@ -107,6 +107,9 @@ class Profile(parentprofile):
     def GetImageOrigins(self):
         return self.imageorigins
 
+    ringtoneorigins=('ringers', 'sounds')
+    excluded_ringtone_origins=('sounds')
+
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",

@@ -68,6 +68,10 @@ mp3_dir='mmc1/my_mp3'
 mp3_dir_len=len(mp3_dir)+1  # account for the last '/'
 mp3_index_file='dload/my_mp3.dat'
 
+# need to call stat to get the file time/data
+broken_filelist_date=True
+
+
 %}
 
 PACKET indexentry:

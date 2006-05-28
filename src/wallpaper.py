@@ -14,6 +14,7 @@ import os
 import sys
 import cStringIO
 import random
+import time
 
 # wx modules
 import wx
@@ -47,6 +48,9 @@ class WallpaperView(fileview.FileView):
     CURRENTFILEVERSION=2
     ID_DELETEFILE=2
     ID_IGNOREFILE=3
+    database_key='wallpaper-index'
+    media_key='wallpapers'
+    default_origin="images"
 
     # this is only used to prevent the pubsub module
     # from being GC while any instance of this class exists
@@ -59,51 +63,28 @@ class WallpaperView(fileview.FileView):
         'png': wx.BITMAP_TYPE_PNG,
         }
 
-    organizetypes=("Origin", "Image Type", "File Size") # Image Size
     media_notification_type=pubsub.wallpaper_type
 
-    def __init__(self, mainwindow, parent):
+    def __init__(self, mainwindow, parent, media_root):
         global thewallpapermanager
         thewallpapermanager=self
         self.mainwindow=mainwindow
         self.usewidth=10
         self.useheight=10
         wx.FileSystem_AddHandler(BPFSHandler(self))
-        self._data={'wallpaper-index': {}}
-        self.updateprofilevariables(self.mainwindow.phoneprofile)
-
-        self.organizemenu=wx.Menu()
-        fileview.FileView.__init__(self, mainwindow, parent, "wallpaper-watermark")
-
+        self._data={self.database_key: {}}
+        fileview.FileView.__init__(self, mainwindow, parent, media_root, "wallpaper-watermark")
+        self.thedir=self.mainwindow.wallpaperpath
         self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci;*.bit"
 
 
 ##        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
 ##        wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
 
-        self.organizeinfo={}
-        last_mode=mainwindow.config.Read('imageorganizedby',
-                                         self.organizetypes[0])
-        for k in self.organizetypes:
-            id=wx.NewId()
-            self.organizemenu.AppendRadioItem(id, k)
-            wx.EVT_MENU(self, id, self.OrganizeChange)
-            self.organizeinfo[id]=getattr(self, "organizeby_"+k.replace(" ",""))
-            if k==last_mode:
-                self.organizemenu.Check(id, True)
-            
         self.modified=False
-        wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_WALLPAPERS)
-        pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
         self._raw_image=self._shift_down=False
-        wx.EVT_KEY_DOWN(self.aggdisp, self._OnKey)
-        wx.EVT_KEY_UP(self.aggdisp, self._OnKey)
 
-    def OnPhoneModelChanged(self, msg):
-        phonemodule=msg.data
-        self.updateprofilevariables(phonemodule.Profile)
-        self.OnRefresh()
 
     def updateprofilevariables(self, profile):
         self.usewidth=profile.WALLPAPER_WIDTH
@@ -118,33 +99,16 @@ class WallpaperView(fileview.FileView):
         else:
             self.woversize_percentage=120
             self.hoversize_percentage=120
-        
+        for o in profile.GetImageOrigins():
+            self.media_root.AddMediaNode(o, self)
+        self.excluded_origins=profile.excluded_wallpaper_origins
+             
     def OnListRequest(self, msg=None):
-        # temporaty quick-fix to not include video items in the list!
-        l=[self._data['wallpaper-index'][x]['name'] \
-           for x in self._data['wallpaper-index']\
-               if self._data['wallpaper-index'][x].get('origin', None)!='video' ]
+        l=[self._data[self.database_key][x].name \
+           for x in self._data[self.database_key] \
+               if self._data[self.database_key][x].origin not in self.excluded_origins ]
         l.sort()
         pubsub.publish(pubsub.ALL_WALLPAPERS, l)
-
-    def OnIdle(self, _):
-        "Save out changed data"
-        if self.modified:
-            self.modified=False
-            self.populatefs(self._data)
-            self.OnListRequest() # broadcast changes
-
-    def OnKeyDown(self, evt):
-        self._OnKey(evt)
-        pass
-
-    def OnKeyUp(self, evt):
-        self._OnKey(evt)
-        pass
-
-    def _OnKey(self, evt):
-        self._shift_down=evt.ShiftDown()
-        evt.Skip()
 
     def GetDeleteInfo(self):
         return guihelper.ART_DEL_WALLPAPER, "Delete Wallpaper"
@@ -158,17 +122,9 @@ class WallpaperView(fileview.FileView):
         # reset the fla
         self._shift_down=False
 
-    def OrganizeChange(self, evt):
-        self.mainwindow.config.Write('imageorganizedby',
-                                     evt.GetEventObject().GetLabel(evt.GetId()))
-        evt.GetEventObject().Check(evt.GetId(), True)
-        self.OnRefresh()
-
     def GetSections(self):
         # get all the items
-        items=[DisplayItem(self, key, self.mainwindow.wallpaperpath) for key in self._data['wallpaper-index']]
-        # prune out ones we don't have images for
-        items=[item for item in items if os.path.exists(item.filename)]
+        items=[DisplayItem(self, key) for key in self._data[self.database_key] if self._data[self.database_key][key].mediadata!=None]
 
         self.sections=[]
 
@@ -176,40 +132,22 @@ class WallpaperView(fileview.FileView):
             return self.sections
         
         # get the current sorting type
-        for i in range(len(self.organizetypes)):
-            item=self.organizemenu.FindItemByPosition(i)
-            if self.organizemenu.IsChecked(item.GetId()):
-                for sectionlabel, items in self.organizeinfo[item.GetId()](items):
-                    sh=aggregatedisplay.SectionHeader(sectionlabel)
-                    sh.itemsize=(self.usewidth+120, self.useheight+DisplayItem.PADDING*2)
-                    for item in items:
-                        item.thumbnailsize=self.usewidth, self.useheight
-                    # sort items by name
-                    items=[(item.name.lower(), item) for item in items]
-                    items.sort()
-                    items=[item for name,item in items]
-                    self.sections.append( (sh, items) )
-                return [sh for sh,items in self.sections]
-        assert False, "Can't get here"
+        for sectionlabel, items in self.organizeby_Origin(items):
+            self.media_root.AddMediaNode(sectionlabel, self)
+            sh=aggregatedisplay.SectionHeader(sectionlabel)
+            sh.itemsize=(self.usewidth+120, self.useheight+DisplayItem.PADDING*2)
+            for item in items:
+                item.thumbnailsize=self.usewidth, self.useheight
+            # sort items by name
+            items.sort(self.CompareItems)
+            self.sections.append( (sh, items) )
+        return [sh for sh,items in self.sections]
 
     def GetItemSize(self, sectionnumber, sectionheader):
         return sectionheader.itemsize
 
     def GetItemsFromSection(self, sectionnumber, sectionheader):
         return self.sections[sectionnumber][1]
-
-    def organizeby_ImageType(self, items):
-        types={}
-        for item in items:
-            t=item.fileinfo.format
-            if t is None: t="<Unknown>"
-            l=types.get(t, [])
-            l.append(item)
-            types[t]=l
-
-        keys=types.keys()
-        keys.sort()
-        return [ (key, types[key]) for key in types]
 
     def organizeby_Origin(self, items):
         types={}
@@ -224,51 +162,9 @@ class WallpaperView(fileview.FileView):
         keys.sort()
         return [ (key, types[key]) for key in types]
         
-    def organizeby_FileSize(self, items):
-        
-        sizes={0: ('<8KB', []),
-               8192: ('8KB - 16KB', []),
-               16384: ('16KB - 32KB', []),
-               32768: ('32KB - 64KB', []),
-               65536: ('64KB - 128KB', []),
-               131052: ('128KB - 512KB', []),
-               524208: ('512KB - 1MB', []),
-               1024*1024: ('>1MB', [])}
 
-        keys=sizes.keys()
-        keys.sort()
-
-        for item in items:
-            t=item.size
-            if t>=keys[-1]:
-                sizes[keys[-1]][1].append(item)
-                continue
-            for i,k in enumerate(keys):
-                if t<keys[i+1]:
-                    sizes[k][1].append(item)
-                    break
-
-        return [sizes[k] for k in keys if len(sizes[k][1])]
-            
-
-    def isBCI(self, filename):
-        """Returns True if the file is a Brew Compressed Image"""
-        # is it a bci file?
-        return open(filename, "rb").read(4)=="BCI\x00"
-
-    def getdata(self,dict,want=fileview.FileView.NONE):
-        return self.genericgetdata(dict, want, self.mainwindow.wallpaperpath, 'wallpapers', 'wallpaper-index')
-
-    def RemoveFromIndex(self, names):
-        for name in names:
-            wp=self._data['wallpaper-index']
-            for k in wp.keys():
-                if wp[k]['name']==name:
-                    del wp[k]
-                    self.modified=True
-
-    def GetItemThumbnail(self, name, width, height):
-        img,_=self.GetImage(name.encode(fileview.media_codec))
+    def GetItemThumbnail(self, data, width, height, fileinfo=None):
+        img=self.GetImageFromString(data, fileinfo)
         if img is None or not img.Ok():
             # unknown image file, display wallpaper.png
             img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
@@ -280,17 +176,32 @@ class WallpaperView(fileview.FileView):
             newwidth=int(img.GetWidth()*sfactor)
             newheight=int(img.GetHeight()*sfactor)
             img.Rescale(newwidth, newheight)
-        bitmap=img.ConvertToBitmap()
-        return bitmap
+        return img.ConvertToBitmap()
 
-    def GetImage(self, file):
+    def GetImageFromString(self, data, fileinfo):
         """Gets the named image
 
         @return: (wxImage, filesize)
         """
-        file,cons = self.GetImageConstructionInformation(file)
+        file,cons = self.GetImageConstructionInformationFromString(data, fileinfo)
         
-        return cons(file), int(os.stat(file).st_size)
+        return cons(file)
+
+    def GetImage(self, name, origin):
+        """Gets the named image
+
+        @return: (wxImage, filesize)
+        """
+        # find the image
+        data=None
+        for x in self._data[self.database_key]:
+            if origin==None or self._data[self.database_key][x].origin==origin:
+                if name==self._data[self.database_key][x].name:
+                    data=self._data[self.database_key][x].mediadata
+        if data!=None:
+            img=self.GetImageFromString(data, None)
+            return img
+        return None
 
     # This function exists because of the constraints of the HTML
     # filesystem stuff.  The previous code was reading in the file to
@@ -301,26 +212,52 @@ class WallpaperView(fileview.FileView):
     # images. We supply the info so that callers can make the minimum
     # number of conversions possible
     
+
+    def GetImageConstructionInformationFromString(self, data, fi):
+        """Gets information for constructing an Image from the data
+
+        @return: (filename to use, function to call that returns wxImage)
+        """
+        if fi==None:
+            try:
+                fi=self.GetFileInfoString(data)
+            except:
+                fi=None
+        if fi:
+            if fi.format=='AVI':
+                # return the 1st frame of the AVI file
+                return data, conversions.convertavitobmp
+            if fi.format=='LGBIT':
+                # LG phones may return a proprietary wallpaper media file, LGBIT
+                return data, conversions.convertlgbittobmp
+            if fi.format=='3GPP2':
+                # video format, can't yet display the first frame.
+                return data, lambda name: None
+        stream=cStringIO.StringIO(data)
+        return stream, wx.ImageFromStream
+
     def GetImageConstructionInformation(self, file):
         """Gets information for constructing an Image from the file
 
         @return: (filename to use, function to call that returns wxImage)
         """
-        file=os.path.join(self.mainwindow.wallpaperpath, file)
         fi=self.GetFileInfo(file)
         if file.endswith(".mp4") or not os.path.isfile(file):
             return guihelper.getresourcefile('wallpaper.png'), wx.Image
         if fi:
             if fi.format=='AVI':
                 # return the 1st frame of the AVI file
-                return file, conversions.convertavitobmp
+                return file, conversions.convertfileavitobmp
             if fi.format=='LGBIT':
                 # LG phones may return a proprietary wallpaper media file, LGBIT
                 return file, conversions.convertfilelgbittobmp
             if fi.format=='3GPP2':
-                # video format, can't yet display the firts frame.
+                # video format, can't yet display the first frame.
                 return file, lambda name: None
         return file, wx.Image
+
+    def GetFileInfoString(self, string):
+        return fileinfo.identify_imagestring(string)
 
     def GetFileInfo(self, filename):
         return fileinfo.identify_imagefile(filename)
@@ -330,17 +267,6 @@ class WallpaperView(fileview.FileView):
         file=os.path.join(self.mainwindow.wallpaperpath, file)
         return statinfo(file)
         
-    def updateindex(self, index):
-        if index!=self._data['wallpaper-index']:
-            self._data['wallpaper-index']=index.copy()
-            self.modified=True
-        
-    def populate(self, dict):
-        if self._data['wallpaper-index']!=dict['wallpaper-index']:
-            self._data['wallpaper-index']=dict['wallpaper-index'].copy()
-            self.modified=True
-        self.OnRefresh()
-                    
     def OnPaste(self, evt=None):
         super(WallpaperView, self).OnPaste(evt)
         if not wx.TheClipboard.Open():
@@ -366,26 +292,14 @@ class WallpaperView(fileview.FileView):
         wx.TheClipboard.Close()
         return r
 
-    def AddToIndex(self, file, origin):
-        for i in self._data['wallpaper-index']:
-            if self._data['wallpaper-index'][i]['name']==file:
-                self._data['wallpaper-index'][i]['origin']=origin
-                return
-        keys=self._data['wallpaper-index'].keys()
-        idx=10000
-        while idx in keys:
-            idx+=1
-        self._data['wallpaper-index'][idx]={'name': file, 'origin': origin}
-        self.modified=True
-
     def OnAddFiles(self, filenames):
         for file in filenames:
+            file_stat=os.stat(file)
+            mtime=file_stat.st_mtime
             if self._raw_image:
-                decoded_file=self.decodefilename(file)
-                targetfilename=self.getshortenedbasename(decoded_file)
-                open(targetfilename, 'wb').write(open(file, 'rb').read())
-                self.AddToIndex(str(os.path.basename(targetfilename)).decode(fileview.media_codec),
-                                'images')
+                targetfilename=self.get_media_name_from_filename(file)
+                data=open(file, 'rb').read()
+                self.AddToIndex(targetfilename, self.active_section, data, self._data, mtime)
             else:
                 # :::TODO:: do i need to handle bci specially here?
                 # The proper way to handle custom image types, e.g. BCI and LGBIT,
@@ -401,10 +315,10 @@ class WallpaperView(fileview.FileView):
                                         "Image not understood", style=wx.OK|wx.ICON_ERROR)
                     dlg.ShowModal()
                     continue
-                self.OnAddImage(img,file,refresh=False)
+                self.OnAddImage(img,file,refresh=False, timestamp=mtime)
         self.OnRefresh()
 
-    def ReplaceContents(self, file_name, new_file_name):
+    def ReplaceContents(self, name, origin, new_file_name):
         """Replace the contents of 'file_name' by the contents of
         'new_file_name' by going through the image converter dialog
         """
@@ -419,88 +333,102 @@ class WallpaperView(fileview.FileView):
             dlg.ShowModal()
             dlg.Destroy()
             return
-        dlg=ImagePreviewDialog(self, img, new_file_name,
-                               self.mainwindow.phoneprofile)
+        dlg=ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section)
         if dlg.ShowModal()!=wx.ID_OK:
             dlg.Destroy()
             return
 
         img=dlg.GetResultImage()
         imgparams=dlg.GetResultParams()
-        origin=dlg.GetResultOrigin()
         dlg.Destroy()
         # ::TODO:: temporary hack - this should really be an imgparam
         extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
-        res=getattr(self, "saveimage_"+imgparams['format'])(img, file_name,
-                                                            imgparams)
+        res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
         if not res:
-            try:
-                os.remove(file_name)
-            except:
-                pass
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
+        self.AddToIndex(name, origin, res, self._data)
 
-    def OnAddImage(self, img, file, refresh=True):
+    def OnAddImage(self, img, file, refresh=True, timestamp=None):
         # ::TODO:: if file is None, find next basename in our directory for
         # clipboard99 where 99 is next unused number
         
-        dlg=ImagePreviewDialog(self, img, file, self.mainwindow.phoneprofile)
+        dlg=ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section)
         if dlg.ShowModal()!=wx.ID_OK:
             dlg.Destroy()
             return
 
         img=dlg.GetResultImage()
         imgparams=dlg.GetResultParams()
-        origin=dlg.GetResultOrigin()
+        origin=self.active_section
+        # if we modified the image update the timestamp
+        if not dlg.skip:
+            timestamp=int(time.time())
 
         # ::TODO:: temporary hack - this should really be an imgparam
         extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
         # munge name
-        decoded_file=self.decodefilename(file)
-        targetfilename=self.getshortenedbasename(decoded_file, extension)
+        targetfilename=self.get_media_name_from_filename(file, extension)
 
-        res=getattr(self, "saveimage_"+imgparams['format'])(
-            img,
-            targetfilename, imgparams)
+        res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
         if not res:
-            try:    os.remove(targetfilename)
-            except: pass
             dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
                                 "Image not converted", style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
             return
 
-        self.AddToIndex(str(os.path.basename(targetfilename)).decode(fileview.media_codec), origin)
+        self.AddToIndex(targetfilename, origin, res, self._data, timestamp)
         if refresh:
             self.OnRefresh()
 
-    def saveimage_BMP(self, img, targetfilename, imgparams):
+    def saveimage_BMP(self, img, imgparams):
         if img.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less
             img.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
-        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_BMP)
+        f=common.gettempfilename("bmp")
+        rc = img.SaveFile(f, wx.BITMAP_TYPE_BMP)
+        if rc:
+            data = open(f, 'rb').read()
+        try:    
+            os.remove(f)
+        except: 
+            pass
+        if not rc:
+            return False
+        return data
 
-    def saveimage_JPEG(self, img, targetfilename, imgparams):
+    def saveimage_JPEG(self, img, imgparams):
         img.SetOptionInt("quality", 100)        
-        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_JPEG)
+        f=common.gettempfilename("jpg")
+        rc = img.SaveFile(f, wx.BITMAP_TYPE_JPEG)
+        if rc:
+            data = open(f, 'rb').read()
+        try:    
+            os.remove(f)
+        except: 
+            pass
+        if not rc:
+            return False
+        return data
 
-    def saveimage_PNG(self, img, targetfilename, imgparams):
+    def saveimage_PNG(self, img, imgparams):
         # ::TODO:: this is where the file size constraints should be examined
         # and obeyed
-        return img.SaveFile(targetfilename, wx.BITMAP_TYPE_PNG)
+        f=common.gettempfilename("png")
+        rc = img.SaveFile(f, wx.BITMAP_TYPE_PNG)
+        if rc:
+            data = open(f, 'rb').read()
+        try:    
+            os.remove(f)
+        except: 
+            pass
+        if not rc:
+            return False
+        return data
     
-    def populatefs(self, dict):
-        self.thedir=self.mainwindow.wallpaperpath
-        return self.genericpopulatefs(dict, 'wallpapers', 'wallpaper-index', self.CURRENTFILEVERSION)
-
-    def getfromfs(self, result):
-        self.thedir=self.mainwindow.wallpaperpath
-        return self.genericgetfromfs(result, None, 'wallpaper-index', self.CURRENTFILEVERSION)
-
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
 
@@ -517,10 +445,10 @@ class WallpaperView(fileview.FileView):
             print "converting to version 2"
             version=2
             d={}
-            input=dict.get('wallpaper-index', {})
+            input=dict.get(self.database_key, {})
             for i in input:
                 d[i]={'name': input[i]}
-            dict['wallpaper-index']=d
+            dict[self.database_key]=d
         return dict
 
 class WallpaperPreview(wx.PyWindow):
@@ -535,11 +463,11 @@ class WallpaperPreview(wx.PyWindow):
 
         self.SetImage(image)
 
-    def SetImage(self, name):
+    def SetImage(self, name, origin=None):
         if name is None:
             self.theimage=None
         else:
-            self.theimage, _=thewallpapermanager.GetImage(name)
+            self.theimage=thewallpapermanager.GetImage(name, origin)
         self.thesizedbitmap=None
         self.Refresh(False)
 
@@ -1061,44 +989,54 @@ class ImagePreviewDialog(wx.Dialog):
              (2, "2"),
              (4, "4")]
 
-    def __init__(self, parent, image, filename, phoneprofile):
+    def __init__(self, parent, image, phoneprofile, origin):
         wx.Dialog.__init__(self, parent, -1, "Image Preview", style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX)
         self.phoneprofile=phoneprofile
-        self.filename=filename
         self.image=image
+        self.skip=False
+        self.origin=origin
+        self.target=''
 
-        vbsouter=wx.BoxSizer(wx.VERTICAL)
+        self.vbsouter=wx.BoxSizer(wx.VERTICAL)
+        self.SetupControls(self.vbsouter)
+        self.OnTargetSelect(0)
 
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _:
+                      wx.GetApp().displayhelpid(helpids.ID_DLG_IMAGEPREVIEW))
+
+        self.SetSizer(self.vbsouter)
+        self.vbsouter.Fit(self)
+
+        import guiwidgets
+        guiwidgets.set_size("wallpaperpreview", self, 80, 1.0)
+
+    def SetupControls(self, vbsouter):
+        vbsouter.Clear(True)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self.cropselect=ImageCropSelect(self, image)
+        self.cropselect=ImageCropSelect(self, self.image)
 
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        self.colourselect=wx.lib.colourselect.ColourSelect(self, wx.NewId(), "Background ...", (255,255,255))
-        vbs.Add(self.colourselect, 0, wx.ALL|wx.EXPAND, 5)
+        self.vbs=wx.BoxSizer(wx.VERTICAL)
+        self.colourselect=wx.lib.colourselect.ColourSelect(self, wx.NewId(), "Background Color ...", (255,255,255))
+        self.vbs.Add(self.colourselect, 0, wx.ALL|wx.EXPAND, 5)
         wx.lib.colourselect.EVT_COLOURSELECT(self, self.colourselect.GetId(), self.OnBackgroundColour)
-        vbs.Add(wx.StaticText(self, -1, "Origin"), 0, wx.ALL, 5)
-        self.originbox=wx.ListBox(self, size=(-1, 100))
-        vbs.Add(self.originbox, 0, wx.ALL|wx.EXPAND, 5)
-        vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
+        self.vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
         self.targetbox=wx.ListBox(self, size=(-1,100))
-        vbs.Add(self.targetbox, 0, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(wx.StaticText(self, -1, "Scale"), 0, wx.ALL, 5)
+        self.vbs.Add(self.targetbox, 0, wx.EXPAND|wx.ALL, 5)
+        self.vbs.Add(wx.StaticText(self, -1, "Scale"), 0, wx.ALL, 5)
 
         for one,(s,_) in enumerate(self.SCALES):
             if s==1: break
         self.slider=wx.Slider(self, -1, one, 0, len(self.SCALES)-1, style=wx.HORIZONTAL|wx.SL_AUTOTICKS)
-        wx.EVT_SCROLL(self, self.SetZoom)
-        vbs.Add(self.slider, 0, wx.ALL|wx.EXPAND, 5)
+        self.vbs.Add(self.slider, 0, wx.ALL|wx.EXPAND, 5)
         self.zoomlabel=wx.StaticText(self, -1, self.SCALES[one][1])
-        vbs.Add(self.zoomlabel, 0, wx.ALL|wx.ALIGN_CENTRE_HORIZONTAL, 5)
+        self.vbs.Add(self.zoomlabel, 0, wx.ALL|wx.ALIGN_CENTRE_HORIZONTAL, 5)
         
-        vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
+        self.vbs.Add(wx.StaticText(self, -1, "Preview"), 0, wx.ALL, 5)
         self.imagepreview=ImagePreview(self)
         self.cropselect.SetPreviewWindow(self.imagepreview)
-        vbs.Add(self.imagepreview, 0, wx.ALL, 5)
+        self.vbs.Add(self.imagepreview, 0, wx.ALL, 5)
 
-
-        hbs.Add(vbs, 0, wx.ALL, 5)
+        hbs.Add(self.vbs, 0, wx.ALL, 5)
         hbs.Add(self.cropselect, 1, wx.ALL|wx.EXPAND, 5)
 
         vbsouter.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
@@ -1106,24 +1044,20 @@ class ImagePreviewDialog(wx.Dialog):
         vbsouter.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)
         vbsouter.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
 
-        wx.EVT_LISTBOX(self, self.originbox.GetId(), self.OnOriginSelect)
-        wx.EVT_LISTBOX_DCLICK(self, self.originbox.GetId(), self.OnOriginSelect)
-
+        wx.EVT_SCROLL(self, self.SetZoom)
         wx.EVT_LISTBOX(self, self.targetbox.GetId(), self.OnTargetSelect)
         wx.EVT_LISTBOX_DCLICK(self, self.targetbox.GetId(), self.OnTargetSelect)
 
-        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _:
-                      wx.GetApp().displayhelpid(helpids.ID_DLG_IMAGEPREVIEW))
-        self.originbox.Set(phoneprofile.GetImageOrigins().keys())
-        self.originbox.SetSelection(0)
-        self.OnOriginSelect(None)
-        
-        self.SetSizer(vbsouter)
-        vbsouter.Fit(self)
-        import guiwidgets
-        guiwidgets.set_size("wallpaperpreview", self, 80, 1.0)
+        self.OnOriginSelect()
 
     def ShowModal(self):
+        # see if the image size is already correct
+        i_w, i_h=self.image.GetSize()
+        for v in self.targets:
+            w,h=self.targets[v]['width'],self.targets[v]['height']
+            if abs(i_w-w) < 5 and abs(i_h-h) < 5:
+                self.skip=True
+                return wx.ID_OK
         res=wx.Dialog.ShowModal(self)
         import guiwidgets
         guiwidgets.save_size("wallpaperpreview", self.GetRect())
@@ -1137,42 +1071,32 @@ class ImagePreviewDialog(wx.Dialog):
     def OnBackgroundColour(self, evt):
         self.cropselect.setlbcolour(evt.GetValue())
 
-    def OnOriginSelect(self, _):
-        v=self.originbox.GetStringSelection()
-        assert v is not None
-        t=self.targetbox.GetStringSelection()
-        self.targets=self.phoneprofile.GetTargetsForImageOrigin(v)
+    def OnOriginSelect(self):
+        self.targets=self.phoneprofile.GetTargetsForImageOrigin(self.origin)
         keys=self.targets.keys()
         keys.sort()
         self.targetbox.Set(keys)
-        if t in keys:
-            self.targetbox.SetSelection(keys.index(t))
+        if self.target in keys:
+            self.targetbox.SetSelection(keys.index(self.target))
         else:
             self.targetbox.SetSelection(0)
-        self.OnTargetSelect(None)
 
     def OnTargetSelect(self, _):
-        v=self.targetbox.GetStringSelection()
-        print "target is",v
-        w,h=self.targets[v]['width'],self.targets[v]['height']
+        self.target=self.targetbox.GetStringSelection()
+        w,h=self.targets[self.target]['width'],self.targets[self.target]['height']
+        self.SetupControls(self.vbsouter)
         self.imagepreview.SetSize( (w,h) )
         self.cropselect.setresultsize( (w, h) )
-        sz=self.GetSizer()
-        if sz is not None:
-            # sizer doesn't autmatically size when we change preview size
-            # so this forces that, as well as the repaint due to screen corruption
-            sz.Layout()
-            self.Refresh(True)
+        self.vbsouter.Layout()
+        self.Refresh(True)
         
     def GetResultImage(self):
+        if self.skip:
+            return self.image
         return self.imagepreview.bmp.ConvertToImage()
 
     def GetResultParams(self):
         return self.targets[self.targetbox.GetStringSelection()]
-
-    def GetResultOrigin(self):
-        return self.originbox.GetStringSelection()
-
 
 
 if __name__=='__main__':
@@ -1210,7 +1134,7 @@ if __name__=='__main__':
 
     def run():
         app=wx.PySimpleApp()
-        dlg=ImagePreviewDialog(None, wx.Image("test.jpg"), "foobar.png", FakeProfile())
+        dlg=ImagePreviewDialog(None, wx.Image("test.jpg"), FakeProfile(), "wallpaper")
         dlg.ShowModal()
 
     if __debug__ and True:

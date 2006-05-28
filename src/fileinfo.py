@@ -844,6 +844,13 @@ def identify_audiofile(filename):
             return thefileinfocache.set(filename, obj)
     return thefileinfocache.set(filename, AudioFileInfo(fo))
 
+def identify_audiostring(string):
+    # identify an audio format based on the audio data string
+    fo=SafeStringWrapper(string)
+    for f in audioids:
+        obj=f(fo)
+        if obj is not None:
+            return obj
 ###
 ###  caches for audio/image id
 ###

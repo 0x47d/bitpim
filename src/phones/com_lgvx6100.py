@@ -138,6 +138,9 @@ class Profile(parentprofile):
     MAX_RINGTONE_BASENAME_LENGTH=24
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_ ."
 
+    ringtoneorigins=('ringers', 'mms', 'drm')
+    excluded_ringtone_origins=('mms', 'drm')
+
     # nb we don't allow save to camera so it isn't listed here
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))

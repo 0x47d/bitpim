@@ -366,9 +366,9 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         # main list
         hbmessage=wx.BoxSizer(wx.HORIZONTAL)
         column_info=[]
-        column_info.append(("From/To", 105))
-        column_info.append(("Date", 120))
-        column_info.append(("Subject", 180))
+        column_info.append(("From/To", 105, False))
+        column_info.append(("Date", 120, False))
+        column_info.append(("Subject", 180, False))
         self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
         self._item_list.ResetView(self.nodes, self.nodes_keys)
         vbs0=wx.BoxSizer(wx.VERTICAL)

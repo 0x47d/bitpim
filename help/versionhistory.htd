@@ -2,12 +2,14 @@
 
    <h2><a name="0.9.01">Changes in 0.9.01</a></h2>
     <ul>
+      <li><b>NOTE: If you run this version going back to an earlier version 
+          will cause all the wallpaper/ringers in BitPim to disappear.</b>
       <li>Fixed A950 Phonebook reading problem.
-      <LI>Added phone detection for the Motorola E815.
-      <LI>Increased the size of the phonebook from 500 to 1000 entries for the V3c and E815.
-      <LI>Fixed V170(m) SMS reading problem.
-      <LI>Fixed Data Recording playback bug.
-      <LI>Fixed Linux Unicode alias error for the Motorola phones.
+      <li>Added phone detection for the Motorola E815.
+      <li>Increased the size of the phonebook from 500 to 1000 entries for the V3c and E815.
+      <li>Fixed V170(m) SMS reading problem.
+      <li>Fixed Data Recording playback bug.
+      <li>Fixed Linux Unicode alias error for the Motorola phones.
       <li>Added support for Sanyo SCP-3100 (Sprint). See the <a
 href="phones-sanyo-model-notes.htm#scp3100">SCP-3100 model notes</a>
 for driver information.
@@ -18,6 +20,21 @@ for driver information.
       <li>Fixed bug: undocking laptop crashes BitPim.
       <li>Fixed bug: run minimized does not go to System Tray.
       <li>Added color coded program status.
+      <li>New GUI layout for media, separate nodes for all origins.
+      <li>Added summary screen to show size and quantity of media.
+      <li>Add right-click menus to media-related items in tree view.
+      <li>Add feature to move media from one origin to another (right-click file to move).
+      <li>Add support for media files of the same name in different origins.
+      <li>Add ability to add media to all origins, note: some origins are read only so updates in
+          BitPim will not appear in the phone, check phone help.
+      <li>Add feature to export media files (right-click in tree view) to zip file and filesystem.
+      <li>Add list view for media panel.
+      <li>Fixed incorrect wallpaper sizes on LG-VX8100.
+      <li>Fixed bug in preview window for wallpaper editor which cause it to be cropped in some cases.
+      <li>Add support for preserving media file timestamps (not implemented on all phones).
+      <li>Internal storage of media moved to database, media files now stored in origin directories.
+      <li>Added patch to prevent 0 size ringers when getting ringers from phones which block reading (e.g. 8100)
+          when the ringers were previously uploaded using bitpim.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>

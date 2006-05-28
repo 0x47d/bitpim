@@ -21,6 +21,8 @@ BREW_FILE_SYSTEM=0
 
 PHONE_ENCODING='iso-8859-1'
 
+# need to call stat to get the file time/data
+broken_filelist_date=True
 class indexentry(BaseProtogenClass):
     __fields=['index', 'type', 'filename', 'icon', 'date', 'dunno']
 
@@ -309,7 +311,7 @@ class msg_record(BaseProtogenClass):
         self.__field_length.writetobuffer(buf)
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_87, 'length': 219})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_89, 'length': 219})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -331,7 +333,7 @@ class msg_record(BaseProtogenClass):
         self.__field_unknown6.readfrombuffer(buf)
         self.__field_length=UINT(**{'sizeinbytes': 1})
         self.__field_length.readfrombuffer(buf)
-        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_87, 'length': 219})
+        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_89, 'length': 219})
         self.__field_msg.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -417,14 +419,14 @@ class msg_record(BaseProtogenClass):
     def __getfield_msg(self):
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_87, 'length': 219})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_89, 'length': 219})
         return self.__field_msg.getvalue()
 
     def __setfield_msg(self, value):
         if isinstance(value,LIST):
             self.__field_msg=value
         else:
-            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx5200_87, 'length': 219})
+            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx5200_89, 'length': 219})
 
     def __delfield_msg(self): del self.__field_msg
 
@@ -444,7 +446,7 @@ class msg_record(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx5200_87(BaseProtogenClass):
+class _gen_p_lgvx5200_89(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
 
@@ -453,8 +455,8 @@ class _gen_p_lgvx5200_87(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx5200_87,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx5200_87:
+        super(_gen_p_lgvx5200_89,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx5200_89:
             self._update(args,dict)
 
 
@@ -463,7 +465,7 @@ class _gen_p_lgvx5200_87(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx5200_87,self)._update(args,kwargs)
+        super(_gen_p_lgvx5200_89,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -471,7 +473,7 @@ class _gen_p_lgvx5200_87(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx5200_87,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx5200_89,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1179,7 +1181,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(SMSINBOXMSGFRAGMENT,kwargs)
         if len(args):
-            dict2={'elementclass': _gen_p_lgvx5200_126, 'length': 181}
+            dict2={'elementclass': _gen_p_lgvx5200_128, 'length': 181}
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_msg=LIST(*args,**dict2)
@@ -1191,7 +1193,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_126, 'length': 181})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_128, 'length': 181})
         self.__field_msg.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1201,7 +1203,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_126, 'length': 181})
+        self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_128, 'length': 181})
         self.__field_msg.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1209,14 +1211,14 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     def __getfield_msg(self):
         try: self.__field_msg
         except:
-            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_126, 'length': 181})
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lgvx5200_128, 'length': 181})
         return self.__field_msg.getvalue()
 
     def __setfield_msg(self, value):
         if isinstance(value,LIST):
             self.__field_msg=value
         else:
-            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx5200_126, 'length': 181})
+            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lgvx5200_128, 'length': 181})
 
     def __delfield_msg(self): del self.__field_msg
 
@@ -1230,7 +1232,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx5200_126(BaseProtogenClass):
+class _gen_p_lgvx5200_128(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
 
@@ -1239,8 +1241,8 @@ class _gen_p_lgvx5200_126(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx5200_126,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx5200_126:
+        super(_gen_p_lgvx5200_128,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx5200_128:
             self._update(args,dict)
 
 
@@ -1249,7 +1251,7 @@ class _gen_p_lgvx5200_126(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx5200_126,self)._update(args,kwargs)
+        super(_gen_p_lgvx5200_128,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1257,7 +1259,7 @@ class _gen_p_lgvx5200_126(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx5200_126,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx5200_128,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1346,7 +1348,7 @@ class sms_in(BaseProtogenClass):
         self.__field_sender_length.writetobuffer(buf)
         try: self.__field_sender
         except:
-            self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_136, 'length': 38})
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_138, 'length': 38})
         self.__field_sender.writetobuffer(buf)
         self.__field_unknown3.writetobuffer(buf)
         self.__field_lg_time.writetobuffer(buf)
@@ -1366,7 +1368,7 @@ class sms_in(BaseProtogenClass):
         self.__field_num_msg_elements.writetobuffer(buf)
         try: self.__field_msglengths
         except:
-            self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_154, 'length': 10})
+            self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_156, 'length': 10})
         self.__field_msglengths.writetobuffer(buf)
         self.__field_unknown8.writetobuffer(buf)
         try: self.__field_msgs
@@ -1394,7 +1396,7 @@ class sms_in(BaseProtogenClass):
         self.__field_callback.readfrombuffer(buf)
         self.__field_sender_length=UINT(**{'sizeinbytes': 1})
         self.__field_sender_length.readfrombuffer(buf)
-        self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_136, 'length': 38})
+        self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_138, 'length': 38})
         self.__field_sender.readfrombuffer(buf)
         self.__field_unknown3=DATA(**{'sizeinbytes': 12})
         self.__field_unknown3.readfrombuffer(buf)
@@ -1428,7 +1430,7 @@ class sms_in(BaseProtogenClass):
         self.__field_bin_header3.readfrombuffer(buf)
         self.__field_num_msg_elements=UINT(**{'sizeinbytes': 1})
         self.__field_num_msg_elements.readfrombuffer(buf)
-        self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_154, 'length': 10})
+        self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_156, 'length': 10})
         self.__field_msglengths.readfrombuffer(buf)
         self.__field_unknown8=UNKNOWN(**{'sizeinbytes': 10})
         self.__field_unknown8.readfrombuffer(buf)
@@ -1520,14 +1522,14 @@ class sms_in(BaseProtogenClass):
     def __getfield_sender(self):
         try: self.__field_sender
         except:
-            self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_136, 'length': 38})
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lgvx5200_138, 'length': 38})
         return self.__field_sender.getvalue()
 
     def __setfield_sender(self, value):
         if isinstance(value,LIST):
             self.__field_sender=value
         else:
-            self.__field_sender=LIST(value,**{'elementclass': _gen_p_lgvx5200_136, 'length': 38})
+            self.__field_sender=LIST(value,**{'elementclass': _gen_p_lgvx5200_138, 'length': 38})
 
     def __delfield_sender(self): del self.__field_sender
 
@@ -1744,14 +1746,14 @@ class sms_in(BaseProtogenClass):
     def __getfield_msglengths(self):
         try: self.__field_msglengths
         except:
-            self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_154, 'length': 10})
+            self.__field_msglengths=LIST(**{'elementclass': _gen_p_lgvx5200_156, 'length': 10})
         return self.__field_msglengths.getvalue()
 
     def __setfield_msglengths(self, value):
         if isinstance(value,LIST):
             self.__field_msglengths=value
         else:
-            self.__field_msglengths=LIST(value,**{'elementclass': _gen_p_lgvx5200_154, 'length': 10})
+            self.__field_msglengths=LIST(value,**{'elementclass': _gen_p_lgvx5200_156, 'length': 10})
 
     def __delfield_msglengths(self): del self.__field_msglengths
 
@@ -1833,7 +1835,7 @@ class sms_in(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx5200_136(BaseProtogenClass):
+class _gen_p_lgvx5200_138(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
 
@@ -1842,8 +1844,8 @@ class _gen_p_lgvx5200_136(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx5200_136,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx5200_136:
+        super(_gen_p_lgvx5200_138,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx5200_138:
             self._update(args,dict)
 
 
@@ -1852,7 +1854,7 @@ class _gen_p_lgvx5200_136(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx5200_136,self)._update(args,kwargs)
+        super(_gen_p_lgvx5200_138,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1860,7 +1862,7 @@ class _gen_p_lgvx5200_136(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx5200_136,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx5200_138,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1907,7 +1909,7 @@ class _gen_p_lgvx5200_136(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx5200_154(BaseProtogenClass):
+class _gen_p_lgvx5200_156(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msglength']
 
@@ -1916,8 +1918,8 @@ class _gen_p_lgvx5200_154(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx5200_154,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx5200_154:
+        super(_gen_p_lgvx5200_156,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx5200_156:
             self._update(args,dict)
 
 
@@ -1926,7 +1928,7 @@ class _gen_p_lgvx5200_154(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx5200_154,self)._update(args,kwargs)
+        super(_gen_p_lgvx5200_156,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1934,7 +1936,7 @@ class _gen_p_lgvx5200_154(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx5200_154,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx5200_156,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -2009,7 +2011,7 @@ class sms_quick_text(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(sms_quick_text,kwargs)
         if len(args):
-            dict2={'elementclass': _gen_p_lgvx5200_167,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True}
+            dict2={'elementclass': _gen_p_lgvx5200_169,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True}
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_msgs=LIST(*args,**dict2)
@@ -2021,7 +2023,7 @@ class sms_quick_text(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_msgs
         except:
-            self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_167,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
+            self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_169,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
         self.__field_msgs.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -2031,7 +2033,7 @@ class sms_quick_text(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_167,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
+        self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_169,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
         self.__field_msgs.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2039,14 +2041,14 @@ class sms_quick_text(BaseProtogenClass):
     def __getfield_msgs(self):
         try: self.__field_msgs
         except:
-            self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_167,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
+            self.__field_msgs=LIST(**{'elementclass': _gen_p_lgvx5200_169,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
         return self.__field_msgs.getvalue()
 
     def __setfield_msgs(self, value):
         if isinstance(value,LIST):
             self.__field_msgs=value
         else:
-            self.__field_msgs=LIST(value,**{'elementclass': _gen_p_lgvx5200_167,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
+            self.__field_msgs=LIST(value,**{'elementclass': _gen_p_lgvx5200_169,  'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True})
 
     def __delfield_msgs(self): del self.__field_msgs
 
@@ -2060,7 +2062,7 @@ class sms_quick_text(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx5200_167(BaseProtogenClass):
+class _gen_p_lgvx5200_169(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msg']
 
@@ -2069,8 +2071,8 @@ class _gen_p_lgvx5200_167(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx5200_167,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx5200_167:
+        super(_gen_p_lgvx5200_169,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx5200_169:
             self._update(args,dict)
 
 
@@ -2079,7 +2081,7 @@ class _gen_p_lgvx5200_167(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx5200_167,self)._update(args,kwargs)
+        super(_gen_p_lgvx5200_169,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2087,7 +2089,7 @@ class _gen_p_lgvx5200_167(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx5200_167,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx5200_169,kwargs)
         if len(args):
             dict2={'sizeinbytes': 101, 'encoding': PHONE_ENCODING, 'default': ""}
             dict2.update(kwargs)

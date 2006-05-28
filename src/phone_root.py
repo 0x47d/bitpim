@@ -1,6 +1,7 @@
 ### BITPIM
 ###
 ### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2006 Simon Capper <skyjunky@sbcglobal.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -50,6 +51,7 @@ import playlist
 import filesystem
 import widgets
 import helpids
+import media_root
 
 if guihelper.IsMSWindows():
     import win32api
@@ -69,7 +71,8 @@ class PhoneTree(wx.TreeCtrl):
                                                              wx.ART_OTHER,
                                                              bmsize))
         art=["phonebook", "wallpaper", "ringers", "calendar", "callhistory", "calls", "sms", "message", "memo",
-           "file", "log", "todo", "playlist", "protocol", "console", "phone_root", "phone", "root_image"]
+           "file", "log", "todo", "playlist", "protocol", "console", "phone_root", "phone", "root_image", "media",
+           "image", "video", "camera", "sounds"]
         for k in art:
             s="self.%s= self.image_list.Add(wx.ArtProvider_GetBitmap(guihelper.ART_SEL_%s,wx.ART_TOOLBAR,bmsize))" % (k,k.upper())
             exec(s)
@@ -115,10 +118,10 @@ class PhoneTree(wx.TreeCtrl):
         self.active_panel.OnKeyDown(evt)
         # pass onto widget
 
-    def CreatePhone(self, name, config, database):
+    def CreatePhone(self, name, config, path, database_name):
         phone=Phone(self.parent)
         phone_id=self.AddPage(self.root, phone, name, self.phone, None, helpids.ID_TAB_TODAY)
-        phone.Initialise(self, self.mw, config, database, phone_id)
+        phone.Initialise(self, self.mw, config, path, phone_id, database_name)
         if self.active_phone==None:
             self.Expand(phone_id)
             self.active_phone=phone
@@ -167,7 +170,7 @@ class PhoneTree(wx.TreeCtrl):
                 text=self.active_panel.GetWidgetName()
                 if text is not None:
                     self.config.Write("viewnotebookpage", text)
-        self.mw.SetActivePanel(self.active_panel)
+        wx.CallAfter(self.mw.SetActivePanel, self.active_panel)
         # deal with graying out/in menu items on notebook page changing
         del_bmp, short_help_delete=self.active_panel.GetDeleteInfo()
         add_bmp, short_help_add=self.active_panel.GetAddInfo()
@@ -177,7 +180,6 @@ class PhoneTree(wx.TreeCtrl):
             self.del_bmp=del_bmp
             self.short_help_delete=short_help_delete
             self.short_help_add=short_help_add
-        return
 
     def OnRightUp(self, event):
         pt = event.GetPosition();
@@ -307,7 +309,7 @@ class Phone(today.TodayWidget):
         today.TodayWidget.__init__(self, self, self.parent)
         pubsub.subscribe(self.OnPhoneChanged, pubsub.PHONE_MODEL_CHANGED)
 
-    def Initialise(self, tree, mw, config, path, phone_id):
+    def Initialise(self, tree, mw, config, path, phone_id, database_name):
         self.tree=tree
         self.mw=mw
         self.phone_id=phone_id
@@ -316,17 +318,28 @@ class Phone(today.TodayWidget):
         self.phoneprofile=self.mw.phoneprofile
         id=None
 
-        self.EnsureDatabase(self.path, self.path)
+        blob_path=database_name+"_blobs"
+        self.blob_path=self._fixup(os.path.join(self.path, blob_path))
+        try:
+            os.makedirs(self.blob_path)
+        except:
+            pass
+        if not os.path.isdir(self.blob_path):
+            raise Exception("Unable to create database object directory "+self.blob_path)
+        self.ringerpath=self._fixup(os.path.join(self.path, "ringer"))
+        self.wallpaperpath=self._fixup(os.path.join(self.path, "wallpaper"))
+        self.phonebookpath=self._fixup(os.path.join(self.path, "phonebook"))
+        self.calendarpath=self._fixup(os.path.join(self.path, "calendar"))
+
+        self.EnsureDatabase(self.path, self.path, database_name)
         # create all the panels for this phone
         if self.config.ReadInt("console", 0):
             import developer
             id=self.tree.AddPage(self.phone_id, developer.DeveloperPanel(self.parent, {'mw': self.mw, 'db': self.database} ), "Console", self.tree.console)
         self.phonewidget=phonebook.PhoneWidget(self, self.parent, self.config)
         id=self.tree.AddPage(self.phone_id, self.phonewidget, "PhoneBook", self.tree.phonebook,id)
-        self.wallpaperwidget=wallpaper.WallpaperView(self, self.parent)
-        id=self.tree.AddPage(self.phone_id, self.wallpaperwidget, "Wallpaper", self.tree.wallpaper,id)
-        self.ringerwidget=ringers.RingerView(self, self.parent)
-        id=self.tree.AddPage(self.phone_id, self.ringerwidget, "Ringers", self.tree.ringers,id)
+        self.mediawidget=media_root.MediaWidget(self, self.parent)
+        id=self.tree.AddPage(self.phone_id, self.mediawidget, "Media", self.tree.media,id)
         self.calendarwidget=bpcalendar.Calendar(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.calendarwidget, "Calendar", self.tree.calendar,id)
         self.memowidget=memo.MemoWidget(self, self.parent)
@@ -344,18 +357,13 @@ class Phone(today.TodayWidget):
         self.mw.SetPhoneModelStatus()
         self.mw.SetVersionsStatus()
 
-        self.ringerpath=self._fixup(os.path.join(self.path, "ringer"))
-        self.wallpaperpath=self._fixup(os.path.join(self.path, "wallpaper"))
-        self.phonebookpath=self._fixup(os.path.join(self.path, "phonebook"))
-        self.calendarpath=self._fixup(os.path.join(self.path, "calendar"))
-
         # populate all the widgets
         try:
             results={}
             # get info
             self.phonewidget.getfromfs(results)
-            self.wallpaperwidget.getfromfs(results)
-            self.ringerwidget.getfromfs(results)
+            self.mediawidget.GetWallpaper().getfromfs(results)
+            self.mediawidget.GetRinger().getfromfs(results)    
             self.calendarwidget.getfromfs(results)
             self.memowidget.getfromfs(results)
             self.todowidget.getfromfs(results)
@@ -366,9 +374,9 @@ class Phone(today.TodayWidget):
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
-            self.wallpaperwidget.populate(results)
+            self.mediawidget.GetWallpaper().populate(results)
             wx.SafeYield(onlyIfNeeded=True)
-            self.ringerwidget.populate(results)
+            self.mediawidget.GetRinger().populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.calendarwidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
@@ -384,14 +392,14 @@ class Phone(today.TodayWidget):
         except Exception, e:
             if __debug__:
                 raise Exception, e 
-            pass
+   	        pass
 
     def OnPhoneChanged(self, _):
         self.phoneprofile=self.mw.phoneprofile
 
     # deal with the database
-    def EnsureDatabase(self, newpath, oldpath):
-        newdbpath=os.path.abspath(os.path.join(newpath, "bitpim.db"))
+    def EnsureDatabase(self, newpath, oldpath, database_file):
+        newdbpath=os.path.abspath(os.path.join(newpath, database_file))
         if oldpath is not None and len(oldpath) and oldpath!=newpath:
             # copy database to new location
             if self.database:

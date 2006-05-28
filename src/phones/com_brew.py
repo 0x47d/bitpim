@@ -259,7 +259,7 @@ class DebugBrewProtocol:
         try:
             _stat=os.stat(os.path.join(self._fs_path, name))
             _date=_stat[8]
-            results={ 'name': name, 'type': 'file', 'size': _stat[6], 'datevalue': 0xDEB0DEB0,
+            results={ 'name': name, 'type': 'file', 'size': _stat[6], 'datevalue': 0x0DEB0DEB,
                       'date': (_date,
                                time.strftime("%x %X", time.gmtime(_date))) }
             return results
@@ -473,6 +473,12 @@ class RealBrewProtocol:
                 res=self.sendbrewcommand(req,p_brew.listfileresponse)
                 results[res.filename]={ 'name': res.filename, 'type': 'file',
                                         'size': res.size }
+                if hasattr(self.protocolclass, 'broken_filelist_date') and self.protocolclass.broken_filelist_date:
+                    file_stat=self.statfile(res.filename)
+                    if file_stat['date'][0]>self._brewepochtounix:
+                        res.date=file_stat['date'][0]-self._brewepochtounix
+                    else: 
+                        res.date=0
                 if res.date==0:
                     results[res.filename]['date']=(0, "")
                 else:

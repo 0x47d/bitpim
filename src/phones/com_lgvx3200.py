@@ -187,7 +187,7 @@ class Phone(com_lgvx4400.Phone):
                     data=None
                     del wpi[k]
                     for w in wp.keys():
-                        if wp[w]['name']==name:
+                        if wp[w]['name']==name and wp[w]['origin']==type:
                             data=wp[w]['data']
                             del wp[w]
                     if not merge and data is None:

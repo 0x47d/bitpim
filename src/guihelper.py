@@ -63,11 +63,14 @@ ID_HELPSUPPORT=1
 ID_HELP_UPDATE=1
 ID_HELPABOUT=1
 ID_DR_SETTINGS=1
+ID_FILEVIEW_THUMBNAIL=1
+ID_FILEVIEW_LIST=1
 
 # file/filesystem viewer context menus
 ID_FV_SAVE=1
 ID_FV_HEXVIEW=1
 ID_FV_OVERWRITE=1
+ID_FV_MOVE=1
 ID_FV_NEWSUBDIR=1
 ID_FV_NEWFILE=1
 ID_FV_DELETE=1
@@ -94,6 +97,8 @@ ID_EXPORT_CSV_CONTACTS=1
 ID_EXPORT_CSV_CALENDAR=1
 ID_EXPORT_SMS=1
 ID_EXPORT_CSV_CALL_HISTORY=1
+ID_EXPORT_MEDIA_TO_DIR=1
+ID_EXPORT_MEDIA_TO_ZIP=1
 ID_IMPORT_CSV_CONTACTS=1
 ID_IMPORT_CSV_CALENDAR=1
 ID_IMPORT_VCARDS=1
@@ -314,6 +319,11 @@ _ourart={
     "ART_DEL_TODO": "delete_todo",
     "ART_ADD_SMS": "add_sms",
     "ART_DEL_SMS": "delete_sms",
+    "ART_SEL_MEDIA": "select_media",
+    "ART_SEL_IMAGE": "select_image",
+    "ART_SEL_VIDEO": "select_video",
+    "ART_SEL_CAMERA": "select_camera",
+    "ART_SEL_SOUNDS": "select_sounds",
     "ART_SEL_PHONEBOOK": "select_phonebook",
     "ART_SEL_WALLPAPER": "select_wallpaper",
     "ART_SEL_RINGERS": "select_ringers",
@@ -340,6 +350,8 @@ _ourart={
     "ART_EDITDETECT": "editdetect",
     "ART_EDITSETTINGS": "editsettings",
     "ART_DATAHISTORICAL": "data_history",
+    "ART_MEDIA_LIST_VIEW": "media_list_view",
+    "ART_MEDIA_THUMB_VIEW": "media_thumb_view",
     "ART_FOLDER_OPEN": "folder_open",
     "ART_FOLDER": "folder"
     }

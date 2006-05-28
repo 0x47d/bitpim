@@ -68,6 +68,7 @@ class BitPimWidget:
                 else:
                     popup_menu.Append(id, name, tooltip, type)
             parent.PopupMenu(popup_menu, pt)
+            self.OnRightClickMenuExit()
 
     def GetWidgetName(self):
         return self._tree.GetItemText(self.id)
@@ -92,6 +93,9 @@ class BitPimWidget:
         """
         result=[]
         return result
+
+    def OnRightClickMenuExit(self):
+        pass
 
     def OnKeyDown(self, evt):
         pass

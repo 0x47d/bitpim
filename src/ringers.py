@@ -41,68 +41,38 @@ class RingerView(fileview.FileView):
     # this is only used to prevent the pubsub module
     # from being GC while any instance of this class exists
     __publisher=pubsub.Publisher
-    # supported origins
-    origin_list=('ringers', 'sounds')
-
-    organizetypes=("Origin", "Audio Type", "File Size")
     media_notification_type=pubsub.ringtone_type
+    database_key='ringtone-index'
+    media_key='ringtone'
+    default_origin="ringers"
     
-    def __init__(self, mainwindow, parent, id=-1):
+    def __init__(self, mainwindow, parent, media_root, id=-1):
         self.mainwindow=mainwindow
-        self._data={'ringtone-index': {}}
-        self.updateprofilevariables(self.mainwindow.phoneprofile)
-        self.organizemenu=wx.Menu()
-        fileview.FileView.__init__(self, mainwindow, parent, "ringtone-watermark")
+        self._data={self.database_key: {}}
+        fileview.FileView.__init__(self, mainwindow, parent, media_root, "ringtone-watermark")
         self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3;*.pmd|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|PMD/CMX files|*.pmd|All files|*.*"
-
-        self.organizeinfo={}
-
-        for k in self.organizetypes:
-            id=wx.NewId()
-            self.organizemenu.AppendRadioItem(id, k)
-            wx.EVT_MENU(self, id, self.OrganizeChange)
-            self.organizeinfo[id]=getattr(self, "organizeby_"+k.replace(" ",""))
-
+        self.thedir=self.mainwindow.ringerpath
         self.modified=False
-        wx.EVT_IDLE(self, self.OnIdle)
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
         pubsub.subscribe(self.OnDictRequest, pubsub.REQUEST_RINGTONE_INDEX)
         self._raw_media=self._shift_down=False
-        wx.EVT_KEY_DOWN(self.aggdisp, self._OnKey)
-        wx.EVT_KEY_UP(self.aggdisp, self._OnKey)
 
     def updateprofilevariables(self, profile):
         self.maxlen=profile.MAX_RINGTONE_BASENAME_LENGTH
         self.filenamechars=profile.RINGTONE_FILENAME_CHARS
+        self.excluded_origins=profile.excluded_ringtone_origins
+        for o in profile.ringtoneorigins:
+            self.media_root.AddMediaNode(o, self)
 
     def OnListRequest(self, msg=None):
-        l=[self._data['ringtone-index'][x]['name'] \
-           for x in self._data['ringtone-index'] \
-               if self._data['ringtone-index'][x].get('origin', None) in ('builtin', 'ringers') ]
+        l=[self._data[self.database_key][x].name \
+           for x in self._data[self.database_key] \
+               if self._data[self.database_key][x].origin not in self.excluded_origins ]
         l.sort()
         pubsub.publish(pubsub.ALL_RINGTONES, l)
 
     def OnDictRequest(self, msg=None):
-        pubsub.publish(pubsub.ALL_RINGTONE_INDEX, self._data['ringtone-index'].copy())
-
-    def OnIdle(self, _):
-        "Save out changed data"
-        if self.modified:
-            self.modified=False
-            self.populatefs(self._data)
-            self.OnListRequest() # broadcast changes
-
-    def OnKeyDown(self, evt):
-        self._OnKey(evt)
-        pass
-
-    def OnKeyUp(self, evt):
-        self._OnKey(evt)
-        pass
-
-    def _OnKey(self, evt):
-        self._shift_down=evt.ShiftDown()
-        evt.Skip()
+        pubsub.publish(pubsub.ALL_RINGTONE_INDEX, self._data[self.database_key].copy())
 
     def GetDeleteInfo(self):
         return guihelper.ART_DEL_RINGER, "Delete Ringer"
@@ -116,16 +86,9 @@ class RingerView(fileview.FileView):
         # reset the fla
         self._shift_down=False
 
-    def getdata(self,dict,want=fileview.FileView.NONE):
-        return self.genericgetdata(dict, want, self.mainwindow.ringerpath, 'ringtone', 'ringtone-index')
-
     def GetItemThumbnail(self, item, w, h):
         assert w==self.thumbnail.GetWidth() and h==self.thumbnail.GetHeight()
         return self.thumbnail
-
-    def OrganizeChange(self, evt):
-        evt.GetEventObject().Check(evt.GetId(), True)
-        self.OnRefresh()
 
     def GetSections(self):
         # work out section and item sizes
@@ -137,47 +100,27 @@ class RingerView(fileview.FileView):
         itemsize=self.thumbnail.GetWidth()+160, max(self.thumbnail.GetHeight(), h*4+DisplayItem.PADDING)+DisplayItem.PADDING*2
         
         # get all the items
-        items=[DisplayItem(self, key, self.mainwindow.ringerpath) for key in self._data['ringtone-index']]
-        # prune out ones we don't have images for
-        items=[item for item in items if os.path.exists(item.filename)]
+        items=[DisplayItem(self, key) for key in self._data[self.database_key] if self._data[self.database_key][key].mediadata!=None]
 
         self.sections=[]
-
+        
         if len(items)==0:
             return self.sections
         
         # get the current sorting type
-        for i in range(len(self.organizetypes)):
-            item=self.organizemenu.FindItemByPosition(i)
-            if self.organizemenu.IsChecked(item.GetId()):
-                for sectionlabel, items in self.organizeinfo[item.GetId()](items):
-                    sh=aggregatedisplay.SectionHeader(sectionlabel)
-                    sh.itemsize=itemsize
-                    for item in items:
-                        item.thumbnailsize=self.thumbnail.GetWidth(), self.thumbnail.GetHeight()
-                    # sort items by name
-                    items=[(item.name.lower(), item) for item in items]
-                    items.sort()
-                    items=[item for name,item in items]
-                    self.sections.append( (sh, items) )
-                return [sh for sh,items in self.sections]
-        assert False, "Can't get here"
+        for sectionlabel, items in self.organizeby_Origin(items):
+            self.media_root.AddMediaNode(sectionlabel, self)
+            sh=aggregatedisplay.SectionHeader(sectionlabel)
+            sh.itemsize=itemsize
+            for item in items:
+                item.thumbnailsize=self.thumbnail.GetWidth(), self.thumbnail.GetHeight()
+            # sort items by name
+            items.sort(self.CompareItems)
+            self.sections.append( (sh, items) )
+        return [sh for sh,items in self.sections]
 
     def GetItemsFromSection(self, sectionnumber, sectionheader):
         return self.sections[sectionnumber][1]
-
-    def organizeby_AudioType(self, items):
-        types={}
-        for item in items:
-            t=item.fileinfo.format
-            if t is None: t="<Unknown>"
-            l=types.get(t, [])
-            l.append(item)
-            types[t]=l
-
-        keys=types.keys()
-        keys.sort()
-        return [ (key, types[key]) for key in types]
 
     def organizeby_Origin(self, items):
         types={}
@@ -191,51 +134,22 @@ class RingerView(fileview.FileView):
         keys=types.keys()
         keys.sort()
         return [ (key, types[key]) for key in types]
-        
-    def organizeby_FileSize(self, items):
-        
-        sizes={0: ('<8KB', []),
-               8192: ('8KB - 16KB', []),
-               16384: ('16KB - 32KB', []),
-               32768: ('32KB - 64KB', []),
-               65536: ('64KB - 128KB', []),
-               131052: ('128KB -512KB', []),
-               524208: ('512KB - 1MB', []),
-               1024*1024: ('>1MB', [])}
-
-        keys=sizes.keys()
-        keys.sort()
-
-        for item in items:
-            t=item.size
-            if t>=keys[-1]:
-                sizes[keys[-1]][1].append(item)
-                continue
-            for i,k in enumerate(keys):
-                if t<keys[i+1]:
-                    sizes[k][1].append(item)
-                    break
-
-        return [sizes[k] for k in keys if len(sizes[k][1])]   
 
     def GetItemSize(self, sectionnumber, sectionheader):
         return sectionheader.itemsize
 
+    def GetFileInfoString(self, string):
+        return fileinfo.identify_audiostring(string)
+
     def GetFileInfo(self, filename):
         return fileinfo.identify_audiofile(filename)
 
-    def RemoveFromIndex(self, names):
-        for name in names:
-            wp=self._data['ringtone-index']
-            for k in wp.keys():
-                if wp[k]['name']==name:
-                    del wp[k]
-                    self.modified=True
-
-    def ReplaceContents(self, file_name, new_file_name):
+    def ReplaceContents(self, name, origin, new_file_name):
         """Replace the contents of 'file_name' by the contents of
         'new_file_name' by going through the image converter dialog
         """
+        file_stat=os.stat(new_file_name)
+        mtime=file_stat.st_mtime
         afi=fileinfo.identify_audiofile(new_file_name)
         if afi.size<=0:
             return # zero length file or other issues
@@ -264,17 +178,17 @@ class RingerView(fileview.FileView):
             dlg.Destroy()
             if dlg_resp==wx.ID_NO:
                 return
-        file(file_name, 'wb').write(filedata)
+        self.AddToIndex(name, origin, filedata, self._data, mtime)
         
     def OnAddFiles(self, filenames):
-        self.thedir=self.mainwindow.ringerpath
         for file in filenames:
             if file is None: continue  # failed dragdrop?
+            file_stat=os.stat(file)
+            mtime=file_stat.st_mtime
             if self._raw_media:
-                decoded_file=self.decodefilename(file)
-                target=self.getshortenedbasename(decoded_file)
-                open(target, 'wb').write(open(file, 'rb').read())
-                self.AddToIndex(str(os.path.basename(target)).decode(fileview.media_codec))
+                target=self.get_media_name_from_filename(file)
+                data=open(file, 'rb').read()
+                self.AddToIndex(target, self.active_section, data, self._data, mtime)
             else:
                 # do we want to convert file?
                 afi=fileinfo.identify_audiofile(file)
@@ -305,26 +219,11 @@ class RingerView(fileview.FileView):
                     dlg.Destroy()
                     if dlg_resp==wx.ID_NO:
                         continue
-                decoded_file=self.decodefilename(file)
-                target=self.getshortenedbasename(decoded_file, newext)
-                open(target, "wb").write(filedata)
-                self.AddToIndex(str(os.path.basename(target)).decode(fileview.media_codec))
+                target=self.get_media_name_from_filename(file, newext)
+                self.AddToIndex(target, self.active_section, filedata, self._data, mtime)
         self.OnRefresh()
 
     OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
-
-    def AddToIndex(self, file):
-        for i in self._data['ringtone-index']:
-            if self._data['ringtone-index'][i]['name']==file:
-                if hasattr(self._data['ringtone-index'][i], 'origin'):
-                    del self._data['ringtone-index'][i]['origin']
-                return
-        keys=self._data['ringtone-index'].keys()
-        idx=10000
-        while idx in keys:
-            idx+=1
-        self._data['ringtone-index'][idx]={'name': file}
-        self.modified=True
 
     def ConvertFormat(self, file, convertinfo):
         dlg=ConvertDialog(self, file, convertinfo)
@@ -334,30 +233,6 @@ class RingerView(fileview.FileView):
             res=None
         dlg.Destroy()
         return res
-
-    def updateindex(self, index):
-        if index!=self._data['ringtone-index']:
-            self._data['ringtone-index']=index.copy()
-            self.modified=True
-
-    def populatefs(self, dict):
-        self.thedir=self.mainwindow.ringerpath
-        return self.genericpopulatefs(dict, 'ringtone', 'ringtone-index', self.CURRENTFILEVERSION)
-            
-    def populate(self, dict):
-        if self._data['ringtone-index']!=dict['ringtone-index']:
-            self._data['ringtone-index']=dict['ringtone-index'].copy()
-            self.modified=True
-        self.OnRefresh()
-        
-    def getfromfs(self, result):
-        self.thedir=self.mainwindow.ringerpath
-        return self.genericgetfromfs(result, None, 'ringtone-index', self.CURRENTFILEVERSION)
-
-    def updateindex(self, index):
-        if index!=self._data['ringtone-index']:
-            self._data['ringtone-index']=index.copy()
-            self.modified=True
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
@@ -375,10 +250,10 @@ class RingerView(fileview.FileView):
             print "converting to version 2"
             version=2
             d={}
-            input=dict.get('ringtone-index', {})
+            input=dict.get(self.database_key, {})
             for i in input:
                 d[i]={'name': input[i]}
-            dict['ringtone-index']=d
+            dict[self.database_key]=d
         return dict
 
 class ConvertDialog(wx.Dialog):

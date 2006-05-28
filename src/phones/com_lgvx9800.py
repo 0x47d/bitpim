@@ -163,21 +163,32 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         return filename.startswith(self._rs_path)
 
     def getmedia(self, maps, results, key):
-        media={}
+        origins={}
+        # signal that we are using the new media storage that includes the origin and timestamp
+        origins['new_media_version']=1
 
         for type, indexfile, sizefile, directory, lowestindex, maxentries, typemajor, def_icon, idx_ofs  in maps:
+            media={}
             for item in self.getindex(indexfile):
+                data=None
+                timestamp=None
                 try:
+                    stat_res=self.statfile(item.filename)
+                    if stat_res!=None:
+                        timestamp=stat_res['date'][0]
                     if not self._is_rs_file(item.filename):
-                        media[common.basename(item.filename)]=self.getfilecontents(
-                            item.filename, True)
-                except (com_brew.BrewNoSuchFileException,
-                        com_brew.BrewBadPathnameException,
-                        com_brew.BrewNameTooLongException,
-                        ValueError):
+                        data=self.getfilecontents(item.filename, True)
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
+                except com_brew.BrewAccessDeniedException:
+                    # firmware wouldn't let us read this file, just mark it then
+                    self.log('Failed to read file: '+item.filename)
+                    data=''
+                if data!=None:
+                    media[common.basename(item.filename)]={ 'data': data, 'timestamp': timestamp}
+            origins[type]=media
 
-        results[key]=media
+        results[key]=origins
         return results
 
     def _write_index_file(self, type):
@@ -300,7 +311,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                     del wpi[k]
                     for w in wp.keys():
                         # does wp contain a reference to this same item?
-                        if wp[w]['name']==name:
+                        if wp[w]['name']==name and wp[w]['origin']==type:
                             data=wp[w]['data']
                             del wp[w]
                     if not merge and data is None:
@@ -576,8 +587,13 @@ class Profile(parentprofile):
     # the 8100 doesn't have seperate origins - they are all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
     def GetImageOrigins(self):
         return self.imageorigins
+
+    ringtoneorigins=('ringers', 'sounds')
+    excluded_ringtone_origins=('sounds')
+    excluded_wallpaper_origins=('video')
 
     # our targets are the same for all origins
     imagetargets={}

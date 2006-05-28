@@ -477,11 +477,11 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # main list
         column_info=[]
-        column_info.append(("Call Type", 80))
-        column_info.append(("Date", 120))
-        column_info.append(("Number", 100))
-        column_info.append(("Duration", 80))
-        column_info.append(("Name", 130))
+        column_info.append(("Call Type", 80, False))
+        column_info.append(("Date", 120, False))
+        column_info.append(("Number", 100, False))
+        column_info.append(("Duration", 80, True))
+        column_info.append(("Name", 130, False))
         self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
         self._item_list.ResetView(self.nodes, self.nodes_keys)
         vbs.Add(self._item_list, 1, wx.EXPAND|wx.ALL, 5)

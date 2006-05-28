@@ -421,7 +421,19 @@ def convertjpgtoavi(jpg_data, avi_file_name, fps=4, new_file=False):
     except:
         pass
 
-def convertavitobmp(avi_file_name, frame_num=0):
+def convertavitobmp(avi_data, frame_num=0):
+    avi_file=shortfilename(common.gettempfilename("avi"))
+    f=open(avi_file, "wb")
+    f.write(avi_data)
+    f.close()
+    img=convertfileavitobmp(avi_file, frame_num)
+    try:
+        os.remove(avi_file)
+    except:
+        pass
+    return img
+
+def convertfileavitobmp(avi_file_name, frame_num=0):
     bmp2avi=shortfilename(gethelperbinary('bmp2avi'))
     bmp_file_name=shortfilename(common.gettempfilename("bmp"))
     run(bmp2avi, '-t', `frame_num`, '-i', shortfilename(avi_file_name),

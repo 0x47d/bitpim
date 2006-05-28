@@ -1969,6 +1969,11 @@ def GetPhonebookExports():
     # Call History - always possible
     res.append( (guihelper.ID_EXPORT_CSV_CALL_HISTORY, 'CSV Call History...', 'Export Call History to CSV',
                  OnFileExportCallHistory))
+    # Media - always possible
+    res.append( (guihelper.ID_EXPORT_MEDIA_TO_DIR, 'Media to Folder...', 'Export Media Files to a Folder on your computer',
+                 OnFileExportMediaDir))
+    res.append( (guihelper.ID_EXPORT_MEDIA_TO_ZIP, 'Media to Zip File...', 'Export Media Files to a Zip file',
+                 OnFileExportMediaZip))
     return res
 
 class BaseExportDialog(wx.Dialog):
@@ -2524,4 +2529,16 @@ def OnFileExportCallHistory(parent):
     import call_history_export
     dlg=call_history_export.ExportCallHistoryDialog(parent, 'Export Call History')
     dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExportMediaZip(parent):
+    import media_root
+    dlg=media_root.ExportMediaToZipDialog(parent, 'Export Media to Zip')
+    dlg.DoDialog()
+    dlg.Destroy()
+
+def OnFileExportMediaDir(parent):
+    import media_root
+    dlg=media_root.ExportMediaToDirDialog(parent, 'Media will be copied to selected folder')
+    dlg.DoDialog()
     dlg.Destroy()
