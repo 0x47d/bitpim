@@ -7,6 +7,7 @@
 
 <H3>Phonebook</H3>
 <UL>
+<LI>The phone will ignore any entries with no numbers and no emails.
 <LI><B>Groups (Categories)</B> cannot be changed from BitPim, it must be done from the phone.
 </UL>
 
