@@ -262,11 +262,6 @@ class WallpaperView(fileview.FileView):
     def GetFileInfo(self, filename):
         return fileinfo.identify_imagefile(filename)
 
-    def GetImageStatInformation(self, file):
-        """Returns the statinfo for file"""
-        file=os.path.join(self.mainwindow.wallpaperpath, file)
-        return statinfo(file)
-        
     def OnPaste(self, evt=None):
         super(WallpaperView, self).OnPaste(evt)
         if not wx.TheClipboard.Open():
@@ -636,15 +631,7 @@ class BPFSHandler(wx.FileSystemHandler):
         return None
 
     def OpenBPUserImageFile(self, location, name, **kwargs):
-        si=self.wpm.GetImageStatInformation(name)
-        res=self._GetCache(location, si)
-        if res is not None: return res
-        file,cons=self.wpm.GetImageConstructionInformation(name)
-        if cons == wx.Image:
-            res=BPFSImageFile(self, location, file, **kwargs)
-        else:
-            res=BPFSImageFile(self, location, img=cons(file), **kwargs)
-        self._AddCache(location, si, res)
+        res=BPFSImageFile(self, location, img=self.wpm.GetImage(name, None), **kwargs)
         return res
 
     def OpenBPImageFile(self, location, name, **kwargs):

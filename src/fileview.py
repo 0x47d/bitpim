@@ -305,7 +305,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         self.movemenu=wx.Menu()
         self.itemmenu.AppendMenu(guihelper.ID_FV_MOVE, "Move to", self.movemenu)
         self.itemmenu.AppendSeparator()
-        self.itemmenu.Append(guihelper.ID_FV_OVERWRITE, "Overwrite")
+        self.itemmenu.Append(guihelper.ID_FV_REPLACE, "Replace")
         # self.itemmenu.Append(guihelper.ID_FV_RENAME, "Rename")
         self.itemmenu.Append(guihelper.ID_FV_REFRESH, "Refresh")
 
@@ -324,7 +324,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_COPY, self.OnCopy)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_DELETE, self.OnDelete)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_RENAME, self.OnRename)
-        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_OVERWRITE, self.OnOverwrite)
+        wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REPLACE, self.OnReplace)
         wx.EVT_MENU(self.itemmenu, guihelper.ID_FV_REFRESH, lambda evt: self.OnRefresh())
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_ADD, self.OnAdd)
         wx.EVT_MENU(self.bgmenu, guihelper.ID_FV_PASTE, self.OnPaste)
@@ -989,7 +989,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             items[0].Refresh()
         dlg.Destroy()
 
-    def OnOverwrite(self, _=None):
+    def OnReplace(self, _=None):
         items=self.GetSelectedItems()
         if len(items)!=1:
                # either none or more than 1 items selected
