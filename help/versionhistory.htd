@@ -35,6 +35,7 @@ for driver information.
       <li>Internal storage of media moved to database, media files now stored in origin directories.
       <li>Added patch to prevent 0 size ringers when getting ringers from phones which block reading (e.g. 8100)
           when the ringers were previously uploaded using bitpim.
+      <li>Fixed auto-detection for phones that have 2 comm ports.
     </ul>
 
    <h2><a name="0.9.00">Changes in 0.9.00</a></h2>

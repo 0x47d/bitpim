@@ -1224,12 +1224,16 @@ class MainWindow(wx.Frame):
             # not interested
             return
         print 'New device on port:',name
-        if wx.IsBusy():
-            # current phone operation ongoing, abort this
-            return
         # check the new device
         check_auto_sync=auto_sync.UpdateOnConnect(self)
-        self.__detect_phone(name, check_auto_sync, self._autodetect_delay, True)
+        if wx.IsBusy():
+            # current phone operation ongoing, queue this
+            self.queue.put((self.__detect_phone, (name, check_auto_sync,
+                                                  self._autodetect_delay, True),
+                            {}), False)
+        else:
+            self.__detect_phone(name, check_auto_sync, self._autodetect_delay,
+                                True)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
