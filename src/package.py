@@ -214,7 +214,7 @@ def resourcefilter(srcfilename, destfilename):
         exts=exts+['.lbin', '.htb']
     if sys.platform=='darwin':
         exts=exts+['.mbin', '.htb']
-    if os.path.splitext(srcfilename)[1] in exts:
+    if os.path.splitext(srcfilename)[1].lower() in exts:
         return srcfilename, destfilename
     return None
 
