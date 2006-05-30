@@ -172,6 +172,14 @@ BEGIN_TOC
             TOCITEM_2(Notes,phone-lgvx9800-notes.htm)
             TOCITEM_2(Howtos,phone-lgvx9800-howtos.htm)
             ENDTOC_2
+        TOCITEM_1(Motorola E815,phone-motoe815.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-motoe815-notes.htm)
+            ENDTOC_2
+        TOCITEM_1(Motorola E815m,phone-motoe815m.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-motoe815m-notes.htm)
+            ENDTOC_2
         TOCITEM_1(Motorola V3c,phone-motov3c.htm)
             TOC_2
             TOCITEM_2(Notes,phone-motov3c-notes.htm)

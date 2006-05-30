@@ -542,6 +542,26 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Motorola E815">
+        <param name="Local" value="phone-motoe815.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-motoe815-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Motorola E815m">
+        <param name="Local" value="phone-motoe815m.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-motoe815m-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Motorola V3c">
         <param name="Local" value="phone-motov3c.htm">
         </OBJECT>

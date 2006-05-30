@@ -11,6 +11,30 @@
 <th>PHONE INFO
 <th>AUTO DETECT
 </tr>
+<tr><th>E815
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>&nbsp;
+<td align=center>X
+<td align=center>X
+</tr>
+<tr><th>E815m
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>&nbsp;
+<td align=center>X
+<td align=center>X
+</tr>
 <tr><th>LG-C2000
 <td align=center>R W
 <td align=center>R W
@@ -61,7 +85,7 @@
 </tr>
 <tr><th>LG-LG8100
 <td align=center>R W
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -420,7 +444,7 @@
 <td align=center>X
 </tr>
 <tr><th>SCH-A950
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
