@@ -1,5 +1,13 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.02">Changes in 0.9.02</a></h2>
+    <ul>
+      <li><b>NOTE: If you run this version going back to an earlier version 
+          will cause all the wallpaper/ringers in BitPim to disappear.</b>
+      <li>Fixed media view toolbar bitmap problem.
+      <li>Fixed status bar redraw problem.
+    </ul>
+
    <h2><a name="0.9.01">Changes in 0.9.01</a></h2>
     <ul>
       <li><b>NOTE: If you run this version going back to an earlier version 
