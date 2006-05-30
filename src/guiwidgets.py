@@ -1151,7 +1151,8 @@ class MyStatusBar(wx.StatusBar):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
-        self._status=wx.StaticText(self, -1, '')
+        self._status=wx.StaticText(self, -1, '',
+                                   style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
         self.SetFieldsCount(self.__total_panes)
         self.SetStatusWidths(self.__pane_width)
         self.Reposition()
@@ -1172,7 +1173,7 @@ class MyStatusBar(wx.StatusBar):
                 pass
 
     def Reposition(self):
-        self.sizeChanged = False
+        self.sizechanged = False
         rect=self.GetFieldRect(self.__gauge_index)
         self.gauge.SetPosition(wx.Point(rect.x+2, rect.y+2))
         self.gauge.SetSize(wx.Size(rect.width-4, rect.height-4))
