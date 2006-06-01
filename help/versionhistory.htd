@@ -7,6 +7,7 @@
       <li>Fixed media view toolbar bitmap problem.
       <li>Fixed status bar redraw problem.
       <li>Fixed bug: package module not copy all resource files.
+      <li>Fixed bug: calendar entry dialog color coded fields not working properly.
     </ul>
 
    <h2><a name="0.9.01">Changes in 0.9.01</a></h2>
