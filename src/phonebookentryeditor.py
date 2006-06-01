@@ -80,6 +80,9 @@ class DirtyUIBase(wx.Panel):
         self.ignore_dirty=False
     def Ignore(self, ignore=True):
         self.ignore_dirty=ignore
+    def Enable(self, enable=True):
+        super(DirtyUIBase, self).Enable(enable)
+        self.Refresh()
 
 # RingtoneEditor----------------------------------------------------------------
 class RingtoneEditor(DirtyUIBase):
