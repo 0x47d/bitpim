@@ -1133,6 +1133,9 @@ class ExceptionDialog(wx.Dialog):
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
 ###
 
+SB_Phone_Set=0
+SB_Phone_Detected=1
+SB_Phone_Unavailable=2
 class MyStatusBar(wx.StatusBar):
     __total_panes=3
     __version_index=2
@@ -1144,15 +1147,22 @@ class MyStatusBar(wx.StatusBar):
     __help_str_index=2
     __general_pane=2
     __pane_width=[50, 180, -1]
+    
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
         self.__major_progress_text=self.__version_text=self.__phone_text=''
         self.sizechanged=False
+        self._ready_color=wx.GREEN
+        self._busy_color=wx.RED
+        self._phone_detected_color=wx.GREEN
+        self._phone_manuallyset_color=wx.NamedColour('YELLOW')
+        self._phone_unavailable_color=wx.RED
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
         self._status=wx.StaticText(self, -1, '',
                                    style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
+        self._phone_model=wx.StaticText(self, -1, '')
         self.SetFieldsCount(self.__total_panes)
         self.SetStatusWidths(self.__pane_width)
         self.Reposition()
@@ -1180,6 +1190,8 @@ class MyStatusBar(wx.StatusBar):
         rect=self.GetFieldRect(self.__app_status_index)
         self._status.SetPosition(wx.Point(rect.x+2, rect.y+2))
         self._status.SetSize(wx.Size(rect.width-4, rect.height-4))
+        rect=self.GetFieldRect(self.__phone_model_index)
+        self._phone_model.SetPosition(wx.Point(rect.x+rect.width/2+2, rect.y+2))
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
@@ -1202,13 +1214,21 @@ class MyStatusBar(wx.StatusBar):
     def GetHelpPane(self):
         return self.__help_str_index
     def set_app_status_ready(self):
-        self._status.SetBackgroundColour(wx.GREEN)
+        self._status.SetBackgroundColour(self._ready_color)
         self._status.SetLabel('Ready')
     def set_app_status_busy(self):
-        self._status.SetBackgroundColour(wx.RED)
+        self._status.SetBackgroundColour(self._busy_color)
         self._status.SetLabel('BUSY')
-    def set_phone_model(self, str=''):
-        self.__phone_text=str
+    def set_phone_model(self, str='', status=SB_Phone_Set):
+        if status==SB_Phone_Detected:
+            self.__phone_text=str+' - Detected'
+            self._phone_model.SetBackgroundColour(self._phone_detected_color)
+        elif status==SB_Phone_Set:
+            self.__phone_text=str+' - Manually Set'
+            self._phone_model.SetBackgroundColour(self._phone_manuallyset_color)
+        else:
+            self.__phone_text=str+' - Unavailable'
+            self._phone_model.SetBackgroundColour(self._phone_unavailable_color)
         self.__set_version_phone_text()
     def set_versions(self, current, latest=''):
         s='BitPim '+current
@@ -1219,11 +1239,8 @@ class MyStatusBar(wx.StatusBar):
         self.__version_text=s
         self.__set_version_phone_text()
     def __set_version_phone_text(self):
-        if guihelper.IsMac():
-            s = self.__version_text+'         '+self.__phone_text
-        else:
-            s = self.__version_text+'\t'+self.__phone_text
-        self.SetStatusText(s, self.__general_pane)
+        self.SetStatusText(self.__version_text, self.__version_index)
+        self._phone_model.SetLabel(self.__phone_text)
 
 ###
 ###  A MessageBox with a help button

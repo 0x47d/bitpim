@@ -1108,13 +1108,15 @@ class MainWindow(wx.Frame):
     def OnCheckUpdate(self, _):
         self.DoCheckUpdate()
 
-    def SetPhoneModelStatus(self):
+    def SetPhoneModelStatus(self, stat=guiwidgets.SB_Phone_Set):
         phone=self.config.Read('phonetype', 'None')
         port=self.config.Read('lgvx4400port', 'None')
         if self.__owner_name=='':
-            self.GetStatusBar().set_phone_model('%s on %s'%(phone, port))
+            self.GetStatusBar().set_phone_model('%s on %s'%(phone, port),
+                                                stat)
         else:
-            self.GetStatusBar().set_phone_model('%s %s on %s'%(self.__owner_name, phone, port))
+            self.GetStatusBar().set_phone_model('%s %s on %s'%(self.__owner_name, phone, port),
+                                                stat)
 
     def OnPhoneInfo(self, _):
         self.MakeCall(Request(self.wt.getphoneinfo),
@@ -1179,6 +1181,7 @@ class MainWindow(wx.Frame):
                 if _dlg.ShowModal()==wx.ID_YES:
                     wx.CallAfter(self.OnEditSettings)
                 _dlg.Destroy()
+                self.SetPhoneModelStatus(guiwidgets.SB_Phone_Set)
         else:
             if silent_fail:
                 self.__owner_name=None
@@ -1195,7 +1198,7 @@ class MainWindow(wx.Frame):
             self.phonemodule=common.importas(r['phone_module'])
             self.phoneprofile=self.phonemodule.Profile()
             pubsub.publish(pubsub.PHONE_MODEL_CHANGED, self.phonemodule)
-            self.SetPhoneModelStatus()
+            self.SetPhoneModelStatus(guiwidgets.SB_Phone_Detected)
             if not silent_fail:
                 if self.__owner_name =='':
                     wx.MessageBox('Found %s on %s'%(r['phone_name'],
@@ -1216,9 +1219,10 @@ class MainWindow(wx.Frame):
         if type=='DBT_DEVICEREMOVECOMPLETE':
             print "Device remove", name
             # device is removed, if it's ours, clear the port
-            if name==self.config.Read('lgvx4400port', '') and \
-               self.wt is not None:
-                self.wt.clearcomm()
+            if name.lower()==self.config.Read('lgvx4400port', '').lower():
+                if self.wt:
+                    self.wt.clearcomm()
+                self.SetPhoneModelStatus(guiwidgets.SB_Phone_Unavailable)
             return
         if type!='DBT_DEVICEARRIVAL':
             # not interested
