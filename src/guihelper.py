@@ -367,7 +367,6 @@ class ArtProvider(wx.ArtProvider):
         """
         if artid in _ourart:
             return getbitmap(_ourart[artid])
-        print "not returning a bitmap for",artid
         return wx.NullBitmap
           
 class MultiMessageBox:

@@ -67,6 +67,7 @@ import guihelper
 import widgets
 
 widgets_list=[]
+module_debug=False
 
 #-------------------------------------------------------------------------------
 class MemoDataObject(database.basedataobject):
@@ -483,7 +484,7 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
                                                                 memoobjectfactory)
         r={}
         for k,e in memo_dict.items():
-            if __debug__:
+            if __debug__ and module_debug:
                 print e
             ce=MemoEntry()
             ce.set_db_dict(e)
