@@ -187,7 +187,7 @@ class DetectPhone(object):
         self.log('coms:'+str(coms))
         available_modem_coms=[x['name'] for x in coms if x['available'] \
                               and x['class']=='modem']
-        if using_port is None:
+        if not using_port:
             available_coms=[x['name'] for x in coms if x['available']]
         else:
             available_coms=[using_port]

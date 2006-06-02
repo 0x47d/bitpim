@@ -1141,8 +1141,32 @@ class MainWindow(wx.Frame):
     def __detect_phone(self, using_port=None, check_auto_sync=0, delay=0, silent_fail=False):
         self.OnBusyStart()
         self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
-        self.MakeCall(Request(self.wt.detectphone, using_port, delay),
+        self.MakeCall(Request(self.wt.detectphone, using_port, None, delay),
                       Callback(self.OnDetectPhoneReturn, check_auto_sync, silent_fail))
+    def _detect_this_phone(self, check_auto_sync=0, delay=0, silent_fail=False):
+        # (re)detect the current phone model
+        self.OnBusyStart()
+        self.GetStatusBar().progressminor(0, 100, 'Phone detection in progress ...')
+        self.MakeCall(Request(self.wt.detectphone,
+                              self.config.Read('lgvx4400port', ''),
+                              self.config.Read('phonetype', ''), delay),
+                      Callback(self.OnDetectThisPhoneReturn, check_auto_sync,
+                               silent_fail))
+    def OnDetectThisPhoneReturn(self, check_auto_sync, silent_fail,
+                                exception, r):
+        if self.HandleException(exception):
+            self.OnBusyEnd()
+            return
+        if r:
+            # detected!
+            return self.OnDetectPhoneReturn(check_auto_sync, silent_fail,
+                                            exception, r)
+        # Failed to detect current model, retry for all models
+        self.queue.put((self.__detect_phone, (),
+                        { 'check_auto_sync': check_auto_sync,
+                          'silent_fail': silent_fail }), False)
+        self.OnBusyEnd()
+
     def __get_owner_name(self, esn, style=wx.DEFAULT_DIALOG_STYLE):
         """ retrieve or ask user for the owner's name of this phone
         """
@@ -1230,14 +1254,17 @@ class MainWindow(wx.Frame):
         print 'New device on port:',name
         # check the new device
         check_auto_sync=auto_sync.UpdateOnConnect(self)
+        if name.lower()==self.config.Read('lgvx4400port', '').lower():
+            _func=self._detect_this_phone
+            _args=(check_auto_sync, self._autodetect_delay, True)
+        else:
+            _func=self.__detect_phone
+            _args=(name, check_auto_sync, self._autodetect_delay, True)
         if wx.IsBusy():
             # current phone operation ongoing, queue this
-            self.queue.put((self.__detect_phone, (name, check_auto_sync,
-                                                  self._autodetect_delay, True),
-                            {}), False)
+            self.queue.put((_func, _args, {}), False)
         else:
-            self.__detect_phone(name, check_auto_sync, self._autodetect_delay,
-                                True)
+            _func(*_args)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -1898,10 +1925,10 @@ class WorkerThread(WorkerThreadFramework):
             getattr(self.commphone, 'getphoneinfo')(phone_info)
             return phone_info
 
-    def detectphone(self, using_port=None, delay=0):
+    def detectphone(self, using_port=None, using_model=None, delay=0):
         self.clearcomm()
         time.sleep(delay)
-        return phone_detect.DetectPhone(self).detect(using_port)
+        return phone_detect.DetectPhone(self).detect(using_port, using_model)
 
     # various file operations for the benefit of the filesystem viewer
     def dirlisting(self, path, recurse=0):
