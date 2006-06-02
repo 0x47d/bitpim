@@ -6,7 +6,6 @@
           will cause all the wallpaper/ringers in BitPim to disappear.</b>
       <li>Fixed media view toolbar bitmap problem.
       <li>Fixed status bar redraw problem.
-      <li>Fixed bug: package module not copy all resource files.
       <li>Fixed bug: calendar entry dialog color coded fields not working properly.
     </ul>
 
