@@ -75,7 +75,8 @@ class Profile(parentprofile):
     WALLPAPER_HEIGHT=220
 
     # which usb ids correspond to us
-    # usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
+    usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
+    deviceclasses=("serial",)
     
     def __init__(self):
         parentprofile.__init__(self)
