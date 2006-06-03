@@ -96,6 +96,7 @@ _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                              },
               'LG-VX8100': { 'module': 'com_lgvx8100',
                              'carrier': [c_vzw],
+
                              'brand': b_lg,
                              },
               'LG-VX9800': { 'module': 'com_lgvx9800',
@@ -269,7 +270,12 @@ if __debug__:
                                       'brand': b_samsung,
                                       'carrier': [c_sprint],
                                       },
+                        'MM-7500': { 'module': 'com_sanyo7500',
+                                     'carrier': [c_sprint],
+                                     'brand': b_sanyo,
+                                     },
                         })
+# update the module path
 # update the module path
 for k, e in _phonedata.items():
     _phonedata[k]['module']=__name__+'.'+e['module']
