@@ -32,6 +32,7 @@ import wx.html
 import wx.lib.intctrl
 import wx.lib.newevent
 import wx.lib.mixins.listctrl  as  listmix
+import wx.lib.stattext as stattext
 
 # my modules
 import common
@@ -1132,6 +1133,89 @@ class ExceptionDialog(wx.Dialog):
 ###
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
 ###
+BUFFERED=0
+class StatusText(stattext.GenStaticText):
+    # Status value
+    red=None
+    green=None
+    yellow=None
+    def __init__(self, parent, ID, label,
+                 pos = wx.DefaultPosition, size = wx.DefaultSize,
+                 style = 0,
+                 name = "statustext"):
+        # margin between the stoplight and the text
+        self._text_margin=5
+        # relative size of the status stoplight, default to 100% of the height
+        self._status_size=1.0
+        # color for the stop light
+        if StatusText.red is None:
+            StatusText.red=wx.RED
+            StatusText.green=wx.GREEN
+            StatusText.yellow=wx.NamedColour('YELLOW')
+        self._stat=StatusText.green
+        super(StatusText, self).__init__(parent, ID, label,
+                                         pos=pos, style=style, name=name)
+    def DoGetBestSize(self):
+        """
+        Overridden base class virtual.  Determines the best size of
+        the control based on the label size and the current font.
+        """
+        _s=super(StatusText, self).DoGetBestSize()
+        _s.SetWidth(_s.GetWidth()+_s.GetHeight()*self._status_size+\
+                    self._text_margin)
+        self.CacheBestSize(_s)
+        return _s
+    def _draw_status(self, dc, w, h):
+        # draw the status stoplight
+        dc.BeginDrawing()
+        dc.SetBrush(wx.Brush(self._stat, wx.SOLID))
+        _r=(h*self._status_size)/2
+        dc.DrawCircle(_r, h/2, _r)
+        dc.EndDrawing
+
+    def OnPaint(self, event):
+        if BUFFERED:
+            dc = wx.BufferedPaintDC(self)
+        else:
+            dc = wx.PaintDC(self)
+        width, height = self.GetClientSize()
+        if not width or not height:
+            return
+
+        if BUFFERED:
+            clr = self.GetBackgroundColour()
+            backBrush = wx.Brush(clr, wx.SOLID)
+            if wx.Platform == "__WXMAC__" and clr == self.defBackClr:
+                # if colour is still the default then use the striped background on Mac
+                backBrush.MacSetTheme(1) # 1 == kThemeBrushDialogBackgroundActive
+            dc.SetBackground(backBrush)
+            dc.Clear()
+        self._draw_status(dc, width, height)
+        dc.SetTextForeground(self.GetForegroundColour())
+        dc.SetFont(self.GetFont())
+        label = self.GetLabel()
+        style = self.GetWindowStyleFlag()
+        y = 0
+        x=height*self._status_size+self._text_margin
+        for line in label.split('\n'):
+            if line == '':
+                w, h = self.GetTextExtent('W')  # empty lines have height too
+            else:
+                w, h = self.GetTextExtent(line)
+            if style & wx.ALIGN_RIGHT:
+                x = width - w
+            if style & wx.ALIGN_CENTER:
+                x = (width - w)/2
+            dc.DrawText(line, x, y)
+            y += h
+
+    def SetLabel(self, label, status=None):
+        if status:
+            self._stat=status
+        super(StatusText, self).SetLabel(label)
+    def SetStatus(self, status):
+        self._stat=status
+        self.Refresh()
 
 SB_Phone_Set=0
 SB_Phone_Detected=1
@@ -1146,23 +1230,18 @@ class MyStatusBar(wx.StatusBar):
     __minor_progress_index=2
     __help_str_index=2
     __general_pane=2
-    __pane_width=[50, 180, -1]
+    __pane_width=[70, 180, -1]
     
     def __init__(self, parent, id=-1):
         wx.StatusBar.__init__(self, parent, id)
         self.__major_progress_text=self.__version_text=self.__phone_text=''
         self.sizechanged=False
-        self._ready_color=wx.GREEN
-        self._busy_color=wx.RED
-        self._phone_detected_color=wx.GREEN
-        self._phone_manuallyset_color=wx.NamedColour('YELLOW')
-        self._phone_unavailable_color=wx.RED
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
-        self._status=wx.StaticText(self, -1, '',
-                                   style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
-        self._phone_model=wx.StaticText(self, -1, '')
+        self._status=StatusText(self, -1, '',
+                                   style=wx.ST_NO_AUTORESIZE)
+        self._phone_model=StatusText(self, -1, '')
         self.SetFieldsCount(self.__total_panes)
         self.SetStatusWidths(self.__pane_width)
         self.Reposition()
@@ -1214,22 +1293,20 @@ class MyStatusBar(wx.StatusBar):
     def GetHelpPane(self):
         return self.__help_str_index
     def set_app_status_ready(self):
-        self._status.SetBackgroundColour(self._ready_color)
-        self._status.SetLabel('Ready')
+        self._status.SetLabel('Ready', StatusText.green)
     def set_app_status_busy(self):
-        self._status.SetBackgroundColour(self._busy_color)
-        self._status.SetLabel('BUSY')
+        self._status.SetLabel('BUSY', StatusText.red)
     def set_phone_model(self, str='', status=SB_Phone_Set):
         if status==SB_Phone_Detected:
             self.__phone_text=str+' - Detected'
-            self._phone_model.SetBackgroundColour(self._phone_detected_color)
+            _stat=StatusText.green
         elif status==SB_Phone_Set:
             self.__phone_text=str+' - Manually Set'
-            self._phone_model.SetBackgroundColour(self._phone_manuallyset_color)
+            _stat=StatusText.yellow
         else:
             self.__phone_text=str+' - Unavailable'
-            self._phone_model.SetBackgroundColour(self._phone_unavailable_color)
-        self.__set_version_phone_text()
+            _stat=StatusText.red
+        self._phone_model.SetLabel(self.__phone_text, _stat)
     def set_versions(self, current, latest=''):
         s='BitPim '+current
         if len(latest):
@@ -1240,7 +1317,6 @@ class MyStatusBar(wx.StatusBar):
         self.__set_version_phone_text()
     def __set_version_phone_text(self):
         self.SetStatusText(self.__version_text, self.__version_index)
-        self._phone_model.SetLabel(self.__phone_text)
 
 ###
 ###  A MessageBox with a help button

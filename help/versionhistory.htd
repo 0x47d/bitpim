@@ -10,6 +10,7 @@
       <li>Added auto-detect current phone model first.
       <li>Added Sanyo MM-7500 support.  Wallpaper/ringer writing are currently
 	  disabled.  Playlist and call history support are not yet available.
+      <li>Added phone detection status indicator.
     </ul>
 
    <h2><a name="0.9.01">Changes in 0.9.01</a></h2>
