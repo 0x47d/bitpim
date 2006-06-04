@@ -32,9 +32,9 @@ numbertypetab=( 'cell', 'home', 'office', 'pager',
                     'fax', 'data', 'none' )
 
 class Phone(com_sanyo8300.Phone):
-    "Talk to the Sanyo PM7500 cell phone"
+    "Talk to the Sanyo MM-7500 cell phone"
 
-    desc="SCP7500"
+    desc="MM-7500"
 
     FIRST_MEDIA_DIRECTORY=1
     LAST_MEDIA_DIRECTORY=3
@@ -44,7 +44,7 @@ class Phone(com_sanyo8300.Phone):
         )    
 
     protocolclass=p_sanyo7500
-    serialsname='scp7500'
+    serialsname='mm7500'
 
     builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
@@ -78,6 +78,20 @@ class Profile(parentprofile):
     usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
     deviceclasses=("serial",)
     
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        #('wallpaper', 'write', 'MERGE'),
+        #('ringtone', 'write', 'MERGE'),
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        #('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None), # Read sms messages
+        ('todo', 'read', None), # Read todos
+    )
+
     def __init__(self):
         parentprofile.__init__(self)
         com_sanyonewer.Profile.__init__(self)
