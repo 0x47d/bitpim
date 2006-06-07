@@ -464,6 +464,8 @@ class RealBrewProtocol:
         results={}
         self.log("Listing files in dir: '"+dir+"'")
 
+        _broken_date=hasattr(self.protocolclass, 'broken_filelist_date') and \
+                      self.protocolclass.broken_filelist_date
         req=p_brew.listfilerequest()
         req.dirname=dir
         # self.log("file listing 0x0b command")
@@ -473,26 +475,24 @@ class RealBrewProtocol:
                 res=self.sendbrewcommand(req,p_brew.listfileresponse)
                 results[res.filename]={ 'name': res.filename, 'type': 'file',
                                         'size': res.size }
-                if hasattr(self.protocolclass, 'broken_filelist_date') and self.protocolclass.broken_filelist_date:
-                    file_stat=self.statfile(res.filename)
-                    if file_stat['date'][0]>self._brewepochtounix:
-                        res.date=file_stat['date'][0]-self._brewepochtounix
-                    else: 
-                        res.date=0
-                if res.date==0:
-                    results[res.filename]['date']=(0, "")
-                else:
-                    try:
-                        date=res.date+self._brewepochtounix
-                        results[res.filename]['date']=(date, time.strftime("%x %X", time.localtime(date)))
-                    except:
-                        # invalid date - see SF bug #833517
+                if not _broken_date:
+                    if res.date<=0:
                         results[res.filename]['date']=(0, "")
+                    else:
+                        try:
+                            date=res.date+self._brewepochtounix
+                            results[res.filename]['date']=(date, time.strftime("%x %X", time.localtime(date)))
+                        except:
+                            # invalid date - see SF bug #833517
+                            results[res.filename]['date']=(0, "")
             except BrewNoMoreEntriesException:
                 break
             except (BrewBadPathnameException, BrewAccessDeniedException):
                 self.log('Failed to list files in dir '+dir)
                 return {}
+        if _broken_date:
+            for _key,_entry in results.items():
+                _entry['date']=self.statfile(_key)['date']
         return results
 
     def getfilesystem(self, dir="", recurse=0):
@@ -514,7 +514,7 @@ class RealBrewProtocol:
             res=self.sendbrewcommand(req, p_brew.statfileresponse)
             results={ 'name': name, 'type': 'file', 'size': res.size,
                       'datevalue': res.date }
-            if res.date==0:
+            if res.date<=0:
                 results['date']=(0, '')
             else:
                 try:
