@@ -17,10 +17,9 @@ import prototypes
 class DateTime(prototypes.UINTlsb):
     def __init__(self, *args, **kwargs):
         super(DateTime, self).__init__(*args, **kwargs)
-        dict={ 'sizeinbytes': 4 }
-        dict.update(kwargs)
+        kwargs.update({ 'sizeinbytes': 4 })
         if self._ismostderived(DateTime):
-            self._update(args, dict)
+            self._update(args, kwargs)
 
     def _update(self, args, kwargs):
         for k in 'constant', 'default', 'value':
@@ -51,6 +50,25 @@ class DateTime(prototypes.UINTlsb):
         """
         val=super(DateTime, self).getvalue()
         return time.localtime(val+self._time_delta)[:5]
+
+class DateTime1(DateTime):
+    # similar to DateTime, except getvalue includes seconds
+    def __init__(self, *args, **kwargs):
+        super(DateTime1, self).__init__(*args, **kwargs)
+        kwargs.update({ 'sizeinbytes': 4 })
+        if self._ismostderived(DateTime1):
+            self._update(args, kwargs)
+
+    def getvalue(self):
+        """Unpack 32 bit value into date/time
+        @rtype: tuple
+        @return: (year, month, day, hour, minute, second)
+        """
+        val=prototypes.UINTlsb.getvalue(self)
+        if time.daylight:
+            # account for daylight, which gmtime always ignores
+            val+=3600
+        return time.gmtime(val+self._time_delta)[:6]
 
 class ExpiringTime(prototypes.UINTlsb):
     # Implement a weird expiring time used by Samsung calendar events

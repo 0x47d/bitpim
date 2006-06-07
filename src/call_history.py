@@ -578,7 +578,9 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
                         name=temp
                     else:
                         name=""
-                self.nodes[index]=(e.folder, e.get_date_time_str(), e.number, `duration`, name)
+                self.nodes[index]=(e.folder, e.get_date_time_str(),
+                                   phonenumber.format(e.number),
+                                   `duration`, name)
                 self.nodes_keys[index]=k
                 index+=1
         self._item_list.ResetView(self.nodes, self.nodes_keys)
