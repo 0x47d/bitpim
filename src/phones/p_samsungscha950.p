@@ -84,6 +84,18 @@ SS_CMD_PB_CLEAR=0x1D
 SS_CMD_PB_VOICEMAIL_PARAM=0x19
 PB_DEFAULT_VOICEMAIL_NUMBER='*86'
 
+# Call log/history
+CL_PATH='clog'
+CL_PREFIX=CL_PATH+'/clog_'
+CL_INDEX_FILE=CL_PATH+'/clog_master'
+CL_MAX_ENTRIES=20
+CL_TYPE_INCOMING=1
+CL_TYPE_OUTGOING=2
+CL_TYPE_MISSED=3
+CL_TYPE_DELETED=5
+CL_VALID_TYPE=(CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED)
+
+broken_filelist_date=True
 %}
 
 PACKET DefaultResponse:
@@ -441,3 +453,26 @@ PACKET ss_pb_write_resp:
     * ss_cmd_hdr hdr
     1 UINT zero
     2 UINT index
+
+# Call History
+PACKET cl_list:
+    1 UINT index
+
+PACKET cl_index_file:
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } incoming
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } outgoing
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } missed
+    111 UNKNOWN dunno1
+    4 UINT incoming_count
+    4 UINT outgoing_count
+    4 UINT missed_count
+
+PACKET cl_file:
+    1 UINT cl_type
+    51 STRING { 'terminator': 0 } number
+    4 DateTime1 datetime
+    4 UNKNOWN dunno1
+    4 UINT duration

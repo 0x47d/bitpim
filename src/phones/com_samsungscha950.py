@@ -18,6 +18,7 @@ import wx
 
 # BitPim modules
 import bpcalendar
+import call_history
 import common
 import commport
 import com_brew
@@ -842,6 +843,58 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         self._del_private_dicts(fundamentals)
         return fundamentals
 
+    # Call History stuff--------------------------------------------------------
+    def _get_ch_index(self):
+        # read the index file and return the number of incoming, outgoing, and
+        # missed calls
+        try:
+            _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.CL_INDEX_FILE))
+            _req=self.protocolclass.cl_index_file()
+            _req.readfrombuffer(_buf, 'Reading Call Log Index File')
+            return ([x.index for x in _req.incoming[:_req.incoming_count]],
+                    [x.index for x in _req.outgoing[:_req.outgoing_count]],
+                    [x.index for x in _req.missed[:_req.missed_count]])
+        except com_brew.BrewNoSuchFileException:
+            return ([], [], [])
+        except:
+            if __debug__:
+                raise
+            return ([], [], [])
+    def _get_ch(self, call_list, folder, res):
+        # read the call history files
+        _req=self.protocolclass.cl_file()
+        for _idx in call_list:
+            try:
+                _buf=prototypes.buffer(self.getfilecontents(
+                    '%s%02d'%(self.protocolclass.CL_PREFIX, _idx)))
+                _req.readfrombuffer(_buf, 'Reading Call Log File')
+                if _req.cl_type in self.protocolclass.CL_VALID_TYPE and \
+                   _req.number:
+                    _entry=call_history.CallHistoryEntry()
+                    _entry.folder=folder
+                    _entry.number=_req.number
+                    _entry.datetime=_req.datetime
+                    if _req.duration:
+                        _entry.duration=_req.duration
+                    res[_entry.id]=_entry
+            except com_brew.BrewNoSuchFileException:
+                pass
+            except:
+                if __debug__:
+                    raise
+
+    def getcallhistory(self, fundamentals):
+        # retrieve the call history data from the phone
+        res={}
+        _incoming_list, _outgoing_list, _missed_list=self._get_ch_index()
+        self._get_ch(_incoming_list,
+                     call_history.CallHistoryEntry.Folder_Incoming, res)
+        self._get_ch(_outgoing_list,
+                     call_history.CallHistoryEntry.Folder_Outgoing, res)
+        self._get_ch(_missed_list,
+                     call_history.CallHistoryEntry.Folder_Missed, res)
+        fundamentals['call_history']=res
+
 # CalendarEntry class-----------------------------------------------------------
 class CalendarEntry(object):
     """Transient class to handle calendar data being sent to, retrieved from
@@ -1200,6 +1253,7 @@ class Profile(parentprofile):
         ('wallpaper', 'write', None),
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('call_history', 'read', None),# all call history list reading
 ##        ('sms', 'read', None),     # all SMS list reading DJP
         )
 
