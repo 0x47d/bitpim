@@ -33,7 +33,7 @@ NUMGROUPS=4
 # returns or line feeds.
 
 PACKET pbentry:
-    P STRING {'default': ""} +url
+    P USTRING {'default': ""} +url
     P CSVDATE {'default': ""} +birthday
     * CSVINT slot "Internal Slot"
     * CSVINT uslot "User Slot, Speed dial"

@@ -69,7 +69,7 @@ class indexentry(BaseProtogenClass):
         self.__field_index.readfrombuffer(buf)
         self.__field_type=UINT(**{'sizeinbytes': 2})
         self.__field_type.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'sizeinbytes': 64})
+        self.__field_filename=USTRING(**{'sizeinbytes': 64})
         self.__field_filename.readfrombuffer(buf)
         self.__field_date=UINT(**{'sizeinbytes': 4, 'default': 0})
         self.__field_date.readfrombuffer(buf)
@@ -108,10 +108,10 @@ class indexentry(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 64})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 64})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -523,7 +523,7 @@ class recipient_record(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_unknown1=DATA(**{'sizeinbytes': 33})
         self.__field_unknown1.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 49})
+        self.__field_number=USTRING(**{'sizeinbytes': 49})
         self.__field_number.readfrombuffer(buf)
         self.__field_status=UINT(**{'sizeinbytes': 1})
         self.__field_status.readfrombuffer(buf)
@@ -555,10 +555,10 @@ class recipient_record(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 49})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 49})
 
     def __delfield_number(self): del self.__field_number
 
@@ -842,7 +842,7 @@ class sms_out(BaseProtogenClass):
         self.__field_timesent.readfrombuffer(buf)
         self.__field_unknown2=UNKNOWN(**{'sizeinbytes': 6})
         self.__field_unknown2.readfrombuffer(buf)
-        self.__field_subject=STRING(**{'sizeinbytes': 21})
+        self.__field_subject=USTRING(**{'sizeinbytes': 21})
         self.__field_subject.readfrombuffer(buf)
         self.__field_unknown4=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_unknown4.readfrombuffer(buf)
@@ -856,7 +856,7 @@ class sms_out(BaseProtogenClass):
         self.__field_priority.readfrombuffer(buf)
         self.__field_unknown5=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_unknown5.readfrombuffer(buf)
-        self.__field_callback=STRING(**{'sizeinbytes': 35})
+        self.__field_callback=USTRING(**{'sizeinbytes': 35})
         self.__field_callback.readfrombuffer(buf)
         self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 9})
         self.__field_recipients.readfrombuffer(buf)
@@ -934,10 +934,10 @@ class sms_out(BaseProtogenClass):
         return self.__field_subject.getvalue()
 
     def __setfield_subject(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_subject=value
         else:
-            self.__field_subject=STRING(value,**{'sizeinbytes': 21})
+            self.__field_subject=USTRING(value,**{'sizeinbytes': 21})
 
     def __delfield_subject(self): del self.__field_subject
 
@@ -1028,10 +1028,10 @@ class sms_out(BaseProtogenClass):
         return self.__field_callback.getvalue()
 
     def __setfield_callback(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_callback=value
         else:
-            self.__field_callback=STRING(value,**{'sizeinbytes': 35})
+            self.__field_callback=USTRING(value,**{'sizeinbytes': 35})
 
     def __delfield_callback(self): del self.__field_callback
 
@@ -1327,7 +1327,7 @@ class sms_in(BaseProtogenClass):
         self.__field_unknown2.readfrombuffer(buf)
         self.__field_callback_length=UINT(**{'sizeinbytes': 1})
         self.__field_callback_length.readfrombuffer(buf)
-        self.__field_callback=STRING(**{'sizeinbytes': 38})
+        self.__field_callback=USTRING(**{'sizeinbytes': 38})
         self.__field_callback.readfrombuffer(buf)
         self.__field_sender_length=UINT(**{'sizeinbytes': 1})
         self.__field_sender_length.readfrombuffer(buf)
@@ -1351,7 +1351,7 @@ class sms_in(BaseProtogenClass):
         self.__field_unknown6.readfrombuffer(buf)
         self.__field_priority=UINT(**{'sizeinbytes': 1})
         self.__field_priority.readfrombuffer(buf)
-        self.__field_subject=STRING(**{'sizeinbytes': 21})
+        self.__field_subject=USTRING(**{'sizeinbytes': 21})
         self.__field_subject.readfrombuffer(buf)
         self.__field_bin_header1=UINT(**{'sizeinbytes': 1})
         self.__field_bin_header1.readfrombuffer(buf)
@@ -1432,10 +1432,10 @@ class sms_in(BaseProtogenClass):
         return self.__field_callback.getvalue()
 
     def __setfield_callback(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_callback=value
         else:
-            self.__field_callback=STRING(value,**{'sizeinbytes': 38})
+            self.__field_callback=USTRING(value,**{'sizeinbytes': 38})
 
     def __delfield_callback(self): del self.__field_callback
 
@@ -1591,10 +1591,10 @@ class sms_in(BaseProtogenClass):
         return self.__field_subject.getvalue()
 
     def __setfield_subject(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_subject=value
         else:
-            self.__field_subject=STRING(value,**{'sizeinbytes': 21})
+            self.__field_subject=USTRING(value,**{'sizeinbytes': 21})
 
     def __delfield_subject(self): del self.__field_subject
 

@@ -88,11 +88,11 @@ PACKET firmwarerequest:
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  firmwareversion
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  firmwareversion
     * DATA dunno
 
 PACKET speeddial:
@@ -125,20 +125,20 @@ PACKET pbentry:
     2  UINT {'constant': 0x0202} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
-    23 STRING {'raiseonunterminatedread': False} name
+    23 USTRING {'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': NUMEMAILS} +emails:
-        49 STRING {'raiseonunterminatedread': False} email
-    49 STRING {'raiseonunterminatedread': False} url
+        49 USTRING {'raiseonunterminatedread': False} email
+    49 USTRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    * USTRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1 UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 PACKET pbfileentry:
@@ -154,7 +154,7 @@ PACKET pbfile:
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    45 STRING {'default': ""} +name
+    45 USTRING {'default': ""} +name
 
 
 PACKET indexfile:
@@ -204,7 +204,7 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    36 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    36 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
     1 UINT hasvoice
     2 UINT voiceid
 
@@ -215,7 +215,7 @@ PACKET schedulefile:
 
 # Text Memos
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount
@@ -226,8 +226,8 @@ PACKET callentry:
     4 GPSDATE datetime
     4 UNKNOWN pad1
     4 UINT duration
-    49 STRING { 'raiseonunterminatedread': False } number
-    36 STRING { 'raiseonunterminatedread': False } name
+    49 USTRING { 'raiseonunterminatedread': False } number
+    36 USTRING { 'raiseonunterminatedread': False } name
     60 UNKNOWN pad2
 
 PACKET callhistoryfile:
@@ -242,10 +242,10 @@ PACKET SMSInboxFile:
     10 UNKNOWN pad2
     1 UINT locked
     9 UNKNOWN pad3
-    3770 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
-    57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _from
+    3770 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    57 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _from
     47 UNKNOWN pad4
-    57 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
+    57 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
     * UNKNOWN pad5
 
 PACKET SMSSavedFile:
@@ -260,14 +260,14 @@ PACKET SMSOutboxFile:
     4 UNKNOWN pad1
     1 UINT locked
     4 LGCALDATE datetime
-    1610 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    1610 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 UNKNOWN pad2
-    35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
-    35 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _to
+    35 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } callback
+    35 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } _to
     * UNKNOWN pad3
 
 PACKET SMSCannedMsg:
-    101 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +text
+    101 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +text
 
 PACKET SMSCannedFile:
     * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'elementclass': SMSCannedMsg } +items
@@ -312,7 +312,7 @@ PACKET msg_record:
         1 UINT byte "individual byte of message"
 
 PACKET recipient_record:
-    49 STRING number
+    49 USTRING number
     2 UINT status   # 1 when sent, 5 when received, 2 failed to send
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -330,12 +330,12 @@ PACKET sms_out:
     4 UINT index # starting from 1, unique
     1 UINT locked # 1=locked
     4 LGCALDATE timesent # time the message was sent
-    21 STRING subject
+    21 USTRING subject
     2 UINT num_msg_elements # up to 10
     * LIST {'elementclass': msg_record, 'length': 7} +messages
     15 UNKNOWN unknown1
     1 UINT priority # 0=normal, 1=high
-    35 STRING callback 
+    35 USTRING callback 
     * LIST {'elementclass': recipient_record,'length': 9} +recipients
     * UNKNOWN pad
 
@@ -348,7 +348,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown2
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -361,7 +361,7 @@ PACKET sms_in:
     1 UINT locked # 1 if the message is locked, 0 otherwise
     8 UINT unknown6 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
-    21 STRING subject
+    21 USTRING subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     2 UINT unknown7 # zeros

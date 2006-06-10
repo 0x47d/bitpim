@@ -768,19 +768,19 @@ class pbentry(BaseProtogenClass):
         self.__field_serial2.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 2})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 2})
         self.__field_group.readfrombuffer(buf)
         self.__field_emails=LIST(**{'elementclass': _gen_p_lgvi5225_116, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
-        self.__field_url=STRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+        self.__field_url=USTRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 1})
         self.__field_ringtone.readfrombuffer(buf)
         self.__field_secret=UINT(**{'sizeinbytes': 1})
         self.__field_secret.readfrombuffer(buf)
-        self.__field_memo=STRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+        self.__field_memo=USTRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
         self.__field_dunno1=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_dunno1.readfrombuffer(buf)
@@ -865,10 +865,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -907,10 +907,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_url.getvalue()
 
     def __setfield_url(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_url=value
         else:
-            self.__field_url=STRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+            self.__field_url=USTRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
 
     def __delfield_url(self): del self.__field_url
 
@@ -946,10 +946,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=STRING(value,**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+            self.__field_memo=USTRING(value,**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
 
     def __delfield_memo(self): del self.__field_memo
 
@@ -1074,7 +1074,7 @@ class _gen_p_lgvi5225_116(BaseProtogenClass):
             dict2={'sizeinbytes': 73, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_email=STRING(*args,**dict2)
+            self.__field_email=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -1090,7 +1090,7 @@ class _gen_p_lgvi5225_116(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_email=STRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+        self.__field_email=USTRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
         self.__field_email.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1099,10 +1099,10 @@ class _gen_p_lgvi5225_116(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
 
     def __delfield_email(self): del self.__field_email
 
@@ -1222,7 +1222,7 @@ class _gen_p_lgvi5225_126(BaseProtogenClass):
             dict2={'sizeinbytes': 49, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_number=STRING(*args,**dict2)
+            self.__field_number=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -1238,7 +1238,7 @@ class _gen_p_lgvi5225_126(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+        self.__field_number=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1247,10 +1247,10 @@ class _gen_p_lgvi5225_126(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
 
     def __delfield_number(self): del self.__field_number
 

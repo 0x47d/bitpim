@@ -88,11 +88,11 @@ cal_has_voice_id=False
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  firmwareversion
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  firmwareversion
 
 PACKET pbreadentryresponse:
     "Results of reading one entry"
@@ -123,23 +123,23 @@ PACKET pbentry:
     1  UINT {'constant': 0x00} +unknown8
     1  UINT {'constant': 0x00} +unknown9
     1  UINT {'constant': 0x00} +unknown10
-    33 STRING {'raiseonunterminatedread': False} name
+    33 USTRING {'raiseonunterminatedread': False} name
     1  UINT group
     1  UINT {'constant': 0x00} +unknown11
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT unknown12						# used to set ringtone to default
     1  UINT {'constant': 0x00} +unknown13
-    * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    * USTRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     *  LIST {'length': NUMEMAILS} +emails:
-        73 STRING {'raiseonunterminatedread': False} email
-    73 STRING {'raiseonunterminatedread': False} url
+        73 USTRING {'raiseonunterminatedread': False} email
+    73 USTRING {'raiseonunterminatedread': False} url
     4  UINT avatar							# unknown format
     * LIST {'length': NUMPHONENUMBERS} +numberspeeddials:
         1 UINT numberspeeddial
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     1 UINT {'constant': 0x7c} +unknown14
 
 # one of the constant unknowns below is most likely the animation, and thus will except
@@ -157,7 +157,7 @@ PACKET pbgroup:
     1 UINT {'constant': 0x00} +unknown6
     1 UINT unknown7							# sometimes 0x00, sometimes same as number
     1 UINT unknown8							# sometimes 0x00, sometimes 0x01
-    33 STRING name
+    33 USTRING name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -179,7 +179,7 @@ PACKET pbmapgroups:
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    40 STRING {'default': ""} +name
+    40 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -225,7 +225,7 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    39 STRING {'raiseontruncate': False } description
+    39 USTRING {'raiseontruncate': False } description
 
 PACKET schedulefile:
     2 UINT numactiveitems
@@ -235,8 +235,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT unknown2 # set to 1 on some calls
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
@@ -291,7 +291,7 @@ PACKET msg_record:
 
 PACKET recipient_record:
     2 UINT unknown1
-    49 STRING number
+    49 USTRING number
     1 UINT status   # 1 when sent, 5 when received, 2 failed to send
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -310,14 +310,14 @@ PACKET sms_out:
     1 UINT locked # 1=locked
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
-    21 STRING subject
+    21 USTRING subject
     151 DATA unknown2
     1 UINT num_msg_elements # up to 10
     * LIST {'elementclass': msg_record, 'length': 10} +messages
     1 UINT unknown5
     1 UINT priority # 0=normal, 1=high
     14 DATA unknown7
-    49 STRING callback 
+    49 USTRING callback 
     * LIST {'elementclass': recipient_record,'length': 10} +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
@@ -332,7 +332,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -345,7 +345,7 @@ PACKET sms_in:
     2 UINT unknown8 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
     5 DATA flags # message flags, read, priority, locked etc
-    21 STRING subject
+    21 USTRING subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     2 UINT unknown6 # zeros
@@ -362,13 +362,13 @@ PACKET sms_in:
                 # text alway follows the header although the format it different
                 # than a simple SMS
     437 DATA unknown5
-    33 STRING senders_name
+    33 USTRING senders_name
     169 DATA unknown6   # ?? inlcudes senders phone number in ascii
 
 PACKET sms_quick_text:
 # the vi125 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
-        * STRING {} msg #
+        * USTRING {} msg #
 
 

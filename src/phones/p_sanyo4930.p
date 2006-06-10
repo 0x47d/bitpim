@@ -52,7 +52,7 @@ PACKET pbsortbuffer:
     # payload from commands 0X 3c 0F through 0X 43 0F
     P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 7168} bufsize
-    P STRING {'default': "sort buffer"} +comment
+    P USTRING {'default': "sort buffer"} +comment
     * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
@@ -63,7 +63,7 @@ PACKET pbsortbuffer:
         1 UINT firsttype "First phone number type in each slot"
     * LIST {'length': _NUMPBSLOTS} +sortorder:
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
     * LIST {'length': _NUMPBSLOTS} +sortorder2: "Is this the same"
         2 UINT {'default': 0xffff} pbslot
     * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
@@ -72,10 +72,10 @@ PACKET pbsortbuffer:
         2 UINT {'default': 0xffff} pbslotandtype
     * LIST {'length': _NUMPBSLOTS} +emails: "Sorted list of slots with Email"
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} emailfirstletters "First letters in sort order"
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} emailfirstletters "First letters in sort order"
     * LIST {'length': _NUMPBSLOTS} +urls: "Sorted list of slots with a URL"
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
     * UNKNOWN +pad
 
 PACKET calleridbuffer:
@@ -85,7 +85,7 @@ PACKET calleridbuffer:
     P UINT {'constant': 700} maxentries
     P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 9216} bufsize
-    P STRING {'default': "callerid"} +comment
+    P USTRING {'default': "callerid"} +comment
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     * UNKNOWN +pad
@@ -107,12 +107,12 @@ PACKET eventslotinuserequest:
     
 PACKET evententry:
     1 UINT slot
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT start "# seconds since Jan 1, 1980 approximately"
     4 UINT end
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
     4 UINT alarmdiff "Displayed alarm time"
@@ -175,13 +175,13 @@ PACKET callalarmslotinuseresponse:
 PACKET callalarmentry:
     1 UINT slot
     1 UNKNOWN +pad0 "Not the flag?"
-    49 STRING {'raiseonunterminatedread': False} phonenum
+    49 USTRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT datedup "Copy of the date.  Always the same???"
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN +pad1
     1 UINT name_len
     1 UINT phonenumbertype "1: Home, 2: Work, ..." 

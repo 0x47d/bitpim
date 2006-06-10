@@ -30,7 +30,7 @@ PACKET indexentry:
     2 UINT index
     2 UINT type
     # they shortened this from 84 chars in the vx7000
-    64 STRING filename  "includes full pathname"
+    64 USTRING filename  "includes full pathname"
     4 UINT {'default': 0} +date "i think this is bitfield of the date"
     4 UINT dunno
 
@@ -80,7 +80,7 @@ PACKET msg_record:
 
 PACKET recipient_record:
     33 DATA unknown1 # contains recipient name from phonebook on this phone
-    49 STRING number
+    49 USTRING number
     1 UINT status   # 1 when sent, 5 when received
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -101,14 +101,14 @@ PACKET sms_out:
    1 UNKNOWN unknown2
    4 LGCALDATE timesent # time the message was sent
    6 UNKNOWN unknown2
-   21 STRING subject
+   21 USTRING subject
    1 UNKNOWN unknown4
    2 UINT num_msg_elements # up to 10
    * LIST {'elementclass': msg_record, 'length': 7} +messages
    14 UNKNOWN unknown1
    1 UINT priority # 0=normal, 1=high
    1 UNKNOWN unknown5
-   35 STRING callback
+   35 USTRING callback
    * LIST {'elementclass': recipient_record,'length': 9} +recipients
    * UNKNOWN pad
 
@@ -121,7 +121,7 @@ PACKET sms_in:
    6 SMSDATE timesent
    3 UINT unknown2
    1 UINT callback_length # 0 for no callback number
-   38 STRING callback
+   38 USTRING callback
    1 UINT sender_length
    * LIST {'length': 38} +sender:
        1 UINT byte "individual byte of senders phone number"
@@ -134,7 +134,7 @@ PACKET sms_in:
    1 UINT locked # 1 if the message is locked, 0 otherwise
    8 UINT unknown6 # zero
    1 UINT priority # 1 if the message is high priority, 0 otherwise
-   21 STRING subject
+   21 USTRING subject
    1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
    1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
    4 UINT unknown7 # zeros

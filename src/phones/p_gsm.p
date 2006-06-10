@@ -21,27 +21,27 @@ BOOL=BOOLlsb
 %}
 
 PACKET echo_off:
-    * STRING { 'terminator': None, 'default': 'E0V1' } +command
+    * USTRING { 'terminator': None, 'default': 'E0V1' } +command
 
 PACKET esnrequest:
-    * STRING { 'terminator': None, 'default': '+GSN' } +command
+    * USTRING { 'terminator': None, 'default': '+GSN' } +command
 
 PACKET esnresponse:
     * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'default': '+GSN'} command
     * CSVSTRING {'quotechar': None, 'terminator': None} esn
 
 PACKET SIM_ID_Req:
-    * STRING { 'terminator': None, 'default': '+CIMI' } +command
+    * USTRING { 'terminator': None, 'default': '+CIMI' } +command
 
 PACKET single_value_resp:
-    * STRING { 'terminator': None } value
+    * USTRING { 'terminator': None } value
 
 PACKET manufacturer_id_req:
-    * STRING { 'terminator': None, 'default': '+GMI'} +command
+    * USTRING { 'terminator': None, 'default': '+GMI'} +command
 
 PACKET model_id_req:
-    * STRING { 'terminator': None, 'default': '+GMM' } +command
+    * USTRING { 'terminator': None, 'default': '+GMM' } +command
 
 PACKET firmware_version_req:
-    * STRING { 'terminator': None, 'default': '+GMR' } +command
+    * USTRING { 'terminator': None, 'default': '+GMR' } +command
 

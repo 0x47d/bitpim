@@ -149,7 +149,7 @@ class calendar_read_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDR=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_start_index
         except:
@@ -167,7 +167,7 @@ class calendar_read_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDR=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
         self.__field_start_index.readfrombuffer(buf)
@@ -179,14 +179,14 @@ class calendar_read_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDR=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CXDR=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CXDR=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -436,7 +436,7 @@ class calendar_write_check_req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+CXDW' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -445,7 +445,7 @@ class calendar_write_check_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -455,7 +455,7 @@ class calendar_write_check_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -463,14 +463,14 @@ class calendar_write_check_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CXDW' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CXDW' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -528,7 +528,7 @@ class calendar_write_check_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CXDW:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CXDW:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.readfrombuffer(buf)
@@ -539,10 +539,10 @@ class calendar_write_check_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CXDW:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CXDW:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -606,7 +606,7 @@ class calendar_write_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_index
         except:
@@ -640,7 +640,7 @@ class calendar_write_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -660,14 +660,14 @@ class calendar_write_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CXDW=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -819,7 +819,7 @@ class calendar_del_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_index
         except:
@@ -833,7 +833,7 @@ class calendar_del_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.readfrombuffer(buf)
@@ -843,14 +843,14 @@ class calendar_del_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CXDW=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CXDW=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CXDW=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -912,7 +912,7 @@ class media_selector_req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+DDLS?' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -921,7 +921,7 @@ class media_selector_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS?' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS?' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -931,7 +931,7 @@ class media_selector_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS?' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS?' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -939,14 +939,14 @@ class media_selector_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS?' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS?' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+DDLS?' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+DDLS?' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1004,7 +1004,7 @@ class media_selector_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+DDLS:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+DDLS:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_media_type=CSVINT(**{ 'terminator': None })
         self.__field_media_type.readfrombuffer(buf)
@@ -1015,10 +1015,10 @@ class media_selector_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+DDLS:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+DDLS:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1082,7 +1082,7 @@ class media_selector_set(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_media_type
         except:
@@ -1096,7 +1096,7 @@ class media_selector_set(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_media_type=CSVINT(**{ 'terminator': None })
         self.__field_media_type.readfrombuffer(buf)
@@ -1106,14 +1106,14 @@ class media_selector_set(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLS=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+DDLS=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+DDLS=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1180,7 +1180,7 @@ class media_list_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLR=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_start_index
         except:
@@ -1198,7 +1198,7 @@ class media_list_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLR=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
         self.__field_start_index.readfrombuffer(buf)
@@ -1210,14 +1210,14 @@ class media_list_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLR=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+DDLR=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+DDLR=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1438,7 +1438,7 @@ class del_media_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_file_name
         except:
@@ -1452,7 +1452,7 @@ class del_media_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_file_name=CSVSTRING(**{ 'terminator': None })
         self.__field_file_name.readfrombuffer(buf)
@@ -1462,14 +1462,14 @@ class del_media_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLD=0,' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+DDLD=0,' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+DDLD=0,' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1536,7 +1536,7 @@ class write_media_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLW=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_index
         except:
@@ -1576,7 +1576,7 @@ class write_media_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLW=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -1602,14 +1602,14 @@ class write_media_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+DDLW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+DDLW=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+DDLW=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+DDLW=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1806,7 +1806,7 @@ class list_group_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPGR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPGR=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_start_index
         except:
@@ -1824,7 +1824,7 @@ class list_group_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPGR=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPGR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
         self.__field_start_index.readfrombuffer(buf)
@@ -1836,14 +1836,14 @@ class list_group_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPGR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPGR=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPGR=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPGR=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -1936,7 +1936,7 @@ class list_group_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPGR:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CPGR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -1949,10 +1949,10 @@ class list_group_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CPGR:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CPGR:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2030,7 +2030,7 @@ class charset_set_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CSCS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CSCS=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_charset
         except:
@@ -2044,7 +2044,7 @@ class charset_set_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CSCS=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CSCS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_charset=CSVSTRING(**{ 'terminator': None })
         self.__field_charset.readfrombuffer(buf)
@@ -2054,14 +2054,14 @@ class charset_set_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CSCS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CSCS=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CSCS=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CSCS=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2128,7 +2128,7 @@ class select_storage_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBS=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_storage
         except:
@@ -2142,7 +2142,7 @@ class select_storage_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBS=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBS=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_storage=CSVSTRING(**{ 'terminator': None })
         self.__field_storage.readfrombuffer(buf)
@@ -2152,14 +2152,14 @@ class select_storage_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBS=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBS=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPBS=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPBS=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2237,7 +2237,7 @@ class select_storage_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBS:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CPBS:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_storage=CSVSTRING()
         self.__field_storage.readfrombuffer(buf)
@@ -2254,10 +2254,10 @@ class select_storage_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBS:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBS:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2363,7 +2363,7 @@ class read_phonebook_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBR=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_start_index
         except:
@@ -2381,7 +2381,7 @@ class read_phonebook_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBR=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBR=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT()
         self.__field_start_index.readfrombuffer(buf)
@@ -2393,14 +2393,14 @@ class read_phonebook_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBR=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBR=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPBR=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPBR=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2504,7 +2504,7 @@ class read_phonebook_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -2551,10 +2551,10 @@ class read_phonebook_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2753,13 +2753,13 @@ class read_sim_phonebook_resp(BaseProtogenClass):
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
         if getattr(self, '__field_home', None) is None:
-            self.__field_home=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_home=USTRING(**{ 'terminator': None, 'default': '' })
         if getattr(self, '__field_office', None) is None:
-            self.__field_office=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_office=USTRING(**{ 'terminator': None, 'default': '' })
         if getattr(self, '__field_email', None) is None:
-            self.__field_email=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_email=USTRING(**{ 'terminator': None, 'default': '' })
         if getattr(self, '__field_memo', None) is None:
-            self.__field_memo=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_memo=USTRING(**{ 'terminator': None, 'default': '' })
         if getattr(self, '__field_sim', None) is None:
             self.__field_sim=BOOL(**{ 'default': True })
 
@@ -2781,7 +2781,7 @@ class read_sim_phonebook_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -2800,10 +2800,10 @@ class read_sim_phonebook_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBR:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -2877,14 +2877,14 @@ class read_sim_phonebook_resp(BaseProtogenClass):
     def __getfield_home(self):
         try: self.__field_home
         except:
-            self.__field_home=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_home=USTRING(**{ 'terminator': None, 'default': '' })
         return self.__field_home.getvalue()
 
     def __setfield_home(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_home=value
         else:
-            self.__field_home=STRING(value,**{ 'terminator': None, 'default': '' })
+            self.__field_home=USTRING(value,**{ 'terminator': None, 'default': '' })
 
     def __delfield_home(self): del self.__field_home
 
@@ -2893,14 +2893,14 @@ class read_sim_phonebook_resp(BaseProtogenClass):
     def __getfield_office(self):
         try: self.__field_office
         except:
-            self.__field_office=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_office=USTRING(**{ 'terminator': None, 'default': '' })
         return self.__field_office.getvalue()
 
     def __setfield_office(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_office=value
         else:
-            self.__field_office=STRING(value,**{ 'terminator': None, 'default': '' })
+            self.__field_office=USTRING(value,**{ 'terminator': None, 'default': '' })
 
     def __delfield_office(self): del self.__field_office
 
@@ -2909,14 +2909,14 @@ class read_sim_phonebook_resp(BaseProtogenClass):
     def __getfield_email(self):
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_email=USTRING(**{ 'terminator': None, 'default': '' })
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{ 'terminator': None, 'default': '' })
+            self.__field_email=USTRING(value,**{ 'terminator': None, 'default': '' })
 
     def __delfield_email(self): del self.__field_email
 
@@ -2925,14 +2925,14 @@ class read_sim_phonebook_resp(BaseProtogenClass):
     def __getfield_memo(self):
         try: self.__field_memo
         except:
-            self.__field_memo=STRING(**{ 'terminator': None, 'default': '' })
+            self.__field_memo=USTRING(**{ 'terminator': None, 'default': '' })
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=STRING(value,**{ 'terminator': None, 'default': '' })
+            self.__field_memo=USTRING(value,**{ 'terminator': None, 'default': '' })
 
     def __delfield_memo(self): del self.__field_memo
 
@@ -3008,7 +3008,7 @@ class del_phonebook_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_index
         except:
@@ -3022,7 +3022,7 @@ class del_phonebook_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.readfrombuffer(buf)
@@ -3032,14 +3032,14 @@ class del_phonebook_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPBW=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPBW=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3114,7 +3114,7 @@ class update_phonebook_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '), 'constant': '+CPBW:' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '), 'constant': '+CPBW:' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.readfrombuffer(buf)
@@ -3125,10 +3125,10 @@ class update_phonebook_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBW:' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '), 'constant': '+CPBW:' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3192,7 +3192,7 @@ class write_phonebook_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_group
         except:
@@ -3242,7 +3242,7 @@ class write_phonebook_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_group=CSVINT()
         self.__field_group.readfrombuffer(buf)
@@ -3270,14 +3270,14 @@ class write_phonebook_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPBW=,' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3497,7 +3497,7 @@ class write_sim_phonebook_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_group
         except:
@@ -3523,7 +3523,7 @@ class write_sim_phonebook_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_group=CSVINT(**{ 'default': 0 })
         self.__field_group.readfrombuffer(buf)
@@ -3539,14 +3539,14 @@ class write_sim_phonebook_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CPBW=,' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CPBW=,' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CPBW=,' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3664,7 +3664,7 @@ class memo_read_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_start_index
         except:
@@ -3682,7 +3682,7 @@ class memo_read_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_start_index=CSVINT(**{ 'default': MEMO_MIN_INDEX })
         self.__field_start_index.readfrombuffer(buf)
@@ -3694,14 +3694,14 @@ class memo_read_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': MEMO_READ_CMD+'=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3794,7 +3794,7 @@ class memo_read_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '),               'constant': MEMO_READ_CMD+':' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '),               'constant': MEMO_READ_CMD+':' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -3807,10 +3807,10 @@ class memo_read_resp(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '),               'constant': MEMO_READ_CMD+':' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '),               'constant': MEMO_READ_CMD+':' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3888,7 +3888,7 @@ class memo_write_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_text
         except:
@@ -3902,7 +3902,7 @@ class memo_write_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
         self.__field_command.readfrombuffer(buf)
         self.__field_text=CSVSTRING(**{ 'terminator': None })
         self.__field_text.readfrombuffer(buf)
@@ -3912,14 +3912,14 @@ class memo_write_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=,' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -3986,7 +3986,7 @@ class memo_del_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_index
         except:
@@ -4000,7 +4000,7 @@ class memo_del_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT(**{ 'terminator': None })
         self.__field_index.readfrombuffer(buf)
@@ -4010,14 +4010,14 @@ class memo_del_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': MEMO_WRITE_CMD+'=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -4084,7 +4084,7 @@ class sms_format_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_format
         except:
@@ -4098,7 +4098,7 @@ class sms_format_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_format=CSVINT(**{ 'terminator': None,               'default': SMS_FORMAT_TEXT })
         self.__field_format.readfrombuffer(buf)
@@ -4108,14 +4108,14 @@ class sms_format_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': SMS_FORMAT_CMD+'=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -4182,7 +4182,7 @@ class sms_memory_select_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_list_memory
         except:
@@ -4196,7 +4196,7 @@ class sms_memory_select_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_list_memory=CSVSTRING(**{ 'terminator': None })
         self.__field_list_memory.readfrombuffer(buf)
@@ -4206,14 +4206,14 @@ class sms_memory_select_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': SMS_MEMORY_SELECT_CMD+'=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -4280,7 +4280,7 @@ class sms_msg_list_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
         self.__field_command.writetobuffer(buf)
         try: self.__field_msg_type
         except:
@@ -4294,7 +4294,7 @@ class sms_msg_list_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
+        self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
         self.__field_command.readfrombuffer(buf)
         self.__field_msg_type=CSVSTRING(**{ 'terminator': None,                  'default': SMS_MSG_ALL })
         self.__field_msg_type.readfrombuffer(buf)
@@ -4304,14 +4304,14 @@ class sms_msg_list_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
+            self.__field_command=USTRING(**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
+            self.__field_command=USTRING(value,**{ 'terminator': None,               'default': SMS_MSG_LIST_CMD+'=' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -4392,7 +4392,7 @@ class sms_msg_list_header(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': ord(' '),               'constant': SMS_MSG_LIST_CMD+':' })
+        self.__field_command=USTRING(**{ 'terminator': ord(' '),               'constant': SMS_MSG_LIST_CMD+':' })
         self.__field_command.readfrombuffer(buf)
         self.__field_index=CSVINT()
         self.__field_index.readfrombuffer(buf)
@@ -4415,10 +4415,10 @@ class sms_msg_list_header(BaseProtogenClass):
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': ord(' '),               'constant': SMS_MSG_LIST_CMD+':' })
+            self.__field_command=USTRING(value,**{ 'terminator': ord(' '),               'constant': SMS_MSG_LIST_CMD+':' })
 
     def __delfield_command(self): del self.__field_command
 

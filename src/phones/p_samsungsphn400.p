@@ -31,11 +31,11 @@ PACKET firmwarerequest:
 
 PACKET firmwareresponse:
     1 UINT command
-    11 STRING {'terminator': None}  date1
-    8 STRING {'terminator': None}  time1
-    11 STRING {'terminator': None}  date2
-    8 STRING {'terminator': None}  time2
-    8 STRING {'terminator': None}  string1
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  string1
     8 UNKNOWN dunno1
 
 PACKET esnrequest:
@@ -63,7 +63,7 @@ PACKET phonebookname:
     2 UINT pemail
     2 UINT purl
     2 UINT dunno2
-    12 STRING name
+    12 USTRING name
     3 UNKNOWN pad2
     87 UNKNOWN pad2
     2 UINT {'default': 5} sometimesfive
@@ -82,7 +82,7 @@ PACKET phonebooknumbersrequest:
 PACKET phonebooknumbers:
     2 UNKNOWN pad
     1 UINT number_len
-    32 STRING {'raiseonunterminatedread': False} number
+    32 USTRING {'raiseonunterminatedread': False} number
     
 PACKET phonebooknumbersresponse:
     * samheader header

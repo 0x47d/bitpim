@@ -48,7 +48,7 @@ class pbentry(BaseProtogenClass):
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
         if getattr(self, '__field_url', None) is None:
-            self.__field_url=STRING(**{'default': ""})
+            self.__field_url=USTRING(**{'default': ""})
         if getattr(self, '__field_birthday', None) is None:
             self.__field_birthday=CSVDATE(**{'default': ""})
 
@@ -124,14 +124,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_url(self):
         try: self.__field_url
         except:
-            self.__field_url=STRING(**{'default': ""})
+            self.__field_url=USTRING(**{'default': ""})
         return self.__field_url.getvalue()
 
     def __setfield_url(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_url=value
         else:
-            self.__field_url=STRING(value,**{'default': ""})
+            self.__field_url=USTRING(value,**{'default': ""})
 
     def __delfield_url(self): del self.__field_url
 

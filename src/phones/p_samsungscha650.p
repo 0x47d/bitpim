@@ -56,7 +56,7 @@ PACKET pbentry:
     2  UINT alias_num_index
     2  UINT unused_index
     2  UINT email_index
-    22 STRING {'raiseonunterminatedread': False } name
+    22 USTRING {'raiseonunterminatedread': False } name
     1  UINT c4
     1  UINT ringer_type
     1  UINT group_num
@@ -70,7 +70,7 @@ PACKET number:
     2  UINT valid
     2  UINT type
     1  UINT length
-    49 STRING { 'raiseonunterminatedread': False } name
+    49 USTRING { 'raiseonunterminatedread': False } name
     2  UINT pb_index
 
 PACKET numbers:
@@ -82,9 +82,9 @@ PACKET ringtone:
     1  UINT c1
     1  UINT assignment
     1  UINT c2
-    17 STRING { 'raiseonunterminatedread': False } name
+    17 USTRING { 'raiseonunterminatedread': False } name
     1  UINT name_len
-    46 STRING { 'raiseonunterminatedread': False } file_name
+    46 USTRING { 'raiseonunterminatedread': False } file_name
     1  UINT file_name_len
     2  UINT c3
 
@@ -96,9 +96,9 @@ PACKET image:
     1  UINT index
     1  UINT c1
     1  UINT assignment
-    17 STRING { 'raiseonunterminatedread': False } name
+    17 USTRING { 'raiseonunterminatedread': False } name
     1  UINT name_len
-    46 STRING { 'raiseonunterminatedread': False } file_name
+    46 USTRING { 'raiseonunterminatedread': False } file_name
     1  UINT file_name_len
     2  UINT c2
 

@@ -101,8 +101,8 @@ PACKET filepbentry:
     1 UINT  dunno20
     1 UINT  dunno21
     1 UINT name_len
-    21 STRING {'raiseonunterminatedread': False } name
-    11 STRING birthday
+    21 USTRING {'raiseonunterminatedread': False } name
+    11 USTRING birthday
     1 UINT group_num
 
 PACKET pbbook:

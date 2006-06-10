@@ -35,17 +35,17 @@ _MAXEMAILLEN=48
 
 PACKET phonenumber:
     1 UINT {'default': 0} +number_len
-    49 STRING {'default': ""} +number
+    49 USTRING {'default': ""} +number
 
 PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
-    49 STRING {'default': ""} +email
+    49 USTRING {'default': ""} +email
     1 UINT +url_len
-    49 STRING {'default': ""} +url
+    49 USTRING {'default': ""} +url
     1 BOOL +secret
     1 UINT name_len
      
@@ -62,12 +62,12 @@ PACKET phonebookslotupdaterequest:
 PACKET evententry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT start "# seconds since Jan 1, 1980 approximately"
     4 UINT end
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
     1 UINT ringtone "0: Beep, 1: Voice, 2: Silent"
@@ -92,13 +92,13 @@ PACKET callalarmentry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
     1 UINT {'default': 0} +dunno1 "Related to Snooze?"
-    49 STRING {'raiseonunterminatedread': False} phonenum
+    49 USTRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT datedup "Copy of the date.  Always the same???"
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN +pad1
     1 UINT name_len
     1 UINT phonenumbertype "1: Home, 2: Work, ..." 

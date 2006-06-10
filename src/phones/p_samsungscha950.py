@@ -190,7 +190,7 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
         if getattr(self, '__field_name', None) is None:
-            self.__field_name=STRING()
+            self.__field_name=USTRING()
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -198,12 +198,12 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         self.__field_path_prefix.writetobuffer(buf)
         self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|2\x0A' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|2\x0A' })
         self.__field_eor.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -213,11 +213,11 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         self.__field_path_prefix.readfrombuffer(buf)
-        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname=USTRING(**{ 'terminator': None })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_eor=STRING(**{ 'terminator': None,               'default': '|2\x0A' })
+        self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|2\x0A' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -226,10 +226,10 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,)
+            self.__field_name=USTRING(value,)
 
     def __delfield_name(self): del self.__field_name
 
@@ -238,14 +238,14 @@ class WRingtoneIndexEntry(BaseProtogenClass):
     def __getfield_path_prefix(self):
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         return self.__field_path_prefix.getvalue()
 
     def __setfield_path_prefix(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_path_prefix=value
         else:
-            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(value,**{ 'terminator': None,               'default': '/ff/' })
 
     def __delfield_path_prefix(self): del self.__field_path_prefix
 
@@ -255,10 +255,10 @@ class WRingtoneIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': None })
+            self.__field_pathname=USTRING(value,**{ 'terminator': None })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -267,14 +267,14 @@ class WRingtoneIndexEntry(BaseProtogenClass):
     def __getfield_eor(self):
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|2\x0A' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|2\x0A' })
         return self.__field_eor.getvalue()
 
     def __setfield_eor(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_eor=value
         else:
-            self.__field_eor=STRING(value,**{ 'terminator': None,               'default': '|2\x0A' })
+            self.__field_eor=USTRING(value,**{ 'terminator': None,               'default': '|2\x0A' })
 
     def __delfield_eor(self): del self.__field_eor
 
@@ -414,9 +414,9 @@ class RRingtoneIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_pathname=STRING(**{ 'terminator': 0x7C })
+        self.__field_pathname=USTRING(**{ 'terminator': 0x7C })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_misc=STRING(**{ 'terminator': 0x0A })
+        self.__field_misc=USTRING(**{ 'terminator': 0x0A })
         self.__field_misc.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -425,10 +425,10 @@ class RRingtoneIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': 0x7C })
+            self.__field_pathname=USTRING(value,**{ 'terminator': 0x7C })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -438,10 +438,10 @@ class RRingtoneIndexEntry(BaseProtogenClass):
         return self.__field_misc.getvalue()
 
     def __setfield_misc(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_misc=value
         else:
-            self.__field_misc=STRING(value,**{ 'terminator': 0x0A })
+            self.__field_misc=USTRING(value,**{ 'terminator': 0x0A })
 
     def __delfield_misc(self): del self.__field_misc
 
@@ -565,7 +565,7 @@ class WSoundsIndexEntry(BaseProtogenClass):
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
         if getattr(self, '__field_name', None) is None:
-            self.__field_name=STRING()
+            self.__field_name=USTRING()
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -573,12 +573,12 @@ class WSoundsIndexEntry(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         self.__field_path_prefix.writetobuffer(buf)
         self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
         self.__field_eor.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -588,11 +588,11 @@ class WSoundsIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+        self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         self.__field_path_prefix.readfrombuffer(buf)
-        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname=USTRING(**{ 'terminator': None })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
+        self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -601,10 +601,10 @@ class WSoundsIndexEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,)
+            self.__field_name=USTRING(value,)
 
     def __delfield_name(self): del self.__field_name
 
@@ -613,14 +613,14 @@ class WSoundsIndexEntry(BaseProtogenClass):
     def __getfield_path_prefix(self):
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '/ff/' })
         return self.__field_path_prefix.getvalue()
 
     def __setfield_path_prefix(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_path_prefix=value
         else:
-            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '/ff/' })
+            self.__field_path_prefix=USTRING(value,**{ 'terminator': None,               'default': '/ff/' })
 
     def __delfield_path_prefix(self): del self.__field_path_prefix
 
@@ -630,10 +630,10 @@ class WSoundsIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': None })
+            self.__field_pathname=USTRING(value,**{ 'terminator': None })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -642,14 +642,14 @@ class WSoundsIndexEntry(BaseProtogenClass):
     def __getfield_eor(self):
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|7\x0A' })
         return self.__field_eor.getvalue()
 
     def __setfield_eor(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_eor=value
         else:
-            self.__field_eor=STRING(value,**{ 'terminator': None,               'default': '|0|7\x0A' })
+            self.__field_eor=USTRING(value,**{ 'terminator': None,               'default': '|0|7\x0A' })
 
     def __delfield_eor(self): del self.__field_eor
 
@@ -789,9 +789,9 @@ class RSoundIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_pathname=STRING(**{ 'terminator': 0x7C })
+        self.__field_pathname=USTRING(**{ 'terminator': 0x7C })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_misc=STRING(**{ 'terminator': 0x0A })
+        self.__field_misc=USTRING(**{ 'terminator': 0x0A })
         self.__field_misc.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -800,10 +800,10 @@ class RSoundIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': 0x7C })
+            self.__field_pathname=USTRING(value,**{ 'terminator': 0x7C })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -813,10 +813,10 @@ class RSoundIndexEntry(BaseProtogenClass):
         return self.__field_misc.getvalue()
 
     def __setfield_misc(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_misc=value
         else:
-            self.__field_misc=STRING(value,**{ 'terminator': 0x0A })
+            self.__field_misc=USTRING(value,**{ 'terminator': 0x0A })
 
     def __delfield_misc(self): del self.__field_misc
 
@@ -947,12 +947,12 @@ class WPictureIndexEntry(BaseProtogenClass):
         self.__field_name.writetobuffer(buf)
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '|/ff/' })
         self.__field_path_prefix.writetobuffer(buf)
         self.__field_pathname.writetobuffer(buf)
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
         self.__field_eor.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -962,13 +962,13 @@ class WPictureIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=STRING(**{ 'terminator': None })
+        self.__field_name=USTRING(**{ 'terminator': None })
         self.__field_name.readfrombuffer(buf)
-        self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+        self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '|/ff/' })
         self.__field_path_prefix.readfrombuffer(buf)
-        self.__field_pathname=STRING(**{ 'terminator': None })
+        self.__field_pathname=USTRING(**{ 'terminator': None })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
+        self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
         self.__field_eor.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -977,10 +977,10 @@ class WPictureIndexEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None })
+            self.__field_name=USTRING(value,**{ 'terminator': None })
 
     def __delfield_name(self): del self.__field_name
 
@@ -989,14 +989,14 @@ class WPictureIndexEntry(BaseProtogenClass):
     def __getfield_path_prefix(self):
         try: self.__field_path_prefix
         except:
-            self.__field_path_prefix=STRING(**{ 'terminator': None,               'default': '|/ff/' })
+            self.__field_path_prefix=USTRING(**{ 'terminator': None,               'default': '|/ff/' })
         return self.__field_path_prefix.getvalue()
 
     def __setfield_path_prefix(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_path_prefix=value
         else:
-            self.__field_path_prefix=STRING(value,**{ 'terminator': None,               'default': '|/ff/' })
+            self.__field_path_prefix=USTRING(value,**{ 'terminator': None,               'default': '|/ff/' })
 
     def __delfield_path_prefix(self): del self.__field_path_prefix
 
@@ -1006,10 +1006,10 @@ class WPictureIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': None })
+            self.__field_pathname=USTRING(value,**{ 'terminator': None })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -1018,14 +1018,14 @@ class WPictureIndexEntry(BaseProtogenClass):
     def __getfield_eor(self):
         try: self.__field_eor
         except:
-            self.__field_eor=STRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
+            self.__field_eor=USTRING(**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
         return self.__field_eor.getvalue()
 
     def __setfield_eor(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_eor=value
         else:
-            self.__field_eor=STRING(value,**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
+            self.__field_eor=USTRING(value,**{ 'terminator': None,               'default': '|0|0|3|>\x0A\xF4' })
 
     def __delfield_eor(self): del self.__field_eor
 
@@ -1078,7 +1078,7 @@ class WPictureIndexFile(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
         except:
-            self.__field_header=STRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
+            self.__field_header=USTRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
         self.__field_header.writetobuffer(buf)
         try: self.__field_items
         except:
@@ -1092,7 +1092,7 @@ class WPictureIndexFile(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_header=STRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
+        self.__field_header=USTRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
         self.__field_header.readfrombuffer(buf)
         self.__field_items=LIST(**{ 'elementclass': WPictureIndexEntry })
         self.__field_items.readfrombuffer(buf)
@@ -1102,14 +1102,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_header(self):
         try: self.__field_header
         except:
-            self.__field_header=STRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
+            self.__field_header=USTRING(**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
         return self.__field_header.getvalue()
 
     def __setfield_header(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_header=value
         else:
-            self.__field_header=STRING(value,**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
+            self.__field_header=USTRING(value,**{ 'terminator': None,               'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' })
 
     def __delfield_header(self): del self.__field_header
 
@@ -1185,11 +1185,11 @@ class RPictureIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=STRING(**{ 'terminator': 0x7C })
+        self.__field_name=USTRING(**{ 'terminator': 0x7C })
         self.__field_name.readfrombuffer(buf)
-        self.__field_pathname=STRING(**{ 'terminator': 0x7C })
+        self.__field_pathname=USTRING(**{ 'terminator': 0x7C })
         self.__field_pathname.readfrombuffer(buf)
-        self.__field_misc=STRING(**{ 'terminator': 0xF4,               'raiseonunterminatedread': False })
+        self.__field_misc=USTRING(**{ 'terminator': 0xF4,               'raiseonunterminatedread': False })
         self.__field_misc.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1198,10 +1198,10 @@ class RPictureIndexEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': 0x7C })
+            self.__field_name=USTRING(value,**{ 'terminator': 0x7C })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1211,10 +1211,10 @@ class RPictureIndexEntry(BaseProtogenClass):
         return self.__field_pathname.getvalue()
 
     def __setfield_pathname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{ 'terminator': 0x7C })
+            self.__field_pathname=USTRING(value,**{ 'terminator': 0x7C })
 
     def __delfield_pathname(self): del self.__field_pathname
 
@@ -1224,10 +1224,10 @@ class RPictureIndexEntry(BaseProtogenClass):
         return self.__field_misc.getvalue()
 
     def __setfield_misc(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_misc=value
         else:
-            self.__field_misc=STRING(value,**{ 'terminator': 0xF4,               'raiseonunterminatedread': False })
+            self.__field_misc=USTRING(value,**{ 'terminator': 0xF4,               'raiseonunterminatedread': False })
 
     def __delfield_misc(self): del self.__field_misc
 
@@ -1377,7 +1377,7 @@ class GroupEntry(BaseProtogenClass):
         self.__field_dunno1.readfrombuffer(buf)
         self.__field_datetime=DateTime(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 68,  'terminator': 0 })
+        self.__field_name=USTRING(**{'sizeinbytes': 68,  'terminator': 0 })
         self.__field_name.readfrombuffer(buf)
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
@@ -1430,10 +1430,10 @@ class GroupEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 68,  'terminator': 0 })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 68,  'terminator': 0 })
 
     def __delfield_name(self): del self.__field_name
 
@@ -2102,7 +2102,7 @@ class CalEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_titlelen=UINT(**{'sizeinbytes': 2})
         self.__field_titlelen.readfrombuffer(buf)
-        self.__field_title=STRING(**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+        self.__field_title=USTRING(**{ 'sizeinbytes': self.titlelen,               'terminator': None })
         self.__field_title.readfrombuffer(buf)
         self.__field_start=DateTime(**{'sizeinbytes': 4})
         self.__field_start.readfrombuffer(buf)
@@ -2142,7 +2142,7 @@ class CalEntry(BaseProtogenClass):
         self.__field_zero6.readfrombuffer(buf)
         self.__field_ringtonelen=UINT(**{'sizeinbytes': 2})
         self.__field_ringtonelen.readfrombuffer(buf)
-        self.__field_ringtone=STRING(**{ 'sizeinbytes': self.ringtonelen,               'terminator': None })
+        self.__field_ringtone=USTRING(**{ 'sizeinbytes': self.ringtonelen,               'terminator': None })
         self.__field_ringtone.readfrombuffer(buf)
         self.__field_zero7=UNKNOWN(**{'sizeinbytes': 2,  'pad': 0 })
         self.__field_zero7.readfrombuffer(buf)
@@ -2166,10 +2166,10 @@ class CalEntry(BaseProtogenClass):
         return self.__field_title.getvalue()
 
     def __setfield_title(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_title=value
         else:
-            self.__field_title=STRING(value,**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+            self.__field_title=USTRING(value,**{ 'sizeinbytes': self.titlelen,               'terminator': None })
 
     def __delfield_title(self): del self.__field_title
 
@@ -2453,10 +2453,10 @@ class CalEntry(BaseProtogenClass):
         return self.__field_ringtone.getvalue()
 
     def __setfield_ringtone(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_ringtone=value
         else:
-            self.__field_ringtone=STRING(value,**{ 'sizeinbytes': self.ringtonelen,               'terminator': None })
+            self.__field_ringtone=USTRING(value,**{ 'sizeinbytes': self.ringtonelen,               'terminator': None })
 
     def __delfield_ringtone(self): del self.__field_ringtone
 
@@ -2591,7 +2591,7 @@ class NotePadEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_textlen=UINT(**{'sizeinbytes': 2})
         self.__field_textlen.readfrombuffer(buf)
-        self.__field_text=STRING(**{ 'terminator': None,               'sizeinbytes': self.textlen })
+        self.__field_text=USTRING(**{ 'terminator': None,               'sizeinbytes': self.textlen })
         self.__field_text.readfrombuffer(buf)
         self.__field_creation=DateTime(**{'sizeinbytes': 4})
         self.__field_creation.readfrombuffer(buf)
@@ -2633,10 +2633,10 @@ class NotePadEntry(BaseProtogenClass):
         return self.__field_text.getvalue()
 
     def __setfield_text(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_text=value
         else:
-            self.__field_text=STRING(value,**{ 'terminator': None,               'sizeinbytes': self.textlen })
+            self.__field_text=USTRING(value,**{ 'terminator': None,               'sizeinbytes': self.textlen })
 
     def __delfield_text(self): del self.__field_text
 
@@ -4046,7 +4046,7 @@ class NumberEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{ 'terminator': None,               'pascal': True })
+        self.__field_number=USTRING(**{ 'terminator': None,               'pascal': True })
         self.__field_number.readfrombuffer(buf)
         self.__field_option=UINT(**{'sizeinbytes': 1})
         self.__field_option.readfrombuffer(buf)
@@ -4054,7 +4054,7 @@ class NumberEntry(BaseProtogenClass):
             self.__field_speeddial=UINT(**{'sizeinbytes': 2})
             self.__field_speeddial.readfrombuffer(buf)
         if self.option & PB_FLG_RINGTONE:
-            self.__field_ringtone=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_ringtone=USTRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -4063,10 +4063,10 @@ class NumberEntry(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{ 'terminator': None,               'pascal': True })
+            self.__field_number=USTRING(value,**{ 'terminator': None,               'pascal': True })
 
     def __delfield_number(self): del self.__field_number
 
@@ -4102,10 +4102,10 @@ class NumberEntry(BaseProtogenClass):
         return self.__field_ringtone.getvalue()
 
     def __setfield_ringtone(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_ringtone=value
         else:
-            self.__field_ringtone=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_ringtone=USTRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_ringtone(self): del self.__field_ringtone
 
@@ -4199,13 +4199,13 @@ class PBEntry(BaseProtogenClass):
         self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_zero1.readfrombuffer(buf)
         if self.info & PB_FLG_NAME:
-            self.__field_name=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_name=USTRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_name.readfrombuffer(buf)
         if self.info & PB_FLG_EMAIL:
-            self.__field_email=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_email=USTRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_email.readfrombuffer(buf)
         if self.info & PB_FLG_EMAIL2:
-            self.__field_email2=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_email2=USTRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_email2.readfrombuffer(buf)
         if self.info & PB_FLG_HOME:
             self.__field_home=NumberEntry()
@@ -4229,7 +4229,7 @@ class PBEntry(BaseProtogenClass):
             self.__field_group=UINT(**{'sizeinbytes': 1})
             self.__field_group.readfrombuffer(buf)
         if self.info & PB_FLG_WP:
-            self.__field_wallpaper=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_wallpaper=USTRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_wallpaper.readfrombuffer(buf)
             self.__field_wallpaper_range=UINT(**{'sizeinbytes': 4})
             self.__field_wallpaper_range.readfrombuffer(buf)
@@ -4269,10 +4269,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_name=USTRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_name(self): del self.__field_name
 
@@ -4282,10 +4282,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_email=USTRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_email(self): del self.__field_email
 
@@ -4295,10 +4295,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_email2.getvalue()
 
     def __setfield_email2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email2=value
         else:
-            self.__field_email2=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_email2=USTRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_email2(self): del self.__field_email2
 
@@ -4399,10 +4399,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_wallpaper.getvalue()
 
     def __setfield_wallpaper(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_wallpaper=value
         else:
-            self.__field_wallpaper=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_wallpaper=USTRING(value,**{ 'terminator': None,                   'pascal': True })
 
     def __delfield_wallpaper(self): del self.__field_wallpaper
 
@@ -5012,7 +5012,7 @@ class ss_sw_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_sw_version=STRING(**{ 'terminator': 0 })
+        self.__field_sw_version=USTRING(**{ 'terminator': 0 })
         self.__field_sw_version.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5034,10 +5034,10 @@ class ss_sw_resp(BaseProtogenClass):
         return self.__field_sw_version.getvalue()
 
     def __setfield_sw_version(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_sw_version=value
         else:
-            self.__field_sw_version=STRING(value,**{ 'terminator': 0 })
+            self.__field_sw_version=USTRING(value,**{ 'terminator': 0 })
 
     def __delfield_sw_version(self): del self.__field_sw_version
 
@@ -5177,7 +5177,7 @@ class ss_hw_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_hw_version=STRING(**{ 'terminator': 0 })
+        self.__field_hw_version=USTRING(**{ 'terminator': 0 })
         self.__field_hw_version.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5199,10 +5199,10 @@ class ss_hw_resp(BaseProtogenClass):
         return self.__field_hw_version.getvalue()
 
     def __setfield_hw_version(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_hw_version=value
         else:
-            self.__field_hw_version=STRING(value,**{ 'terminator': 0 })
+            self.__field_hw_version=USTRING(value,**{ 'terminator': 0 })
 
     def __delfield_hw_version(self): del self.__field_hw_version
 
@@ -5798,7 +5798,7 @@ class ss_pb_voicemail_resp(BaseProtogenClass):
         self.__field_hdr.readfrombuffer(buf)
         self.__field_param=UINT(**{'sizeinbytes': 1})
         self.__field_param.readfrombuffer(buf)
-        self.__field_number=STRING(**{ 'terminator': 0 })
+        self.__field_number=USTRING(**{ 'terminator': 0 })
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5833,10 +5833,10 @@ class ss_pb_voicemail_resp(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{ 'terminator': 0 })
+            self.__field_number=USTRING(value,**{ 'terminator': 0 })
 
     def __delfield_number(self): del self.__field_number
 
@@ -5896,7 +5896,7 @@ class ss_pb_voicemail_write_req(BaseProtogenClass):
         self.__field_param.writetobuffer(buf)
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
+            self.__field_number=USTRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
         self.__field_number.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -5910,7 +5910,7 @@ class ss_pb_voicemail_write_req(BaseProtogenClass):
         self.__field_hdr.readfrombuffer(buf)
         self.__field_param=UINT(**{'sizeinbytes': 1,  'constant': SS_CMD_PB_VOICEMAIL_PARAM })
         self.__field_param.readfrombuffer(buf)
-        self.__field_number=STRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
+        self.__field_number=USTRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5950,14 +5950,14 @@ class ss_pb_voicemail_write_req(BaseProtogenClass):
     def __getfield_number(self):
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
+            self.__field_number=USTRING(**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
+            self.__field_number=USTRING(value,**{ 'terminator': 0,               'default': PB_DEFAULT_VOICEMAIL_NUMBER })
 
     def __delfield_number(self): del self.__field_number
 
@@ -6174,7 +6174,7 @@ class ss_number_entry(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
+            self.__field_number=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
         self.__field_number.writetobuffer(buf)
         try: self.__field_speeddial
         except:
@@ -6186,11 +6186,11 @@ class ss_number_entry(BaseProtogenClass):
         self.__field_primary.writetobuffer(buf)
         try: self.__field_zero
         except:
-            self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
+            self.__field_zero=USTRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
         self.__field_zero.writetobuffer(buf)
         try: self.__field_ringtone
         except:
-            self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
+            self.__field_ringtone=USTRING(**{ 'terminator': 0,               'default': '' })
         self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -6200,15 +6200,15 @@ class ss_number_entry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
+        self.__field_number=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
         self.__field_number.readfrombuffer(buf)
         self.__field_speeddial=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_speeddial.readfrombuffer(buf)
         self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.readfrombuffer(buf)
-        self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
+        self.__field_zero=USTRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
         self.__field_zero.readfrombuffer(buf)
-        self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
+        self.__field_ringtone=USTRING(**{ 'terminator': 0,               'default': '' })
         self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -6216,14 +6216,14 @@ class ss_number_entry(BaseProtogenClass):
     def __getfield_number(self):
         try: self.__field_number
         except:
-            self.__field_number=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
+            self.__field_number=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
+            self.__field_number=USTRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_NUMBER_LEN,               'raiseontruncate': False })
 
     def __delfield_number(self): del self.__field_number
 
@@ -6264,14 +6264,14 @@ class ss_number_entry(BaseProtogenClass):
     def __getfield_zero(self):
         try: self.__field_zero
         except:
-            self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
+            self.__field_zero=USTRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
         return self.__field_zero.getvalue()
 
     def __setfield_zero(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_zero=value
         else:
-            self.__field_zero=STRING(value,**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
+            self.__field_zero=USTRING(value,**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
 
     def __delfield_zero(self): del self.__field_zero
 
@@ -6280,14 +6280,14 @@ class ss_number_entry(BaseProtogenClass):
     def __getfield_ringtone(self):
         try: self.__field_ringtone
         except:
-            self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
+            self.__field_ringtone=USTRING(**{ 'terminator': 0,               'default': '' })
         return self.__field_ringtone.getvalue()
 
     def __setfield_ringtone(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_ringtone=value
         else:
-            self.__field_ringtone=STRING(value,**{ 'terminator': 0,               'default': '' })
+            self.__field_ringtone=USTRING(value,**{ 'terminator': 0,               'default': '' })
 
     def __delfield_ringtone(self): del self.__field_ringtone
 
@@ -6342,11 +6342,11 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_name.writetobuffer(buf)
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         self.__field_email.writetobuffer(buf)
         try: self.__field_email2
         except:
-            self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         self.__field_email2.writetobuffer(buf)
         try: self.__field_zero1
         except:
@@ -6354,7 +6354,7 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_zero1.writetobuffer(buf)
         try: self.__field_wallpaper
         except:
-            self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
+            self.__field_wallpaper=USTRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.writetobuffer(buf)
         try: self.__field_zero2
         except:
@@ -6404,15 +6404,15 @@ class ss_pb_entry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=STRING(**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
+        self.__field_name=USTRING(**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
         self.__field_name.readfrombuffer(buf)
-        self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+        self.__field_email=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         self.__field_email.readfrombuffer(buf)
-        self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+        self.__field_email2=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         self.__field_email2.readfrombuffer(buf)
         self.__field_zero1=UINT(**{'sizeinbytes': 4,  'default': 0 })
         self.__field_zero1.readfrombuffer(buf)
-        self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
+        self.__field_wallpaper=USTRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.readfrombuffer(buf)
         self.__field_zero2=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_zero2.readfrombuffer(buf)
@@ -6441,10 +6441,10 @@ class ss_pb_entry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
+            self.__field_name=USTRING(value,**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -6453,14 +6453,14 @@ class ss_pb_entry(BaseProtogenClass):
     def __getfield_email(self):
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
 
     def __delfield_email(self): del self.__field_email
 
@@ -6469,14 +6469,14 @@ class ss_pb_entry(BaseProtogenClass):
     def __getfield_email2(self):
         try: self.__field_email2
         except:
-            self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
         return self.__field_email2.getvalue()
 
     def __setfield_email2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email2=value
         else:
-            self.__field_email2=STRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
 
     def __delfield_email2(self): del self.__field_email2
 
@@ -6501,14 +6501,14 @@ class ss_pb_entry(BaseProtogenClass):
     def __getfield_wallpaper(self):
         try: self.__field_wallpaper
         except:
-            self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
+            self.__field_wallpaper=USTRING(**{ 'terminator': 0,               'default': '' })
         return self.__field_wallpaper.getvalue()
 
     def __setfield_wallpaper(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_wallpaper=value
         else:
-            self.__field_wallpaper=STRING(value,**{ 'terminator': 0,               'default': '' })
+            self.__field_wallpaper=USTRING(value,**{ 'terminator': 0,               'default': '' })
 
     def __delfield_wallpaper(self): del self.__field_wallpaper
 
@@ -7207,7 +7207,7 @@ class cl_file(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cl_type=UINT(**{'sizeinbytes': 1})
         self.__field_cl_type.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 51,  'terminator': 0 })
+        self.__field_number=USTRING(**{'sizeinbytes': 51,  'terminator': 0 })
         self.__field_number.readfrombuffer(buf)
         self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
@@ -7235,10 +7235,10 @@ class cl_file(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 51,  'terminator': 0 })
+            self.__field_number=USTRING(value,**{'sizeinbytes': 51,  'terminator': 0 })
 
     def __delfield_number(self): del self.__field_number
 

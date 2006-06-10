@@ -102,51 +102,51 @@ PACKET DefaultResponse:
     * DATA data
 
 PACKET WRingtoneIndexEntry:
-    P STRING name
-    * STRING { 'terminator': None,
+    P USTRING name
+    * USTRING { 'terminator': None,
                'default': '/ff/' } +path_prefix
-    * STRING { 'terminator': None } pathname
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None } pathname
+    * USTRING { 'terminator': None,
                'default': '|2\x0A' } +eor
 PACKET WRingtoneIndexFile:
     * LIST { 'elementclass': WRingtoneIndexEntry } +items
 
 PACKET RRingtoneIndexEntry:
-    * STRING { 'terminator': 0x7C } pathname
-    * STRING { 'terminator': 0x0A } misc
+    * USTRING { 'terminator': 0x7C } pathname
+    * USTRING { 'terminator': 0x0A } misc
 PACKET RRingtoneIndexFile:
     * LIST { 'elementclass': RRingtoneIndexEntry } +items
 
 PACKET WSoundsIndexEntry:
-    P STRING name
-    * STRING { 'terminator': None,
+    P USTRING name
+    * USTRING { 'terminator': None,
                'default': '/ff/' } +path_prefix
-    * STRING { 'terminator': None } pathname
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None } pathname
+    * USTRING { 'terminator': None,
                'default': '|0|7\x0A' } +eor
 PACKET WSoundsIndexFile:
     * LIST { 'elementclass': WSoundsIndexEntry } +items
 PACKET RSoundIndexEntry:
-    * STRING { 'terminator': 0x7C } pathname
-    * STRING { 'terminator': 0x0A } misc
+    * USTRING { 'terminator': 0x7C } pathname
+    * USTRING { 'terminator': 0x0A } misc
 PACKET RSoundsIndexFile:
     * LIST { 'elementclass': RSoundIndexEntry } +items
 
 PACKET WPictureIndexEntry:
-    * STRING { 'terminator': None } name
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None } name
+    * USTRING { 'terminator': None,
                'default': '|/ff/' } +path_prefix
-    * STRING { 'terminator': None } pathname
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None } pathname
+    * USTRING { 'terminator': None,
                'default': '|0|0|3|>\x0A\xF4' } +eor
 PACKET WPictureIndexFile:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': '0|/ff/brew/16452/mp/Default Album|\x0A\x0A\xF4' } +header
     * LIST { 'elementclass': WPictureIndexEntry } +items
 PACKET RPictureIndexEntry:
-    * STRING { 'terminator': 0x7C } name
-    * STRING { 'terminator': 0x7C } pathname
-    * STRING { 'terminator': 0xF4,
+    * USTRING { 'terminator': 0x7C } name
+    * USTRING { 'terminator': 0x7C } pathname
+    * USTRING { 'terminator': 0xF4,
                'raiseonunterminatedread': False } misc
 PACKET RPictureIndexFile:
     * LIST { 'elementclass': RPictureIndexEntry } +items
@@ -155,7 +155,7 @@ PACKET GroupEntry:
     1 UINT index
     4 UNKNOWN dunno1
     4 DateTime datetime
-    68 STRING { 'terminator': 0 } name
+    68 USTRING { 'terminator': 0 } name
     2 UINT numofmembers
     if self.numofmembers:
         * LIST { 'length': self.numofmembers } members:
@@ -188,7 +188,7 @@ PACKET CalIndexFile:
 
 PACKET CalEntry:
     2 UINT titlelen
-    * STRING { 'sizeinbytes': self.titlelen,
+    * USTRING { 'sizeinbytes': self.titlelen,
                'terminator': None } title
     4 DateTime start
     4 UNKNOWN { 'pad': 0 } +zero1
@@ -209,13 +209,13 @@ PACKET CalEntry:
     4 DateTime modifiedtime
     4 UNKNOWN { 'pad': 0 } +zero6
     2 UINT ringtonelen
-    * STRING { 'sizeinbytes': self.ringtonelen,
+    * USTRING { 'sizeinbytes': self.ringtonelen,
                'terminator': None } ringtone
     2 UNKNOWN { 'pad': 0 } +zero7
 
 PACKET NotePadEntry:
     2 UINT textlen
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'sizeinbytes': self.textlen } text
     4 DateTime creation
     4 UNKNOWN { 'pad': 0 } +zero1
@@ -299,26 +299,26 @@ PACKET JournalFile:
     * LIST { 'elementclass': JournalRec } +items
 
 PACKET NumberEntry:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'pascal': True } number
     1 UINT option
     if self.option & PB_FLG_SPEEDDIAL:
         2 UINT speeddial
     if self.option & PB_FLG_RINGTONE:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
                    'pascal': True } ringtone
 
 PACKET PBEntry:
     2 UINT info
     2 UINT { 'default': 0 } +zero1
     if self.info & PB_FLG_NAME:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
                    'pascal': True } name
     if self.info & PB_FLG_EMAIL:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
                    'pascal': True } email
     if self.info & PB_FLG_EMAIL2:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
                    'pascal': True } email2
     if self.info & PB_FLG_HOME:
         * NumberEntry home
@@ -335,7 +335,7 @@ PACKET PBEntry:
     if self.info & PB_FLG_GROUP:
         1 UINT group
     if self.info & PB_FLG_WP:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
                    'pascal': True } wallpaper
         4 UINT wallpaper_range
 
@@ -365,12 +365,12 @@ PACKET ss_sw_req:
     * ss_cmd_hdr { 'command': SS_CMD_SW_VERSION } +hdr
 PACKET ss_sw_resp:
     * ss_cmd_hdr hdr
-    * STRING { 'terminator': 0 } sw_version
+    * USTRING { 'terminator': 0 } sw_version
 PACKET ss_hw_req:
     * ss_cmd_hdr { 'command': SS_CMD_HW_VERSION } +hdr
 PACKET ss_hw_resp:
     * ss_cmd_hdr hdr
-    * STRING { 'terminator': 0 } hw_version
+    * USTRING { 'terminator': 0 } hw_version
 
 PACKET ss_pb_count_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_COUNT } +hdr
@@ -394,11 +394,11 @@ PACKET ss_pb_voicemail_read_req:
 PACKET ss_pb_voicemail_resp:
     * ss_cmd_hdr hdr
     1 UINT param
-    * STRING { 'terminator': 0 } number
+    * USTRING { 'terminator': 0 } number
 PACKET ss_pb_voicemail_write_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_VOICEMAIL_WRITE } +hdr
     1 UINT { 'constant': SS_CMD_PB_VOICEMAIL_PARAM } +param
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': PB_DEFAULT_VOICEMAIL_NUMBER } +number
 PACKET ss_pb_clear_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_CLEAR } +hdr
@@ -407,31 +407,31 @@ PACKET ss_pb_clear_resp:
     2 UINT flg
 
 PACKET ss_number_entry:
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': '',
                'maxsizeinbytes': PB_MAX_NUMBER_LEN,
                'raiseontruncate': False } +number
     2 UINT { 'default': 0 } +speeddial
     1 UINT { 'default': 0 } +primary
-    8 STRING { 'pad': 0,
+    8 USTRING { 'pad': 0,
                'default': '' } +zero
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': '' } +ringtone
 
 PACKET ss_pb_entry:
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'maxsizeinbytes': PB_MAX_NAME_LEN,
                'raiseontruncate': False } name
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': '',
                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
                'raiseontruncate': False } +email
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': '',
                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
                'raiseontruncate': False } +email2
     4 UINT { 'default': 0 } +zero1
-    * STRING { 'terminator': 0,
+    * USTRING { 'terminator': 0,
                'default': '' } +wallpaper
     1 UINT { 'default': 0 } +zero2
     * ss_number_entry +home
@@ -472,7 +472,7 @@ PACKET cl_index_file:
 
 PACKET cl_file:
     1 UINT cl_type
-    51 STRING { 'terminator': 0 } number
+    51 USTRING { 'terminator': 0 } number
     4 DateTime1 datetime
     4 UNKNOWN dunno1
     4 UINT duration

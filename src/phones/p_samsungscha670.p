@@ -33,9 +33,9 @@ PACKET ringtone:
     1  UINT c1
     1  UINT assignment
     1  UINT c2
-    17 STRING { 'raiseonunterminatedread': False } name
+    17 USTRING { 'raiseonunterminatedread': False } name
     1  UINT name_len
-    51 STRING { 'raiseonunterminatedread': False } file_name
+    51 USTRING { 'raiseonunterminatedread': False } file_name
     1  UINT file_name_len
     2  UINT c3
 
@@ -47,9 +47,9 @@ PACKET image:
     1  UINT index
     1  UINT c1
     1  UINT assignment
-    17 STRING { 'raiseonunterminatedread': False } name
+    17 USTRING { 'raiseonunterminatedread': False } name
     1  UINT name_len
-    51 STRING { 'raiseonunterminatedread': False } file_name
+    51 USTRING { 'raiseonunterminatedread': False } file_name
     1  UINT file_name_len
     2  UINT c2
 

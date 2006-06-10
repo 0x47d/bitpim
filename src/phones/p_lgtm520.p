@@ -40,7 +40,7 @@ PACKET pbappendentryrequest:
 # All STRINGS have raiseonterminatedread as False since the phone does
 # occassionally leave out the terminator byte
 PACKET numentry:
-    33 STRING {'raiseonunterminatedread': False} number
+    33 USTRING {'raiseonunterminatedread': False} number
     1  UINT chksum
 
 PACKET pbentry:
@@ -51,17 +51,17 @@ PACKET pbentry:
     2  UINT {'constant': 0xf5} +entrysize
     4  UINT serial2     "Same as serial1"
     1  UINT entrynumber
-    17 STRING {'raiseonunterminatedread': False} name
+    17 USTRING {'raiseonunterminatedread': False} name
     1  BOOL secret
     1  UINT default	"Default number"
     * LIST {'length': self.numberofphonenumbers, 'elementclass': numentry, 'createdefault': True} +numbers
     1  UINT ringtone	"ringtone index for a call, 0x17 for custom"
     1  BOOL voicetag
-    49 STRING {'raiseonunterminatedread': False} +email
+    49 USTRING {'raiseonunterminatedread': False} +email
 
 PACKET ringentry:
     1  UINT index	"Phonebook entry number"
-    40 STRING {'raiseonunterminatedread': False} name	"Path of custom ringer, or default"
+    40 USTRING {'raiseonunterminatedread': False} name	"Path of custom ringer, or default"
 
 PACKET ringindex:
     P UINT {'constant': 199} maxitems
@@ -73,7 +73,7 @@ PACKET scheduleevent:
     1 UINT alarm	"00 => created, 80 => modified/never been used, B0 => alarm"
     4 UINT date
     1 UINT repeat	"01 => used, 02 => daily"
-    32 STRING {'raiseonunterminatedread': False} description
+    32 USTRING {'raiseonunterminatedread': False} description
  
 
 # Maximum of 50 entries, first one is the wake-up alarm

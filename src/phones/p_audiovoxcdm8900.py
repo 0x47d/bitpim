@@ -819,13 +819,13 @@ class pbentry(BaseProtogenClass):
         self.__field_pager.readfrombuffer(buf)
         self.__field_fax=COUNTEDBUFFEREDSTRING(**{'sizeinbytes': 33})
         self.__field_fax.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17})
+        self.__field_name=USTRING(**{'sizeinbytes': 17})
         self.__field_name.readfrombuffer(buf)
-        self.__field_email=STRING(**{'sizeinbytes': 49})
+        self.__field_email=USTRING(**{'sizeinbytes': 49})
         self.__field_email.readfrombuffer(buf)
-        self.__field_wireless=STRING(**{'sizeinbytes': 49})
+        self.__field_wireless=USTRING(**{'sizeinbytes': 49})
         self.__field_wireless.readfrombuffer(buf)
-        self.__field_memo=STRING(**{'sizeinbytes': 49})
+        self.__field_memo=USTRING(**{'sizeinbytes': 49})
         self.__field_memo.readfrombuffer(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 2})
         self.__field_ringtone.readfrombuffer(buf)
@@ -957,10 +957,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17})
 
     def __delfield_name(self): del self.__field_name
 
@@ -970,10 +970,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 49})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 49})
 
     def __delfield_email(self): del self.__field_email
 
@@ -983,10 +983,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_wireless.getvalue()
 
     def __setfield_wireless(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_wireless=value
         else:
-            self.__field_wireless=STRING(value,**{'sizeinbytes': 49})
+            self.__field_wireless=USTRING(value,**{'sizeinbytes': 49})
 
     def __delfield_wireless(self): del self.__field_wireless
 
@@ -996,10 +996,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=STRING(value,**{'sizeinbytes': 49})
+            self.__field_memo=USTRING(value,**{'sizeinbytes': 49})
 
     def __delfield_memo(self): del self.__field_memo
 
@@ -1215,7 +1215,7 @@ class readgroupentryresponse(BaseProtogenClass):
         self.__field_anothergroupnum.readfrombuffer(buf)
         self.__field_dunno=UINT(**{'sizeinbytes': 2})
         self.__field_dunno.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17})
+        self.__field_name=USTRING(**{'sizeinbytes': 17})
         self.__field_name.readfrombuffer(buf)
         self.__field_nummembers=UINT(**{'sizeinbytes': 2})
         self.__field_nummembers.readfrombuffer(buf)
@@ -1278,10 +1278,10 @@ class readgroupentryresponse(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1375,7 +1375,7 @@ class writegroupentryrequest(BaseProtogenClass):
         self.__field_anothernumber.readfrombuffer(buf)
         self.__field_dunno=UINT(**{'sizeinbytes': 2, 'constant': 0xffff})
         self.__field_dunno.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17})
+        self.__field_name=USTRING(**{'sizeinbytes': 17})
         self.__field_name.readfrombuffer(buf)
         self.__field_nummembers=UINT(**{'sizeinbytes': 2})
         self.__field_nummembers.readfrombuffer(buf)
@@ -1444,10 +1444,10 @@ class writegroupentryrequest(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1959,7 +1959,7 @@ class readlockcoderesponse(BaseProtogenClass):
         self.__field_cmd2.readfrombuffer(buf)
         self.__field_cmd3=UINT(**{'sizeinbytes': 1, 'constant': 0x00})
         self.__field_cmd3.readfrombuffer(buf)
-        self.__field_lockcode=STRING()
+        self.__field_lockcode=USTRING()
         self.__field_lockcode.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2007,10 +2007,10 @@ class readlockcoderesponse(BaseProtogenClass):
         return self.__field_lockcode.getvalue()
 
     def __setfield_lockcode(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_lockcode=value
         else:
-            self.__field_lockcode=STRING(value,)
+            self.__field_lockcode=USTRING(value,)
 
     def __delfield_lockcode(self): del self.__field_lockcode
 

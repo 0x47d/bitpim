@@ -73,26 +73,26 @@ PACKET pbentry:
     2  UINT {'constant': 0x0202} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
-    23 STRING {'raiseonunterminatedread': False} name
+    23 USTRING {'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': NUMEMAILS} +emails:
-        49 STRING {'raiseonunterminatedread': False} email
-    49 STRING {'raiseonunterminatedread': False} url
+        49 USTRING {'raiseonunterminatedread': False} email
+    49 USTRING {'raiseonunterminatedread': False} url
     1  UINT ringtone                                     "ringtone index for a call"
     1  UINT msgringtone                                  "ringtone index for a text message"
     1  BOOL secret
-    * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    * USTRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 PACKET pbgroup:
     "A single group"
     1 UINT icon
-    23 STRING name
+    23 USTRING name
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -100,7 +100,7 @@ PACKET pbgroups:
 
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    40 STRING {'default': ""} +name
+    40 USTRING {'default': ""} +name
 
 
 PACKET indexfile:
@@ -148,7 +148,7 @@ PACKET scheduleevent:
     1 UINT alarmtype
     1 UINT { 'default': 0 } +snoozedelay
     1 UINT ringtone
-    39 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    39 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } description
 
 
 PACKET schedulefile:
@@ -161,8 +161,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     6 UNKNOWN unknown
 
@@ -217,7 +217,7 @@ PACKET recipient_record:
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
     12 UNKNOWN unknown
-    49 STRING number
+    49 USTRING number
 
 PACKET sms_saved:
     4 UINT outboxmsg
@@ -231,12 +231,12 @@ PACKET sms_out:
     4 UINT index # starting from 1, unique
     1 UINT locked # 1=locked
     4 LGCALDATE timesent # time the message was sent
-    21 STRING subject
+    21 USTRING subject
     1 UINT num_msg_elements # up to 10
     * LIST {'elementclass': msg_record, 'length': 1} +messages
     39 UNKNOWN unknown
     1 UINT priority # 0=normal, 1=high
-    49 STRING callback 
+    49 USTRING callback 
     * LIST {'elementclass': recipient_record,'length': 9 } +recipients 
 
 PACKET SMSINBOXMSGFRAGMENT:
@@ -251,7 +251,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    34 STRING callback
+    34 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -265,7 +265,7 @@ PACKET sms_in:
     2 UINT unknown8 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
     5 DATA flags # message flags, read, priority, locked etc
-    21 STRING subject
+    21 USTRING subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     2 UINT unknown6 # zeros
@@ -283,19 +283,19 @@ PACKET sms_in:
                 # text alway follows the header although the format it different
                 # than a simple SMS
     44 DATA unknown5
-    33 STRING senders_name
+    33 USTRING senders_name
     * DATA unknown6   # ?? inlcudes senders phone number in ascii
 
 PACKET sms_quick_text:
 # the vx4400 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
-        * STRING {} msg #
+        * USTRING {} msg #
 ###
 ### Text Memos
 ###
 PACKET textmemo:
-    151 STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    151 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } text
 
 PACKET textmemofile:
     4 UINT itemcount

@@ -268,7 +268,7 @@ class pbsortbuffer(BaseProtogenClass):
         if getattr(self, '__field_bufsize', None) is None:
             self.__field_bufsize=UINT(**{'constant': 7168})
         if getattr(self, '__field_comment', None) is None:
-            self.__field_comment=STRING(**{'default': "sort buffer"})
+            self.__field_comment=USTRING(**{'default': "sort buffer"})
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -339,7 +339,7 @@ class pbsortbuffer(BaseProtogenClass):
         self.__field_firsttypes.readfrombuffer(buf)
         self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo4930_65, 'length': _NUMPBSLOTS})
         self.__field_sortorder.readfrombuffer(buf)
-        self.__field_pbfirstletters=STRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+        self.__field_pbfirstletters=USTRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
         self.__field_pbfirstletters.readfrombuffer(buf)
         self.__field_sortorder2=LIST(**{'elementclass': _gen_p_sanyo4930_68, 'length': _NUMPBSLOTS})
         self.__field_sortorder2.readfrombuffer(buf)
@@ -349,11 +349,11 @@ class pbsortbuffer(BaseProtogenClass):
         self.__field_longnumbersindex.readfrombuffer(buf)
         self.__field_emails=LIST(**{'elementclass': _gen_p_sanyo4930_74, 'length': _NUMPBSLOTS})
         self.__field_emails.readfrombuffer(buf)
-        self.__field_emailfirstletters=STRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+        self.__field_emailfirstletters=USTRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
         self.__field_emailfirstletters.readfrombuffer(buf)
         self.__field_urls=LIST(**{'elementclass': _gen_p_sanyo4930_77, 'length': _NUMPBSLOTS})
         self.__field_urls.readfrombuffer(buf)
-        self.__field_urlfirstletters=STRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+        self.__field_urlfirstletters=USTRING(**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
         self.__field_urlfirstletters.readfrombuffer(buf)
         self.__field_pad=UNKNOWN()
         self.__field_pad.readfrombuffer(buf)
@@ -389,14 +389,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_comment(self):
         try: self.__field_comment
         except:
-            self.__field_comment=STRING(**{'default': "sort buffer"})
+            self.__field_comment=USTRING(**{'default': "sort buffer"})
         return self.__field_comment.getvalue()
 
     def __setfield_comment(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_comment=value
         else:
-            self.__field_comment=STRING(value,**{'default': "sort buffer"})
+            self.__field_comment=USTRING(value,**{'default': "sort buffer"})
 
     def __delfield_comment(self): del self.__field_comment
 
@@ -506,10 +506,10 @@ class pbsortbuffer(BaseProtogenClass):
         return self.__field_pbfirstletters.getvalue()
 
     def __setfield_pbfirstletters(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_pbfirstletters=value
         else:
-            self.__field_pbfirstletters=STRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+            self.__field_pbfirstletters=USTRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
 
     def __delfield_pbfirstletters(self): del self.__field_pbfirstletters
 
@@ -583,10 +583,10 @@ class pbsortbuffer(BaseProtogenClass):
         return self.__field_emailfirstletters.getvalue()
 
     def __setfield_emailfirstletters(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_emailfirstletters=value
         else:
-            self.__field_emailfirstletters=STRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+            self.__field_emailfirstletters=USTRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
 
     def __delfield_emailfirstletters(self): del self.__field_emailfirstletters
 
@@ -612,10 +612,10 @@ class pbsortbuffer(BaseProtogenClass):
         return self.__field_urlfirstletters.getvalue()
 
     def __setfield_urlfirstletters(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_urlfirstletters=value
         else:
-            self.__field_urlfirstletters=STRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
+            self.__field_urlfirstletters=USTRING(value,**{'terminator': None, 'sizeinbytes': _NUMPBSLOTS})
 
     def __delfield_urlfirstletters(self): del self.__field_urlfirstletters
 
@@ -1292,7 +1292,7 @@ class calleridbuffer(BaseProtogenClass):
         if getattr(self, '__field_bufsize', None) is None:
             self.__field_bufsize=UINT(**{'constant': 9216})
         if getattr(self, '__field_comment', None) is None:
-            self.__field_comment=STRING(**{'default': "callerid"})
+            self.__field_comment=USTRING(**{'default': "callerid"})
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -1366,14 +1366,14 @@ class calleridbuffer(BaseProtogenClass):
     def __getfield_comment(self):
         try: self.__field_comment
         except:
-            self.__field_comment=STRING(**{'default': "callerid"})
+            self.__field_comment=USTRING(**{'default': "callerid"})
         return self.__field_comment.getvalue()
 
     def __setfield_comment(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_comment=value
         else:
-            self.__field_comment=STRING(value,**{'default': "callerid"})
+            self.__field_comment=USTRING(value,**{'default': "callerid"})
 
     def __delfield_comment(self): del self.__field_comment
 
@@ -1847,7 +1847,7 @@ class evententry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_slot=UINT(**{'sizeinbytes': 1})
         self.__field_slot.readfrombuffer(buf)
-        self.__field_eventname=STRING(**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+        self.__field_eventname=USTRING(**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         self.__field_eventname.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 7})
         self.__field_pad1.readfrombuffer(buf)
@@ -1857,7 +1857,7 @@ class evententry(BaseProtogenClass):
         self.__field_start.readfrombuffer(buf)
         self.__field_end=UINT(**{'sizeinbytes': 4})
         self.__field_end.readfrombuffer(buf)
-        self.__field_location=STRING(**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+        self.__field_location=USTRING(**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         self.__field_location.readfrombuffer(buf)
         self.__field_pad2=UNKNOWN(**{'sizeinbytes': 7})
         self.__field_pad2.readfrombuffer(buf)
@@ -1899,10 +1899,10 @@ class evententry(BaseProtogenClass):
         return self.__field_eventname.getvalue()
 
     def __setfield_eventname(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_eventname=value
         else:
-            self.__field_eventname=STRING(value,**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_eventname=USTRING(value,**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
 
     def __delfield_eventname(self): del self.__field_eventname
 
@@ -1967,10 +1967,10 @@ class evententry(BaseProtogenClass):
         return self.__field_location.getvalue()
 
     def __setfield_location(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_location=value
         else:
-            self.__field_location=STRING(value,**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_location=USTRING(value,**{'sizeinbytes': 14, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
 
     def __delfield_location(self): del self.__field_location
 
@@ -3269,7 +3269,7 @@ class callalarmentry(BaseProtogenClass):
         self.__field_slot.readfrombuffer(buf)
         self.__field_pad0=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_pad0.readfrombuffer(buf)
-        self.__field_phonenum=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+        self.__field_phonenum=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         self.__field_phonenum.readfrombuffer(buf)
         self.__field_phonenum_len=UINT(**{'sizeinbytes': 1})
         self.__field_phonenum_len.readfrombuffer(buf)
@@ -3281,7 +3281,7 @@ class callalarmentry(BaseProtogenClass):
         self.__field_dom.readfrombuffer(buf)
         self.__field_datedup=UINT(**{'sizeinbytes': 4})
         self.__field_datedup.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+        self.__field_name=USTRING(**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         self.__field_name.readfrombuffer(buf)
         self.__field_pad1=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_pad1.readfrombuffer(buf)
@@ -3339,10 +3339,10 @@ class callalarmentry(BaseProtogenClass):
         return self.__field_phonenum.getvalue()
 
     def __setfield_phonenum(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_phonenum=value
         else:
-            self.__field_phonenum=STRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_phonenum=USTRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
 
     def __delfield_phonenum(self): del self.__field_phonenum
 
@@ -3417,10 +3417,10 @@ class callalarmentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
 
     def __delfield_name(self): del self.__field_name
 

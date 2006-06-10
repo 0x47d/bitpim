@@ -110,19 +110,19 @@ PACKET pbentry:
     2 UINT {'constant': 0x01E0} +entrysize
     4 UINT serial2
     2 UINT entrynumber 
-    23 STRING {'raiseonunterminatedread': False} name
+    23 USTRING {'raiseonunterminatedread': False} name
     2 UINT group
     * LIST {'length': NUMEMAILS} +emails:
-        73 STRING {'raiseonunterminatedread': False} email
-    73 STRING {'raiseonunterminatedread': False} url
+        73 USTRING {'raiseonunterminatedread': False} email
+    73 USTRING {'raiseonunterminatedread': False} url
     1 UINT ringtone                                     "ringtone index for a call"
     1 UINT secret
-    * STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    * USTRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     1 UINT {'default': 0} +dunno1
     2 UINT {'default': 0} +dunno2
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        49 STRING {'raiseonunterminatedread': False} number
+        49 USTRING {'raiseonunterminatedread': False} number
 
     

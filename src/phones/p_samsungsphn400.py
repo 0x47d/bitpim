@@ -291,15 +291,15 @@ class firmwareresponse(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_command=UINT(**{'sizeinbytes': 1})
         self.__field_command.readfrombuffer(buf)
-        self.__field_date1=STRING(**{'sizeinbytes': 11, 'terminator': None})
+        self.__field_date1=USTRING(**{'sizeinbytes': 11, 'terminator': None})
         self.__field_date1.readfrombuffer(buf)
-        self.__field_time1=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_time1=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_time1.readfrombuffer(buf)
-        self.__field_date2=STRING(**{'sizeinbytes': 11, 'terminator': None})
+        self.__field_date2=USTRING(**{'sizeinbytes': 11, 'terminator': None})
         self.__field_date2.readfrombuffer(buf)
-        self.__field_time2=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_time2=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_time2.readfrombuffer(buf)
-        self.__field_string1=STRING(**{'sizeinbytes': 8, 'terminator': None})
+        self.__field_string1=USTRING(**{'sizeinbytes': 8, 'terminator': None})
         self.__field_string1.readfrombuffer(buf)
         self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 8})
         self.__field_dunno1.readfrombuffer(buf)
@@ -323,10 +323,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_date1.getvalue()
 
     def __setfield_date1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_date1=value
         else:
-            self.__field_date1=STRING(value,**{'sizeinbytes': 11, 'terminator': None})
+            self.__field_date1=USTRING(value,**{'sizeinbytes': 11, 'terminator': None})
 
     def __delfield_date1(self): del self.__field_date1
 
@@ -336,10 +336,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_time1.getvalue()
 
     def __setfield_time1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_time1=value
         else:
-            self.__field_time1=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_time1=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_time1(self): del self.__field_time1
 
@@ -349,10 +349,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_date2.getvalue()
 
     def __setfield_date2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_date2=value
         else:
-            self.__field_date2=STRING(value,**{'sizeinbytes': 11, 'terminator': None})
+            self.__field_date2=USTRING(value,**{'sizeinbytes': 11, 'terminator': None})
 
     def __delfield_date2(self): del self.__field_date2
 
@@ -362,10 +362,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_time2.getvalue()
 
     def __setfield_time2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_time2=value
         else:
-            self.__field_time2=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_time2=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_time2(self): del self.__field_time2
 
@@ -375,10 +375,10 @@ class firmwareresponse(BaseProtogenClass):
         return self.__field_string1.getvalue()
 
     def __setfield_string1(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_string1=value
         else:
-            self.__field_string1=STRING(value,**{'sizeinbytes': 8, 'terminator': None})
+            self.__field_string1=USTRING(value,**{'sizeinbytes': 8, 'terminator': None})
 
     def __delfield_string1(self): del self.__field_string1
 
@@ -852,7 +852,7 @@ class phonebookname(BaseProtogenClass):
         self.__field_purl.readfrombuffer(buf)
         self.__field_dunno2=UINT(**{'sizeinbytes': 2})
         self.__field_dunno2.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 12})
+        self.__field_name=USTRING(**{'sizeinbytes': 12})
         self.__field_name.readfrombuffer(buf)
         self.__field_pad2=UNKNOWN(**{'sizeinbytes': 3})
         self.__field_pad2.readfrombuffer(buf)
@@ -958,10 +958,10 @@ class phonebookname(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 12})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 12})
 
     def __delfield_name(self): del self.__field_name
 
@@ -1382,7 +1382,7 @@ class phonebooknumbers(BaseProtogenClass):
         self.__field_pad.readfrombuffer(buf)
         self.__field_number_len=UINT(**{'sizeinbytes': 1})
         self.__field_number_len.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
+        self.__field_number=USTRING(**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1417,10 +1417,10 @@ class phonebooknumbers(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
 
     def __delfield_number(self): del self.__field_number
 

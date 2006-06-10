@@ -967,9 +967,9 @@ class filepbentry(BaseProtogenClass):
         self.__field_dunno21.readfrombuffer(buf)
         self.__field_name_len=UINT(**{'sizeinbytes': 1})
         self.__field_name_len.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 21, 'raiseonunterminatedread': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 21, 'raiseonunterminatedread': False })
         self.__field_name.readfrombuffer(buf)
-        self.__field_birthday=STRING(**{'sizeinbytes': 11})
+        self.__field_birthday=USTRING(**{'sizeinbytes': 11})
         self.__field_birthday.readfrombuffer(buf)
         self.__field_group_num=UINT(**{'sizeinbytes': 1})
         self.__field_group_num.readfrombuffer(buf)
@@ -1279,10 +1279,10 @@ class filepbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 21, 'raiseonunterminatedread': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 21, 'raiseonunterminatedread': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1292,10 +1292,10 @@ class filepbentry(BaseProtogenClass):
         return self.__field_birthday.getvalue()
 
     def __setfield_birthday(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_birthday=value
         else:
-            self.__field_birthday=STRING(value,**{'sizeinbytes': 11})
+            self.__field_birthday=USTRING(value,**{'sizeinbytes': 11})
 
     def __delfield_birthday(self): del self.__field_birthday
 

@@ -381,7 +381,7 @@ class pbentry(BaseProtogenClass):
         self.__field_unused_index.readfrombuffer(buf)
         self.__field_email_index=UINT(**{'sizeinbytes': 2})
         self.__field_email_index.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 22, 'raiseonunterminatedread': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 22, 'raiseonunterminatedread': False })
         self.__field_name.readfrombuffer(buf)
         self.__field_c4=UINT(**{'sizeinbytes': 1})
         self.__field_c4.readfrombuffer(buf)
@@ -554,10 +554,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 22, 'raiseonunterminatedread': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 22, 'raiseonunterminatedread': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -848,7 +848,7 @@ class number(BaseProtogenClass):
         self.__field_type.readfrombuffer(buf)
         self.__field_length=UINT(**{'sizeinbytes': 1})
         self.__field_length.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 49,  'raiseonunterminatedread': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 49,  'raiseonunterminatedread': False })
         self.__field_name.readfrombuffer(buf)
         self.__field_pb_index=UINT(**{'sizeinbytes': 2})
         self.__field_pb_index.readfrombuffer(buf)
@@ -898,10 +898,10 @@ class number(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 49,  'raiseonunterminatedread': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 49,  'raiseonunterminatedread': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1073,11 +1073,11 @@ class ringtone(BaseProtogenClass):
         self.__field_assignment.readfrombuffer(buf)
         self.__field_c2=UINT(**{'sizeinbytes': 1})
         self.__field_c2.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
         self.__field_name.readfrombuffer(buf)
         self.__field_name_len=UINT(**{'sizeinbytes': 1})
         self.__field_name_len.readfrombuffer(buf)
-        self.__field_file_name=STRING(**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
+        self.__field_file_name=USTRING(**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
         self.__field_file_name.readfrombuffer(buf)
         self.__field_file_name_len=UINT(**{'sizeinbytes': 1})
         self.__field_file_name_len.readfrombuffer(buf)
@@ -1155,10 +1155,10 @@ class ringtone(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1181,10 +1181,10 @@ class ringtone(BaseProtogenClass):
         return self.__field_file_name.getvalue()
 
     def __setfield_file_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_file_name=value
         else:
-            self.__field_file_name=STRING(value,**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
+            self.__field_file_name=USTRING(value,**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
 
     def __delfield_file_name(self): del self.__field_file_name
 
@@ -1365,11 +1365,11 @@ class image(BaseProtogenClass):
         self.__field_c1.readfrombuffer(buf)
         self.__field_assignment=UINT(**{'sizeinbytes': 1})
         self.__field_assignment.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
         self.__field_name.readfrombuffer(buf)
         self.__field_name_len=UINT(**{'sizeinbytes': 1})
         self.__field_name_len.readfrombuffer(buf)
-        self.__field_file_name=STRING(**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
+        self.__field_file_name=USTRING(**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
         self.__field_file_name.readfrombuffer(buf)
         self.__field_file_name_len=UINT(**{'sizeinbytes': 1})
         self.__field_file_name_len.readfrombuffer(buf)
@@ -1434,10 +1434,10 @@ class image(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17,  'raiseonunterminatedread': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1460,10 +1460,10 @@ class image(BaseProtogenClass):
         return self.__field_file_name.getvalue()
 
     def __setfield_file_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_file_name=value
         else:
-            self.__field_file_name=STRING(value,**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
+            self.__field_file_name=USTRING(value,**{'sizeinbytes': 46,  'raiseonunterminatedread': False })
 
     def __delfield_file_name(self): del self.__field_file_name
 

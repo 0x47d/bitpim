@@ -812,7 +812,7 @@ class sanyomediafilenameresponse(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_pad1=UINT(**{'sizeinbytes': 1})
         self.__field_pad1.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'sizeinbytes': 154})
+        self.__field_filename=USTRING(**{'sizeinbytes': 154})
         self.__field_filename.readfrombuffer(buf)
         self.__field_num1=UINT(**{'sizeinbytes': 1})
         self.__field_num1.readfrombuffer(buf)
@@ -863,10 +863,10 @@ class sanyomediafilenameresponse(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 154})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 154})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -1611,7 +1611,7 @@ class sanyosendfilename(BaseProtogenClass):
         self.__field_payloadsize.writetobuffer(buf)
         try: self.__field_filename
         except:
-            self.__field_filename=STRING(**{'sizeinbytes': 150, 'default': ""})
+            self.__field_filename=USTRING(**{'sizeinbytes': 150, 'default': ""})
         self.__field_filename.writetobuffer(buf)
         try: self.__field_pad
         except:
@@ -1629,7 +1629,7 @@ class sanyosendfilename(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_payloadsize=UINT(**{'sizeinbytes': 1, 'constant': 0x96})
         self.__field_payloadsize.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'sizeinbytes': 150, 'default': ""})
+        self.__field_filename=USTRING(**{'sizeinbytes': 150, 'default': ""})
         self.__field_filename.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 21})
         self.__field_pad.readfrombuffer(buf)
@@ -1671,14 +1671,14 @@ class sanyosendfilename(BaseProtogenClass):
     def __getfield_filename(self):
         try: self.__field_filename
         except:
-            self.__field_filename=STRING(**{'sizeinbytes': 150, 'default': ""})
+            self.__field_filename=USTRING(**{'sizeinbytes': 150, 'default': ""})
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 150, 'default': ""})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 150, 'default': ""})
 
     def __delfield_filename(self): del self.__field_filename
 

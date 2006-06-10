@@ -76,7 +76,7 @@ PACKET phonebookslotupdaterequest:
 
 PACKET phonenumber:
     1 UINT {'default': 0} +number_len
-    33 STRING {'default': ""} +number
+    33 USTRING {'default': ""} +number
 
 # Correct up to start of email.  Email, url field size
 # and secret location not verified yet
@@ -84,12 +84,12 @@ PACKET phonebookentry:
     2 UINT slot
     2 UINT slotdup
     1 UINT name_len
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     * LIST {'length': 7, 'createdefault': True, 'elementclass': phonenumber} +numbers
     1 UINT +email_len
-    97 STRING {'default': ""} +email
+    97 USTRING {'default': ""} +email
     1 UINT +url_len
-    97 STRING {'default': ""} +url
+    97 USTRING {'default': ""} +url
     1 UINT {'default': 1} +defaultnum
     1 BOOL +secret
 
@@ -108,12 +108,12 @@ PACKET eventrequest:
 PACKET evententry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT start "# seconds since Jan 1, 1980 approximately"
     4 UINT end
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
     1 UNKNOWN +pad3
@@ -145,13 +145,13 @@ PACKET callalarmentry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Scheduled, 2: Already Happened"
     1 UINT {'default': 0} +dunno1 "Related to Snooze?"
-    49 STRING {'raiseonunterminatedread': False} phonenum
+    49 USTRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT datedup "Copy of the date.  Always the same???"
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN +pad1
     1 UINT name_len
     1 UINT phonenumbertype "1: Home, 2: Work, ..." 
@@ -194,7 +194,7 @@ PACKET calleridbuffer:
     P UINT {'constant': 500} maxentries
     P UINT {'constant': 0x46} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 7168} bufsize
-    P STRING {'default': "callerid"} +comment
+    P USTRING {'default': "callerid"} +comment
     2 UINT numentries "Number phone numbers"
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     666 UNKNOWN +pad
@@ -207,7 +207,7 @@ PACKET ringerpicbuffer:
     P UINT {'constant': 0xd7} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 0x0f} packettype "Non standard packet type"
     P UINT {'constant': 1024} bufsize
-    P STRING {'default': "ringer/picture assignments"} +comment
+    P USTRING {'default': "ringer/picture assignments"} +comment
     * LIST {'length': _NUMPBSLOTS} +ringtones:
         1 UINT ringtone "ringtone index"
     * LIST {'length': _NUMPBSLOTS} +wallpapers:
@@ -230,7 +230,7 @@ PACKET pbsortbuffer:
     # payload from commands 0X 3c 0F through 0X 43 0F
     P UINT {'constant': 0x3c} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 4096} bufsize
-    P STRING {'default': "sort buffer"} +comment
+    P USTRING {'default': "sort buffer"} +comment
     * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     2 UINT slotsused
@@ -241,7 +241,7 @@ PACKET pbsortbuffer:
         1 UINT firsttype "First phone number type in each slot"
     * LIST {'length': _NUMPBSLOTS} +sortorder:
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
     * LIST {'length': _NUMPBSLOTS} +sortorder2: "Is this the same"
         2 UINT {'default': 0xffff} pbslot
     * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
@@ -250,10 +250,10 @@ PACKET pbsortbuffer:
         2 UINT {'default': 0xffff} pbslotandtype
     * LIST {'length': _NUMPBSLOTS} +emails: "Sorted list of slots with Email"
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} emailfirstletters "First letters in sort order"
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} emailfirstletters "First letters in sort order"
     * LIST {'length': _NUMPBSLOTS} +urls: "Sorted list of slots with a URL"
         2 UINT {'default': 0xffff} pbslot
-    * STRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
+    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} urlfirstletters "First letters in sort order"
     162 UNKNOWN +pad
 
 PACKET wallpaperbuffer:
@@ -262,7 +262,7 @@ PACKET wallpaperbuffer:
     P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
     P UINT {'constant': 0x69} startcommand "Starting command for R/W buf parts"
     P UINT {'constant': 2048} bufsize
-    P STRING {'default': "wallpaper assignment info"} +comment
+    P USTRING {'default': "wallpaper assignment info"} +comment
     * LIST {'length': _NUMPBSLOTS, 'elementclass': wallpaperinfo} +wallpapers
     548 UNKNOWN +pad
 
@@ -285,7 +285,7 @@ PACKET messageentry:
     1 UINT dunno5
     1 UNKNOWN pad3
     1 UINT message_len
-    255 STRING message "Text of the notification"
+    255 USTRING message "Text of the notification"
     1 UNKNOWN pad4
     1 UINT year
     1 UINT month
@@ -294,9 +294,9 @@ PACKET messageentry:
     1 UINT minute
     1 UINT second
     1 UINT callback_len
-    34 STRING callback
+    34 USTRING callback
     1 UINT phonenum_len
-    37 STRING phonenum
+    37 USTRING phonenum
     1 UINT dunno6
     1 UINT priority
     3 UNKNOWN pad6
@@ -319,9 +319,9 @@ PACKET foldernameentry:
     1 UINT autofile "If 1, autofile messages with keyword"
     1 UINT notify
     1 UINT icon
-    13 STRING {'raiseonunterminatedread': False} name "Name of the folder"
+    13 USTRING {'raiseonunterminatedread': False} name "Name of the folder"
     3 UNKNOWN +pad
-    14 STRING {'raiseonunterminatedread': False} keyword
+    14 USTRING {'raiseonunterminatedread': False} keyword
 
 PACKET foldernameresponse:
     * sanyoheader header
@@ -336,7 +336,7 @@ PACKET todorequest:
 PACKET todoentry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Used"
-    14 STRING {'raiseonunterminatedread': False} todo
+    14 USTRING {'raiseonunterminatedread': False} todo
     7 UNKNOWN +pad1
     1 UINT todo_len
     1 UINT priority "0: Normal, 1: Urgent, 2: Done"
@@ -375,8 +375,8 @@ PACKET historyentry:
     1 UNKNOWN dunno1
     4 GPSDATE date
     1 UINT phonenumlen
-    48 STRING {'raiseonunterminatedread': False} phonenum
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    48 USTRING {'raiseonunterminatedread': False} phonenum
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN dunno2
     1 UNKNOWN dunno3
 

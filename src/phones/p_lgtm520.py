@@ -326,7 +326,7 @@ class numentry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+        self.__field_number=USTRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
         self.__field_number.readfrombuffer(buf)
         self.__field_chksum=UINT(**{'sizeinbytes': 1})
         self.__field_chksum.readfrombuffer(buf)
@@ -337,10 +337,10 @@ class numentry(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
 
     def __delfield_number(self): del self.__field_number
 
@@ -425,7 +425,7 @@ class pbentry(BaseProtogenClass):
         self.__field_voicetag.writetobuffer(buf)
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         self.__field_email.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -443,7 +443,7 @@ class pbentry(BaseProtogenClass):
         self.__field_serial2.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 1})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 17, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 17, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self.__field_secret=BOOL(**{'sizeinbytes': 1})
         self.__field_secret.readfrombuffer(buf)
@@ -455,7 +455,7 @@ class pbentry(BaseProtogenClass):
         self.__field_ringtone.readfrombuffer(buf)
         self.__field_voicetag=BOOL(**{'sizeinbytes': 1})
         self.__field_voicetag.readfrombuffer(buf)
-        self.__field_email=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+        self.__field_email=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         self.__field_email.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -545,10 +545,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 17, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 17, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -625,14 +625,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_email(self):
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 49, 'raiseonunterminatedread': False})
 
     def __delfield_email(self): del self.__field_email
 
@@ -704,7 +704,7 @@ class ringentry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_index=UINT(**{'sizeinbytes': 1})
         self.__field_index.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 40, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 40, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -726,10 +726,10 @@ class ringentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 40, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 40, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -893,7 +893,7 @@ class scheduleevent(BaseProtogenClass):
         self.__field_date.readfrombuffer(buf)
         self.__field_repeat=UINT(**{'sizeinbytes': 1})
         self.__field_repeat.readfrombuffer(buf)
-        self.__field_description=STRING(**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
+        self.__field_description=USTRING(**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
         self.__field_description.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -967,10 +967,10 @@ class scheduleevent(BaseProtogenClass):
         return self.__field_description.getvalue()
 
     def __setfield_description(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_description=value
         else:
-            self.__field_description=STRING(value,**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
+            self.__field_description=USTRING(value,**{'sizeinbytes': 32, 'raiseonunterminatedread': False})
 
     def __delfield_description(self): del self.__field_description
 

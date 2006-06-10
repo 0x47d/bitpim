@@ -71,7 +71,7 @@ PACKET speeddials:
     
 PACKET indexentry:
     2 UINT {'default': 0xffff} +index
-    50 STRING {'default': ""} +name
+    50 USTRING {'default': ""} +name
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
@@ -83,7 +83,7 @@ PACKET indexfile:
 
 PACKET camindexentry:
     1 UINT {'default': 0} +index
-    11 STRING {'default': ""} +name
+    11 USTRING {'default': ""} +name
     4 LGCALDATE +taken
     4 UINT {'default': 0x00ff0100} +dunno
 
@@ -116,7 +116,7 @@ PACKET scheduleevent:
     1 UINT alarmtype    "preset alarm reminder type"
     1 UINT { 'default': 0 } +snoozedelay   "in minutes, not for this phone"
     1 UINT ringtone
-    39 STRING {'raiseontruncate': False,
+    39 USTRING {'raiseontruncate': False,
                'raiseonunterminatedread': False } description
 
 PACKET schedulefile:
@@ -129,8 +129,8 @@ PACKET call:
     4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
     4 UINT unknown1 # different for each call
     4 UINT duration #seconds, not certain about length of this field
-    49 STRING {'raiseonunterminatedread': False} number
-    36 STRING {'raiseonunterminatedread': False} name
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT unknown2 # set to 1 on some calls
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
@@ -184,7 +184,7 @@ PACKET msg_record:
 
 PACKET recipient_record:
     2 UINT unknown1
-    49 STRING number
+    49 USTRING number
     1 UINT status   # 1 when sent, 5 when received, 2 failed to send
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
@@ -199,12 +199,12 @@ PACKET sms_saved:
         * sms_in inbox
 
 PACKET sms_out:
-    P STRING { 'default': '' } callback
+    P USTRING { 'default': '' } callback
     4 UINT index # starting from 1, unique
     1 UINT locked # 1=locked
     3 UINT unknown1 # zero
     4 LGCALDATE timesent # time the message was sent
-    21 STRING subject
+    21 USTRING subject
     151 DATA unknown2
     1 UINT num_msg_elements # up to 10
     * LIST {'elementclass': msg_record, 'length': 10} +messages
@@ -225,7 +225,7 @@ PACKET sms_in:
     6 SMSDATE timesent
     3 UINT unknown
     1 UINT callback_length # 0 for no callback number
-    38 STRING callback
+    38 USTRING callback
     1 UINT sender_length
     * LIST {'length': 38} +sender:
         1 UINT byte "individual byte of senders phone number"
@@ -238,7 +238,7 @@ PACKET sms_in:
     2 UINT unknown8 # zero
     1 UINT priority # 1 if the message is high priority, 0 otherwise
     5 DATA flags # message flags, read, priority, locked etc
-    21 STRING subject
+    21 USTRING subject
     1 UINT bin_header1 # 0 in simple message 1 if the message contains a binary header
     1 UINT bin_header2 # 0 in simple message 9 if the message contains a binary header
     2 UINT unknown6 # zeros
@@ -255,12 +255,12 @@ PACKET sms_in:
                 # text alway follows the header although the format it different
                 # than a simple SMS
     437 DATA unknown5
-    33 STRING senders_name
+    33 USTRING senders_name
     169 DATA unknown6   # ?? inlcudes senders phone number in ascii
 
 PACKET sms_quick_text:
 # the vx4400 has variable length NULL terminated strings null terminated in it's canned messages
 # file sms/mediacan000.dat, not sure about the max
     * LIST {} +msgs:
-        * STRING {} msg #
+        * USTRING {} msg #
 

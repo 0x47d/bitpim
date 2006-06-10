@@ -82,10 +82,10 @@ PACKET pbentry:
     33 COUNTEDBUFFEREDSTRING pager
     33 COUNTEDBUFFEREDSTRING fax
     # these have space for the field and a null terminator
-    17 STRING name
-    49 STRING email
-    49 STRING wireless
-    49 STRING memo
+    17 USTRING name
+    49 USTRING email
+    49 USTRING wireless
+    49 USTRING memo
     2 UINT ringtone
     2 UINT msgringtone
     2 UINT wallpaper
@@ -99,7 +99,7 @@ PACKET readgroupentryresponse:
     1 UINT number
     1 UINT anothergroupnum
     2 UINT dunno "first member?"
-    17 STRING name  # always terminated
+    17 USTRING name  # always terminated
     2 UINT nummembers "how many members of the group"
 
 PACKET writegroupentryrequest:
@@ -107,7 +107,7 @@ PACKET writegroupentryrequest:
     1 UINT number
     1 UINT anothernumber  "same as number"
     2 UINT {'constant': 0xffff} +dunno "?first member of the group"
-    17 STRING name
+    17 USTRING name
     2 UINT nummembers
 
 PACKET writegroupentryresponse:
@@ -134,4 +134,4 @@ PACKET readlockcoderesponse:
     1 UINT {'constant': 0x26} cmd
     1 UINT {'constant': 0x52} cmd2
     1 UINT {'constant': 0x00} cmd3
-    * STRING lockcode
+    * USTRING lockcode

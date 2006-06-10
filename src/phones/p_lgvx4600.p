@@ -45,10 +45,10 @@ PACKET mediadesc:
     4 UINT {'default': 0x7824c97a} +magic2 "probably a date"
     4 UINT {'default': 0x7824c97a} +magic3 "probably a date"
     4 UINT {'constant': 0} +dunno2
-    32 STRING {'default': 'body'} filename
-    32 STRING {'default': 'identity'} +whoknows
-    32 STRING mimetype
-    32 STRING {'default': ""} +whoknows2
+    32 USTRING {'default': 'body'} filename
+    32 USTRING {'default': 'identity'} +whoknows
+    32 USTRING mimetype
+    32 USTRING {'default': ""} +whoknows2
 
 # All STRINGS have raiseonterminatedread as False since the phone does
 # occassionally leave out the terminator byte
@@ -60,19 +60,19 @@ PACKET pbentry:
     2  UINT {'constant': 0x0190} +entrysize
     4  UINT serial2
     2  UINT entrynumber 
-    23 STRING {'raiseonunterminatedread': False} name
+    23 USTRING {'raiseonunterminatedread': False} name
     2  UINT group
     *  LIST {'length': NUMEMAILS} +emails:
-        73 STRING {'raiseonunterminatedread': False} email
-    72 STRING {'raiseonunterminatedread': False} url
+        73 USTRING {'raiseonunterminatedread': False} email
+    72 USTRING {'raiseonunterminatedread': False} url
     2  UINT ringtone                                     "ringtone index for a call"
     1  BOOL secret
-    *  STRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
+    *  USTRING {'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH} memo
     2  UINT wallpaper
     * LIST {'length': NUMPHONENUMBERS} +numbertypes:
         1 UINT numbertype
     * LIST {'length': NUMPHONENUMBERS} +numbers:
-        33 STRING {'raiseonunterminatedread': False} number
+        33 USTRING {'raiseonunterminatedread': False} number
     * UNKNOWN +unknown20c
 
 PACKET pbreadentryresponse:

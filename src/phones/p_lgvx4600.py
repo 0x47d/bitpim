@@ -84,12 +84,12 @@ class mediadesc(BaseProtogenClass):
         self.__field_filename.writetobuffer(buf)
         try: self.__field_whoknows
         except:
-            self.__field_whoknows=STRING(**{'sizeinbytes': 32, 'default': 'identity'})
+            self.__field_whoknows=USTRING(**{'sizeinbytes': 32, 'default': 'identity'})
         self.__field_whoknows.writetobuffer(buf)
         self.__field_mimetype.writetobuffer(buf)
         try: self.__field_whoknows2
         except:
-            self.__field_whoknows2=STRING(**{'sizeinbytes': 32, 'default': ""})
+            self.__field_whoknows2=USTRING(**{'sizeinbytes': 32, 'default': ""})
         self.__field_whoknows2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -113,13 +113,13 @@ class mediadesc(BaseProtogenClass):
         self.__field_magic3.readfrombuffer(buf)
         self.__field_dunno2=UINT(**{'sizeinbytes': 4, 'constant': 0})
         self.__field_dunno2.readfrombuffer(buf)
-        self.__field_filename=STRING(**{'sizeinbytes': 32, 'default': 'body'})
+        self.__field_filename=USTRING(**{'sizeinbytes': 32, 'default': 'body'})
         self.__field_filename.readfrombuffer(buf)
-        self.__field_whoknows=STRING(**{'sizeinbytes': 32, 'default': 'identity'})
+        self.__field_whoknows=USTRING(**{'sizeinbytes': 32, 'default': 'identity'})
         self.__field_whoknows.readfrombuffer(buf)
-        self.__field_mimetype=STRING(**{'sizeinbytes': 32})
+        self.__field_mimetype=USTRING(**{'sizeinbytes': 32})
         self.__field_mimetype.readfrombuffer(buf)
-        self.__field_whoknows2=STRING(**{'sizeinbytes': 32, 'default': ""})
+        self.__field_whoknows2=USTRING(**{'sizeinbytes': 32, 'default': ""})
         self.__field_whoknows2.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -234,10 +234,10 @@ class mediadesc(BaseProtogenClass):
         return self.__field_filename.getvalue()
 
     def __setfield_filename(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=STRING(value,**{'sizeinbytes': 32, 'default': 'body'})
+            self.__field_filename=USTRING(value,**{'sizeinbytes': 32, 'default': 'body'})
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -246,14 +246,14 @@ class mediadesc(BaseProtogenClass):
     def __getfield_whoknows(self):
         try: self.__field_whoknows
         except:
-            self.__field_whoknows=STRING(**{'sizeinbytes': 32, 'default': 'identity'})
+            self.__field_whoknows=USTRING(**{'sizeinbytes': 32, 'default': 'identity'})
         return self.__field_whoknows.getvalue()
 
     def __setfield_whoknows(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_whoknows=value
         else:
-            self.__field_whoknows=STRING(value,**{'sizeinbytes': 32, 'default': 'identity'})
+            self.__field_whoknows=USTRING(value,**{'sizeinbytes': 32, 'default': 'identity'})
 
     def __delfield_whoknows(self): del self.__field_whoknows
 
@@ -263,10 +263,10 @@ class mediadesc(BaseProtogenClass):
         return self.__field_mimetype.getvalue()
 
     def __setfield_mimetype(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_mimetype=value
         else:
-            self.__field_mimetype=STRING(value,**{'sizeinbytes': 32})
+            self.__field_mimetype=USTRING(value,**{'sizeinbytes': 32})
 
     def __delfield_mimetype(self): del self.__field_mimetype
 
@@ -275,14 +275,14 @@ class mediadesc(BaseProtogenClass):
     def __getfield_whoknows2(self):
         try: self.__field_whoknows2
         except:
-            self.__field_whoknows2=STRING(**{'sizeinbytes': 32, 'default': ""})
+            self.__field_whoknows2=USTRING(**{'sizeinbytes': 32, 'default': ""})
         return self.__field_whoknows2.getvalue()
 
     def __setfield_whoknows2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_whoknows2=value
         else:
-            self.__field_whoknows2=STRING(value,**{'sizeinbytes': 32, 'default': ""})
+            self.__field_whoknows2=USTRING(value,**{'sizeinbytes': 32, 'default': ""})
 
     def __delfield_whoknows2(self): del self.__field_whoknows2
 
@@ -386,19 +386,19 @@ class pbentry(BaseProtogenClass):
         self.__field_serial2.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 2})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
+        self.__field_name=USTRING(**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
         self.__field_name.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 2})
         self.__field_group.readfrombuffer(buf)
         self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx4600_66, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
-        self.__field_url=STRING(**{'sizeinbytes': 72, 'raiseonunterminatedread': False})
+        self.__field_url=USTRING(**{'sizeinbytes': 72, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
         self.__field_ringtone=UINT(**{'sizeinbytes': 2})
         self.__field_ringtone.readfrombuffer(buf)
         self.__field_secret=BOOL(**{'sizeinbytes': 1})
         self.__field_secret.readfrombuffer(buf)
-        self.__field_memo=STRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+        self.__field_memo=USTRING(**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
         self.__field_wallpaper=UINT(**{'sizeinbytes': 2})
         self.__field_wallpaper.readfrombuffer(buf)
@@ -470,10 +470,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 23, 'raiseonunterminatedread': False})
 
     def __delfield_name(self): del self.__field_name
 
@@ -512,10 +512,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_url.getvalue()
 
     def __setfield_url(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_url=value
         else:
-            self.__field_url=STRING(value,**{'sizeinbytes': 72, 'raiseonunterminatedread': False})
+            self.__field_url=USTRING(value,**{'sizeinbytes': 72, 'raiseonunterminatedread': False})
 
     def __delfield_url(self): del self.__field_url
 
@@ -551,10 +551,10 @@ class pbentry(BaseProtogenClass):
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=STRING(value,**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
+            self.__field_memo=USTRING(value,**{'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
 
     def __delfield_memo(self): del self.__field_memo
 
@@ -675,7 +675,7 @@ class _gen_p_lgvx4600_66(BaseProtogenClass):
             dict2={'sizeinbytes': 73, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_email=STRING(*args,**dict2)
+            self.__field_email=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -691,7 +691,7 @@ class _gen_p_lgvx4600_66(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_email=STRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+        self.__field_email=USTRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
         self.__field_email.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -700,10 +700,10 @@ class _gen_p_lgvx4600_66(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
+            self.__field_email=USTRING(value,**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
 
     def __delfield_email(self): del self.__field_email
 
@@ -823,7 +823,7 @@ class _gen_p_lgvx4600_75(BaseProtogenClass):
             dict2={'sizeinbytes': 33, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_number=STRING(*args,**dict2)
+            self.__field_number=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -839,7 +839,7 @@ class _gen_p_lgvx4600_75(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_number=STRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+        self.__field_number=USTRING(**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
         self.__field_number.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -848,10 +848,10 @@ class _gen_p_lgvx4600_75(BaseProtogenClass):
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 33, 'raiseonunterminatedread': False})
 
     def __delfield_number(self): del self.__field_number
 

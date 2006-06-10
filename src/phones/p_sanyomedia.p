@@ -67,7 +67,7 @@ PACKET sanyomediafilenamerequest:
 PACKET sanyomediafilenameresponse:
     * sanyomediaheader header
     1 UINT pad1
-    154 STRING filename
+    154 USTRING filename
     1 UINT num1
     1 UNKNOWN pad2
     1 UINT num2
@@ -107,7 +107,7 @@ PACKET sanyomediaresponse:
 PACKET sanyosendfilename:
     * sanyomediaheader {'command': 0xffa1, 'pad': 0, 'faset': 0x05} +header
     1 UINT {'constant': 0x96} +payloadsize
-    150 STRING {'default': ""} +filename
+    150 USTRING {'default': ""} +filename
     21 UNKNOWN +pad
 
 PACKET sanyosendfilesize:

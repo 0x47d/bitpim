@@ -126,7 +126,7 @@ SMS_MSG_LIST_CMD='+CMGL'
 
 # calendar packets
 PACKET calendar_read_req:
-    * STRING { 'terminator': None, 'default': '+CXDR=' } +command
+    * USTRING { 'terminator': None, 'default': '+CXDR=' } +command
     * CSVINT +start_index
     * CSVINT { 'terminator': None } +end_index
 
@@ -140,13 +140,13 @@ PACKET calendar_read_resp:
     * CSVSTRING { 'terminator': None } description
 
 PACKET calendar_write_check_req:
-    * STRING { 'terminator': None, 'default': '+CXDW' } +command
+    * USTRING { 'terminator': None, 'default': '+CXDW' } +command
 PACKET calendar_write_check_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+CXDW:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CXDW:' } command
     * CSVINT { 'terminator': None } index
 
 PACKET calendar_write_req:
-    * STRING { 'terminator': None, 'default': '+CXDW=' } +command
+    * USTRING { 'terminator': None, 'default': '+CXDW=' } +command
     * CSVINT +index
     * CSVINT +repeat
     * CSVINT +alarm
@@ -156,22 +156,22 @@ PACKET calendar_write_req:
                   'maxsizeinbytes': CAL_DESC_LEN,
                   'raiseontruncate': False } +description
 PACKET calendar_del_req:
-    * STRING { 'terminator': None, 'default': '+CXDW=' } +command
+    * USTRING { 'terminator': None, 'default': '+CXDW=' } +command
     * CSVINT { 'terminator': None } +index
 
 # Media packets
 PACKET media_selector_req:
-    * STRING { 'terminator': None, 'default': '+DDLS?' } +command
+    * USTRING { 'terminator': None, 'default': '+DDLS?' } +command
 PACKET media_selector_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+DDLS:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+DDLS:' } command
     * CSVINT { 'terminator': None } media_type
 
 PACKET media_selector_set:
-    * STRING { 'terminator': None, 'default': '+DDLS=' } +command
+    * USTRING { 'terminator': None, 'default': '+DDLS=' } +command
     * CSVINT { 'terminator': None } +media_type
 
 PACKET media_list_req:
-    * STRING { 'terminator': None, 'default': '+DDLR=' } +command
+    * USTRING { 'terminator': None, 'default': '+DDLR=' } +command
     * CSVINT +start_index
     * CSVINT { 'terminator': None } +end_index
 
@@ -183,11 +183,11 @@ PACKET media_list_resp:
     * CSVINT size
 
 PACKET del_media_req:
-    * STRING { 'terminator': None, 'default': '+DDLD=0,' } +command
+    * USTRING { 'terminator': None, 'default': '+DDLD=0,' } +command
     * CSVSTRING { 'terminator': None } +file_name
 
 PACKET write_media_req:
-    * STRING { 'terminator': None, 'default': '+DDLW=' } +command
+    * USTRING { 'terminator': None, 'default': '+DDLW=' } +command
     * CSVINT +index
     * CSVSTRING +file_name
     * CSVSTRING +media_name
@@ -197,42 +197,42 @@ PACKET write_media_req:
     * CSVINT { 'default': 0 } +dunno2    # height?
     * CSVINT { 'default': 0 } +dunno3    # #of colors?
     * CSVINT { 'default': 0, 'terminator': ord('\r') } +dunno4
-#    * STRING { 'terminator': None } +data
+#    * USTRING { 'terminator': None } +data
 
 # Phonebook packets
 PACKET list_group_req:
-    * STRING { 'terminator': None, 'default': '+CPGR=' } +command
+    * USTRING { 'terminator': None, 'default': '+CPGR=' } +command
     * CSVINT +start_index
     * CSVINT { 'terminator': None } +end_index
 
 PACKET list_group_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+CPGR:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CPGR:' } command
     * CSVINT index
     * CSVSTRING { 'terminator': None } group_name
 
 PACKET charset_set_req:
-    * STRING { 'terminator': None, 'default': '+CSCS=' } +command
+    * USTRING { 'terminator': None, 'default': '+CSCS=' } +command
     * CSVSTRING { 'terminator': None } +charset
 
 PACKET select_storage_req:
-    * STRING { 'terminator': None, 'default': '+CPBS=' } +command
+    * USTRING { 'terminator': None, 'default': '+CPBS=' } +command
     * CSVSTRING { 'terminator': None } +storage
 
 PACKET select_storage_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+CPBS:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CPBS:' } command
     * CSVSTRING storage
     * CSVINT used_slots_count
     * CSVINT total_slots_count
     * CSVINT { 'terminator': None } dunno
 
 PACKET read_phonebook_req:
-    * STRING { 'terminator': None, 'default': '+CPBR=' } +command
+    * USTRING { 'terminator': None, 'default': '+CPBR=' } +command
     * CSVINT +start_index
     * CSVINT { 'terminator': None } +end_index
     
 PACKET read_phonebook_resp:
     P BOOL { 'default': False } +sim
-    * STRING { 'terminator': ord(' '), 'constant': '+CPBR:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CPBR:' } command
     * CSVINT index
     * CSVINT group
     * CSVSTRING mobile
@@ -246,28 +246,28 @@ PACKET read_phonebook_resp:
     * CSVSTRING memo
 
 PACKET read_sim_phonebook_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+CPBR:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CPBR:' } command
     * CSVINT index
     * CSVINT group
     * CSVSTRING mobile
     * CSVINT mobile_type
     * CSVSTRING name
-    P STRING { 'terminator': None, 'default': '' } +home
-    P STRING { 'terminator': None, 'default': '' } +office
-    P STRING { 'terminator': None, 'default': '' } +email
-    P STRING { 'terminator': None, 'default': '' } +memo
+    P USTRING { 'terminator': None, 'default': '' } +home
+    P USTRING { 'terminator': None, 'default': '' } +office
+    P USTRING { 'terminator': None, 'default': '' } +email
+    P USTRING { 'terminator': None, 'default': '' } +memo
     P BOOL { 'default': True } +sim
 
 PACKET del_phonebook_req:
-    * STRING { 'terminator': None, 'default': '+CPBW=' } +command
+    * USTRING { 'terminator': None, 'default': '+CPBW=' } +command
     * CSVINT { 'terminator': None } +index
 
 PACKET update_phonebook_resp:
-    * STRING { 'terminator': ord(' '), 'constant': '+CPBW:' } command
+    * USTRING { 'terminator': ord(' '), 'constant': '+CPBW:' } command
     * CSVINT { 'terminator': None } index
 
 PACKET write_phonebook_req:
-    * STRING { 'terminator': None, 'default': '+CPBW=,' } +command
+    * USTRING { 'terminator': None, 'default': '+CPBW=,' } +command
     * CSVINT +group
     * CSVSTRING { 'default': '',
                   'maxsizeinbytes': PB_NUMBER_LEN,
@@ -291,7 +291,7 @@ PACKET write_phonebook_req:
                   'raiseontruncate': False } +memo
 
 PACKET write_sim_phonebook_req:
-    * STRING { 'terminator': None, 'default': '+CPBW=,' } +command
+    * USTRING { 'terminator': None, 'default': '+CPBW=,' } +command
     * CSVINT { 'default': 0 } +group
     * CSVSTRING { 'default': '',
                   'maxsizeinbytes': PB_NUMBER_LEN,
@@ -303,48 +303,48 @@ PACKET write_sim_phonebook_req:
 
 # Memo packets
 PACKET memo_read_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': MEMO_READ_CMD+'=' } +command
     * CSVINT { 'default': MEMO_MIN_INDEX } +start_index
     * CSVINT { 'terminator': None,
                'default': MEMO_MAX_INDEX } +end_index
 
 PACKET memo_read_resp:
-    * STRING { 'terminator': ord(' '),
+    * USTRING { 'terminator': ord(' '),
                'constant': MEMO_READ_CMD+':' } command
     * CSVINT index
     * CSVSTRING { 'terminator': None } text
 
 PACKET memo_write_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': MEMO_WRITE_CMD+'=,' } +command
     * CSVSTRING { 'terminator': None } +text
 
 PACKET memo_del_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': MEMO_WRITE_CMD+'=' } +command
     * CSVINT { 'terminator': None } +index
 
 # SMS packets
 PACKET sms_format_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': SMS_FORMAT_CMD+'=' } +command
     * CSVINT { 'terminator': None,
                'default': SMS_FORMAT_TEXT } +format
 
 PACKET sms_memory_select_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': SMS_MEMORY_SELECT_CMD+'=' } +command
     * CSVSTRING { 'terminator': None } +list_memory
 
 PACKET sms_msg_list_req:
-    * STRING { 'terminator': None,
+    * USTRING { 'terminator': None,
                'default': SMS_MSG_LIST_CMD+'=' } +command
     * CSVSTRING { 'terminator': None,
                   'default': SMS_MSG_ALL } +msg_type
 
 PACKET sms_msg_list_header:
-    * STRING { 'terminator': ord(' '),
+    * USTRING { 'terminator': ord(' '),
                'constant': SMS_MSG_LIST_CMD+':' } command
     * CSVINT index
     * CSVSTRING msg_type

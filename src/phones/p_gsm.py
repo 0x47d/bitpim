@@ -40,7 +40,7 @@ class echo_off(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': 'E0V1' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -49,7 +49,7 @@ class echo_off(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': 'E0V1' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': 'E0V1' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -59,7 +59,7 @@ class echo_off(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': 'E0V1' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': 'E0V1' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -67,14 +67,14 @@ class echo_off(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': 'E0V1' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': 'E0V1' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': 'E0V1' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': 'E0V1' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -119,7 +119,7 @@ class esnrequest(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+GSN' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -128,7 +128,7 @@ class esnrequest(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GSN' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GSN' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -138,7 +138,7 @@ class esnrequest(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+GSN' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GSN' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -146,14 +146,14 @@ class esnrequest(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GSN' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GSN' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+GSN' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+GSN' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -284,7 +284,7 @@ class SIM_ID_Req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+CIMI' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -293,7 +293,7 @@ class SIM_ID_Req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CIMI' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CIMI' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -303,7 +303,7 @@ class SIM_ID_Req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+CIMI' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CIMI' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -311,14 +311,14 @@ class SIM_ID_Req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+CIMI' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+CIMI' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+CIMI' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+CIMI' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -363,7 +363,7 @@ class single_value_resp(BaseProtogenClass):
             dict2={ 'terminator': None }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_value=STRING(*args,**dict2)
+            self.__field_value=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -379,7 +379,7 @@ class single_value_resp(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_value=STRING(**{ 'terminator': None })
+        self.__field_value=USTRING(**{ 'terminator': None })
         self.__field_value.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -388,10 +388,10 @@ class single_value_resp(BaseProtogenClass):
         return self.__field_value.getvalue()
 
     def __setfield_value(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_value=value
         else:
-            self.__field_value=STRING(value,**{ 'terminator': None })
+            self.__field_value=USTRING(value,**{ 'terminator': None })
 
     def __delfield_value(self): del self.__field_value
 
@@ -436,7 +436,7 @@ class manufacturer_id_req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+GMI'}
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -445,7 +445,7 @@ class manufacturer_id_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMI'})
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMI'})
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -455,7 +455,7 @@ class manufacturer_id_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMI'})
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMI'})
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -463,14 +463,14 @@ class manufacturer_id_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMI'})
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMI'})
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+GMI'})
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+GMI'})
 
     def __delfield_command(self): del self.__field_command
 
@@ -515,7 +515,7 @@ class model_id_req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+GMM' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -524,7 +524,7 @@ class model_id_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMM' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMM' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -534,7 +534,7 @@ class model_id_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMM' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMM' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -542,14 +542,14 @@ class model_id_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMM' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMM' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+GMM' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+GMM' })
 
     def __delfield_command(self): del self.__field_command
 
@@ -594,7 +594,7 @@ class firmware_version_req(BaseProtogenClass):
             dict2={ 'terminator': None, 'default': '+GMR' }
             dict2.update(kwargs)
             kwargs=dict2
-            self.__field_command=STRING(*args,**dict2)
+            self.__field_command=USTRING(*args,**dict2)
         # Make all P fields that haven't already been constructed
 
 
@@ -603,7 +603,7 @@ class firmware_version_req(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMR' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMR' })
         self.__field_command.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -613,7 +613,7 @@ class firmware_version_req(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMR' })
+        self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMR' })
         self.__field_command.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -621,14 +621,14 @@ class firmware_version_req(BaseProtogenClass):
     def __getfield_command(self):
         try: self.__field_command
         except:
-            self.__field_command=STRING(**{ 'terminator': None, 'default': '+GMR' })
+            self.__field_command=USTRING(**{ 'terminator': None, 'default': '+GMR' })
         return self.__field_command.getvalue()
 
     def __setfield_command(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_command=value
         else:
-            self.__field_command=STRING(value,**{ 'terminator': None, 'default': '+GMR' })
+            self.__field_command=USTRING(value,**{ 'terminator': None, 'default': '+GMR' })
 
     def __delfield_command(self): del self.__field_command
 

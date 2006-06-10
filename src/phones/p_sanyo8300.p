@@ -58,12 +58,12 @@ PACKET eventslotinuserequest:
     
 PACKET evententry:
     1 UINT slot
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
     7 UNKNOWN +pad1
     1 UINT eventname_len
     4 UINT start "# seconds since Jan 1, 1980 approximately"
     4 UINT end
-    14 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
     4 UINT alarmdiff "Displayed alarm time"
@@ -126,13 +126,13 @@ PACKET callalarmslotinuseresponse:
 PACKET callalarmentry:
     1 UINT slot
     1 UNKNOWN +pad0 "Not the flag?"
-    49 STRING {'raiseonunterminatedread': False} phonenum
+    49 USTRING {'raiseonunterminatedread': False} phonenum
     1 UINT phonenum_len
     4 UINT date "# seconds since Jan 1, 1980 approximately"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT datedup "Copy of the date.  Always the same???"
-    16 STRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
     1 UNKNOWN +pad1
     1 UINT name_len
     1 UINT phonenumbertype "1: Home, 2: Work, ..." 
@@ -152,7 +152,7 @@ PACKET todorequest:
 PACKET todoentry:
     1 UINT slot
     1 UINT flag "0: Not used, 1: Used"
-    14 STRING {'raiseonunterminatedread': False} todo
+    14 USTRING {'raiseonunterminatedread': False} todo
     7 UNKNOWN +pad1
     1 UINT todo_len
     1 UINT priority "0: Normal, 1: Urgent, 2: Done"
