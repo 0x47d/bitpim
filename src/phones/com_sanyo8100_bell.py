@@ -44,6 +44,7 @@ class Phone(com_sanyonewer.Phone):
                        'Disco' )
 
     calendar_defaultringtone=4
+    calendar_defaultcaringtone=0
 
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
