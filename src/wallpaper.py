@@ -164,18 +164,21 @@ class WallpaperView(fileview.FileView):
         
 
     def GetItemThumbnail(self, data, width, height, fileinfo=None):
-        img=self.GetImageFromString(data, fileinfo)
-        if img is None or not img.Ok():
-            # unknown image file, display wallpaper.png
+        if data is None:
             img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
-        if width!=img.GetWidth() or height!=img.GetHeight():
-            # scale the image. 
-            sfactorw=float(width)/img.GetWidth()
-            sfactorh=float(height)/img.GetHeight()
-            sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-            newwidth=int(img.GetWidth()*sfactor)
-            newheight=int(img.GetHeight()*sfactor)
-            img.Rescale(newwidth, newheight)
+        else:
+            img=self.GetImageFromString(data, fileinfo)
+            if img is None or not img.Ok():
+                # unknown image file, display wallpaper.png
+                img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
+            if width!=img.GetWidth() or height!=img.GetHeight():
+                # scale the image. 
+                sfactorw=float(width)/img.GetWidth()
+                sfactorh=float(height)/img.GetHeight()
+                sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
+                newwidth=int(img.GetWidth()*sfactor)
+                newheight=int(img.GetHeight()*sfactor)
+                img.Rescale(newwidth, newheight)
         return img.ConvertToBitmap()
 
     def GetImageFromString(self, data, fileinfo):

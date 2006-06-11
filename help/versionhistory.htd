@@ -3,6 +3,7 @@
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>
     <ul>
       <li>Added Call History support to the A950.
+      <li>Fix bug:Exception in wallpaper pane when it contains unrecognised image formats.
     </ul>
 
    <h2><a name="0.9.02">Changes in 0.9.02</a></h2>
