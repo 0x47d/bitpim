@@ -285,6 +285,188 @@ class BOOLlsb(UINTlsb):
     def readfrombuffer(self, buf):
         UINTlsb.readfrombuffer(self,buf)
         self._boolme()
+    
+class STRING(BaseProtogenClass):
+    "A text string DEPRECATED USE USTRING "
+    def __init__(self, *args, **kwargs):
+        """
+        A string value can be specified to this constructor, or in the value keyword arg.
+
+        @keyword constant: (Optional) A constant value.  All reads must have this value
+        @keyword terminator: (Default=0) The string terminator (or None).  If set there will
+             always be a terminator when writing.  The terminator is not returned when getting
+             the value.
+        @keyword pad: (Default=0) The padding byte if fixed length when writing, or stripped off
+                       when reading
+        @keyword sizeinbytes: (Optional) Set if fixed length.
+             If not set, then the terminator will be used to find the end of strings on reading.
+             If not set and the terminator is None, then reads will be entire rest of buffer.
+        @keyword maxsizeinbytes: (Optional) Max string length.  Used together
+             with terminator to limit the max length of the value.
+             TODO: Need to add this to USTRING also.
+        @keyword default: (Optional) Our default value
+        @keyword raiseonunterminatedread: (Default True) raise L{NotTerminatedException} if there is
+             no terminator on the value being read in.  terminator must also be set.
+        @keyword raiseontruncate: (Default True) raise L{ValueLengthException} if the supplied
+             value is too large to fit within sizeinbytes.
+        @keyword value: (Optional) Value
+        @keyword pascal: (Default False) The string is preceded with one byte giving the length
+                         of the string (including terminator if there is one)
+        """
+        super(STRING, self).__init__(*args, **kwargs)
+        
+        self._constant=None
+        self._terminator=0
+        self._pad=0
+        self._sizeinbytes=None
+        self._default=None
+        self._raiseonunterminatedread=True
+        self._raiseontruncate=True
+        self._value=None
+        self._pascal=False
+        self._maxsizeinbytes=None
+
+        if self._ismostderived(STRING):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(STRING,self)._update(args, kwargs)
+
+        self._consumekw(kwargs, ("constant", "terminator", "pad", "pascal",
+        "sizeinbytes", "default", "raiseonunterminatedread", "value",
+                                 "raiseontruncate", "maxsizeinbytes"))
+        self._complainaboutunusedargs(STRING,kwargs)
+
+        # Set our value if one was specified
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            self._value=common.forceascii(args[0])
+            if self._constant is not None and self._constant!=self._value:
+                raise ValueException("This field is a constant of '%s'.  You tried setting it to '%s'" % (self._constant, self._value))
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+        if self._value is None and self._default is not None:
+            self._value=self._default
+
+        if self._value is not None:
+            self._value=str(self._value) # no unicode here!
+            l=len(self._value)
+            if self._sizeinbytes is not None:
+                if self._terminator is not None:
+                    l+=1
+                if l>self._sizeinbytes:
+                    if self._raiseontruncate:
+                        raise ValueLengthException(l, self._sizeinbytes)
+                    
+                    self._value=self._value[:self._sizeinbytes]
+                    if len(self._value) and self._terminator is not None:
+                        self._value=self._value[:-1]
+            elif self._maxsizeinbytes is not None:
+                if l>self._maxsizeinbytes:
+                    if self._raiseontruncate:
+                        raise ValueLengthException(l, self._maxsizeinbytes)
+                    self._value=self._value[:self._maxsizeinbytes]
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        
+        flush=0
+        if self._pascal: 
+            if self._sizeinbytes is None:
+                self._sizeinbytes=buf.getnextbyte()
+            # allow for fixed size pascal strings
+            else:
+                temp=self._sizeinbytes-1
+                self._sizeinbytes=buf.getnextbyte()
+                flush=temp-self._sizeinbytes
+                if(temp < 0):
+                    raise ValueLengthException()
+
+        if self._sizeinbytes is not None:
+            # fixed size
+            self._value=buf.getnextbytes(self._sizeinbytes)
+            if self._terminator is not None:
+                # using a terminator
+                pos=self._value.find(chr(self._terminator))
+                if pos>=0:
+                    self._value=self._value[:pos]
+                elif self._raiseonunterminatedread:
+                    raise NotTerminatedException()
+            elif self._pad is not None:
+                # else remove any padding
+                while len(self._value) and self._value[-1]==chr(self._pad):
+                    self._value=self._value[:-1]
+        else:
+            if self._terminator is None:
+                # read in entire rest of packet
+                self._value=buf.getremainingbytes()
+            else:
+                # read up to terminator
+                self._value=""
+                while buf.hasmore():
+                    self._value+=chr(buf.getnextbyte())
+                    if self._value[-1]==chr(self._terminator):
+                        break
+                if self._value[-1]!=chr(self._terminator):
+                    if self._raiseonunterminatedread:
+                        raise NotTerminatedException()
+                else:
+                    self._value=self._value[:-1]
+
+        if self._maxsizeinbytes is not None:
+            self._value=self._value[:self._maxsizeinbytes]
+
+        if self._constant is not None and self._value!=self._constant:
+            raise ValueException("The value read was not the constant")
+
+        # for fixed size pascal strings flush the remainder of the buffer
+        if(flush):
+            buf.getnextbytes(flush)
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        if self._value is None:
+            raise ValueNotSetException()
+
+        self._bufferstartoffset=buf.getcurrentoffset()
+        # calculate length
+        l=len(self._value)
+        if self._terminator is not None:
+            l+=1
+        if self._pascal:
+            buf.appendbyte(l)
+            l+=1
+        buf.appendbytes(self._value)
+        if self._terminator is not None:
+            buf.appendbyte(self._terminator)
+        if self._sizeinbytes is not None:
+            if l<self._sizeinbytes:
+                buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def packetsize(self):
+        if self._sizeinbytes is not None:
+            return self._sizeinbytes
+
+        if self._value is None:
+            raise ValueNotSetException()
+
+        l=len(self._value)
+        if self._terminator is not None:
+            l+=1
+        if self._pascal:
+            l+=1
+        return l
+
+    def getvalue(self):
+        """Returns the string we are"""
+        if self._value is None:
+            raise ValueNotSetException()
+        return self._value
+
 
 class USTRING(BaseProtogenClass):
     "A text string that supports configurable encodings"
@@ -304,6 +486,8 @@ class USTRING(BaseProtogenClass):
         @keyword sizeinbytes: (Optional) Set if fixed length.
              If not set, then the terminator will be used to find the end of strings on reading.
              If not set and the terminator is None, then reads will be entire rest of buffer.
+        @keyword maxsizeinbytes: (Optional) Max string length.  Used together
+             with terminator to limit the max length of the value.
         @keyword default: (Optional) Our default value
         @keyword raiseonunterminatedread: (Default True) raise L{NotTerminatedException} if there is
              no terminator on the value being read in. Terminator must also be set.
@@ -327,6 +511,7 @@ class USTRING(BaseProtogenClass):
         self._raiseontruncate=True
         self._value=None
         self._pascal=False
+        self._maxsizeinbytes=None
         self._encoding='ascii'
         self._read_encoding=None
         self._write_encoding=None
@@ -340,7 +525,7 @@ class USTRING(BaseProtogenClass):
 
         self._consumekw(kwargs, ("constant", "terminator", "pad", "pascal",
         "sizeinbytes", "default", "raiseonunterminatedread", "value", "raiseontruncate",
-        "encoding", "read_encoding", "write_encoding"))
+        "encoding", "read_encoding", "write_encoding", "maxsizeinbytes"))
         self._complainaboutunusedargs(USTRING,kwargs)
         if self._read_encoding==None:
             self._read_encoding=self._encoding
@@ -380,21 +565,26 @@ class USTRING(BaseProtogenClass):
             raise common.PhoneStringEncodeException(self._value, uni_string_codec) 
 
         if self._value is not None:
+            max_size=None
             if self._sizeinbytes is not None:
+                max_size=self._sizeinbytes
+            elif self._maxsizeinbytes is not None:
+                max_size=self._maxsizeinbytes
+            if max_size is not None:
                 l=len(test)
                 if self._terminator is not None:
-                    l+=1
-                if l>self._sizeinbytes:
+                    l+=self._terminator_length
+                if l>max_size:
                     if self._raiseontruncate:
                         raise ValueLengthException(l, self._sizeinbytes)
                     # truncate, but the number of bytes might be larger than the number of
                     # unicode characters depending on conversion
-                    self._value=self._value[:self._sizeinbytes]
+                    self._value=self._value[:max_size]
                     term_len=0
                     if self._terminator!=None:
                         term_len=self._terminator_length
                     # adjust for terminator and multibyte characters
-                    while (len(self.convert_for_write())+term_len)>self._sizeinbytes:
+                    while (len(self.convert_for_write())+term_len)>max_size:
                         self._value=self._value[:-1]
 
     def readfrombuffer(self, buf):
@@ -457,6 +647,9 @@ class USTRING(BaseProtogenClass):
                     raise NotTerminatedException()
                 else:
                     _value=_value[:-1]
+
+        if self._maxsizeinbytes is not None:
+            self._value=self._value[:self._maxsizeinbytes]
 
         if self._constant is not None and _value!=self._constant:
             raise ValueException("The value read was not the constant")
