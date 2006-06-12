@@ -275,11 +275,15 @@ PACKET sms_m_read_resp:
                   'terminator': ord(' '),
                   'default': '+MMGR:' } command
     P BOOL { 'default': True } +has_date
+    P BOOL { 'default': False } +date_terminated
     * CSVSTRING sms_type
     if self.has_date:
         * CSVSTRING { 'quotechar': None } sms_addr
-        * M_SMSDATETIME { 'quotechar': None,
-                          'terminator': None } sms_date
+        if self.date_terminated:
+            * M_SMSDATETIME sms_date
+        else:
+            * M_SMSDATETIME { 'quotechar': None,
+                              'terminator': None } sms_date
     else:
         * CSVSTRING { 'terminator': None,
                       'quotechar': None } sms_addr

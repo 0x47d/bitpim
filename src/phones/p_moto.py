@@ -3178,7 +3178,7 @@ class sms_sel_req(BaseProtogenClass):
 
 
 class sms_m_read_resp(BaseProtogenClass):
-    __fields=['command', 'has_date', 'sms_type', 'sms_addr', 'sms_date', 'sms_addr']
+    __fields=['command', 'has_date', 'date_terminated', 'sms_type', 'sms_addr', 'sms_date', 'sms_date', 'sms_addr']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -3206,8 +3206,12 @@ class sms_m_read_resp(BaseProtogenClass):
             self._complainaboutunusedargs(sms_m_read_resp,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_has_date', None) is None:
+        try: self.__field_has_date
+        except:
             self.__field_has_date=BOOL(**{ 'default': True })
+        try: self.__field_date_terminated
+        except:
+            self.__field_date_terminated=BOOL(**{ 'default': False })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -3217,7 +3221,10 @@ class sms_m_read_resp(BaseProtogenClass):
         self.__field_sms_type.writetobuffer(buf)
         if self.has_date:
             self.__field_sms_addr.writetobuffer(buf)
-            self.__field_sms_date.writetobuffer(buf)
+            if self.date_terminated:
+                self.__field_sms_date.writetobuffer(buf)
+            else:
+                self.__field_sms_date.writetobuffer(buf)
         else:
             self.__field_sms_addr.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -3235,8 +3242,12 @@ class sms_m_read_resp(BaseProtogenClass):
         if self.has_date:
             self.__field_sms_addr=CSVSTRING(**{ 'quotechar': None })
             self.__field_sms_addr.readfrombuffer(buf)
-            self.__field_sms_date=M_SMSDATETIME(**{ 'quotechar': None,                          'terminator': None })
-            self.__field_sms_date.readfrombuffer(buf)
+            if self.date_terminated:
+                self.__field_sms_date=M_SMSDATETIME()
+                self.__field_sms_date.readfrombuffer(buf)
+            else:
+                self.__field_sms_date=M_SMSDATETIME(**{ 'quotechar': None,                              'terminator': None })
+                self.__field_sms_date.readfrombuffer(buf)
         else:
             self.__field_sms_addr=CSVSTRING(**{ 'terminator': None,                      'quotechar': None })
             self.__field_sms_addr.readfrombuffer(buf)
@@ -3272,6 +3283,22 @@ class sms_m_read_resp(BaseProtogenClass):
 
     has_date=property(__getfield_has_date, __setfield_has_date, __delfield_has_date, None)
 
+    def __getfield_date_terminated(self):
+        try: self.__field_date_terminated
+        except:
+            self.__field_date_terminated=BOOL(**{ 'default': False })
+        return self.__field_date_terminated.getvalue()
+
+    def __setfield_date_terminated(self, value):
+        if isinstance(value,BOOL):
+            self.__field_date_terminated=value
+        else:
+            self.__field_date_terminated=BOOL(value,**{ 'default': False })
+
+    def __delfield_date_terminated(self): del self.__field_date_terminated
+
+    date_terminated=property(__getfield_date_terminated, __setfield_date_terminated, __delfield_date_terminated, None)
+
     def __getfield_sms_type(self):
         return self.__field_sms_type.getvalue()
 
@@ -3305,7 +3332,20 @@ class sms_m_read_resp(BaseProtogenClass):
         if isinstance(value,M_SMSDATETIME):
             self.__field_sms_date=value
         else:
-            self.__field_sms_date=M_SMSDATETIME(value,**{ 'quotechar': None,                          'terminator': None })
+            self.__field_sms_date=M_SMSDATETIME(value,)
+
+    def __delfield_sms_date(self): del self.__field_sms_date
+
+    sms_date=property(__getfield_sms_date, __setfield_sms_date, __delfield_sms_date, None)
+
+    def __getfield_sms_date(self):
+        return self.__field_sms_date.getvalue()
+
+    def __setfield_sms_date(self, value):
+        if isinstance(value,M_SMSDATETIME):
+            self.__field_sms_date=value
+        else:
+            self.__field_sms_date=M_SMSDATETIME(value,**{ 'quotechar': None,                              'terminator': None })
 
     def __delfield_sms_date(self): del self.__field_sms_date
 
@@ -3330,10 +3370,14 @@ class sms_m_read_resp(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('has_date', self.__field_has_date, None)
+        yield ('date_terminated', self.__field_date_terminated, None)
         yield ('sms_type', self.__field_sms_type, None)
         if self.has_date:
             yield ('sms_addr', self.__field_sms_addr, None)
-            yield ('sms_date', self.__field_sms_date, None)
+            if self.date_terminated:
+                yield ('sms_date', self.__field_sms_date, None)
+            else:
+                yield ('sms_date', self.__field_sms_date, None)
         else:
             yield ('sms_addr', self.__field_sms_addr, None)
 

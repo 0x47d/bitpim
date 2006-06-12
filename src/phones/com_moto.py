@@ -530,7 +530,9 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         """Process an SMS result as returned from the phone"""
         _buf=prototypes.buffer(_res[0])
         _header=self.protocolclass.sms_m_read_resp()
-        _header.has_date=len(_res[0].split(','))>2
+        _field_cnt=len(_res[0].split(','))
+        _header.has_date=_field_cnt>2
+        _header.date_terminated=_field_cnt>4    # the date field also has a ','
         _header.readfrombuffer(_buf, logtitle='Reading SMS Response')
         _entry=sms.SMSEntry()
         self._process_sms_header(_header, _entry)
