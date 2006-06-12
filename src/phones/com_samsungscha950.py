@@ -31,6 +31,7 @@ import prototypes
 import pubsub
 import p_samsungscha950
 import sqlite2_file
+import sms
 
 class Phone(com_phone.Phone, com_brew.BrewProtocol):
     desc='SCH-A950'
@@ -895,6 +896,92 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                      call_history.CallHistoryEntry.Folder_Missed, res)
         fundamentals['call_history']=res
 
+    # SMS Stuff----------------------------------------------------------------
+    def _build_common_msg(self, entry, sms_hdr):
+        entry.text=sms_hdr.body.msg
+        entry.datetime=sms_hdr.body.datetime[:5]
+        if sms_hdr.body.has_callback:
+            entry.callback=sms_hdr.body.callback
+        if sms_hdr.body.has_priority:
+            if sms_hdr.body.priority:
+                entry.priority=sms.SMSEntry.Priority_High
+            else:
+                entry.priority=sms.SMSEntry.Priority_Normal
+
+    def _build_locked_field(self, entry, buf):
+        _locked=self.protocolclass.UINT(sizeinbytes=4)
+        _locked.readfrombuffer(buf)
+        entry.locked=bool(_locked.getvalue())
+
+    def _build_in_msg(self, sms_hdr, buf, res):
+        _entry=sms.SMSEntry()
+        _entry.folder=sms.SMSEntry.Folder_Inbox
+        _entry._from=sms_hdr.body.addr0
+        self._build_common_msg(_entry, sms_hdr)
+        _entry.read=sms_hdr.body.msg_stat[0].status==self.protocolclass.SMS_STATUS_READ
+        self._build_locked_field(_entry, buf)
+        res[_entry.id]=_entry
+
+    def _build_sent_msg(self, sms_hdr, buf, res):
+        _entry=sms.SMSEntry()
+        _entry.folder=sms.SMSEntry.Folder_Sent
+        self._build_common_msg(_entry, sms_hdr)
+        _confirmed_flg=False
+        for _stat in sms_hdr.body.msg_stat:
+            if _stat.status==self.protocolclass.SMS_STATUS_DELIVERED:
+                _confirmed_flg=True
+                break
+        if _confirmed_flg:
+            _datetime_list=self.protocolclass.sms_delivered_datetime()
+            _datetime_list.readfrombuffer(buf, 'Reading Confirmed Datetime field')
+        for _idx in range(10):
+            if getattr(sms_hdr.body, 'addr_len%d'%_idx):
+                if sms_hdr.body.msg_stat[_idx].status==self.protocolclass.SMS_STATUS_DELIVERED:
+                    _entry.add_recipient(getattr(sms_hdr.body, 'addr%d'%_idx),
+                                         True,
+                                         _datetime_list.datetime[_idx].datetime[:5])
+                else:
+                    _entry.add_recipient(getattr(sms_hdr.body, 'addr%d'%_idx))
+        self._build_locked_field(_entry, buf)
+        res[_entry.id]=_entry
+
+    def _build_draft_msg(self, sms_hdr, buf, res):
+        _entry=sms.SMSEntry()
+        _entry.folder=sms.SMSEntry.Folder_Saved
+        self._build_common_msg(_entry, sms_hdr)
+        self._build_locked_field(_entry, buf)
+        for _idx in range(10):
+            if getattr(sms_hdr.body, 'addr_len%d'%_idx):
+                _entry.add_recipient(getattr(sms_hdr.body, 'addr%d'%_idx))
+        res[_entry.id]=_entry
+
+    def _read_sms(self, filename, res, fundamentals):
+        _buf=prototypes.buffer(self.getfilecontents(filename))
+        _sms=self.protocolclass.sms_header()
+        _sms.readfrombuffer(_buf, 'Reading SMS File')
+        if not _sms.is_txt_msg.value:
+            # not a text message
+            return
+        if _sms.in_msg.value:
+            self._build_in_msg(_sms, _buf, res)
+        elif _sms.sent_msg.value:
+            self._build_sent_msg(_sms, _buf, res)
+        else:
+            self._build_draft_msg(_sms, _buf, res)
+
+    def getsms(self, fundamentals):
+        res={}
+        try:
+            for _filename in self.listfiles(self.protocolclass.SMS_PATH):
+                self._read_sms(_filename, res, fundamentals)
+        except:
+            self.log('Failed to read SMS File '+_filename)
+            if __debug__:
+                raise
+        fundamentals['sms']=res
+        fundamentals['canned_msg']=[]
+        return fundamentals
+
 # CalendarEntry class-----------------------------------------------------------
 class CalendarEntry(object):
     """Transient class to handle calendar data being sent to, retrieved from
@@ -1254,7 +1341,7 @@ class Profile(parentprofile):
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('call_history', 'read', None),# all call history list reading
-##        ('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'read', None),     # all SMS list reading DJP
         )
 
     def QueryAudio(self, origin, currentextension, afi):
