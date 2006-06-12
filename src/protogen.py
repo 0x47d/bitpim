@@ -540,7 +540,9 @@ class codegen:
         print >>out, indent(2)+"# Make all P fields that haven't already been constructed"
         for f in fields:
             if f[0]==tokens.FIELD and f[2]=='P':
-                print >>out, indent(2)+"if getattr(self, '__field_"+f[1]+"', None) is None:"
+##                print >>out, indent(2)+"if getattr(self, '__field_"+f[1]+"', None) is None:"
+                print >>out, indent(2)+"try: self.__field_"+f[1]
+                print >>out, indent(2)+"except:"
                 self.makefield(out, 3, f)
 
         print >>out, "\n"
