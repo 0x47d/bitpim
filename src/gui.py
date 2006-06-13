@@ -2031,6 +2031,10 @@ class WorkerThread(WorkerThreadFramework):
         self.setupcomm()
         self.progressmajor(0,0,"Listing files")
         files=self.dirlisting(path, recurse)
+        if path=="/" or path=="":
+            strip=0 # root dir
+        else:
+            strip=len(path)+1 # child
 
         keys=files.keys()
         keys.sort()
@@ -2055,7 +2059,10 @@ class WorkerThread(WorkerThreadFramework):
                 # zipfile does not like unicode. cp437 works on windows well, may be
                 # a better choice than ascii, but no phones currently support anything
                 # other than ascii for filenames
-                zi.filename=common.get_ascii_string(common.basename(k), 'ignore')
+                if k[strip]=='/':
+                    zi.filename=common.get_ascii_string(k[strip+1:], 'ignore')
+                else:
+                    zi.filename=common.get_ascii_string(k[strip:], 'ignore')
                 if files[k]['date'][0]==0:
                     zi.date_time=(0,0,0,0,0,0)
                 else:

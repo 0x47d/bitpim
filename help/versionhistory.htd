@@ -5,6 +5,7 @@
       <li>Added Call History support to the A950.
       <li>Fix bug:Exception in wallpaper pane when it contains unrecognised image formats.
       <li>Fixed SMS feature for V3c(m) phones.
+      <li>Fixed backup dir bug.
     </ul>
 
    <h2><a name="0.9.02">Changes in 0.9.02</a></h2>
