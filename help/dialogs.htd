@@ -14,6 +14,7 @@ BEGIN_TOC
     TOCITEM_0(Audio Conversion,dialog-audioconversion.htm)
     TOCITEM_0(Calendar Import,dialog-calendarimport.htm)
     TOCITEM_0(Image Preview,dialog-imagepreview.htm)
+    TOCITEM_0(Calendar Merge,dialog-calendarmerge.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->

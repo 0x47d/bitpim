@@ -2,11 +2,14 @@
 
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>
     <ul>
-      <li>Added Call History support to the A950.
+      <li>Added Call History and SMS support to the A950.
       <li>Fix bug:Exception in wallpaper pane when it contains unrecognised image formats.
       <li>Fixed SMS feature for V3c(m) phones.
       <li>Fixed backup dir bug.
       <li>Added Calendar Read Merge feature.
+      <li>Fixed bug: phonebook preview with bad image.
+      <li>Fixed bug: BitPim crashes when VX9800 fails to read media files.
+      <li>Improved phone detection scheme for VX6100.
     </ul>
 
    <h2><a name="0.9.02">Changes in 0.9.02</a></h2>
