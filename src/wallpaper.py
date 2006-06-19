@@ -71,6 +71,7 @@ class WallpaperView(fileview.FileView):
         self.mainwindow=mainwindow
         self.usewidth=10
         self.useheight=10
+        self._dummy_image_filename=guihelper.getresourcefile('wallpaper.png')
         wx.FileSystem_AddHandler(BPFSHandler(self))
         self._data={self.database_key: {}}
         fileview.FileView.__init__(self, mainwindow, parent, media_root, "wallpaper-watermark")
@@ -164,21 +165,15 @@ class WallpaperView(fileview.FileView):
         
 
     def GetItemThumbnail(self, data, width, height, fileinfo=None):
-        if data is None:
-            img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
-        else:
-            img=self.GetImageFromString(data, fileinfo)
-            if img is None or not img.Ok():
-                # unknown image file, display wallpaper.png
-                img=wx.Image(guihelper.getresourcefile('wallpaper.png'))
-            if width!=img.GetWidth() or height!=img.GetHeight():
-                # scale the image. 
-                sfactorw=float(width)/img.GetWidth()
-                sfactorh=float(height)/img.GetHeight()
-                sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
-                newwidth=int(img.GetWidth()*sfactor)
-                newheight=int(img.GetHeight()*sfactor)
-                img.Rescale(newwidth, newheight)
+        img=self.GetImageFromString(data, fileinfo)
+        if width!=img.GetWidth() or height!=img.GetHeight():
+            # scale the image. 
+            sfactorw=float(width)/img.GetWidth()
+            sfactorh=float(height)/img.GetHeight()
+            sfactor=min(sfactorw,sfactorh) # preserve aspect ratio
+            newwidth=int(img.GetWidth()*sfactor)
+            newheight=int(img.GetHeight()*sfactor)
+            img.Rescale(newwidth, newheight)
         return img.ConvertToBitmap()
 
     def GetImageFromString(self, data, fileinfo):
@@ -202,8 +197,7 @@ class WallpaperView(fileview.FileView):
                 if name==self._data[self.database_key][x].name:
                     data=self._data[self.database_key][x].mediadata
         if data!=None:
-            img=self.GetImageFromString(data, None)
-            return img
+            return self.GetImageFromString(data, None)
         return None
 
     # This function exists because of the constraints of the HTML
@@ -236,8 +230,8 @@ class WallpaperView(fileview.FileView):
             if fi.format=='3GPP2':
                 # video format, can't yet display the first frame.
                 return data, lambda name: None
-        stream=cStringIO.StringIO(data)
-        return stream, wx.ImageFromStream
+            return cStringIO.StringIO(data), wx.ImageFromStream
+        return self._dummy_image_filename, wx.Image
 
     def GetImageConstructionInformation(self, file):
         """Gets information for constructing an Image from the file
@@ -246,7 +240,7 @@ class WallpaperView(fileview.FileView):
         """
         fi=self.GetFileInfo(file)
         if file.endswith(".mp4") or not os.path.isfile(file):
-            return guihelper.getresourcefile('wallpaper.png'), wx.Image
+            return self._dummy_image_filename, wx.Image
         if fi:
             if fi.format=='AVI':
                 # return the 1st frame of the AVI file
@@ -257,7 +251,8 @@ class WallpaperView(fileview.FileView):
             if fi.format=='3GPP2':
                 # video format, can't yet display the first frame.
                 return file, lambda name: None
-        return file, wx.Image
+            return file, wx.Image
+        return self._dummy_image_filename, wx.Image
 
     def GetFileInfoString(self, string):
         return fileinfo.identify_imagestring(string)
