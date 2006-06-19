@@ -103,6 +103,19 @@ class Phone(com_lgvx4400.Phone):
         return index
 
     my_model='VX6100'
+    def eval_detect_data(self, res):
+        # Brute force: do not look into bpinfo data, which may incorrectly
+        # identify this as a VX6000.  Probably can/should be handled more gracefully
+        # in the superclass.
+        found=False
+        if res.get(self.brew_version_txt_key, None) is not None:
+            found=res[self.brew_version_txt_key][:len(self.my_model)]==self.my_model
+        if found:
+            res['model']=self.my_model
+            res['manufacturer']='LG Electronics Inc'
+            s=res.get(self.esn_file_key, None)
+            if s:
+                res['esn']=self.get_esn(s)
 
     def getphoneinfo(self, phone_info):
         self.log('Getting Phone Info')
