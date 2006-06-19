@@ -1365,8 +1365,9 @@ class MainWindow(wx.Frame):
             v=results['sync']['calendar']
             if v=='MERGE': raise Exception("Not implemented")
             results['calendar_version']=self.phoneprofile.BP_Calendar_Version
-            self.GetActiveCalendarWidget().populatefs(results)
-            self.GetActiveCalendarWidget().populate(results)
+            self.GetActiveCalendarWidget().mergedata(results)
+##            self.GetActiveCalendarWidget().populatefs(results)
+##            self.GetActiveCalendarWidget().populate(results)
         # memo
         if results['sync'].has_key('memo'):
             v=results['sync']['memo']

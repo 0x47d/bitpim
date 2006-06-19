@@ -113,13 +113,13 @@ import datetime
 import random
 import sha
 import time
-import webbrowser
 
 # wx stuff
 import wx
 import wx.lib
 import wx.lib.masked.textctrl
 import wx.lib.intctrl
+import wx.grid as gridlib
 
 # my modules
 import bphtml
@@ -129,6 +129,7 @@ import calendarentryeditor
 import common
 import database
 import guihelper
+import guiwidgets
 import helpids
 import pubsub
 import today
@@ -186,6 +187,26 @@ class RepeatEntry(object):
         self._type=repeat_type
         self._data=[0,0,0]
         self._suppressed=[]
+
+    def __eq__(self, rhs):
+        # return T if equal
+        if self.repeat_type!=rhs.repeat_type:
+            return False
+        if self.repeat_type==RepeatEntry.daily:
+            if self.interval!=rhs.interval:
+                return False
+        elif self.repeat_type==RepeatEntry.weekly:
+            if self.interval!=rhs.interval or \
+               self.dow!=rhs.dow:
+                return False
+        elif self.repeat_type==RepeatEntry.monthly:
+            if self.interval!=rhs.interval or \
+               self.interval2!=rhs.interval2 or \
+               self.dow!=rhs.dow:
+                return False
+        return True
+    def __ne__(self, rhs):
+        return not self.__eq__(rhs)
 
     def get(self):
         # return a dict representing internal data
@@ -509,7 +530,15 @@ class CalendarEntry(object):
     priority_low=10
     # no end date
     no_end_date=(4000, 1, 1)
-
+    # required and optional attributes, mainly used for comparison
+    _required_attrs=('description', 'start','end')
+    _required_attr_names=('Description', 'Start', 'End')
+    _optional_attrs=('location', 'priority', 'alarm', 'allday', 'vibrate',
+                     'voice', 'repeat', 'notes', 'categories',
+                     'ringtone', 'wallpaper')
+    _optional_attr_names=('Location', 'Priority', 'Alarm', 'All-Day',
+                          'Vibrate', '', 'Repeat', 'Notes', 'Categories',
+                          'Ringtone', 'Wallpaper')
     def __init__(self, year=None, month=None, day=None):
         self._data={}
         # setting default values
@@ -521,6 +550,56 @@ class CalendarEntry(object):
             self._data['end']=bptime.BPTime()
         self._data['serials']=[]
         self._create_id()
+
+    def matches(self, rhs):
+        # Match self against this entry, which may not have all the
+        # optional attributes
+        if not isinstance(rhs, CalendarEntry):
+            return False
+        for _attr in CalendarEntry._required_attrs:
+            if getattr(self, _attr) != getattr(rhs, _attr):
+                return False
+        for _attr in CalendarEntry._optional_attrs:
+            _rhs_attr=getattr(rhs, _attr)
+            if _rhs_attr is not None and getattr(self, _attr)!=_rhs_attr:
+                return False
+        return True
+    def get_changed_fields(self, rhs):
+        # Return a CSV string of all the fields having different values
+        if not isinstance(rhs, CalendarEntry):
+            return ''
+        _res=[]
+        for _idx,_attr in enumerate(CalendarEntry._required_attrs):
+            if getattr(self, _attr) != getattr(rhs, _attr):
+                _res.append(CalendarEntry._required_attr_names[_idx])
+        for _idx,_attr in enumerate(CalendarEntry._optional_attrs):
+            _rhs_attr=getattr(rhs, _attr)
+            if _rhs_attr is not None and getattr(self, _attr)!=_rhs_attr:
+                _res.append(CalendarEntry._optional_attr_names[_idx])
+        return ','.join(_res)
+
+    def similar(self, rhs):
+        # return T if rhs is similar to self
+        # for now, they're similar if they have the same start time
+        return self.start==rhs.start
+
+    def replace(self, rhs):
+        # replace the contents of this entry with the new one
+        for _attr in CalendarEntry._required_attrs+\
+            CalendarEntry._optional_attrs:
+            _rhs_attr=getattr(rhs, _attr)
+            if _rhs_attr is not None:
+                setattr(self, _attr, _rhs_attr)
+
+    def __eq__(self, rhs):
+        if not isinstance(rhs, CalendarEntry):
+            return False
+        for _attr in CalendarEntry._required_attrs+CalendarEntry._optional_attrs:
+            if getattr(self, _attr)!=getattr(rhs, _attr):
+                return False
+        return True
+    def __ne__(self, rhs):
+        return not self.__eq__(rhs)
 
     def get(self):
         r=copy.deepcopy(self._data, _nil={})
@@ -1147,6 +1226,15 @@ class Calendar(calendarcontrol.Calendar):
 
         return dict
 
+    def mergedata(self, result):
+        """ Merge the newdata (from the phone) into current data
+        """
+        dlg=MergeDialog(self, self._data, result.get('calendar', {}))
+        if dlg.ShowModal()==wx.ID_OK:
+            self._data=dlg.get()
+            self.updateonchange()
+        dlg.Destroy()
+
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
 
@@ -1549,8 +1637,6 @@ class CalendarPrintDialog(wx.Dialog):
     def OnPrintPreview(self, _):
         self._gen_print_data()
         wx.GetApp().htmlprinter.PreviewText(self._html)
-##        file(self._tmp_file, 'wt').write(self._html)
-##        webbrowser.open('file://localhost/'+self._tmp_file)
     def OnHelp(self, _):
         pass
     def OnClose(self, _):
@@ -1560,3 +1646,187 @@ class CalendarPrintDialog(wx.Dialog):
         except:
             pass
         self.EndModal(wx.ID_CANCEL)
+
+#-------------------------------------------------------------------------------
+
+class MergeDataTable(gridlib.PyGridTableBase):
+    # colum labels
+    _labels=('Description', 'Start', 'Changed', 'New', 'Ignore',
+             'Changed Details')
+    # readony colums
+    _readonly=(True, True, True, False, False, True)
+    # colum type
+    _col_types=(gridlib.GRID_VALUE_STRING, gridlib.GRID_VALUE_STRING,
+                gridlib.GRID_VALUE_BOOL, gridlib.GRID_VALUE_BOOL,
+                gridlib.GRID_VALUE_BOOL, gridlib.GRID_VALUE_STRING)
+    # index into each row
+    _desc_index=0
+    _start_index=1
+    _changed_index=2
+    _new_index=3
+    _ignore_index=4
+    _details_index=5
+    _key_index=6
+    _similar_key_index=7
+
+    def __init__(self, olddata, newdata):
+        super(MergeDataTable, self).__init__()
+        self._old=olddata
+        self._new=newdata
+        self.data=[]
+        self._bins={}
+        self._similarpairs={}
+        self._generate_table()
+    
+    def _generate_table(self):
+        # Generate table data from the given data
+        # first, separate old events into bins for efficient comparison
+        self._bins={}
+        for _key,_entry in self._old.items():
+            self._bins.setdefault(_entry.start[:3], []).append(_key)
+        self._similarpairs={}
+        for _key,_entry in self._new.items():
+            # default to a new event being added
+            _row=[_entry.description, _entry.start_str, 0, 1, 0, '', _key]
+            _bin_key=_entry.start[:3]
+            for _item_key in self._bins.get(_bin_key, []):
+                _old_event=self._old[_item_key]
+                if _old_event.matches(_entry):
+                    # same event, no action
+                    _row[self._new_index]=0
+                    break
+                elif _old_event.similar(_entry):
+                    # changed event, being merged
+                    _row[self._changed_index]=1
+                    _row[self._new_index]=0
+                    _row[self._details_index]=_old_event.get_changed_fields(_entry)
+                    _row.append(_item_key)
+                    break
+            self.data.append(_row)
+    def _merge(self):
+        # merge the new data into the old one, and return the result
+        for _row in self.data:
+            if _row[self._ignore_index]:
+                # ignore this new entry
+                continue
+            elif _row[self._new_index]:
+                # add this new entry
+                _key=_row[self._key_index]
+                self._old[_key]=self._new[key]
+            elif _row[self._changed_index]:
+                # replace the old entry with this new one
+                _new_key=_row[self._key_index]
+                _old_key=_row[self._similar_key_index]
+                self._old[_old_key].replace(self._new[_new_key])
+        return self._old
+    def get(self, merge=False):
+        # return the result data
+        if not merge:
+            # replace all with new data
+            return self._new
+        else:
+            return self._merge()
+
+    #--------------------------------------------------
+    # required methods for the wxPyGridTableBase interface
+
+    def GetNumberRows(self):
+        return len(self.data)
+    def GetNumberCols(self):
+        return len(self._labels)
+    def IsEmptyCell(self, row, col):
+        if row>len(self.data) or col>len(self._labels):
+            return True
+        return False
+    # Get/Set values in the table.  The Python version of these
+    # methods can handle any data-type, (as long as the Editor and
+    # Renderer understands the type too,) not just strings as in the
+    # C++ version.
+    def GetValue(self, row, col):
+        try:
+            return self.data[row][col]
+        except IndexError:
+            return ''
+    def SetValue(self, row, col, value):
+        try:
+            self.data[row][col] = value
+        except IndexError:
+            pass
+
+    #--------------------------------------------------
+    # Some optional methods
+
+    # Called when the grid needs to display labels
+    def GetColLabelValue(self, col):
+        return self._labels[col]
+    def IsReadOnlyCell(self, row, col):
+        try:
+            return self._readonly[col]
+        except IndexError:
+            return True
+    # Called to determine the kind of editor/renderer to use by
+    # default, doesn't necessarily have to be the same type used
+    # natively by the editor/renderer if they know how to convert.
+    def GetTypeName(self, row, col):
+        return self._col_types[col]
+    # Called to determine how the data can be fetched and stored by the
+    # editor and renderer.  This allows you to enforce some type-safety
+    # in the grid.
+    def CanGetValueAs(self, row, col, typeName):
+        return self._col_types[col]==typeName
+    def CanSetValueAs(self, row, col, typeName):
+        return self.CanGetValueAs(row, col, typeName)
+
+class MergeDataGrid(gridlib.Grid):
+    def __init__(self, parent, table):
+        super(MergeDataGrid, self).__init__(parent, -1)
+        self.SetTable(table, True)
+        # set read-only cols
+        _attr=gridlib.GridCellAttr()
+        _attr.SetReadOnly(True)
+        for _col in range(table.GetNumberCols()):
+            if table.IsReadOnlyCell(0, _col):
+                self.SetColAttr(_col, _attr)
+        self.SetRowLabelSize(0)
+        self.SetMargins(0,0)
+        self.AutoSize()
+        self.Refresh()
+class MergeDialog(wx.Dialog):
+    def __init__(self, parent, olddata, newdata):
+        super(MergeDialog, self).__init__(parent, -1,
+                                          'Calendar Data Merge',
+                                          style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self._merge=False
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        self._grid=MergeDataGrid(self, MergeDataTable(olddata, newdata))
+        vbs.Add(self._grid, 1, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        _btn=wx.Button(self, -1, 'Replace All')
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnReplaceAll)
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Merge')
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnMerge)
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, wx.ID_CANCEL, 'Cancel')
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        guiwidgets.set_size("CalendarMergeEditor", self, 52, 1.0)
+    def OnOK(self, _=None):
+        guiwidgets.save_size("CalendarMergeEditor", self.GetRect())
+        if self.IsModal():
+            self.EndModal(wx.ID_OK)
+        else:
+            self.SetReturnCode(wx.ID_OK)
+            self.Show(False)
+    def OnReplaceAll(self, evt):
+        self._merge=False
+        self.OnOK()
+    def OnMerge(self, _):
+        self._merge=True
+        self.OnOK()
+    def get(self):
+        # return the merge data
+        return self._grid.GetTable().get(self._merge)
