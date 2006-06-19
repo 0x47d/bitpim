@@ -1650,15 +1650,33 @@ class CalendarPrintDialog(wx.Dialog):
 #-------------------------------------------------------------------------------
 
 class MergeDataTable(gridlib.PyGridTableBase):
-    # colum labels
-    _labels=('Description', 'Start', 'Changed', 'New', 'Ignore',
-             'Changed Details')
-    # readony colums
-    _readonly=(True, True, True, False, False, True)
-    # colum type
-    _col_types=(gridlib.GRID_VALUE_STRING, gridlib.GRID_VALUE_STRING,
-                gridlib.GRID_VALUE_BOOL, gridlib.GRID_VALUE_BOOL,
-                gridlib.GRID_VALUE_BOOL, gridlib.GRID_VALUE_STRING)
+    # colums attributes
+    _cols_attrs=(
+        { 'label': 'Description',
+          'readonly': True,
+          'alignment': (wx.ALIGN_LEFT, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_STRING },
+        { 'label': 'Start',
+          'readonly': True,
+          'alignment': (wx.ALIGN_LEFT, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_STRING },
+        { 'label': 'Changed',
+          'readonly': True,
+          'alignment': (wx.ALIGN_CENTRE, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_BOOL },
+        { 'label': 'New',
+          'readonly': False,
+          'alignment': (wx.ALIGN_CENTRE, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_BOOL },
+        { 'label': 'Ignore',
+          'readonly': False,
+          'alignment': (wx.ALIGN_CENTRE, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_BOOL },
+        { 'label': 'Changed Details',
+          'readonly': True,
+          'alignment': (wx.ALIGN_LEFT, wx.ALIGN_CENTRE),
+          'type': gridlib.GRID_VALUE_STRING },
+        )
     # index into each row
     _desc_index=0
     _start_index=1
@@ -1687,13 +1705,14 @@ class MergeDataTable(gridlib.PyGridTableBase):
         self._similarpairs={}
         for _key,_entry in self._new.items():
             # default to a new event being added
-            _row=[_entry.description, _entry.start_str, 0, 1, 0, '', _key]
+            _row=[_entry.description, _entry.start_str, 0, 1, 0, 'New event', _key]
             _bin_key=_entry.start[:3]
             for _item_key in self._bins.get(_bin_key, []):
                 _old_event=self._old[_item_key]
                 if _old_event.matches(_entry):
                     # same event, no action
                     _row[self._new_index]=0
+                    _row[self._details_index]='No changes'
                     break
                 elif _old_event.similar(_entry):
                     # changed event, being merged
@@ -1725,17 +1744,17 @@ class MergeDataTable(gridlib.PyGridTableBase):
             # replace all with new data
             return self._new
         else:
+            # return merged data
             return self._merge()
 
     #--------------------------------------------------
     # required methods for the wxPyGridTableBase interface
-
     def GetNumberRows(self):
         return len(self.data)
     def GetNumberCols(self):
-        return len(self._labels)
+        return len(self._cols_attrs)
     def IsEmptyCell(self, row, col):
-        if row>len(self.data) or col>len(self._labels):
+        if row>len(self.data) or col>len(self._cols_attrs):
             return True
         return False
     # Get/Set values in the table.  The Python version of these
@@ -1755,25 +1774,32 @@ class MergeDataTable(gridlib.PyGridTableBase):
 
     #--------------------------------------------------
     # Some optional methods
-
     # Called when the grid needs to display labels
     def GetColLabelValue(self, col):
-        return self._labels[col]
+        try:
+            return self._cols_attrs[col]['label']
+        except IndexError:
+            return ''
     def IsReadOnlyCell(self, row, col):
         try:
-            return self._readonly[col]
+            return self._cols_attrs[col]['readonly']
         except IndexError:
-            return True
+            return False
+    def GetAlignments(self, row, col):
+        try:
+            return self._cols_attrs[col]['alignment']
+        except IndexError:
+            return None
     # Called to determine the kind of editor/renderer to use by
     # default, doesn't necessarily have to be the same type used
     # natively by the editor/renderer if they know how to convert.
     def GetTypeName(self, row, col):
-        return self._col_types[col]
+        return self._cols_attrs[col]['type']
     # Called to determine how the data can be fetched and stored by the
     # editor and renderer.  This allows you to enforce some type-safety
     # in the grid.
     def CanGetValueAs(self, row, col, typeName):
-        return self._col_types[col]==typeName
+        return self._cols_attrs[col]['type']==typeName
     def CanSetValueAs(self, row, col, typeName):
         return self.CanGetValueAs(row, col, typeName)
 
@@ -1781,16 +1807,22 @@ class MergeDataGrid(gridlib.Grid):
     def __init__(self, parent, table):
         super(MergeDataGrid, self).__init__(parent, -1)
         self.SetTable(table, True)
-        # set read-only cols
-        _attr=gridlib.GridCellAttr()
-        _attr.SetReadOnly(True)
+        # set col attributes
         for _col in range(table.GetNumberCols()):
-            if table.IsReadOnlyCell(0, _col):
+            _ro=table.IsReadOnlyCell(0, _col)
+            _alignments=table.GetAlignments(0, _col)
+            if  _ro or _alignments:
+                _attr=gridlib.GridCellAttr()
+                if _ro:
+                    _attr.SetReadOnly(True)
+                if _alignments:
+                    _attr.SetAlignment(*_alignments)
                 self.SetColAttr(_col, _attr)
         self.SetRowLabelSize(0)
         self.SetMargins(0,0)
         self.AutoSize()
         self.Refresh()
+
 class MergeDialog(wx.Dialog):
     def __init__(self, parent, olddata, newdata):
         super(MergeDialog, self).__init__(parent, -1,
@@ -1810,7 +1842,11 @@ class MergeDialog(wx.Dialog):
         hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
         _btn=wx.Button(self, wx.ID_CANCEL, 'Cancel')
         hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        _btn=wx.Button(self, wx.ID_HELP, 'Help')
+        wx.EVT_BUTTON(self, wx.ID_HELP,
+                      lambda _: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_MERGE))
+        hbs.Add(_btn, 0, wx.EXPAND|wx.ALL, 5)
+        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
         guiwidgets.set_size("CalendarMergeEditor", self, 52, 1.0)
