@@ -184,6 +184,11 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
                     # firmware wouldn't let us read this file, just mark it then
                     self.log('Failed to read file: '+item.filename)
                     data=''
+                except:
+                    if __debug__:
+                        raise
+                    self.log('Failed to read file: '+item.filename)
+                    data=''
                 if data!=None:
                     media[common.basename(item.filename)]={ 'data': data, 'timestamp': timestamp}
             origins[type]=media
