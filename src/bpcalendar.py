@@ -1738,11 +1738,19 @@ class MergeDataTable(gridlib.PyGridTableBase):
                 _old_key=_row[self._similar_key_index]
                 self._old[_old_key].replace(self._new[_new_key])
         return self._old
+    def _replace(self):
+        # return non-ignore events
+        _res={}
+        for _row in self.data:
+            if not _row[self._ignore_index]:
+                _key=_row[self._key_index]
+                _res[_key]=self._new[_key]
+        return _res
     def get(self, merge=False):
         # return the result data
         if not merge:
             # replace all with new data
-            return self._new
+            return self._replace()
         else:
             # return merged data
             return self._merge()
