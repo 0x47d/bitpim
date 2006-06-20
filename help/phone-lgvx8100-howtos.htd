@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<H3>Access Ringtones from a miniSD card (V4 or earlier only):</H3>
+<H3>Access Ringtones from a miniSD card:</H3>
 <P>Transferring files to the miniSD card through the phone using BitPim is very slow, users should transfer files to the card directly from a PC.
 <OL>
 <LI>On the miniSD card, create a subdir called <B>ringers</B>

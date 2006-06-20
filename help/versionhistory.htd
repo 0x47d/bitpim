@@ -11,6 +11,7 @@
       <li>Fixed bug: BitPim crashes when VX9800 fails to read media files.
       <li>Improved phone detection scheme for VX6100.
       <li><b>Linux</b> ISO 8559-1 encoding is now found 
+      <LI>Added a work-around that allows storing ringtones on miniSD cards for the <B>VX8100</B> and <B>VX9800</B>.
     </ul>
 
    <h2><a name="0.9.02">Changes in 0.9.02</a></h2>

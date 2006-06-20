@@ -13,7 +13,6 @@
 <H3>Ringtones</H3>
 <UL>
 <LI>BitPim can make use of ringtone files stored on the miniSD card, see section <a href="phone-lgvx9800-howtos.htm">Howtos</a> for more details.
-This features does not work properly with firmware version 2 (it works properly until the next time the phone is rebooted.)
 <LI>As far as I could determine, this phone supports up to about 150 ringtones (both on the phone and on miniSD card).
 <LI>The ringtone formats include MIDI, QCP, SMAF, and MP3.
 <LI>All ringtones added through BitPim would be stored on the phone.
