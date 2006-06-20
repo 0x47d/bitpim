@@ -1185,7 +1185,8 @@ class callalarmentry(BaseProtogenClass):
             self._complainaboutunusedargs(callalarmentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_ringtone', None) is None:
+        try: self.__field_ringtone
+        except:
             self.__field_ringtone=UINT(**{'constant': 0})
 
 

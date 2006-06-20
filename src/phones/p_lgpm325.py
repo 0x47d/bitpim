@@ -28,7 +28,7 @@ NORINGTONE=0
 NOMSGRINGTONE=0
 NOWALLPAPER=0
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
 
@@ -557,9 +557,11 @@ class pbentry(BaseProtogenClass):
             self._complainaboutunusedargs(pbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_ringtone', None) is None:
+        try: self.__field_ringtone
+        except:
             self.__field_ringtone=UINT(**{'default': 0x600})
-        if getattr(self, '__field_wallpaper', None) is None:
+        try: self.__field_wallpaper
+        except:
             self.__field_wallpaper=UINT(**{'default': 0x100})
 
 
@@ -1903,7 +1905,8 @@ class scheduleevent(BaseProtogenClass):
             self._complainaboutunusedargs(scheduleevent,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_packet_size', None) is None:
+        try: self.__field_packet_size
+        except:
             self.__field_packet_size=UINT(**{ 'constant': 64 })
 
 

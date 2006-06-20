@@ -2692,7 +2692,8 @@ class bufferpartrequest(BaseProtogenClass):
             self._complainaboutunusedargs(bufferpartrequest,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_bufpartsize', None) is None:
+        try: self.__field_bufpartsize
+        except:
             self.__field_bufpartsize=UINT(**{'constant': 1024})
 
 
@@ -2806,7 +2807,8 @@ class bufferpartresponse(BaseProtogenClass):
             self._complainaboutunusedargs(bufferpartresponse,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_bufpartsize', None) is None:
+        try: self.__field_bufpartsize
+        except:
             self.__field_bufpartsize=UINT(**{'constant': 1024})
 
 
@@ -2925,7 +2927,8 @@ class bufferpartupdaterequest(BaseProtogenClass):
             self._complainaboutunusedargs(bufferpartupdaterequest,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_bufpartsize', None) is None:
+        try: self.__field_bufpartsize
+        except:
             self.__field_bufpartsize=UINT(**{'constant': 1024})
 
 
@@ -3057,13 +3060,17 @@ class calleridbuffer(BaseProtogenClass):
             self._complainaboutunusedargs(calleridbuffer,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxentries', None) is None:
+        try: self.__field_maxentries
+        except:
             self.__field_maxentries=UINT(**{'constant': 500})
-        if getattr(self, '__field_startcommand', None) is None:
+        try: self.__field_startcommand
+        except:
             self.__field_startcommand=UINT(**{'constant': 0x46})
-        if getattr(self, '__field_bufsize', None) is None:
+        try: self.__field_bufsize
+        except:
             self.__field_bufsize=UINT(**{'constant': 7168})
-        if getattr(self, '__field_comment', None) is None:
+        try: self.__field_comment
+        except:
             self.__field_comment=USTRING(**{'default': "callerid"})
 
 
@@ -3240,15 +3247,20 @@ class ringerpicbuffer(BaseProtogenClass):
             self._complainaboutunusedargs(ringerpicbuffer,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_numpbslots', None) is None:
+        try: self.__field_numpbslots
+        except:
             self.__field_numpbslots=UINT(**{'constant': _NUMPBSLOTS})
-        if getattr(self, '__field_startcommand', None) is None:
+        try: self.__field_startcommand
+        except:
             self.__field_startcommand=UINT(**{'constant': 0xd7})
-        if getattr(self, '__field_packettype', None) is None:
+        try: self.__field_packettype
+        except:
             self.__field_packettype=UINT(**{'constant': 0x0f})
-        if getattr(self, '__field_bufsize', None) is None:
+        try: self.__field_bufsize
+        except:
             self.__field_bufsize=UINT(**{'constant': 1024})
-        if getattr(self, '__field_comment', None) is None:
+        try: self.__field_comment
+        except:
             self.__field_comment=USTRING(**{'default': "ringer/picture assignments"})
 
 
@@ -3593,11 +3605,14 @@ class pbsortbuffer(BaseProtogenClass):
             self._complainaboutunusedargs(pbsortbuffer,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_startcommand', None) is None:
+        try: self.__field_startcommand
+        except:
             self.__field_startcommand=UINT(**{'constant': 0x3c})
-        if getattr(self, '__field_bufsize', None) is None:
+        try: self.__field_bufsize
+        except:
             self.__field_bufsize=UINT(**{'constant': 4096})
-        if getattr(self, '__field_comment', None) is None:
+        try: self.__field_comment
+        except:
             self.__field_comment=USTRING(**{'default': "sort buffer"})
 
 
@@ -4615,13 +4630,17 @@ class wallpaperbuffer(BaseProtogenClass):
             self._complainaboutunusedargs(wallpaperbuffer,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_numpbslots', None) is None:
+        try: self.__field_numpbslots
+        except:
             self.__field_numpbslots=UINT(**{'constant': _NUMPBSLOTS})
-        if getattr(self, '__field_startcommand', None) is None:
+        try: self.__field_startcommand
+        except:
             self.__field_startcommand=UINT(**{'constant': 0x69})
-        if getattr(self, '__field_bufsize', None) is None:
+        try: self.__field_bufsize
+        except:
             self.__field_bufsize=UINT(**{'constant': 2048})
-        if getattr(self, '__field_comment', None) is None:
+        try: self.__field_comment
+        except:
             self.__field_comment=USTRING(**{'default': "wallpaper assignment info"})
 
 
@@ -6373,7 +6392,8 @@ class historyrequest(BaseProtogenClass):
             self._complainaboutunusedargs(historyrequest,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_type', None) is None:
+        try: self.__field_type
+        except:
             self.__field_type=UINT()
 
 
@@ -6559,7 +6579,8 @@ class historymiscrequest(BaseProtogenClass):
             self._complainaboutunusedargs(historymiscrequest,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_type', None) is None:
+        try: self.__field_type
+        except:
             self.__field_type=UINT()
 
 

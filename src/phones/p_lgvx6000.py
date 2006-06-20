@@ -871,7 +871,8 @@ class scheduleevent(BaseProtogenClass):
             self._complainaboutunusedargs(scheduleevent,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_packet_size', None) is None:
+        try: self.__field_packet_size
+        except:
             self.__field_packet_size=UINT(**{ 'constant': 60 })
 
 
@@ -2109,7 +2110,8 @@ class sms_out(BaseProtogenClass):
             self._complainaboutunusedargs(sms_out,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_callback', None) is None:
+        try: self.__field_callback
+        except:
             self.__field_callback=USTRING(**{ 'default': '' })
 
 

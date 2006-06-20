@@ -1701,7 +1701,8 @@ class indexfile(BaseProtogenClass):
             self._complainaboutunusedargs(indexfile,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 30})
 
 

@@ -549,7 +549,8 @@ class ringtone_index_entry(BaseProtogenClass):
             self._complainaboutunusedargs(ringtone_index_entry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_read_mode', None) is None:
+        try: self.__field_read_mode
+        except:
             self.__field_read_mode=BOOL(**{ 'default': True })
 
 

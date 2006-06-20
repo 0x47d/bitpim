@@ -48,7 +48,7 @@ SMS_CANNED_MAX_LENGTH=101
 
 BREW_FILE_SYSTEM=1
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 # playlist constants
 pl_dir='mmc1/my_mp3_playlist'

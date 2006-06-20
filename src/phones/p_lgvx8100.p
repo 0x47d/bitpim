@@ -46,7 +46,7 @@ MEDIA_RINGTONE_DEFAULT_ICON=1
 MEDIA_IMAGE_DEFAULT_ICON=0
 MEDIA_VIDEO_DEFAULT_ICON=0
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 # need to call stat to get the file time/data
 broken_filelist_date=True

@@ -45,7 +45,7 @@ MEDIA_RINGTONE_DEFAULT_ICON=1
 MEDIA_IMAGE_DEFAULT_ICON=0
 MEDIA_VIDEO_DEFAULT_ICON=0
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 # to allow for mixed up file naming for this phone
 this_takes_the_prize_for_the_most_brain_dead_call_history_file_naming_ive_seen=1
@@ -3502,7 +3502,8 @@ class sms_in(BaseProtogenClass):
             self._complainaboutunusedargs(sms_in,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_senders_name', None) is None:
+        try: self.__field_senders_name
+        except:
             self.__field_senders_name=USTRING()
 
 

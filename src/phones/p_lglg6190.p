@@ -97,7 +97,7 @@ cal_dir='sch'
 cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 %}
 
@@ -214,7 +214,7 @@ PACKET mediadesc:
     4 UINT {'default': 0x7824c97a} +magic3 "probably the file date (modified)"
     4 UINT {'constant': 0} +dunno2
     32 USTRING {'default': 'body'} +filename
-    32 USTRING {'default': 'identity'} +whoknows "set to iso-8859-1 in some cases??"
+    32 USTRING {'default': 'identity'} +whoknows "set to iso8859_1 in some cases??"
     32 USTRING mimetype
     32 USTRING {'default': ""} +whoknows2
 

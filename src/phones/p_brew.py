@@ -4577,7 +4577,8 @@ class new_writefilerequest(BaseProtogenClass):
             self._complainaboutunusedargs(new_writefilerequest,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_bytes', None) is None:
+        try: self.__field_bytes
+        except:
             self.__field_bytes=UINT()
 
 

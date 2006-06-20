@@ -712,7 +712,8 @@ class pbentry(BaseProtogenClass):
             self._complainaboutunusedargs(pbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_wallpaper', None) is None:
+        try: self.__field_wallpaper
+        except:
             self.__field_wallpaper=UINT(**{'constant': NOWALLPAPER})
 
 

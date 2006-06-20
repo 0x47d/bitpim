@@ -29,7 +29,7 @@ MAXEMAILS=3
 
 numbertypetab=( 'phone', 'home', 'office','cell', 'pager', 'fax' )
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 %}
 

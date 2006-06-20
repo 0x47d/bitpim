@@ -85,7 +85,7 @@ cal_has_voice_id=False
 # Text Memo const
 text_memo_file='sch/memo.dat'
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 %}
 

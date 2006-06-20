@@ -2457,7 +2457,8 @@ class read_phonebook_resp(BaseProtogenClass):
             self._complainaboutunusedargs(read_phonebook_resp,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_sim', None) is None:
+        try: self.__field_sim
+        except:
             self.__field_sim=BOOL(**{ 'default': False })
 
 
@@ -2732,15 +2733,20 @@ class read_sim_phonebook_resp(BaseProtogenClass):
             self._complainaboutunusedargs(read_sim_phonebook_resp,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_home', None) is None:
+        try: self.__field_home
+        except:
             self.__field_home=USTRING(**{ 'terminator': None, 'default': '' })
-        if getattr(self, '__field_office', None) is None:
+        try: self.__field_office
+        except:
             self.__field_office=USTRING(**{ 'terminator': None, 'default': '' })
-        if getattr(self, '__field_email', None) is None:
+        try: self.__field_email
+        except:
             self.__field_email=USTRING(**{ 'terminator': None, 'default': '' })
-        if getattr(self, '__field_memo', None) is None:
+        try: self.__field_memo
+        except:
             self.__field_memo=USTRING(**{ 'terminator': None, 'default': '' })
-        if getattr(self, '__field_sim', None) is None:
+        try: self.__field_sim
+        except:
             self.__field_sim=BOOL(**{ 'default': True })
 
 

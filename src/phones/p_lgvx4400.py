@@ -76,7 +76,7 @@ cal_has_voice_id=False
 # Text Memo const
 text_memo_file='sch/memo.dat'
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 class speeddial(BaseProtogenClass):
     __fields=['entry', 'number']
@@ -1397,7 +1397,8 @@ class indexfile(BaseProtogenClass):
             self._complainaboutunusedargs(indexfile,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 30})
 
 
@@ -1704,7 +1705,8 @@ class scheduleevent(BaseProtogenClass):
             self._complainaboutunusedargs(scheduleevent,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_packet_size', None) is None:
+        try: self.__field_packet_size
+        except:
             self.__field_packet_size=UINT(**{ 'constant': 60 })
 
 

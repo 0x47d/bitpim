@@ -93,7 +93,7 @@ cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 cal_has_voice_id=False
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 %}
 

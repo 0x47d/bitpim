@@ -47,9 +47,11 @@ class pbentry(BaseProtogenClass):
             self._complainaboutunusedargs(pbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_url', None) is None:
+        try: self.__field_url
+        except:
             self.__field_url=USTRING(**{'default': ""})
-        if getattr(self, '__field_birthday', None) is None:
+        try: self.__field_birthday
+        except:
             self.__field_birthday=CSVDATE(**{'default': ""})
 
 

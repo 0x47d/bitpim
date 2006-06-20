@@ -89,7 +89,7 @@ cal_dir='sch'
 cal_data_file_name='sch/schedule.dat'
 cal_exception_file_name='sch/schexception.dat'
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 class pbreadentryresponse(BaseProtogenClass):
     "Results of reading one entry"
@@ -1741,7 +1741,8 @@ class indexfile(BaseProtogenClass):
             self._complainaboutunusedargs(indexfile,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 30})
 
 
@@ -1999,7 +2000,8 @@ class camindexfile(BaseProtogenClass):
             self._complainaboutunusedargs(camindexfile,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 60})
 
 
@@ -2283,7 +2285,7 @@ class mediadesc(BaseProtogenClass):
 
     def __delfield_whoknows(self): del self.__field_whoknows
 
-    whoknows=property(__getfield_whoknows, __setfield_whoknows, __delfield_whoknows, "set to iso-8859-1 in some cases??")
+    whoknows=property(__getfield_whoknows, __setfield_whoknows, __delfield_whoknows, "set to iso8859_1 in some cases??")
 
     def __getfield_mimetype(self):
         return self.__field_mimetype.getvalue()
@@ -2325,7 +2327,7 @@ class mediadesc(BaseProtogenClass):
         yield ('magic3', self.__field_magic3, "probably the file date (modified)")
         yield ('dunno2', self.__field_dunno2, None)
         yield ('filename', self.__field_filename, None)
-        yield ('whoknows', self.__field_whoknows, "set to iso-8859-1 in some cases??")
+        yield ('whoknows', self.__field_whoknows, "set to iso8859_1 in some cases??")
         yield ('mimetype', self.__field_mimetype, None)
         yield ('whoknows2', self.__field_whoknows2, None)
 
@@ -2724,7 +2726,8 @@ class scheduleevent(BaseProtogenClass):
             self._complainaboutunusedargs(scheduleevent,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_packet_size', None) is None:
+        try: self.__field_packet_size
+        except:
             self.__field_packet_size=UINT(**{ 'constant': 64 })
 
 
@@ -3180,7 +3183,8 @@ class recipient_record(BaseProtogenClass):
             self._complainaboutunusedargs(recipient_record,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_name', None) is None:
+        try: self.__field_name
+        except:
             self.__field_name=USTRING(**{'encoding': PHONE_ENCODING, 'default':'', 'raiseonunterminatedread': False})
 
 

@@ -2148,7 +2148,8 @@ class indexfile(BaseProtogenClass):
             self._complainaboutunusedargs(indexfile,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 30})
 
 
@@ -2455,7 +2456,8 @@ class scheduleevent(BaseProtogenClass):
             self._complainaboutunusedargs(scheduleevent,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_packet_size', None) is None:
+        try: self.__field_packet_size
+        except:
             self.__field_packet_size=UINT(**{ 'constant': 60 })
 
 

@@ -398,9 +398,11 @@ class pbentry(BaseProtogenClass):
             self._complainaboutunusedargs(pbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_numberofemails', None) is None:
+        try: self.__field_numberofemails
+        except:
             self.__field_numberofemails=UINT(**{'constant': 1})
-        if getattr(self, '__field_numberofphonenumbers', None) is None:
+        try: self.__field_numberofphonenumbers
+        except:
             self.__field_numberofphonenumbers=UINT(**{'constant': 5})
 
 
@@ -773,7 +775,8 @@ class ringindex(BaseProtogenClass):
             self._complainaboutunusedargs(ringindex,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
-        if getattr(self, '__field_maxitems', None) is None:
+        try: self.__field_maxitems
+        except:
             self.__field_maxitems=UINT(**{'constant': 199})
 
 

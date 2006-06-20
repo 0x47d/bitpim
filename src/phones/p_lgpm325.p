@@ -37,7 +37,7 @@ NORINGTONE=0
 NOMSGRINGTONE=0
 NOWALLPAPER=0
 
-PHONE_ENCODING='iso-8859-1'
+PHONE_ENCODING='iso8859_1'
 
 numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
 
