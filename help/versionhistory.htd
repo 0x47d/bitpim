@@ -10,6 +10,7 @@
       <li>Fixed bug: phonebook preview with bad image.
       <li>Fixed bug: BitPim crashes when VX9800 fails to read media files.
       <li>Improved phone detection scheme for VX6100.
+      <li><b>Linux</b> ISO 8559-1 encoding is now found 
     </ul>
 
    <h2><a name="0.9.02">Changes in 0.9.02</a></h2>
