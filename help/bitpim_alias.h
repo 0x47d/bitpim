@@ -12,6 +12,7 @@ ID_DLG_PBMERGEENTRIES=dialog-mergingphonebookentries.htm
 ID_DLG_AUDIOCONVERT=dialog-audioconversion.htm
 ID_DLG_CALENDAR_IMPORT=dialog-calendarimport.htm
 ID_DLG_IMAGEPREVIEW=dialog-imagepreview.htm
+ID_DLG_CALENDAR_MERGE=dialog-calendarmerge.htm
 ID_TAB_TODAY=tab-today.htm
 ID_TAB_PHONEBOOK=tab-phonebook.htm
 ID_TAB_WALLPAPER=tab-wallpaper.htm
