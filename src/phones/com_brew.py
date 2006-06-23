@@ -170,10 +170,18 @@ class DebugBrewProtocol:
                 pass
     def rmdir(self,name):
         self.log("Deleting directory '"+name+"'")
-        os.rmdir(os.path.join(self._fs_path, name))
+        try:
+            os.rmdir(os.path.join(self._fs_path, name))
+        except:
+            # convert to brew exception
+            raise BrewNoSuchDirectoryException
     def rmfile(self,name):
         self.log("Deleting file '"+name+"'")
-        os.remove(os.path.join(self._fs_path, name))
+        try:
+            os.remove(os.path.join(self._fs_path, name))
+        except:
+            # convert to brew exception
+            raise BrewNoSuchFileException
     def rmdirs(self, path):
         self.progress(0,1, "Listing child files and directories")
         all=self.getfilesystem(path, 100)
@@ -775,6 +783,10 @@ class RealBrewProtocol:
                 raise BrewBadBrewCommandException()
         if ord(data[0])==0x14:
             raise BrewMalformedBrewCommandException()
+        # the vx8300 returns yet another error for access denied (probably related to the new brew protocol)
+        if ord(data[0])==0x4b and ord(data[1])==0x04 and ord(data[2])==0x1c:
+            raise BrewAccessDeniedException()
+
         # parse data
         buffer=prototypes.buffer(data)
         res=responseclass()

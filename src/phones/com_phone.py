@@ -204,6 +204,8 @@ class Profile:
         "camera": {'meta-help': 'Camera images'},
         "camera-fullsize": {'meta-help': 'Fullsize camera images'},
         "video": {'meta-help': 'Video clips'},
+        "images(sd)": {'meta-help': 'General images stored on removable media'},
+        "video(sd)": {'meta-help': 'Video clips stored on removable media'},
         }
 
     stockimagetargets={

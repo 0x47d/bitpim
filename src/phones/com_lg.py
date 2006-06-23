@@ -1203,6 +1203,292 @@ class LGDirectoryMedia:
         reindexfunction(results)
         return results
 
+class LGUncountedIndexedMedia:
+    """Implements media for LG phones that use the new index format with index file with no counters such as the VX8300
+    Allow external media to be managed without downloading files, can detect if external media is present.
+    Also contains 'hack' for ringtones to allow users to store ringtones on the external media"""
+
+    def __init__(self):
+        pass
+
+    def getmediaindex(self, builtins, maps, results, key):
+        """Gets the media (wallpaper/ringtone) index
+
+        @param builtins: the builtin list on the phone
+        @param results: places results in this dict
+        @param maps: the list of index files and locations
+        @param key: key to place results in
+        """
+
+        self.log("Reading "+key)
+        media={}
+
+        # builtins
+        for i,n in enumerate(builtins): # nb zero based index whereas previous phones used 1
+            media[i]={'name': n, 'origin': 'builtin'}
+
+        # maps
+        index=0
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            for item in self.getindex(indexfile):
+                media[index]={
+                    'name': basename(item.filename),
+                    'filename': item.filename,
+                    'origin': type,
+                    }
+                if item.date!=0:
+                    media[index]['date']=item.date
+                index+=1
+
+        # finish
+        results[key]=media
+
+    def getindex(self, filename):
+        "read an index file"
+        try:
+            buf=prototypes.buffer(self.getfilecontents(filename))
+        except com_brew.BrewNoSuchFileException:
+            return []
+
+        g=self.protocolclass.indexfile()
+        # some media indexes have crap appended to the end, prevent this error from messing up everything
+        # valid entries at the start of the file will still get read OK. 
+        try:
+            g.readfrombuffer(buf, logtitle="Index file "+filename)
+        except:
+            self.log("Corrupt index file "+`filename`+", this might cause you all sorts of problems.")
+        return g.items
+
+    def getmedia(self, maps, results, key):
+        origins={}
+        # signal that we are using the new media storage that includes the origin and timestamp
+        origins['new_media_version']=1
+
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            media={}
+            for item in self.getindex(indexfile):
+                data=None
+                # skip files that are not in the actual directory
+                # these are external media files that are handled
+                # differently, this will prevent them from showing 
+                # in the media views
+                if not item.filename.startswith(directory):
+                    continue
+                timestamp=None
+                try:
+                    stat_res=self.statfile(item.filename)
+                    if stat_res!=None:
+                        timestamp=stat_res['date'][0]
+                    if not self.is_external_media(item.filename):
+                        data=self.getfilecontents(item.filename, True)
+                    else:
+                        # for external memory skip reading it is very slow
+                        # the file will show up in bitpim allowing it to 
+                        # be managed, files added from bitpim will be 
+                        # visible because we will have a copy of the
+                        # file we copied to the phone.
+                        data=''
+                except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
+                    self.log("It was in the index, but not on the filesystem")
+                except com_brew.BrewAccessDeniedException:
+                    # firmware wouldn't let us read this file, just mark it then
+                    self.log('Failed to read file: '+item.filename)
+                    data=''
+                if data!=None:
+                    media[common.basename(item.filename)]={ 'data': data, 'timestamp': timestamp}
+            origins[type]=media
+
+        results[key]=origins
+        return results
+
+    def is_external_media(self, filename):
+        return filename.startswith(self.external_storage_root)
+
+    def external_storage_present(self):
+        dircache=self.DirCache(self)
+        test_name=self.external_storage_root+"bitpim_test"
+        try:
+            dircache.writefile(test_name, "bitpim_test")
+        except:
+            return False
+        dircache.rmfile(test_name)
+        return True
+
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+        """Actually saves out the media
+
+        @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
+        @param mediaindexkey:  index key (eg 'wallpaper-index')
+        @param maps: list index files and locations
+        @param results: results dict
+        @param merge: are we merging or overwriting what is there?
+        @param reindexfunction: the media is re-indexed at the end.  this function is called to do it
+        """
+
+        # take copies of the lists as we modify them
+        wp=results[mediakey].copy()  # the media we want to save
+        wpi=results[mediaindexkey].copy() # what is already in the index files
+
+        # remove builtins
+        for k in wpi.keys():
+            if wpi[k].get('origin', "")=='builtin':
+                del wpi[k]
+
+        use_external_media=self.external_storage_present()
+        skip_origin=[]
+        
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            # if no external media is present skip indexes which refer
+            # to external media
+            if self.is_external_media(directory) and not use_external_media:
+                self.log(" No external storage detected. Skipping "+type+" media.")
+                skip_origin.append(type)
+            else:
+                # make sure the media directory exists
+                try:
+                    self.mkdirs(directory)
+                except:
+                    pass
+
+
+        # build up list into init
+        init={}
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            init[type]={}
+            for k in wpi.keys():
+                if wpi[k]['origin']==type:
+                    name=wpi[k]['name']
+                    fullname=wpi[k]['filename']
+                    data=None
+                    del wpi[k]
+                    for w in wp.keys():
+                        # does wp contain a reference to this same item?
+                        if wp[w]['name']==name and wp[w]['origin']==type:
+                            data=wp[w]['data']
+                            del wp[w]
+                    if not merge and data is None:
+                        # delete the entry
+                        continue
+                    if type in skip_origin:
+                        self.log("skipping "+name+" in index "+type+" no external media detected")
+                    elif fullname.startswith(directory):
+                        # only add in files that are really in the media directory on the phone
+                        # fake files will be added in later in this function
+                        init[type][name]={'data': data, 'filename': fullname}
+
+        # init now contains what is in the original indexes that should stay on the phone
+        # wp contains items that we still need to add, and weren't in the existing index
+        assert len(wpi)==0
+        
+        # now look through the media and see if anything was assigned a particular
+        # origin and put it in the indexes, things that were not assigned are dropped
+        for w in wp.keys():
+            o=wp[w].get("origin", "")
+            if o is not None and len(o) and o in init and o not in skip_origin:
+                init[o][wp[w]['name']]={'data': wp[w]['data']}
+                del wp[w]
+
+        # if external media is specified, add all the extra files to the index
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            if type not in skip_origin and len(external_dir):
+                if self.is_external_media(external_dir) and not use_external_media:
+                    continue
+                try:
+                    dirlisting=self.listfiles(external_dir)
+                except:
+                    self.log("Unable to list files in external directory "+external_dir)
+                    continue
+                for file in dirlisting:
+                    init[type][basename(file)]={'data': 'bitpim:)', 'filename': file}
+
+
+        # time to write the files out
+        dircache=self.DirCache(self)
+        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+            if type not in skip_origin:
+                # get the old index file so we can work out what to delete
+                for item in self.getindex(indexfile):
+                    # force the name to the correct directory
+                    # this will then cleanup fake external files that are
+                    # no longer in the index
+                    real_filename=directory+"/"+basename(item.filename)
+                    if basename(item.filename) not in init[type]:
+                        self.log(real_filename+" is being deleted")
+                        try:
+                            dircache.rmfile(real_filename)
+                        except com_brew.BrewNoSuchFileException:
+                            self.log("Hmm, it didn't exist!")
+                # write each entry out
+                for idx in init[type].keys():
+                    entry=init[type][idx]
+                    # we force the use of the correct directory, regardless of the 
+                    # actual path the file is in, the phone requires the file to be in the correct
+                    # location or it will rewrite the index file on reboot
+                    # the actual index file can point to a different location
+                    # as long as the filename exists, allowing a hack.
+                    filename=directory+"/"+idx
+                    if not entry.has_key('filename'):
+                        entry['filename']=filename
+                    fstat=dircache.stat(filename)
+                    if 'data' not in entry:
+                        # must be in the filesystem already
+                        if fstat is None:
+                            self.log("Entry "+idx+" is in index "+indexfile+" but there is no data for it and it isn't in the filesystem.  The index entry will be removed.")
+                            del init[type][idx]
+                            continue
+                    # check len(data) against fstat->length
+                    data=entry['data']
+                    if data is None:
+                        assert merge 
+                        continue # we are doing an add and don't have data for this existing entry
+                    if not data:
+                        # check for files with no data, probably due to access denied or external media read
+                        self.log('Not writing '+filename+', no data available')
+                        continue
+                    if fstat is not None and len(data)==fstat['size']:
+                        self.log("Not writing "+filename+" as a file of the same name and length already exists.")
+                    else:
+                        dircache.writefile(filename, data)
+            # write out index
+            ifile=self.protocolclass.indexfile()
+            idxlist=init[type].keys()
+            idxlist.sort()
+            idxlist.reverse()
+            for idx in idxlist:
+                ie=self.protocolclass.indexentry()
+                ie.type=typemajor
+                ie.filename=init[type][idx]['filename']
+                fstat=dircache.stat(init[type][idx]['filename'])
+                if fstat is not None:
+                    ie.size=fstat['size']
+                else:
+                    ie.size=0
+                # ie.date left as zero
+                ifile.items.append(ie)
+            buf=prototypes.buffer()
+            ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
+            self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
+            dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
+        return reindexfunction(results)
+                            
+    def getwallpaperindices(self, results):
+        return self.getmediaindex(self.builtinwallpapers, self.wallpaperlocations, results, 'wallpaper-index')
+
+    def getringtoneindices(self, results):
+        return self.getmediaindex(self.builtinringtones, self.ringtonelocations, results, 'ringtone-index')
+
+    def getwallpapers(self, result):
+        return self.getmedia(self.wallpaperlocations, result, 'wallpapers')
+
+    def getringtones(self, result):
+        return self.getmedia(self.ringtonelocations, result, 'ringtone')
+
+    def savewallpapers(self, results, merge):
+        return self.savemedia('wallpapers', 'wallpaper-index', self.wallpaperlocations, results, merge, self.getwallpaperindices)
+            
+    def saveringtones(self, results, merge):
+        return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
+
 
 def basename(name):
     if name.rfind('/')>=0:

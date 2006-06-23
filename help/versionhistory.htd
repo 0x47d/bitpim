@@ -1,5 +1,11 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.04">Changes in 0.9.04</a></h2>
+    <ul>
+      <li>Add support for <B>LG-VX8300</B> (Verizon). Calendar not supported. 
+      Phonebook ringer and wallpaper assignment not supported.
+    </ul>
+
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>
     <ul>
       <li>Added Call History and SMS support to the A950.
