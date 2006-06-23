@@ -157,21 +157,21 @@ class PhoneModelPage(MyPage):
                                      style=wx.LB_MULTIPLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._carriers_lb.GetId(), self.OnCarriersLB)
         _sbs.Add(self._carriers_lb, 1, wx.EXPAND|wx.ALL, 5)
-        hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(_sbs, 1, wx.EXPAND|wx.ALL, 5)
         _sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Manufacturers'),
                                wx.VERTICAL)
         self._manuf_lb=wx.ListBox(self, -1,
                                   style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._manuf_lb.GetId(), self.OnCarriersLB)
         _sbs.Add(self._manuf_lb, 1, wx.EXPAND|wx.ALL, 5)
-        hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(_sbs, 1, wx.EXPAND|wx.ALL, 5)
         _sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Models'),
                                wx.VERTICAL)
         self._models_lb=wx.ListBox(self, -1,
                                    style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._models_lb.GetId(), self.OnModelsLB)
         _sbs.Add(self._models_lb, 1, wx.EXPAND|wx.ALL, 5)
-        hs.Add(_sbs, 0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(_sbs, 1, wx.EXPAND|wx.ALL, 5)
         return hs
 
     def _populate_models(self, carriers=None, brand=None):
