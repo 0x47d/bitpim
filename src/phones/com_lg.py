@@ -477,8 +477,7 @@ class LGNewIndexedMedia:
                     stat_res=self.statfile(item.filename)
                     if stat_res!=None:
                         timestamp=stat_res['date'][0]
-                    if not self._is_rs_file(item.filename):
-                        data=self.getfilecontents(item.filename, True)
+                    data=self.getfilecontents(item.filename, True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
                 if data!=None:
@@ -743,8 +742,7 @@ class LGNewIndexedMedia2(LGNewIndexedMedia):
                     stat_res=self.statfile(item.filename)
                     if stat_res!=None:
                         timestamp=stat_res['date'][0]
-                    if not self._is_rs_file(item.filename):
-                        data=self.getfilecontents(item.filename, True)
+                    data=self.getfilecontents(item.filename, True)
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
                 except com_brew.BrewAccessDeniedException:
