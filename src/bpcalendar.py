@@ -190,6 +190,8 @@ class RepeatEntry(object):
 
     def __eq__(self, rhs):
         # return T if equal
+        if not isinstance(rhs, RepeatEntry):
+            return False
         if self.repeat_type!=rhs.repeat_type:
             return False
         if self.repeat_type==RepeatEntry.daily:
