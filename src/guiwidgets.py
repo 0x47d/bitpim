@@ -1791,9 +1791,10 @@ class DRRecFileDialog(wx.Dialog):
                 flag=wx.EXPAND|wx.ALL)
         self._append=wx.CheckBox(self, -1, 'Append to existing file')
         fgs.Add(self._append, pos=(1, 1), flag=wx.EXPAND|wx.ALL)
-        _setstart_btn=wx.Button(self, -1, 'Set Start')
-        wx.EVT_BUTTON(self, _setstart_btn.GetId(), self.OnSetStart)
-        fgs.Add(_setstart_btn, pos=(1, 2), flag=wx.EXPAND|wx.ALL)
+        if __debug__:
+            _setstart_btn=wx.Button(self, -1, 'Set Start')
+            wx.EVT_BUTTON(self, _setstart_btn.GetId(), self.OnSetStart)
+            fgs.Add(_setstart_btn, pos=(1, 2), flag=wx.EXPAND|wx.ALL)
         fgs.Add(wx.StaticText(self, -1, 'Status:'), pos=(2,0),
                               flag=wx.EXPAND|wx.ALL)
         self._status=wx.StaticText(self, -1, 'None')
