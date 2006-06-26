@@ -4,6 +4,9 @@
     <ul>
       <li>Add support for <B>LG-VX8300</B> (Verizon). Calendar not supported. 
       Phonebook ringer and wallpaper assignment not supported.
+      <li>Fixed bug: Calendar read raised exception.
+      <li>Fixed bug: LG VX7000 media read raised exception.
+      <li>Yet another attempt to fix LG VX6000/6100 auto-detection.
     </ul>
 
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>
