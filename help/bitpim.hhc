@@ -528,6 +528,24 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="LG VX-8300">
+        <param name="Local" value="phone-lgvx8300.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Cables">
+          <param name="Local" value="phone-lgvx8300-cables.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-lgvx8300-notes.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Howtos">
+          <param name="Local" value="phone-lgvx8300-howtos.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="LG VX-9800">
         <param name="Local" value="phone-lgvx9800.htm">
         </OBJECT>

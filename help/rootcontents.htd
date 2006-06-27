@@ -167,6 +167,12 @@ BEGIN_TOC
             TOCITEM_2(Notes,phone-lgvx8100-notes.htm)
             TOCITEM_2(Howtos,phone-lgvx8100-howtos.htm)
             ENDTOC_2
+        TOCITEM_1(LG VX-8300,phone-lgvx8300.htm)
+            TOC_2
+            TOCITEM_2(Cables,phone-lgvx8300-cables.htm)
+            TOCITEM_2(Notes,phone-lgvx8300-notes.htm)
+            TOCITEM_2(Howtos,phone-lgvx8300-howtos.htm)
+            ENDTOC_2
         TOCITEM_1(LG VX-9800,phone-lgvx9800.htm)
             TOC_2
             TOCITEM_2(Cables,phone-lgvx9800-cables.htm)
