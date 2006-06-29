@@ -169,6 +169,22 @@ def getversion():
     return version.version
 
 import phones
+import encodings.aliases
+def getallencodingsmodules():
+    # work-around for cx_freeze: add all encodings modules
+    _mod={}
+    for _key,_entry in encodings.aliases.aliases.items():
+        _mod[_entry]=None
+    _res=[]
+    for _key in _mod.keys():
+        # collect what we have
+        try:
+            _mod_name='encodings.'+_key
+            __import__(_mod_name)
+            _res.append(_mod_name)
+        except (ImportError,AttributeError):
+            pass
+    return _res
 
 def getcxfreezeoptions(defaults):
     defaults.update(
@@ -176,7 +192,8 @@ def getcxfreezeoptions(defaults):
         'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}],
         }
         )
-    defaults['options']['cxfreeze']['includes']=phones.getallmodulenames()
+    defaults['options']['cxfreeze']['includes']=phones.getallmodulenames()+\
+                                                 getallencodingsmodules()
     return defaults
 
 def getpy2appoptions(defaults):
