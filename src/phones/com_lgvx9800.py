@@ -196,6 +196,20 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
         results[key]=origins
         return results
 
+    def _mark_files(self, local_files, rs_files, local_dir):
+        # create empty local files as markers for remote files
+        _empty_files=[common.basename(x) for x,_entry in local_files.items() \
+                      if not _entry['size']]
+        _remote_files=[common.basename(x) for x in rs_files]
+        for _file in _remote_files:
+            if _file not in _empty_files:
+                # mark this one
+                self.writefile(local_dir+'/'+_file, '')
+        for _file in _empty_files:
+            if _file not in _remote_files:
+                # remote file no longer exists, del the marker
+                self.rmfile(local_dir+'/'+_file)
+                
     def _write_index_file(self, type):
         _info=self.media_info.get(type, None)
         if not _info:
@@ -218,11 +232,20 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
             pass
         try:
             if _rs_dir:
-                _files.update(self.listfiles(_rs_dir))
+                _rs_files=self.listfiles(_rs_dir)
+                if type=='ringers':
+                    self._mark_files(_files, _rs_files, _local_dir)
+                _files.update(_rs_files)
         except (com_brew.BrewNoSuchDirectoryException,
                 com_brew.BrewBadPathnameException):
             # dir does not exist, no media files available
             pass
+        # del all the markers (empty files) ringers
+        if type=='ringers':
+            _keys=_files.keys()
+            for _key in _keys:
+                if not _files[_key]['size']:
+                    del _files[_key]
         # dict of all indices
         _idx_keys={}
         for _i in xrange(_index, _index+_maxsize):
