@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
+    <ul>
+      <LI>Added a work-around that allows storing ringtones on miniSD cards for the <B>VX9800 (V2+)</B>, which was inadvertently left out from the release <B>0.9.03</B>.
+    </ul>
+
    <h2><a name="0.9.04">Changes in 0.9.04</a></h2>
     <ul>
       <li>Add support for <B>LG-VX8300</B> (Verizon). Calendar not supported. 
@@ -7,6 +12,7 @@
       <li>Fixed bug: Calendar read raised exception.
       <li>Fixed bug: LG VX7000 media read raised exception.
       <li>Yet another attempt to fix LG VX6000/6100 auto-detection.
+
     </ul>
 
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>

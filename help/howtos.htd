@@ -9,7 +9,8 @@ BEGIN_TOC
     TOCITEM_0(Import Outlook Notes/Tasks,howtos-importoutlooknotes.htm)
     TOCITEM_0(Add Ringtones,howto-addringtones.htm)
     TOCITEM_0(Add Images,howto-addimages.htm)
-    TOCITEM_0(Set category, ringtone, or wallpaper to multiple contacts,howtos-group-edit.htm)
+    TOCITEM_0(Set category/ringtone/or wallpaper to multiple contacts,howtos-group-edit.htm)
+    TOCITEM_0(Do Data Recording,howtos-datarecording.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->
