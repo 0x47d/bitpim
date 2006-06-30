@@ -29,6 +29,7 @@ BOOL=BOOLlsb
 # vx8100 uses a type based index for speed dials instead of positional like the vx4400
 SPEEDDIALINDEX=1 
 MAXCALENDARDESCRIPTION=32
+MAX_PHONEBOOK_GROUPS=30
 
 SMS_CANNED_MAX_ITEMS=18
 SMS_CANNED_MAX_LENGTH=101

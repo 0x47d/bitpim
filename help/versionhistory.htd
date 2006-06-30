@@ -3,6 +3,7 @@
    <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
     <ul>
       <LI>Added a work-around that allows storing ringtones on miniSD cards for the <B>VX9800 (V2+)</B>, which was inadvertently left out from the release <B>0.9.03</B>.
+      <li>Raise bitpim phonebook group limit from 10 to 30 on LG-VX5200/8100/9800. 
     </ul>
 
    <h2><a name="0.9.04">Changes in 0.9.04</a></h2>

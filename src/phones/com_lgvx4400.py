@@ -1285,7 +1285,7 @@ class Profile(parentprofile):
                     name=data['groups'][k]['name']
                     pad.append(name)
 
-        groups=helper.getmostpopularcategories(10, data['phonebook'], ["No Group"], 22, pad)
+        groups=helper.getmostpopularcategories(self.protocolclass.MAX_PHONEBOOK_GROUPS, data['phonebook'], ["No Group"], 22, pad)
 
         # alpha sort
         groups.sort()
