@@ -786,6 +786,12 @@ class RealBrewProtocol:
         # the vx8300 returns yet another error for access denied (probably related to the new brew protocol)
         if ord(data[0])==0x4b and ord(data[1])==0x04 and ord(data[2])==0x1c:
             raise BrewAccessDeniedException()
+        # the lx550 returns yet another error for access denied listing directories (probably related to the new brew protocol)
+        if ord(data[0])==0x4b and ord(data[1])==0x0a and ord(data[2])==0x1c:
+            raise BrewAccessDeniedException()
+        # the lx550 returns yet another error for access denied listing files in a dir (probably related to the new brew protocol)
+        if ord(data[0])==0x4b and ord(data[1])==0x0b and ord(data[2])==0x1c:
+            raise BrewAccessDeniedException()
 
         # parse data
         buffer=prototypes.buffer(data)

@@ -752,13 +752,37 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                     raise Exception("Unable to create media directory "+dir_name)
                 relative_name=os.path.join(db_rr[k]['origin'], db_rr[k]['name'])
                 fname=os.path.join(self.mainwindow.blob_path, relative_name)
-                f=open(fname, "wb")
+                try:
+                    f=open(fname, "wb")
+                except:
+                    # probably a filename the OS cannot understand so simplify it.
+                    new_name=self.fix_bad_filename(db_rr[k]['name'])
+                    # try again
+                    relative_name=os.path.join(db_rr[k]['origin'], new_name)
+                    fname=os.path.join(self.mainwindow.blob_path, relative_name)
+                    f=open(fname, "wb")
+                    # success, update the database
+                    db_rr[k]['name']=new_name
                 f.write(db_rr[k]['mediadata'])
                 f.close()
                 db_rr[k]['mediadata']=relative_name
         database.ensurerecordtype(db_rr, mediaobjectfactory)
         self.mainwindow.database.savemajordict(self.database_key, db_rr)
 
+    def fix_bad_filename(self, old_name):
+        # convert to ascii
+        temp_name=common.encode_with_degrade(old_name, 'ascii', 'ignore')
+        new_name=''
+        # remove bad characters
+        bad_chars={
+            '__WXMSW__': ('/', '\\', '[', ']', '?', '*', ':',
+                          '"', '<', '>', '|', '=', ';'),
+            '__WXMAC__': ('/', ':'),
+            '__WXGTK__': ('/') }
+        for c in temp_name:
+            if c not in bad_chars.get(wx.Platform, ()):
+                new_name+=c
+        return new_name
 
     def _load_from_db(self, result):
         dict=self.mainwindow.database.\
@@ -774,9 +798,14 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                     f=open(fname, "rb")
                     ce.mediadata=f.read()
                     f.close()
+                    r[ce.id]=ce
                 except:
-                    ce.mediadata=None
-            r[ce.id]=ce
+                    # abandon data that has no file it probably means that 
+                    # blobs directory is corrupted, maybe the user deleted
+                    # the file themselves
+                    pass
+            else:
+                r[ce.id]=ce
         result.update({ self.database_key: r})
         return result
 
@@ -1003,9 +1032,6 @@ class FileView(wx.Panel, widgets.BitPimWidget):
 
     def get_media_name_from_filename(self, filename, newext=''):
         path,filename=os.path.split(filename)
-        # get an ascii representation of the filename
-        if not isinstance(filename, unicode):
-            filename=filename.decode(getfilesystemencoding)
         # degrade to ascii
         degraded_fname=common.encode_with_degrade(filename, 'ascii', 'ignore')
         # decode with media codec in case it contains escape characters
@@ -1104,7 +1130,10 @@ class FileViewDisplayItem(object):
             self.size=len(me.mediadata)
             self.no_data=False
             if me.timestamp!=None and me.timestamp!=0:
-                self.timestamp=time.strftime("%x %X", time.localtime(me.timestamp))
+                try:
+                    self.timestamp=time.strftime("%x %X", time.localtime(me.timestamp))
+                except: # unexplained errors sometimes, so skip timestamp if this fails
+                    self.timestamp=''
             fileinfo=self.view.GetFileInfoString(me.mediadata)
             if fileinfo!=None:
                 self.short=fileinfo.shortdescription()
