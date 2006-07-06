@@ -61,6 +61,7 @@ import common
 import commport
 import comscan
 import phones
+import usbscan
 
 class DetectPhone(object):
     __default_timeout=1
@@ -183,10 +184,10 @@ class DetectPhone(object):
     def detect(self, using_port=None, using_model=None):
         # start the detection process
         # 1st, get the list of available ports
-        coms=comscan.comscan()
+        coms=comscan.comscan()+usbscan.usbscan()
         self.log('coms:'+str(coms))
         available_modem_coms=[x['name'] for x in coms if x['available'] \
-                              and x['class']=='modem']
+                              and x.get('class', None)=='modem']
         if not using_port:
             available_coms=[x['name'] for x in coms if x['available']]
         else:
