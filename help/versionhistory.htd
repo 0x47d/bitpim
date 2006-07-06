@@ -2,8 +2,11 @@
 
    <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
     <ul>
-      <LI>Added a work-around that allows storing ringtones on miniSD cards for the <B>VX9800 (V2+)</B>, which was inadvertently left out from the release <B>0.9.03</B>.
       <li>Raise bitpim phonebook group limit from 10 to 30 on LG-VX5200/8100/9800. 
+      <li>Fixed Set Phone wizard for Linux plaform.
+      <li>Fixed auto-detection to include libusb ports for Linux.
+      <li>Fixed bug: BitPim does not always terminate on Linux.
+      <li>Fixed bug: get calendar data raised exception.
     </ul>
 
    <h2><a name="0.9.04">Changes in 0.9.04</a></h2>
@@ -13,7 +16,7 @@
       <li>Fixed bug: Calendar read raised exception.
       <li>Fixed bug: LG VX7000 media read raised exception.
       <li>Yet another attempt to fix LG VX6000/6100 auto-detection.
-
+      <LI>Added a work-around that allows storing ringtones on miniSD cards for the <B>VX9800 (V2+)</B>, which was inadvertently left out from the release <B>0.9.03</B>.
     </ul>
 
    <h2><a name="0.9.03">Changes in 0.9.03</a></h2>
