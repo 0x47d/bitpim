@@ -625,6 +625,12 @@ class MainApp(wx.App):
         # treading._MainThread
         sys.excepthook=donothingexceptionhandler
 
+    def ExitMainLoop(self):
+        if guihelper.IsGtk():
+            # This hangs for GTK, so what the heck!
+            sys.exit(0)
+        super(MainApp, self).ExitMainLoop()
+
 # do nothing exception handler
 def donothingexceptionhandler(*args):
     pass
