@@ -21,6 +21,7 @@ import common
 import comscan
 import phone_detect
 import phones
+import usbscan
 
 #-------------------------------------------------------------------------------
 class MyPage(wiz.WizardPageSimple):
@@ -77,7 +78,8 @@ class CommPortPage(MyPage):
         super(CommPortPage, self).__init__(parent, 'Communication Port Setting',
                                            'Set the serial port through which BitPim communicates with the phone.')
         self._ports=[{'name': 'auto', 'description': 'BitPim will try to detect the correct port automatically when accessing your phone'}]+\
-                     [x for x in comscan.comscan() if x.get('available', False)]
+                     [x for x in comscan.comscan()+usbscan.usbscan() \
+                      if x.get('available', False)]
         self._populate()
         self._set_max_size()
 
@@ -145,6 +147,7 @@ class CommPortPage(MyPage):
 #-------------------------------------------------------------------------------
 class PhoneModelPage(MyPage):
     def __init__(self, parent):
+        self._setbyme=False
         super(PhoneModelPage, self).__init__(parent, 'Phone Model Setting',
                                         'Set your phone model.')
         self._populate()
@@ -205,9 +208,12 @@ class PhoneModelPage(MyPage):
         data['phone']=self._models_lb.GetStringSelection()
 
     def OnCarriersLB(self, evt):
+        if self._setbyme:
+            return
         _s=self._carriers_lb.GetSelections()
         if _s==wx.NOT_FOUND:
             return
+        self._setbyme=True
         if 0 in _s:
             _carriers=None
         else:
@@ -218,13 +224,18 @@ class PhoneModelPage(MyPage):
         else:
             _brand=_s
         self._populate_models(_carriers, _brand)
+        self._setbyme=False
 
     def OnModelsLB(self, evt):
+        if self._setbyme:
+            return
+        self._setbyme=True
         _model=evt.GetString()
         self._manuf_lb.SetStringSelection(phones.manufacturer(_model))
         self._populate_carriers()
         for s in phones.carriers(_model):
             self._carriers_lb.SetStringSelection(s)
+        self._setbyme=False
 
 #-------------------------------------------------------------------------------
 class SummaryPage(MyPage):
