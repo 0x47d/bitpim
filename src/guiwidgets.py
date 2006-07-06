@@ -1239,12 +1239,11 @@ class MyStatusBar(wx.StatusBar):
         wx.EVT_SIZE(self, self.OnSize)
         wx.EVT_IDLE(self, self.OnIdle)
         self.gauge=wx.Gauge(self, 1000, 1)
-        self._status=StatusText(self, -1, '',
-                                   style=wx.ST_NO_AUTORESIZE)
-        self._phone_model=StatusText(self, -1, '')
+        self._status=StatusText(self, -1, '', style=wx.ST_NO_AUTORESIZE)
+        self._phone_model=StatusText(self, -1, '', style=wx.ST_NO_AUTORESIZE)
         self.SetFieldsCount(self.__total_panes)
         self.SetStatusWidths(self.__pane_width)
-        self.Reposition()
+##        self.Reposition()
 
     def OnSize(self,_):
         self.sizechanged=True
@@ -1271,6 +1270,7 @@ class MyStatusBar(wx.StatusBar):
         self._status.SetSize(wx.Size(rect.width-4, rect.height-4))
         rect=self.GetFieldRect(self.__phone_model_index)
         self._phone_model.SetPosition(wx.Point(rect.x+rect.width/2+2, rect.y+2))
+        self._phone_model.SetSize(wx.Size(rect.width/2-4, rect.height-4))
 
     def progressminor(self, pos, max, desc=""):
         self.gauge.SetRange(max)
