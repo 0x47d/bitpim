@@ -217,10 +217,6 @@ class USBFile:
         self.close()
 
     def resetep(self, resetin=True, resetout=True):
-        return
-        print "unhalting/resetting endpoints"
-        self.write('')
-        return
         if resetin:
             res=usb.usb_clear_halt(self.iface.device.handle, self.addrin)
             if TRACE: print "usb_clear_halt(%s,%d)=%d" % (self.iface.device.handle, self.addrin, res)
@@ -261,9 +257,10 @@ class USBFile:
             if res<0:
                 raise USBException()
             data=data[res:]
-            
+
     def close(self):
         if self.claimed:
+            self.resetep()
             self.usb.usb_release_interface(self.iface.device.handle, self.iface.number())
         self.usb=None
         self.claimed=False
