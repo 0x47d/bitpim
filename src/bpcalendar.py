@@ -1733,7 +1733,7 @@ class MergeDataTable(gridlib.PyGridTableBase):
             elif _row[self._new_index]:
                 # add this new entry
                 _key=_row[self._key_index]
-                self._old[_key]=self._new[key]
+                self._old[_key]=self._new[_key]
             elif _row[self._changed_index]:
                 # replace the old entry with this new one
                 _new_key=_row[self._key_index]
