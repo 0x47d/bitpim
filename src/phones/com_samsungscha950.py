@@ -3,7 +3,7 @@
 ### Copyright (C) 2006 Joe Pham <djpham@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
-### it under the terms of the BitPim license as detailed ESN_respin the LICENSE file.
+### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
 ### $Id:  $
 
@@ -656,6 +656,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     # Phone Detection-----------------------------------------------------------
     my_model='SCH-A950/DM'
     my_manufacturer='SAMSUNG'
+    detected_model='A950'
     def is_mode_brew(self):
         # Borrowed from the VX4400
         req=self.protocolclass.memoryconfigrequest()
@@ -675,7 +676,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         try:
             _req=self.protocolclass.firmwarerequest()
             _resp=self.sendbrewcommand(_req, self.protocolclass.DefaultResponse)
-            if _resp.data[31:35]=='A950':
+            if _resp.data[31:35]==self.detected_model:
                 # yup, this's it!
                 res['model']=self.my_model
                 res['manufacturer']=self.my_manufacturer

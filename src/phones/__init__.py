@@ -231,6 +231,10 @@ _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                             'brand': b_samsung,
                             'carrier': [c_vzw],
                             },
+              'SCH-A930': { 'module': 'com_samsungscha930',
+                            'brand': b_samsung,
+                            'carrier': [c_vzw],
+                            },
               'SK6100' : { 'module': 'com_sk6100',
                            'brand': b_sk,
                            'carrier': [c_pelephone],
@@ -290,7 +294,7 @@ if __debug__:
                                      'brand': b_sanyo,
                                      },
                         })
-# update the module path
+
 # update the module path
 for k, e in _phonedata.items():
     _phonedata[k]['module']=__name__+'.'+e['module']
@@ -333,5 +337,3 @@ def manufacturer2phones(brand_name):
 
 def getallmodulenames():
     return [_phonedata[k]['module'] for k in _phonedata]
-
-    
