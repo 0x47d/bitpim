@@ -628,6 +628,7 @@ class MainApp(wx.App):
     def ExitMainLoop(self):
         if guihelper.IsGtk():
             # This hangs for GTK, so what the heck!
+            self.OnExit()
             sys.exit(0)
         super(MainApp, self).ExitMainLoop()
 
