@@ -6,7 +6,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: __init__.py,v 1.1 2006/03/01 23:26:46 djpham Exp $
+### $Id$
 
 
 # phone carriers

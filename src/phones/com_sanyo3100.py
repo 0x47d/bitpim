@@ -5,7 +5,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: com_sanyo3100.py 2655 2005-11-29 03:02:39Z sawecw $
+### $Id$
 
 """Talk to the Sanyo SCP-3100 cell phone"""
 # standard modules

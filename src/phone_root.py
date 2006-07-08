@@ -6,7 +6,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: gui.py,v 1.241 2006/02/24 22:21:08 djpham Exp $
+### $Id$
 
 """The main gui code for BitPim"""
 

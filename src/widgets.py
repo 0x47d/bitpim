@@ -7,7 +7,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: widgets.py 2920 2006-03-15 10:12:09Z skyjunky $
+### $Id$
 
 ### base class for all widgets
 

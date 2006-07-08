@@ -39,7 +39,7 @@ if vendor[1:].startswith("Id:"):
     else:
         vendor=vendor.split()[1]
 
-_headurl="$HeadURL$".split()[1]
+_headurl="$HeadURL: https://svn.sourceforge.net/svnroot/bitpim/trunk/bitpim/src/version.py $".split()[1]
 # work out our version number
 _rp="https://svn.sourceforge.net/svnroot/bitpim/releases/"
 if _headurl.startswith(_rp):

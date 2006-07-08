@@ -6,7 +6,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: com_lgvx5200.py 2674 2005-12-11 05:52:23Z djpham $
+### $Id$
 
 """Communicate with the LG VX5200 cell phone
 
