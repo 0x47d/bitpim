@@ -289,7 +289,7 @@ if __debug__:
                                       'brand': b_samsung,
                                       'carrier': [c_sprint],
                                       },
-                        'MM-7500': { 'module': 'com_sanyo7500',
+                        'SCP-6600 (Katana)': { 'module': 'com_sanyo6600',
                                      'carrier': [c_sprint],
                                      'brand': b_sanyo,
                                      },
