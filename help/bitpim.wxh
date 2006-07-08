@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">326</long>
+    <long name="name_counter">332</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">265</long>
+    <long name="doc_count">269</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
@@ -2665,6 +2665,60 @@
             </document>
           </document>
           <document>
+            <string name="title">"Samsung SCH-A930"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-samsungscha930.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/7/2006"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Cables"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-samsungscha930-cables.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/7/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-samsungscha930-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"7/7/2006"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
             <string name="title">"Samsung SCH-A950"</string>
             <string name="type">"text-editor-document"</string>
             <string name="filename">"phone-samsungscha950.htd"</string>
@@ -3142,6 +3196,24 @@
             <long name="title-mode">0</long>
             <long name="locked">0</long>
             <string name="created">"8/8/2005"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"How do I bypass the Convert Audio File Dialog?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"faq-bypassaudioconversion.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"7/7/2006"</string>
             <long name="is-folder">0</long>
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
