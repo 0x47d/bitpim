@@ -861,18 +861,6 @@ def out_adr(vals, formatter):
 def out_note(vals, formatter, limit=1):
     return "".join([out_line("NOTE", None, v["memo"], formatter) for v in vals[:limit]])
 
-def out_wallpapers(vals, formatter):
-    w=[v.get("wallpaper") for v in vals]
-    if len(w):
-        return out_line('PHOTO', None, w, formatter, join_char=",")
-    return ""
-
-def out_ringtones(vals, formatter):
-    r=[v.get("ringtone") for v in vals]
-    if len(r):
-        return out_line('SOUND', None, r, formatter, join_char=",")
-    return ""
-
 # This is the order we write things out to the vcard.  Although
 # vCard doesn't require an ordering, it looks nicer if it
 # is (eg name first)
@@ -919,8 +907,6 @@ profile_vcard2={
     'numbers': out_tel,
     'addresses': out_adr,
     'memos': out_note,
-    'wallpapers': out_wallpapers,
-    'ringtones': out_ringtones
     }
 
 profile_vcard3=profile_vcard2.copy()
