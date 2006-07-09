@@ -8,6 +8,8 @@
       <li>Fixed bug: BitPim does not always terminate on Linux.
       <li>Fixed bug: get calendar data raised exception.
       <li>Add support for calendar on <B>LG-VX8300</B> (Verizon).
+      <li>Fixed vCard Photo field import problem.
+      <li>Added support for Samsung <B>SCH-A930</B> phone.
     </ul>
 
    <h2><a name="0.9.04">Changes in 0.9.04</a></h2>
