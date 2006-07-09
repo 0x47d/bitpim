@@ -35,6 +35,7 @@ FIRSTSPEEDDIAL=2
 LASTSPEEDDIAL=99
 NUMPHONEBOOKENTRIES=500
 MAXCALENDARDESCRIPTION=38
+CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
 
 NUMEMAILS=2
 NUMPHONENUMBERS=5
@@ -112,12 +113,13 @@ PACKET scheduleexception:
 PACKET scheduleexceptionfile:
     * LIST {'elementclass': scheduleexception} +items
 
+# 314 bytes per record, maybe they plan to add a memo field at some point??
 PACKET scheduleevent:
     4 UINT pos "position within file, used as an event id"
     33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } description
     4 LGCALDATE start
-    4 LGCALDATE end
-    4 LGCALDATE another_data
+    4 LGCALDATE end_time
+    4 LGCALDATE end_date
     4 LGCALREPEAT repeat # complicated bit mapped field
     1 UINT alarmindex_vibrate #LSBit of this set vibrate ON(0)/OFF(1), the 7 MSBits are the alarm index
                               #the alarmindex is the index into the amount of time in advance of the 
@@ -128,7 +130,7 @@ PACKET scheduleevent:
     1 UINT unknown1
     1 UINT alarmminutes  "a value of 0xFF indicates not set"
     1 UINT alarmhours    "a value of 0xFF indicates not set"
-    1 UINT unknown2
+    256 UINT { 'default': 0 } +unknown2
 
 PACKET schedulefile:
     2 UINT numactiveitems

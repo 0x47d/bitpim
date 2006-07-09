@@ -246,7 +246,15 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 entry.desc_loc=event.description
                 try: # delete events are still in the calender file but have garbage dates
                     entry.start=event.start
-                    entry.end=event.end
+                    if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                        if event.repeat[0] == 0:           # MIC:  If non-repeating event
+                            entry.end = event.end_time     # MIC:  Set entry.end to full end_time
+                        else: 
+                            _,_,_,hour,minute=event.end_time
+                            year,month,day,_,_=event.end_date
+                            entry.end=(year,month,day,hour,minute)
+                    else:
+                        entry.end=event.end
                 except ValueError:
                     continue
                 if event.alarmindex_vibrate&0x1:
@@ -260,7 +268,17 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                     entry.alarm=None # no alarm set
                 else:
                     entry.alarm=hour*60+min
-                entry.ringtone=result['ringtone-index'][event.ringtone]['name']
+                if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                    try:
+                        entry.ringtone=self.builtinringtones[event.ringtone]
+                    except:
+                        # hack, not having a phone makes it hard to figure out the best approach
+                        if entry.alarm==None:
+                            entry.ringtone='No Ring'
+                        else:
+                            entry.ringtone='Loud Beeps'
+                else:                    
+                    entry.ringtone=result['ringtone-index'][event.ringtone]['name']
                 entry.snoozedelay=0
                 # check for exceptions and remove them
                 if event.repeat[3] and exceptions.has_key(event.pos):
@@ -328,7 +346,16 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             data.pos=eventsf.packetsize()
             data.description=entry.desc_loc
             data.start=entry.start
-            data.end=entry.end
+            if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                year_e,month_e,day_e,hour_e,minute_e=entry.end
+                year_s,month_s,day_s,hour_s,minute_s=entry.start
+                if entry.repeat!=None:           # MIC:  Added check for repeating event
+                    data.end_date = (year_e,month_e,day_e,31,63)
+                else:
+                    data.end_date = (year_s+5,month_s,day_s,31,63)
+                data.end_time = (year_s,month_s,day_s,hour_e,minute_e)
+            else:
+                data.end=entry.end
             alarm_set=self.setalarm(entry, data)
             data.ringtone=0
             if alarm_set:
@@ -338,14 +365,28 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                     alarm_name=entry.ringtone
             else:# set alarm to "No Ring" gets rid of alarm icon on phone
                 alarm_name="No Ring"
-            for i in dict['ringtone-index']:
-                if dict['ringtone-index'][i]['name']==alarm_name:
-                    data.ringtone=i
+            if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                count=0
+                for i in self.builtinringtones:
+                    if i==alarm_name:
+                        data.ringtone=count
+                        break
+                    count+=1
+            else:
+                for i in dict['ringtone-index']:
+                    if dict['ringtone-index'][i]['name']==alarm_name:
+                        data.ringtone=i
+                        break
             # check for exceptions and add them to the exceptions list
             exceptions=0
             if entry.repeat!=None:
-                if data.end[:3]==entry.no_end_date:
-                    data.end=(2100, 12, 31)+data.end[3:]
+                if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                    if data.end_date[:3]==entry.no_end_date:
+                        year_s,month_s,day_s,hour_s,minute_s=entry.start
+                        data.end_date=(year_s + 5, month_s, day_s, 31, 63)
+                else:
+                    if data.end[:3]==entry.no_end_date:
+                        data.end=(2100, 12, 31)+data.end[3:]
                 for i in entry.repeat.suppressed:
                     de=self.protocolclass.scheduleexception()
                     de.pos=data.pos
@@ -857,7 +898,7 @@ class Profile(parentprofile):
             'storage': 0,
             },
         'calendar': {
-            'description': True, 'location': True, 'allday': True,
+            'description': True, 'location': False, 'allday': True,
             'start': True, 'end': True, 'priority': False,
             'alarm': True, 'vibrate': True,
             'repeat': True,

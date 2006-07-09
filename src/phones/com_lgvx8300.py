@@ -168,14 +168,14 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-        #('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None),         # all SMS list reading
         ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
         ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
@@ -204,14 +204,14 @@ class Profile(parentprofile):
             'storage': 0,
             },
         'calendar': {
-            'description': False, 'location': False, 'allday': False,
-            'start': False, 'end': False, 'priority': False,
-            'alarm': False, 'vibrate': False,
-            'repeat': False,
+            'description': True, 'location': False, 'allday': True,
+            'start': True, 'end': True, 'priority': False,
+            'alarm': True, 'vibrate': True,
+            'repeat': True,
             'memo': False,
             'category': False,
             'wallpaper': False,
-            'ringtone': False,
+            'ringtone': True,
             },
         'memo': {
             'subject': True,

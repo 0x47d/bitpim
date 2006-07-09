@@ -257,10 +257,10 @@ class DebugBrewProtocol:
             results[_name]={ 'name': _name, 'type': 'file', 'size': _stat[6],
                              'date': (_date, _timestr) }
         for d in _dir:
-            results[d]={ 'name': d, 'type': 'directory' }
+            _name=dir+'/'+d
+            results[_name]={ 'name': _name, 'type': 'directory' }
             if recurse>0:
-                results.update(self.getfilesystem(os.path.join(dir, d),
-                                                  recurse-1))
+                results.update(self.getfilesystem(_name, recurse-1))
         return results
 
     def statfile(self, name):
