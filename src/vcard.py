@@ -273,7 +273,7 @@ class VCard:
     _field_REV=_field_ignore          # not stored in bitpim
     _field_KEY=_field_ignore          # not stored in bitpim
     _field_SOURCE=_field_ignore       # not stored in bitpim (although arguably part of serials)
-
+    _field_PHOTO=_field_ignore        # contained either binary image, or external URL, not used by BitPim
 
     # simple fields
     
@@ -523,13 +523,6 @@ class VCard:
         else:
             result['categories']=';'.join(values)
 
-    def _field_PHOTO(self, field, value, result):
-        # comma seperated just for fun
-        values=self.splitandunquote(value, seperator=",")
-        values=[v.replace(";", "").strip() for v in values]  # semi colon is used as seperator in bitpim text field
-        values=[v for v in values if len(v)]
-        result[self._getfieldname("wallpapers", result)]=";".join(values)
-        
     def _field_SOUND(self, field, value, result):
         # comma seperated just for fun
         values=self.splitandunquote(value, seperator=",")
