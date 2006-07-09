@@ -1,7 +1,8 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
-### Copyright (C) 2005 Simon Capper <skyjunky@sbcglobal.net>
+### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2006-2006 Simon Capper <skyjunky@sbcglobal.net>
+### Copyright (C) 2006 Michael Cohen <mikepublic@nc.rr.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -72,7 +73,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         ( 'images', 'dload/image.dat', 'dload/imagesize.dat', 'brew/16452/mp', 100, 50, 0, 0, 0),
         ( 'video', 'dload/video.dat', None, 'brew/16452/mf', 1000, 50, 0x0304, 0, 0),
         )
-        
+
     # for removable media (miniSD cards)
     _rs_path='mmc1/'
     _rs_ringers_path=_rs_path+'ringers'
@@ -119,7 +120,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
              'sizefile': 'dload/videosize.dat',
              'dunno': 0, 'date': True },
          }
-        
+
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
@@ -206,7 +207,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             t=time.strptime(memo_dict[k].date, '%b %d, %Y %H:%M')
             entry.memotime=(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min)
             if 'GPStime' in entry.getfields():
-                entry.GPStime = (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)    
+                entry.GPStime = (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
             text_memo.items.append(entry)
         buf=prototypes.buffer()
         text_memo.writetobuffer(buf, logtitle="Updated memo "+self.memolocation)
@@ -241,7 +242,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 # the vx8100 has a bad entry when the calender is empty
                 # stop processing the calender when we hit this record
                 if event.pos==0: #invalid entry
-                    continue                   
+                    continue
                 entry=bpcalendar.CalendarEntry()
                 entry.desc_loc=event.description
                 try: # delete events are still in the calender file but have garbage dates
@@ -249,7 +250,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                     if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
                         if event.repeat[0] == 0:           # MIC:  If non-repeating event
                             entry.end = event.end_time     # MIC:  Set entry.end to full end_time
-                        else: 
+                        else:
                             _,_,_,hour,minute=event.end_time
                             year,month,day,_,_=event.end_date
                             entry.end=(year,month,day,hour,minute)
@@ -277,7 +278,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                             entry.ringtone='No Ring'
                         else:
                             entry.ringtone='Loud Beeps'
-                else:                    
+                else:
                     entry.ringtone=result['ringtone-index'][event.ringtone]['name']
                 entry.snoozedelay=0
                 # check for exceptions and remove them
@@ -331,13 +332,13 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         # what are we working with
         cal=dict['calendar']
         newcal={}
-        #sort into start order, makes it possible to see if the calendar has changed        
+        #sort into start order, makes it possible to see if the calendar has changed
         keys=[(x.start, k) for k,x in cal.items()]
         keys.sort()
         # number of entries
         eventsf.numactiveitems=len(keys)
         pos=1
-        contains_alarms=False        
+        contains_alarms=False
         # play with each entry
         for (_,k) in keys:
             # entry is what we will return to user
@@ -580,7 +581,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             if _file not in _remote_files:
                 # remote file no longer exists, del the marker
                 self.rmfile(local_dir+'/'+_file)
-                
+
     def _write_index_file(self, type):
         _info=self.media_info.get(type, None)
         if not _info:
@@ -723,7 +724,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         # wp contains items that we still need to add, and weren't in the existing index
         assert len(wpi)==0
         print init.keys()
-        
+
         # now look through wallpapers and see if anything was assigned a particular
         # origin
         for w in wp.keys():
@@ -787,7 +788,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 # check len(data) against fstat->length
                 data=entry['data']
                 if data is None:
-                    assert merge 
+                    assert merge
                     continue # we are doing an add and don't have data for this existing entry
                 elif not data:
                     self.log('Not writing file: '+filename)
@@ -818,7 +819,7 @@ class Profile(parentprofile):
 
     # the 8100 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
-   
+
     MAX_RINGTONE_BASENAME_LENGTH=32
     RINGTONE_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()_ .-"
 
@@ -856,7 +857,7 @@ class Profile(parentprofile):
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 
- 
+
     def __init__(self):
         parentprofile.__init__(self)
 

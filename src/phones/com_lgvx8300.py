@@ -54,7 +54,7 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
         #  type          index file            default dir        external dir    max  type
         ( 'ringers',    'dload/myringtone.dat','brew/16452/lk/mr','mmc1/ringers', 100, 0x01),
         ( 'sounds',     'dload/mysound.dat',   'brew/16452/ms',   '',             100, 0x02),
-        ( 'mp3',        'dload/my_mp3.dat',    'mmc1/my_mp3',     '',             100, 0x15),  
+        ( 'mp3',        'dload/my_mp3.dat',    'mmc1/my_mp3',     '',             100, 0x15),
        #( 'music',      'dload/sd_music.dat',  'mmc1/my_music',   '',             100, 0x14), # .wma files
         )
 
@@ -72,7 +72,7 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
         ( 'video',      'dload/video.dat',    'brew/16452/mf', '',           100, 0x03),
         ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13),
         )
-    
+
     def __init__(self, logtarget, commport):
         com_lgvx8100.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
@@ -134,7 +134,7 @@ class Profile(parentprofile):
     MAX_WALLPAPER_BASENAME_LENGTH=32
     WALLPAPER_FILENAME_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_() ."
     WALLPAPER_CONVERT_FORMAT="jpg"
-   
+
     # the 8300 uses "W" for wait in the dialstring, it does not support "T"
     DIALSTRING_CHARS="[^0-9PW#*]"
 
@@ -162,7 +162,7 @@ class Profile(parentprofile):
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 
- 
+
     def __init__(self):
         parentprofile.__init__(self)
 
@@ -204,7 +204,7 @@ class Profile(parentprofile):
             'storage': 0,
             },
         'calendar': {
-            'description': True, 'location': False, 'allday': True,
+            'description': True, 'location': False, 'allday': False,
             'start': True, 'end': True, 'priority': False,
             'alarm': True, 'vibrate': True,
             'repeat': True,
