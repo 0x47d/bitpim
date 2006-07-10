@@ -25,7 +25,7 @@
 <H3>Ringtones</H3>
 <UL>
 <LI>BitPim does not delete ringtones on the phone.  You must delete them manually from the phone.
-<LI>The limit of the size of a ringtone is arbitrarily set at 100,000 bytes.  Exceeding this limit will display a warning.  If you have a more accurate limit, please post it to the BitPim Users list.
+<LI>The limit of the size of a ringtone is arbitrarily set at 200,000 bytes.  Exceeding this limit will display a warning.  If you have a more accurate limit, please post it to the BitPim Users list.
 <LI>BitPim will not be able to retrieve ringtones purchased with GIN.
 <LI>BitPim will neither retrieve nor send ringtones from/to the microSD card.
 </UL>
