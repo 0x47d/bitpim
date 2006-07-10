@@ -246,7 +246,7 @@ class CommConnection:
         if not self._write_res:
             raise CommTimeout()
 
-    def sendatcommand(self, atcommand, ignoreerror=False):
+    def sendatcommand(self, atcommand, ignoreerror=False, retry=False):
         #print "sendatcommand: "+atcommand
 
         if not data_recording.DR_Play:
@@ -258,7 +258,14 @@ class CommConnection:
         fullline="AT"+atcommand
         self.write(str(fullline+"\r\n"))
         # Cache response
-        self.readatresponse(ignoreerror)
+        try:
+            self.readatresponse(ignoreerror)
+        except CommTimeout:
+            if retry:
+                # try to read a response 1 more time
+                self.readatresponse(ignoreerror)
+            else:
+                raise
 
         res=[]
         
@@ -299,8 +306,12 @@ class CommConnection:
         """Read until OK, ERROR or a timeout"""
         self.readrequests+=1
         if data_recording.DR_Play:
-            self.readahead=data_recording.get_data(data_recording.DR_Type_Read_ATResponse)
-            return
+            res=data_recording.get_data(data_recording.DR_Type_Read_ATResponse)
+            if res:
+                self.readahead=res
+                return
+            else:
+                raise CommTimeout()
         res=""
         while True:
             b=self.ser.inWaiting()
@@ -319,6 +330,8 @@ class CommConnection:
             res=res[1:]
 
         if len(res)==0:
+            self.logdata("Reading remaining data", '',
+                         data_recording.DR_Type_Read_ATResponse)
             raise CommTimeout()
 
         self.readbytes+=len(res)
