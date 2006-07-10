@@ -1326,6 +1326,8 @@ class Profile(parentprofile):
     RINGTONE_LIMITS= {
         'MAXSIZE': 100000
     }
+    WALLPAPER_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ._:"
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789 ._:"
 
     def __init__(self):
         parentprofile.__init__(self)

@@ -10,30 +10,24 @@
 """Communicate with the Samsung SCH-A930 Phone"""
 
 # System Models
-import datetime
-import sha
-import time
-
-import wx
 
 # BitPim modules
-import bpcalendar
-import call_history
+##import bpcalendar
+##import call_history
 import common
-import commport
-import com_brew
-import com_phone
+##import commport
+##import com_brew
+##import com_phone
 import com_samsungscha950 as com_a950
-import datetime
-import fileinfo
-import memo
-import nameparser
-import prototypes
-import pubsub
+##import fileinfo
+##import memo
+##import nameparser
+##import prototypes
+##import pubsub
 import p_samsungscha950 as p_a950
 import p_samsungscha930 as p_a930
-import sqlite2_file
-import sms
+##import sqlite2_file
+##import sms
 
 class Phone(com_a950.Phone):
     desc='SCH-A930'
@@ -89,6 +83,10 @@ class Profile(parentprofile):
     # For phone detection
     phone_manufacturer=Phone.my_manufacturer
     phone_model=Phone.my_model
+    # "Warning" media size limit
+    RINGTONE_LIMITS= {
+        'MAXSIZE': 200000
+    }
 
     # all dumped in "images"
     imageorigins={}
