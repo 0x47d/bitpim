@@ -752,37 +752,12 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                     raise Exception("Unable to create media directory "+dir_name)
                 relative_name=os.path.join(db_rr[k]['origin'], db_rr[k]['name'])
                 fname=os.path.join(self.mainwindow.blob_path, relative_name)
-                try:
-                    f=open(fname, "wb")
-                except:
-                    # probably a filename the OS cannot understand so simplify it.
-                    new_name=self.fix_bad_filename(db_rr[k]['name'])
-                    # try again
-                    relative_name=os.path.join(db_rr[k]['origin'], new_name)
-                    fname=os.path.join(self.mainwindow.blob_path, relative_name)
-                    f=open(fname, "wb")
-                    # success, update the database
-                    db_rr[k]['name']=new_name
+                f=open(fname, "wb")
                 f.write(db_rr[k]['mediadata'])
                 f.close()
                 db_rr[k]['mediadata']=relative_name
         database.ensurerecordtype(db_rr, mediaobjectfactory)
         self.mainwindow.database.savemajordict(self.database_key, db_rr)
-
-    def fix_bad_filename(self, old_name):
-        # convert to ascii
-        temp_name=common.encode_with_degrade(old_name, 'ascii', 'ignore')
-        new_name=''
-        # remove bad characters
-        bad_chars={
-            '__WXMSW__': ('/', '\\', '[', ']', '?', '*', ':',
-                          '"', '<', '>', '|', '=', ';'),
-            '__WXMAC__': ('/', ':'),
-            '__WXGTK__': ('/') }
-        for c in temp_name:
-            if c not in bad_chars.get(wx.Platform, ()):
-                new_name+=c
-        return new_name
 
     def _load_from_db(self, result):
         dict=self.mainwindow.database.\
