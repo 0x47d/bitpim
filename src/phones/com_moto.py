@@ -554,7 +554,8 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
                 _sms_item.readfrombuffer(_buf,
                                          logtitle='Reading an SMS List Item')
                 try:
-                    _res=self.comm.sendatcommand('+MMGR=%d'%_sms_item.index)
+                    _res=self.comm.sendatcommand('+MMGR=%d'%_sms_item.index,
+                                                 retry=True)
                     self._process_sms_result(_res, _sms, fundamentals)
                 except commport.ATError:
                     pass
