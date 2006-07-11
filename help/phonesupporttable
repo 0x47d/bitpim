@@ -325,7 +325,7 @@
 </tr>
 <tr><th>LG-VX8300
 <td align=center>R W
-<td align=center>&nbsp;
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>R W
@@ -465,6 +465,18 @@
 <td align=center>R 
 <td align=center>&nbsp;
 <td align=center>X
+<td align=center>X
+</tr>
+<tr><th>SCH-A930
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>R 
+<td align=center>&nbsp;
 <td align=center>X
 </tr>
 <tr><th>SCH-A950

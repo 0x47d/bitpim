@@ -42,8 +42,8 @@ BEGIN_TOC
         TOCITEM_1(Import Outlook Notes/Tasks,howtos-importoutlooknotes.htm)
         TOCITEM_1(Add Ringtones,howto-addringtones.htm)
         TOCITEM_1(Add Images,howto-addimages.htm)
-        TOCITEM_1(Set category/ringtone/or wallpaper to multiple contacts,howtos-group-edit.htm)
-	TOCITEM_1(Do Data Recording,howtos-datarecording.htm)
+        TOCITEM_1(Set category, ringtone, or wallpaper to multiple contacts,howtos-group-edit.htm)
+        TOCITEM_1(Do Data Recording,howtos-datarecording.htm)
         ENDTOC_1
     TOCITEM_0(USB,hoto-usbintro.htm)
         TOC_1

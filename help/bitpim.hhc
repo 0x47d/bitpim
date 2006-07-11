@@ -204,6 +204,10 @@
           <param name="Name" value="Set category, ringtone, or wallpaper to multiple contacts">
           <param name="Local" value="howtos-group-edit.htm">
           </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Do Data Recording">
+          <param name="Local" value="howtos-datarecording.htm">
+          </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="USB">
@@ -632,6 +636,20 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="Samsung SCH-A930">
+        <param name="Local" value="phone-samsungscha930.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Cables">
+          <param name="Local" value="phone-samsungscha930-cables.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-samsungscha930-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Samsung SCH-A950">
         <param name="Local" value="phone-samsungscha950.htm">
         </OBJECT>
@@ -752,6 +770,10 @@
         <param name="Local" value="faq-bypassimagepreview.htm">
         </OBJECT>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="How do I bypass the Convert Audio File Dialog?">
+        <param name="Local" value="faq-bypassaudioconversion.htm">
+        </OBJECT>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="I do not have the Send Phone Data memu item?">
         <param name="Local" value="faq-donthavesendphonedata.htm">
         </OBJECT>
@@ -760,7 +782,7 @@
         <param name="Local" value="faq-colorcodedfields.htm">
         </OBJECT>
     <LI><OBJECT type="text/sitemap">
-        <param name="Name" value="When saving ringtones/wallpapers to the phone, what are the differences between the Replace All and Add option?">
+        <param name="Name" value="What are the differences between the Replace All and Add option when saving ringtones/wallpapers to the phone?">
         <param name="Local" value="faq-mediaoptions.htm">
         </OBJECT>
   </UL>

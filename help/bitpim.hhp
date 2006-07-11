@@ -59,6 +59,7 @@ howtos-importoutlooknotes.htm
 howto-addringtones.htm
 howto-addimages.htm
 howtos-group-edit.htm
+howtos-datarecording.htm
 hoto-usbintro.htm
 howto-linuxusb.htm
 howto-macusb.htm
@@ -153,6 +154,9 @@ phone-motov710-notes.htm
 phone-motov710-howtos.htm
 phone-motov710m.htm
 phone-motov710m-notes.htm
+phone-samsungscha930.htm
+phone-samsungscha930-cables.htm
+phone-samsungscha930-notes.htm
 phone-samsungscha950.htm
 phone-samsungscha950-cables.htm
 phone-samsungscha950-notes.htm
@@ -180,6 +184,7 @@ faq-limits.htm
 faq-stupidformat.htm
 phones-lg-integritycheckfailed.htm
 faq-bypassimagepreview.htm
+faq-bypassaudioconversion.htm
 faq-donthavesendphonedata.htm
 faq-colorcodedfields.htm
 faq-mediaoptions.htm

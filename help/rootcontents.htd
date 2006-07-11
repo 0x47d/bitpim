@@ -60,6 +60,7 @@ BEGIN_TOC
             TOCITEM_2(Add Ringtones,howto-addringtones.htm)
             TOCITEM_2(Add Images,howto-addimages.htm)
             TOCITEM_2(Set category, ringtone, or wallpaper to multiple contacts,howtos-group-edit.htm)
+            TOCITEM_2(Do Data Recording,howtos-datarecording.htm)
             ENDTOC_2
         TOCITEM_1(USB,hoto-usbintro.htm)
             TOC_2
@@ -205,6 +206,11 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-motov710m-notes.htm)
             ENDTOC_2
+        TOCITEM_1(Samsung SCH-A930,phone-samsungscha930.htm)
+            TOC_2
+            TOCITEM_2(Cables,phone-samsungscha930-cables.htm)
+            TOCITEM_2(Notes,phone-samsungscha930-notes.htm)
+            ENDTOC_2
         TOCITEM_1(Samsung SCH-A950,phone-samsungscha950.htm)
             TOC_2
             TOCITEM_2(Cables,phone-samsungscha950-cables.htm)
@@ -244,9 +250,10 @@ BEGIN_TOC
         TOCITEM_1(Why do you do this stupid thing with my phone?,faq-stupidformat.htm)
         TOCITEM_1(I get an IntegrityCheckFailed exception on my LG phone,phones-lg-integritycheckfailed.htm)
         TOCITEM_1(How do I bypass the Image Preview/Conversion Dialog?,faq-bypassimagepreview.htm)
+        TOCITEM_1(How do I bypass the Convert Audio File Dialog?,faq-bypassaudioconversion.htm)
         TOCITEM_1(I do not have the Send Phone Data memu item?,faq-donthavesendphonedata.htm)
         TOCITEM_1(What do those colors of the color-coded field names mean?,faq-colorcodedfields.htm)
-        TOCITEM_1(When saving ringtones/wallpapers to the phone, what are the differences between the Replace All and Add option?,faq-mediaoptions.htm)
+        TOCITEM_1(What are the differences between the Replace All and Add option when saving ringtones/wallpapers to the phone?,faq-mediaoptions.htm)
         ENDTOC_1
     TOCITEM_0(About BitPim,about.htm)
         TOC_1
