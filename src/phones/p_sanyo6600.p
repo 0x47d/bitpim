@@ -37,3 +37,21 @@ HASRINGPICBUF=0
 
 %}
 
+PACKET {'readwrite': 0x26} qcpheader:
+    1 UINT readwrite
+    1 UINT command
+    1 UINT packettype
+
+PACKET {'readwrite': 0x27} qcpwriteheader:
+    1 UINT readwrite
+    1 UINT command
+    1 UINT packettype
+
+PACKET phonebookslotrequest:
+    * qcpheader {'packettype': 0x0c,
+                   'command': 0x28} +header
+    2 UINT slot
+    128 UNKNOWN +pad
+
+PACKET phonebookslotresponse:
+    * UNKNOWN data
