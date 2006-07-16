@@ -63,6 +63,12 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
+    def getfundamentals(self, results):
+        req=self.protocolclass.phonebookentry()
+        for slot in range(10):
+            req.slot=slot
+            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
+
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):
 
