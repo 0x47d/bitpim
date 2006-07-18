@@ -1139,6 +1139,15 @@ class Calendar(calendarcontrol.Calendar):
         self._publish_today_events()
         self._publish_thisweek_events()
 
+    def _add_entries(self, entry):
+        # Add this entry, which may span several days, to the entries list
+        _t0=datetime.datetime(*entry.start[:3])
+        _t1=datetime.datetime(*entry.end[:3])
+        _oneday=datetime.timedelta(days=1)
+        for _ in range((_t1-_t0).days+1):
+            self.entries.setdefault((_t0.year, _t0.month, _t0.day), []).append(entry)
+            _t0+=_oneday
+
     def populate(self, dict):
         """Updates the internal data with the contents of C{dict['calendar']}"""
         if dict.get('calendar_version', None)==2:
@@ -1155,7 +1164,7 @@ class Calendar(calendarcontrol.Calendar):
             entry=self._data[entry]
             y,m,d,h,min=entry.start
             if entry.repeat is None:
-                self.entries.setdefault((y,m,d), []).append(entry)
+                self._add_entries(entry)
             else:
                 self.repeating.append(entry)
         # tell everyone that i've changed
