@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.06">Changes in 0.9.06</a></h2>
+    <ul>
+      <li>
+    </ul>
+
    <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
     <ul>
       <li>Raise bitpim phonebook group limit from 10 to 30 on LG-VX5200/8100/9800. 
