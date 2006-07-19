@@ -832,6 +832,9 @@ class CSVSTRING(BaseProtogenClass):
         @keyword value: (Optional) Value
         @keyword invalidchars: (Default=quotechar) A string containing invalid
              characters which would be removed before writing to buffer.
+        @keyword encoding: (Default=None) If specified Unicode charset.
+        @keyword raiseonunicodeerror: (Default=True) raise exception if fail
+        to encode/decode Unicode.
         """
         super(CSVSTRING, self).__init__(*args, **kwargs)
         
@@ -847,6 +850,8 @@ class CSVSTRING(BaseProtogenClass):
         self._raiseonmissingquotes=True
         self._invalidchars=chr(self._quotechar)
         self._value=None
+        self._encoding=None
+        self._raiseonunicodeerror=True
 
         if self._ismostderived(CSVSTRING):
             self._update(args,kwargs)
@@ -941,12 +946,26 @@ class CSVSTRING(BaseProtogenClass):
         # Need to raise exception if string exceeds maxsizeinbytes
         if self._value is None:
             raise ValueNotSetException()
-                
+
+        if self._encoding and isinstance(self._value, unicode):
+            try:
+                _value=common.encode_with_degrade(self._value,
+                                                  self._encoding)
+            except UnicodeError:
+                if self._raiseonunicodeerror:
+                    raise common.PhoneStringEncodeException(self._value,
+                                                            self._encoding)
+                else:
+                    # failed to encode, clear it out
+                    _value=''
+        else:
+            _value=self._value
+
         self._bufferstartoffset=buf.getcurrentoffset()
 
         if self._quotechar is not None:
             buf.appendbyte(self._quotechar)
-        buf.appendbytes(self._value)
+        buf.appendbytes(_value)
         if self._quotechar is not None:
             buf.appendbyte(self._quotechar)
         if self._terminator is not None:
@@ -971,6 +990,16 @@ class CSVSTRING(BaseProtogenClass):
         """Returns the string we are"""
         if self._value is None:
             raise ValueNotSetException()
+        # convert to unicode if we are not already
+        if self._encoding and not isinstance(self._value, unicode):
+            try:
+                if self._raiseonunicodeerror:
+                    self._value=self._value.decode(self._encoding)
+                else:
+                    self._value=self._value.decode(self._encoding, 'ignore')
+            except UnicodeDecodeError:
+                # this means the codec is set wrong for this phone !!
+                raise common.PhoneStringDecodeException(self._value, self._encoding) 
         return self._value
 
 class CSVINT(CSVSTRING):
