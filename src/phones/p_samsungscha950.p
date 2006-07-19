@@ -19,6 +19,8 @@ from p_brew import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+ENCODING='latin_1'
+
 RT_PATH='brew/16452/mr'
 RT_PATH2='brew/16452/lk/mr'
 RT_INDEX_FILE_NAME=RT_PATH+'/MrInfo.db'
@@ -176,7 +178,8 @@ PACKET GroupEntry:
     1 UINT index
     4 UNKNOWN dunno1
     4 DateTime datetime
-    68 STRING { 'terminator': 0 } name
+    68 USTRING { 'encoding': ENCODING,
+                 'terminator': 0 } name
     2 UINT numofmembers
     if self.numofmembers:
         * LIST { 'length': self.numofmembers } members:
@@ -209,8 +212,9 @@ PACKET CalIndexFile:
 
 PACKET CalEntry:
     2 UINT titlelen
-    * STRING { 'sizeinbytes': self.titlelen,
-               'terminator': None } title
+    * USTRING { 'sizeinbytes': self.titlelen,
+                'encoding': ENCODING,
+                'terminator': None } title
     4 DateTime start
     4 UNKNOWN { 'pad': 0 } +zero1
     4 DateTime { 'default': self.start } +start2
@@ -236,8 +240,9 @@ PACKET CalEntry:
 
 PACKET NotePadEntry:
     2 UINT textlen
-    * STRING { 'terminator': None,
-               'sizeinbytes': self.textlen } text
+    * USTRING { 'terminator': None,
+                'encoding': ENCODING,
+                'sizeinbytes': self.textlen } text
     4 DateTime creation
     4 UNKNOWN { 'pad': 0 } +zero1
     4 DateTime { 'default': self.creation } +creation2
@@ -333,13 +338,16 @@ PACKET PBEntry:
     2 UINT info
     2 UINT { 'default': 0 } +zero1
     if self.info & PB_FLG_NAME:
-        * STRING { 'terminator': None,
-                   'pascal': True } name
+        * USTRING { 'terminator': None,
+                    'encoding': ENCODING,
+                    'pascal': True } name
     if self.info & PB_FLG_EMAIL:
-        * STRING { 'terminator': None,
-                   'pascal': True } email
+        * USTRING { 'terminator': None,
+                    'encoding': ENCODING,
+                    'pascal': True } email
     if self.info & PB_FLG_EMAIL2:
-        * STRING { 'terminator': None,
+        * USTRING { 'terminator': None,
+                    'encoding': ENCODING,
                    'pascal': True } email2
     if self.info & PB_FLG_HOME:
         * NumberEntry home
@@ -440,17 +448,20 @@ PACKET ss_number_entry:
                'default': '' } +ringtone
 
 PACKET ss_pb_entry:
-    * STRING { 'terminator': 0,
-               'maxsizeinbytes': PB_MAX_NAME_LEN,
-               'raiseontruncate': False } name
-    * STRING { 'terminator': 0,
-               'default': '',
-               'maxsizeinbytes': PB_MAX_EMAIL_LEN,
-               'raiseontruncate': False } +email
-    * STRING { 'terminator': 0,
-               'default': '',
-               'maxsizeinbytes': PB_MAX_EMAIL_LEN,
-               'raiseontruncate': False } +email2
+    * USTRING { 'terminator': 0,
+                'maxsizeinbytes': PB_MAX_NAME_LEN,
+                'encoding': ENCODING,
+                'raiseontruncate': False } name
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email2
     4 UINT { 'default': 0 } +zero1
     * STRING { 'terminator': 0,
                'default': '' } +wallpaper
@@ -543,8 +554,9 @@ PACKET sms_body:
     P BOOL { 'default': True } +has_1byte2
     P BOOL { 'default': False } +has_40bytes
     50 UNKNOWN dunno1
-    * STRING { 'sizeinbytes': self.msg_len,
-               'terminator': None } msg
+    * USTRING { 'sizeinbytes': self.msg_len,
+                'encoding': ENCODING,
+                'terminator': None } msg
     if self.has_callback:
         3 UNKNOWN dunno2
         1 UINT callback_len

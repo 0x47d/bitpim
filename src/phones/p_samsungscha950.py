@@ -10,6 +10,8 @@ from p_brew import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+ENCODING='latin_1'
+
 RT_PATH='brew/16452/mr'
 RT_PATH2='brew/16452/lk/mr'
 RT_INDEX_FILE_NAME=RT_PATH+'/MrInfo.db'
@@ -1400,12 +1402,12 @@ class GroupEntry(BaseProtogenClass):
         self.__field_dunno1.readfrombuffer(buf)
         self.__field_datetime=DateTime(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_name=STRING(**{'sizeinbytes': 68,  'terminator': 0 })
+        self.__field_name=USTRING(**{'sizeinbytes': 68,  'encoding': ENCODING,                 'terminator': 0 })
         self.__field_name.readfrombuffer(buf)
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
         if self.numofmembers:
-            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_183,  'length': self.numofmembers })
+            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_186,  'length': self.numofmembers })
             self.__field_members.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1453,10 +1455,10 @@ class GroupEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{'sizeinbytes': 68,  'terminator': 0 })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 68,  'encoding': ENCODING,                 'terminator': 0 })
 
     def __delfield_name(self): del self.__field_name
 
@@ -1482,7 +1484,7 @@ class GroupEntry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_members=value
         else:
-            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_183,  'length': self.numofmembers })
+            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_186,  'length': self.numofmembers })
 
     def __delfield_members(self): del self.__field_members
 
@@ -1502,7 +1504,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungscha950_183(BaseProtogenClass):
+class _gen_p_samsungscha950_186(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
 
@@ -1511,8 +1513,8 @@ class _gen_p_samsungscha950_183(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungscha950_183,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungscha950_183:
+        super(_gen_p_samsungscha950_186,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungscha950_186:
             self._update(args,dict)
 
 
@@ -1521,7 +1523,7 @@ class _gen_p_samsungscha950_183(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungscha950_183,self)._update(args,kwargs)
+        super(_gen_p_samsungscha950_186,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1529,7 +1531,7 @@ class _gen_p_samsungscha950_183(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungscha950_183,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungscha950_186,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2}
             dict2.update(kwargs)
@@ -2125,7 +2127,7 @@ class CalEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_titlelen=UINT(**{'sizeinbytes': 2})
         self.__field_titlelen.readfrombuffer(buf)
-        self.__field_title=STRING(**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+        self.__field_title=USTRING(**{ 'sizeinbytes': self.titlelen,                'encoding': ENCODING,                'terminator': None })
         self.__field_title.readfrombuffer(buf)
         self.__field_start=DateTime(**{'sizeinbytes': 4})
         self.__field_start.readfrombuffer(buf)
@@ -2189,10 +2191,10 @@ class CalEntry(BaseProtogenClass):
         return self.__field_title.getvalue()
 
     def __setfield_title(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_title=value
         else:
-            self.__field_title=STRING(value,**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+            self.__field_title=USTRING(value,**{ 'sizeinbytes': self.titlelen,                'encoding': ENCODING,                'terminator': None })
 
     def __delfield_title(self): del self.__field_title
 
@@ -2614,7 +2616,7 @@ class NotePadEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_textlen=UINT(**{'sizeinbytes': 2})
         self.__field_textlen.readfrombuffer(buf)
-        self.__field_text=STRING(**{ 'terminator': None,               'sizeinbytes': self.textlen })
+        self.__field_text=USTRING(**{ 'terminator': None,                'encoding': ENCODING,                'sizeinbytes': self.textlen })
         self.__field_text.readfrombuffer(buf)
         self.__field_creation=DateTime(**{'sizeinbytes': 4})
         self.__field_creation.readfrombuffer(buf)
@@ -2656,10 +2658,10 @@ class NotePadEntry(BaseProtogenClass):
         return self.__field_text.getvalue()
 
     def __setfield_text(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_text=value
         else:
-            self.__field_text=STRING(value,**{ 'terminator': None,               'sizeinbytes': self.textlen })
+            self.__field_text=USTRING(value,**{ 'terminator': None,                'encoding': ENCODING,                'sizeinbytes': self.textlen })
 
     def __delfield_text(self): del self.__field_text
 
@@ -4224,13 +4226,13 @@ class PBEntry(BaseProtogenClass):
         self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_zero1.readfrombuffer(buf)
         if self.info & PB_FLG_NAME:
-            self.__field_name=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_name=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
             self.__field_name.readfrombuffer(buf)
         if self.info & PB_FLG_EMAIL:
-            self.__field_email=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_email=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
             self.__field_email.readfrombuffer(buf)
         if self.info & PB_FLG_EMAIL2:
-            self.__field_email2=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_email2=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                   'pascal': True })
             self.__field_email2.readfrombuffer(buf)
         if self.info & PB_FLG_HOME:
             self.__field_home=NumberEntry()
@@ -4294,10 +4296,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_name=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
 
     def __delfield_name(self): del self.__field_name
 
@@ -4307,10 +4309,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_email=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
 
     def __delfield_email(self): del self.__field_email
 
@@ -4320,10 +4322,10 @@ class PBEntry(BaseProtogenClass):
         return self.__field_email2.getvalue()
 
     def __setfield_email2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email2=value
         else:
-            self.__field_email2=STRING(value,**{ 'terminator': None,                   'pascal': True })
+            self.__field_email2=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                   'pascal': True })
 
     def __delfield_email2(self): del self.__field_email2
 
@@ -6367,11 +6369,11 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_name.writetobuffer(buf)
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email.writetobuffer(buf)
         try: self.__field_email2
         except:
-            self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.writetobuffer(buf)
         try: self.__field_zero1
         except:
@@ -6429,11 +6431,11 @@ class ss_pb_entry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=STRING(**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
+        self.__field_name=USTRING(**{ 'terminator': 0,                'maxsizeinbytes': PB_MAX_NAME_LEN,                'encoding': ENCODING,                'raiseontruncate': False })
         self.__field_name.readfrombuffer(buf)
-        self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+        self.__field_email=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email.readfrombuffer(buf)
-        self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+        self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.readfrombuffer(buf)
         self.__field_zero1=UINT(**{'sizeinbytes': 4,  'default': 0 })
         self.__field_zero1.readfrombuffer(buf)
@@ -6466,10 +6468,10 @@ class ss_pb_entry(BaseProtogenClass):
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=STRING(value,**{ 'terminator': 0,               'maxsizeinbytes': PB_MAX_NAME_LEN,               'raiseontruncate': False })
+            self.__field_name=USTRING(value,**{ 'terminator': 0,                'maxsizeinbytes': PB_MAX_NAME_LEN,                'encoding': ENCODING,                'raiseontruncate': False })
 
     def __delfield_name(self): del self.__field_name
 
@@ -6478,14 +6480,14 @@ class ss_pb_entry(BaseProtogenClass):
     def __getfield_email(self):
         try: self.__field_email
         except:
-            self.__field_email=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         return self.__field_email.getvalue()
 
     def __setfield_email(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email=value
         else:
-            self.__field_email=STRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email=USTRING(value,**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
 
     def __delfield_email(self): del self.__field_email
 
@@ -6494,14 +6496,14 @@ class ss_pb_entry(BaseProtogenClass):
     def __getfield_email2(self):
         try: self.__field_email2
         except:
-            self.__field_email2=STRING(**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         return self.__field_email2.getvalue()
 
     def __setfield_email2(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_email2=value
         else:
-            self.__field_email2=STRING(value,**{ 'terminator': 0,               'default': '',               'maxsizeinbytes': PB_MAX_EMAIL_LEN,               'raiseontruncate': False })
+            self.__field_email2=USTRING(value,**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
 
     def __delfield_email2(self): del self.__field_email2
 
@@ -8061,7 +8063,7 @@ class sms_body(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 50})
         self.__field_dunno1.readfrombuffer(buf)
-        self.__field_msg=STRING(**{ 'sizeinbytes': self.msg_len,               'terminator': None })
+        self.__field_msg=USTRING(**{ 'sizeinbytes': self.msg_len,                'encoding': ENCODING,                'terminator': None })
         self.__field_msg.readfrombuffer(buf)
         if self.has_callback:
             self.__field_dunno2=UNKNOWN(**{'sizeinbytes': 3})
@@ -8258,10 +8260,10 @@ class sms_body(BaseProtogenClass):
         return self.__field_msg.getvalue()
 
     def __setfield_msg(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_msg=value
         else:
-            self.__field_msg=STRING(value,**{ 'sizeinbytes': self.msg_len,               'terminator': None })
+            self.__field_msg=USTRING(value,**{ 'sizeinbytes': self.msg_len,                'encoding': ENCODING,                'terminator': None })
 
     def __delfield_msg(self): del self.__field_msg
 

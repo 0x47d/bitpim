@@ -845,7 +845,7 @@ class CalEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_titlelen=UINT(**{'sizeinbytes': 2})
         self.__field_titlelen.readfrombuffer(buf)
-        self.__field_title=STRING(**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+        self.__field_title=USTRING(**{ 'sizeinbytes': self.titlelen,                'encoding': ENCODING,                'terminator': None })
         self.__field_title.readfrombuffer(buf)
         self.__field_start=DateTime(**{'sizeinbytes': 4})
         self.__field_start.readfrombuffer(buf)
@@ -911,10 +911,10 @@ class CalEntry(BaseProtogenClass):
         return self.__field_title.getvalue()
 
     def __setfield_title(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,USTRING):
             self.__field_title=value
         else:
-            self.__field_title=STRING(value,**{ 'sizeinbytes': self.titlelen,               'terminator': None })
+            self.__field_title=USTRING(value,**{ 'sizeinbytes': self.titlelen,                'encoding': ENCODING,                'terminator': None })
 
     def __delfield_title(self): del self.__field_title
 

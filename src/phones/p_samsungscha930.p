@@ -74,8 +74,9 @@ PACKET CalIndexFile:
 
 PACKET CalEntry:
     2 UINT titlelen
-    * STRING { 'sizeinbytes': self.titlelen,
-               'terminator': None } title
+    * USTRING { 'sizeinbytes': self.titlelen,
+                'encoding': ENCODING,
+                'terminator': None } title
     4 DateTime start
     4 UNKNOWN { 'pad': 0 } +zero1
     4 DateTime { 'default': self.start } +start2
