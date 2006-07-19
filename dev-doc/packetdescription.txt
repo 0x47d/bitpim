@@ -11,6 +11,8 @@ from prototypes import *
 
 # map all UINT fields to lsb version
 UINT=UINTlsb
+BOOL=BOOLlsb
+
 %}
 
 PACKET {'errorcode': 0, 'bar': "a test}",
@@ -25,8 +27,12 @@ PACKET {'errorcode': 0, 'bar': "a test}",
     1   UINT errorcode
     1   UINT block_number    "this wraps at 0xff to 0x01"
     
-    if self.thetype>1:
+    if self.thetype==1:
         1   UINT there_is_more
+    elif self.thetype==2:
+        *   STRING some_string
+    else:
+        2   BOOL some_bool
 
     2   UINT size
     2   UINT {'value': self.size+2} +computedsize
@@ -38,6 +44,15 @@ PACKET {'errorcode': 0, 'bar': "a test}",
     *   LIST list2:
 		4 UINT field1
 		27 STRING field2
+    """Embedded code"""
+    %{
+    def test(self):
+        print 'this is a test'
+    def test2(self, v):
+        print 'this is another test',v
+        return True
+    %}
+
 =================================================================================
 
 The general format is that parameters/customisation of a field or type is

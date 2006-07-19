@@ -56,6 +56,9 @@ class protogentokenizer:
     # An actual field. Followed by name, size [-1 means unknown size], type, generatordict, userspecced dict, comment, modifiers
     FIELD="FIELD"
 
+    # Embedded codes: similar to LITERAL, but defined inside a PACKET.
+    CODE="CODE"
+
     # An assertion (validity check).  Followed by string of assertion expression
     ASSERTION="ASSERTION"
 
@@ -267,7 +270,7 @@ class protogentokenizer:
             res+=l
 
         return res
-        
+
     def _processpacketheader(self):
         t=self._next()
         if t[0]!='NAME':
@@ -329,6 +332,10 @@ class protogentokenizer:
                     return (self.CONDITIONALEND,)
             else:
                 return (self.PACKETEND,)
+
+        if t[0]=='OP' and t[1]=='%':
+            # embedded codes
+            return self.CODE, self._getliteral()
 
         # Size
         if t[0]=='NUMBER':
@@ -463,15 +470,19 @@ class codegen:
             if t[0]==tokens.PACKETSTART:
                 classdetails=t
                 classfields=[]
+                classcodes=[]
                 continue
             if t[0]==tokens.PACKETEND:
-                self.genclasscode(out, classdetails, classfields)
+                self.genclasscode(out, classdetails, classfields, classcodes)
                 continue
-            classfields.append(t)
+            if t[0]==tokens.CODE:
+                classcodes.append(t)
+            else:
+                classfields.append(t)
 
         return out.getvalue()
 
-    def genclasscode(self, out, namestuff, fields):
+    def genclasscode(self, out, namestuff, fields, codes):
         classname=namestuff[1]
         tokens=self.tokenizer
         print >>out, "class %s(BaseProtogenClass):" % (classname,)
@@ -639,7 +650,11 @@ class codegen:
             elif f[0]==tokens.CONDITIONALEND:
                 i-=1
         assert i==2
-        
+
+        # generate embeded codes
+        print >>out
+        for _l in codes:
+            print >>out, _l[1]
 
         print >>out, "\n\n"
 
