@@ -343,7 +343,7 @@ class SanyoPhonebook:
                     entry.priority=sms.SMSEntry.Priority_Normal
                 if res.entry.priority==200:
                     entry.priority=sms.SMSEntry.Priority_High
-                entry.text=unicode(res.entry.message, errors='ignore')
+                entry.text=res.entry.message
                 gsms[entry.id]=entry
                 result['sms']=gsms
         return result
