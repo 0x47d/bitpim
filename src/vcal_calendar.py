@@ -26,6 +26,12 @@ import vcard
 module_debug=False
 
 #-------------------------------------------------------------------------------
+class ImportDataSource(common_calendar.ImportDataSource):
+    # how to define, and retrieve calendar import data source
+    message_str="Pick a vCal Calendar File"
+    wildcard='*.vcs;*.ics'
+
+#-------------------------------------------------------------------------------
 class vCalendarFile(object):
     def __init__(self, file_name=None):
         self._data=[]

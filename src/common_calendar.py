@@ -84,6 +84,32 @@ def category_str(dict, v):
         return ''
 
 #-------------------------------------------------------------------------------
+class ImportDataSource(object):
+    # how to define, and retrieve calendar import data source
+
+    # subclass might want to set these
+    message_str='Select the source'
+    wildcard='*.*'
+
+    def __init__(self):
+        self._source=None
+
+    def browse(self, parent=None):
+        # how to select a source, default to select a file
+        dlg=wx.FileDialog(parent, self.message_str, wildcard=self.wildcard)
+        if dlg.ShowModal()==wx.ID_OK:
+            self._source=dlg.GetPath()
+        dlg.Destroy()
+
+    def get(self):
+        # return a source suitable for importing data
+        return self._source
+
+    def name(self):
+        # return a string name for the source, default is the source itself
+        return self._source or ''
+
+#-------------------------------------------------------------------------------
 class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
     def __init__(self, parent, id, title, col_labels, data={},
                  config_name=None,

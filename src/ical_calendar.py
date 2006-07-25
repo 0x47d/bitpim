@@ -23,6 +23,12 @@ import vcal_calendar as vcal
 module_debug=False
 
 #-------------------------------------------------------------------------------
+class ImportDataSource(common_calendar.ImportDataSource):
+    # how to define, and retrieve calendar import data source
+    message_str="Pick an iCal Calendar File"
+    wildcard='*.ics'
+
+#-------------------------------------------------------------------------------
 class Duration(object):
     def __init__(self, data):
         # Got a dict, compute the time duration in seconds

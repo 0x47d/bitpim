@@ -67,6 +67,20 @@ def set_recurrence(item, dict, oc):
     return oc.process_repeat(item, dict)
 
 #-------------------------------------------------------------------------------
+class ImportDataSource(common_calendar.ImportDataSource):
+    # how to define, and retrieve calendar import data source
+
+    def browse(self, parent=None):
+        # how to select a source
+        self._source=native.outlook.pickfolder()
+    
+    def name(self):
+        # return a string name for the source
+        if self._source:
+            return native.outlook.getfoldername(self._source)
+        return ''
+
+#-------------------------------------------------------------------------------
 class OutlookCalendarImportData:
     _non_auto_sync_calendar_keys=[
         # (Outlook field, BP Calendar field, convertor function)
@@ -136,7 +150,7 @@ class OutlookCalendarImportData:
     olImportanceLow  = native.outlook.outlook_com.constants.olImportanceLow
     olImportanceNormal = native.outlook.outlook_com.constants.olImportanceNormal
 
-    def __init__(self, outlook, auto_sync_only=0):
+    def __init__(self, outlook=native.outlook, auto_sync_only=0):
         self._outlook=outlook
         self._data=[]
         self._error_list=[]
@@ -343,7 +357,7 @@ class OutlookCalendarImportData:
 
     def get_folder_name(self):
         if self._folder is None:
-            return '<None>'
+            return ''
         return self._outlook.getfoldername(self._folder)
 
     def read(self, folder=None, update_dlg=None):

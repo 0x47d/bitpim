@@ -33,10 +33,17 @@ import nameparser
 import phonebook
 import pubsub
 import guihelper
+import csv_calendar
+import vcal_calendar
+import ical_calendar
+import gcal_calendar as gcal
 
 # control
 def GetPhonebookImports():
     res=[]
+    # Calendar Wizard
+    res.append( (guihelper.ID_CALENDAR_WIZARD, 'Import Calendar Wizard...',
+                 'Import Calendar Wizard', OnCalendarWizard) )
     # CSV - always possible
     res.append( (guihelper.ID_IMPORT_CSV_CONTACTS,"CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     res.append( (guihelper.ID_IMPORT_CSV_CALENDAR,"CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
@@ -89,6 +96,31 @@ def GetCalenderAutoSyncImports():
         pass
     # Evolution
     
+    return res
+
+def GetCalendarImports():
+    # return a list of calendar types data objects
+    res=[]
+    res.append({ 'type': 'CSV Calendar',
+                 'source': csv_calendar.ImportDataSource,
+                 'data': csv_calendar.CSVCalendarImportData })
+    res.append({ 'type': 'vCalendar',
+                 'source': vcal_calendar.ImportDataSource,
+                 'data': vcal_calendar.VCalendarImportData })
+    res.append({ 'type': 'iCalendar',
+                 'source': ical_calendar.ImportDataSource,
+                 'data': ical_calendar.iCalendarImportData })
+    res.append({ 'type': 'Google Calendar',
+                 'source': gcal.ImportDataSource,
+                 'data': gcal.gCalendarImportData })
+    try:
+        import native.outlook
+        import outlook_calendar
+        res.append({ 'type': 'Outlook Calendar',
+                     'source': outlook_calendar.ImportDataSource,
+                     'data': outlook_calendar.OutlookCalendarImportData })
+    except:
+        pass
     return res
 
 def TestOutlookIsInstalled():
@@ -1844,6 +1876,13 @@ def OnFileImportOutlookCalendar(parent):
                        'calendar')
     native.outlook.releaseoutlook()
 
+def OnCalendarWizard(parent):
+    import imp_cal_wizard
+    OnFileImportCommon(parent, imp_cal_wizard.ImportCalendarWizard,
+                       'Import Calendar Wizard',
+                       parent.GetActiveCalendarWidget(),
+                       'calendar')
+
 def OnFileImportOutlookNotes(parent):
     import native.outlook
     if not TestOutlookIsInstalled():
@@ -1865,26 +1904,22 @@ def OnFileImportOutlookTasks(parent):
     native.outlook.releaseoutlook()
 
 def OnFileImportVCal(parent):
-    import vcal_calendar
     OnFileImportCommon(parent, vcal_calendar.VcalImportCalDialog,
                        'Import vCalendar', parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportiCal(parent):
-    import ical_calendar
     OnFileImportCommon(parent, ical_calendar.iCalImportCalDialog,
                        'Import iCalendar', parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportgCal(parent):
-    import gcal_calendar as gcal
     OnFileImportCommon(parent, gcal.gCalImportDialog,
                        'Import Google Calendar',
                        parent.GetActiveCalendarWidget(),
                        'calendar')
 
 def OnFileImportCSVCalendar(parent):
-    import csv_calendar
     OnFileImportCommon(parent, csv_calendar.CSVImportDialog,
                        'Import CSV Calendar', parent.GetActiveCalendarWidget(),
                        'calendar')

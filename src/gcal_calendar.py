@@ -24,6 +24,22 @@ import vcal_calendar as vcal
 module_debug=False
 
 #-------------------------------------------------------------------------------
+class ImportDataSource(common_calendar.ImportDataSource):
+    # how to define, and retrieve calendar import data source
+    message_str='Select a Google Calendar iCal URL'
+
+    def browse(self, parent=None):
+        # how to select a source, default to select a file
+        if parent is None or not hasattr(parent, 'GetActiveDatabase'):
+            # need the database
+            return
+        dlg=SelectURLDialog(parent, self.message_str,
+                            parent.GetActiveDatabase())
+        if dlg.ShowModal()==wx.ID_OK:
+            self._source=dlg.GetPath()
+        dlg.Destroy()
+
+#-------------------------------------------------------------------------------
 URLDictKey='URLs'
 URLDictName='gCalURL'
 class URLDataObject(database.basedataobject):

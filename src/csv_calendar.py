@@ -25,6 +25,12 @@ import helpids
 
 module_debug=False
 
+#-------------------------------------------------------------------------------
+class ImportDataSource(common_calendar.ImportDataSource):
+    # how to define, and retrieve calendar import data source
+    message_str="Pick a CSV Calendar File"
+    wildcard='*.csv'
+
 #------------------------------------------------------------------------------
 class ExportCSVDialog(wx.Dialog):
     def __init__(self, parent, title):
@@ -261,7 +267,7 @@ class CSVCalendarImportData(object):
             return self.__file_name
         return ''
 
-    def read(self, file_name=None):
+    def read(self, file_name=None, dlg=None):
         if file_name is not None:
             self.__file_name=file_name
         if self.__file_name is None:

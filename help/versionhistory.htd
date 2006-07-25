@@ -3,6 +3,7 @@
    <h2><a name="0.9.06">Changes in 0.9.06</a></h2>
     <ul>
       <li>Fix crash on reading SMS messages from Sanyo phones
+      <li>Added Import Calendar Wizard feature.
     </ul>
 
    <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
