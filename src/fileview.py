@@ -39,7 +39,7 @@ getext=common.getext
 #-------------------------------------------------------------------------------
 class MediaDataObject(database.basedataobject):
     # modified_datatime is unix time
-    _knownproperties=['name', 'origin', 'index', 'mediadata', 'timestamp' ]
+    _knownproperties=['name', 'origin', 'index', 'mediadata', 'timestamp']
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     def __init__(self, data=None):
         if data is None or not isinstance(data, MediaEntry):
@@ -482,7 +482,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         wx.BeginBusyCursor()
         item=self.GetSelectedItems()[0]
         me=self._data[self.database_key][item.key]
-        fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+        fname=self.filename(me)
         if not os.path.isfile(fname):
             return
         if guihelper.IsMac():
@@ -509,7 +509,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             file_names=wx.FileDataObject()
             for item in items:
                 me=self._data[self.database_key][item.key]
-                fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+                fname=self.filename(me)
                 if not os.path.isfile(fname):
                     continue
                 file_names.AddFile(fname)
@@ -521,7 +521,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             # can't trust result returned by DoDragDrop
             for item in items:
                 me=self._data[self.database_key][item.key]
-                fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+                fname=self.filename(me)
                 if not os.path.isfile(fname):
                     item.RemoveFromIndex()
 
@@ -605,14 +605,14 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         if not deleteitems:
             for item in context:
                 me=self._data[self.database_key][item.key]
-                fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+                fname=self.filename(me)
                 if not os.path.exists(fname):
                     deleteitems=True
                     break
         if deleteitems:
             for item in context:
                 me=self._data[self.database_key][item.key]
-                fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+                fname=self.filename(me)
                 if os.path.exists(fname):
                     os.remove(fname)
             for item in context:
@@ -632,9 +632,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             else: ext="*."+ext
             dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0].name, style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
             if dlg.ShowModal()==wx.ID_OK:
-                f=open(dlg.GetPath(), "wb")
-                f.write(self._data[items[0].datakey][items[0].key].mediadata)
-                f.close()
+                file(dlg.GetPath(), "wb").write(self._data[items[0].datakey][items[0].key].mediadata)
                 if self._data[items[0].datakey][items[0].key].timestamp!=None:
                     os.utime(dlg.GetPath(), (self._data[items[0].datakey][items[0].key].timestamp, 
                                              self._data[items[0].datakey][items[0].key].timestamp))
@@ -643,10 +641,9 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             dlg=wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
             if dlg.ShowModal()==wx.ID_OK:
                 for item in items:
-                    fname=os.path.join(dlg.GetPath(), basename(item.name))
-                    f=open(fname, "wb")
-                    f.write(self._data[item.datakey][item.key].mediadata)
-                    f.close()
+                    fname=self.filename(item)
+                    fname=os.path.join(dlg.GetPath(), basename(fname))
+                    file(fname, 'wb').write(self._data[item.datakey][item.key].mediadata)
                     if self._data[item.datakey][item.key].timestamp!=None:
                         os.utime(fname, (self._data[item.datakey][item.key].timestamp, 
                                          self._data[item.datakey][item.key].timestamp))
@@ -661,7 +658,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             file_names=wx.FileDataObject()
             for item in items:
                 me=self._data[self.database_key][item.key]
-                fname=os.path.join(self.mainwindow.blob_path, me.origin, me.name)
+                fname=self.filename(me)
                 if not os.path.isfile(fname):
                     continue
                 file_names.AddFile(fname)
@@ -701,6 +698,11 @@ class FileView(wx.Panel, widgets.BitPimWidget):
     def OnDelete(self,_):
         items=self.GetSelectedItems()
         for item in items:
+            try:
+                # try to remove the media file
+                os.remove(self.filename(item))
+            except:
+                pass
             item.RemoveFromIndex()
         self.OnRefresh()
 
@@ -734,6 +736,18 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         dict[self.database_key][entry.id]=entry
         self.modified=True
 
+    def filename(self, item):
+        # return the filename associated with a media file
+        if hasattr(item, 'origin'):
+            _origin=item.origin
+            _name=item.name
+        else:
+            _origin=item.get('origin', '')
+            _name=item.get('name', '')
+        relative_name=os.path.join(_origin,
+                                   _name.encode(media_codec))
+        return os.path.join(self.mainwindow.blob_path, relative_name)
+
     def _save_to_db(self, dict):
         db_rr={}
         for k,e in dict.items():
@@ -742,20 +756,17 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             # in a regular file to minimise the database size, it 
             # gets very big if the data is stored in it and starts to get slow.
             if db_rr[k].has_key('mediadata'):
+                fname=self.filename(db_rr[k])
                 # create the directory for the origin
-                dir_name=os.path.join(self.mainwindow.blob_path, db_rr[k]['origin'])
+                dir_name,_=os.path.split(fname)
                 try:
                     os.makedirs(dir_name)
                 except:
                     pass
                 if not os.path.isdir(dir_name):
                     raise Exception("Unable to create media directory "+dir_name)
-                relative_name=os.path.join(db_rr[k]['origin'], db_rr[k]['name'])
-                fname=os.path.join(self.mainwindow.blob_path, relative_name)
-                f=open(fname, "wb")
-                f.write(db_rr[k]['mediadata'])
-                f.close()
-                db_rr[k]['mediadata']=relative_name
+                file(fname, 'wb').write(db_rr[k]['mediadata'])
+                del db_rr[k]['mediadata']
         database.ensurerecordtype(db_rr, mediaobjectfactory)
         self.mainwindow.database.savemajordict(self.database_key, db_rr)
 
@@ -767,20 +778,14 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         for k,e in dict.items():
             ce=MediaEntry()
             ce.set_db_dict(e)
-            if ce.mediadata!=None:
-                try:
-                    fname=os.path.join(self.mainwindow.blob_path, ce.mediadata)
-                    f=open(fname, "rb")
-                    ce.mediadata=f.read()
-                    f.close()
-                    r[ce.id]=ce
-                except:
-                    # abandon data that has no file it probably means that 
-                    # blobs directory is corrupted, maybe the user deleted
-                    # the file themselves
-                    pass
-            else:
-                r[ce.id]=ce
+            try:
+                ce.mediadata=file(self.filename(ce), 'rb').read()
+            except:
+                # abandon data that has no file it probably means that 
+                # blobs directory is corrupted, maybe the user deleted
+                # the file themselves
+                ce.mediadata=None
+            r[ce.id]=ce
         result.update({ self.database_key: r})
         return result
 
@@ -970,28 +975,25 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         if dlg.ShowModal()==wx.ID_OK:
             new_name=dlg.GetValue()
             if len(new_name) and new_name!=old_name:
-                old_name=items[0].name
-                new_name=self.get_media_name_from_filename(new_name)
-                items[0].RenameInIndex(new_name)
-                pubsub.publish(pubsub.MEDIA_NAME_CHANGED,
-                               data={ pubsub.media_change_type: self.media_notification_type,
-                                      pubsub.media_old_name: old_name,
-                                      pubsub.media_new_name: new_name })
+                old_fname=self.filename(items[0])
+                items[0].name=new_name
+                new_fname=self.filename(items[0])
+                try:
+                    # try renaming the file
+                    os.rename(old_fname, new_fname)
+                    # good to go with the rest
+                    items[0].RenameInIndex(new_name)
+                    pubsub.publish(pubsub.MEDIA_NAME_CHANGED,
+                                   data={ pubsub.media_change_type: self.media_notification_type,
+                                          pubsub.media_old_name: old_name,
+                                          pubsub.media_new_name: new_name })
+                except:
+                    # failed to rename
+                    items[0].name=old_name
         dlg.Destroy()
           
     def OnAddFiles(self,_):
         raise Exception("not implemented")
-
-        items=self.GetSelectedItems()
-        if len(items)!=1:
-               # either none or more than 1 items selected
-               return
-        dlg=wx.FileDialog(self, "Choose file",
-                          style=wx.OPEN, wildcard=self.wildcard)
-        if dlg.ShowModal()==wx.ID_OK:
-            file(items[0].filename, 'wb').write(file(dlg.GetPath(), 'rb').read())
-            items[0].Refresh()
-        dlg.Destroy()
 
     def OnReplace(self, _=None):
         items=self.GetSelectedItems()
@@ -1024,7 +1026,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         if len(media_name)>self.maxlen:
             chop=len(media_name)-self.maxlen
             media_name=stripext(media_name)[:-chop].strip()+'.'+getext(media_name)
-        return media_name
+        return media_name.decode(media_codec)
 
     def getdata(self,dict,want=NONE):
         items=None
