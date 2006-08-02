@@ -5,6 +5,9 @@
       <li>Fix crash on reading SMS messages from Sanyo phones
       <li>Added Import Calendar Wizard feature.
       <li>Handled local filesystem file names.
+      <li>Added unicode support to the Samsung A930/A950.
+      <li>Fixed calendar support for the LG VX8300.
+      <li>Fixed various Help screen shots.
     </ul>
 
    <h2><a name="0.9.05">Changes in 0.9.05</a></h2>
