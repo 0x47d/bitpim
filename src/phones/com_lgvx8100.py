@@ -270,8 +270,18 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 else:
                     entry.alarm=hour*60+min
                 if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
+                    # MIC Unlike previous phones, the VX8300 passes the ringtone
+                    # via both the index, and a path.  If the index is set to 100
+                    # (0x64), then the ringtone information will be found in the
+                    # "ringpath", the last 256 bytes of the calendar packet.  If
+                    # the index is between 0 and 15, inclusive, then it is using
+                    # one of the builtin ringers, and the ringpath is set to
+                    # null.
                     try:
-                        entry.ringtone=self.builtinringtones[event.ringtone]
+                        if (event.ringtone == 100):   # MIC Ringer is downloaded to phone or microSD
+                            entry.ringtone = common.basename(event.ringpath)
+                        else:                         # MIC Ringer is built-in
+                            entry.ringtone=self.builtinringtones[event.ringtone]
                     except:
                         # hack, not having a phone makes it hard to figure out the best approach
                         if entry.alarm==None:
@@ -367,13 +377,23 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             else:# set alarm to "No Ring" gets rid of alarm icon on phone
                 alarm_name="No Ring"
             if self.protocolclass.CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE:
-                count=0
-                for i in self.builtinringtones:
-                    if i==alarm_name:
-                        data.ringtone=count
+                # MIC VX8300 handles the ringtone differently than previous
+                # phones.  Except for the 16 builtin ringers, ringers stored
+                # directly on the phone or on the microSD are specified by
+                # their fully qualified path, and an index of 100.
+                for i in dict['ringtone-index']:
+                    if dict['ringtone-index'][i]['name']==alarm_name:
+                        if (i > 15):   # Ringer stored on phone or microSD
+                            data.ringtone=100
+                            data.ringpath=dict['ringtone-index'][i]['filename']
+                        else:          # Ringer is builtin
+                            data.ringtone=i      # Set to proper index
+                            data.ringpath=""     # Set to null
                         break
-                    count+=1
             else:
+                data.unknown2=0        # MIC Only unknown in VX8100 and prior
+                                       # Moved up from line below, as we do not
+                                       # want it defined for the VX8300+
                 for i in dict['ringtone-index']:
                     if dict['ringtone-index'][i]['name']==alarm_name:
                         data.ringtone=i
@@ -401,7 +421,9 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
             else:
                 data.repeat=((0,0,0,0,0))
             data.unknown1=0
-            data.unknown2=0
+            # data.unknown2=0          # MIC Moved up, since this should not be
+                                       # assigned for the VX8300; not part of the
+                                       # defined packet.
             if data.alarmindex_vibrate!=1: # if alarm set
                 contains_alarms=True
             # put entry in nice shiny new dict we are building

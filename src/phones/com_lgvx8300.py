@@ -200,7 +200,7 @@ class Profile(parentprofile):
             'memo': 0,
             'category': 1,
             'wallpaper': 0,
-            'ringtone': 0,
+            'ringtone': 2,
             'storage': 0,
             },
         'calendar': {

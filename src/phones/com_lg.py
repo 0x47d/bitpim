@@ -1,6 +1,7 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2006 Michael Cohen <mikepublic@nc.rr.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -1222,11 +1223,15 @@ class LGUncountedIndexedMedia:
         media={}
 
         # builtins
+        index = 0;                      # MIC Initialize counter here, instead of the next stanza
         for i,n in enumerate(builtins): # nb zero based index whereas previous phones used 1
             media[i]={'name': n, 'origin': 'builtin'}
+            index+=1;
 
         # maps
-        index=0
+        # index=0                       # MIC Do not want to reset index; builtins start at 0
+                                        # Otherwise, the builtins are overwriten by
+                                        # these
         for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
             for item in self.getindex(indexfile):
                 media[index]={
