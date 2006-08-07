@@ -1,7 +1,8 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2005 Roger Binns <rogerb@rogerbinns.com>
-### Copyright (C) 2005 Simon Capper <skyjunky@sbcglobal.net>
+### Copyright (C) 2003-2006 Roger Binns <rogerb@rogerbinns.com>
+### Copyright (C) 2005-2006 Simon Capper <skyjunky@sbcglobal.net>
+### Copyright (C) 2006 Michael Cohen <mikepublic@nc.rr.com>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -34,7 +35,7 @@ NUMSPEEDDIALS=100
 FIRSTSPEEDDIAL=2
 LASTSPEEDDIAL=99
 NUMPHONEBOOKENTRIES=500
-MAXCALENDARDESCRIPTION=38
+MAXCALENDARDESCRIPTION=32
 CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
 
 NUMEMAILS=2
@@ -47,7 +48,7 @@ broken_filelist_date=True
 PACKET indexentry:
     256 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "full pathname"
     4 UINT size
-    4 UINT {'default': 0} +date 
+    4 UINT {'default': 0} +date
     4 UINT type
 
 PACKET indexfile:
@@ -122,15 +123,17 @@ PACKET scheduleevent:
     4 LGCALDATE end_date
     4 LGCALREPEAT repeat # complicated bit mapped field
     1 UINT alarmindex_vibrate #LSBit of this set vibrate ON(0)/OFF(1), the 7 MSBits are the alarm index
-                              #the alarmindex is the index into the amount of time in advance of the 
-                              #event to notify the user. It is directly related to the alarmminutes 
+                              #the alarmindex is the index into the amount of time in advance of the
+                              #event to notify the user. It is directly related to the alarmminutes
                               #and alarmhours below, valid values are
                               # 8=2days, 7=1day, 6=2hours, 5=1hour, 4=15mins, 3=10mins, 2=5mins, 1=0mins, 0=NoAlarm
     1 UINT ringtone
     1 UINT unknown1
     1 UINT alarmminutes  "a value of 0xFF indicates not set"
     1 UINT alarmhours    "a value of 0xFF indicates not set"
-    256 UINT { 'default': 0 } +unknown2
+    256 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } ringpath
+                              # MIC If ringtone = 0x64 (decimal 100), this field is used to specify
+                              # the full path of the ringer, either on the phone or on the microSD card
 
 PACKET schedulefile:
     2 UINT numactiveitems
@@ -144,7 +147,7 @@ PACKET call:
     36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
     1 UINT numberlength # length of phone number
     1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
-    5 UINT unknown2 # 
+    5 UINT unknown2 #
     2 UINT pbentrynum #entry number in phonebook
 
 PACKET callhistory:
@@ -271,12 +274,12 @@ PACKET sms_quick_text:
     * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
         101 USTRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
 
-# Text Memos. LG memo support is weak, it only supports the raw text and none of 
+# Text Memos. LG memo support is weak, it only supports the raw text and none of
 # the features that other phones support, when you run bitpim you see loads of
 # options that do not work in the vx8100 on the memo page
 PACKET textmemo:
     152 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
-    4 UINT {'default' : 0x1000000} +dunno 
+    4 UINT {'default' : 0x1000000} +dunno
     4 LGCALDATE memotime # time the memo was writen LG time
 
 PACKET textmemofile:
