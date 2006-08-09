@@ -98,6 +98,7 @@ class wholebook(BaseProtogenClass):
 
 
 
+
 class pbentry(BaseProtogenClass):
     __fields=['slot', 'unk1', 'group_id', 'unk3', 'record', 'unk4', 'name', 'unk2']
 
@@ -286,6 +287,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class groups(BaseProtogenClass):
     __fields=['filename', 'pbgroups']
 
@@ -369,6 +371,7 @@ class groups(BaseProtogenClass):
     def containerelements(self):
         yield ('filename', self.__field_filename, "group file name")
         yield ('pbgroups', self.__field_pbgroups, None)
+
 
 
 
@@ -509,6 +512,7 @@ class pbgroup(BaseProtogenClass):
 
 
 
+
 class phones(BaseProtogenClass):
     __fields=['filename', 'records']
 
@@ -592,6 +596,7 @@ class phones(BaseProtogenClass):
     def containerelements(self):
         yield ('filename', self.__field_filename, None)
         yield ('records', self.__field_records, None)
+
 
 
 
@@ -729,6 +734,7 @@ class phone(BaseProtogenClass):
         yield ('owner_id', self.__field_owner_id, None)
         yield ('type', self.__field_type, "Home / Work / Cell / Fax")
         yield ('number', self.__field_number, None)
+
 
 
 

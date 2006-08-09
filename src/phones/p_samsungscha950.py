@@ -183,6 +183,7 @@ class DefaultResponse(BaseProtogenClass):
 
 
 
+
 class WRingtoneIndexEntry(BaseProtogenClass):
     __fields=['name', 'path_prefix', 'pathname', 'eor']
 
@@ -315,6 +316,7 @@ class WRingtoneIndexEntry(BaseProtogenClass):
 
 
 
+
 class WRingtoneIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -391,6 +393,7 @@ class WRingtoneIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -480,6 +483,7 @@ class RRingtoneIndexEntry(BaseProtogenClass):
 
 
 
+
 class RRingtoneIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -556,6 +560,7 @@ class RRingtoneIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -691,6 +696,7 @@ class WSoundsIndexEntry(BaseProtogenClass):
 
 
 
+
 class WSoundsIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -767,6 +773,7 @@ class WSoundsIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -856,6 +863,7 @@ class RSoundIndexEntry(BaseProtogenClass):
 
 
 
+
 class RSoundsIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -932,6 +940,7 @@ class RSoundsIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -1067,6 +1076,7 @@ class WPictureIndexEntry(BaseProtogenClass):
 
 
 
+
 class WPictureIndexFile(BaseProtogenClass):
     __fields=['header', 'items']
 
@@ -1162,6 +1172,7 @@ class WPictureIndexFile(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -1268,6 +1279,7 @@ class RPictureIndexEntry(BaseProtogenClass):
 
 
 
+
 class RPictureIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -1344,6 +1356,7 @@ class RPictureIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -1504,6 +1517,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungscha950_186(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
@@ -1575,6 +1589,7 @@ class _gen_p_samsungscha950_186(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -1670,6 +1685,7 @@ class GroupIndexFile(BaseProtogenClass):
 
 
 
+
 class CalIndexEntry(BaseProtogenClass):
     __fields=['index']
 
@@ -1746,6 +1762,7 @@ class CalIndexEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -2027,6 +2044,7 @@ class CalIndexFile(BaseProtogenClass):
         yield ('events', self.__field_events, None)
         yield ('notes', self.__field_notes, None)
         yield ('activeevents', self.__field_activeevents, None)
+
 
 
 
@@ -2533,6 +2551,7 @@ class CalEntry(BaseProtogenClass):
 
 
 
+
 class NotePadEntry(BaseProtogenClass):
     __fields=['textlen', 'text', 'creation', 'zero1', 'creation2', 'zero2', 'five', 'zero3', 'modified', 'zero4', 'modified2', 'zero5']
 
@@ -2843,6 +2862,7 @@ class NotePadEntry(BaseProtogenClass):
 
 
 
+
 class JournalNumber(BaseProtogenClass):
     __fields=['index', 'bitmap']
 
@@ -2926,6 +2946,7 @@ class JournalNumber(BaseProtogenClass):
     def containerelements(self):
         yield ('index', self.__field_index, None)
         yield ('bitmap', self.__field_bitmap, None)
+
 
 
 
@@ -3029,6 +3050,7 @@ class JournalSpeeddial(BaseProtogenClass):
         yield ('index', self.__field_index, None)
         yield ('speeddial', self.__field_speeddial, None)
         yield ('bitmap', self.__field_bitmap, None)
+
 
 
 
@@ -3831,6 +3853,7 @@ class JournalEntry(BaseProtogenClass):
 
 
 
+
 class JournalRec(BaseProtogenClass):
     __fields=['command', 'blocklen', 'entry']
 
@@ -3946,6 +3969,7 @@ class JournalRec(BaseProtogenClass):
 
 
 
+
 class JournalFile(BaseProtogenClass):
     __fields=['items']
 
@@ -4022,6 +4046,7 @@ class JournalFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -4148,6 +4173,7 @@ class NumberEntry(BaseProtogenClass):
             yield ('speeddial', self.__field_speeddial, None)
         if self.option & PB_FLG_RINGTONE:
             yield ('ringtone', self.__field_ringtone, None)
+
 
 
 
@@ -4480,6 +4506,7 @@ class PBEntry(BaseProtogenClass):
 
 
 
+
 class LenEntry(BaseProtogenClass):
     __fields=['itemlen']
 
@@ -4556,6 +4583,7 @@ class LenEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('itemlen', self.__field_itemlen, None)
+
 
 
 
@@ -4657,6 +4685,7 @@ class PBFile(BaseProtogenClass):
 
 
 
+
 class PBFileHeader(BaseProtogenClass):
     __fields=['lens']
 
@@ -4733,6 +4762,7 @@ class PBFileHeader(BaseProtogenClass):
 
     def containerelements(self):
         yield ('lens', self.__field_lens, None)
+
 
 
 
@@ -4828,6 +4858,7 @@ class ss_cmd_hdr(BaseProtogenClass):
 
 
 
+
 class ss_cmd_resp(BaseProtogenClass):
     __fields=['cmd_hdr', 'data']
 
@@ -4914,6 +4945,7 @@ class ss_cmd_resp(BaseProtogenClass):
 
 
 
+
 class ss_sw_req(BaseProtogenClass):
     __fields=['hdr']
 
@@ -4990,6 +5022,7 @@ class ss_sw_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
+
 
 
 
@@ -5079,6 +5112,7 @@ class ss_sw_resp(BaseProtogenClass):
 
 
 
+
 class ss_hw_req(BaseProtogenClass):
     __fields=['hdr']
 
@@ -5155,6 +5189,7 @@ class ss_hw_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
+
 
 
 
@@ -5244,6 +5279,7 @@ class ss_hw_resp(BaseProtogenClass):
 
 
 
+
 class ss_pb_count_req(BaseProtogenClass):
     __fields=['hdr']
 
@@ -5320,6 +5356,7 @@ class ss_pb_count_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
+
 
 
 
@@ -5423,6 +5460,7 @@ class ss_pb_count_resp(BaseProtogenClass):
         yield ('hdr', self.__field_hdr, None)
         yield ('zero', self.__field_zero, None)
         yield ('count', self.__field_count, None)
+
 
 
 
@@ -5538,6 +5576,7 @@ class ss_pb_read_req(BaseProtogenClass):
         yield ('hdr', self.__field_hdr, None)
         yield ('zero', self.__field_zero, None)
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -5678,6 +5717,7 @@ class ss_pb_read_resp(BaseProtogenClass):
 
 
 
+
 class ss_pb_voicemail_read_req(BaseProtogenClass):
     __fields=['hdr', 'param']
 
@@ -5773,6 +5813,7 @@ class ss_pb_voicemail_read_req(BaseProtogenClass):
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
         yield ('param', self.__field_param, None)
+
 
 
 
@@ -5876,6 +5917,7 @@ class ss_pb_voicemail_resp(BaseProtogenClass):
         yield ('hdr', self.__field_hdr, None)
         yield ('param', self.__field_param, None)
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -6000,6 +6042,7 @@ class ss_pb_voicemail_write_req(BaseProtogenClass):
 
 
 
+
 class ss_pb_clear_req(BaseProtogenClass):
     __fields=['hdr']
 
@@ -6076,6 +6119,7 @@ class ss_pb_clear_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
+
 
 
 
@@ -6162,6 +6206,7 @@ class ss_pb_clear_resp(BaseProtogenClass):
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
         yield ('flg', self.__field_flg, None)
+
 
 
 
@@ -6329,6 +6374,7 @@ class ss_number_entry(BaseProtogenClass):
         yield ('primary', self.__field_primary, None)
         yield ('zero', self.__field_zero, None)
         yield ('ringtone', self.__field_ringtone, None)
+
 
 
 
@@ -6723,6 +6769,7 @@ class ss_pb_entry(BaseProtogenClass):
 
 
 
+
 class ss_pb_write_req(BaseProtogenClass):
     __fields=['hdr', 'zero', 'entry']
 
@@ -6838,6 +6885,7 @@ class ss_pb_write_req(BaseProtogenClass):
 
 
 
+
 class ss_pb_write_resp(BaseProtogenClass):
     __fields=['hdr', 'zero', 'index']
 
@@ -6941,6 +6989,7 @@ class ss_pb_write_resp(BaseProtogenClass):
 
 
 
+
 class cl_list(BaseProtogenClass):
     __fields=['index']
 
@@ -7011,6 +7060,7 @@ class cl_list(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -7185,6 +7235,7 @@ class cl_index_file(BaseProtogenClass):
 
 
 
+
 class cl_file(BaseProtogenClass):
     __fields=['cl_type', 'number', 'datetime', 'dunno1', 'duration']
 
@@ -7322,6 +7373,7 @@ class cl_file(BaseProtogenClass):
 
 
 
+
 class pBOOL(BaseProtogenClass):
     __fields=['value']
 
@@ -7392,6 +7444,7 @@ class pBOOL(BaseProtogenClass):
 
     def containerelements(self):
         yield ('value', self.__field_value, None)
+
 
 
 
@@ -7705,6 +7758,7 @@ class sms_header(BaseProtogenClass):
 
 
 
+
 class sms_msg_stat_list(BaseProtogenClass):
     __fields=['status']
 
@@ -7775,6 +7829,7 @@ class sms_msg_stat_list(BaseProtogenClass):
 
     def containerelements(self):
         yield ('status', self.__field_status, None)
+
 
 
 
@@ -7864,6 +7919,7 @@ class sms_datetime_list(BaseProtogenClass):
 
 
 
+
 class sms_delivered_datetime(BaseProtogenClass):
     __fields=['datetime', 'dunno']
 
@@ -7947,6 +8003,7 @@ class sms_delivered_datetime(BaseProtogenClass):
     def containerelements(self):
         yield ('datetime', self.__field_datetime, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -8759,6 +8816,7 @@ class sms_body(BaseProtogenClass):
         if self.has_40bytes:
             yield ('dunno9', self.__field_dunno9, None)
         yield ('msg_stat', self.__field_msg_stat, None)
+
 
 
 

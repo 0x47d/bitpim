@@ -88,6 +88,7 @@ class getphonestatus(BaseProtogenClass):
 
 
 
+
 class getphoneresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -158,6 +159,7 @@ class getphoneresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -237,6 +239,7 @@ class firmwarerequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -411,6 +414,7 @@ class firmwareresponse(BaseProtogenClass):
 
 
 
+
 class esnrequest(BaseProtogenClass):
     __fields=['command']
 
@@ -487,6 +491,7 @@ class esnrequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -582,6 +587,7 @@ class beginendupdaterequest(BaseProtogenClass):
 
 
 
+
 class samheader(BaseProtogenClass):
     __fields=['readwrite', 'attribute']
 
@@ -667,6 +673,7 @@ class samheader(BaseProtogenClass):
     def containerelements(self):
         yield ('readwrite', self.__field_readwrite, None)
         yield ('attribute', self.__field_attribute, None)
+
 
 
 
@@ -782,6 +789,7 @@ class phonebooknamerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1024,6 +1032,7 @@ class phonebookname(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungsphn400_62(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pnumber']
@@ -1095,6 +1104,7 @@ class _gen_p_samsungsphn400_62(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pnumber', self.__field_pnumber, None)
+
 
 
 
@@ -1218,6 +1228,7 @@ class phonebooknameresponse(BaseProtogenClass):
 
 
 
+
 class phonebooknumbersrequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -1333,6 +1344,7 @@ class phonebooknumbersrequest(BaseProtogenClass):
 
 
 
+
 class phonebooknumbers(BaseProtogenClass):
     __fields=['pad', 'number_len', 'number']
 
@@ -1433,6 +1445,7 @@ class phonebooknumbers(BaseProtogenClass):
         yield ('pad', self.__field_pad, None)
         yield ('number_len', self.__field_number_len, None)
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -1556,6 +1569,7 @@ class phonebooknumbersresponse(BaseProtogenClass):
 
 
 
+
 class attributerequest(BaseProtogenClass):
     __fields=['command', 'attribute', 'pad']
 
@@ -1668,6 +1682,7 @@ class attributerequest(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('attribute', self.__field_attribute, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 

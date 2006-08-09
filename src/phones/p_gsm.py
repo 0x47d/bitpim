@@ -88,6 +88,7 @@ class echo_off(BaseProtogenClass):
 
 
 
+
 class esnrequest(BaseProtogenClass):
     __fields=['command']
 
@@ -164,6 +165,7 @@ class esnrequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -253,6 +255,7 @@ class esnresponse(BaseProtogenClass):
 
 
 
+
 class SIM_ID_Req(BaseProtogenClass):
     __fields=['command']
 
@@ -332,6 +335,7 @@ class SIM_ID_Req(BaseProtogenClass):
 
 
 
+
 class single_value_resp(BaseProtogenClass):
     __fields=['value']
 
@@ -402,6 +406,7 @@ class single_value_resp(BaseProtogenClass):
 
     def containerelements(self):
         yield ('value', self.__field_value, None)
+
 
 
 
@@ -484,6 +489,7 @@ class manufacturer_id_req(BaseProtogenClass):
 
 
 
+
 class model_id_req(BaseProtogenClass):
     __fields=['command']
 
@@ -563,6 +569,7 @@ class model_id_req(BaseProtogenClass):
 
 
 
+
 class firmware_version_req(BaseProtogenClass):
     __fields=['command']
 
@@ -639,6 +646,7 @@ class firmware_version_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 

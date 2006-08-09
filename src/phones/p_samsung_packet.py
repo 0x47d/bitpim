@@ -114,6 +114,7 @@ class phonenumber(BaseProtogenClass):
 
 
 
+
 class phonebookslotrequest(BaseProtogenClass):
     __fields=['command', 'slot']
 
@@ -209,6 +210,7 @@ class phonebookslotrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('slot', self.__field_slot, "Internal Slot")
+
 
 
 
@@ -310,6 +312,7 @@ class phonebooksloterase(BaseProtogenClass):
 
 
 
+
 class phonebookslotupdateresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -380,6 +383,7 @@ class phonebookslotupdateresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -481,149 +485,6 @@ class groupnamerequest(BaseProtogenClass):
 
 
 
-class groupnamesetrequest(BaseProtogenClass):
-    __fields=['command', 'gid', 'groupname', 'ringtone']
-
-    def __init__(self, *args, **kwargs):
-        dict={}
-        # What was supplied to this function
-        dict.update(kwargs)
-        # Parent constructor
-        super(groupnamesetrequest,self).__init__(**dict)
-        if self.__class__ is groupnamesetrequest:
-            self._update(args,dict)
-
-
-    def getfields(self):
-        return self.__fields
-
-
-    def _update(self, args, kwargs):
-        super(groupnamesetrequest,self)._update(args,kwargs)
-        keys=kwargs.keys()
-        for key in keys:
-            if key in self.__fields:
-                setattr(self, key, kwargs[key])
-                del kwargs[key]
-        # Were any unrecognized kwargs passed in?
-        if __debug__:
-            self._complainaboutunusedargs(groupnamesetrequest,kwargs)
-        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
-        # Make all P fields that haven't already been constructed
-
-
-    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
-        'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_command
-        except:
-            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
-        self.__field_command.writetobuffer(buf)
-        try: self.__field_gid
-        except:
-            self.__field_gid=CSVINT()
-        self.__field_gid.writetobuffer(buf)
-        try: self.__field_groupname
-        except:
-            self.__field_groupname=CSVSTRING()
-        self.__field_groupname.writetobuffer(buf)
-        try: self.__field_ringtone
-        except:
-            self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
-        self.__field_ringtone.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
-
-
-    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
-        'Reads this packet from the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
-        self.__field_command.readfrombuffer(buf)
-        self.__field_gid=CSVINT()
-        self.__field_gid.readfrombuffer(buf)
-        self.__field_groupname=CSVSTRING()
-        self.__field_groupname.readfrombuffer(buf)
-        self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
-        self.__field_ringtone.readfrombuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-
-
-    def __getfield_command(self):
-        try: self.__field_command
-        except:
-            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
-        return self.__field_command.getvalue()
-
-    def __setfield_command(self, value):
-        if isinstance(value,CSVSTRING):
-            self.__field_command=value
-        else:
-            self.__field_command=CSVSTRING(value,**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
-
-    def __delfield_command(self): del self.__field_command
-
-    command=property(__getfield_command, __setfield_command, __delfield_command, None)
-
-    def __getfield_gid(self):
-        try: self.__field_gid
-        except:
-            self.__field_gid=CSVINT()
-        return self.__field_gid.getvalue()
-
-    def __setfield_gid(self, value):
-        if isinstance(value,CSVINT):
-            self.__field_gid=value
-        else:
-            self.__field_gid=CSVINT(value,)
-
-    def __delfield_gid(self): del self.__field_gid
-
-    gid=property(__getfield_gid, __setfield_gid, __delfield_gid, "Group #")
-
-    def __getfield_groupname(self):
-        try: self.__field_groupname
-        except:
-            self.__field_groupname=CSVSTRING()
-        return self.__field_groupname.getvalue()
-
-    def __setfield_groupname(self, value):
-        if isinstance(value,CSVSTRING):
-            self.__field_groupname=value
-        else:
-            self.__field_groupname=CSVSTRING(value,)
-
-    def __delfield_groupname(self): del self.__field_groupname
-
-    groupname=property(__getfield_groupname, __setfield_groupname, __delfield_groupname, None)
-
-    def __getfield_ringtone(self):
-        try: self.__field_ringtone
-        except:
-            self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
-        return self.__field_ringtone.getvalue()
-
-    def __setfield_ringtone(self, value):
-        if isinstance(value,CSVINT):
-            self.__field_ringtone=value
-        else:
-            self.__field_ringtone=CSVINT(value,**{'terminator': None, 'default': 0})
-
-    def __delfield_ringtone(self): del self.__field_ringtone
-
-    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, "Ringtone assignment")
-
-    def iscontainer(self):
-        return True
-
-    def containerelements(self):
-        yield ('command', self.__field_command, None)
-        yield ('gid', self.__field_gid, "Group #")
-        yield ('groupname', self.__field_groupname, None)
-        yield ('ringtone', self.__field_ringtone, "Ringtone assignment")
-
-
 
 class groupnamesetrequest(BaseProtogenClass):
     __fields=['command', 'gid', 'groupname', 'ringtone']
@@ -766,6 +627,152 @@ class groupnamesetrequest(BaseProtogenClass):
         yield ('gid', self.__field_gid, "Group #")
         yield ('groupname', self.__field_groupname, None)
         yield ('ringtone', self.__field_ringtone, "Ringtone assignment")
+
+
+
+
+class groupnamesetrequest(BaseProtogenClass):
+    __fields=['command', 'gid', 'groupname', 'ringtone']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(groupnamesetrequest,self).__init__(**dict)
+        if self.__class__ is groupnamesetrequest:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(groupnamesetrequest,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(groupnamesetrequest,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_gid
+        except:
+            self.__field_gid=CSVINT()
+        self.__field_gid.writetobuffer(buf)
+        try: self.__field_groupname
+        except:
+            self.__field_groupname=CSVSTRING()
+        self.__field_groupname.writetobuffer(buf)
+        try: self.__field_ringtone
+        except:
+            self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
+        self.__field_ringtone.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
+        self.__field_command.readfrombuffer(buf)
+        self.__field_gid=CSVINT()
+        self.__field_gid.readfrombuffer(buf)
+        self.__field_groupname=CSVSTRING()
+        self.__field_groupname.readfrombuffer(buf)
+        self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
+        self.__field_ringtone.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{'quotechar': None, 'terminator': None, 'default': '#PBGRW='})
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_gid(self):
+        try: self.__field_gid
+        except:
+            self.__field_gid=CSVINT()
+        return self.__field_gid.getvalue()
+
+    def __setfield_gid(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_gid=value
+        else:
+            self.__field_gid=CSVINT(value,)
+
+    def __delfield_gid(self): del self.__field_gid
+
+    gid=property(__getfield_gid, __setfield_gid, __delfield_gid, "Group #")
+
+    def __getfield_groupname(self):
+        try: self.__field_groupname
+        except:
+            self.__field_groupname=CSVSTRING()
+        return self.__field_groupname.getvalue()
+
+    def __setfield_groupname(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_groupname=value
+        else:
+            self.__field_groupname=CSVSTRING(value,)
+
+    def __delfield_groupname(self): del self.__field_groupname
+
+    groupname=property(__getfield_groupname, __setfield_groupname, __delfield_groupname, None)
+
+    def __getfield_ringtone(self):
+        try: self.__field_ringtone
+        except:
+            self.__field_ringtone=CSVINT(**{'terminator': None, 'default': 0})
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=CSVINT(value,**{'terminator': None, 'default': 0})
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, "Ringtone assignment")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('gid', self.__field_gid, "Group #")
+        yield ('groupname', self.__field_groupname, None)
+        yield ('ringtone', self.__field_ringtone, "Ringtone assignment")
+
 
 
 
@@ -864,6 +871,7 @@ class eventrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('slot', self.__field_slot, None)
+
 
 
 
@@ -1055,6 +1063,7 @@ class eventresponse(BaseProtogenClass):
 
 
 
+
 class eventupdaterequest(BaseProtogenClass):
     __fields=['command', 'slot', 'start', 'end', 'timestamp', 'alarm', 'eventname']
 
@@ -1232,6 +1241,7 @@ class eventupdaterequest(BaseProtogenClass):
 
 
 
+
 class eventsloterase(BaseProtogenClass):
     __fields=['command', 'slot']
 
@@ -1330,6 +1340,7 @@ class eventsloterase(BaseProtogenClass):
 
 
 
+
 class eventupdateresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -1400,6 +1411,7 @@ class eventupdateresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1498,6 +1510,7 @@ class todorequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('slot', self.__field_slot, None)
+
 
 
 
@@ -1672,6 +1685,7 @@ class todoresponse(BaseProtogenClass):
 
 
 
+
 class todoupdaterequest(BaseProtogenClass):
     __fields=['command', 'slot', 'priority', 'duedate', 'timestamp', 'subject']
 
@@ -1832,6 +1846,7 @@ class todoupdaterequest(BaseProtogenClass):
 
 
 
+
 class todoerase(BaseProtogenClass):
     __fields=['command', 'slot']
 
@@ -1924,6 +1939,7 @@ class todoerase(BaseProtogenClass):
 
 
 
+
 class todoupdateresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -1994,6 +2010,7 @@ class todoupdateresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2092,6 +2109,7 @@ class memorequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('slot', self.__field_slot, None)
+
 
 
 
@@ -2232,6 +2250,7 @@ class memoresponse(BaseProtogenClass):
 
 
 
+
 class memoupdaterequest(BaseProtogenClass):
     __fields=['command', 'slot', 'timestamp', 'text']
 
@@ -2358,6 +2377,7 @@ class memoupdaterequest(BaseProtogenClass):
 
 
 
+
 class memoerase(BaseProtogenClass):
     __fields=['command', 'slot']
 
@@ -2450,6 +2470,7 @@ class memoerase(BaseProtogenClass):
 
 
 
+
 class memoupdateresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -2520,6 +2541,7 @@ class memoupdateresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2599,6 +2621,7 @@ class esnrequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -2685,6 +2708,7 @@ class esnresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('esn', self.__field_esn, None)
+
 
 
 

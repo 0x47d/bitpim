@@ -178,6 +178,7 @@ class pbreadentryresponse(BaseProtogenClass):
 
 
 
+
 class pbupdateentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -270,6 +271,7 @@ class pbupdateentryrequest(BaseProtogenClass):
 
 
 
+
 class pbappendentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -359,6 +361,7 @@ class pbappendentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -460,6 +463,7 @@ class speeddial(BaseProtogenClass):
 
 
 
+
 class speeddials(BaseProtogenClass):
     __fields=['speeddials']
 
@@ -536,6 +540,7 @@ class speeddials(BaseProtogenClass):
 
     def containerelements(self):
         yield ('speeddials', self.__field_speeddials, None)
+
 
 
 
@@ -893,6 +898,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6190_137(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
@@ -964,6 +970,7 @@ class _gen_p_lglg6190_137(BaseProtogenClass):
 
     def containerelements(self):
         yield ('email', self.__field_email, None)
+
 
 
 
@@ -1041,6 +1048,7 @@ class _gen_p_lglg6190_145(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6190_147(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
@@ -1112,6 +1120,7 @@ class _gen_p_lglg6190_147(BaseProtogenClass):
 
     def containerelements(self):
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -1202,6 +1211,7 @@ class pbgroup(BaseProtogenClass):
 
 
 
+
 class pbgroups(BaseProtogenClass):
     "Phonebook groups"
     __fields=['groups']
@@ -1279,6 +1289,7 @@ class pbgroups(BaseProtogenClass):
 
     def containerelements(self):
         yield ('groups', self.__field_groups, None)
+
 
 
 
@@ -1504,6 +1515,7 @@ class call(BaseProtogenClass):
 
 
 
+
 class callhistory(BaseProtogenClass):
     __fields=['numcalls', 'unknown1', 'calls']
 
@@ -1613,6 +1625,7 @@ class callhistory(BaseProtogenClass):
 
 
 
+
 class indexentry(BaseProtogenClass):
     __fields=['index', 'name']
 
@@ -1708,6 +1721,7 @@ class indexentry(BaseProtogenClass):
     def containerelements(self):
         yield ('index', self.__field_index, None)
         yield ('name', self.__field_name, None)
+
 
 
 
@@ -1818,6 +1832,7 @@ class indexfile(BaseProtogenClass):
         yield ('maxitems', self.__field_maxitems, None)
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -1970,6 +1985,7 @@ class camindexentry(BaseProtogenClass):
 
 
 
+
 class camindexfile(BaseProtogenClass):
     "Used for tracking wallpaper and ringtones"
     __fields=['maxitems', 'items']
@@ -2060,6 +2076,7 @@ class camindexfile(BaseProtogenClass):
     def containerelements(self):
         yield ('maxitems', self.__field_maxitems, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -2333,6 +2350,7 @@ class mediadesc(BaseProtogenClass):
 
 
 
+
 class textmemo(BaseProtogenClass):
     __fields=['text']
 
@@ -2403,6 +2421,7 @@ class textmemo(BaseProtogenClass):
 
     def containerelements(self):
         yield ('text', self.__field_text, None)
+
 
 
 
@@ -2495,6 +2514,7 @@ class textmemofile(BaseProtogenClass):
     def containerelements(self):
         yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -2618,6 +2638,7 @@ class scheduleexception(BaseProtogenClass):
 
 
 
+
 class scheduleexceptionfile(BaseProtogenClass):
     __fields=['items']
 
@@ -2694,6 +2715,7 @@ class scheduleexceptionfile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -3062,6 +3084,7 @@ class scheduleevent(BaseProtogenClass):
 
 
 
+
 class schedulefile(BaseProtogenClass):
     __fields=['numactiveitems', 'events']
 
@@ -3151,6 +3174,7 @@ class schedulefile(BaseProtogenClass):
     def containerelements(self):
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('events', self.__field_events, None)
+
 
 
 
@@ -3308,6 +3332,7 @@ class recipient_record(BaseProtogenClass):
 
 
 
+
 class sms_saved(BaseProtogenClass):
     __fields=['outboxmsg', 'GPStime', 'outbox', 'inbox']
 
@@ -3431,6 +3456,7 @@ class sms_saved(BaseProtogenClass):
             yield ('outbox', self.__field_outbox, None)
         if not self.outboxmsg:
             yield ('inbox', self.__field_inbox, None)
+
 
 
 
@@ -3628,6 +3654,7 @@ class sms_out(BaseProtogenClass):
 
 
 
+
 class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     __fields=['msg']
 
@@ -3707,6 +3734,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6190_321(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -3778,6 +3806,7 @@ class _gen_p_lglg6190_321(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -4196,6 +4225,7 @@ class sms_in(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6190_333(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -4267,6 +4297,7 @@ class _gen_p_lglg6190_333(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of senders phone number")
+
 
 
 
@@ -4349,6 +4380,7 @@ class sms_quick_text(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6190_354(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msg']
@@ -4420,6 +4452,7 @@ class _gen_p_lglg6190_354(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msg', self.__field_msg, None)
+
 
 
 

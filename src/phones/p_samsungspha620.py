@@ -379,6 +379,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -462,6 +463,7 @@ class phonebookslotresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -557,6 +559,7 @@ class phonebookslotupdaterequest(BaseProtogenClass):
 
 
 
+
 class groupnameresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -640,6 +643,7 @@ class groupnameresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -780,6 +784,7 @@ class groupnameentry(BaseProtogenClass):
 
 
 
+
 class unparsedresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -850,6 +855,7 @@ class unparsedresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1347,6 +1353,7 @@ class filepbentry(BaseProtogenClass):
 
 
 
+
 class pbbook(BaseProtogenClass):
     __fields=['dummy', 'entry']
 
@@ -1436,6 +1443,7 @@ class pbbook(BaseProtogenClass):
     def containerelements(self):
         yield ('dummy', self.__field_dummy, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1542,6 +1550,7 @@ class image(BaseProtogenClass):
 
 
 
+
 class avatars(BaseProtogenClass):
     __fields=['dummy', 'entry']
 
@@ -1631,6 +1640,7 @@ class avatars(BaseProtogenClass):
     def containerelements(self):
         yield ('dummy', self.__field_dummy, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1734,6 +1744,7 @@ class ringer(BaseProtogenClass):
         yield ('inuse', self.__field_inuse, None)
         yield ('ring_type', self.__field_ring_type, "0: Default: 1: Ringtones, 2: Melodies, 3: Downloads, 4: Single Tone")
         yield ('ring_id', self.__field_ring_id, "0x45 Tone 1, 0x4a = Tone 6, 0x51=Ringtone 1, 5b=Fur Elise")
+
 
 
 
@@ -1925,6 +1936,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungspha620_134(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['zeros', 'sixtyfour']
@@ -2009,6 +2021,7 @@ class _gen_p_samsungspha620_134(BaseProtogenClass):
     def containerelements(self):
         yield ('zeros', self.__field_zeros, None)
         yield ('sixtyfour', self.__field_sixtyfour, None)
+
 
 
 
@@ -2354,6 +2367,7 @@ class _gen_p_samsungspha620_137(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungspha620_155(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['val1', 'val2', 'val3', 'val4', 'val5', 'val6', 'val7', 'val8', 'val9', 'val10']
@@ -2574,6 +2588,7 @@ class _gen_p_samsungspha620_155(BaseProtogenClass):
         yield ('val8', self.__field_val8, None)
         yield ('val9', self.__field_val9, None)
         yield ('val10', self.__field_val10, None)
+
 
 
 

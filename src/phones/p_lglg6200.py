@@ -174,6 +174,7 @@ class pbreadentryresponse(BaseProtogenClass):
 
 
 
+
 class pbupdateentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -266,6 +267,7 @@ class pbupdateentryrequest(BaseProtogenClass):
 
 
 
+
 class pbappendentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -355,6 +357,7 @@ class pbappendentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -753,6 +756,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6200_129(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
@@ -824,6 +828,7 @@ class _gen_p_lglg6200_129(BaseProtogenClass):
 
     def containerelements(self):
         yield ('email', self.__field_email, None)
+
 
 
 
@@ -901,6 +906,7 @@ class _gen_p_lglg6200_132(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6200_134(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
@@ -975,6 +981,7 @@ class _gen_p_lglg6200_134(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglg6200_136(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
@@ -1046,6 +1053,7 @@ class _gen_p_lglg6200_136(BaseProtogenClass):
 
     def containerelements(self):
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -1199,6 +1207,7 @@ class pbgroup(BaseProtogenClass):
 
 
 
+
 class pbgroups(BaseProtogenClass):
     "Phonebook groups"
     __fields=['groups']
@@ -1276,6 +1285,7 @@ class pbgroups(BaseProtogenClass):
 
     def containerelements(self):
         yield ('groups', self.__field_groups, None)
+
 
 
 
@@ -1452,6 +1462,7 @@ class pb_contact_media_entry(BaseProtogenClass):
 
 
 
+
 class pb_contact_media_file(BaseProtogenClass):
     __fields=['contacts']
 
@@ -1528,6 +1539,7 @@ class pb_contact_media_file(BaseProtogenClass):
 
     def containerelements(self):
         yield ('contacts', self.__field_contacts, None)
+
 
 
 
@@ -1640,6 +1652,7 @@ class indexentry(BaseProtogenClass):
 
 
 
+
 class indexfile(BaseProtogenClass):
     "Used for tracking wallpaper and ringtones"
     __fields=['numactiveitems', 'items']
@@ -1730,6 +1743,7 @@ class indexfile(BaseProtogenClass):
     def containerelements(self):
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -2157,6 +2171,7 @@ class content_entry(BaseProtogenClass):
 
 
 
+
 class content_file(BaseProtogenClass):
     "Used to store all content on the phone, apps, ringers and images (with the exception of the camera)"
     __fields=['items']
@@ -2237,6 +2252,7 @@ class content_file(BaseProtogenClass):
 
 
 
+
 class content_count(BaseProtogenClass):
     "Stores the number of items in the content file"
     __fields=['count']
@@ -2311,6 +2327,7 @@ class content_count(BaseProtogenClass):
 
 
 
+
 class textmemo(BaseProtogenClass):
     __fields=['text']
 
@@ -2381,6 +2398,7 @@ class textmemo(BaseProtogenClass):
 
     def containerelements(self):
         yield ('text', self.__field_text, None)
+
 
 
 
@@ -2473,6 +2491,7 @@ class textmemofile(BaseProtogenClass):
     def containerelements(self):
         yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
+
 
 
 

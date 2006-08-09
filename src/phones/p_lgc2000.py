@@ -234,6 +234,7 @@ class calendar_read_req(BaseProtogenClass):
 
 
 
+
 class calendar_read_resp(BaseProtogenClass):
     __fields=['command', 'index', 'repeat', 'alarm', 'date', 'time', 'description']
 
@@ -405,6 +406,7 @@ class calendar_read_resp(BaseProtogenClass):
 
 
 
+
 class calendar_write_check_req(BaseProtogenClass):
     __fields=['command']
 
@@ -481,6 +483,7 @@ class calendar_write_check_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -567,6 +570,7 @@ class calendar_write_check_resp(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -783,6 +787,7 @@ class calendar_write_req(BaseProtogenClass):
 
 
 
+
 class calendar_del_req(BaseProtogenClass):
     __fields=['command', 'index']
 
@@ -881,6 +886,7 @@ class calendar_del_req(BaseProtogenClass):
 
 
 
+
 class media_selector_req(BaseProtogenClass):
     __fields=['command']
 
@@ -957,6 +963,7 @@ class media_selector_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -1043,6 +1050,7 @@ class media_selector_resp(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('media_type', self.__field_media_type, None)
+
 
 
 
@@ -1141,6 +1149,7 @@ class media_selector_set(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('media_type', self.__field_media_type, None)
+
 
 
 
@@ -1262,6 +1271,7 @@ class media_list_req(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('start_index', self.__field_start_index, None)
         yield ('end_index', self.__field_end_index, None)
+
 
 
 
@@ -1402,6 +1412,7 @@ class media_list_resp(BaseProtogenClass):
 
 
 
+
 class del_media_req(BaseProtogenClass):
     __fields=['command', 'file_name']
 
@@ -1497,6 +1508,7 @@ class del_media_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('file_name', self.__field_file_name, None)
+
 
 
 
@@ -1770,6 +1782,7 @@ class write_media_req(BaseProtogenClass):
 
 
 
+
 class list_group_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
@@ -1891,6 +1904,7 @@ class list_group_req(BaseProtogenClass):
 
 
 
+
 class list_group_resp(BaseProtogenClass):
     __fields=['command', 'index', 'group_name']
 
@@ -1994,6 +2008,7 @@ class list_group_resp(BaseProtogenClass):
 
 
 
+
 class charset_set_req(BaseProtogenClass):
     __fields=['command', 'charset']
 
@@ -2092,6 +2107,7 @@ class charset_set_req(BaseProtogenClass):
 
 
 
+
 class select_storage_req(BaseProtogenClass):
     __fields=['command', 'storage']
 
@@ -2187,6 +2203,7 @@ class select_storage_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('storage', self.__field_storage, None)
+
 
 
 
@@ -2327,6 +2344,7 @@ class select_storage_resp(BaseProtogenClass):
 
 
 
+
 class read_phonebook_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
@@ -2445,6 +2463,7 @@ class read_phonebook_req(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('start_index', self.__field_start_index, None)
         yield ('end_index', self.__field_end_index, None)
+
 
 
 
@@ -2724,6 +2743,7 @@ class read_phonebook_resp(BaseProtogenClass):
 
 
 
+
 class read_sim_phonebook_resp(BaseProtogenClass):
     __fields=['command', 'index', 'group', 'mobile', 'mobile_type', 'name', 'home', 'office', 'email', 'memo', 'sim']
 
@@ -2978,6 +2998,7 @@ class read_sim_phonebook_resp(BaseProtogenClass):
 
 
 
+
 class del_phonebook_req(BaseProtogenClass):
     __fields=['command', 'index']
 
@@ -3076,6 +3097,7 @@ class del_phonebook_req(BaseProtogenClass):
 
 
 
+
 class update_phonebook_resp(BaseProtogenClass):
     __fields=['command', 'index']
 
@@ -3159,6 +3181,7 @@ class update_phonebook_resp(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -3467,6 +3490,7 @@ class write_phonebook_req(BaseProtogenClass):
 
 
 
+
 class write_sim_phonebook_req(BaseProtogenClass):
     __fields=['command', 'group', 'number', 'number_type', 'name']
 
@@ -3634,6 +3658,7 @@ class write_sim_phonebook_req(BaseProtogenClass):
 
 
 
+
 class memo_read_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
@@ -3755,6 +3780,7 @@ class memo_read_req(BaseProtogenClass):
 
 
 
+
 class memo_read_resp(BaseProtogenClass):
     __fields=['command', 'index', 'text']
 
@@ -3858,6 +3884,7 @@ class memo_read_resp(BaseProtogenClass):
 
 
 
+
 class memo_write_req(BaseProtogenClass):
     __fields=['command', 'text']
 
@@ -3953,6 +3980,7 @@ class memo_write_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('text', self.__field_text, None)
+
 
 
 
@@ -4054,6 +4082,7 @@ class memo_del_req(BaseProtogenClass):
 
 
 
+
 class sms_format_req(BaseProtogenClass):
     __fields=['command', 'format']
 
@@ -4149,6 +4178,7 @@ class sms_format_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('format', self.__field_format, None)
+
 
 
 
@@ -4250,6 +4280,7 @@ class sms_memory_select_req(BaseProtogenClass):
 
 
 
+
 class sms_msg_list_req(BaseProtogenClass):
     __fields=['command', 'msg_type']
 
@@ -4345,6 +4376,7 @@ class sms_msg_list_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('msg_type', self.__field_msg_type, None)
+
 
 
 
@@ -4533,6 +4565,7 @@ class sms_msg_list_header(BaseProtogenClass):
         yield ('timestamp', self.__field_timestamp, None)
         yield ('address_type', self.__field_address_type, None)
         yield ('data_len', self.__field_data_len, None)
+
 
 
 

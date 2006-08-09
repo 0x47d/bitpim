@@ -130,6 +130,7 @@ class qcpheader(BaseProtogenClass):
 
 
 
+
 class qcpwriteheader(BaseProtogenClass):
     __fields=['readwrite', 'command', 'packettype']
 
@@ -232,6 +233,7 @@ class qcpwriteheader(BaseProtogenClass):
         yield ('readwrite', self.__field_readwrite, None)
         yield ('command', self.__field_command, None)
         yield ('packettype', self.__field_packettype, None)
+
 
 
 
@@ -350,6 +352,7 @@ class eventrequest(BaseProtogenClass):
 
 
 
+
 class eventslotinuserequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -462,6 +465,7 @@ class eventslotinuserequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -836,6 +840,7 @@ class evententry(BaseProtogenClass):
 
 
 
+
 class eventresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -936,6 +941,7 @@ class eventresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1056,6 +1062,7 @@ class eventslotinuseresponse(BaseProtogenClass):
         yield ('slot', self.__field_slot, None)
         yield ('flag', self.__field_flag, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1191,6 +1198,7 @@ class eventslotinuseupdaterequest(BaseProtogenClass):
 
 
 
+
 class eventupdaterequest(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -1303,6 +1311,7 @@ class eventupdaterequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1421,6 +1430,7 @@ class callalarmrequest(BaseProtogenClass):
 
 
 
+
 class callalarmresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -1521,6 +1531,7 @@ class callalarmresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1639,6 +1650,7 @@ class callalarmupdaterequest(BaseProtogenClass):
 
 
 
+
 class callalarmslotinuserequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -1751,6 +1763,7 @@ class callalarmslotinuserequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1871,6 +1884,7 @@ class callalarmslotinuseresponse(BaseProtogenClass):
         yield ('slot', self.__field_slot, None)
         yield ('flag', self.__field_flag, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2297,6 +2311,7 @@ class callalarmentry(BaseProtogenClass):
 
 
 
+
 class todorequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -2409,6 +2424,7 @@ class todorequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2612,6 +2628,7 @@ class todoentry(BaseProtogenClass):
 
 
 
+
 class todoresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -2712,6 +2729,7 @@ class todoresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 

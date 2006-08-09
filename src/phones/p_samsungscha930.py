@@ -140,6 +140,7 @@ class WRingtoneIndexEntry(BaseProtogenClass):
 
 
 
+
 class WRingtoneIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -216,6 +217,7 @@ class WRingtoneIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -305,6 +307,7 @@ class RRingtoneIndexEntry(BaseProtogenClass):
 
 
 
+
 class RRingtoneIndexFile(BaseProtogenClass):
     __fields=['items']
 
@@ -384,6 +387,7 @@ class RRingtoneIndexFile(BaseProtogenClass):
 
 
 
+
 class CalIndexEntry(BaseProtogenClass):
     __fields=['index']
 
@@ -460,6 +464,7 @@ class CalIndexEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -741,6 +746,7 @@ class CalIndexFile(BaseProtogenClass):
         yield ('events', self.__field_events, None)
         yield ('notes', self.__field_notes, None)
         yield ('activeevents', self.__field_activeevents, None)
+
 
 
 
@@ -1270,6 +1276,7 @@ class CalEntry(BaseProtogenClass):
 
 
 
+
 class cl_list(BaseProtogenClass):
     __fields=['index']
 
@@ -1340,6 +1347,7 @@ class cl_list(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -1514,6 +1522,7 @@ class cl_index_file(BaseProtogenClass):
 
 
 
+
 class cl_file(BaseProtogenClass):
     __fields=['cl_type', 'number', 'datetime', 'dunno1', 'duration']
 
@@ -1648,6 +1657,7 @@ class cl_file(BaseProtogenClass):
         yield ('datetime', self.__field_datetime, None)
         yield ('dunno1', self.__field_dunno1, None)
         yield ('duration', self.__field_duration, None)
+
 
 
 

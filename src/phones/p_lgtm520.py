@@ -98,6 +98,7 @@ class pbreadentryresponse(BaseProtogenClass):
 
 
 
+
 class pbupdateentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -187,6 +188,7 @@ class pbupdateentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -282,6 +284,7 @@ class pbappendentryrequest(BaseProtogenClass):
 
 
 
+
 class numentry(BaseProtogenClass):
     __fields=['number', 'chksum']
 
@@ -365,6 +368,7 @@ class numentry(BaseProtogenClass):
     def containerelements(self):
         yield ('number', self.__field_number, None)
         yield ('chksum', self.__field_chksum, None)
+
 
 
 
@@ -660,6 +664,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class ringentry(BaseProtogenClass):
     __fields=['index', 'name']
 
@@ -743,6 +748,7 @@ class ringentry(BaseProtogenClass):
     def containerelements(self):
         yield ('index', self.__field_index, "Phonebook entry number")
         yield ('name', self.__field_name, "Path of custom ringer, or default")
+
 
 
 
@@ -835,6 +841,7 @@ class ringindex(BaseProtogenClass):
     def containerelements(self):
         yield ('maxitems', self.__field_maxitems, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -992,6 +999,7 @@ class scheduleevent(BaseProtogenClass):
 
 
 
+
 class schedulefile(BaseProtogenClass):
     __fields=['events']
 
@@ -1068,6 +1076,7 @@ class schedulefile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('events', self.__field_events, None)
+
 
 
 

@@ -113,6 +113,7 @@ class sanyofaheader(BaseProtogenClass):
 
 
 
+
 class sanyoheader(BaseProtogenClass):
     __fields=['preamble', 'command', 'packettype']
 
@@ -222,6 +223,7 @@ class sanyoheader(BaseProtogenClass):
 
 
 
+
 class sanyowriteheader(BaseProtogenClass):
     __fields=['preamble', 'command', 'packettype']
 
@@ -328,6 +330,7 @@ class sanyowriteheader(BaseProtogenClass):
         yield ('preamble', self.__field_preamble, None)
         yield ('command', self.__field_command, None)
         yield ('packettype', self.__field_packettype, None)
+
 
 
 
@@ -446,6 +449,7 @@ class study(BaseProtogenClass):
 
 
 
+
 class studyresponse(BaseProtogenClass):
     __fields=['header', 'data']
 
@@ -529,6 +533,7 @@ class studyresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('data', self.__field_data, None)
+
 
 
 
@@ -647,6 +652,7 @@ class phonebookslotrequest(BaseProtogenClass):
 
 
 
+
 class phonebookslotupdaterequest(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -762,6 +768,7 @@ class phonebookslotupdaterequest(BaseProtogenClass):
 
 
 
+
 class phonenumber(BaseProtogenClass):
     __fields=['number_len', 'number']
 
@@ -857,6 +864,7 @@ class phonenumber(BaseProtogenClass):
     def containerelements(self):
         yield ('number_len', self.__field_number_len, None)
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -1141,6 +1149,7 @@ class phonebookentry(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -1241,6 +1250,7 @@ class phonebookslotresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1356,6 +1366,7 @@ class eventrequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1747,6 +1758,7 @@ class evententry(BaseProtogenClass):
 
 
 
+
 class eventresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -1847,6 +1859,7 @@ class eventresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1965,6 +1978,7 @@ class eventupdaterequest(BaseProtogenClass):
 
 
 
+
 class callalarmrequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -2077,6 +2091,7 @@ class callalarmrequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2445,6 +2460,7 @@ class callalarmentry(BaseProtogenClass):
 
 
 
+
 class callalarmresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -2545,6 +2561,7 @@ class callalarmresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2663,6 +2680,7 @@ class callalarmupdaterequest(BaseProtogenClass):
 
 
 
+
 class bufferpartrequest(BaseProtogenClass):
     __fields=['bufpartsize', 'header', 'pad']
 
@@ -2775,6 +2793,7 @@ class bufferpartrequest(BaseProtogenClass):
         yield ('bufpartsize', self.__field_bufpartsize, None)
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2895,6 +2914,7 @@ class bufferpartresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('data', self.__field_data, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -3027,6 +3047,7 @@ class bufferpartupdaterequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('data', self.__field_data, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -3214,6 +3235,7 @@ class calleridbuffer(BaseProtogenClass):
         yield ('numentries', self.__field_numentries, "Number phone numbers")
         yield ('items', self.__field_items, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -3427,6 +3449,7 @@ class ringerpicbuffer(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_212(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['ringtone']
@@ -3501,6 +3524,7 @@ class _gen_p_sanyonewer_212(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_214(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['wallpaper']
@@ -3572,6 +3596,7 @@ class _gen_p_sanyonewer_214(BaseProtogenClass):
 
     def containerelements(self):
         yield ('wallpaper', self.__field_wallpaper, "wallpaper index")
+
 
 
 
@@ -4008,6 +4033,7 @@ class pbsortbuffer(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_235(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
@@ -4079,6 +4105,7 @@ class _gen_p_sanyonewer_235(BaseProtogenClass):
 
     def containerelements(self):
         yield ('used', self.__field_used, "1 if slot in use")
+
 
 
 
@@ -4156,6 +4183,7 @@ class _gen_p_sanyonewer_241(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_243(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslot']
@@ -4227,6 +4255,7 @@ class _gen_p_sanyonewer_243(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pbslot', self.__field_pbslot, None)
+
 
 
 
@@ -4304,6 +4333,7 @@ class _gen_p_sanyonewer_246(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_248(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslotandtype']
@@ -4375,6 +4405,7 @@ class _gen_p_sanyonewer_248(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pbslotandtype', self.__field_pbslotandtype, None)
+
 
 
 
@@ -4452,6 +4483,7 @@ class _gen_p_sanyonewer_250(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_252(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslot']
@@ -4526,6 +4558,7 @@ class _gen_p_sanyonewer_252(BaseProtogenClass):
 
 
 
+
 class _gen_p_sanyonewer_255(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslot']
@@ -4597,6 +4630,7 @@ class _gen_p_sanyonewer_255(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pbslot', self.__field_pbslot, None)
+
 
 
 
@@ -4770,6 +4804,7 @@ class wallpaperbuffer(BaseProtogenClass):
 
 
 
+
 class messagerequest(BaseProtogenClass):
     __fields=['header', 'slot', 'pad']
 
@@ -4882,6 +4917,7 @@ class messagerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -5430,6 +5466,7 @@ class messageentry(BaseProtogenClass):
 
 
 
+
 class messageresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -5530,6 +5567,7 @@ class messageresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -5645,6 +5683,7 @@ class foldernamerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('index', self.__field_index, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -5842,6 +5881,7 @@ class foldernameentry(BaseProtogenClass):
 
 
 
+
 class foldernameresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -5942,6 +5982,7 @@ class foldernameresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -6057,6 +6098,7 @@ class todorequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -6260,6 +6302,7 @@ class todoentry(BaseProtogenClass):
 
 
 
+
 class todoresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -6360,6 +6403,7 @@ class todoresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -6550,6 +6594,7 @@ class historyrequest(BaseProtogenClass):
 
 
 
+
 class historymiscrequest(BaseProtogenClass):
     __fields=['type', 'header', 'header', 'header', 'slot', 'pad']
 
@@ -6734,6 +6779,7 @@ class historymiscrequest(BaseProtogenClass):
             yield ('header', self.__field_header, None)
         yield ('slot', self.__field_slot, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -6925,6 +6971,7 @@ class historyentry(BaseProtogenClass):
 
 
 
+
 class historyresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -7025,6 +7072,7 @@ class historyresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -7182,6 +7230,7 @@ class historymiscentry(BaseProtogenClass):
 
 
 
+
 class historymiscresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -7282,6 +7331,7 @@ class historymiscresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 

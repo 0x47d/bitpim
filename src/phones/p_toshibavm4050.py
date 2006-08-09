@@ -279,6 +279,7 @@ class pbnumber(BaseProtogenClass):
 
 
 
+
 class pbemail(BaseProtogenClass):
     __fields=['valid', 'dunno1', 'dunno2', 'dunno3', 'dunno4', 'email']
 
@@ -466,6 +467,7 @@ class pbemail(BaseProtogenClass):
         yield ('dunno3', self.__field_dunno3, None)
         yield ('dunno4', self.__field_dunno4, None)
         yield ('email', self.__field_email, None)
+
 
 
 
@@ -716,6 +718,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class setphoneattribrequest(BaseProtogenClass):
     __fields=['cmd', 'cmd2', 'cmd3', 'flag', 'data']
 
@@ -883,6 +886,7 @@ class setphoneattribrequest(BaseProtogenClass):
 
 
 
+
 class setphoneattribresponse(BaseProtogenClass):
     __fields=['cmd', 'cmd2', 'cmd3', 'flag', 'pad']
 
@@ -1044,6 +1048,7 @@ class setphoneattribresponse(BaseProtogenClass):
 
 
 
+
 class tosh_swapheaderrequest(BaseProtogenClass):
     "The bit in front on all toshiba request packets"
     __fields=['cmd', 'cmd2', 'command']
@@ -1160,6 +1165,7 @@ class tosh_swapheaderrequest(BaseProtogenClass):
 
 
 
+
 class tosh_swapheaderresponse(BaseProtogenClass):
     "The bit in front on all toshiba request packets"
     __fields=['cmd', 'cmd2']
@@ -1256,6 +1262,7 @@ class tosh_swapheaderresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
         yield ('cmd2', self.__field_cmd2, None)
+
 
 
 
@@ -1446,6 +1453,7 @@ class tosh_getpbentryrequest(BaseProtogenClass):
 
 
 
+
 class tosh_getpbentryresponse(BaseProtogenClass):
     __fields=['header', 'cmd', 'read', 'data_type', 'swap_ok']
 
@@ -1604,6 +1612,7 @@ class tosh_getpbentryresponse(BaseProtogenClass):
         yield ('read', self.__field_read, None)
         yield ('data_type', self.__field_data_type, None)
         yield ('swap_ok', self.__field_swap_ok, None)
+
 
 
 
@@ -1794,6 +1803,7 @@ class tosh_setpbentryrequest(BaseProtogenClass):
 
 
 
+
 class tosh_setpbentryresponse(BaseProtogenClass):
     __fields=['header', 'cmd', 'swap_ok']
 
@@ -1906,6 +1916,7 @@ class tosh_setpbentryresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('cmd', self.__field_cmd, None)
         yield ('swap_ok', self.__field_swap_ok, None)
+
 
 
 
@@ -2098,6 +2109,7 @@ class tosh_modifypbentryrequest(BaseProtogenClass):
 
 
 
+
 class tosh_modifypbentryresponse(BaseProtogenClass):
     __fields=['header', 'cmd', 'swap_ok']
 
@@ -2213,6 +2225,7 @@ class tosh_modifypbentryresponse(BaseProtogenClass):
 
 
 
+
 class tosh_enableswapdatarequest(BaseProtogenClass):
     __fields=['header']
 
@@ -2289,6 +2302,7 @@ class tosh_enableswapdatarequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
+
 
 
 
@@ -2413,6 +2427,7 @@ class tosh_enableswapdataresponse(BaseProtogenClass):
 
 
 
+
 class tosh_disableswapdatarequest(BaseProtogenClass):
     __fields=['header']
 
@@ -2489,6 +2504,7 @@ class tosh_disableswapdatarequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
+
 
 
 
@@ -2610,6 +2626,7 @@ class tosh_disableswapdataresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('cmd3', self.__field_cmd3, None)
         yield ('cmd4', self.__field_cmd4, None)
+
 
 
 
@@ -2791,6 +2808,7 @@ class tosh_getunknownrecordrequest(BaseProtogenClass):
 
 
 
+
 class tosh_getunknownrecordresponse(BaseProtogenClass):
     __fields=['header', 'data']
 
@@ -2886,6 +2904,7 @@ class tosh_getunknownrecordresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('data', self.__field_data, None)
+
 
 
 

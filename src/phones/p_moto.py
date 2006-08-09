@@ -173,6 +173,7 @@ class esnrequest(BaseProtogenClass):
 
 
 
+
 class esnresponse(BaseProtogenClass):
     __fields=['command', 'esnlabel', 'esn']
 
@@ -276,6 +277,7 @@ class esnresponse(BaseProtogenClass):
 
 
 
+
 class string_resp(BaseProtogenClass):
     __fields=['command', 'value']
 
@@ -362,6 +364,7 @@ class string_resp(BaseProtogenClass):
 
 
 
+
 class manufacturer_req(BaseProtogenClass):
     __fields=['command']
 
@@ -438,6 +441,7 @@ class manufacturer_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -520,6 +524,7 @@ class model_req(BaseProtogenClass):
 
 
 
+
 class number_req(BaseProtogenClass):
     __fields=['command']
 
@@ -596,6 +601,7 @@ class number_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -678,6 +684,7 @@ class firmware_req(BaseProtogenClass):
 
 
 
+
 class signal_req(BaseProtogenClass):
     __fields=['command']
 
@@ -754,6 +761,7 @@ class signal_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -860,6 +868,7 @@ class signal_resp(BaseProtogenClass):
 
 
 
+
 class battery_req(BaseProtogenClass):
     __fields=['command']
 
@@ -936,6 +945,7 @@ class battery_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -1042,6 +1052,7 @@ class battery_resp(BaseProtogenClass):
 
 
 
+
 class modereq(BaseProtogenClass):
     __fields=['command']
 
@@ -1118,6 +1129,7 @@ class modereq(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -1204,6 +1216,7 @@ class moderesp(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('mode', self.__field_mode, None)
+
 
 
 
@@ -1305,6 +1318,7 @@ class modeset(BaseProtogenClass):
 
 
 
+
 class charset_set_req(BaseProtogenClass):
     __fields=['command', 'charset']
 
@@ -1403,6 +1417,7 @@ class charset_set_req(BaseProtogenClass):
 
 
 
+
 class featurereq(BaseProtogenClass):
     __fields=['command']
 
@@ -1479,6 +1494,7 @@ class featurereq(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -1761,6 +1777,7 @@ class featureresp(BaseProtogenClass):
 
 
 
+
 class select_phonebook_req(BaseProtogenClass):
     __fields=['command', 'pb_type']
 
@@ -1856,6 +1873,7 @@ class select_phonebook_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('pb_type', self.__field_pb_type, None)
+
 
 
 
@@ -1977,6 +1995,7 @@ class read_pb_simple_req(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('start_index', self.__field_start_index, None)
         yield ('end_index', self.__field_end_index, None)
+
 
 
 
@@ -2123,6 +2142,7 @@ class read_pb_simple_resp(BaseProtogenClass):
 
 
 
+
 class read_pb_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
@@ -2241,6 +2261,7 @@ class read_pb_req(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('start_index', self.__field_start_index, None)
         yield ('end_index', self.__field_end_index, None)
+
 
 
 
@@ -2565,6 +2586,7 @@ class read_pb_resp(BaseProtogenClass):
         yield ('subfield_index', self.__field_subfield_index, None)
         yield ('picture_name', self.__field_picture_name, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -2941,6 +2963,7 @@ class write_pb_req(BaseProtogenClass):
 
 
 
+
 class del_pb_req(BaseProtogenClass):
     __fields=['command', 'index']
 
@@ -3030,6 +3053,7 @@ class del_pb_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -3174,6 +3198,7 @@ class sms_sel_req(BaseProtogenClass):
         yield ('mem1', self.__field_mem1, None)
         yield ('mem2', self.__field_mem2, None)
         yield ('mem3', self.__field_mem3, None)
+
 
 
 
@@ -3383,6 +3408,7 @@ class sms_m_read_resp(BaseProtogenClass):
 
 
 
+
 class sms_list_req(BaseProtogenClass):
     __fields=['command', 'listtype']
 
@@ -3478,6 +3504,7 @@ class sms_list_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('listtype', self.__field_listtype, None)
+
 
 
 
@@ -3581,6 +3608,7 @@ class sms_list_resp(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
         yield ('dontcare', self.__field_dontcare, None)
+
 
 
 

@@ -131,6 +131,7 @@ class qcpheader(BaseProtogenClass):
 
 
 
+
 class qcpwriteheader(BaseProtogenClass):
     __fields=['readwrite', 'command', 'packettype']
 
@@ -233,6 +234,7 @@ class qcpwriteheader(BaseProtogenClass):
         yield ('readwrite', self.__field_readwrite, None)
         yield ('command', self.__field_command, None)
         yield ('packettype', self.__field_packettype, None)
+
 
 
 
@@ -351,6 +353,7 @@ class phonebookslotrequest(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['data']
 
@@ -421,6 +424,7 @@ class phonebookslotresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('data', self.__field_data, None)
+
 
 
 

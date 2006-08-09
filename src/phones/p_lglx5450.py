@@ -151,6 +151,7 @@ class speeddial(BaseProtogenClass):
 
 
 
+
 class speeddials(BaseProtogenClass):
     __fields=['speeddials']
 
@@ -227,6 +228,7 @@ class speeddials(BaseProtogenClass):
 
     def containerelements(self):
         yield ('speeddials', self.__field_speeddials, None)
+
 
 
 
@@ -328,6 +330,7 @@ class indexentry(BaseProtogenClass):
 
 
 
+
 class indexfile(BaseProtogenClass):
     "Used for tracking wallpaper and ringtones"
     __fields=['numactiveitems', 'items']
@@ -418,6 +421,7 @@ class indexfile(BaseProtogenClass):
     def containerelements(self):
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -565,6 +569,7 @@ class camindexentry(BaseProtogenClass):
 
 
 
+
 class campicsdat(BaseProtogenClass):
     "the cam/pics.dat file"
     __fields=['items']
@@ -642,6 +647,7 @@ class campicsdat(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -765,6 +771,7 @@ class scheduleexception(BaseProtogenClass):
 
 
 
+
 class scheduleexceptionfile(BaseProtogenClass):
     __fields=['items']
 
@@ -841,6 +848,7 @@ class scheduleexceptionfile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -1129,6 +1137,7 @@ class scheduleevent(BaseProtogenClass):
 
 
 
+
 class schedulefile(BaseProtogenClass):
     __fields=['numactiveitems', 'events']
 
@@ -1218,6 +1227,7 @@ class schedulefile(BaseProtogenClass):
     def containerelements(self):
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('events', self.__field_events, None)
+
 
 
 
@@ -1443,6 +1453,7 @@ class call(BaseProtogenClass):
 
 
 
+
 class callhistory(BaseProtogenClass):
     __fields=['numcalls', 'unknown1', 'calls']
 
@@ -1549,6 +1560,7 @@ class callhistory(BaseProtogenClass):
         yield ('numcalls', self.__field_numcalls, None)
         yield ('unknown1', self.__field_unknown1, None)
         yield ('calls', self.__field_calls, None)
+
 
 
 
@@ -1729,6 +1741,7 @@ class msg_record(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglx5450_186(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -1800,6 +1813,7 @@ class _gen_p_lglx5450_186(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -1957,6 +1971,7 @@ class recipient_record(BaseProtogenClass):
 
 
 
+
 class sms_saved(BaseProtogenClass):
     __fields=['outboxmsg', 'pad', 'outbox', 'inbox']
 
@@ -2080,6 +2095,7 @@ class sms_saved(BaseProtogenClass):
             yield ('outbox', self.__field_outbox, None)
         if not self.outboxmsg:
             yield ('inbox', self.__field_inbox, None)
+
 
 
 
@@ -2385,6 +2401,7 @@ class sms_out(BaseProtogenClass):
 
 
 
+
 class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     __fields=['msg']
 
@@ -2464,6 +2481,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglx5450_222(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -2535,6 +2553,7 @@ class _gen_p_lglx5450_222(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -3135,6 +3154,7 @@ class sms_in(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglx5450_235(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -3209,6 +3229,7 @@ class _gen_p_lglx5450_235(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglx5450_253(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msglength']
@@ -3280,6 +3301,7 @@ class _gen_p_lglx5450_253(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msglength', self.__field_msglength, "lengths of individual messages in septets")
+
 
 
 
@@ -3362,6 +3384,7 @@ class sms_quick_text(BaseProtogenClass):
 
 
 
+
 class _gen_p_lglx5450_269(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msg']
@@ -3433,6 +3456,7 @@ class _gen_p_lglx5450_269(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msg', self.__field_msg, None)
+
 
 
 

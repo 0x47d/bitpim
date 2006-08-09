@@ -190,6 +190,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class phonenumber(BaseProtogenClass):
     __fields=['last_number', 'numbertype', 'number', 'number']
 
@@ -337,6 +338,7 @@ class phonenumber(BaseProtogenClass):
 
 
 
+
 class phonebookslotrequest(BaseProtogenClass):
     __fields=['command', 'slot']
 
@@ -435,6 +437,7 @@ class phonebookslotrequest(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -518,6 +521,7 @@ class phonebookslotresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -610,6 +614,7 @@ class phonebookslotupdaterequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 

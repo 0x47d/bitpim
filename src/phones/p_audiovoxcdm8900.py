@@ -96,6 +96,7 @@ class readpbslotsrequest(BaseProtogenClass):
 
 
 
+
 class readpbslotsresponse(BaseProtogenClass):
     __fields=['cmd', 'present']
 
@@ -179,6 +180,7 @@ class readpbslotsresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
         yield ('present', self.__field_present, "a non-zero value indicates a slot is present")
+
 
 
 
@@ -274,6 +276,7 @@ class writepbslotsrequest(BaseProtogenClass):
 
 
 
+
 class writepbslotsresponse(BaseProtogenClass):
     __fields=['cmd']
 
@@ -344,6 +347,7 @@ class writepbslotsresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
+
 
 
 
@@ -436,6 +440,7 @@ class readpbentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
         yield ('slotnumber', self.__field_slotnumber, None)
+
 
 
 
@@ -548,6 +553,7 @@ class readpbentryresponse(BaseProtogenClass):
 
 
 
+
 class writepbentryrequest(BaseProtogenClass):
     __fields=['cmd', 'slotnumber', 'entry']
 
@@ -657,6 +663,7 @@ class writepbentryrequest(BaseProtogenClass):
 
 
 
+
 class writepbentryresponse(BaseProtogenClass):
     __fields=['cmd', 'slotnumber']
 
@@ -740,6 +747,7 @@ class writepbentryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
         yield ('slotnumber', self.__field_slotnumber, None)
+
 
 
 
@@ -1067,6 +1075,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class readgroupentryrequest(BaseProtogenClass):
     __fields=['cmd', 'number']
 
@@ -1156,6 +1165,7 @@ class readgroupentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -1310,6 +1320,7 @@ class readgroupentryresponse(BaseProtogenClass):
         yield ('dunno', self.__field_dunno, "first member?")
         yield ('name', self.__field_name, None)
         yield ('nummembers', self.__field_nummembers, "how many members of the group")
+
 
 
 
@@ -1479,6 +1490,7 @@ class writegroupentryrequest(BaseProtogenClass):
 
 
 
+
 class writegroupentryresponse(BaseProtogenClass):
     __fields=['cmd']
 
@@ -1549,6 +1561,7 @@ class writegroupentryresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('cmd', self.__field_cmd, None)
+
 
 
 
@@ -1690,6 +1703,7 @@ class dunnorequest(BaseProtogenClass):
 
 
 
+
 class dunnoresponse(BaseProtogenClass):
     __fields=['stuff']
 
@@ -1760,6 +1774,7 @@ class dunnoresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('stuff', self.__field_stuff, None)
+
 
 
 
@@ -1907,6 +1922,7 @@ class readlockcoderequest(BaseProtogenClass):
 
 
 
+
 class readlockcoderesponse(BaseProtogenClass):
     __fields=['cmd', 'cmd2', 'cmd3', 'lockcode']
 
@@ -2024,6 +2040,7 @@ class readlockcoderesponse(BaseProtogenClass):
         yield ('cmd2', self.__field_cmd2, None)
         yield ('cmd3', self.__field_cmd3, None)
         yield ('lockcode', self.__field_lockcode, None)
+
 
 
 

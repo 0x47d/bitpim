@@ -189,6 +189,7 @@ class indexentry(BaseProtogenClass):
 
 
 
+
 class indexfile(BaseProtogenClass):
     "Used for tracking wallpaper and ringtones"
     __fields=['items']
@@ -266,6 +267,7 @@ class indexfile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -446,6 +448,7 @@ class msg_record(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx5200_89(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -517,6 +520,7 @@ class _gen_p_lgvx5200_89(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -691,6 +695,7 @@ class recipient_record(BaseProtogenClass):
 
 
 
+
 class sms_saved(BaseProtogenClass):
     __fields=['outboxmsg', 'GPStime', 'outbox', 'inbox']
 
@@ -814,6 +819,7 @@ class sms_saved(BaseProtogenClass):
             yield ('outbox', self.__field_outbox, None)
         if not self.outboxmsg:
             yield ('inbox', self.__field_inbox, None)
+
 
 
 
@@ -1153,6 +1159,7 @@ class sms_out(BaseProtogenClass):
 
 
 
+
 class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     __fields=['msg']
 
@@ -1232,6 +1239,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx5200_128(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -1303,6 +1311,7 @@ class _gen_p_lgvx5200_128(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -1835,6 +1844,7 @@ class sms_in(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx5200_138(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -1909,6 +1919,7 @@ class _gen_p_lgvx5200_138(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx5200_156(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msglength']
@@ -1980,6 +1991,7 @@ class _gen_p_lgvx5200_156(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msglength', self.__field_msglength, "lengths of individual messages in septets")
+
 
 
 
@@ -2062,6 +2074,7 @@ class sms_quick_text(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx5200_169(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msg']
@@ -2139,6 +2152,7 @@ class _gen_p_lgvx5200_169(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msg', self.__field_msg, None)
+
 
 
 
@@ -2268,6 +2282,7 @@ class textmemo(BaseProtogenClass):
 
 
 
+
 class textmemofile(BaseProtogenClass):
     __fields=['itemcount', 'items']
 
@@ -2357,6 +2372,7 @@ class textmemofile(BaseProtogenClass):
     def containerelements(self):
         yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
+
 
 
 

@@ -108,6 +108,7 @@ class requestheader(BaseProtogenClass):
 
 
 
+
 class responseheader(BaseProtogenClass):
     "The bit in front on all Brew response packets"
     __fields=['commandmode', 'command', 'errorcode']
@@ -209,6 +210,7 @@ class responseheader(BaseProtogenClass):
         yield ('commandmode', self.__field_commandmode, None)
         yield ('command', self.__field_command, None)
         yield ('errorcode', self.__field_errorcode, None)
+
 
 
 
@@ -324,6 +326,7 @@ class readfilerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('blocknumber', self.__field_blocknumber, None)
         yield ('filename', self.__field_filename, None)
+
 
 
 
@@ -481,6 +484,7 @@ class readfileresponse(BaseProtogenClass):
 
 
 
+
 class readfileblockrequest(BaseProtogenClass):
     __fields=['header', 'blockcounter']
 
@@ -570,6 +574,7 @@ class readfileblockrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('blockcounter', self.__field_blockcounter, "always greater than zero, increment with each request, loop to 0x01 from 0xff")
+
 
 
 
@@ -707,6 +712,7 @@ class readfileblockresponse(BaseProtogenClass):
         yield ('thereismore', self.__field_thereismore, "true if there is more data available after this block")
         yield ('datasize', self.__field_datasize, None)
         yield ('data', self.__field_data, None)
+
 
 
 
@@ -951,6 +957,7 @@ class writefilerequest(BaseProtogenClass):
 
 
 
+
 class writefileblockrequest(BaseProtogenClass):
     __fields=['header', 'blockcounter', 'thereismore', 'datalen', 'data']
 
@@ -1100,6 +1107,7 @@ class writefileblockrequest(BaseProtogenClass):
 
 
 
+
 class listdirectoriesrequest(BaseProtogenClass):
     "Lists the subdirectories of dirname"
     __fields=['header', 'dirname']
@@ -1190,6 +1198,7 @@ class listdirectoriesrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('dirname', self.__field_dirname, None)
+
 
 
 
@@ -1316,6 +1325,7 @@ class listdirectoriesresponse(BaseProtogenClass):
 
 
 
+
 class _gen_p_brew_96(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['subdir']
@@ -1387,6 +1397,7 @@ class _gen_p_brew_96(BaseProtogenClass):
 
     def containerelements(self):
         yield ('subdir', self.__field_subdir, None)
+
 
 
 
@@ -1497,6 +1508,7 @@ class listfilerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entrynumber', self.__field_entrynumber, None)
         yield ('dirname', self.__field_dirname, None)
+
 
 
 
@@ -1705,6 +1717,7 @@ class listfileresponse(BaseProtogenClass):
 
 
 
+
 class listdirectoryrequest(BaseProtogenClass):
     "This gets one directory entry (directory only) at a time"
     __fields=['header', 'entrynumber', 'dirname']
@@ -1812,6 +1825,7 @@ class listdirectoryrequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entrynumber', self.__field_entrynumber, None)
         yield ('dirname', self.__field_dirname, None)
+
 
 
 
@@ -1935,6 +1949,7 @@ class listdirectoryresponse(BaseProtogenClass):
 
 
 
+
 class statfilerequest(BaseProtogenClass):
     "Get the status of the file"
     __fields=['header', 'filename']
@@ -2025,6 +2040,7 @@ class statfilerequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('filename', self.__field_filename, None)
+
 
 
 
@@ -2148,6 +2164,7 @@ class statfileresponse(BaseProtogenClass):
 
 
 
+
 class mkdirrequest(BaseProtogenClass):
     __fields=['header', 'dirname']
 
@@ -2237,6 +2254,7 @@ class mkdirrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('dirname', self.__field_dirname, None)
+
 
 
 
@@ -2332,6 +2350,7 @@ class rmdirrequest(BaseProtogenClass):
 
 
 
+
 class rmfilerequest(BaseProtogenClass):
     __fields=['header', 'filename']
 
@@ -2424,6 +2443,7 @@ class rmfilerequest(BaseProtogenClass):
 
 
 
+
 class memoryconfigrequest(BaseProtogenClass):
     __fields=['header']
 
@@ -2500,6 +2520,7 @@ class memoryconfigrequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
+
 
 
 
@@ -2589,6 +2610,7 @@ class memoryconfigresponse(BaseProtogenClass):
 
 
 
+
 class firmwarerequest(BaseProtogenClass):
     __fields=['command']
 
@@ -2665,6 +2687,7 @@ class firmwarerequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -2924,6 +2947,7 @@ class firmwareresponse(BaseProtogenClass):
 
 
 
+
 class ESN_req(BaseProtogenClass):
     __fields=['command']
 
@@ -3000,6 +3024,7 @@ class ESN_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -3089,6 +3114,7 @@ class ESN_resp(BaseProtogenClass):
 
 
 
+
 class testing0crequest(BaseProtogenClass):
     __fields=['command']
 
@@ -3168,6 +3194,7 @@ class testing0crequest(BaseProtogenClass):
 
 
 
+
 class testing0cresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -3238,6 +3265,7 @@ class testing0cresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -3356,6 +3384,7 @@ class setmoderequest(BaseProtogenClass):
 
 
 
+
 class setmoderesponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -3426,6 +3455,7 @@ class setmoderesponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -3505,6 +3535,7 @@ class setmodemmoderequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('command', self.__field_command, None)
+
 
 
 
@@ -3641,6 +3672,7 @@ class setfileattrrequest(BaseProtogenClass):
 
 
 
+
 class new_requestheader(BaseProtogenClass):
     "The bit in front on all Brew request packets"
     __fields=['commandmode', 'command', 'zero']
@@ -3757,6 +3789,7 @@ class new_requestheader(BaseProtogenClass):
 
 
 
+
 class new_responseheader(BaseProtogenClass):
     "The bit in front on all Brew response packets"
     __fields=['commandmode', 'command', 'zero']
@@ -3858,6 +3891,7 @@ class new_responseheader(BaseProtogenClass):
         yield ('commandmode', self.__field_commandmode, None)
         yield ('command', self.__field_command, None)
         yield ('zero', self.__field_zero, None)
+
 
 
 
@@ -3987,6 +4021,7 @@ class new_openfilerequest(BaseProtogenClass):
 
 
 
+
 class new_openfileresponse(BaseProtogenClass):
     __fields=['header', 'handle', 'pad']
 
@@ -4090,6 +4125,7 @@ class new_openfileresponse(BaseProtogenClass):
 
 
 
+
 class new_closefilerequest(BaseProtogenClass):
     __fields=['header', 'handle']
 
@@ -4182,6 +4218,7 @@ class new_closefilerequest(BaseProtogenClass):
 
 
 
+
 class new_closefileresponse(BaseProtogenClass):
     __fields=['header', 'pad']
 
@@ -4265,6 +4302,7 @@ class new_closefileresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -4391,6 +4429,7 @@ class new_readfilerequest(BaseProtogenClass):
         yield ('handle', self.__field_handle, None)
         yield ('bytes', self.__field_bytes, None)
         yield ('position', self.__field_position, None)
+
 
 
 
@@ -4548,6 +4587,7 @@ class new_readfileresponse(BaseProtogenClass):
 
 
 
+
 class new_writefilerequest(BaseProtogenClass):
     __fields=['header', 'handle', 'position', 'bytes', 'data']
 
@@ -4691,6 +4731,7 @@ class new_writefilerequest(BaseProtogenClass):
 
 
 
+
 class new_writefileresponse(BaseProtogenClass):
     __fields=['header', 'handle', 'position', 'bytes', 'pad']
 
@@ -4828,6 +4869,7 @@ class new_writefileresponse(BaseProtogenClass):
 
 
 
+
 class new_rmfilerequest(BaseProtogenClass):
     """Remove file, full path should be provided, 
     but the root character / is not required at the start of the name.
@@ -4943,6 +4985,7 @@ class new_rmfilerequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('filename', self.__field_filename, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -5064,6 +5107,7 @@ class new_mkdirrequest(BaseProtogenClass):
 
 
 
+
 class new_rmdirrequest(BaseProtogenClass):
     """Remove directory, full path should be provided, but the
     root character / is not required at the start of the name.
@@ -5159,6 +5203,7 @@ class new_rmdirrequest(BaseProtogenClass):
 
 
 
+
 class new_opendirectoryrequest(BaseProtogenClass):
     __fields=['header', 'dirname']
 
@@ -5248,6 +5293,7 @@ class new_opendirectoryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('dirname', self.__field_dirname, None)
+
 
 
 
@@ -5351,6 +5397,7 @@ class new_opendirectoryresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('handle', self.__field_handle, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -5460,6 +5507,7 @@ class new_listentryrequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('handle', self.__field_handle, None)
         yield ('entrynumber', self.__field_entrynumber, None)
+
 
 
 
@@ -5685,6 +5733,7 @@ class new_listentryresponse(BaseProtogenClass):
 
 
 
+
 class new_closedirectoryrequest(BaseProtogenClass):
     __fields=['header', 'handle']
 
@@ -5777,6 +5826,7 @@ class new_closedirectoryrequest(BaseProtogenClass):
 
 
 
+
 class new_closedirectoryresponse(BaseProtogenClass):
     __fields=['header', 'pad']
 
@@ -5860,6 +5910,7 @@ class new_closedirectoryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -5953,6 +6004,7 @@ class new_statfilerequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('filename', self.__field_filename, None)
+
 
 
 
@@ -6144,6 +6196,7 @@ class new_statfileresponse(BaseProtogenClass):
 
 
 
+
 class new_reconfigfilesystemrequest(BaseProtogenClass):
     """Called after mkdir/rmdir and writing files,
     possibly a filesystem status request with space used/free etc.
@@ -6245,6 +6298,7 @@ class new_reconfigfilesystemrequest(BaseProtogenClass):
 
 
 
+
 class new_reconfigfilesystemresponse(BaseProtogenClass):
     __fields=['header', 'unknown']
 
@@ -6334,6 +6388,7 @@ class new_reconfigfilesystemresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('unknown', self.__field_unknown, None)
+
 
 
 

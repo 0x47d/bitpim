@@ -146,6 +146,7 @@ class sanyomediaheader(BaseProtogenClass):
 
 
 
+
 class sanyochangedir(BaseProtogenClass):
     __fields=['header', 'pad', 'dirindex']
 
@@ -258,6 +259,7 @@ class sanyochangedir(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
         yield ('dirindex', self.__field_dirindex, None)
+
 
 
 
@@ -387,6 +389,7 @@ class sanyochangedirresponse(BaseProtogenClass):
 
 
 
+
 class sanyonumfilesrequest(BaseProtogenClass):
     __fields=['header', 'pad']
 
@@ -482,6 +485,7 @@ class sanyonumfilesrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -614,6 +618,7 @@ class sanyonumfilesresponse(BaseProtogenClass):
         yield ('pad1', self.__field_pad1, None)
         yield ('count', self.__field_count, None)
         yield ('pad2', self.__field_pad2, None)
+
 
 
 
@@ -752,6 +757,7 @@ class sanyomediafilenamerequest(BaseProtogenClass):
         yield ('pad1', self.__field_pad1, None)
         yield ('index', self.__field_index, None)
         yield ('pad2', self.__field_pad2, None)
+
 
 
 
@@ -994,6 +1000,7 @@ class sanyomediafilenameresponse(BaseProtogenClass):
 
 
 
+
 class sanyomediafragmentrequest(BaseProtogenClass):
     __fields=['header', 'pad1', 'fileindex', 'pad2']
 
@@ -1129,6 +1136,7 @@ class sanyomediafragmentrequest(BaseProtogenClass):
         yield ('pad1', self.__field_pad1, None)
         yield ('fileindex', self.__field_fileindex, None)
         yield ('pad2', self.__field_pad2, None)
+
 
 
 
@@ -1320,6 +1328,7 @@ class sanyomediafragmentresponse(BaseProtogenClass):
 
 
 
+
 class sanyomediafilegragment(BaseProtogenClass):
     __fields=['header', 'word', 'len', 'data', 'pad']
 
@@ -1481,6 +1490,7 @@ class sanyomediafilegragment(BaseProtogenClass):
 
 
 
+
 class sanyomediaresponse(BaseProtogenClass):
     __fields=['header', 'UNKNOWN']
 
@@ -1564,6 +1574,7 @@ class sanyomediaresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('UNKNOWN', self.__field_UNKNOWN, None)
+
 
 
 
@@ -1708,6 +1719,7 @@ class sanyosendfilename(BaseProtogenClass):
         yield ('payloadsize', self.__field_payloadsize, None)
         yield ('filename', self.__field_filename, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1872,6 +1884,7 @@ class sanyosendfilesize(BaseProtogenClass):
 
 
 
+
 class sanyosendfilefragment(BaseProtogenClass):
     __fields=['header', 'payloadsize', 'data', 'pad']
 
@@ -2010,6 +2023,7 @@ class sanyosendfilefragment(BaseProtogenClass):
 
 
 
+
 class sanyosendfileterminator(BaseProtogenClass):
     __fields=['header', 'payloadsize', 'pad']
 
@@ -2131,6 +2145,7 @@ class sanyosendfileterminator(BaseProtogenClass):
 
 
 
+
 class sanyosendfileresponse(BaseProtogenClass):
     __fields=['header', 'payloadsize', 'pad']
 
@@ -2237,6 +2252,7 @@ class sanyosendfileresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('payloadsize', self.__field_payloadsize, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -2355,6 +2371,7 @@ class sanyomediathingyrequest(BaseProtogenClass):
 
 
 
+
 class sanyomediathingyresponse(BaseProtogenClass):
     __fields=['fa', 'faset', 'value']
 
@@ -2455,6 +2472,7 @@ class sanyomediathingyresponse(BaseProtogenClass):
         yield ('fa', self.__field_fa, None)
         yield ('faset', self.__field_faset, None)
         yield ('value', self.__field_value, None)
+
 
 
 

@@ -134,6 +134,7 @@ class pbheader(BaseProtogenClass):
 
 
 
+
 class pbstartsyncrequest(BaseProtogenClass):
     __fields=['header', 'pad']
 
@@ -232,6 +233,7 @@ class pbstartsyncrequest(BaseProtogenClass):
 
 
 
+
 class pbstartsyncresponse(BaseProtogenClass):
     __fields=['header', 'unknown']
 
@@ -315,6 +317,7 @@ class pbstartsyncresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('unknown', self.__field_unknown, None)
+
 
 
 
@@ -416,6 +419,7 @@ class pbendsyncrequest(BaseProtogenClass):
 
 
 
+
 class pbendsyncresponse(BaseProtogenClass):
     __fields=['header', 'unknown']
 
@@ -499,6 +503,7 @@ class pbendsyncresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('unknown', self.__field_unknown, None)
+
 
 
 
@@ -598,6 +603,7 @@ class pbinforequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -840,6 +846,7 @@ class pbinforesponse(BaseProtogenClass):
 
 
 
+
 class pbinitrequest(BaseProtogenClass):
     "Moves cursor to begining of phonebook"
     __fields=['header', 'pad']
@@ -939,6 +946,7 @@ class pbinitrequest(BaseProtogenClass):
 
 
 
+
 class pbinitresponse(BaseProtogenClass):
     __fields=['header', 'dunno']
 
@@ -1022,6 +1030,7 @@ class pbinitresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -1123,6 +1132,7 @@ class pbreadentryrequest(BaseProtogenClass):
 
 
 
+
 class pbnextentryrequest(BaseProtogenClass):
     __fields=['header', 'pad']
 
@@ -1218,6 +1228,7 @@ class pbnextentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1355,6 +1366,7 @@ class pbnextentryresponse(BaseProtogenClass):
         yield ('datalen', self.__field_datalen, None)
         yield ('data', self.__field_data, None)
         yield ('randomgunk', self.__field_randomgunk, None)
+
 
 
 
@@ -1507,6 +1519,7 @@ class pbdeleteentryrequest(BaseProtogenClass):
 
 
 
+
 class pbdeleteentryresponse(BaseProtogenClass):
     __fields=['header', 'dunno']
 
@@ -1590,6 +1603,7 @@ class pbdeleteentryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -1693,6 +1707,7 @@ class pbupdateentryresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('serial1', self.__field_serial1, None)
         yield ('dunno', self.__field_dunno, None)
+
 
 
 
@@ -1813,6 +1828,7 @@ class pbappendentryresponse(BaseProtogenClass):
         yield ('newserial', self.__field_newserial, None)
         yield ('dunno', self.__field_dunno, None)
         yield ('dunno2', self.__field_dunno2, None)
+
 
 
 

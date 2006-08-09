@@ -233,6 +233,7 @@ class indexentry(BaseProtogenClass):
 
 
 
+
 class indexfile(BaseProtogenClass):
     "Used for tracking wallpaper and ringtones"
     __fields=['items']
@@ -313,6 +314,7 @@ class indexfile(BaseProtogenClass):
 
 
 
+
 class pbgroup(BaseProtogenClass):
     "A single group"
     __fields=['name']
@@ -384,6 +386,7 @@ class pbgroup(BaseProtogenClass):
 
     def containerelements(self):
         yield ('name', self.__field_name, None)
+
 
 
 
@@ -464,6 +467,7 @@ class pbgroups(BaseProtogenClass):
 
     def containerelements(self):
         yield ('groups', self.__field_groups, None)
+
 
 
 
@@ -587,6 +591,7 @@ class scheduleexception(BaseProtogenClass):
 
 
 
+
 class scheduleexceptionfile(BaseProtogenClass):
     __fields=['items']
 
@@ -663,6 +668,7 @@ class scheduleexceptionfile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -905,6 +911,7 @@ class scheduleevent(BaseProtogenClass):
 
 
 
+
 class schedulefile(BaseProtogenClass):
     __fields=['numactiveitems', 'events']
 
@@ -994,6 +1001,7 @@ class schedulefile(BaseProtogenClass):
     def containerelements(self):
         yield ('numactiveitems', self.__field_numactiveitems, None)
         yield ('events', self.__field_events, None)
+
 
 
 
@@ -1202,6 +1210,7 @@ class call(BaseProtogenClass):
 
 
 
+
 class callhistory(BaseProtogenClass):
     __fields=['numcalls', 'unknown1', 'calls']
 
@@ -1308,6 +1317,7 @@ class callhistory(BaseProtogenClass):
         yield ('numcalls', self.__field_numcalls, None)
         yield ('unknown1', self.__field_unknown1, None)
         yield ('calls', self.__field_calls, None)
+
 
 
 
@@ -1488,6 +1498,7 @@ class msg_record(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx8100_179(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -1559,6 +1570,7 @@ class _gen_p_lgvx8100_179(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -1733,6 +1745,7 @@ class recipient_record(BaseProtogenClass):
 
 
 
+
 class sms_saved(BaseProtogenClass):
     __fields=['outboxmsg', 'GPStime', 'outbox', 'inbox']
 
@@ -1856,6 +1869,7 @@ class sms_saved(BaseProtogenClass):
             yield ('outbox', self.__field_outbox, None)
         if not self.outboxmsg:
             yield ('inbox', self.__field_inbox, None)
+
 
 
 
@@ -2195,6 +2209,7 @@ class sms_out(BaseProtogenClass):
 
 
 
+
 class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
     __fields=['msg']
 
@@ -2274,6 +2289,7 @@ class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx8100_218(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -2345,6 +2361,7 @@ class _gen_p_lgvx8100_218(BaseProtogenClass):
 
     def containerelements(self):
         yield ('byte', self.__field_byte, "individual byte of message")
+
 
 
 
@@ -2962,6 +2979,7 @@ class sms_in(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx8100_230(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['byte']
@@ -3036,6 +3054,7 @@ class _gen_p_lgvx8100_230(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx8100_250(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msglength']
@@ -3107,6 +3126,7 @@ class _gen_p_lgvx8100_250(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msglength', self.__field_msglength, "lengths of individual messages in septets")
+
 
 
 
@@ -3189,6 +3209,7 @@ class sms_quick_text(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx8100_264(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['msg']
@@ -3266,6 +3287,7 @@ class _gen_p_lgvx8100_264(BaseProtogenClass):
 
     def containerelements(self):
         yield ('msg', self.__field_msg, None)
+
 
 
 
@@ -3352,6 +3374,7 @@ class textmemo(BaseProtogenClass):
     def containerelements(self):
         yield ('text', self.__field_text, None)
         yield ('memotime', self.__field_memotime, None)
+
 
 
 
@@ -3444,6 +3467,7 @@ class textmemofile(BaseProtogenClass):
     def containerelements(self):
         yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -3598,6 +3622,7 @@ class firmwareresponse(BaseProtogenClass):
         yield ('date2', self.__field_date2, None)
         yield ('time2', self.__field_time2, None)
         yield ('firmware', self.__field_firmware, None)
+
 
 
 

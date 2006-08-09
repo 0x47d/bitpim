@@ -159,6 +159,7 @@ class read_group_req(BaseProtogenClass):
 
 
 
+
 class read_group_resp(BaseProtogenClass):
     __fields=['command', 'index', 'name', 'ringtone', 'dunno']
 
@@ -296,6 +297,7 @@ class read_group_resp(BaseProtogenClass):
 
 
 
+
 class del_group_req(BaseProtogenClass):
     __fields=['command', 'index']
 
@@ -385,6 +387,7 @@ class del_group_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('index', self.__field_index, None)
+
 
 
 
@@ -517,6 +520,7 @@ class write_group_req(BaseProtogenClass):
         yield ('index', self.__field_index, None)
         yield ('name', self.__field_name, None)
         yield ('ringtone', self.__field_ringtone, None)
+
 
 
 
@@ -689,6 +693,7 @@ class ringtone_index_entry(BaseProtogenClass):
 
 
 
+
 class ringtone_index_file(BaseProtogenClass):
     __fields=['items']
 
@@ -765,6 +770,7 @@ class ringtone_index_file(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -857,6 +863,7 @@ class calendar_lock_req(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('lock', self.__field_lock, None)
+
 
 
 
@@ -978,6 +985,7 @@ class calendar_read_req(BaseProtogenClass):
         yield ('command', self.__field_command, None)
         yield ('start_index', self.__field_start_index, None)
         yield ('end_index', self.__field_end_index, None)
+
 
 
 
@@ -1260,6 +1268,7 @@ class calendar_req_resp(BaseProtogenClass):
 
 
 
+
 class calendar_write_req(BaseProtogenClass):
     __fields=['command', 'index', 'title', 'alarm_timed', 'alarm_enabled', 'start_time', 'start_date', 'duration', 'alarm_time', 'alarm_date', 'repeat_type']
 
@@ -1523,6 +1532,7 @@ class calendar_write_req(BaseProtogenClass):
 
 
 
+
 class calendar_write_ex_req(BaseProtogenClass):
     __fields=['command', 'index', 'nth_event', 'ex_event_flag']
 
@@ -1652,6 +1662,7 @@ class calendar_write_ex_req(BaseProtogenClass):
         yield ('index', self.__field_index, None)
         yield ('nth_event', self.__field_nth_event, None)
         yield ('ex_event_flag', self.__field_ex_event_flag, None)
+
 
 
 

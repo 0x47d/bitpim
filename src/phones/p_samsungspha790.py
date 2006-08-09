@@ -296,6 +296,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -379,6 +380,7 @@ class phonebookslotresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -502,6 +504,7 @@ class speeddial_entry(BaseProtogenClass):
 
 
 
+
 class speeddial_file(BaseProtogenClass):
     __fields=['items']
 
@@ -572,6 +575,7 @@ class speeddial_file(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
 
 
 
@@ -658,6 +662,7 @@ class groupnameresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -795,6 +800,7 @@ class groupnameentry(BaseProtogenClass):
         yield ('ringtone', self.__field_ringtone, "Ringtone assignment?")
         yield ('dunno2', self.__field_dunno2, "A single character C or S")
         yield ('timestamp', self.__field_timestamp, None)
+
 
 
 
@@ -950,6 +956,7 @@ class groupnamesetrequest(BaseProtogenClass):
         yield ('groupname', self.__field_groupname, None)
         yield ('ringtone', self.__field_ringtone, None)
         yield ('timestamp', self.__field_timestamp, None)
+
 
 
 

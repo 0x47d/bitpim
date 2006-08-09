@@ -409,6 +409,7 @@ class evententry(BaseProtogenClass):
 
 
 
+
 class eventresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -509,6 +510,7 @@ class eventresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -624,6 +626,7 @@ class eventupdaterequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -998,6 +1001,7 @@ class callalarmentry(BaseProtogenClass):
 
 
 
+
 class callalarmresponse(BaseProtogenClass):
     __fields=['header', 'entry', 'pad']
 
@@ -1098,6 +1102,7 @@ class callalarmresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -1213,6 +1218,7 @@ class callalarmupdaterequest(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
         yield ('pad', self.__field_pad, None)
+
 
 
 

@@ -350,6 +350,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class phonebookslotresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -433,6 +434,7 @@ class phonebookslotresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -528,6 +530,7 @@ class phonebookslotupdaterequest(BaseProtogenClass):
 
 
 
+
 class groupnameresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -611,6 +614,7 @@ class groupnameresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -700,6 +704,7 @@ class groupnameentry(BaseProtogenClass):
 
 
 
+
 class unparsedresponse(BaseProtogenClass):
     __fields=['pad']
 
@@ -770,6 +775,7 @@ class unparsedresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('pad', self.__field_pad, None)
+
 
 
 
@@ -871,6 +877,7 @@ class eventrequest(BaseProtogenClass):
 
 
 
+
 class eventresponse(BaseProtogenClass):
     __fields=['command', 'entry']
 
@@ -954,6 +961,7 @@ class eventresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1125,6 +1133,7 @@ class evententry(BaseProtogenClass):
         yield ('alarm', self.__field_alarm, "0: No Alarm, 1: On Time, 2: 10 minutes, 3: 30 minutes, 4: 60 minutes")
         yield ('dunno', self.__field_dunno, None)
         yield ('eventname', self.__field_eventname, None)
+
 
 
 

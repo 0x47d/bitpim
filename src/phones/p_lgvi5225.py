@@ -235,6 +235,7 @@ class ffpacket(BaseProtogenClass):
 
 
 
+
 class speeddial(BaseProtogenClass):
     __fields=['entry', 'number']
 
@@ -333,6 +334,7 @@ class speeddial(BaseProtogenClass):
 
 
 
+
 class speeddials(BaseProtogenClass):
     __fields=['speeddials']
 
@@ -409,6 +411,7 @@ class speeddials(BaseProtogenClass):
 
     def containerelements(self):
         yield ('speeddials', self.__field_speeddials, None)
+
 
 
 
@@ -496,6 +499,7 @@ class pbreadentryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -591,6 +595,7 @@ class pbupdateentryrequest(BaseProtogenClass):
 
 
 
+
 class pbappendentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -680,6 +685,7 @@ class pbappendentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1043,6 +1049,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvi5225_116(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
@@ -1114,6 +1121,7 @@ class _gen_p_lgvi5225_116(BaseProtogenClass):
 
     def containerelements(self):
         yield ('email', self.__field_email, None)
+
 
 
 
@@ -1191,6 +1199,7 @@ class _gen_p_lgvi5225_124(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvi5225_126(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
@@ -1262,6 +1271,7 @@ class _gen_p_lgvi5225_126(BaseProtogenClass):
 
     def containerelements(self):
         yield ('number', self.__field_number, None)
+
 
 
 

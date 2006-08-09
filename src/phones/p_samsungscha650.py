@@ -142,6 +142,7 @@ class pbslot(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungscha650_41(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['t']
@@ -213,6 +214,7 @@ class _gen_p_samsungscha650_41(BaseProtogenClass):
 
     def containerelements(self):
         yield ('t', self.__field_t, None)
+
 
 
 
@@ -292,6 +294,7 @@ class pbslots(BaseProtogenClass):
 
     def containerelements(self):
         yield ('slot', self.__field_slot, None)
+
 
 
 
@@ -642,6 +645,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class _gen_p_samsungscha650_64(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['c5']
@@ -713,6 +717,7 @@ class _gen_p_samsungscha650_64(BaseProtogenClass):
 
     def containerelements(self):
         yield ('c5', self.__field_c5, None)
+
 
 
 
@@ -792,6 +797,7 @@ class pbbook(BaseProtogenClass):
 
     def containerelements(self):
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -932,6 +938,7 @@ class number(BaseProtogenClass):
 
 
 
+
 class numbers(BaseProtogenClass):
     __fields=['entry']
 
@@ -1008,6 +1015,7 @@ class numbers(BaseProtogenClass):
 
     def containerelements(self):
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1233,6 +1241,7 @@ class ringtone(BaseProtogenClass):
 
 
 
+
 class ringtones(BaseProtogenClass):
     __fields=['entry']
 
@@ -1303,6 +1312,7 @@ class ringtones(BaseProtogenClass):
 
     def containerelements(self):
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1511,6 +1521,7 @@ class image(BaseProtogenClass):
 
 
 
+
 class images(BaseProtogenClass):
     __fields=['entry']
 
@@ -1581,6 +1592,7 @@ class images(BaseProtogenClass):
 
     def containerelements(self):
         yield ('entry', self.__field_entry, None)
+
 
 
 

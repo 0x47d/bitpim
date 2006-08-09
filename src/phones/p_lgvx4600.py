@@ -306,6 +306,7 @@ class mediadesc(BaseProtogenClass):
 
 
 
+
 class pbentry(BaseProtogenClass):
     __fields=['serial1', 'entrysize', 'serial2', 'entrynumber', 'name', 'group', 'emails', 'url', 'ringtone', 'secret', 'memo', 'wallpaper', 'numbertypes', 'numbers', 'unknown20c']
 
@@ -643,6 +644,7 @@ class pbentry(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx4600_66(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
@@ -714,6 +716,7 @@ class _gen_p_lgvx4600_66(BaseProtogenClass):
 
     def containerelements(self):
         yield ('email', self.__field_email, None)
+
 
 
 
@@ -791,6 +794,7 @@ class _gen_p_lgvx4600_73(BaseProtogenClass):
 
 
 
+
 class _gen_p_lgvx4600_75(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
@@ -862,6 +866,7 @@ class _gen_p_lgvx4600_75(BaseProtogenClass):
 
     def containerelements(self):
         yield ('number', self.__field_number, None)
+
 
 
 
@@ -949,6 +954,7 @@ class pbreadentryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
@@ -1044,6 +1050,7 @@ class pbupdateentryrequest(BaseProtogenClass):
 
 
 
+
 class pbappendentryrequest(BaseProtogenClass):
     __fields=['header', 'entry']
 
@@ -1133,6 +1140,7 @@ class pbappendentryrequest(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('entry', self.__field_entry, None)
+
 
 
 
