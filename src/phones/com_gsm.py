@@ -94,8 +94,8 @@ class Phone(com_phone.Phone):
 
     def get_sim_id(self):
         req=self.protocolclass.SIM_ID_Req()
-        res=self.sendATcommand(req, self.protocolclass.single_value_resp)
         try:
+            res=self.sendATcommand(req, self.protocolclass.single_value_resp)
             return res[0].value
         except:
             return None
