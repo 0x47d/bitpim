@@ -54,6 +54,7 @@ import playlist
 import fileview
 import data_recording
 import analyser
+import rpc_comm
 
 if guihelper.IsMSWindows():
     import win32api
@@ -538,12 +539,15 @@ class MainApp(wx.App):
     def displayhelpid(self, id):
         if guihelper.IsMSWindows():
             import win32help
-            fname=guihelper.gethelpfilename()+".chm"
+            fname=guihelper.gethelpfilename()+".chm>Help"
             if id is None:
                 id=helpids.ID_WELCOME
-            # unfortunately I can't get the stupid help viewer to also make the treeview
-            # on the left to go to the right place
-            win32help.HtmlHelp(self.frame.GetHandle(), fname, win32help.HH_DISPLAY_TOPIC, id)
+            # display the topic
+            win32help.HtmlHelp(self.frame.GetHandle(), fname,
+                               win32help.HH_DISPLAY_TOPIC, id)
+            # and sync the TOC
+            win32help.HtmlHelp(self.frame.GetHandle(), fname,
+                               win32help.HH_SYNC, id)
             return
         elif guihelper.IsMac():
             if self.helpcontroller is None:
@@ -888,7 +892,9 @@ class MainWindow(wx.Frame):
         self.configdlg.updatevariables()
         
         pos=self.config.ReadInt("mainwindowsplitterpos", 200)
+        self.tree.active_panel.OnPreActivate()
         self.sw.SplitVertically(self.tree, self.tree.active_panel, pos)
+        self.tree.active_panel.OnPostActivate()
         self.sw.SetMinimumPaneSize(50)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
         self.tree.Expand(self.tree.root)
@@ -955,18 +961,25 @@ class MainWindow(wx.Frame):
             wx.CallAfter(self.Show, False)
         self.GetStatusBar().set_app_status_ready()
 
+        # Comm notification stuff for Linux
+        if guihelper.IsGtk():
+            rpc_comm.start_server(self, self.config.ReadInt('rpcport',
+                                                            rpc_comm.default_port))
+
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()
         self.config.WriteInt("mainwindowsplitterpos", pos)        
 
     def SetActivePanel(self, panel):
         w2=self.sw.GetWindow2()
-        if w2==None: # still in startup
+        if w2 is None or w2 is panel:
             return
+        panel.OnPreActivate()
         w2.Show(False)
         self.sw.ReplaceWindow(w2, panel)
         panel.Show(True)
         panel.SetFocus()
+        panel.OnPostActivate()
 
     def GetActiveMemoWidget(self):
         return self.tree.GetActivePhone().memowidget
@@ -1244,25 +1257,13 @@ class MainWindow(wx.Frame):
             if check_auto_sync:
                 # see if we should re-sync the calender on connect, do it silently
                 self.__autosync_phone(silent=1)
-        
-    def WindowsOnDeviceChanged(self, type, name="", drives=[], flag=None):
-        if not name.lower().startswith("com"):
-            return
-        if type=='DBT_DEVICEREMOVECOMPLETE':
-            print "Device remove", name
-            # device is removed, if it's ours, clear the port
-            if name.lower()==self.config.Read('lgvx4400port', '').lower():
-                if self.wt:
-                    self.wt.clearcomm()
-                self.SetPhoneModelStatus(guiwidgets.SB_Phone_Unavailable)
-            return
-        if type!='DBT_DEVICEARRIVAL':
-            # not interested
-            return
+
+    def AddComm(self, name):
+        # A new comm port became available
         print 'New device on port:',name
         # check the new device
         check_auto_sync=auto_sync.UpdateOnConnect(self)
-        if name.lower()==self.config.Read('lgvx4400port', '').lower():
+        if name and name.lower()==self.config.Read('lgvx4400port', '').lower():
             _func=self._detect_this_phone
             _args=(check_auto_sync, self._autodetect_delay, True)
         else:
@@ -1273,6 +1274,39 @@ class MainWindow(wx.Frame):
             self.queue.put((_func, _args, {}), False)
         else:
             _func(*_args)
+
+    def RemoveComm(self, name):
+        # This comm just went away
+        print "Device remove", name
+        # device is removed, if it's ours, clear the port
+        if name and name.lower()==self.config.Read('lgvx4400port', '').lower():
+            if self.wt:
+                self.wt.clearcomm()
+            self.SetPhoneModelStatus(guiwidgets.SB_Phone_Unavailable)
+
+    def NotifyComm(self, evt):
+        if evt.type==evt.add:
+            self.AddComm(evt.comm)
+        else:
+            self.RemoveComm(evt.comm)
+
+    def OnCommNotification(self, evt):
+        print 'OnCommNotification'
+        if wx.Thread_IsMain():
+            self.NotifyComm(evt)
+        else:
+            wx.CallAfter(self.NotifyComm, evt)
+
+    def WindowsOnDeviceChanged(self, type, name="", drives=[], flag=None):
+        if not name.lower().startswith("com"):
+            return
+        if type=='DBT_DEVICEREMOVECOMPLETE':
+            self.RemoveComm(name)
+            return
+        if type!='DBT_DEVICEARRIVAL':
+            # not interested
+            return
+        self.AddComm(name)
 
     def MyWndProc(self, hwnd, msg, wparam, lparam):
 
@@ -2177,3 +2211,9 @@ if guihelper.IsMSWindows():
 
             print "unhandled devicetype struct", dbch_devicetype
             return ()
+
+#-------------------------------------------------------------------------------
+# Notify BitPim of changes in Comm status
+def notify_comm_status(status, comm, config_filename=None):
+    _config=Config(config_filename)
+    rpc_comm.notify_comm_status(status, comm, _config)
