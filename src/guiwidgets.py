@@ -53,6 +53,7 @@ import widgets
 import phones
 import setphone_wizard
 import data_recording
+import rpc_comm
 
 ###
 ### BitFling cert stuff
@@ -451,6 +452,13 @@ class ConfigDialog(wx.Dialog):
                                      'Detect phone at bitpim startup')
         gs.Add(self.autodetect_start, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
+        # RPC Port for comm notification (Linux only)
+        if True or guihelper.IsGtk():
+            gs.Add(wx.StaticText(self, -1, 'RPC Port'), pos=(_row, 0),
+                   flag=wx.ALIGN_CENTER_VERTICAL)
+            self.rpc_port=wx.TextCtrl(self, -1, '')
+            gs.Add(self.rpc_port, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+            _row+=1
 
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
@@ -633,6 +641,9 @@ class ConfigDialog(wx.Dialog):
                 self.taskbaricon1.SetValue(False)
                 self.taskbaricon1.Enable(False)
         self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
+        if True or guihelper.IsGtk():
+            self.rpc_port.SetValue(str(self.mw.config.ReadInt('rpcport',
+                                                          rpc_comm.default_port)))
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -687,6 +698,9 @@ class ConfigDialog(wx.Dialog):
             self.mw.config.WriteInt('taskbaricon1', 0)
         # startup autodetect option
         self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
+        # RPC Port
+        if True or guihelper.IsGtk():
+            self.mw.config.WriteInt('rpcport', self.rpc_port.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         # update the status bar
