@@ -172,6 +172,11 @@ class BitPimWidget:
     def OnViewColumnSelector(self):
         pass
 
+    def OnPreActivate(self):
+        pass
+    def OnPostActivate(self):
+        pass
+
 class RootWidget(bphtml.HTMLWindow, BitPimWidget):
     welcome_text="""
 <html>
