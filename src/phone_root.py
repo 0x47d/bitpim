@@ -81,7 +81,7 @@ class PhoneTree(wx.TreeCtrl):
             self.startuppage='Phone'
         else:
             self.startuppage=self.config.Read("viewnotebookpage", "")
-        self.startuppage_set=False
+        self.startuppage_item=None
         self.DeleteAllItems()
         self.active_phone=None
         self.active_panel=self.root_panel=widgets.RootWidget(self.parent, wx.NewId())
@@ -145,10 +145,13 @@ class PhoneTree(wx.TreeCtrl):
         self.SetItemImage(item, image)
         panel.Show(False)
         panel.InitialiseWidget(self, item, phone, self.config, help_id)
-        if not self.startuppage_set and name==self.startuppage:
-            wx.CallAfter(self.SelectItem, item)
-            self.startuppage_set
+        if not self.startuppage_item and name==self.startuppage:
+            self.startuppage_item=item
         return item
+
+    def SetStartupPage(self):
+        if self.startuppage_item:
+            self.SelectItem(self.startuppage_item)
 
     def AddNode(self, panel, name, image=None):
         if image==None:
@@ -393,6 +396,7 @@ class Phone(today.TodayWidget):
             if __debug__:
                 raise Exception, e 
    	        pass
+   	wx.CallAfter(self.tree.SetStartupPage)
 
     def OnPhoneChanged(self, _):
         self.phoneprofile=self.mw.phoneprofile

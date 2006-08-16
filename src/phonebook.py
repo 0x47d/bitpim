@@ -559,6 +559,8 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
 
     def __init__(self, mainwindow, parent, config):
         wx.Panel.__init__(self, parent,-1)
+        self.sash_pos=config.ReadInt('phonebooksashpos', -300)
+        self.update_sash=True
         # keep this around while we exist
         self.categorymanager=CategoryManager
 ##        self.SetBackgroundColour("ORANGE")
@@ -612,8 +614,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self.preview=PhoneEntryDetailsView(split, -1, "styles.xy", "pblayout.xy")
         # for some reason, preview doesn't show initial background
         wx.CallAfter(self.preview.ShowEntry, {})
-        self.sash_pos=None
-        split.SplitVertically(self.table_panel, self.preview, -300)
+        split.SplitVertically(self.table_panel, self.preview, self.sash_pos)
         self.split=split
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(split, 1, wx.EXPAND)
@@ -632,6 +633,8 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         wx.EVT_PAINT(self.table.GetGridColLabelWindow(), self.OnColumnHeaderPaint)
         wx.grid.EVT_GRID_LABEL_LEFT_CLICK(self.table, self.OnGridLabelLeftClick)
         wx.grid.EVT_GRID_LABEL_LEFT_DCLICK(self.table, self.OnGridLabelLeftClick)
+        wx.EVT_SPLITTER_SASH_POS_CHANGED(self, self.split.GetId(),
+                                         self.OnSashPosChanged)
         # context menu
         self.context_menu=wx.Menu()
         id=wx.NewId()
@@ -690,6 +693,15 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self.dt.Sort()
         self.table.Refresh()
 
+    def OnSashPosChanged(self, _):
+        if self.update_sash:
+            self.sash_pos=self.split.GetSashPosition()
+            self.config.WriteInt('phonebooksashpos', self.sash_pos)
+    def OnPreActivate(self):
+        self.update_sash=False
+    def OnPostActivate(self):
+        self.split.SetSashPosition(self.sash_pos)
+        self.update_sash=True
 
     def SetColumns(self, columns):
         c=self.GetColumns()[self.sortedColumn]

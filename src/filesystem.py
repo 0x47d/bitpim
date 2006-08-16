@@ -55,8 +55,9 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
         wx.SplitterWindow.__init__(self, parent, id, style=wx.SP_LIVE_UPDATE)
         self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=(wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)&~wx.TR_TWIST_BUTTONS)
         self.list=FileSystemFileView(mainwindow, self, wx.NewId())
-        pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
-        self.SplitVertically(self.tree, self.list, pos)
+        self.sash_pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
+        self.update_sash=True
+        self.SplitVertically(self.tree, self.list, self.sash_pos)
         self.SetMinimumPaneSize(20)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)
         pubsub.subscribe(self.OnPhoneModelChanged, pubsub.PHONE_MODEL_CHANGED)
@@ -70,8 +71,16 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
         self.tree.ResetView()
 
     def OnSplitterPosChanged(self,_):
-        pos=self.GetSashPosition()
-        self.mainwindow.config.WriteInt("filesystemsplitterpos", pos)        
+        if self.update_sash:
+            self.sash_pos=self.GetSashPosition()
+            self.mainwindow.config.WriteInt("filesystemsplitterpos",
+                                            self.sash_pos)
+
+    def OnPreActivate(self):
+        self.update_sash=False
+    def OnPostActivate(self):
+        self.SetSashPosition(self.sash_pos)
+        self.update_sash=True
 
     def OnPhoneReboot(self,_):
         mw=self.mainwindow
