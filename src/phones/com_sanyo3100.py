@@ -15,6 +15,7 @@ import sha
 
 # my modules
 import common
+import com_sanyo8300
 import p_brew
 import p_sanyo8300
 import p_sanyo3100
@@ -23,7 +24,6 @@ import com_phone
 import com_sanyo
 import com_sanyomedia
 import com_sanyonewer
-import com_sanyo8300
 import prototypes
 import bpcalendar
 
@@ -34,7 +34,7 @@ class Phone(com_sanyo8300.Phone):
     "Talk to the Sanyo PM3100 cell phone"
 
     desc="SCP3100"
-
+# WOrking directories 1,2,4
     FIRST_MEDIA_DIRECTORY=1
     LAST_MEDIA_DIRECTORY=2
 
@@ -45,17 +45,18 @@ class Phone(com_sanyo8300.Phone):
     protocolclass=p_sanyo3100
     serialsname='scp3100'
 
-    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
-                       'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
-                       '', '', '', '', '', '', '',
-                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
-                       'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
-                       'Foster Ky. Home', 'The Moment', 'Asian Jingle',
-                       'Disco')
+                       'Tone 6', 'Tone 7', 'Tone 8',
+                       '', '', '', '', '',
+                       '', '', '',
+                       '', '', '', '',
+                       'Hungarian Dance No.5', 'Asian Jingle',
+                       'Ska Big Band', 'Habanera', 'Clair de Lune',
+                       'Nocturne', 'Techno Beat', 'Jazz Melody','','','','','','','','','','','','','','','','','','','Ringer & Voice')
 
-    calendar_defaultringtone=0
-    calendar_defaultcaringtone=0
+    calendar_defaultringtone=4
+    calendar_defaultcaringtone=4
 
     def __init__(self, logtarget, commport):
         com_sanyo8300.Phone.__init__(self, logtarget, commport)
@@ -75,6 +76,7 @@ class Profile(parentprofile):
 
     # which usb ids correspond to us
     usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
+    deviceclasses=("serial",)
     
     def __init__(self):
         parentprofile.__init__(self)
