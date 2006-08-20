@@ -1048,6 +1048,7 @@ class SanyoPhonebook:
         # Value to subtract from mktime results since there is no inverse
         # of gmtime
         zonedif=time.mktime(time.gmtime(0))-time.mktime(time.localtime(0))
+        save_tonerange = xrange(self.calendar_tonerange[0]-self.calendar_toneoffset,self.calendar_tonerange[-1]-self.calendar_toneoffset+1)
 
         try:
             reqflag=self.protocolclass.eventslotinuseupdaterequest()
@@ -1107,12 +1108,7 @@ class SanyoPhonebook:
                 e.name="" # Could get this by reading phone book
                           # But it would take a lot more time
                 e.name_len=len(e.name)
-                #if entry.ringtone==0:
-                #    e.ringtone=self.calendar_defaultcaringtone
-                #else:
-                #    e.ringtone=entry.ringtone
-                # Use default ringtone for now
-                e.ringtone=self.calendar_defaultcaringtone
+                #e.ringtone=self.calendar_defaultcaringtone
                 print "Setting ringtone "+`e.ringtone`
 
                 req=self.protocolclass.callalarmupdaterequest()
@@ -1176,12 +1172,15 @@ class SanyoPhonebook:
                 except: # If no valid end date, make end
                     e.end=e.start+60 #  one minute later 
 
-                #if entry.ringtone==0:
-                #    e.ringtone=self.calendar_defaultringtone
-                #else:
-                #    e.ringtone=entry.ringtone
+                ringtoneindex=self._findmediaindex(dict['ringtone-index'],entry.ringtone,'Calendar','ringtone')
+                if ringtoneindex==0:
+                    e.ringtone=self.calendar_defaultringtone
+                else:
+                    e.ringtone=ringtoneindex
+                    if e.ringtone in save_tonerange:
+                        e.ringtone+=self.calendar_toneoffset
                 # Use default ringtone for now
-                e.ringtone=self.calendar_defaultringtone
+                #e.ringtone=self.calendar_defaultringtone
                 print "Setting ringtone "+`e.ringtone`
 
 # What we should do is first find largest changeserial, and then increment

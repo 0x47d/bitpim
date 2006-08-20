@@ -5,6 +5,7 @@
       <li>Fixed phonebook and filesystem splitter display.
       <li>On Windows, sync the current help topic with the TOC.
       <li>Added comm port notification feature for Linux.
+      <li>Sanyo phones: Improve setting of alarms for calendar
     </ul>
 
    <h2><a name="0.9.06">Changes in 0.9.06</a></h2>
