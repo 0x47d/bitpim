@@ -147,7 +147,7 @@ class SyncSchedule(object):
             return 0
         self.log("Auto Sync: Starting (silent mode=%d)..." % (silent))
         self.mw.OnBusyStart()
-        self.mw.GetStatusBar().progressminor(0, 100, 'AutoSync in progress ...')
+        self.mw.GetStatusBar().progressminor(0, 100, 'Auto Calendar Import in progress ...')
         # retrieve the configuration
         self.settings=_getsettings(mw, profile)
         # update BitPims calender
@@ -158,8 +158,8 @@ class SyncSchedule(object):
         else:
             self.mw.OnBusyEnd()
             if silent==0:
-                wx.MessageBox('Unable to synchronize phone schedule',
-                              'Synchronize failed', wx.OK)
+                wx.MessageBox('Unable to Auto-Import Calendar Data',
+                              'Auto Calendar Import failed', wx.OK)
             self.log("Auto Sync: Failed, Unable to synchronize phone schedule")
         return res
 
@@ -259,7 +259,7 @@ class AutoSyncSettingsEntry(object):
 
 class AutoSyncSettingsDialog(wx.Dialog):
     ID_CALSETTINGS=wx.NewId()
-    def __init__(self, mainwindow, frame, title="Schedule Auto Sync Settings", profile="Default Autosync", id=-1):
+    def __init__(self, mainwindow, frame, title="Auto Calendar Import Settings", profile="Default Autosync", id=-1):
         t=title+" - "+profile
         wx.Dialog.__init__(self, frame, id, t,
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)

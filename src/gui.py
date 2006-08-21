@@ -721,8 +721,17 @@ class MainWindow(wx.Frame):
         # imports
         impmenu=wx.Menu()
         for x, desc, help, func in importexport.GetPhonebookImports():
-            impmenu.Append(x, desc, help)
-            wx.EVT_MENU(self, x, MenuCallback(func, self) )
+            if isinstance(func, tuple):
+                # submenu
+                _submenu=wx.Menu()
+                for _id, _desc, _help, _func in func:
+                    _submenu.Append(_id, _desc, _help)
+                    if _func:
+                        wx.EVT_MENU(self, _id, MenuCallback(_func, self))
+                impmenu.AppendMenu(x, desc, _submenu, help)
+            else:
+                impmenu.Append(x, desc, help)
+                wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
         menu.AppendMenu(guihelper.ID_FILEIMPORT, "Import", impmenu)
 
@@ -765,11 +774,6 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
         menu.Append(guihelper.ID_DATAHISTORICAL, "&Historical Data ...", "View Current & Historical Data")
         menuBar.Append(menu, "&Data")
-
-        menu=wx.Menu()
-        menu.Append(guihelper.ID_AUTOSYNCSETTINGS, "&Configure AutoSync Settings...", "Configures Schedule Auto-Synchronisation")
-        menu.Append(guihelper.ID_AUTOSYNCEXECUTE, "&Synchronize Schedule Now", "Synchronize Schedule Now")
-        menuBar.Append(menu, "&AutoSync")
 
         menu=wx.Menu()
         menu.Append(guihelper.ID_VIEWCOLUMNS, "&Columns ...", "Which columns to show")
