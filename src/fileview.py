@@ -1026,7 +1026,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         if len(media_name)>self.maxlen:
             chop=len(media_name)-self.maxlen
             media_name=stripext(media_name)[:-chop].strip()+'.'+getext(media_name)
-        return media_name.decode(media_codec)
+        return media_name
 
     def getdata(self,dict,want=NONE):
         items=None
