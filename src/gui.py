@@ -54,7 +54,6 @@ import playlist
 import fileview
 import data_recording
 import analyser
-import rpc_comm
 
 if guihelper.IsMSWindows():
     import win32api
@@ -964,11 +963,6 @@ class MainWindow(wx.Frame):
             # the app is started minimized !!
             wx.CallAfter(self.Show, False)
         self.GetStatusBar().set_app_status_ready()
-
-        # Comm notification stuff for Linux
-        if guihelper.IsGtk():
-            rpc_comm.start_server(self, self.config.ReadInt('rpcport',
-                                                            rpc_comm.default_port))
 
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()
@@ -2215,9 +2209,3 @@ if guihelper.IsMSWindows():
 
             print "unhandled devicetype struct", dbch_devicetype
             return ()
-
-#-------------------------------------------------------------------------------
-# Notify BitPim of changes in Comm status
-def notify_comm_status(status, comm, config_filename=None):
-    _config=Config(config_filename)
-    rpc_comm.notify_comm_status(status, comm, _config)

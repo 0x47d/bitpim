@@ -42,9 +42,6 @@ if __debug__:
 
 if __name__ == '__main__':
     import sys  
-    import encodings.utf_8
-    import encodings.ascii
-    import encodings.iso8859_1
     import getopt
     import os.path
 
@@ -52,7 +49,7 @@ if __name__ == '__main__':
     if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
 	# get rid of the process serial number on mac
 	sys.argv=sys.argv[:1]+sys.argv[2:]
-    _options, _args=getopt.getopt(sys.argv[1:], 'a:c:d:r:')
+    _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
     _kwargs={}
     # check for debug flag
     _debug=__debug__ or bool(_args and 'debug' in _args)
@@ -75,29 +72,17 @@ if __name__ == '__main__':
         sys.stdout=_donowt()
         sys.stderr=_donowt()
 
-    _comm_stat=None
     for _k,_v in _options:
         if _k=='-d':
             _kwargs['config_filename']=os.path.join(_v, '.bitpim')
         elif _k=='-c':
             _kwargs['config_filename']=_v
-        elif _k=='-a':
-            # add a comm
-            _comm_stat='add'
-            _comm=_v
-        elif _k=='-r':
-            # remove a comm
-            _comm_stat='remove'
-            _comm=_v
     if _args and 'bitfling' in _args:
         import bitfling.bitfling
         #if True:
         #    profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")
         #else:
         bitfling.bitfling.run(sys.argv)
-    elif _comm_stat:
-        import gui
-        gui.notify_comm_status(_comm_stat, _comm, _kwargs)
     else:
         import gui
         #if True:
