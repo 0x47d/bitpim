@@ -824,7 +824,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 s=self.getfilecontents(self.brew_version_file)
                 res[self.brew_version_txt_key]=s
             except (com_brew.BrewNoSuchFileException,
-                    com_brew.BrewBadBrewCommandException):
+                    com_brew.BrewBadBrewCommandException,
+                    com_brew.BrewAccessDeniedException):
                 res[self.brew_version_txt_key]=None
             except:
                 if __debug__:

@@ -1232,7 +1232,9 @@ class LGUncountedIndexedMedia:
         # index=0                       # MIC Do not want to reset index; builtins start at 0
                                         # Otherwise, the builtins are overwriten by
                                         # these
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor,_idx  in maps:
+            if _idx is not None:
+                index=_idx
             for item in self.getindex(indexfile):
                 media[index]={
                     'name': basename(item.filename),
@@ -1267,7 +1269,7 @@ class LGUncountedIndexedMedia:
         # signal that we are using the new media storage that includes the origin and timestamp
         origins['new_media_version']=1
 
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor, _idx  in maps:
             media={}
             for item in self.getindex(indexfile):
                 data=None
@@ -1340,7 +1342,7 @@ class LGUncountedIndexedMedia:
         use_external_media=self.external_storage_present()
         skip_origin=[]
         
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor, _idx  in maps:
             # if no external media is present skip indexes which refer
             # to external media
             if self.is_external_media(directory) and not use_external_media:
@@ -1356,7 +1358,7 @@ class LGUncountedIndexedMedia:
 
         # build up list into init
         init={}
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor, _idx  in maps:
             init[type]={}
             for k in wpi.keys():
                 if wpi[k]['origin']==type:
@@ -1392,7 +1394,7 @@ class LGUncountedIndexedMedia:
                 del wp[w]
 
         # if external media is specified, add all the extra files to the index
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor, _idx  in maps:
             if type not in skip_origin and len(external_dir):
                 if self.is_external_media(external_dir) and not use_external_media:
                     continue
@@ -1407,7 +1409,7 @@ class LGUncountedIndexedMedia:
 
         # time to write the files out
         dircache=self.DirCache(self)
-        for type, indexfile, directory, external_dir, maxentries, typemajor  in maps:
+        for type, indexfile, directory, external_dir, maxentries, typemajor, _idx  in maps:
             if type not in skip_origin:
                 # get the old index file so we can work out what to delete
                 for item in self.getindex(indexfile):
