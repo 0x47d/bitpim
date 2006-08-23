@@ -128,10 +128,13 @@ PACKET scheduleevent:
                               #and alarmhours below, valid values are
                               # 8=2days, 7=1day, 6=2hours, 5=1hour, 4=15mins, 3=10mins, 2=5mins, 1=0mins, 0=NoAlarm
     1 UINT ringtone
-    1 UINT unknown1
+    1 UINT { 'default': 0 } +unknown1
     1 UINT alarmminutes  "a value of 0xFF indicates not set"
     1 UINT alarmhours    "a value of 0xFF indicates not set"
-    256 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } ringpath
+    256 USTRING {'encoding': PHONE_ENCODING,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False,
+                 'default': '' } +ringpath
                               # MIC If ringtone = 0x64 (decimal 100), this field is used to specify
                               # the full path of the ringer, either on the phone or on the microSD card
 

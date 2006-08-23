@@ -383,12 +383,12 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 # their fully qualified path, and an index of 100.
                 for i in dict['ringtone-index']:
                     if dict['ringtone-index'][i]['name']==alarm_name:
-                        if (i > 15):   # Ringer stored on phone or microSD
+                        if dict['ringtone-index'][i].get('filename', None):
                             data.ringtone=100
                             data.ringpath=dict['ringtone-index'][i]['filename']
-                        else:          # Ringer is builtin
+                        else:
+                            # builtin ringer
                             data.ringtone=i      # Set to proper index
-                            data.ringpath=""     # Set to null
                         break
             else:
                 data.unknown2=0        # MIC Only unknown in VX8100 and prior
