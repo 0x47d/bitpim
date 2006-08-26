@@ -13,14 +13,18 @@
 Communicate with the LG VX8500 cell phone
 """
 # standard modules
+import datetime
 
 # wx modules
 
 # BitPim modules
 import common
+import com_brew
 import com_lgvx8300
 import fileinfo
 import p_lgvx8500
+import playlist
+import prototypes
 
 parentphone=com_lgvx8300.Phone
 class Phone(parentphone):
@@ -50,6 +54,214 @@ class Phone(parentphone):
         ( 'video',      'dload/video.dat',    'brew/16452/mf', '',           100, 0x03, None),
         ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
         )
+
+    # Phonebook stuff-----------------------------------------------------------
+    def _build_pb_info(self, fundamentals):
+        # build a dict of info to update pbentry
+        pbook=fundamentals.get('phonebook', {})
+        wallpaper_index=fundamentals.get('wallpaper-index', {})
+        r1={}
+        for k,e in pbook.items():
+            r1[e['bitpimserial']['id']]={ 'wallpaper': \
+                                          self._findmediainindex(wallpaper_index,
+                                                                 e['wallpaper'],
+                                                                 e['name'],
+                                                                 'wallpaper') }
+        serialupdates=fundamentals.get("serialupdates", [])
+        r2={}
+        for bps, serials in serialupdates:
+            r2[serials['serial1']]=r1[bps['id']]
+        return r2
+    def _update_pb_file(self, pb, fundamentals, pbinfo):
+        # update the pbentry file
+        update_flg=False
+        for e in pb.items:
+            _info=pbinfo.get(e.serial1, None)
+            if _info:
+                wp=_info.get('wallpaper', None)
+                if wp is not None and wp!=e.wallpaper:
+                    update_flg=True
+                    e.wallpaper=wp
+        if update_flg:
+            self.log('Updating wallpaper index')
+            buf=prototypes.buffer()
+            pb.writetobuffer(buf, logtitle="Updated index "+self.protocolclass.pb_file_name)
+            self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
+    def _update_pb_info(self, pbentries, fundamentals):
+        # Manually update phonebook data that the normal protocol should have
+        _pbinfo=self._build_pb_info(fundamentals)
+        self._update_pb_file(pbentries, fundamentals, _pbinfo)
+    def _write_path_index(self, pbentries, pbmediakey, media_index,
+                          index_file, invalid_values):
+        _path_entry=self.protocolclass.PathIndexEntry()
+        _path_file=self.protocolclass.PathIndexFile()
+        for _ in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            _path_file.items.append(_path_entry)
+        for _entry in pbentries.items:
+            _idx=getattr(_entry, pbmediakey)
+            if _idx in invalid_values or not media_index.has_key(_idx):
+                continue
+            if media_index[_idx].get('origin', None)=='builtin':
+                _filename=media_index[_idx]['name']
+            elif media_index[_idx].get('filename', None):
+                _filename=media_index[_idx]['filename']
+            else:
+                continue
+            _path_file.items[_entry.entrynumber]=self.protocolclass.PathIndexEntry(
+                pathname=_filename)
+        _buf=prototypes.buffer()
+        _path_file.writetobuffer(_buf, logtitle='Writing Path ID')
+        self.writefile(index_file, _buf.getvalue())
+
+    def savephonebook(self, data):
+        "Saves out the phonebook"
+        res=parentphone.savephonebook(self, data)
+        # retrieve the phonebook entries
+        _buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.pb_file_name))
+        _pb_entries=self.protocolclass.pbfile()
+        _pb_entries.readfrombuffer(_buf, logtitle="Read phonebook file "+self.protocolclass.pb_file_name)
+        _rt_index=data.get('ringtone-index', {})
+        _wp_index=data.get('wallpaper-index', {})
+        # update info that the phone software failed to do!!
+        self._update_pb_info(_pb_entries, data)
+        # fix up ringtone index
+        self._write_path_index(_pb_entries, 'ringtone',
+                               _rt_index,
+                               self.protocolclass.RTPathIndexFile,
+                               (0xffff,))
+        # fix up msg ringtone index
+        self._write_path_index(_pb_entries, 'msgringtone',
+                               _rt_index,
+                               self.protocolclass.MsgRTIndexFile,
+                               (0xffff,))
+        # fix up wallpaer index
+        self._write_path_index(_pb_entries, 'wallpaper',
+                               _wp_index,
+                               self.protocolclass.WPPathIndexFile,
+                               (0, 0xffff,))
+        return res
+
+    # Playlist stuff------------------------------------------------------------
+    def _get_all_songs(self, fundamentals):
+        # return a list of all available songs
+        _rt_index=fundamentals.get('ringtone-index', {})
+        return [x['name'] for _,x in _rt_index.items() \
+                if x.get('origin', None) in ('music', 'music(sd)') ]
+    def _read_pl_list(self, filename):
+        # read and return the contents of the specified playlist
+        _req=self.protocolclass.PLPlayListFile()
+        _buf=prototypes.buffer(self.getfilecontents(filename))
+        _req.readfrombuffer(_buf, logtitle="Read playlist "+filename)
+        _songs=[]
+        for _item in _req.items:
+            _songs.append(common.basename(_item.pathname))
+        _entry=playlist.PlaylistEntry()
+        _entry.name=common.stripext(common.basename(filename))
+        _entry.songs=_songs
+        return _entry
+    def getplaylist(self, result):
+        # return a list of all available songs and playlists
+        # first, retrieve the list of all songs
+        result[playlist.masterlist_key]=self._get_all_songs(result)
+        # get a list of playlists and their contents
+        _req=self.protocolclass.PLIndexFile()
+        _buf=prototypes.buffer(
+            self.getfilecontents(self.protocolclass.PLIndexFileName))
+        _req.readfrombuffer(_buf, logtitle='Reading Playlist Index')
+        _pl_list=[]
+        for _item in _req.items:
+            try:
+                _pl_list.append(self._read_pl_list(_item.pathname))
+            except com_brew.BrewNoSuchFileException:
+                pass
+            except:
+                if __debug__:
+                    raise
+        result[playlist.playlist_key]=_pl_list
+        return result
+
+    def _get_info_from_index(self, filename):
+        _res={}
+        try:
+            _buf=prototypes.buffer(
+                self.getfilecontents(filename))
+            _req=self.protocolclass.indexfile()
+            _req.readfrombuffer(_buf, logtitle='Reading Index File')
+            for _item in _req.items:
+                _res[common.basename(_item.filename)]={ 'size': _item.size,
+                                                        'filename': _item.filename }
+        except com_brew.BrewNoSuchFileException:
+            pass
+        except:
+            if __debug__:
+                raise
+        return _res
+    def _get_song_info(self):
+        # return a dict of all songs & their info
+        _res=self._get_info_from_index('dload/efs_music.dat')
+        _res.update(self._get_info_from_index('dload/sd_music.dat'))
+        return _res
+    def _write_a_playlist(self, filename, pl, song_info):
+        # write a single playlist
+        _pl_file=self.protocolclass.PLPlayListFile()
+        _dt=datetime.datetime.now()
+        _onesec=datetime.timedelta(seconds=1)
+        for _song in pl.songs:
+            if song_info.has_key(_song):
+                _dt-=_onesec
+                _entry=self.protocolclass.PLSongEntry(
+                    pathname=song_info[_song]['filename'],
+                    date=_dt.timetuple()[:6],
+                    size=song_info[_song]['size'])
+                _pl_file.items.append(_entry)
+        _buf=prototypes.buffer()
+        _pl_file.writetobuffer(_buf,
+                               logtitle='Writing Playlist '+pl.name)
+        self.writefile(filename, _buf.getvalue())
+    def _write_playlists(self, playlists, song_info):
+        _pl_index=self.protocolclass.PLIndexFile()
+        for _pl in playlists:
+            try:
+                _filename=self.protocolclass.PLFilePath+'/'+_pl.name+\
+                           self.protocolclass.PLExt
+                self._write_a_playlist(_filename, _pl, song_info)
+                _pl_index.items.append(
+                    self.protocolclass.PLIndexEntry(pathname=_filename))
+            except:
+                self.log('Failed to write playlist '+_pl.name)
+                if __debug__:
+                    raise
+        try:
+            _buf=prototypes.buffer()
+            _pl_index.writetobuffer(_buf,
+                                    logtitle='Writing Playlist Index')
+            self.writefile(self.protocolclass.PLIndexFileName,
+                           _buf.getvalue())
+        except:
+            self.log('Failed to write Playlist Index file')
+            if __debug__:
+                raise
+    def saveplaylist(self, result, merge):
+        # delete all existing playlists
+        _buf=prototypes.buffer(self.getfilecontents(
+            self.protocolclass.PLIndexFileName))
+        _req=self.protocolclass.PLIndexFile()
+        _req.readfrombuffer(_buf, logtitle='Reading Playlist Index')
+        for _item in _req.items:
+            try:
+                self.rmfile(_item.pathname)
+            except com_brew. BrewNoSuchFileException:
+                pass
+            except:
+                if __debug__:
+                    raise
+        # get info on all songs
+        _song_info=self._get_song_info()
+        # update the new playlists
+        self._write_playlists(result.get(playlist.playlist_key, []),
+                              _song_info)
+        return result
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8300.Profile
@@ -132,6 +344,8 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
+        ('playlist', 'read', 'OVERWRITE'),
+        ('playlist', 'write', 'OVERWRITE'),
         )
 
     field_color_data={

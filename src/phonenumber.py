@@ -26,6 +26,7 @@ import re
 
 _notdigits=re.compile("[^0-9]*")
 _tendigits=re.compile("^[0-9]{10}$")
+_sevendigits=re.compile("^[0-9]{7}$")
 
 
 def normalise(n):
@@ -39,6 +40,8 @@ def normalise(n):
 def format(n):
     if re.match(_tendigits, n) is not None:
         return "(%s) %s-%s" % (n[0:3], n[3:6], n[6:])
+    elif re.match(_sevendigits, n) is not None:
+        return "%s-%s" %(n[:3], n[3:])
     return n
 
 

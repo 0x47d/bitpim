@@ -24,7 +24,7 @@ class LGCALDATE(prototypes.UINTlsb):
         dict.update(kwargs)
 
         if self._ismostderived(LGCALDATE):
-            self._update(args,kwargs)
+            self._update(args, dict)
 
     def _update(self, args, kwargs):
         for k in 'constant', 'default', 'value':
@@ -105,7 +105,7 @@ class LGCALREPEAT(prototypes.UINTlsb):
         dict.update(kwargs)
 
         if self._ismostderived(LGCALREPEAT):
-            self._update(args,kwargs)
+            self._update(args, dict)
 
     def _update(self, args, kwargs):
         for k in 'constant', 'default', 'value':
@@ -209,7 +209,7 @@ class GPSDATE(prototypes.UINTlsb):
         dict.update(kwargs)
 
         if self._ismostderived(GPSDATE):
-            self._update(args,kwargs)
+            self._update(args, dict)
 
     def _update(self, args, kwargs):
         for k in 'constant', 'default', 'value':
@@ -237,6 +237,9 @@ class GPSDATE(prototypes.UINTlsb):
     def _converttoint(self, date):
         assert len(date)==6
         return calendar.timegm(date)-self._time_t_ofs
+    def _now():
+        return time.gmtime()[:6]
+    now=staticmethod(_now)
 
 class GSMCALDATE(prototypes.CSVSTRING):
     """ Represent date string with format "YYMMDD*"
@@ -376,7 +379,7 @@ class TELUSLGCALREPEAT(prototypes.UINTlsb):
         dict.update(kwargs)
 
         if self._ismostderived(TELUSLGCALREPEAT):
-            self._update(args,kwargs)
+            self._update(args, dict)
 
     def _update(self, args, kwargs):
         for k in 'constant', 'default', 'value':

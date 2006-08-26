@@ -539,6 +539,12 @@ def basename(name):
         name=name[pos+1:]
     return name
 
+def dirname(name):
+    if name.rfind('\\')>=0 or name.rfind('/')>=0:
+        pos=max(name.rfind('\\'), name.rfind('/'))
+        name=name[:pos]
+    return name
+
 def stripext(name):
     if name.rfind('.')>=0:
         name=name[:name.rfind('.')]

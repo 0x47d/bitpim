@@ -197,6 +197,10 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
                                 self.OnMakeDirty)
         wx.EVT_BUTTON(self, wx.ID_HELP,
                       lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_PLAYLIST))
+        wx.EVT_BUTTON(self._pl_list, self._pl_list.GetUpButton().GetId(),
+                      self._OnUpDown)
+        wx.EVT_BUTTON(self._pl_list, self._pl_list.GetDownButton().GetId(),
+                      self._OnUpDown)
         # populate data
         self._populate()
         # turn on dirty flag
@@ -289,12 +293,15 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
                 _entry=PlaylistEntry()
                 _entry.name=e['name']
                 _entry.type=_pl_entry['type']
-                _entry.songs=[x['name'] for x in _pl_entry['songs']]
+                _entry.songs=[x['name'] for x in _pl_entry.get('songs', [])]
                 _pl_list.append(_entry)
         result.update({playlist_key: _pl_list })
         return result
 
     # called from various widget update callbacks
+    def _OnUpDown(self, evt):
+        self.OnMakeDirty()
+        evt.Skip()
     def OnMakeDirty(self, _=None):
         """A public function you can call that will set the dirty flag"""
         if self.dirty or self.ignoredirty:

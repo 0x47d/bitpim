@@ -18,28 +18,154 @@ from prototypes import *
 # Make all lg stuff available in this module as well
 from p_lg import *
 
-# we are the same as lgvx8300 except as noted
-# below
+# we are the same as lgvx8300 except as noted below
 from p_lgvx8300 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-##BREW_FILE_SYSTEM=0
-##
-##PHONE_ENCODING='iso-8859-1'
-##
-##NUMSPEEDDIALS=100
-##FIRSTSPEEDDIAL=2
-##LASTSPEEDDIAL=99
-##NUMPHONEBOOKENTRIES=500
-##MAXCALENDARDESCRIPTION=32
-##CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
-##
-##NUMEMAILS=2
-##NUMPHONENUMBERS=5
-##
-### need to call stat to get the file time/data
-##broken_filelist_date=True
+# Phonebook stuff
+RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
+MsgRTIndexFile='pim/pbMsgRingIdSetAsPath.dat'
+WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+pb_file_name='pim/pbentry.dat'
+
+#Play List stuff
+PLIndexFileName='dload/aodplaylist.lgpl'
+PLFilePath='dload'
+PLExt='.clgpl'
+
 %}
+
+# Phonebook stuff
+PACKET pbfileentry:
+    4   UINT    serial1
+    2   UINT    entrynumber
+    123 DATA    data1
+    2   UINT    ringtone
+    2   UINT    msgringtone
+    2   UINT    wallpaper
+    250 DATA    data2
+
+PACKET pbfile:
+    * LIST { 'elementclass': pbfileentry } items
+
+PACKET PathIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': '' } +pathname
+PACKET PathIndexFile:
+    * LIST { 'elementclass': PathIndexEntry,
+             'createdefault': True,
+             'length': NUMPHONEBOOKENTRIES } +items
+
+# Playlist stuff
+PACKET PLIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING } pathname
+
+PACKET PLIndexFile:
+    * LIST { 'elementclass': PLIndexEntry,
+             'createdefault': True } +items
+
+PACKET PLSongEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING } pathname
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': self.pathname } +tunename
+    100 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +artistname
+    100 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +albumname
+    102 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +genre
+    4 UINT { 'default': 2 } +dunno1
+    4 GPSDATE { 'default': GPSDATE.now() } +date
+    4 UINT size
+    4 UINT { 'default': 0 } +zero
+
+PACKET PLPlayListFile:
+    * LIST { 'elementclass': PLSongEntry,
+             'createdefault': True } +items
+
+# SMS stuff
+
+PACKET msg_record:
+    # the first few fields in this packet have something to do with the type of SMS
+    # message contained. EMS and concatinated text are coded differently than a
+    # simple text message
+    1 UINT binary   # 0=simple text, 1=binary/concatinated
+    1 UINT unknown3 # 0=simple text, 1=binary/concatinated
+    1 UINT unknown4 # 0
+    1 UINT unknown6 # 2=simple text, 9=binary/concatinated
+    1 UINT length
+    * LIST {'length': 219} +msg:
+        1 UINT byte "individual byte of message"
+
+PACKET recipient_record:
+    33 DATA unknown1 # contains recipient name from phonebook on this phone
+    50 USTRING number
+    1 UINT status   # 1 when sent, 5 when received
+    4 LGCALDATE timesent
+    4 LGCALDATE timereceived
+    1 UINT unknown2 # 0 when not received, set to 1 when received
+    57 DATA unknown3
+
+PACKET sms_saved:
+    P BOOL { 'default': True } +outboxmsg
+    4 GPSDATE GPStime   # num seconds since 0h 1-6-80, time message received by phone
+    * sms_out outbox
+
+PACKET sms_out:
+    4 UINT index # starting from 1, unique
+    1 UINT locked # 1=locked
+    4 LGCALDATE timesent # time the message was sent
+    7 UNKNOWN unknown2 # zero
+    61 USTRING {'encoding': PHONE_ENCODING} subject
+    1 UINT num_msg_elements # up to 7
+    * LIST {'elementclass': msg_record, 'length': 7} +messages
+    8 UNKNOWN unknown1
+    1 UINT priority # 0=normal, 1=high
+    16 UNKNOWN unknown5
+    73 USTRING callback
+    * LIST {'elementclass': recipient_record,'length': 9} +recipients
+    * UNKNOWN pad
+
+PACKET SMSINBOXMSGFRAGMENT:
+    * LIST {'length': 181} +msg: # this size could be wrong
+        1 UINT byte "individual byte of message"
+
+PACKET sms_in:
+    7 UNKNOWN unknown1
+    4 LGCALDATE lg_time # time the message was sent
+    1 UINT unknown2
+    4 GPSDATE GPStime # num seconds since 0h 1-6-80, time message received by phone
+    6 SMSDATE timesent
+    1 UINT read
+    1 UINT locked
+    1 UINT priority
+    6 UNKNOWN dunno1
+    23 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False } subject
+    47 UNKNOWN dunno2
+    1 UINT num_msg_elements # max 10 elements (guessing on max here)
+    * LIST {'length': 10} +msglengths:
+        1 UINT msglength "lengths of individual messages in septets"
+    10 UNKNOWN unknown9
+    * LIST {'length': 10, 'elementclass': SMSINBOXMSGFRAGMENT} +msgs
+    2594 UNKNOWN dunno3
+    1 UINT sender_length
+    * LIST {'length': 49} +sender:
+        1 UINT byte "individual byte of senders phone number"
+    3 UNKNOWN dunno4
+    1 UINT callback_length # 0 for no callback number
+    55 USTRING callback
+    * UNKNOWN PAD
+    # this stuff is required by the code, but couldn't figure it out,
+    # so just fake it
+    P UINT { 'default': 0 } +bin_header1
+    P UINT { 'default': 0 } +bin_header2
+    P UINT { 'default': 0 } +multipartID
+    P UINT { 'default': 0 } +bin_header3
+
+PACKET sms_quick_text:
+    * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
+        101 USTRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
