@@ -60,13 +60,19 @@ class Phone(parentphone):
         # build a dict of info to update pbentry
         pbook=fundamentals.get('phonebook', {})
         wallpaper_index=fundamentals.get('wallpaper-index', {})
+        ringtone_index=fundamentals.get('ringtone-index', {})
         r1={}
         for k,e in pbook.items():
             r1[e['bitpimserial']['id']]={ 'wallpaper': \
                                           self._findmediainindex(wallpaper_index,
                                                                  e['wallpaper'],
                                                                  e['name'],
-                                                                 'wallpaper') }
+                                                                 'wallpaper'),
+                                          'msgringtone': \
+                                          self._findmediainindex(ringtone_index,
+                                                                 e['msgringtone'],
+                                                                 e['name'],
+                                                                 'message ringtone')}
         serialupdates=fundamentals.get("serialupdates", [])
         r2={}
         for bps, serials in serialupdates:
@@ -82,6 +88,10 @@ class Phone(parentphone):
                 if wp is not None and wp!=e.wallpaper:
                     update_flg=True
                     e.wallpaper=wp
+                msgrt=_info.get('msgringtone', None)
+                if msgrt is not None and msgrt!=e.msgringtone:
+                    update_flg=True
+                    e.msgringtone=msgrt
         if update_flg:
             self.log('Updating wallpaper index')
             buf=prototypes.buffer()
