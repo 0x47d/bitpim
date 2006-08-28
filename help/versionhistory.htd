@@ -8,6 +8,7 @@
       <li>Renamed menu item AutoSync to Auto Calendar Import, and moved it to under Import menu item.
       <li>Fixed adding media files decode exceptions.
       <li>Added support for the LG VX8500 phone.  See the Help for more details.
+      <li>Increased A930 max ringtone size to 290K.
     </ul>
 
    <h2><a name="0.9.06">Changes in 0.9.06</a></h2>

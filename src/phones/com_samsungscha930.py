@@ -85,7 +85,7 @@ class Profile(parentprofile):
     phone_model=Phone.my_model
     # "Warning" media size limit
     RINGTONE_LIMITS= {
-        'MAXSIZE': 200000
+        'MAXSIZE': 290000
     }
 
     # all dumped in "images"
