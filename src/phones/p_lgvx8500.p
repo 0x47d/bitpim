@@ -104,6 +104,7 @@ PACKET recipient_record:
     33 DATA unknown1 # contains recipient name from phonebook on this phone
     50 USTRING number
     1 UINT status   # 1 when sent, 5 when received
+    3 UNKNOWN dunno1
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
     1 UINT unknown2 # 0 when not received, set to 1 when received
