@@ -4,6 +4,7 @@
     <ul>
       <li>Capability to read ringtone files for the LG VX8500.
       <li>Added MS Windows Media Player Play List (wpl) files import.
+      <li>Fixed Shift+Add feature for Linux.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>

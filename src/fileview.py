@@ -351,11 +351,19 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             self.OnListRequest() # broadcast changes
 
     def OnKeyDown(self, evt):
-        self._shift_down=evt.ShiftDown()
+        if guihelper.IsGtk():
+            if evt.GetKeyCode()==wx.WXK_SHIFT:
+                self._shift_down=True
+        else:
+            self._shift_down=evt.ShiftDown()
         evt.Skip()
 
     def OnKeyUp(self, evt):
-        self._shift_down=evt.ShiftDown()
+        if guihelper.IsGtk():
+            if evt.GetKeyCode()==wx.WXK_SHIFT:
+                self._shift_down=False
+        else:
+            self._shift_down=evt.ShiftDown()
         evt.Skip()
 
     def OnThumbnailView(self, _):
