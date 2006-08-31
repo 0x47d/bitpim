@@ -55,6 +55,27 @@ class Phone(parentphone):
         ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
         )
 
+    def __init__(self, logtarget, commport):
+        parentphone.__init__(self, logtarget, commport)
+        self._in_DM=False
+
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI.
+
+        Currently this is:
+
+          - 'uniqueserial'     a unique serial number representing the phone
+          - 'groups'           the phonebook groups
+          - 'wallpaper-index'  map index numbers to names
+          - 'ringtone-index'   map index numbers to ringtone names
+
+        This method is called before we read phone data or before we
+        write phone data.
+        """
+        if not self._in_DM:
+            self.enter_DM()
+        return parentphone.getfundamentals(self, results)
+
     # Phonebook stuff-----------------------------------------------------------
     def _build_pb_info(self, fundamentals):
         # build a dict of info to update pbentry
@@ -273,6 +294,33 @@ class Phone(parentphone):
                               _song_info)
         return result
 
+    # Misc Stuff----------------------------------------------------------------
+    def _unlock_key(self):
+        _req=self.protocolclass.LockKeyReq(lock=1)
+        self.sendbrewcommand(_req, self.protocolclass.data)
+    def _lock_key(self):
+        _req=self.protocolclass.LockKeyReq()
+        self.sendbrewcommand(_req, self.protocolclass.data)
+
+    def _press_key(self, keys):
+        # simulate a series of keypress
+        if not keys:
+            return
+        _req=self.protocolclass.KeyPressReq()
+        for _k in keys:
+            _req.key=_k
+            self.sendbrewcommand(_req, self.protocolclass.data)
+
+    def enter_DM(self):
+        try:
+            self._lock_key()
+            self._press_key('\x06\x513733929\x51')
+            self._unlock_key()
+            self._in_DM=True
+        except:
+            self.log('Failed to enter DM')
+            self._in_DM=False
+
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8300.Profile
 class Profile(parentprofile):
@@ -373,7 +421,7 @@ class Profile(parentprofile):
             'url': 0,
             'memo': 0,
             'category': 1,
-            'wallpaper': 0,
+            'wallpaper': 1,
             'ringtone': 2,
             'storage': 0,
             },

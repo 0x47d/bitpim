@@ -19,6 +19,7 @@ from prototypes import *
 from p_lg import *
 
 # we are the same as lgvx8300 except as noted below
+from p_brew import *
 from p_lgvx8300 import *
 
 # We use LSB for all integer like fields
@@ -170,3 +171,14 @@ PACKET sms_in:
 PACKET sms_quick_text:
     * LIST { 'length': SMS_CANNED_MAX_ITEMS, 'createdefault': True} +msgs:
         101 USTRING {'encoding': PHONE_ENCODING, 'default': ""} +msg # include terminating NULL
+
+# Misc stuff
+PACKET LockKeyReq:
+    1 UINT { 'default': 0x21 } +cmd
+    2 UINT { 'default': 0 } +lock "0=Lock, 1=Unlock"
+
+PACKET KeyPressReq:
+     1 UINT { 'default': 0x20 } +cmd
+     1 UINT { 'default': 0 } +hold
+     1 STRING { 'terminator': None,
+                'sizeinbytes': 1 } key

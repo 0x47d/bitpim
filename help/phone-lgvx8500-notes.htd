@@ -37,6 +37,7 @@
 <UL>
 <LI>Users can now retrieve, manage, and save their music playlists from/to the phones.  See section <a href="phone-lgvx8500-howtos.htm">Howtos</a> for more details.
 <LI>Within each playlist, to keep to order of the songs as appeared in BitPim, sort them by dates on the phone.
+<LI>When saving playlists to the phone, BitPim sets the Artist, Album, and Genre info of all songs to 'Unknown'.
 </UL>
 
 <H3>Filesystem</H3>

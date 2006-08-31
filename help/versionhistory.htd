@@ -1,5 +1,11 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
+    <ul>
+      <li>Capability to read ringtone files for the LG VX8500.
+      <li>Added MS Windows Media Player Play List (wpl) files import.
+    </ul>
+
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
     <ul>
       <li>Fixed phonebook and filesystem splitter display.

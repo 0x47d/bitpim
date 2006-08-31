@@ -210,6 +210,9 @@ PACKET setfileattrrequest:
     4 UINT date  # in GPS time
     * USTRING {'terminator': 0, 'pascal': True} filename
 
+PACKET data:
+    * DATA bytes
+
 # these "new" commands are for the RealBrewProtocol2 class, they are an
 # alternative way to talk to newer phones such as the lg vx8100
 # all the date/time fields are in unix time, a change from GPS time

@@ -3673,6 +3673,80 @@ class setfileattrrequest(BaseProtogenClass):
 
 
 
+class data(BaseProtogenClass):
+    __fields=['bytes']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(data,self).__init__(**dict)
+        if self.__class__ is data:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(data,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(data,kwargs)
+        if len(args):
+            dict2={}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_bytes=DATA(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_bytes.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_bytes=DATA()
+        self.__field_bytes.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_bytes(self):
+        return self.__field_bytes.getvalue()
+
+    def __setfield_bytes(self, value):
+        if isinstance(value,DATA):
+            self.__field_bytes=value
+        else:
+            self.__field_bytes=DATA(value,)
+
+    def __delfield_bytes(self): del self.__field_bytes
+
+    bytes=property(__getfield_bytes, __setfield_bytes, __delfield_bytes, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('bytes', self.__field_bytes, None)
+
+
+
+
 class new_requestheader(BaseProtogenClass):
     "The bit in front on all Brew request packets"
     __fields=['commandmode', 'command', 'zero']
