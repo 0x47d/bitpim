@@ -23,12 +23,8 @@
 # Adapted for use with BitPim by Joe Pham <djpham@bitpim.org>
 #
 
-export LD_LIBRARY_PATH="/usr/local/lib;/usr/lib;/lib"
-
-logfile='/dev/null'
-# logfile='/tmp/usbcell.log'
-
-echo "${ACTION}" "${DEVICE}" "${INTERFACE}" >& $logfile
+logfile='/var/bitpim/dnotify.log'
+rm -f "${logfile}"
 
 if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
 then
@@ -50,11 +46,7 @@ then
         chown "$CONSOLEOWNER" "${DEVICE}"
         chmod 0600 "${DEVICE}"
     fi
-    if [ -x /usr/bin/bitpim ]
-    then
-        /usr/bin/bitpim -a "${DEVICE}" >> $logfile 2>&1
-    fi
-elif [ "${ACTION}" = "remove" ] && [ -x /usr/bin/bitpim ]
-then
-    /usr/bin/bitpim -r "${DEVICE}" >> $logfile 2>&1
+    echo add "${DEVICE}" > "${logfile}"
+else
+    echo del "${DEVICE}" > "${logfile}"
 fi

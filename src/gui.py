@@ -963,6 +963,10 @@ class MainWindow(wx.Frame):
             # the app is started minimized !!
             wx.CallAfter(self.Show, False)
         self.GetStatusBar().set_app_status_ready()
+        # Linux USB port notification
+        if guihelper.IsGtk():
+            import comm_notify
+            comm_notify.start_server(self)
 
     def OnSplitterPosChanged(self,_):
         pos=self.sw.GetSashPosition()
