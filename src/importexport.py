@@ -37,6 +37,8 @@ import csv_calendar
 import vcal_calendar
 import ical_calendar
 import gcal_calendar as gcal
+import playlist
+import wpl_file
 
 # control
 def GetPhonebookImports():
@@ -85,7 +87,10 @@ def GetPhonebookImports():
     res.append( (guihelper.ID_IMPORT_QTOPIA_CONTACTS,"Qtopia Desktop...", "Import Qtopia Desktop contacts for the phonebook", OnFileImportQtopiaDesktopContacts) )
     # eGroupware - always possible
     res.append( (guihelper.ID_IMPORT_GROUPWARE_CONTACTS,"eGroupware...", "Import eGroupware contacts for the phonebook", OnFileImporteGroupwareContacts) )
-    
+    # WPL Playlist, always possible
+    res.append( (guihelper.ID_IMPORT_WPL, 'WPL Play List...',
+                 'Import WPL Play List',
+                 OnWPLImport))
     return res
     
 def GetCalenderAutoSyncImports():
@@ -1998,6 +2003,32 @@ def OnAutoCalImportSettings(parent):
 
 def OnAutoCalImportExecute(parent):
     pass
+
+# Play list
+def OnWPLImport(parent):
+    # get the wpl file name
+    _dlg=wx.FileDialog(parent, "Import wpl file",
+                       wildcard="wpl files (*.wpl)|*.wpl|All files|*",
+                       style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
+    if _dlg.ShowModal()!=wx.ID_OK:
+        _dlg.Destroy()
+        return
+    # parse & retrieve the data
+    _wpl=wpl_file.WPL(filename=_dlg.GetPath())
+    _dlg.Destroy()
+    if not _wpl.title:
+        return
+    _pl_entry=playlist.PlaylistEntry()
+    _pl_entry.name=_wpl.title
+    _pl_entry.songs=[common.basename(x) for x in _wpl.songs]
+    # populate the new data
+    _widget=parent.GetActivePlaylistWidget()
+    _pl_data={}
+    _widget.getdata(_pl_data)
+    _pl_data[playlist.playlist_key].append(_pl_entry)
+    _widget.populate(_pl_data)
+    _widget.populatefs(_pl_data)
+
 ###
 ###   EXPORTS
 ###
