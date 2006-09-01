@@ -60,5 +60,26 @@ configured with the right ownership or permissions to be accessible by
 the user.  The URL(howto-linuxusb.htm,Linux USB Howto) gives more
 information on how to configure the system to properly set these
 device permissions.
+<h3>zipimport.ZipImportError</h3>
+On some Linux systems (Fedora Core 5 for example) BitPim will install
+and run fine, but after a day or so, the following error will appear
+when bitpim is run:
+<pre>
+zipimport.ZipImportError: not a Zip file: '/usr/lib/BitPim-X.Y.ZZ/bitpim'
+Fatal Python error: cannot get zipimporter instance
+Aborted
+</pre>
+This happens because of the periodic prelink task.  This task modifies
+binaries so that that load quicker, but has the effect of destroying
+the BitPim binary.  The solution is to prevent prelink from modifying
+the BitPim binary and then to reinstall BitPim.  The can be done
+either by disabling prelink (remove the prelink package or disable the
+cron job) or by configuring prelink to ignore BitPim.  The latter can
+be done by adding the line
+<pre>
+-b *bitpim*
+</pre>
+to the prelink configuration file, which will usually be
+"/etc/prelink.conf".
 
 #include "pageend.h"
