@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
+    <ul>
+      <li>
+    </ul>
+
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
     <ul>
       <li>Fixed phonebook and filesystem splitter display.
