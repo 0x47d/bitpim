@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2004 Stephen Wood <sawecw@users.sf.net>
+### Copyright (C) 2004-2006 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -37,14 +37,15 @@ class Phone(com_sanyonewer.Phone):
     protocolclass=p_sanyo8200
     serialsname='pm8200'
 
-    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
                        'Tschaik.Swanlake', 'Satie Gymnop.#1',
                        'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
                        'Foster Ky. Home', 'The Moment', 'Asian Jingle',
-                       'Disco')
+                       'Disco','','','','','','','','','','','','','','','','','',
+                       'Voice Alarm')
 
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
