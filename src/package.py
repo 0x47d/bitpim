@@ -13,6 +13,7 @@
 
 import sys
 import os
+import os.path
 import shutil
 
 import version
@@ -169,14 +170,16 @@ def getversion():
     return version.version
 
 import phones
-import encodings.aliases
+import encodings
+import glob
 def getallencodingsmodules():
     # work-around for cx_freeze: add all encodings modules
-    _mod={}
-    for _key,_entry in encodings.aliases.aliases.items():
-        _mod[_entry]=None
     _res=[]
-    for _key in _mod.keys():
+    _dir=os.path.dirname(encodings.__file__)
+    _glob_name=os.path.join(_dir, '*.py')
+    _modules=[os.path.basename(os.path.splitext(x)[0]) for x in glob.glob(_glob_name) \
+              if os.path.basename(x) != '__init__.py']
+    for _key in _modules:
         # collect what we have
         try:
             _mod_name='encodings.'+_key

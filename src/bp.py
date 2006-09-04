@@ -44,9 +44,6 @@ if __name__ == '__main__':
     import sys  
     import getopt
     import os.path
-    import encodings.utf_8
-    import encodings.ascii
-    import encodings.iso8859_1
 
     # in production builds we don't need the stupid warnings
     if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
