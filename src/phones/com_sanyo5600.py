@@ -40,9 +40,9 @@ class Phone(com_sanyonewer.Phone):
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
-                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
-                       'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
-                       'Foster Ky. Home', 'The Moment', 'Asian Jingle',
+                       'Requiem:Dies Irae', 'Minute Waltz',
+                       'Hungarian Dance', 'Miltary March', 'Ten Little Indians',
+                       'Head,Shoulders,Knees&Toes', 'The Moment', 'Asian Jingle',
                        'Disco','','','','','','','','','','','','','','','','','',
                        'Voice Alarm')
 

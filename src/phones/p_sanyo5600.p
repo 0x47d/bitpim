@@ -30,7 +30,7 @@ _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
 _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
-HASRINGPICBUF=0
+HASRINGPICBUF=1
 
 %}
 
@@ -175,3 +175,17 @@ PACKET sanyomediafilenameresponse:
     1 UNKNOWN pad5
     1 UINT num3
     8 UNKNOWN pad5
+
+PACKET ringerpicbuffer:
+    "Index of ringer and picture assignments"
+    # This 1000 byte buffer is formed from the concatenation of 500 bytes of
+    # payload from commands 0X 46 0F through 0X 47 0F
+    P UINT {'constant': _NUMPBSLOTS} numpbslots "Number of phone book slots"
+    P UINT {'constant': 0x5a} startcommand "Starting command for R/W buf parts"
+    P UINT {'constant': 2048} bufsize
+    P USTRING {'default': "ringer/picture assignments"} +comment
+    * LIST {'length': _NUMPBSLOTS} +ringtones:
+        2 UINT ringtone "ringtone index"
+    * LIST {'length': _NUMPBSLOTS} +wallpapers:
+        2 UINT wallpaper "wallpaper index"
+    424 UNKNOWN +pad

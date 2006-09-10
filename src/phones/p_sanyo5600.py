@@ -21,7 +21,7 @@ _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
 _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
-HASRINGPICBUF=0
+HASRINGPICBUF=1
 
 class qcpheader(BaseProtogenClass):
     __fields=['readwrite', 'command', 'packettype']
@@ -3001,6 +3001,350 @@ class sanyomediafilenameresponse(BaseProtogenClass):
         yield ('pad5', self.__field_pad5, None)
         yield ('num3', self.__field_num3, None)
         yield ('pad5', self.__field_pad5, None)
+
+
+
+
+class ringerpicbuffer(BaseProtogenClass):
+    "Index of ringer and picture assignments"
+    __fields=['numpbslots', 'startcommand', 'bufsize', 'comment', 'ringtones', 'wallpapers', 'pad']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(ringerpicbuffer,self).__init__(**dict)
+        if self.__class__ is ringerpicbuffer:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(ringerpicbuffer,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(ringerpicbuffer,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+        try: self.__field_numpbslots
+        except:
+            self.__field_numpbslots=UINT(**{'constant': _NUMPBSLOTS})
+        try: self.__field_startcommand
+        except:
+            self.__field_startcommand=UINT(**{'constant': 0x5a})
+        try: self.__field_bufsize
+        except:
+            self.__field_bufsize=UINT(**{'constant': 2048})
+        try: self.__field_comment
+        except:
+            self.__field_comment=USTRING(**{'default': "ringer/picture assignments"})
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_ringtones
+        except:
+            self.__field_ringtones=LIST(**{'elementclass': _gen_p_sanyo5600_188, 'length': _NUMPBSLOTS})
+        self.__field_ringtones.writetobuffer(buf)
+        try: self.__field_wallpapers
+        except:
+            self.__field_wallpapers=LIST(**{'elementclass': _gen_p_sanyo5600_190, 'length': _NUMPBSLOTS})
+        self.__field_wallpapers.writetobuffer(buf)
+        try: self.__field_pad
+        except:
+            self.__field_pad=UNKNOWN(**{'sizeinbytes': 424})
+        self.__field_pad.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_ringtones=LIST(**{'elementclass': _gen_p_sanyo5600_188, 'length': _NUMPBSLOTS})
+        self.__field_ringtones.readfrombuffer(buf)
+        self.__field_wallpapers=LIST(**{'elementclass': _gen_p_sanyo5600_190, 'length': _NUMPBSLOTS})
+        self.__field_wallpapers.readfrombuffer(buf)
+        self.__field_pad=UNKNOWN(**{'sizeinbytes': 424})
+        self.__field_pad.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_numpbslots(self):
+        return self.__field_numpbslots.getvalue()
+
+    def __setfield_numpbslots(self, value):
+        if isinstance(value,UINT):
+            self.__field_numpbslots=value
+        else:
+            self.__field_numpbslots=UINT(value,**{'constant': _NUMPBSLOTS})
+
+    def __delfield_numpbslots(self): del self.__field_numpbslots
+
+    numpbslots=property(__getfield_numpbslots, __setfield_numpbslots, __delfield_numpbslots, "Number of phone book slots")
+
+    def __getfield_startcommand(self):
+        return self.__field_startcommand.getvalue()
+
+    def __setfield_startcommand(self, value):
+        if isinstance(value,UINT):
+            self.__field_startcommand=value
+        else:
+            self.__field_startcommand=UINT(value,**{'constant': 0x5a})
+
+    def __delfield_startcommand(self): del self.__field_startcommand
+
+    startcommand=property(__getfield_startcommand, __setfield_startcommand, __delfield_startcommand, "Starting command for R/W buf parts")
+
+    def __getfield_bufsize(self):
+        return self.__field_bufsize.getvalue()
+
+    def __setfield_bufsize(self, value):
+        if isinstance(value,UINT):
+            self.__field_bufsize=value
+        else:
+            self.__field_bufsize=UINT(value,**{'constant': 2048})
+
+    def __delfield_bufsize(self): del self.__field_bufsize
+
+    bufsize=property(__getfield_bufsize, __setfield_bufsize, __delfield_bufsize, None)
+
+    def __getfield_comment(self):
+        try: self.__field_comment
+        except:
+            self.__field_comment=USTRING(**{'default': "ringer/picture assignments"})
+        return self.__field_comment.getvalue()
+
+    def __setfield_comment(self, value):
+        if isinstance(value,USTRING):
+            self.__field_comment=value
+        else:
+            self.__field_comment=USTRING(value,**{'default': "ringer/picture assignments"})
+
+    def __delfield_comment(self): del self.__field_comment
+
+    comment=property(__getfield_comment, __setfield_comment, __delfield_comment, None)
+
+    def __getfield_ringtones(self):
+        try: self.__field_ringtones
+        except:
+            self.__field_ringtones=LIST(**{'elementclass': _gen_p_sanyo5600_188, 'length': _NUMPBSLOTS})
+        return self.__field_ringtones.getvalue()
+
+    def __setfield_ringtones(self, value):
+        if isinstance(value,LIST):
+            self.__field_ringtones=value
+        else:
+            self.__field_ringtones=LIST(value,**{'elementclass': _gen_p_sanyo5600_188, 'length': _NUMPBSLOTS})
+
+    def __delfield_ringtones(self): del self.__field_ringtones
+
+    ringtones=property(__getfield_ringtones, __setfield_ringtones, __delfield_ringtones, None)
+
+    def __getfield_wallpapers(self):
+        try: self.__field_wallpapers
+        except:
+            self.__field_wallpapers=LIST(**{'elementclass': _gen_p_sanyo5600_190, 'length': _NUMPBSLOTS})
+        return self.__field_wallpapers.getvalue()
+
+    def __setfield_wallpapers(self, value):
+        if isinstance(value,LIST):
+            self.__field_wallpapers=value
+        else:
+            self.__field_wallpapers=LIST(value,**{'elementclass': _gen_p_sanyo5600_190, 'length': _NUMPBSLOTS})
+
+    def __delfield_wallpapers(self): del self.__field_wallpapers
+
+    wallpapers=property(__getfield_wallpapers, __setfield_wallpapers, __delfield_wallpapers, None)
+
+    def __getfield_pad(self):
+        try: self.__field_pad
+        except:
+            self.__field_pad=UNKNOWN(**{'sizeinbytes': 424})
+        return self.__field_pad.getvalue()
+
+    def __setfield_pad(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_pad=value
+        else:
+            self.__field_pad=UNKNOWN(value,**{'sizeinbytes': 424})
+
+    def __delfield_pad(self): del self.__field_pad
+
+    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('numpbslots', self.__field_numpbslots, "Number of phone book slots")
+        yield ('startcommand', self.__field_startcommand, "Starting command for R/W buf parts")
+        yield ('bufsize', self.__field_bufsize, None)
+        yield ('comment', self.__field_comment, None)
+        yield ('ringtones', self.__field_ringtones, None)
+        yield ('wallpapers', self.__field_wallpapers, None)
+        yield ('pad', self.__field_pad, None)
+
+
+
+
+class _gen_p_sanyo5600_188(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['ringtone']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_sanyo5600_188,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo5600_188:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_sanyo5600_188,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_sanyo5600_188,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 2}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_ringtone=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_ringtone.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_ringtone=UINT(**{'sizeinbytes': 2})
+        self.__field_ringtone.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_ringtone(self):
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,UINT):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, "ringtone index")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('ringtone', self.__field_ringtone, "ringtone index")
+
+
+
+
+class _gen_p_sanyo5600_190(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['wallpaper']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_sanyo5600_190,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo5600_190:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_sanyo5600_190,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_sanyo5600_190,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 2}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_wallpaper=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_wallpaper.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_wallpaper=UINT(**{'sizeinbytes': 2})
+        self.__field_wallpaper.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_wallpaper(self):
+        return self.__field_wallpaper.getvalue()
+
+    def __setfield_wallpaper(self, value):
+        if isinstance(value,UINT):
+            self.__field_wallpaper=value
+        else:
+            self.__field_wallpaper=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_wallpaper(self): del self.__field_wallpaper
+
+    wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, "wallpaper index")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('wallpaper', self.__field_wallpaper, "wallpaper index")
 
 
 
