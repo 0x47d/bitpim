@@ -203,6 +203,10 @@ def genhtml(port):
                 res+=sfont+"""This is a modem connection"""+efont
             else:
                 res+=sfont+"""The port type (serial, modem etc)"""+efont
+        elif k=='PID':
+            res+=sfont+'Product ID'+efont
+        elif k=='VID':
+            res+=sfont+'Vendor ID'+efont
         else:
             res+="&nbsp;"
 

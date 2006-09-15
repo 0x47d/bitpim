@@ -68,7 +68,9 @@ def usbscan(*args, **kwargs):
                     v={'name': name, 'active': active, 'available': available,
                        'libusb': True,
                        'usb-vendor#': device.vendor(), 'usb-product#': device.product(),
-                       'usb-interface#': iface.number()}
+                       'usb-interface#': iface.number(),
+                       'VID': '0x%04X'%device.vendor(),
+                       'PID': '0x%04X'%device.product() }
 
                     if ( device.vendor(), device.product(), iface.number() ) in needdriver:
                         v["available"]=False
@@ -87,7 +89,8 @@ def usbscan(*args, **kwargs):
                         i="#%02X" % (iface.number(),)
                     else:
                         v['usb-interface']=i
-                    hwinstance="USB Device - Vendor %s Product %s (Interface %s)" % (vend, prod, i)
+                    hwinstance="USB Device - Vendor %s, Product %s, (Interface %s)" % \
+                                (vend, prod, i)
                     v['description']=hwinstance
 
                     prot=" / ".join([val for val in ids.lookupclass(*(iface.classdetails())) if val is not None])
