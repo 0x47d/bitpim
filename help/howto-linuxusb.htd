@@ -31,7 +31,7 @@ how to configure it.<br>&nbsp;</p>
 <code>usbcell 0x0003 <i>VID</i> <i>PID</i> 0 0 0 0 0 0 0 0 0</code>
 
 <p>You need to replace <i>VID</i> and <i>PID</i> with the relevant
-<a href="ref-usbids.htm">vendor and product ids</a>.
+<a href="ref-usbids.htm">vendor and product ids</a>.  The VID and PID can also be obtained from the <a href="ref-commsettingsdialog.htm">Comm Port Settings</a> dialog.
 
 <p><b>Note</b>  For more recent versions of hotplug, it is considered better form
 to create the file <code>/etc/hotplug/usb/usbcell.usermap</code>.<br>&nbsp;

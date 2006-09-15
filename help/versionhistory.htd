@@ -3,6 +3,7 @@
    <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
     <ul>
       <li>Added Sanyo MM-5600 support.
+      <li>Show libusb device Product ID and Vendor ID in the Comm Port Settings dialog.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
