@@ -43,14 +43,16 @@ class Phone(com_sanyonewer.Phone):
     protocolclass=p_sanyo8300
     serialsname='mm8300'
 
-    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
-                       '', '', '', '', '', '', '',
-                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
-                       'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
-                       'Foster Ky. Home', 'The Moment', 'Asian Jingle',
-                       'Disco')
+                       '', '', '', '', 
+                       'Requiem:Dies Irae', 'Minute Waltz',
+                       'Hungarian Dance', 'Miltary March', 'Ten Little Indians',
+                       'Head,Shoulders,Knees&Toes', 'The Moment', 'Asian Jingle',
+                       'Kung-fu','','','','','','','','','','','','','','','','','',
+                       '','','','','','',
+                       'Voice Alarm')
 
     # Calendar ringer info
     # e8 02 Tone 1  744
@@ -59,12 +61,14 @@ class Phone(com_sanyonewer.Phone):
     # ff 02 Melody 7  767
     # 00 03 Melody 8  768
     # 01 03 Melody 9  769
-    # 00 00 Normal
-    # f1 ff None
-    # f2 ff Vibrate
-    # 19 03 Voice
+    # 00 00 Normal      0
+    # f1 ff None    65521
+    # f2 ff Vibrate 65522
+    # 19 03 Voice     793
     calendar_defaultringtone=0
     calendar_defaultcaringtone=0
+    calendar_toneoffset=734
+    calendar_tonerange=xrange(744,794)
 
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
