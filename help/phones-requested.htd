@@ -1,0 +1,27 @@
+#include "pagestart.h"
+
+<P>These phones are not currently supported by BitPim and not available/accessible to developers.  We appreciate any <a href="contributing.htm#phoneloan">loans and donations</a>.
+
+<p><table width="100%" border=1>
+
+<tr>
+<th>Manufacturer
+<th>Model
+<th>Notes
+</tr>
+
+<tr>
+<td>Motorola
+<td>V3c/V3m
+<td>&nbsp;
+</tr>
+
+<tr>
+<td>Samsung
+<td>SCH-A990
+<td>&nbsp;
+</tr>
+
+</table>
+
+#include "pageend.h"

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">337</long>
+    <long name="name_counter">339</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">273</long>
+    <long name="doc_count">274</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
     <string name="quote-symbol">"\"</string>
     <string name="custom-preprocessor-options">""</string>
-    <double name="version">1.1700</double>
+    <double name="version">1.1800</double>
     <string name="page-header">"&lt;HTML&gt;
 &lt;head&gt;&lt;title&gt;_HELP_TITLE&lt;/title&gt;&lt;/head&gt;
 
@@ -1435,6 +1435,24 @@
             <long name="title-mode">0</long>
             <long name="locked">0</long>
             <string name="created">"17/6/2004"</string>
+            <long name="is-folder">0</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"What phones do the developers want?"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-requested.htd"</string>
+            <string name="icon-name">"htmldoc"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"27/9/2006"</string>
             <long name="is-folder">0</long>
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>

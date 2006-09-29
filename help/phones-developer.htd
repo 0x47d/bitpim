@@ -6,6 +6,9 @@ We appreciate <a href="contributing.htm#phoneloan">phone loans</a>.
 <p>Phones that are listed here, but not in the list of supported phones are
 still being worked on.  URL(http://bitpim.org/papers/phonespecs/,How to get phonespecs)
 
+<P><FONT COLOR="blue">BLUE</FONT>: Still available to developers.
+<P>BLACK: No longer available to developers.
+
 <p><table width="100%" border=1>
 <tr>
 <th>Manufacturer
@@ -48,14 +51,14 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>LG
-<td>G4015
+<td><FONT COLOR="blue">G4015</FONT>
 <td>Kindly donated by Rodney Myers.
 </tr>
 
 
 <tr>
 <td>LG
-<td>VX-4400
+<td><FONT COLOR="blue">VX-4400</FONT>
 <td>Personal phone.
 </tr>
 
@@ -67,7 +70,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>LG
-<td>VX-4650
+<td><FONT COLOR="blue">VX-4650</FONT>
 <td>Personal phone.
 </tr>
 
@@ -97,7 +100,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Motorola
-<td>V60c
+<td><FONT COLOR="blue">V60c</FONT>
 <td>Kindly donated by Rob Ross.
 </tr>
 
@@ -115,13 +118,13 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Motorola
-<td>V710
+<td><FONT COLOR="blue">V710</FONT>
 <td>Kindly loaned by URL(http://www.Ringarama.com/,Ringarama).
 </tr>
 
 <tr>
 <td>Motorola
-<td>T720
+<td><FONT COLOR="blue">T720</FONT>
 <td>Kindly loaned by URL(http://www.Ringarama.com/,Ringarama).
 </tr>
 
@@ -169,7 +172,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Samsung
-<td>SCH-A310
+<td><FONT COLOR="blue">SCH-A310</FONT>
 <td>Personal phone.
 </tr>
 
@@ -181,7 +184,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Samsung
-<td>SCH-A670
+<td><FONT COLOR="blue">SCH-A670</FONT>
 <td>Personal phone.
 </tr>
 
@@ -193,7 +196,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Samsung
-<td>SCH-A950
+<td><FONT COLOR="blue">SCH-A950</FONT>
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
 </tr>
 
@@ -267,7 +270,7 @@ and URL(http://www.rapidigm.com/,Rapidigm).
 
 <tr>
 <td>Palm
-<td>Treo 650
+<td><FONT COLOR="blue">Treo 650</FONT>
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
 </tr>
 

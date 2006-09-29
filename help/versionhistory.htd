@@ -4,6 +4,12 @@
     <ul>
       <li>Added Sanyo MM-5600 support.
       <li>Show libusb device Product ID and Vendor ID in the Comm Port Settings dialog.
+      <li>Handled media unicode file names for the <B>LG-VX8300/VX8500</B>. 
+      <li>Clarified phonebook writing error message. 
+      <li>Fixed deleting nonexisting media files bug (<B>LG-VX8100</B>).
+      <li>Fixed iCal import DTEND property.
+      <li>Fixed support for adding 3g2 video files.
+      <LI>Added the <B>Replace All</B> and <B>Merge</B> options to the Contacts Import dialog.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
