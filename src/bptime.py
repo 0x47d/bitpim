@@ -139,13 +139,13 @@ class BPTime(object):
                 s='%02d:%02d'%(h, self._time.minute)
         return s
 
-    def get(self):
+    def get(self, default=(0,0,0,0,0)):
         if self._date is None:
-            t=(0, 0, 0)
+            t=default[:3]
         else:
             t=(self._date.year, self._date.month, self._date.day)
         if self._time is None:
-            t+=(0, 0)
+            t+=default[3:5]
         else:
             t+=(self._time.hour, self._time.minute)
         return t

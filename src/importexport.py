@@ -240,6 +240,7 @@ class ImportDialog(wx.Dialog):
                  wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER):
         wx.Dialog.__init__(self, parent, id=id, title=title, style=style)
         self.possiblecolumns+=self.bp_columns
+        self.merge=True
         vbs=wx.BoxSizer(wx.VERTICAL)
         t,sz=self.gethtmlhelp()
         w=wx.html.HtmlWindow(self, -1, size=sz, style=wx.html.HW_SCROLLBAR_NEVER)
@@ -290,7 +291,14 @@ class ImportDialog(wx.Dialog):
         vbs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         # Static line and buttons
         vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        _button_sizer=self.CreateButtonSizer(wx.CANCEL|wx.HELP)
+        _btn=wx.Button(self, -1, 'Merge')
+        _button_sizer.Add(_btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnOk)
+        _btn=wx.Button(self, -1, 'Replace All')
+        _button_sizer.Add(_btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        wx.EVT_BUTTON(self, _btn.GetId(), self.OnReplaceAll)
+        vbs.Add(_button_sizer, 0, wx.ALIGN_CENTER|wx.ALL, 5)
         self.SetSizer(vbs)
         for w in self.wname, self.wnumber, self.waddress, self.wemail:
             wx.EVT_CHECKBOX(self, w.GetId(), self.DataNeedsUpdate)
@@ -339,6 +347,11 @@ class ImportDialog(wx.Dialog):
             self.preview.SaveEditControlValue()
         self.OnClose()  # for some reason this isn't called automatically
         self.EndModal(wx.ID_OK)
+
+    def OnReplaceAll(self, evt):
+        "ReplaceAll button was pressed"
+        self.merge=False
+        self.OnOk(evt)
 
     def __build_entry(self, rec):
         entry={}
@@ -1778,7 +1791,7 @@ def OnFileImportCSVContacts(parent):
     path=None
     if dlg.ShowModal()==wx.ID_OK:
         path=dlg.GetPath()
-        dlg.Destroy()
+    dlg.Destroy()
     if path is None:
         return
 
@@ -1786,9 +1799,10 @@ def OnFileImportCSVContacts(parent):
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImportVCards(parent):
     dlg=wx.FileDialog(parent, "Import vCards file",
@@ -1797,7 +1811,7 @@ def OnFileImportVCards(parent):
     path=None
     if dlg.ShowModal()==wx.ID_OK:
         path=dlg.GetPath()
-        dlg.Destroy()
+    dlg.Destroy()
     if path is None:
         return
 
@@ -1805,18 +1819,20 @@ def OnFileImportVCards(parent):
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImportQtopiaDesktopContacts(parent):
     dlg=ImportQtopiaDesktopDialog(parent, -1, "Import Qtopia Desktop Contacts")
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
         
 def OnFileImportOutlookContacts(parent):
@@ -1827,10 +1843,11 @@ def OnFileImportOutlookContacts(parent):
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     native.outlook.releaseoutlook()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImportEvolutionContacts(parent):
     import native.evolution
@@ -1838,9 +1855,10 @@ def OnFileImportEvolutionContacts(parent):
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImporteGroupwareContacts(parent):
     import native.egroupware
@@ -1848,9 +1866,10 @@ def OnFileImporteGroupwareContacts(parent):
     data=None
     if dlg.ShowModal()==wx.ID_OK:
         data=dlg.GetFormattedData()
+    _merge=dlg.merge
     dlg.Destroy()
     if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=True)
+        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
     dlg=dlg_class(parent, -1, dlg_title)
