@@ -46,7 +46,9 @@ broken_filelist_date=True
 %}
 
 PACKET indexentry:
-    256 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "full pathname"
+    256 USTRING {'encoding': PHONE_ENCODING,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False } filename  "full pathname"
     4 UINT size
     4 UINT {'default': 0} +date
     4 UINT type
