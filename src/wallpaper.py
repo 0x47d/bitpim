@@ -76,7 +76,8 @@ class WallpaperView(fileview.FileView):
         self._data={self.database_key: {}}
         fileview.FileView.__init__(self, mainwindow, parent, media_root, "wallpaper-watermark")
         self.thedir=self.mainwindow.wallpaperpath
-        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci;*.bit"
+        self.wildcard="Image files|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.pnm;*.tiff;*.ico;*.bci;*.bit"\
+                       "|Video files|*.3g2|All files|*.*"
 
 
 ##        self.bgmenu.Insert(1,guihelper.ID_FV_PASTE, "Paste")
@@ -301,6 +302,12 @@ class WallpaperView(fileview.FileView):
                 fi=self.GetFileInfo(file)
                 if fi is not None and fi.format=='LGBIT':
                     img=conversions.convertfilelgbittobmp(file)
+                elif fi and fi.format=='3GPP2':
+                    # 3g2 video file, no scaling, just add
+                    targetfilename=self.get_media_name_from_filename(file)
+                    data=open(file, 'rb').read()
+                    self.AddToIndex(targetfilename, self.active_section, data, self._data, mtime)
+                    continue
                 else:
                     img=wx.Image(file)
                 if not img.Ok():
