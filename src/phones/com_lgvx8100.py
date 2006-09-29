@@ -779,7 +779,15 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
                 if common.basename(item.filename) not in names and \
                    not self._is_rs_file(item.filename):
                     self.log(item.filename+" is being deleted")
-                    self.rmfile(item.filename)
+                    try:
+                        self.rmfile(item.filename)
+                    except (com_brew.BrewNoSuchDirectoryException,
+                            com_brew.BrewBadPathnameException,
+                            com_brew.BrewNoSuchFileException):
+                        pass
+                    except:
+                        if __debug__:
+                            raise
             # fixup the indices
             fixups=[k for k in init[type].keys() if k<lowestindex]
             fixups.sort()
