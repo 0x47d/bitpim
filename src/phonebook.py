@@ -575,7 +575,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self.table=wx.grid.Grid(self.table_panel, wx.NewId())
         self.table.EnableGridLines(False)
         self.error_log=guihelper.MultiMessageBox(self.mainwindow , "Contact Export Errors", 
-                   "Bitpim is unable to send the following contacts to your phone")
+                   "Bitpim is unable to send the following data to your phone")
         # which columns?
         cur=config.Read("phonebookcolumns", "")
         if len(cur):
@@ -1192,6 +1192,16 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
             self._save_db(dict)
         return dict
 
+    def _ensure_unicode(self, data):
+        # convert and ensure unicode fields
+        for _key,_entry in data.items():
+            for _field_key,_field_value in _entry.items():
+                if _field_key=='names':
+                    for _idx,_item in enumerate(_field_value):
+                        for _subkey, _value in _item.items():
+                            if isinstance(_value, str):
+                                _item[_subkey]=_value.decode('ascii', 'ignore')
+
     def importdata(self, importdata, categoriesinfo=[], merge=True):
         if self.read_only:
             wx.MessageBox('You are viewing historical data which cannot be changed or saved',
@@ -1203,6 +1213,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         else:
             d={}
         normalise_data(importdata)
+        self._ensure_unicode(importdata)
         dlg=ImportDialog(self, d, importdata)
         result=None
         if dlg.ShowModal()==wx.ID_OK:
@@ -1233,6 +1244,9 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
 
     def add_error_message(self, msg, priority=99):
         self.error_log.AddMessage(msg, priority)
+
+    def log(self, msg):
+        self.mainwindow.log(msg)
 
     class ConversionFailed(Exception):
         pass
