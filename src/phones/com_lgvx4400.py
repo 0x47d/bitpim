@@ -1396,8 +1396,8 @@ class Profile(parentprofile):
                             break
                     if len(e['numbertypes'])==b4:
                         # we couldn't find a type for the number
-                        helper.add_error_message("%s has number %s of type %s, the phone does not support this type" % 
-                                                (e['name'], num['number'], num['type']))
+                        helper.add_error_message('Number %s (%s/%s) not supported and ignored.'%
+                                                 (num['number'], e['name'], num['type']))
                         continue 
                     # deal with number
                     number=self.phonize(num['number'])
