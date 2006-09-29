@@ -216,11 +216,22 @@ class iCalendarImportData(parentclass):
                 raise
             return []
 
+    def _conv_start_date(self, v, dd):
+        _dt=bptime.BPTime(v['value']).get(default=(0,0,0, None, None))
+        if _dt[-1] is None:
+            # all day event
+            dd['allday']=True
+            _dt=_dt[:3]+(0,0)
+        return _dt
+
+    def _conv_end_date(self, v, _):
+        return bptime.BPTime(v['value']).get(default=(0,0,0, 23,59))
+
     _calendar_keys=[
         ('CATEGORIES', 'categories', parentclass._conv_cat),
         ('DESCRIPTION', 'notes', parentclass._conv_str),
-        ('DTSTART', 'start', _conv_date),
-        ('DTEND', 'end', _conv_date),
+        ('DTSTART', 'start', _conv_start_date),
+        ('DTEND', 'end', _conv_end_date),
         ('DURATION', 'end', _conv_duration),
         ('LOCATION', 'location', parentclass._conv_str),
         ('PRIORITY', 'priority', parentclass._conv_priority),
