@@ -10,6 +10,7 @@
       <li>Fixed iCal import DTEND property.
       <li>Fixed support for adding 3g2 video files.
       <LI>Added the <B>Replace All</B> and <B>Merge</B> options to the Contacts Import dialog.
+      <li>Support for Telus SPH-A840, phonebook and calendar only, added.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>

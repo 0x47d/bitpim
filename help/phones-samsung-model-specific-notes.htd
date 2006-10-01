@@ -30,6 +30,12 @@ product page)
 <li>URL(http://www.samsung.com/search/search.asp?qt=A620&la=en&col=wu+wsimsi+download&tabpage=1&radio=1&select=0&x=0&y=0#,Manual)
 </ul>
 
+<h4>SPH-A840 on Telus (Canada)</h4>
+BitPim support the phonebook and calendar on this phone.  Groups are
+not read or restored.  Email address and "Other" entries no saved to
+phone.  The default number for a given contactx may sometimes change
+on saving the phonebook.
+
 <h4>SPH-A460</h4>
 BitPim can read and write the phonebook and calendar on this older
 Sprint phone.  The phone does not support up/downloading of ringtones
