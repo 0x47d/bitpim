@@ -2,7 +2,7 @@
 
 <h4>SPH-A620 (VGA1000), SPH-A660, SPH-A740, SPH-A840 (Sprint)</h4>
 BitPim can read and write the phonebook and calendar.  Wallpaper and ringers
-can be read and writen to the phone.  For phones with cameras,
+can be read and written to the phone.  For phones with cameras,
 pictures and videos are read with the wallpaper.
 <p>
 Many of these Samsung models are also available from carriers other
@@ -31,9 +31,9 @@ product page)
 </ul>
 
 <h4>SPH-A840 on Telus (Canada)</h4>
-BitPim support the phonebook and calendar on this phone.  Groups are
-not read or restored.  Email address and "Other" entries no saved to
-phone.  The default number for a given contactx may sometimes change
+BitPim supports the phonebook and calendar on this phone.  Groups are
+not read or restored.  Email addresses and "Other" entries are not saved to
+the phone.  The default number for a given contact may sometimes change
 on saving the phonebook.
 
 <h4>SPH-A460</h4>
