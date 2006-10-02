@@ -213,9 +213,9 @@ in order to try and track down the fragility issues and work around them.
 </tr>
 
 <tr>
-<td>Samsung
-<td>SPH-N400
-<td>Kindly loaned by URL(http://www.craytonelectronics.com/,Crayton Electronics).
+<td>Samsung</td>
+<td><font color="blue">SPH-N400</font></td>
+<td>Kindly loaned by URL(http://www.craytonelectronics.com/,Crayton Electronics).</td>
 </tr>
 
 <tr>
@@ -239,8 +239,20 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Sanyo
-<td>SCP-5500 (VM4500)
+<td><FONT COLOR="black">SCP-5500 (VM4500)</FONT>
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
+</tr>
+
+<tr>
+<td>Sanyo</td>
+<td><font color="blue">SCP-5600</font></td>
+<td>Anonymous</td>
+</tr>
+
+<tr>
+<td>Sanyo</td>
+<td><font color="blue">SCP-6600 (Katana)</font></td>
+<td>Personal phone</td>
 </tr>
 
 <tr>
@@ -251,14 +263,14 @@ and URL(http://www.rapidigm.com/,Rapidigm).
 </tr>
 
 <tr>
-<td>Sanyo
-<td>PM-8200
-<td>Personal phone.
+<td>Sanyo</td>
+<td><font color="blue">PM-8200</font></td>
+<td>Kindly donated by URL(http://www.rapidigm.com/,Rapidigm)</td>
 </tr>
 
 <tr>
 <td>Sanyo
-<td>MM-8300
+<td><FONT COLOR="black">MM-8300</FONT>
 <td>Kindly loaned by the folks at URL(http://www.ringerpost.com/,Ringerpost.com).
 </tr>
 
