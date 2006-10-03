@@ -30,8 +30,8 @@ def sanitycheck():
 
     print "wxPython version",
     import wx
-    if wx.VERSION[:4]!=(2,6,3,2):
-        raise Exception("Should be wxPython 2.6.3.2.  This is "+`wx.VERSION`)
+    if wx.VERSION[:4]!=(2,6,3,3):
+        raise Exception("Should be wxPython 2.6.3.3.  This is "+`wx.VERSION`)
     print "  OK"
 
     print "wxPython is unicode build",
