@@ -6,9 +6,6 @@ We appreciate <a href="contributing.htm#phoneloan">phone loans</a>.
 <p>Phones that are listed here, but not in the list of supported phones are
 still being worked on.  URL(http://bitpim.org/papers/phonespecs/,How to get phonespecs)
 
-<P><FONT COLOR="blue">BLUE</FONT>: Still available to developers.
-<P>BLACK: No longer available to developers.
-
 <p><table width="100%" border=1>
 <tr>
 <th>Manufacturer
@@ -51,14 +48,14 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>LG
-<td><FONT COLOR="blue">G4015</FONT>
+<td>G4015
 <td>Kindly donated by Rodney Myers.
 </tr>
 
 
 <tr>
 <td>LG
-<td><FONT COLOR="blue">VX-4400</FONT>
+<td>VX-4400
 <td>Personal phone.
 </tr>
 
@@ -70,7 +67,7 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>LG
-<td><FONT COLOR="blue">VX-4650</FONT>
+<td>VX-4650
 <td>Personal phone.
 </tr>
 
@@ -87,20 +84,8 @@ in order to try and track down the fragility issues and work around them.
 </tr>
 
 <tr>
-<td>LG
-<td>VX-8100
-<td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
-</tr>
-
-<tr>
-<td>LG
-<td>VX-9800
-<td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
-</tr>
-
-<tr>
 <td>Motorola
-<td><FONT COLOR="blue">V60c</FONT>
+<td>V60c
 <td>Kindly donated by Rob Ross.
 </tr>
 
@@ -118,13 +103,13 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Motorola
-<td><FONT COLOR="blue">V710</FONT>
+<td>V710
 <td>Kindly loaned by URL(http://www.Ringarama.com/,Ringarama).
 </tr>
 
 <tr>
 <td>Motorola
-<td><FONT COLOR="blue">T720</FONT>
+<td>T720
 <td>Kindly loaned by URL(http://www.Ringarama.com/,Ringarama).
 </tr>
 
@@ -172,31 +157,19 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Samsung
-<td><FONT COLOR="blue">SCH-A310</FONT>
+<td>SCH-A310
 <td>Personal phone.
 </tr>
 
 <tr>
 <td>Samsung
-<td>SCH-A650
+<td>SCH-A670
 <td>Personal phone.
 </tr>
 
 <tr>
 <td>Samsung
-<td><FONT COLOR="blue">SCH-A670</FONT>
-<td>Personal phone.
-</tr>
-
-<tr>
-<td>Samsung
-<td>SCH-A790
-<td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
-</tr>
-
-<tr>
-<td>Samsung
-<td><FONT COLOR="blue">SCH-A950</FONT>
+<td>SCH-A950
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
 </tr>
 
@@ -213,9 +186,9 @@ in order to try and track down the fragility issues and work around them.
 </tr>
 
 <tr>
-<td>Samsung</td>
-<td><font color="blue">SPH-N400</font></td>
-<td>Kindly loaned by URL(http://www.craytonelectronics.com/,Crayton Electronics).</td>
+<td>Samsung
+<td>SPH-N400
+<td>Kindly loaned by URL(http://www.craytonelectronics.com/,Crayton Electronics).
 </tr>
 
 <tr>
@@ -230,7 +203,6 @@ in order to try and track down the fragility issues and work around them.
 <td>Kindly loaned by URL(http://www.rapidigm.com/,Rapidigm).
 </tr>
 
-
 <tr>
 <td>Sanyo
 <td>SCP-5400
@@ -239,20 +211,8 @@ in order to try and track down the fragility issues and work around them.
 
 <tr>
 <td>Sanyo
-<td><FONT COLOR="black">SCP-5500 (VM4500)</FONT>
+<td>SCP-5500 (VM4500)
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
-</tr>
-
-<tr>
-<td>Sanyo</td>
-<td><font color="blue">SCP-5600</font></td>
-<td>Anonymous</td>
-</tr>
-
-<tr>
-<td>Sanyo</td>
-<td><font color="blue">SCP-6600 (Katana)</font></td>
-<td>Personal phone</td>
 </tr>
 
 <tr>
@@ -263,14 +223,14 @@ and URL(http://www.rapidigm.com/,Rapidigm).
 </tr>
 
 <tr>
-<td>Sanyo</td>
-<td><font color="blue">PM-8200</font></td>
-<td>Kindly donated by URL(http://www.rapidigm.com/,Rapidigm)</td>
+<td>Sanyo
+<td>PM-8200
+<td>Personal phone.
 </tr>
 
 <tr>
 <td>Sanyo
-<td><FONT COLOR="black">MM-8300</FONT>
+<td>MM-8300
 <td>Kindly loaned by the folks at URL(http://www.ringerpost.com/,Ringerpost.com).
 </tr>
 
@@ -282,7 +242,7 @@ and URL(http://www.rapidigm.com/,Rapidigm).
 
 <tr>
 <td>Palm
-<td><FONT COLOR="blue">Treo 650</FONT>
+<td>Treo 650
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
 </tr>
 
