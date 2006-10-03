@@ -132,6 +132,10 @@ _phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
                            'carrier': [c_sprint],
                            'brand': b_sanyo,
                            },
+              'SCP-6600 (Katana)': { 'module': 'com_sanyo6600',
+                                     'carrier': [c_sprint],
+                                     'brand': b_sanyo,
+                                     },
               'MM-7400': { 'module': 'com_sanyo7400',
                            'carrier': [c_sprint],
                            'brand': b_sanyo,
@@ -305,10 +309,6 @@ if __debug__:
                                       'brand': b_samsung,
                                       'carrier': [c_sprint],
                                       },
-                        'SCP-6600 (Katana)': { 'module': 'com_sanyo6600',
-                                     'carrier': [c_sprint],
-                                     'brand': b_sanyo,
-                                     },
                         })
 
 # update the module path

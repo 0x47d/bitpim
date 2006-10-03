@@ -41,7 +41,9 @@ class Phone(com_sanyo8300.Phone):
 
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
-        )    
+        )
+    wallpaperexts=(".jpg", ".png", ".mp4", ".3g2",".JPG")
+
 
     protocolclass=p_sanyo6600
     serialsname='scp6600'
@@ -63,12 +65,6 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def getfundamentals(self, results):
-        req=self.protocolclass.phonebookentry()
-        for slot in range(10):
-            req.slot=slot
-            res=self.sendpbcommand(req, self.protocolclass.phonebookslotresponse)
-
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):
 
@@ -85,17 +81,17 @@ class Profile(parentprofile):
     deviceclasses=("serial",)
     
     _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        #('phonebook', 'read', None),  # all phonebook reading
+        #('calendar', 'read', None),   # all calendar reading
+        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         #('wallpaper', 'write', 'MERGE'),
         #('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         #('call_history', 'read', None),# all call history list reading
-        ('sms', 'read', None), # Read sms messages
-        ('todo', 'read', None), # Read todos
+        #('sms', 'read', None), # Read sms messages
+        #('todo', 'read', None), # Read todos
     )
 
     def __init__(self):
