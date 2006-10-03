@@ -24,6 +24,9 @@ new_fileopen_flag_create=1
 
 import com_brew
 
+DEFAULT_PHONE_ENCODING='ascii'
+PHONE_ENCODING=DEFAULT_PHONE_ENCODING
+
 %}
 
 # Note that we don't include the trailing CRC and 7f
@@ -42,7 +45,8 @@ PACKET responseheader:
 PACKET readfilerequest:
     * requestheader {'command': 0x04} +header
     1 UINT {'constant': 0} +blocknumber
-    * USTRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename
 
 PACKET readfileresponse:
     * responseheader header
@@ -70,7 +74,8 @@ PACKET writefilerequest:
     1 UINT {'constant': 1} +unknown1
     4 UINT filesize
     4 UINT {'constant': 0x000100ff} +unknown2 "probably file attributes"
-    * USTRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename
     2 UINT {'value': len(self.data)} +*datalen
     * DATA data
         
@@ -84,7 +89,8 @@ PACKET writefileblockrequest:
 PACKET listdirectoriesrequest:
     "Lists the subdirectories of dirname"
     * requestheader {'command': 0x02} +header
-    * USTRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET listdirectoriesresponse:
     * responseheader header
@@ -93,13 +99,14 @@ PACKET listdirectoriesresponse:
         # Samsung A620 has garbage from this point on if numentries==0
         2 UINT datalen
         * LIST {'length': self.numentries} items:
-            * USTRING subdir
+            * USTRING { 'encoding': PHONE_ENCODING } subdir
     
 PACKET listfilerequest:
     "This gets one directory entry (files only) at a time"
     * requestheader {'command': 0x0b} +header
     4 UINT entrynumber
-    * USTRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET listfileresponse:
     * responseheader header
@@ -110,24 +117,28 @@ PACKET listfileresponse:
     4 UNKNOWN unknown2
     * com_brew.SPURIOUSZERO spuriouszero  "on some models there is a zero here"
     1 UINT dirnamelen "which portion of the filename is the directory, including the last /"
-    * USTRING {'terminator': None, 'pascal': True} filename 
+    * USTRING {'terminator': None, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename 
 
 PACKET listdirectoryrequest:
     "This gets one directory entry (directory only) at a time"
     * requestheader {'command': 0x0a} +header
     4 UINT entrynumber
-    * USTRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET listdirectoryresponse:
     * responseheader header
     4 UINT entrynumber  
     17 UNKNOWN unknown1  "probably the directory attributes"
-    * USTRING {'terminator': None, 'pascal': True} subdir 
+    * USTRING {'terminator': None, 'pascal': True,
+               'encoding': PHONE_ENCODING } subdir 
 
 PACKET statfilerequest:
     "Get the status of the file"
     * requestheader { 'command': 7 } +header
-    * USTRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename
 
 PACKET statfileresponse:
     * responseheader header
@@ -137,15 +148,18 @@ PACKET statfileresponse:
     
 PACKET mkdirrequest:
     * requestheader {'command': 0x00} +header
-    * USTRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET rmdirrequest:
     * requestheader {'command': 0x01} +header
-    * USTRING {'terminator': 0, 'pascal': True} dirname
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET rmfilerequest:
     * requestheader {'command': 0x06} +header
-    * USTRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename
 
 PACKET memoryconfigrequest:
     * requestheader {'command': 0x0c} +header
@@ -208,7 +222,8 @@ PACKET setfileattrrequest:
     * requestheader { 'command': 8 } +header
     4 UINT {'constant': 0x000100ff} +unknown "probably file attributes"
     4 UINT date  # in GPS time
-    * USTRING {'terminator': 0, 'pascal': True} filename
+    * USTRING {'terminator': 0, 'pascal': True,
+               'encoding': PHONE_ENCODING } filename
 
 PACKET data:
     * DATA bytes
@@ -235,7 +250,8 @@ PACKET new_openfilerequest:
     * new_requestheader {'command': 0x02} +header
     4 UINT mode # 0=read, 0x41=write
     4 UINT flags # 0=open_existing, 1=create
-    * USTRING {'terminator': 0} filename
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } filename
         
 PACKET new_openfileresponse:
     * new_responseheader header
@@ -284,7 +300,8 @@ PACKET new_rmfilerequest:
     but the root character / is not required at the start of the name.
     """
     * new_requestheader {'command': 0x08} +header
-    * USTRING {'terminator': 0} filename
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } filename
     1 UINT {'constant':1} +dunno
 
 PACKET new_mkdirrequest:
@@ -293,18 +310,21 @@ PACKET new_mkdirrequest:
     """
     * new_requestheader {'command': 0x09} +header
     2 UINT {'constant': 0x01ff} +unknown
-    * USTRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET new_rmdirrequest:
     """Remove directory, full path should be provided, but the
     root character / is not required at the start of the name.
     """
     * new_requestheader {'command': 0x0a} +header
-    * USTRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET new_opendirectoryrequest:
     * new_requestheader {'command': 0x0b} +header
-    * USTRING {'terminator': 0} dirname
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } dirname
 
 PACKET new_opendirectoryresponse:
     * new_responseheader header
@@ -326,7 +346,8 @@ PACKET new_listentryresponse:
     4 UINT size # garbage for directories
     8 UINT pad2 # zero
     4 UINT date # LG date format, date file created
-    * USTRING {'terminator': 0} entryname
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } entryname
 
 PACKET new_closedirectoryrequest:
     * new_requestheader {'command': 0x0d} +header
@@ -339,7 +360,8 @@ PACKET new_closedirectoryresponse:
 PACKET new_statfilerequest:
     "Get the status of the file"
     * new_requestheader { 'command': 0x0f } +header
-    * USTRING {'terminator': 0} filename
+    * USTRING {'terminator': 0,
+               'encoding': PHONE_ENCODING } filename
 
 PACKET new_statfileresponse:
     * new_responseheader header

@@ -316,7 +316,8 @@ class RealBrewProtocol:
     _brewepochtounix=315964800
 
     def __init__(self):
-        pass
+        # reset default encoding
+        p_brew.PHONE_ENCODING=p_brew.DEFAULT_PHONE_ENCODING
 
     def getfirmwareinformation(self):
         self.log("Getting firmware information")
@@ -1048,6 +1049,7 @@ class BrewProtocol(RealBrewProtocol):
     RealBrewProtocol and DebugBrewProtocol classes.
     """
     def __init__(self):
+        RealBrewProtocol.__init__(self)
         # if the env var PHONE_FS is set, we're debugging!
         phone_path=os.environ.get('PHONE_FS', None)
         if __debug__ and phone_path:

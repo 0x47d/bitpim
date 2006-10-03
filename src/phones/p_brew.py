@@ -15,6 +15,9 @@ new_fileopen_flag_create=1
 
 import com_brew
 
+DEFAULT_PHONE_ENCODING='ascii'
+PHONE_ENCODING=DEFAULT_PHONE_ENCODING
+
 class requestheader(BaseProtogenClass):
     "The bit in front on all Brew request packets"
     __fields=['commandmode', 'command']
@@ -269,7 +272,7 @@ class readfilerequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_blocknumber=UINT(**{'sizeinbytes': 1, 'constant': 0})
         self.__field_blocknumber.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -313,7 +316,7 @@ class readfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -797,7 +800,7 @@ class writefilerequest(BaseProtogenClass):
         self.__field_filesize.readfrombuffer(buf)
         self.__field_unknown2=UINT(**{'sizeinbytes': 4, 'constant': 0x000100ff})
         self.__field_unknown2.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self.__field_datalen=UINT(**{'sizeinbytes': 2})
         self.__field_datalen.readfrombuffer(buf)
@@ -906,7 +909,7 @@ class writefilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -1158,7 +1161,7 @@ class listdirectoriesrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x02})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1186,7 +1189,7 @@ class listdirectoriesrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1256,7 +1259,7 @@ class listdirectoriesresponse(BaseProtogenClass):
         if self.numentries>0:
             self.__field_datalen=UINT(**{'sizeinbytes': 2})
             self.__field_datalen.readfrombuffer(buf)
-            self.__field_items=LIST(**{'elementclass': _gen_p_brew_96, 'length': self.numentries})
+            self.__field_items=LIST(**{'elementclass': _gen_p_brew_102, 'length': self.numentries})
             self.__field_items.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1307,7 +1310,7 @@ class listdirectoriesresponse(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_items=value
         else:
-            self.__field_items=LIST(value,**{'elementclass': _gen_p_brew_96, 'length': self.numentries})
+            self.__field_items=LIST(value,**{'elementclass': _gen_p_brew_102, 'length': self.numentries})
 
     def __delfield_items(self): del self.__field_items
 
@@ -1326,7 +1329,7 @@ class listdirectoriesresponse(BaseProtogenClass):
 
 
 
-class _gen_p_brew_96(BaseProtogenClass):
+class _gen_p_brew_102(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['subdir']
 
@@ -1335,8 +1338,8 @@ class _gen_p_brew_96(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_brew_96,self).__init__(**dict)
-        if self.__class__ is _gen_p_brew_96:
+        super(_gen_p_brew_102,self).__init__(**dict)
+        if self.__class__ is _gen_p_brew_102:
             self._update(args,dict)
 
 
@@ -1345,7 +1348,7 @@ class _gen_p_brew_96(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_brew_96,self)._update(args,kwargs)
+        super(_gen_p_brew_102,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1353,9 +1356,9 @@ class _gen_p_brew_96(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_brew_96,kwargs)
+            self._complainaboutunusedargs(_gen_p_brew_102,kwargs)
         if len(args):
-            dict2={}
+            dict2={ 'encoding': PHONE_ENCODING }
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_subdir=USTRING(*args,**dict2)
@@ -1374,7 +1377,7 @@ class _gen_p_brew_96(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_subdir=USTRING()
+        self.__field_subdir=USTRING(**{ 'encoding': PHONE_ENCODING })
         self.__field_subdir.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1386,7 +1389,7 @@ class _gen_p_brew_96(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_subdir=value
         else:
-            self.__field_subdir=USTRING(value,)
+            self.__field_subdir=USTRING(value,**{ 'encoding': PHONE_ENCODING })
 
     def __delfield_subdir(self): del self.__field_subdir
 
@@ -1454,7 +1457,7 @@ class listfilerequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 4})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1495,7 +1498,7 @@ class listfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1579,7 +1582,7 @@ class listfileresponse(BaseProtogenClass):
         self.__field_spuriouszero.readfrombuffer(buf)
         self.__field_dirnamelen=UINT(**{'sizeinbytes': 1})
         self.__field_dirnamelen.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': None, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1695,7 +1698,7 @@ class listfileresponse(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': None, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -1771,7 +1774,7 @@ class listdirectoryrequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_entrynumber=UINT(**{'sizeinbytes': 4})
         self.__field_entrynumber.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1812,7 +1815,7 @@ class listdirectoryrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -1881,7 +1884,7 @@ class listdirectoryresponse(BaseProtogenClass):
         self.__field_entrynumber.readfrombuffer(buf)
         self.__field_unknown1=UNKNOWN(**{'sizeinbytes': 17})
         self.__field_unknown1.readfrombuffer(buf)
-        self.__field_subdir=USTRING(**{'terminator': None, 'pascal': True})
+        self.__field_subdir=USTRING(**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_subdir.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1932,7 +1935,7 @@ class listdirectoryresponse(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_subdir=value
         else:
-            self.__field_subdir=USTRING(value,**{'terminator': None, 'pascal': True})
+            self.__field_subdir=USTRING(value,**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_subdir(self): del self.__field_subdir
 
@@ -2000,7 +2003,7 @@ class statfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{ 'command': 7 })
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2028,7 +2031,7 @@ class statfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -2214,7 +2217,7 @@ class mkdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x00})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2242,7 +2245,7 @@ class mkdirrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -2307,7 +2310,7 @@ class rmdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x01})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_dirname=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2335,7 +2338,7 @@ class rmdirrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_dirname=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -2400,7 +2403,7 @@ class rmfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=requestheader(**{'command': 0x06})
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2428,7 +2431,7 @@ class rmfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -3598,7 +3601,7 @@ class setfileattrrequest(BaseProtogenClass):
         self.__field_unknown.readfrombuffer(buf)
         self.__field_date=UINT(**{'sizeinbytes': 4})
         self.__field_date.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True})
+        self.__field_filename=USTRING(**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3655,7 +3658,7 @@ class setfileattrrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True})
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'pascal': True,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -4024,7 +4027,7 @@ class new_openfilerequest(BaseProtogenClass):
         self.__field_mode.readfrombuffer(buf)
         self.__field_flags=UINT(**{'sizeinbytes': 4})
         self.__field_flags.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -4078,7 +4081,7 @@ class new_openfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -5000,7 +5003,7 @@ class new_rmfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x08})
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self.__field_dunno=UINT(**{'sizeinbytes': 1, 'constant':1})
         self.__field_dunno.readfrombuffer(buf)
@@ -5030,7 +5033,7 @@ class new_rmfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 
@@ -5121,7 +5124,7 @@ class new_mkdirrequest(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_unknown=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
         self.__field_unknown.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5165,7 +5168,7 @@ class new_mkdirrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5234,7 +5237,7 @@ class new_rmdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x0a})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5262,7 +5265,7 @@ class new_rmdirrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5327,7 +5330,7 @@ class new_opendirectoryrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x0b})
         self.__field_header.readfrombuffer(buf)
-        self.__field_dirname=USTRING(**{'terminator': 0})
+        self.__field_dirname=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5355,7 +5358,7 @@ class new_opendirectoryrequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_dirname=value
         else:
-            self.__field_dirname=USTRING(value,**{'terminator': 0})
+            self.__field_dirname=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_dirname(self): del self.__field_dirname
 
@@ -5655,7 +5658,7 @@ class new_listentryresponse(BaseProtogenClass):
         self.__field_pad2.readfrombuffer(buf)
         self.__field_date=UINT(**{'sizeinbytes': 4})
         self.__field_date.readfrombuffer(buf)
-        self.__field_entryname=USTRING(**{'terminator': 0})
+        self.__field_entryname=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_entryname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -5784,7 +5787,7 @@ class new_listentryresponse(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_entryname=value
         else:
-            self.__field_entryname=USTRING(value,**{'terminator': 0})
+            self.__field_entryname=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_entryname(self): del self.__field_entryname
 
@@ -6038,7 +6041,7 @@ class new_statfilerequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{ 'command': 0x0f })
         self.__field_header.readfrombuffer(buf)
-        self.__field_filename=USTRING(**{'terminator': 0})
+        self.__field_filename=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -6066,7 +6069,7 @@ class new_statfilerequest(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_filename=value
         else:
-            self.__field_filename=USTRING(value,**{'terminator': 0})
+            self.__field_filename=USTRING(value,**{'terminator': 0,               'encoding': PHONE_ENCODING })
 
     def __delfield_filename(self): del self.__field_filename
 

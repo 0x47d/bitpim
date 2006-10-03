@@ -75,6 +75,7 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
 
     def __init__(self, logtarget, commport):
         com_lgvx8100.Phone.__init__(self, logtarget, commport)
+        p_brew.PHONE_ENCODING=self.protocolclass.PHONE_ENCODING
         self.mode=self.MODENONE
 
     def get_esn(self, data=None):
