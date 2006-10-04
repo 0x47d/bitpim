@@ -48,17 +48,24 @@ class Phone(com_sanyo8300.Phone):
     protocolclass=p_sanyo6600
     serialsname='scp6600'
 
-    builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
-                       '', '', '', '', '', '', '',
-                       'Tschaik.Swanlake', 'Satie Gymnop.#1',
-                       'Hungarian Dance', 'Beethoven Sym.5', 'Greensleeves',
-                       'Foster Ky. Home', 'The Moment', 'Asian Jingle',
-                       'Disco')
+                       '', '', '', '', 
+                       'Requiem:Dies Irae', 'Minute Waltz', 'Hungarian Dance',
+                       'Military March', 'Ten Little Indians',
+                       'Head,Shoulders,Knees&Toes', 'The Moment', 'Asian Jingle',
+                       'Kung-fu','','','','','','','','','','','','','','','','','',
+                       '','','','','','',
+                       'Voice Alarm')
 
+
+    # f1ff  None    65521
+    # FFF2: Vibrate 65522
     calendar_defaultringtone=0
     calendar_defaultcaringtone=0
+    calendar_toneoffset=33
+    calendar_tonerange=xrange(4,100)
 
     def __init__(self, logtarget, commport):
         com_sanyo8300.Phone.__init__(self, logtarget, commport)
@@ -82,15 +89,15 @@ class Profile(parentprofile):
     
     _supportedsyncs=(
         #('phonebook', 'read', None),  # all phonebook reading
-        #('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'read', None),   # all calendar reading
         #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         #('wallpaper', 'write', 'MERGE'),
         #('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-        #('call_history', 'read', None),# all call history list reading
-        #('sms', 'read', None), # Read sms messages
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None), # Read sms messages
         #('todo', 'read', None), # Read todos
     )
 

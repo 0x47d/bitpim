@@ -55,3 +55,17 @@ PACKET phonebookslotrequest:
 
 PACKET phonebookslotresponse:
     * UNKNOWN data
+
+PACKET historyresponse:
+    * sanyoheader header
+    * historyentry entry
+    428 UNKNOWN pad
+
+PACKET historyentry:
+    2 UINT slot
+    4 GPSDATE date
+    1 UINT phonenumlen
+    48 USTRING {'raiseonunterminatedread': False} phonenum
+    16 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
+    1 UNKNOWN dunno2
+    1 UNKNOWN dunno3

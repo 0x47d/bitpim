@@ -428,3 +428,279 @@ class phonebookslotresponse(BaseProtogenClass):
 
 
 
+class historyresponse(BaseProtogenClass):
+    __fields=['header', 'entry', 'pad']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(historyresponse,self).__init__(**dict)
+        if self.__class__ is historyresponse:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(historyresponse,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(historyresponse,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_header.writetobuffer(buf)
+        self.__field_entry.writetobuffer(buf)
+        self.__field_pad.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_header=sanyoheader()
+        self.__field_header.readfrombuffer(buf)
+        self.__field_entry=historyentry()
+        self.__field_entry.readfrombuffer(buf)
+        self.__field_pad=UNKNOWN(**{'sizeinbytes': 428})
+        self.__field_pad.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_header(self):
+        return self.__field_header.getvalue()
+
+    def __setfield_header(self, value):
+        if isinstance(value,sanyoheader):
+            self.__field_header=value
+        else:
+            self.__field_header=sanyoheader(value,)
+
+    def __delfield_header(self): del self.__field_header
+
+    header=property(__getfield_header, __setfield_header, __delfield_header, None)
+
+    def __getfield_entry(self):
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,historyentry):
+            self.__field_entry=value
+        else:
+            self.__field_entry=historyentry(value,)
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def __getfield_pad(self):
+        return self.__field_pad.getvalue()
+
+    def __setfield_pad(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_pad=value
+        else:
+            self.__field_pad=UNKNOWN(value,**{'sizeinbytes': 428})
+
+    def __delfield_pad(self): del self.__field_pad
+
+    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('header', self.__field_header, None)
+        yield ('entry', self.__field_entry, None)
+        yield ('pad', self.__field_pad, None)
+
+
+
+
+class historyentry(BaseProtogenClass):
+    __fields=['slot', 'date', 'phonenumlen', 'phonenum', 'name', 'dunno2', 'dunno3']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(historyentry,self).__init__(**dict)
+        if self.__class__ is historyentry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(historyentry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(historyentry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_slot.writetobuffer(buf)
+        self.__field_date.writetobuffer(buf)
+        self.__field_phonenumlen.writetobuffer(buf)
+        self.__field_phonenum.writetobuffer(buf)
+        self.__field_name.writetobuffer(buf)
+        self.__field_dunno2.writetobuffer(buf)
+        self.__field_dunno3.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_slot=UINT(**{'sizeinbytes': 2})
+        self.__field_slot.readfrombuffer(buf)
+        self.__field_date=GPSDATE(**{'sizeinbytes': 4})
+        self.__field_date.readfrombuffer(buf)
+        self.__field_phonenumlen=UINT(**{'sizeinbytes': 1})
+        self.__field_phonenumlen.readfrombuffer(buf)
+        self.__field_phonenum=USTRING(**{'sizeinbytes': 48, 'raiseonunterminatedread': False})
+        self.__field_phonenum.readfrombuffer(buf)
+        self.__field_name=USTRING(**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+        self.__field_name.readfrombuffer(buf)
+        self.__field_dunno2=UNKNOWN(**{'sizeinbytes': 1})
+        self.__field_dunno2.readfrombuffer(buf)
+        self.__field_dunno3=UNKNOWN(**{'sizeinbytes': 1})
+        self.__field_dunno3.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_slot(self):
+        return self.__field_slot.getvalue()
+
+    def __setfield_slot(self, value):
+        if isinstance(value,UINT):
+            self.__field_slot=value
+        else:
+            self.__field_slot=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_slot(self): del self.__field_slot
+
+    slot=property(__getfield_slot, __setfield_slot, __delfield_slot, None)
+
+    def __getfield_date(self):
+        return self.__field_date.getvalue()
+
+    def __setfield_date(self, value):
+        if isinstance(value,GPSDATE):
+            self.__field_date=value
+        else:
+            self.__field_date=GPSDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_date(self): del self.__field_date
+
+    date=property(__getfield_date, __setfield_date, __delfield_date, None)
+
+    def __getfield_phonenumlen(self):
+        return self.__field_phonenumlen.getvalue()
+
+    def __setfield_phonenumlen(self, value):
+        if isinstance(value,UINT):
+            self.__field_phonenumlen=value
+        else:
+            self.__field_phonenumlen=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_phonenumlen(self): del self.__field_phonenumlen
+
+    phonenumlen=property(__getfield_phonenumlen, __setfield_phonenumlen, __delfield_phonenumlen, None)
+
+    def __getfield_phonenum(self):
+        return self.__field_phonenum.getvalue()
+
+    def __setfield_phonenum(self, value):
+        if isinstance(value,USTRING):
+            self.__field_phonenum=value
+        else:
+            self.__field_phonenum=USTRING(value,**{'sizeinbytes': 48, 'raiseonunterminatedread': False})
+
+    def __delfield_phonenum(self): del self.__field_phonenum
+
+    phonenum=property(__getfield_phonenum, __setfield_phonenum, __delfield_phonenum, None)
+
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=USTRING(value,**{'sizeinbytes': 16, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_dunno2(self):
+        return self.__field_dunno2.getvalue()
+
+    def __setfield_dunno2(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_dunno2=value
+        else:
+            self.__field_dunno2=UNKNOWN(value,**{'sizeinbytes': 1})
+
+    def __delfield_dunno2(self): del self.__field_dunno2
+
+    dunno2=property(__getfield_dunno2, __setfield_dunno2, __delfield_dunno2, None)
+
+    def __getfield_dunno3(self):
+        return self.__field_dunno3.getvalue()
+
+    def __setfield_dunno3(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_dunno3=value
+        else:
+            self.__field_dunno3=UNKNOWN(value,**{'sizeinbytes': 1})
+
+    def __delfield_dunno3(self): del self.__field_dunno3
+
+    dunno3=property(__getfield_dunno3, __setfield_dunno3, __delfield_dunno3, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('slot', self.__field_slot, None)
+        yield ('date', self.__field_date, None)
+        yield ('phonenumlen', self.__field_phonenumlen, None)
+        yield ('phonenum', self.__field_phonenum, None)
+        yield ('name', self.__field_name, None)
+        yield ('dunno2', self.__field_dunno2, None)
+        yield ('dunno3', self.__field_dunno3, None)
+
+
+
+
