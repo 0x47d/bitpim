@@ -322,6 +322,10 @@
         <param name="Local" value="phones-developer.htm">
         </OBJECT>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="What phones do the developers want?">
+        <param name="Local" value="phones-requested.htm">
+        </OBJECT>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Audiovox CDM8900">
         <param name="Local" value="phone-audiovoxcdm8900.htm">
         </OBJECT>
