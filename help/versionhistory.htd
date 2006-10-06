@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.09">Changes in 0.9.09</a></h2>
+    <ul>
+      <li>Added file infor support for WMA file type.
+    </ul>
+
    <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
     <ul>
       <li>Added Sanyo MM-5600 support.
