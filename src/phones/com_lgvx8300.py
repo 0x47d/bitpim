@@ -163,6 +163,16 @@ class Profile(parentprofile):
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 
+    def QueryAudio(self, origin, currentextension, afi):
+        # we don't modify any of these
+        if afi.format in ("MIDI", "QCP", "PMD", "WMA"):
+            return currentextension, afi
+        # examine mp3
+        if afi.format=="MP3":
+            if afi.channels==1 and 8<=afi.bitrate<=64 and 16000<=afi.samplerate<=22050:
+                return currentextension, afi
+        # convert it
+        return ("mp3", fileinfo.AudioFileInfo(afi, **{'format': 'MP3', 'channels': 1, 'bitrate': 32, 'samplerate': 22050}))
 
     def __init__(self):
         parentprofile.__init__(self)

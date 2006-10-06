@@ -373,7 +373,7 @@ class Profile(parentprofile):
         _max_size=self.RINGTONE_LIMITS['MAXSIZE']
         setattr(afi, 'MAXSIZE', _max_size)
         # we don't modify any of these
-        if afi.format in ("MIDI", "QCP", "PMD"):
+        if afi.format in ("MIDI", "QCP", "PMD", "WMA"):
             return currentextension, afi
         # examine mp3
         if afi.format=="MP3":

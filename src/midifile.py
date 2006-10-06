@@ -8,7 +8,6 @@
 ### $Id$
 
 import common
-import fileinfo
 
 
 module_debug=False

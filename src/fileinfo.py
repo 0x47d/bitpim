@@ -10,10 +10,12 @@
 "Returns information about files"
 
 import os
+import struct
 
 import common
 
 import midifile
+import wma_file
 
 class FailedFile:
     data=""
@@ -52,22 +54,22 @@ class SafeFileWrapper:
     def GetLSBUint32(self, offset):
         v=self.GetBytes(offset, 4)
         if v is None: return v
-        return ord(v[0])+(ord(v[1])<<8)+(ord(v[2])<<16)+(ord(v[3])<<24)
+        return struct.unpack('<L', v)[0]
 
     def GetLSBUint16(self, offset):
         v=self.GetBytes(offset, 2)
         if v is None: return v
-        return ord(v[0])+(ord(v[1])<<8)
+        return struct.unpack('<H', v)[0]
 
     def GetMSBUint32(self, offset):
         v=self.GetBytes(offset, 4)
         if v is None: return v
-        return ord(v[3])+(ord(v[2])<<8)+(ord(v[1])<<16)+(ord(v[0])<<24)
+        return struct.unpack('>L', v)[0]
 
     def GetMSBUint16(self, offset):
         v=self.GetBytes(offset, 2)
         if v is None: return v
-        return ord(v[1])+(ord(v[0])<<8)
+        return struct.unpack('>H', v)[0]
 
     def GetByte(self, offset):
         v=self.GetBytes(offset,1)
@@ -832,6 +834,39 @@ def fmt_PCM(afi):
 def getpcmfileinfo(filename):
     f=SafeFileWrapper(filename)
     return idaudio_PCM(f)
+
+# WMA file support
+def idaudio_WMA(f):
+    "Identify a WMA file"
+    try:
+        _wma=wma_file.WMA_File(f)
+        if not _wma.valid:
+            return None
+        d={ 'format': 'WMA',
+            'mimetypes': ['audio/x-ms-wma'],
+            'duration': _wma.play_duration,
+            'title': _wma.title,
+            'artist': _wma.author,
+            'album': _wma.album,
+            'genre': _wma.genre,
+            '_longdescription': fmt_WMA,
+            }
+        return AudioFileInfo(f, **d)
+    except:
+        if __debug__:
+            raise
+
+def fmt_WMA(afi):
+    res=['WMA', 'Duration: %.2f'%afi.duration ]
+    if afi.title:
+        res.append('Title: %s'%afi.title)
+    if afi.artist:
+        res.append('Artist: %s'%afi.artist)
+    if afi.album:
+        res.append('Album: %s'%afi.album)
+    if afi.genre:
+        res.append('Genre: %s'%afi.genre)
+    return '\n'.join(res)
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 def identify_audiofile(filename):

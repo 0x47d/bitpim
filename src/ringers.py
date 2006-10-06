@@ -50,7 +50,7 @@ class RingerView(fileview.FileView):
         self.mainwindow=mainwindow
         self._data={self.database_key: {}}
         fileview.FileView.__init__(self, mainwindow, parent, media_root, "ringtone-watermark")
-        self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3;*.pmd|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|PMD/CMX files|*.pmd|All files|*.*"
+        self.wildcard="Audio files|*.wav;*.mid;*.qcp;*.mp3;*.pmd;*.wma|Midi files|*.mid|Purevoice files|*.qcp|MP3 files|*.mp3|WMA files|*.wma|PMD/CMX files|*.pmd|All files|*.*"
         self.thedir=self.mainwindow.ringerpath
         self.modified=False
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_RINGTONES)
