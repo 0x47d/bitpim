@@ -1,9 +1,5 @@
 #include "pagestart.h"
 
-   <h2><a name="0.9.09">Changes in 0.9.09</a></h2>
-    <ul>
-      <li>Added file infor support for WMA file type.
-    </ul>
 
    <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
     <ul>
@@ -18,6 +14,7 @@
       <li>Support for Telus SPH-A840, phonebook and calendar only, added.
       <li>Sanyo SPH-6600 (Katana): Phonebook and wallpaper/ringtone writing
 	not supported.  Camera images read with wallpaper. 
+      <li>Added file infor support for WMA file type.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
