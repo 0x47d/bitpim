@@ -1002,7 +1002,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         # do exceptions
         cal_ex=exceptions.get(event.pos, [])
         for e in cal_ex:
-            rep.add_suppressed(*e)
+            try:
+                rep.add_suppressed(*e)
+            except ValueError:
+                # illegal exception date
+                pass
+            except:
+                if __debug__:
+                    raise
         return rep
 
     def _get_voice_id(self, event, entry):
@@ -1010,35 +1017,43 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             entry.voice=event.voiceid
 
     def _build_cal_entry(self, event, exceptions, ringtone_index):
-        # return a copy of bpcalendar object based on my values
-        # general fields
-        entry=bpcalendar.CalendarEntry()
-        entry.start=event.start
         try:
-            entry.end=event.end
-        # some phones (e.g. lx5550) have unreliable end dates for "forever" events
+            # return a copy of bpcalendar object based on my values
+            # general fields
+            entry=bpcalendar.CalendarEntry()
+            entry.start=event.start
+            try:
+                entry.end=event.end
+            # some phones (e.g. lx5550) have unreliable end dates for "forever" events
+            except ValueError:
+                entry.end=self.protocolclass.CAL_REPEAT_DATE
+            entry.desc_loc=event.description
+            # check for allday event
+            if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
+                entry.allday=True
+            # alarm
+            if event.alarmtype:
+                entry.alarm=event.alarmhours*60+event.alarmminutes
+            # ringtone
+            rt_idx=event.ringtone
+            # hack to account for the VX4650 weird ringtone setup
+            if rt_idx<50:
+                # 1st part of builtin ringtones, need offset by 1
+                rt_idx+=1
+            entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
+            # voice ID if applicable
+            if self._cal_has_voice_id:
+                self._get_voice_id(event, entry)
+            # repeat info
+            entry.repeat=self._build_cal_repeat(event, exceptions)
+            return entry
         except ValueError:
-            entry.end=self.protocolclass.CAL_REPEAT_DATE
-        entry.desc_loc=event.description
-        # check for allday event
-        if entry.start[3:]==(0, 0) and entry.end[3:]==(23, 59):
-            entry.allday=True
-        # alarm
-        if event.alarmtype:
-            entry.alarm=event.alarmhours*60+event.alarmminutes
-        # ringtone
-        rt_idx=event.ringtone
-        # hack to account for the VX4650 weird ringtone setup
-        if rt_idx<50:
-            # 1st part of builtin ringtones, need offset by 1
-            rt_idx+=1
-        entry.ringtone=ringtone_index.get(rt_idx, {'name': None} )['name']
-        # voice ID if applicable
-        if self._cal_has_voice_id:
-            self._get_voice_id(event, entry)
-        # repeat info
-        entry.repeat=self._build_cal_repeat(event, exceptions)
-        return entry
+            # illegal date/time
+            pass
+        except:
+            # this entry is hosed!
+            if __debug__:
+                raise
 
     def get_cal(self, sch_file, exceptions, ringtone_index):
         res={}
@@ -1046,7 +1061,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             if event.pos==-1:   # blank entry
                 continue
             cal_event=self._build_cal_entry(event, exceptions, ringtone_index)
-            res[cal_event.id]=cal_event
+            if cal_event:
+                res[cal_event.id]=cal_event
         return res
 
     _alarm_info={
