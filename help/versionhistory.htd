@@ -15,6 +15,7 @@
       <li>Sanyo SPH-6600 (Katana): Phonebook and wallpaper/ringtone writing
 	not supported.  Camera images read with wallpaper. 
       <li>Added file infor support for WMA file type.
+      <li>For <B>LG VX</B> phones: ignore invalid calendar events read from phones.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
