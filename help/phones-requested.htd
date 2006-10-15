@@ -28,6 +28,12 @@
 <td>&nbsp;
 </tr>
 
+<tr>
+<td>Sanyo</td>
+<td>SCP-200</td>
+<td>&nbsp;</td>
+</tr>
+
 </table>
 
 #include "pageend.h"
