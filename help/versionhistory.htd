@@ -17,6 +17,7 @@
       <li>Added file infor support for WMA file type.
       <li>For <B>LG VX</B> phones: ignore invalid calendar events read from phones.
       <li>Added the capability to export BitPim calendar data to iCalendar format.
+      <li>Improved display of non-recurrent calendar events that span more than 1 day.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
