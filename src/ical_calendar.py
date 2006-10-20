@@ -11,6 +11,7 @@
 
 # system modules
 import datetime
+import time
 
 # site modules
 
@@ -19,6 +20,7 @@ import bpcalendar
 import bptime
 import common_calendar
 import vcal_calendar as vcal
+import vcard
 
 module_debug=False
 
@@ -246,3 +248,239 @@ class iCalImportCalDialog(vcal.VcalImportCalDialog):
     _filetype_label='iCalendar File:'
     _data_type='iCalendar'
     _import_data_class=iCalendarImportData
+
+#------------------------------------------------------------------------------
+ExportDialogParent=common_calendar.ExportCalendarDialog
+out_line=vcard.out_line
+
+class ExportDialog(ExportDialogParent):
+    _default_file_name="calendar.ics"
+    _wildcards="ICS files|*.ics"
+
+    def __init__(self, parent, title):
+        super(ExportDialog, self).__init__(parent, title)
+
+    def _write_header(self, f):
+        f.write(out_line('BEGIN', None, 'VCALENDAR', None))
+        f.write(out_line('PRODID', None, '-//BitPim//EN', None))
+        f.write(out_line('VERSION', None, '2.0', None))
+        f.write(out_line('METHOD', None, 'PUBLISH', None))
+    def _write_end(self, f):
+        f.write(out_line('END', None, 'VCALENDAR', None))
+
+    def _write_timezone(self, f):
+        # write out the timezone info, return a timezone ID
+        f.write(out_line('BEGIN', None, 'VTIMEZONE', None))
+        _tzid=time.tzname[0].split(' ')[0]
+        f.write(out_line('TZID', None, _tzid, None))
+        _offset_standard=-((time.timezone/3600)*100+time.timezone%3600)
+        _offset_daylight=_offset_standard+100
+        # standard part
+        f.write(out_line('BEGIN', None, 'STANDARD', None))
+        f.write(out_line('DTSTART', None, '20051030T020000', None))
+        f.write(out_line('RRULE', None,
+                         'FREQ=YEARLY;INTERVAL=1;BYDAY=-1SU;BYMONTH=10', None))
+        f.write(out_line('TZOFFSETFROM', None,
+                         '%05d'%_offset_daylight, None))
+        f.write(out_line('TZOFFSETTO', None,
+                         '%05d'%_offset_standard, None))
+        f.write(out_line('END', None, 'STANDARD', None))
+        # daylight part
+        f.write(out_line('BEGIN', None, 'DAYLIGHT', None))
+        f.write(out_line('DTSTART', None, '20060402T020000', None))
+        f.write(out_line('RRULE', None,
+                         'FREQ=YEARLY;INTERVAL=1;BYDAY=1SU;BYMONTH=4', None))
+        f.write(out_line('TZOFFSETFROM', None,
+                         '%05d'%_offset_standard, None))
+        f.write(out_line('TZOFFSETTO', None,
+                         '%05d'%_offset_daylight, None))
+        f.write(out_line('END', None, 'DAYLIGHT', None))
+        # all done
+        f.write(out_line('END', None, 'VTIMEZONE', None))
+        return _tzid
+
+    # support writing to ICS file routines
+    def _write_categories(self, keyword, v, *args):
+        _cats=[x['category'] for x in v]
+        if _cats:
+            return out_line(keyword, None, ','.join(_cats), None)
+    def _write_string(self, keyword, v, *args):
+        if v:
+            return out_line(keyword, None, v, None)
+    def _write_priority(self, keyword, v, *args):
+        if v<1:
+            return
+        return out_line(keyword, None, '%d'%min(v, 9), None)
+    def _write_alarm(self, keyword, v, *args):
+        if v<0:
+            # No Alarm
+            return
+        _res=out_line('BEGIN', None, 'VALARM', None)
+        _res+=out_line('TRIGGER', None,
+                       '-P%dDT%dH%dM'%(v/1440, (v%1440)/60, v%60), None)
+        _res+=out_line('ACTION', None, 'AUDIO', None)
+        _res+=out_line('END', None, 'VALARM', None)
+        return _res
+    def _write_times_single(self, keyword, v, event, tzid):
+        # write the DTSTART/DTEND property for a single
+        # (non-recurrent) event
+        _start=bptime.BPTime(event.start)
+        _end=bptime.BPTime(event.end)
+        if event.allday:
+            # all day event
+            _params=('VALUE=DATE',)
+            _res=out_line('DTSTART', _params,
+                          _start.iso_str(no_time=True), None)
+            _res+=out_line('DTEND', _params,
+                           _end.iso_str(no_time=True), None)
+        else:
+            _params=('TZID=%s'%tzid,)
+            _res=out_line('DTSTART', _params, _start.iso_str(no_seconds=False), None)
+            _res+=out_line('DTEND', _params, _end.iso_str(no_seconds=False), None)
+        return _res
+    def _write_start(self, event, tzid):
+        # write the DTSTART/DURATION property for a recurrent event
+        _start=bptime.BPTime(event.start)
+        _end=bptime.BPTime(event.end)
+        if event.allday:
+            # all day event, can only handle sameday allday event (for now)
+            _date_str=_start.iso_str(no_time=True)
+            _params=('VALUE=DATE',)
+            _res=out_line('DTSTART', _params, _date_str, None)
+            _res+=out_line('DTEND', _params, _date_str, None)
+        else:
+            # can only handle 24hr-long event (for now)
+            _new_end=_start+(_end-_start).seconds
+            _params=('TZID=%s'%tzid,)
+            _res=out_line('DTSTART', _params, _start.iso_str(no_seconds=False), None)
+            _res+=out_line('DTEND',  _params, _new_end.iso_str(no_seconds=False), None)
+        return _res
+    def _write_repeat_daily(self, event, rpt):
+        _value=['FREQ=DAILY']
+        if not event.open_ended():
+            _value.append('UNTIL=%04d%02d%02dT000000Z'%event.end[:3])
+        if rpt.interval:
+            # every nth day
+            _value.append('INTERVAL=%d'%rpt.interval)
+        else:
+            # weekday
+            _value.append('BYDAY=MO,TU,WE,TH,FR')
+        return out_line('RRULE', None, ';'.join(_value), None)
+    _dow_list=(
+        (1, 'SU'), (2, 'MO'), (4, 'TU'), (8, 'WE'), (16, 'TH'),
+        (32, 'FR'), (64, 'SA'))
+    def _write_repeat_weekly(self, event, rpt):
+        _dow=rpt.dow
+        _byday=','.join([x[1] for x in self._dow_list \
+                         if _dow&x[0] ])
+        _value=['FREQ=WEEKLY',
+                'INTERVAL=%d'%rpt.interval,
+                'BYDAY=%s'%_byday]
+        if not event.open_ended():
+            _value.append('UNTIL=%04d%02d%02dT000000Z'%event.end[:3])
+        return out_line('RRULE', None, ';'.join(_value), None)
+    def _write_repeat_monthly(self, event, rpt):
+        _value=['FREQ=MONTHLY',
+                'INTERVAL=%d'%rpt.interval2,
+                ]
+        if not event.open_ended():
+            _value.append('UNTIL=%04d%02d%02dT000000Z'%event.end[:3])
+        _dow=rpt.dow
+        if _dow==0:
+            # every n-day of the month
+            _value.append('BYMONTHDAY=%d'%event.start[2])
+        else:
+            # every n-th day-of-week (ie 1st Monday)
+            for _entry in self._dow_list:
+                if _dow & _entry[0]:
+                    _dow_name=_entry[1]
+                    break
+            if rpt.interval<5:
+                _nth=rpt.interval
+            else:
+                _nth=-1
+            _value.append('BYDAY=%d%s'%(_nth, _dow_name))
+        return out_line('RRULE', None, ';'.join(_value), None)
+    def _write_repeat_yearly(self, event, rpt):
+        _value=['FREQ=YEARLY',
+                'INTERVAL=1',
+                'BYMONTH=%d'%event.start[1],
+                'BYMONTHDAY=%d'%event.start[2],
+                ]
+        if not event.open_ended():
+            _value.append('UNTIL=%04d%02d%02dT000000Z'%event.end[:3])
+        return out_line('RRULE', None, ';'.join(_value), None)
+    def _write_repeat_exceptions(self, event, rpt):
+        # write out the exception dates
+        return out_line('EXDATE', ('VALUE=DATE',),
+                        ','.join([x.iso_str(no_time=True) for x in rpt.suppressed]),
+                        None)
+    def _write_repeat(self, event):
+        _repeat=event.repeat
+        _type=_repeat.repeat_type
+        if _type:
+            _res=getattr(self, '_write_repeat_'+_type, lambda *_: None)(event, _repeat)
+            if _res and _repeat.suppressed:
+                _res+=self._write_repeat_exceptions(event, _repeat)
+            return _res
+    def _write_times_repeat(self, keyword, v, event, tzid):
+        return self._write_start(event, tzid)+self._write_repeat(event)
+    def _write_times(self, keyword, v, event, tzid):
+        # write the START and DURATION property
+        if event.repeat:
+            return self._write_times_repeat(keyword, v, event, tzid)
+        else:
+            return self._write_times_single(keyword, v, event, tzid)
+
+    _field_list=(
+        ('SUMMARY', 'description', _write_string),
+        ('DESCRIPTION', 'notes', _write_string),
+        ('DTSTART', 'start', _write_times),
+        ('LOCATION', 'location', _write_string),
+        ('PRIORITY', 'priority', _write_priority),
+        ('CATEGORIES', 'categories', _write_categories),
+        ('TRIGGER', 'alarm', _write_alarm),
+        )
+
+    def _write_event(self, f, event, tzid):
+        # write out an BitPim Calendar event
+        f.write(out_line('BEGIN', None, 'VEVENT', None))
+        for _entry in self._field_list:
+            _v=getattr(event, _entry[1], None)
+            if _v is not None:
+                _line=_entry[2](self, _entry[0], _v, event, tzid)
+                if _line:
+                    f.write(_line)
+        f.write(out_line('DTSTAMP', None,
+                         '%04d%02d%02dT%02d%02d%02dZ'%time.gmtime()[:6],
+                         None))
+        f.write(out_line('UID', None, event.id, None))
+        f.write(out_line('END', None, 'VEVENT', None))
+    def _export(self):
+        filename=self.filenamectrl.GetValue()
+        try:
+            f=file(filename, 'wt')
+        except:
+            f=None
+        if f is None:
+            dlg=wx.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                 'Export Error')
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+        all_items=self._selection.GetSelection()==0
+        dt=self._start_date.GetValue()
+        range_start=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        dt=self._end_date.GetValue()
+        range_end=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
+        cal_dict=self.GetParent().GetCalendarData()
+        self._write_header(f)
+        _tzid=self._write_timezone(f)
+        # now go through the data and export each event
+        for k,e in cal_dict.items():
+            if not all_items and \
+               (e.end < range_start or e.start>range_end):
+                continue
+            self._write_event(f, e, _tzid)
+        self._write_end(f)
+        f.close()

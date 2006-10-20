@@ -689,3 +689,68 @@ class AutoSyncFilterDialog(FilterDialogBase):
             r['end_offset']=None
         self.get_base(r)
         return r
+
+#-------------------------------------------------------------------------------
+class ExportCalendarDialog(wx.Dialog):
+    # subclass should override these
+    _default_file_name=""
+    _wildcards="All files|*.*"
+    
+    def __init__(self, parent, title):
+        super(ExportCalendarDialog, self).__init__(parent, -1, title)
+        # make the ui
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, "File"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
+        self.filenamectrl=wx.TextCtrl(self, -1, self._default_file_name)
+        hbs.Add(self.filenamectrl, 1, wx.ALL|wx.EXPAND, 5)
+        self.browsectrl=wx.Button(self, wx.NewId(), "Browse...")
+        hbs.Add(self.browsectrl, 0, wx.ALL|wx.EXPAND, 5)
+        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
+        # selection GUI
+        vbs.Add(self.GetSelectionGui(self), 5, wx.EXPAND|wx.ALL, 5)
+        # the buttons
+        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
+        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        # event handlers
+        wx.EVT_BUTTON(self, self.browsectrl.GetId(), self.OnBrowse)
+        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
+        # all done
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def GetSelectionGui(self, parent):
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self._selection=wx.RadioBox(parent, wx.NewId(), 'Events Selection',
+                                    choices=['All', 'Date Range'],
+                                    style=wx.RA_SPECIFY_ROWS)
+        hbs.Add(self._selection, 0, wx.EXPAND|wx.ALL, 5)
+        sbs=wx.StaticBoxSizer(wx.StaticBox(parent, -1, 'Date Range'), wx.VERTICAL)
+        gs=wx.FlexGridSizer(-1, 2, 5, 5)
+        gs.AddGrowableCol(1)
+        gs.Add(wx.StaticText(self, -1, 'Start:'), 0, wx.ALL, 0)
+        self._start_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        gs.Add(self._start_date, 0, wx.ALL, 0)
+        gs.Add(wx.StaticText(self, -1, 'End:'), 0, wx.ALL, 0)
+        self._end_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+        gs.Add(self._end_date, 0, wx.ALL, 0)
+        sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(sbs, 0, wx.EXPAND|wx.ALL, 5)
+        return hbs
+
+    def OnBrowse(self, _):
+        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                          wildcard=self._wildcards, style=wx.SAVE|wx.CHANGE_DIR)
+        if dlg.ShowModal()==wx.ID_OK:
+            self.filenamectrl.SetValue(dlg.GetPath())
+        dlg.Destroy()
+
+    def _export(self):
+        # perform the actual caledar data import, subclass MUST override
+        raise NotImplementedError
+
+    def OnOk(self, _):
+        # do export
+        self._export()
+        self.EndModal(wx.ID_OK)

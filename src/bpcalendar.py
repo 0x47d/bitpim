@@ -748,6 +748,9 @@ class CalendarEntry(object):
         return self._data['end'].date_str()+' '+\
                self._data['end'].time_str(False, '00:00')
     end_str=property(fget=_get_end_str)
+    def open_ended(self):
+        # True if this is an open-ended event
+        return self.end[:3]==self.no_end_date
 
     def _get_vibrate(self):
         return self._data.get('vibrate', 0)

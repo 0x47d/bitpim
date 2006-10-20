@@ -36,9 +36,12 @@ class BPTime(object):
             raise TypeError
         return datetime.datetime(*self.get())-datetime.datetime(*rhs.get())
     def __add__(self, rhs):
-        if not isinstance(rhs, datetime.timedelta):
+        if isinstance(rhs, int):
+            dt=datetime.datetime(*self.get())+datetime.timedelta(seconds=rhs)
+        elif isinstance(rhs, datetime.timedelta):
+            dt=datetime.datetime(*self.get())+rhs
+        else:
             raise TypeError
-        dt=datetime.datetime(*self.get())+rhs
         return BPTime((dt.year, dt.month, dt.day, dt.hour, dt.minute))
     def __eq__(self, rhs):
         if isinstance(rhs, BPTime):
@@ -104,7 +107,7 @@ class BPTime(object):
         elif v[-5]=='-' or v[-5]=='+':
             self._utc_to_local(v[-5:])
 
-    def iso_str(self, no_time=False):
+    def iso_str(self, no_time=False, no_seconds=True):
         # return an ISO string representation
         s=''
         if self._date is not None:
@@ -112,6 +115,8 @@ class BPTime(object):
                                    self._date.day)
         if self._time is not None and not no_time:
             s+='T%02d%02d'%(self._time.hour, self._time.minute)
+            if not no_seconds:
+                s+='00'
         return s
 
     def date_str(self):

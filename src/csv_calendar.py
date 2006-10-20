@@ -32,56 +32,14 @@ class ImportDataSource(common_calendar.ImportDataSource):
     wildcard='*.csv'
 
 #------------------------------------------------------------------------------
-class ExportCSVDialog(wx.Dialog):
+ExportCSVDialogParent=common_calendar.ExportCalendarDialog
+class ExportCSVDialog(ExportCSVDialogParent):
+    _default_file_name="calendar.csv"
+    _wildcards="CSV files (*.csv)|*.csv"
+
     def __init__(self, parent, title):
-        super(ExportCSVDialog, self).__init__(parent, -1, title)
-        # make the ui
-        vbs=wx.BoxSizer(wx.VERTICAL)
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        hbs.Add(wx.StaticText(self, -1, "File"), 0, wx.ALL|wx.ALIGN_CENTRE, 5)
-        self.filenamectrl=wx.TextCtrl(self, -1, "calendar.csv")
-        hbs.Add(self.filenamectrl, 1, wx.ALL|wx.EXPAND, 5)
-        self.browsectrl=wx.Button(self, wx.NewId(), "Browse...")
-        hbs.Add(self.browsectrl, 0, wx.ALL|wx.EXPAND, 5)
-        vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
-        # selection GUI
-        vbs.Add(self.GetSelectionGui(self), 5, wx.EXPAND|wx.ALL, 5)
-        # the buttons
-        vbs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL,5)
-        vbs.Add(self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP), 0, wx.ALIGN_CENTER|wx.ALL, 5)
-        # event handlers
-        wx.EVT_BUTTON(self, self.browsectrl.GetId(), self.OnBrowse)
-        wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
-        # all done
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
+        super(ExportCSVDialog, self).__init__(parent, title)
 
-    def GetSelectionGui(self, parent):
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self.__selection=wx.RadioBox(parent, wx.NewId(), 'Events Selection',
-                                     choices=['All', 'Date Range'],
-                                     style=wx.RA_SPECIFY_ROWS)
-        hbs.Add(self.__selection, 0, wx.EXPAND|wx.ALL, 5)
-        sbs=wx.StaticBoxSizer(wx.StaticBox(parent, -1, 'Date Range'), wx.VERTICAL)
-        gs=wx.FlexGridSizer(-1, 2, 5, 5)
-        gs.AddGrowableCol(1)
-        gs.Add(wx.StaticText(self, -1, 'Start:'), 0, wx.ALL, 0)
-        self.__start_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-        gs.Add(self.__start_date, 0, wx.ALL, 0)
-        gs.Add(wx.StaticText(self, -1, 'End:'), 0, wx.ALL, 0)
-        self.__end_date=wx.DatePickerCtrl(self, style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-        gs.Add(self.__end_date, 0, wx.ALL, 0)
-        sbs.Add(gs, 1, wx.EXPAND|wx.ALL, 5)
-        hbs.Add(sbs, 0, wx.EXPAND|wx.ALL, 5)
-        return hbs
-
-    def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="CSV files (*.cvs)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
     def __get_str(self, entry, field):
         s=getattr(entry, field, '')
         if s is None:
@@ -90,7 +48,8 @@ class ExportCSVDialog(wx.Dialog):
             return s.encode('ascii', 'ignore')
         else:
             return str(s)
-    def OnOk(self, _):
+
+    def _export(self):
         # do export
         filename=self.filenamectrl.GetValue()
         csv_event_template=(
@@ -120,14 +79,14 @@ class ExportCSVDialog(wx.Dialog):
                              'Export Error')
             dlg.ShowModal()
             dlg.Destroy()
-            self.EndModal(wx.ID_OK)
+            return
         s=['"'+x[0]+'"' for x in csv_event_template]+\
            ['"'+x[0]+'"' for x in csv_repeat_template]
         f.write(','.join(s)+'\n')
-        all_items=self.__selection.GetSelection()==0
-        dt=self.__start_date.GetValue()
+        all_items=self._selection.GetSelection()==0
+        dt=self._start_date.GetValue()
         range_start=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
-        dt=self.__end_date.GetValue()
+        dt=self._end_date.GetValue()
         range_end=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
         #---
         def __write_rec(f, cal_dict):
@@ -157,7 +116,6 @@ class ExportCSVDialog(wx.Dialog):
         cal_dict=self.GetParent().GetCalendarData()
         __write_rec(f, cal_dict)
         f.close()
-        self.EndModal(wx.ID_OK)
 
 #------------------------------------------------------------------------------
 class CSVCalendarImportData(object):

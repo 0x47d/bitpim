@@ -2061,6 +2061,11 @@ def GetPhonebookExports():
     # CSV - always possible
     res.append( (guihelper.ID_EXPORT_CSV_CONTACTS, 'CSV Contacts...', 'Export the phonebook to CSV', OnFileExportCSV))
     res.append( (guihelper.ID_EXPORT_CSV_CALENDAR, 'CSV Calendar...', 'Export the calendar to CSV', OnFileExportCSVCalendar) )
+    # iCal
+    res.append( (guihelper.ID_EXPORT_ICALENDAR,
+                 'iCalendar...',
+                 'Export the calendar to iCalendar',
+                 OnFileExportiCalendar) )
     # SMS - always possible
     res.append( (guihelper.ID_EXPORT_SMS, 'SMS...', 'Export SMS Messages', OnFileExportSMS))
     # Call History - always possible
@@ -2252,7 +2257,7 @@ class ExportCSVDialog(BaseExportDialog):
 
     def OnBrowse(self, _):
         dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="CSV files (*.cvs)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
+                          wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
         if dlg.ShowModal()==wx.ID_OK:
             self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
         dlg.Destroy()
@@ -2613,6 +2618,11 @@ def OnFileExportCSV(parent):
 def OnFileExportCSVCalendar(parent):
     import csv_calendar
     dlg=csv_calendar.ExportCSVDialog(parent, 'Export Calendar to CSV')
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def OnFileExportiCalendar(parent):
+    dlg=ical_calendar.ExportDialog(parent, 'Export Calendar to iCalendar')
     dlg.ShowModal()
     dlg.Destroy()
 
