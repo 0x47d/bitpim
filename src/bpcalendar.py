@@ -1076,10 +1076,15 @@ class Calendar(calendarcontrol.Calendar):
         as required by the parent L{calendarcontrol.Calendar} for
         display in a cell"""
         entry_list=self.getentrydata(year, month, day)
-        res=[ (i.start[3], i.start[4], i.description) \
-              for i in entry_list if not i.allday ]
-        res += [ (None, None, i.description) \
-                 for i in entry_list if i.allday ]
+        res=[]
+        for _entry in entry_list:
+            (_y,_m,_d,_h,_min, _desc)=_entry.start+(_entry.description,)
+            if _entry.allday:
+                res.append((None, None, _desc))
+            elif _entry.repeat or (_y,_m,_d)==(year, month, day):
+                res.append((_h, _min, _desc))
+            else:
+                res.append((None, None, '...'+_desc))
         res.sort()
         return res
 
