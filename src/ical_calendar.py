@@ -444,6 +444,7 @@ class ExportDialog(ExportDialogParent):
 
     def _write_event(self, f, event, tzid):
         # write out an BitPim Calendar event
+        f.write(out_line('COMMENT', None, '//----------', None))
         f.write(out_line('BEGIN', None, 'VEVENT', None))
         for _entry in self._field_list:
             _v=getattr(event, _entry[1], None)
