@@ -861,6 +861,40 @@ def out_adr(vals, formatter):
 def out_note(vals, formatter, limit=1):
     return "".join([out_line("NOTE", None, v["memo"], formatter) for v in vals[:limit]])
 
+# Sany SCP-6600 (Katana) support
+def out_tel_scp6600(vals, formatter):
+    res=""
+    _pref=len(vals)>1
+    for v in vals:
+        res+=out_line("TEL",
+                      ["TYPE=%s%s" % (_pref and "PREF," or "",
+                                      _out_tel_mapping[v['type']])],
+                      phonenumber.format(v['number']), formatter)
+        _pref=False
+    return res
+def out_email_scp6600(vals, formatter):
+    res=''
+    for _idx in range(min(len(vals), 2)):
+        v=vals[_idx]
+        if v.get('email', None):
+            res+=out_line('EMAIL', ['TYPE=INTERNET'],
+                          v['email'], formatter)
+    return res
+def out_url_scp660(vals, formatter):
+    if vals and vals[0].get('url', None):
+        return out_line('URL', None, vals[0]['url'], formatter)
+    return ''
+def out_adr_scp6600(vals, formatter):
+    for v in vals:
+        if v.get('type', None)=='home':
+            _type='HOME'
+        else:
+            _type='WORK'
+        return out_line("ADR", ['TYPE=%s'%_type],
+                        [v.get(k, "") for k in (None, "street2", "street", "city", "state", "postalcode", "country")],
+                        formatter)
+    return ''
+
 # This is the order we write things out to the vcard.  Although
 # vCard doesn't require an ordering, it looks nicer if it
 # is (eg name first)
@@ -919,11 +953,22 @@ profile_apple['categories']=out_categories_apple
 profile_full=profile_vcard3.copy()
 profile_full['_limit']=99999
 
+profile_scp6600=profile_full.copy()
+del profile_scp6600['categories']
+profile_scp6600.update(
+    { 'numbers': out_tel_scp6600,
+      'emails': out_email_scp6600,
+      'urls': out_url_scp660,
+      'addresses': out_adr_scp6600,
+      })
+
 profiles={
     'vcard2':  { 'description': "vCard v2.1", 'profile': profile_vcard2 },
     'vcard3':  { 'description': "vCard v3.0", 'profile': profile_vcard3 },
     'apple':   { 'description': "Apple",      'profile': profile_apple  },
     'fullv3':  { 'description': "Full vCard v3.0", 'profile': profile_full},
+    'scp6600': { 'description': "Sanyo SCP-6600 (Katana)",
+                 'profile': profile_scp6600 },
 }
     
     
