@@ -281,6 +281,12 @@ class ImportDialog(wx.Dialog):
             self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
         hbs.Add(self.categorieslabel, 1, wx.ALIGN_LEFT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, 5)
         vbs.Add(hbs,0, wx.EXPAND|wx.ALL,5)
+        # Full name options: Full Name, First M Last, or Last, First M
+        self._name_option=wx.RadioBox(self, -1, 'Name Reformat',
+                                      choices=['No Reformat', 'First M Last', 'Last, First M'])
+        wx.EVT_RADIOBOX(self, self._name_option.GetId(),
+                        self.DataNeedsUpdate)
+        vbs.Add(self._name_option, 0, wx.ALL, 5)
         # Preview grid row
         self.preview=PreviewGrid(self, wx.NewId())
         self.preview.CreateGrid(10,10)
@@ -353,6 +359,36 @@ class ImportDialog(wx.Dialog):
         self.merge=False
         self.OnOk(evt)
 
+    def _reformat_name_firstmiddlelast(self, entry):
+        # reformat the full name to be First Middle Last
+        _name=entry.get('names', [None])[0]
+        if not _name:
+            return entry
+        _s=[]
+        for _field in ('first', 'middle', 'last'):
+            if _name.get(_field, None):
+                _s.append(_field)
+        if _s:
+            _name['full']=' '.join(_s)
+            entry['names']=[_name]
+        return entry
+    def _reformat_name_lastfirtsmiddle(self, entry):
+        # reformat the full name to be Last, First Middle
+        _name=entry.get('names', [None])[0]
+        if not _name:
+            return entry
+        if _name.get('last', None):
+            _s=_name['last']
+            if _name.get('first', None):
+                _s+=', '+_name['first']
+                if _name.get('middle', None):
+                    _s+=' '+_name['middle'][0]
+            _name['full']=_s
+            entry['names']=[_name]
+        return entry
+    _reformat_name_func=(lambda self, event: event,
+                         _reformat_name_firstmiddlelast,
+                         _reformat_name_lastfirtsmiddle)
     def __build_entry(self, rec):
         entry={}
         # emails
@@ -583,7 +619,7 @@ class ImportDialog(wx.Dialog):
         count=0
         for record in self.data:
             if bp_csv:
-                res[count]=self.__build_bp_entry(record)
+                _entry=self.__build_bp_entry(record)
             else:                
                 # make a dict of the record
                 rec={}
@@ -604,7 +640,9 @@ class ImportDialog(wx.Dialog):
                     else:
                         rec[c]=record[n]
                 # entry is what we are building.  fields are removed from rec as we process them
-                res[count]=self.__build_entry(rec)
+                _entry=self.__build_entry(rec)
+            res[count]=self._reformat_name_func[self._name_option.GetSelection()](self,
+                                                                                  _entry)
             count+=1
         return res
 
@@ -699,7 +737,47 @@ class ImportDialog(wx.Dialog):
         self.FillPreview()
 
     UpdateData=guihelper.BusyWrapper(UpdateData)
-                
+
+    def _preview_format_name_none(self, row, col, names_col):
+        # no format needed
+        return row[col]
+    def _preview_format_name_lastfirtmiddle(self, row, col, names_col):
+        # reformat to Last, First Middle
+        _last=names_col.get('Last Name',
+                            names_col.get('names_last', None))
+        _first=names_col.get('First Name',
+                             names_col.get('names_first', None))
+        _middle=names_col.get('Middle Name',
+                              names_col.get('names_middle', None))
+        _s=''
+        if row[_last]:
+            _s=row[_last]
+            if row[_first]:
+                _s+=', '+row[_first]
+            if row[_middle]:
+                _s+=' '+row[_middle][0]
+        else:
+            _s=row[col]
+        return _s
+    def _preview_format_name_firstmiddlelast(self, row, col, names_col):
+        # reformat to First Middle Last
+        _last=names_col.get('Last Name',
+                            names_col.get('names_last', None))
+        _first=names_col.get('First Name',
+                             names_col.get('names_first', None))
+        _middle=names_col.get('Middle Name',
+                              names_col.get('names_middle', None))
+        _s=[]
+        for _col in (_first, _middle, _last):
+            if row[_col]:
+                _s.append(row[_col])
+        if _s:
+            return ' '.join(_s)
+        return row[col]
+    _preview_format_names_func=(_preview_format_name_none,
+                                _preview_format_name_firstmiddlelast,
+                                _preview_format_name_lastfirtmiddle)
+        
     def FillPreview(self):
         self.preview.BeginBatch()
         if self.preview.GetNumberCols():
@@ -716,7 +794,11 @@ class ImportDialog(wx.Dialog):
         editor=wx.grid.GridCellChoiceEditor(self.possiblecolumns, False)
         self.preview.AppendRows(1)
         self.preview.AppendCols(numcols)
+        _names_col={}
         for col in range(numcols):
+            if 'Name' in self.columns[col] or \
+               'names_' in self.columns[col]:
+                _names_col[self.columns[col]]=col
             self.preview.SetCellValue(0, col, self.columns[col])
             self.preview.SetCellEditor(0, col, editor)
         attr=wx.grid.GridCellAttr()
@@ -731,10 +813,14 @@ class ImportDialog(wx.Dialog):
         evenattr=wx.grid.GridCellAttr()
         evenattr.SetBackgroundColour("ALICE BLUE")
         evenattr.SetReadOnly(True)
+        _format_name=self._preview_format_names_func[self._name_option.GetSelection()]
         for row in range(numrows):
             self.preview.AppendRows(1)
             for col in range(numcols):
-                s=_getpreviewformatted(self.data[row][col], self.columns[col])
+                if self.columns[col] in ('Name', 'names_full'):
+                    s=_format_name(self, self.data[row], col, _names_col)
+                else:
+                    s=_getpreviewformatted(self.data[row][col], self.columns[col])
                 if len(s):
                     self.preview.SetCellValue(row+1, col, s)
             self.preview.SetRowAttr(row+1, (evenattr,oddattr)[row%2])
