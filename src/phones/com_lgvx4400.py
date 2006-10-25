@@ -367,21 +367,27 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         problemsdetected=False
         dupecheck={}
         for i in loop:
-            if hardway:
-                numentries+=1
-            req=self.protocolclass.pbreadentryrequest()
-            res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
-            self.log("Read entry "+`i`+" - "+res.entry.name)
-            entry=self.extractphonebookentry(res.entry, speeds, result)
-            if hardway and firstserial is None:
-                firstserial=res.entry.serial1
-            pbook[i]=entry
-            if res.entry.serial1 in dupecheck:
-                self.log("Entry %s has same serial as entry %s.  This will cause problems." % (`entry`, dupecheck[res.entry.serial1]))
-                problemsdetected=True
-            else:
-                dupecheck[res.entry.serial1]=entry
-            self.progress(i, numentries, res.entry.name)
+            try:
+                if hardway:
+                    numentries+=1
+                req=self.protocolclass.pbreadentryrequest()
+                res=self.sendpbcommand(req, self.protocolclass.pbreadentryresponse)
+                self.log("Read entry "+`i`+" - "+res.entry.name)
+                entry=self.extractphonebookentry(res.entry, speeds, result)
+                if hardway and firstserial is None:
+                    firstserial=res.entry.serial1
+                pbook[i]=entry
+                if res.entry.serial1 in dupecheck:
+                    self.log("Entry %s has same serial as entry %s.  This will cause problems." % (`entry`, dupecheck[res.entry.serial1]))
+                    problemsdetected=True
+                else:
+                    dupecheck[res.entry.serial1]=entry
+                self.progress(i, numentries, res.entry.name)
+            except:
+                # Something's wrong with this entry, log it and skip
+                self.log('Failed to read entry %d'%i)
+                if __debug__:
+                    raise
             #### Advance to next entry
             req=self.protocolclass.pbnextentryrequest()
             res=self.sendpbcommand(req, self.protocolclass.pbnextentryresponse)

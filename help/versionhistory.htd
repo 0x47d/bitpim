@@ -21,6 +21,7 @@
       <li>Added an option to reformat contact names during the contact import process.
       <li>Bug fix: BitPim crashed due to corrupted config file.
       <li>Bug fix: BitPim crashed due to corrupted Call History file.
+      <li>Bug fix: Bad phone contact entry crashes BitPim.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
