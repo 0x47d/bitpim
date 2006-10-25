@@ -311,8 +311,9 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                     if call.name:
                         entry.name=call.name
                 res[entry.id]=entry
-        except com_brew.BrewNoSuchFileException:
-            pass # do nothing if file doesn't exist
+        except (com_brew.BrewNoSuchFileException,
+                IndexError):
+            pass # do nothing if file doesn't exist or is corrupted
         return
 
     def getwallpaperindices(self, results):
