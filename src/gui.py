@@ -317,7 +317,12 @@ class Config(ConfigParser.ConfigParser):
             self._path, self._filename=self._getdefaults()
         # read in the config if exist
         if self._filename:
-            self.read([self._filename])
+            try:
+                self.read([self._filename])
+            except:
+                # something is wrong with the config file, just bail
+                if __debug__:
+                    raise
             self.Write('path', self._path)
             self.Write('config', self._filename)
 
