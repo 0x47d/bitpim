@@ -364,12 +364,9 @@ class ImportDialog(wx.Dialog):
         _name=entry.get('names', [None])[0]
         if not _name:
             return entry
-        _s=[]
-        for _field in ('first', 'middle', 'last'):
-            if _name.get(_field, None):
-                _s.append(_field)
+        _s=nameparser.formatsimplefirstlast(_name)
         if _s:
-            _name['full']=' '.join(_s)
+            _name['full']=_s
             entry['names']=[_name]
         return entry
     def _reformat_name_lastfirtsmiddle(self, entry):
@@ -377,16 +374,12 @@ class ImportDialog(wx.Dialog):
         _name=entry.get('names', [None])[0]
         if not _name:
             return entry
-        if _name.get('last', None):
-            _s=_name['last']
-            if _name.get('first', None):
-                _s+=', '+_name['first']
-                if _name.get('middle', None):
-                    _s+=' '+_name['middle'][0]
+        _s=nameparser.formatsimplelastfirst(_name)
+        if _s:
             _name['full']=_s
             entry['names']=[_name]
         return entry
-    _reformat_name_func=(lambda self, event: event,
+    _reformat_name_func=(lambda self, entry: entry,
                          _reformat_name_firstmiddlelast,
                          _reformat_name_lastfirtsmiddle)
     def __build_entry(self, rec):
@@ -749,16 +742,14 @@ class ImportDialog(wx.Dialog):
                              names_col.get('names_first', None))
         _middle=names_col.get('Middle Name',
                               names_col.get('names_middle', None))
-        _s=''
-        if row[_last]:
-            _s=row[_last]
-            if row[_first]:
-                _s+=', '+row[_first]
-            if row[_middle]:
-                _s+=' '+row[_middle][0]
-        else:
-            _s=row[col]
-        return _s
+        _full=names_col.get('Name',
+                            names_col.get('names_full', None))
+        _name_dict={}
+        for _key,_value in (('full', _full), ('first', _first),
+                            ('middle', _middle), ('last', _last)):
+            if _value is not None and row[_value]:
+                _name_dict[_key]=row[_value]
+        return nameparser.formatsimplelastfirst(_name_dict)
     def _preview_format_name_firstmiddlelast(self, row, col, names_col):
         # reformat to First Middle Last
         _last=names_col.get('Last Name',
@@ -767,13 +758,14 @@ class ImportDialog(wx.Dialog):
                              names_col.get('names_first', None))
         _middle=names_col.get('Middle Name',
                               names_col.get('names_middle', None))
-        _s=[]
-        for _col in (_first, _middle, _last):
-            if row[_col]:
-                _s.append(row[_col])
-        if _s:
-            return ' '.join(_s)
-        return row[col]
+        _full=names_col.get('Name',
+                            names_col.get('names_full', None))
+        _name_dict={}
+        for _key,_value in (('full', _full), ('first', _first),
+                            ('middle', _middle), ('last', _last)):
+            if _value is not None and row[_value]:
+                _name_dict[_key]=row[_value]
+        return nameparser.formatsimplefirstlast(_name_dict)
     _preview_format_names_func=(_preview_format_name_none,
                                 _preview_format_name_firstmiddlelast,
                                 _preview_format_name_lastfirtmiddle)

@@ -14,19 +14,7 @@ def formatfullname(name):
 
     res=""
     full=name.get("full", "")
-    fml=""
-
-    f=name.get("first", "")
-    m=name.get("middle", "")
-    l=name.get("last", "")
-    if len(f) or len(m) or len(l):
-        fml+=f
-        if len(m) and len(fml) and fml[-1]!=' ':
-            fml+=" "
-        fml+=m
-        if len(l) and len(fml) and fml[-1]!=' ':
-            fml+=" "
-        fml+=l
+    fml=' '.join([x for x in getparts(name) if x])
 
     if len(fml) or len(full):
         # are they the same
@@ -47,15 +35,14 @@ def formatfullname(name):
 
 def formatsimplename(name):
     "like L{formatname}, except we use the first matching component"
-    if len(name.get("full", "")):
-        return name.get("full")
-    f=name.get("first", "")
-    m=name.get("middle", "")
-    l=name.get("last", "")
-    if len(f) or len(m) or len(l):
-        return " ".join([p for p in (f,m,l) if len(p)])
+    _fullname=getfullname(name)
+    if _fullname:
+        return _fullname
     return name.get('nickname', "")
 
+def formatsimplefirstlast(name):
+    "Returns the name formatted as First Middle Last"
+    return ' '.join([x for x in getparts(name) if x])
 def formatsimplelastfirst(name):
     "Returns the name formatted as Last, First Middle"
     f,m,l=getparts(name)
@@ -69,8 +56,7 @@ def getfullname(name):
     """Gets the full name, joining the first/middle/last if necessary"""
     if name.has_key("full"):
         return name["full"]
-    parts=[name.get(part, "") for part in ("first", "middle", "last")]
-    return " ".join([part for part in parts if len(part)])
+    return ' '.join([x for x in getparts(name) if x])
 
 # See the following references for name parsing and how little fun it
 # is.
@@ -97,19 +83,7 @@ lastparts= [ "van", "von", "de", "di" ]
 # I would also like to proudly point out that this code has no comment saying
 # "Have I no shame".  It will be considered incomplete until that happens
 
-def getparts(name):
-    """Returns (first, middle, last) for name.  If the part doesn't exist
-    then a blank string is returned"""
-
-    # do we have any of the parts?
-    for i in ("first", "middle", "last"):
-        if name.has_key(i):
-            return (name.get("first", ""), name.get("middle", ""), name.get("last", ""))
-
-    # check we have full.  if not return nickname
-    if not name.has_key("full"):
-        return (name.get("nickname", ""), "", "")
-
+def _getparts_FML(name):
     n=name.get("full")
     
     # [1]
@@ -136,6 +110,42 @@ def getparts(name):
 
     # return it all
     return (" ".join(f), " ".join(m), " ".join(l))
+
+def _getparts_LFM(name):
+    n=name.get("full")
+    
+    parts=n.split(',')
+
+    if len(parts)<=1:
+        return (n, '', '')
+    
+    _last=parts[0]
+    _first=''
+    _middle=''
+    parts=parts[1].split()
+    if len(parts)>=1:
+        _first=parts[0]
+        if len(parts)>1:
+            _middle=' '.join(parts[1:])
+    return (_first, _middle, _last)
+    
+def getparts(name):
+    """Returns (first, middle, last) for name.  If the part doesn't exist
+    then a blank string is returned"""
+
+    # do we have any of the parts?
+    for i in ("first", "middle", "last"):
+        if name.has_key(i):
+            return (name.get("first", ""), name.get("middle", ""), name.get("last", ""))
+
+    # check we have full.  if not return nickname
+    if not name.has_key("full"):
+        return (name.get("nickname", ""), "", "")
+
+    n=name.get("full")
+    if ',' in n:
+        return _getparts_LFM(name)
+    return _getparts_FML(name)
 
 # convenience functions
 
