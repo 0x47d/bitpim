@@ -66,21 +66,3 @@ PACKET groupnameentry:
 
 PACKET unparsedresponse:
     * UNKNOWN pad
-    
-PACKET eventrequest:
-    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PISHR='} +command
-    * CSVINT {'terminator': None} +slot
-
-PACKET eventresponse:
-    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PISHR:'} command
-    * evententry entry
-    
-PACKET evententry:
-    * CSVINT slot
-    * CSVTIME start
-    * CSVTIME end
-    * CSVTIME timestamp
-    * CSVINT alarm "0: No Alarm, 1: On Time, 2: 10 minutes, 3: 30 minutes, 4: 60 minutes"
-    * CSVSTRING {'quotechar': None} dunno
-    * CSVSTRING {'terminator': None} eventname
-
