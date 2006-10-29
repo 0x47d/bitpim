@@ -42,10 +42,10 @@ class Phone(com_sanyonewer.Phone):
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
-                       'Gymnopedie', 'Hungarian Dance',
-                       'Dies Irae from Requeiem', 'The Moment', 'Asian Jingle',
+                       'Gymnopedie', 'Hungarian Dance No. 5',
+                       'Dies Irae from Requiem', 'The Moment', 'Asian Jingle',
                        'Habanera', 'Ska Big Band', 'Asian Melody',
-                       'Clair de Lune', 'Kung Fu')
+                       'Clair de Lune', 'Kung-fu')
 
     calendar_defaultringtone=4
 
