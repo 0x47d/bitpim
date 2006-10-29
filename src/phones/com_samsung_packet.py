@@ -433,8 +433,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 else:
                     entry.end=entry.start
 
-                # description
-                entry.description=res[0].eventname
+                # description[location]
+                entry.desc_loc=res[0].eventname
 
                 try:
                     alarm=self.__cal_alarm_values[res[0].alarm]
@@ -561,7 +561,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
             # Name, check for bad char & proper length
             #name=c.description.replace('"', '')
-            name=c.description
+            name=c.desc_loc
             if len(name)>self.__cal_max_name_len:
                 name=name[:self.__cal_max_name_len]
             req.eventname=name
@@ -912,7 +912,7 @@ class Samsung_Calendar:
         10: 0, 30: 1, 60: 2, -1: 3, 0: 4 }
     
     def __init__(self, calendar_entry, new_date=None):
-        self._start=self._end=self._alarm=self._desc=None
+        self._start=self._end=self._alarm=self._desc=self._desc_loc=None
         self._extract_cal_info(calendar_entry, new_date)
 
     def _extract_cal_info(self, cal_entry, new_date):
@@ -922,6 +922,7 @@ class Samsung_Calendar:
         self._start=s
         self._end=cal_entry.end
         self._desc=cal_entry.description
+        self._desc_loc=cal_entry.desc_loc
         # approximate the alarm value
         self._alarm=0
         alarm=cal_entry.alarm
@@ -957,6 +958,10 @@ class Samsung_Calendar:
     def _get_desc(self):
         return self._desc
     description=property(fget=_get_desc)
+
+    def _get_desc_loc(self):
+        return self._desc_loc
+    desc_loc=property(fget=_get_desc_loc)
 
     def _get_alarm(self):
         return self._alarm
