@@ -42,7 +42,7 @@ class SanyoMedia:
         ( 300, 1, 0, "camera", 30),
         )
 
-    wallpaperexts=(".jpg", ".png", ".mp4", "3g2")
+    wallpaperexts=(".jpg", ".png", ".mp4", ".3g2",".JPG")
     ringerexts=(".mid", ".qcp", ".mp3", ".m4a", ".pmd", ".bin")
 
     def __init__(self):
