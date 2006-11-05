@@ -72,6 +72,36 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
+    def getmediaindices(self, results):
+        "Just index builtin media for now."
+
+        com_sanyo.SanyoPhonebook.getmediaindices(self, results)
+        ringermedia=results['ringtone-index']
+        imagemedia=results['wallpaper-index']
+
+        results['ringtone-index']=ringermedia
+        results['wallpaper-index']=imagemedia
+        return
+
+    def getphonebook(self,result):
+        "Code to retrieve packets we have discovered so far so we can work out their formats."
+        pbook={}
+
+        sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
+        
+        print sortstuff.somecount,' Somethings?'
+        print sortstuff.slotsused,' Contacts'
+        print sortstuff.slotsused2,' Duplicate Contacts'
+        print sortstuff.numslotsused,' Phone numbers'
+        print sortstuff.emailslotsused,' Email addresses'
+        print sortstuff.urlslotsused, ' URLs'
+        print sortstuff.num_address, ' Addresses'
+        print sortstuff.num_memo, ' Memos'
+
+        req=self.protocolclass.pbinfo()
+
+        return
+        
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):
 
@@ -79,9 +109,6 @@ class Profile(parentprofile):
     serialsname=Phone.serialsname
     phone_manufacturer='SANYO'
     phone_model='SCP-6600/US'
-
-    WALLPAPER_WIDTH=176
-    WALLPAPER_HEIGHT=220
 
     # which usb ids correspond to us
     usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
@@ -92,13 +119,11 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        #('wallpaper', 'write', 'MERGE'),
-        #('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
         ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None), # Read sms messages
-        #('todo', 'read', None), # Read todos
+        ('todo', 'read', None), # Read todos
     )
 
     def __init__(self):
