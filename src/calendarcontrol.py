@@ -178,9 +178,14 @@ class CalendarCell(wx.PyWindow):
         self.buffer=None
         self.needsupdate=True
         self.entries=()
+        self._tipwindow=None
 
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_SIZE(self, self.OnSize)
+        wx.EVT_ENTER_WINDOW(self, self.OnEnterWindow)
+        wx.EVT_LEAVE_WINDOW(self, self.OnLeaveWindow)
+        self._timer=wx.Timer(self)
+        wx.EVT_TIMER(self, self._timer.GetId(), self.OnTimer)
         self.OnSize(None)
 
     def DoGetBestSize(self):
@@ -244,6 +249,18 @@ class CalendarCell(wx.PyWindow):
         mdc.SelectObject(wx.NullBitmap)
         del mdc
 
+    def _tipstr(self):
+        # return a summary of events for displaying in a tooltip
+        _res=[]
+        lastap=""
+        for h,m,desc in self.entries:
+            if h is None:
+                _res.append(desc)
+            else:
+                _text, lastap=self._timestr(h, m, lastap)
+                _res.append('%s  %s'%(_text, desc))
+        return '\n'.join(_res)
+
     def OnPaint(self, _=None):
         """Callback for when we need to repaint"""
         if self.needsupdate:
@@ -251,6 +268,22 @@ class CalendarCell(wx.PyWindow):
             self.redraw()
         dc=wx.PaintDC(self)
         dc.DrawBitmap(self.buffer, 0, 0, False)
+
+    def _timestr(self, h, m, lastap=''):
+        text=""
+        if self.attr.ismiltime():
+            ap=""
+        else:
+            ap="a"
+            if h>=12: ap="p"
+            h%=12
+            if h==0: h=12
+            if ap==lastap:
+                ap=""
+            else:
+                lastap=ap
+        if h<10: text+=" "
+        return (text+"%d:%02d%s" % (h,m,ap), lastap)
 
     def draw(self, dc):
         """Draw ourselves
@@ -307,22 +340,7 @@ class CalendarCell(wx.PyWindow):
                     timey=y
                     if timeheight<firstrowheight:
                         timey+=(firstrowheight-timeheight)/2
-                    text=""
-                    
-                    if self.attr.ismiltime():
-                        ap=""
-                    else:
-                        ap="a"
-                        if h>=12: ap="p"
-                        h%=12
-                        if h==0: h=12
-                        if ap==lastap:
-                            ap=""
-                        else:
-                            lastap=ap
-                    if h<10: text+=" "
-                    
-                    text+="%d:%02d%s" % (h,m,ap)
+                    text, lastap=self._timestr(h, m, lastap)
                     dc.DrawText(text, x, timey)
                     x+=timespace
                     if not self.attr.ismiltime: x+=ampm
@@ -349,6 +367,21 @@ class CalendarCell(wx.PyWindow):
             else:
                 thefontscalecache.set(self.height-entrystart, self.attr, len(self.entries), fontscale)
                 break
+
+    def OnEnterWindow(self, _):
+        if self.entries:
+            self._timer.Start(1000, wx.TIMER_ONE_SHOT)
+    def OnLeaveWindow(self, _):
+        self._timer.Stop()
+    def OnTimer(self, _):
+        if not self.entries:
+            return
+        _rect=self.GetRect()
+        _x,_y=self.GetParent().ClientToScreen(_rect[:2])
+        _rect=wx.Rect(_x, _y, _rect[2], _rect[3])
+        if self._tipwindow:
+            self._tipwindow.Destroy()
+        self._tipwindow=wx.TipWindow(self, self._tipstr(), 1024, _rect)
 
 class CalendarLabel(wx.PyWindow):
     """The label window on the left of the day cells that shows the month with rotated text

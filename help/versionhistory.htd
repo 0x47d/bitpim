@@ -23,7 +23,7 @@
       <li>Bug fix: BitPim crashed due to corrupted Call History file.
       <li>Bug fix: Bad phone contact entry crashes BitPim.
       <li>For Sprint Samsung phones, include location in event name.
- 
+      <li>New feature: display calendar events inside a Tool Tip window.
     </ul>
 
    <h2><a name="0.9.07">Changes in 0.9.07</a></h2>
