@@ -378,7 +378,8 @@ class CalendarCell(wx.PyWindow):
             return
         _rect=self.GetRect()
         _x,_y=self.GetParent().ClientToScreen(_rect[:2])
-        _rect=wx.Rect(_x, _y, _rect[2], _rect[3])
+        _rect.SetX(_x)
+        _rect.SetY(_y)
         if self._tipwindow:
             self._tipwindow.Destroy()
         self._tipwindow=wx.TipWindow(self, self._tipstr(), 1024, _rect)
