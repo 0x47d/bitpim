@@ -343,7 +343,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             _req.end_index=_end_idx
             for _retry_cnt in range(2):
                 try:
-                    self.progress(_total_entries, _end_idx,
+                    self.progress(_end_idx, _total_entries,
                                   'Reading conatct entry %d to %d'%(_start_idx, _end_idx))
                     _res=self.sendATcommand(_req, self.protocolclass.read_pb_resp)
                     for _entry in _res:
@@ -415,7 +415,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
             _req.end_index=_end_idx
             for _retry in range(2):
                 try:
-                    self.progress(_total_entries, _end_idx,
+                    self.progress(_end_idx, _total_entries,
                                   'Reading calendar entry %d to %d'%(_start_idx, _end_idx))
                     _res=self.sendATcommand(_req, self.protocolclass.calendar_req_resp)
                     for _entry in _res:
