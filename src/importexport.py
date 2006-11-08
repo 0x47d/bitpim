@@ -2368,7 +2368,10 @@ class ExportCSVDialog(BaseExportDialog):
                         except (KeyError, IndexError):
                             entry={}
                         for field in e[1]:
-                            ll.append('"'+str(entry.get(field, '')).replace('"', '')+'"')
+                            _v=entry.get(field, '')
+                            if isinstance(_v, unicode):
+                                _v=_v.encode('ascii', 'ignore')
+                            ll.append('"'+str(_v).replace('"', '')+'"')
             f.write(','.join(ll)+'\n')
         f.flush()
         f.close()
