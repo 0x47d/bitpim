@@ -394,6 +394,11 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         self.SetAutoLayout(True)
         vbs.Fit(self)
 
+    def CanCopy(self):
+        return self._item_text.CanCopy()
+    def OnCopy(self, _):
+        self._item_text.Copy()
+
     def OnSelected(self, node):
         for stat in self._stats.msg_type_list:
             if self._stats.sms_tree_nodes[stat]==node:

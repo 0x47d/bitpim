@@ -580,6 +580,20 @@ class MemoEditor(DirtyUIBase):
             return {'memo': self.memo.GetValue()}
         return {}
 
+    # copy/cut/paste routines
+    def CanCopy(self):
+        return self.memo.CanCopy()
+    def Copy(self):
+        return self.memo.Copy()
+    def CanPaste(self):
+        return self.memo.CanPaste()
+    def Paste(self):
+        return self.memo.Paste()
+    def CanCut(self):
+        return self.memo.CanCut()
+    def Cut(self):
+        return self.memo.Cut()
+
 # NumberEditor------------------------------------------------------------------
 class NumberEditor(DirtyUIBase):
 
