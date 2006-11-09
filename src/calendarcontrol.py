@@ -24,7 +24,7 @@ import cStringIO
 import calendar
 import time
 import widgets
-
+import tipwin
 
 class FontscaleCache(dict):
     """A cache used internally to remember how much to shrink fonts by"""
@@ -255,10 +255,10 @@ class CalendarCell(wx.PyWindow):
         lastap=""
         for h,m,desc in self.entries:
             if h is None:
-                _res.append(desc)
+                _res.append('\t'+desc)
             else:
                 _text, lastap=self._timestr(h, m, lastap)
-                _res.append('%s  %s'%(_text, desc))
+                _res.append('%s\t%s'%(_text, desc))
         return '\n'.join(_res)
 
     def OnPaint(self, _=None):
@@ -382,7 +382,7 @@ class CalendarCell(wx.PyWindow):
         _rect.SetY(_y)
         if self._tipwindow:
             self._tipwindow.Destroy()
-        self._tipwindow=wx.TipWindow(self, self._tipstr(), 1024, _rect)
+        self._tipwindow=tipwin.TipWindow(self, self._tipstr(), 1024, _rect)
 
 class CalendarLabel(wx.PyWindow):
     """The label window on the left of the day cells that shows the month with rotated text
