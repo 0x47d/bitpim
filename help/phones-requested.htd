@@ -34,6 +34,18 @@
 <td>&nbsp;</td>
 </tr>
 
+<tr>
+<td>Sanyo</td>
+<td>SCP-2400</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>Sanyo</td>
+<td>SCP-8400</td>
+<td>&nbsp;</td>
+</tr>
+
 </table>
 
 #include "pageend.h"
