@@ -72,36 +72,6 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def getmediaindices(self, results):
-        "Just index builtin media for now."
-
-        com_sanyo.SanyoPhonebook.getmediaindices(self, results)
-        ringermedia=results['ringtone-index']
-        imagemedia=results['wallpaper-index']
-
-        results['ringtone-index']=ringermedia
-        results['wallpaper-index']=imagemedia
-        return
-
-    def getphonebook(self,result):
-        "Code to retrieve packets we have discovered so far so we can work out their formats."
-        pbook={}
-
-        sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
-        
-        print sortstuff.somecount,' Somethings?'
-        print sortstuff.slotsused,' Contacts'
-        print sortstuff.slotsused2,' Duplicate Contacts'
-        print sortstuff.numslotsused,' Phone numbers'
-        print sortstuff.emailslotsused,' Email addresses'
-        print sortstuff.urlslotsused, ' URLs'
-        print sortstuff.num_address, ' Addresses'
-        print sortstuff.num_memo, ' Memos'
-
-        req=self.protocolclass.pbinfo()
-
-        return
-        
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):
 
