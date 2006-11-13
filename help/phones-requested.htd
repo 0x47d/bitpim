@@ -5,9 +5,9 @@
 <p><table width="100%" border=1>
 
 <tr>
-<th>Manufacturer
-<th>Model
-<th>Notes
+<th>Manufacturer</th>
+<th>Model</th>
+<th>Notes</th>
 </tr>
 
 <tr>
@@ -17,15 +17,21 @@
 </tr>
 
 <tr>
-<td>Motorola
-<td>V3c/V3m
-<td>&nbsp;
+<td>Motorola</td>
+<td>V3c/V3m</td>
+<td>&nbsp;</td>
 </tr>
 
 <tr>
-<td>Samsung
-<td>SCH-A990
-<td>&nbsp;
+<td>Samsung</td>
+<td>SCH-A990</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>Samsung</td>
+<td>SPH-A900</td>
+<td>&nbsp;</td>
 </tr>
 
 <tr>
