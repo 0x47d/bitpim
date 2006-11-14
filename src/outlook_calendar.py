@@ -80,6 +80,16 @@ class ImportDataSource(common_calendar.ImportDataSource):
             return native.outlook.getfoldername(self._source)
         return ''
 
+    def _get_id(self):
+        if self._source:
+            return native.outlook.getfolderid(self._source)
+        return None
+    def _set_id(self, id):
+        self._source=None
+        if id:
+            self._source=native.outlook.getfolderfromid(id, False, 'calendar')
+    id=property(fget=_get_id, fset=_set_id)
+
 #-------------------------------------------------------------------------------
 class OutlookCalendarImportData:
     _non_auto_sync_calendar_keys=[

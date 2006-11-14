@@ -109,6 +109,16 @@ class ImportDataSource(object):
         # return a string name for the source, default is the source itself
         return self._source or ''
 
+    def _get_id(self):
+        # return the ID string of this source (mainly for Outlook),
+        # by default, just return the name
+        return self.name()
+    def _set_id(self, id):
+        # set the ID of this source (mainly for Outlook),
+        # by default, just set the source to it
+        self._source=id
+    id=property(fget=_get_id, fset=_set_id)
+
 #-------------------------------------------------------------------------------
 class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
     def __init__(self, parent, id, title, col_labels, data={},
