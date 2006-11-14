@@ -44,7 +44,6 @@ class TipWindow(parentclass):
             return
         _dc=wx.ClientDC(self._view)
         _dc.SetFont(self._view.GetFont())
-        _tab_count=0
         for _line in self._text.split('\n'):
             _cnt=0
             for _col in _line.split('\t'):
@@ -54,15 +53,11 @@ class TipWindow(parentclass):
                 _w, _h=_dc.GetTextExtent(_col)
                 self._col_x[_cnt]=max(_w, self._col_x[_cnt])
                 self._line_h=max(self._line_h, _h)
-            _tab_count=max(_tab_count, _cnt-1)
-        _tab_w=_dc.GetTextExtent('\t')[0]
         _space_w=_dc.GetTextExtent(' '*space_count)[0]
-        _extra_w=max(_space_w-_tab_w, 0)
         for _cnt in range(1, len(self._col_x)):
             self._col_x[_cnt]+=self._col_x[_cnt-1]+_space_w
-        _extra_w*=_tab_count
         _w, _h=self.GetClientSizeTuple()
-        _w=min(_w+_extra_w, self._max_w)
+        _w=min(self._col_x[-1]-_space_w+self._col_x[0], self._max_w)
         self.SetClientSizeWH(_w, _h)
         self._view.SetDimensions(0, 0, _w, _h)
 
