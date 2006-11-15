@@ -23,7 +23,8 @@ if len(sys.argv)!=2:
     sys.exit(3)
 release=sys.argv[1]
 
-branchtarget="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"+sys.argv[1]
+#branchtarget="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"+sys.argv[1]
+branchtarget="https://svn.sourceforge.net/svnroot/bitpim/releases/"+sys.argv[1]
 
 branchdirs=topdirs
 
