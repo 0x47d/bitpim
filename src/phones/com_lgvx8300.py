@@ -35,6 +35,7 @@ import bpcalendar
 import call_history
 import sms
 import memo
+import fileinfo
 
 class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
     "Talk to the LG VX8300 cell phone"
