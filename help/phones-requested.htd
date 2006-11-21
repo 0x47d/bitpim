@@ -1,13 +1,17 @@
 #include "pagestart.h"
 
-<P>These phones are not currently supported by BitPim and not available/accessible to developers.  We appreciate any <a href="contributing.htm#phoneloan">loans and donations</a>.
+<P>These phones are not currently supported by BitPim but have been requested
+by BitPim users.  Phones that are not available/accessible to the BitPim
+developers are unlikely to be supported.  We would appreciate any
+<a href="contributing.htm#phoneloan">loans and donations</a> of these and
+other phones.
 
 <p><table width="100%" border=1>
 
 <tr>
 <th>Manufacturer</th>
 <th>Model</th>
-<th>Notes</th>
+<th>Carrier</th>
 </tr>
 
 <tr>
@@ -24,32 +28,38 @@
 
 <tr>
 <td>Samsung</td>
-<td>SCH-A990</td>
+<td>SCH-A790</td>
 <td>&nbsp;</td>
 </tr>
 
 <tr>
 <td>Samsung</td>
-<td>SPH-A900</td>
+<td>SCH-A900</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>Samsung</td>
+<td>SPH-A990</td>
 <td>&nbsp;</td>
 </tr>
 
 <tr>
 <td>Sanyo</td>
 <td>SCP-200</td>
-<td>&nbsp;</td>
+<td>Sprint</td>
 </tr>
 
 <tr>
 <td>Sanyo</td>
 <td>SCP-2400</td>
-<td>&nbsp;</td>
+<td>Sprint</td>
 </tr>
 
 <tr>
 <td>Sanyo</td>
 <td>SCP-8400</td>
-<td>&nbsp;</td>
+<td>Sprint</td>
 </tr>
 
 </table>
