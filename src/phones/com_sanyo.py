@@ -50,6 +50,8 @@ class SanyoPhonebook:
 
     calendar_defaultringtone=0
     calendar_defaultcaringtone=0
+    calendar_voicenumber=0
+    phonebook_voicenumber=0
 
     def __init__(self):
         self.numbertypetab=numbertypetab
@@ -419,6 +421,7 @@ class SanyoPhonebook:
                 if self.protocolclass.HASRINGPICBUF:
                     # ringtones
                     if ringpic.ringtones[i].ringtone>0:
+                        print res.entry.name,ringpic.ringtones[i].ringtone
                         try:
                             tone=result['ringtone-index'][ringpic.ringtones[i].ringtone]['name']
                         except:
@@ -973,8 +976,13 @@ class SanyoPhonebook:
                 alarmtime=res.entry.alarm
                 entry.alarm=(starttime-alarmtime)/60
             ringtone=res.entry.ringtone
+            print "ringtone=",ringtone
+            if self.calendar_voicenumber and ringtone == self.calendar_voicenumber:
+                ringtone=self.phonebook_voicenumber
             if ringtone in self.calendar_tonerange:
+                print "Adjusting ringtone by",-self.calendar_toneoffset
                 ringtone-=self.calendar_toneoffset
+                print "ringtone=",ringtone
             if ringtone!=self.calendar_defaultringtone:
                 if result['ringtone-index'].has_key(ringtone):
                     entry.ringtone=result['ringtone-index'][ringtone]['name']
@@ -1119,14 +1127,6 @@ class SanyoPhonebook:
                 e=self.protocolclass.evententry()
                 e.slot=eventslot
 
-                slashpos=descloc.find('/')
-                if(slashpos >= 0):
-                    eventname=descloc[0:slashpos]
-                    location=descloc[slashpos+1:]
-                else:
-                    eventname=descloc
-                    location=''
-            
                 e.eventname=descloc
                 e.eventname_len=len(e.eventname)
                 e.location=entry.location
@@ -1179,6 +1179,8 @@ class SanyoPhonebook:
                     e.ringtone=ringtoneindex
                     if e.ringtone in save_tonerange:
                         e.ringtone+=self.calendar_toneoffset
+                    if self.calendar_voicenumber and e.ringtone==self.phonebook_voicenumber:
+                        e.ringtone=self.calendar_voicenumber
                 # Use default ringtone for now
                 #e.ringtone=self.calendar_defaultringtone
                 print "Setting ringtone "+`e.ringtone`
