@@ -36,18 +36,19 @@ class Phone(com_sanyonewer.Phone):
         # offset, directory #, indexflag, type, maximumentries
         )    
 
-    builtinringtones=( 'None', 'Vibrate', '', '', '', '', '', '', '', 
+    builtinringtones=( 'None', 'Vibrate', 'Voice Alarm', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',
                        '', '', '', '', '', '', '',
                        'Requiem:Dies Irae', 'Minute Waltz',
                        'Hungarian Dance', 'Miltary March', 'Ten Little Indians',
                        'Head,Shoulders,Knees&Toes', 'The Moment', 'Asian Jingle',
-                       'Disco','','','','','','','','','','','','','','','','','',
-                       'Voice Alarm')
+                       'Disco')
 
     calendar_defaultringtone=0
     calendar_defaultcaringtone=0
+    calendar_voicenumber=56
+    phonebook_voicenumber=3
 
     def __init__(self, logtarget, commport):
         com_sanyonewer.Phone.__init__(self, logtarget, commport)
