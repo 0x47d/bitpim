@@ -160,14 +160,14 @@ class ImportDataAll(setphone_wizard.MyPage):
 
 #-------------------------------------------------------------------------------
 class ImportOptionPage(setphone_wizard.MyPage):
+    _choices=('Replace All', 'Add')
     def __init__(self, parent):
         super(ImportOptionPage, self).__init__(parent,
                                                'Import Options')
     def GetMyControls(self):
         vbs=wx.BoxSizer(wx.VERTICAL)
         self._option_rb=wx.RadioBox(self, -1, 'Import Options',
-                                    choices=['Replace All',
-                                             'Add'],
+                                    choices=self._choices,
                                     style=wx.RA_SPECIFY_ROWS)
         vbs.Add(self._option_rb, 0, wx.EXPAND|wx.ALL, 5)
         return vbs
