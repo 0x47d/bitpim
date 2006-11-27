@@ -29,7 +29,7 @@ import prototypes
 import bpcalendar
 
 numbertypetab=( 'cell', 'home', 'office', 'pager',
-                    'fax', 'data', 'none' )
+                    'fax', 'none')
 
 class Phone(com_sanyo8300.Phone):
     "Talk to the Sanyo Katana (SCP-6600) cell phone"
@@ -71,6 +71,132 @@ class Phone(com_sanyo8300.Phone):
         com_sanyo8300.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
+
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI."""
+        req=self.protocolclass.esnrequest()
+        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
+        results['uniqueserial']=sha.new('%8.8X' % res.esn).hexdigest()
+        self.getmediaindices(results)
+
+        results['groups']=self.read_groups()
+
+        self.log("Fundamentals retrieved")
+
+        return results
+
+    def read_groups(self):
+        g={}
+
+        req=self.protocolclass.grouprequest()
+        for slot in range(1,self.protocolclass.NUMGROUPS+1):
+            req.slot = slot
+            res=self.sendpbcommand(req, self.protocolclass.groupresponse)
+            if res.entry.groupname_len:
+                g[slot]={'name': res.entry.groupname}
+        return g
+
+    def xgetmediaindices(self, results):
+        "Just index builtin media for now."
+
+        com_sanyo.SanyoPhonebook.getmediaindices(self, results)
+        ringermedia=results['ringtone-index']
+        imagemedia=results['wallpaper-index']
+
+        results['ringtone-index']=ringermedia
+        results['wallpaper-index']=imagemedia
+        return
+
+    def getphonebook(self, result):
+        "Code to retrieve packets we have discovered so far so we can work out their formats."
+        pbook={}
+
+        sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
+
+        numentries=sortstuff.slotsused
+        self.log("There are %d entries" % (numentries,))
+
+        count = 0 # Number of phonebook entries
+        numcount = 0 # Number of phone numbers
+        numemail = 0 # Number of emails
+        numurl = 0 # Number of urls
+
+        self.log("`sortstuff.somecount` Somethings?")
+        self.log("`sortstuff.slotsused` Contacts")
+        self.log("`sortstuff.slotsused2` Duplicate Contacts")
+        self.log("`sortstuff.numslotsused` Phone numbers")
+        self.log("`sortstuff.emailslotsused` Email addresses")
+        self.log("`sortstuff.urlslotsused` URLs")
+        self.log("`sortstuff.num_address1` Addresses")
+        self.log("`sortstuff.num_memo`  Memos")
+
+        reqindex=self.protocolclass.contactindexrequest()
+        reqname=self.protocolclass.namerequest()
+        reqnumber=self.protocolclass.numberrequest()
+        reqemail=self.protocolclass.emailrequest()
+        requrl=self.protocolclass.urlrequest()
+        reqmemo=self.protocolclass.memorequest()
+        reqaddress=self.protocolclass.addressrequest()
+        for slot in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            if sortstuff.usedflags[slot].used:
+                entry={}
+                reqindex.slot=slot
+                resindex=self.sendpbcommand(reqindex,self.protocolclass.contactindexresponse)
+                ringerid = resindex.entry.ringerid
+                pictureid = resindex.entry.pictureid
+
+                reqname.slot = resindex.entry.namep
+                resname=self.sendpbcommand(reqname,self.protocolclass.nameresponse)
+                name=resname.entry.name
+                self.log(name)
+                #cat=result['groups'].get(group, {'name': "Unassigned"})['name']
+            
+                entry['serials']=[ {'sourcetype': self.serialsname,
+
+                                    'slot': slot,
+                                    'sourceuniqueid': result['uniqueserial']} ]
+                entry['names']=[ {'full': name} ]
+                entry['numbers']=[]
+                for numi in range(self.protocolclass.NUMPHONENUMBERS):
+                    nump=resindex.entry.numberps[numi].slot
+                    if nump < self.protocolclass.MAXNUMBERS:
+                        reqnumber.slot=nump
+                        resnumber=self.sendpbcommand(reqnumber,self.protocolclass.numberresponse)
+                        numhash={'number':resnumber.entry.number, 'type': self.numbertypetab[resnumber.entry.numbertype-1]}
+                        # Speed dial and secret
+                        entry['numbers'].append(numhash)
+
+                # Still to do:
+                # Speed dial, secrets 
+
+                urlp=resindex.entry.urlp
+                if urlp<self.protocolclass.MAXURLS:
+                    requrl.slot=urlp
+                    resurl=self.sendpbcommand(requrl,self.protocolclass.urlresponse)
+                    entry['urls']=[ {'url': resurl.entry.url} ]
+                memop=resindex.entry.memop
+                if memop<self.protocolclass.MAXMEMOS:
+                    reqmemo.slot=memop
+                    resmemo=self.sendpbcommand(reqmemo,self.protocolclass.memoresponse)
+                    entry['memos']=[ {'memo': resmemo.entry.memo} ]
+                addressp=resindex.entry.addressp
+                if addressp<self.protocolclass.MAXADDRESSES:
+                    reqaddress.slot=addressp
+                    resaddress=self.sendpbcommand(reqaddress,self.protocolclass.addressresponse)
+                    entry['address']=[ {'address': resaddress.entry.address} ]
+                emails=[]
+                for emaili in range(self.protocolclass.NUMEMAILS):
+                    emaili=resindex.entry.emailps[emaili].slot
+                    if emaili < self.protocolclass.MAXEMAILS:
+                        reqemail.slot=emaili
+                        resemail=self.sendpbcommand(reqemail,self.protocolclass.emailresponse)
+                        emails.append({'email': resemail.entry.email})
+                        
+                pbook[count]=entry
+                count+=1
+                
+        result['phonebook']=pbook
+        return pbook
 
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):

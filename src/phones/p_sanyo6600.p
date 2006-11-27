@@ -22,9 +22,12 @@ from p_sanyo4930 import *
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
-_NUMPBSLOTS=500
-_NUMNUMSLOTS=700
-_NUMEMAILSLOTS=1000
+NUMPHONEBOOKENTRIES=500
+MAXNUMBERS=700
+MAXEMAILS=1000
+MAXURLS=500
+MAXMEMOS=500
+MAXADDRESSES=500
 _NUMSPEEDDIALS=8
 _NUMLONGNUMBERS=5
 _LONGPHONENUMBERLEN=30
@@ -34,9 +37,10 @@ _NUMCALLALARMSLOTS=15
 _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
 HASRINGPICBUF=0
-MODE_OBEX=22
+NUMGROUPS=20
+NUMPHONENUMBERS=7
+NUMEMAILS=2
 
-#BREW_FILE_SYSTEM=2
 
 %}
 
@@ -70,35 +74,35 @@ PACKET pbsortbuffer:
         1 UINT used "1 if slot in use"
     # Contact slots
     2 UINT slotsused
-    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +usedflags:
+    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
         2 UINT {'default': 0xffff} pbslotandtype
     # Duplicate Contact count and slots used array?
     2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
-    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +used2flags:
+    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +used2flags:
         1 UINT used "1 if slot in use"
-    * LIST {'length': _NUMPBSLOTS} +sortorder:
+    * LIST {'length': NUMPHONEBOOKENTRIES} +sortorder:
         2 UINT {'default': 0xffff} pbslot
-    * USTRING {'terminator': None, 'sizeinbytes': _NUMPBSLOTS} pbfirstletters
+    * USTRING {'terminator': None, 'sizeinbytes': NUMPHONEBOOKENTRIES} pbfirstletters
     # Phone number slots
     2 UINT numslotsused "Number of phone number slots used"
-    * LIST {'length': _NUMNUMSLOTS, 'createdefault': True} +numusedflags:
+    * LIST {'length': MAXNUMBERS, 'createdefault': True} +numusedflags:
         1 UINT used "1 if slot in use"
     # Email address slots
     2 UINT emailslotsused
-    * LIST {'length': _NUMEMAILSLOTS, 'createdefault': True} +emailusedflags:
+    * LIST {'length': MAXEMAILS, 'createdefault': True} +emailusedflags:
         1 UINT used "1 if slot in use"
     2 UINT urlslotsused
-    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +urlusedflags:
+    * LIST {'length': MAXURLS, 'createdefault': True} +urlusedflags:
         1 UINT used "1 if slot in use"
     2 UINT num_address
     # Slots with an address
-    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +addressusedflags:
+    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +addressusedflags:
         1 UINT used "1 if slot in use"
     # Slots with a memo Needs to be checked.
     2 UINT num_memo
-    * LIST {'length': _NUMPBSLOTS, 'createdefault': True} +memousedflags:
+    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +memousedflags:
         1 UINT used "1 if slot in use"
     # We see stuff repeating here, so 6*1024 must be enough.
     # Pad out the rest of the buffer
@@ -109,3 +113,196 @@ PACKET pbsortbuffer:
 PACKET cannedmessagerequest:
     * sanyoheader {'packettype': 0x0e,
                    'command': 0x5b} +header
+
+PACKET pbinfo:
+    2 UINT {'constant': 0x00fa} +fa
+    1 UINT {'default': 0x02} +faset
+    #1 UINT command
+    1 UINT byte1
+    1 UINT byte2
+    2 UINT byte3
+
+PACKET contactindexrequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x88} +header
+    2 UINT slot
+
+# Pointers to the name, phone numbers, memo, emails, url, address
+# One name, 7 phone numbers, 2 email, 1 url, one group, 1 ringer, 1 address
+# 1 memo, 1 picture
+PACKET contactindexentry:
+    1 UINT group "Group ID"
+    2 UINT slot
+    2 UINT namep
+    * LIST {'length': NUMPHONENUMBERS} +numberps:
+        2 UINT {'default': 0xffff} +slot
+    * LIST {'length': NUMEMAILS} +emailps:
+        2 UINT {'default': 0xffff} +slot
+    2 UINT urlp
+    2 UINT addressp
+    2 UINT memop
+    2 UINT ringerid
+    2 UINT pictureid
+    
+PACKET contactindexresponse:
+    * sanyoheader header
+    2 UINT slot
+    * contactindexentry entry
+    * UNKNOWN pad
+
+PACKET numberrequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x8f} +header
+    2 UINT slot
+
+PACKET numberentry:
+    2 UINT contactp "Pointer to contact number belongs"
+    1 UINT numberlen
+    32 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +number
+    16 UNKNOWN +pad
+    1 UNKNOWN +pad2
+    1 UINT numbertype
+    
+PACKET numberresponse:
+    * sanyoheader header
+    2 UINT slot
+    * numberentry entry
+    * UNKNOWN pad
+
+PACKET namerequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x8c} +header
+    2 UINT slot
+                  
+PACKET nameentry:
+    2 UINT slot
+    1 UINT name_len
+    1 UINT name_len2
+    32 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +name
+
+PACKET nameresponse:
+    * sanyoheader header
+    2 UINT slot
+    * nameentry entry
+    * UNKNOWN pad
+                  
+PACKET urlrequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x98} +header
+    2 UINT slot
+
+PACKET urlentry:
+    2 UINT contactp "Pointer to contact number belongs"
+    1 UINT url_len
+    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +url
+    1 UNKNOWN +pad
+    1 UINT {'default': 9} +type "Always 9 for World Icon"
+
+PACKET urlresponse:
+    * sanyoheader header
+    2 UINT slot
+    * urlentry entry
+    * UNKNOWN pad
+
+PACKET addressrequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x9b} +header
+    2 UINT slot
+                  
+PACKET addressentry:
+    2 UINT contactp "Pointer to contact number belongs"
+    1 UINT address_len
+    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +address
+    1 UNKNOWN +pad
+    1 UINT {'default': 9} +type "Always 9 for World Icon"
+
+PACKET addressresponse:
+    * sanyoheader header
+    2 UINT slot
+    * addressentry entry
+    * UNKNOWN pad
+                  
+PACKET memorequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x9e} +header
+    2 UINT slot
+
+PACKET memoentry:
+    2 UINT contactp "Pointer to contact number belongs"
+    1 UINT memo_len
+    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +memo
+    1 UNKNOWN +pad
+    1 UINT {'default': 9} +type "Always 9 for World Icon"
+
+PACKET memoresponse:
+    * sanyoheader header
+    2 UINT slot
+    * memoentry entry
+    * UNKNOWN pad
+
+
+PACKET emailrequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x93} +header
+    2 UINT slot
+
+PACKET emailentry:
+    2 UINT contactp "Pointer to contact number belongs"
+    1 UINT email_len
+    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +email
+    1 UNKNOWN +pad
+    1 UINT type "7: Mobile, 8: Internet"
+    
+PACKET emailresponse:
+    * sanyoheader header
+    2 UINT slot
+    * emailentry entry
+
+PACKET grouprequest:
+    * sanyoheader {'packettype': 0x16,
+                   'command': 0x87} +header
+    1 UINT slot
+
+PACKET groupentry:
+    1 UINT slot
+    1 UINT groupname_len
+    16 USTRING {'default': ""} +groupname
+    2 UINT {'default': 0xfff0} +ringer
+    2 UINT {'default': 0xfffe} +picture
+    
+
+PACKET groupresponse:
+    * sanyoheader header
+    1 UINT slot
+    * groupentry entry
+    * UNKNOWN pad
+
+PACKET evententry:
+    P UINT {'default': 0xffffffff} +alarm
+    1 UINT slot
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
+    7 UNKNOWN +pad1
+    1 UINT eventname_len
+    4 UINT start "# seconds since Jan 1, 1980 approximately"
+    4 UINT end
+    14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
+    7 UNKNOWN +pad2
+    1 UINT location_len
+    4 UINT alarmdiff "Displayed alarm time"
+    1 UINT period "No, Daily, Weekly, Monthly, Yearly"
+    1 UINT dom "Day of month for the event"
+    4 UINT {'default': 0} +timestamp
+    1 UNKNOWN +pad3
+    1 UINT {'default': 0} +serial "Some kind of serial number"
+    3 UNKNOWN +pad4
+    2 UINT ringtone
+
+PACKET eventresponse:
+    * qcpheader header
+    * evententry entry
+    * UNKNOWN pad
+    
+PACKET eventupdaterequest:
+    * qcpwriteheader {'packettype': 0x0c, 'command':0x23} +header
+    * evententry entry
+    56 UNKNOWN +pad
