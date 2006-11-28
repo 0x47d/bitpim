@@ -332,7 +332,12 @@ class Config(ConfigParser.ConfigParser):
         if guihelper.IsMSWindows(): # we want subdir of my documents on windows
             # nice and painful
             from win32com.shell import shell, shellcon
-            path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+            try:
+                path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
+            except: # it will fail if path doesn't exist.  one example was a user
+                # putting my docs on an external usb drive that isn't plugged in
+                # when starting bitpim
+                path=r"c:\My BitPim Files"
             path=os.path.join(path, "bitpim")
         else:
             path=os.path.expanduser("~/.bitpim-files")
