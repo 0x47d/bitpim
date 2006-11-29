@@ -196,19 +196,25 @@ class Phone(parentphone):
         # first, retrieve the list of all songs
         result[playlist.masterlist_key]=self._get_all_songs(result)
         # get a list of playlists and their contents
-        _req=self.protocolclass.PLIndexFile()
-        _buf=prototypes.buffer(
-            self.getfilecontents(self.protocolclass.PLIndexFileName))
-        _req.readfrombuffer(_buf, logtitle='Reading Playlist Index')
         _pl_list=[]
-        for _item in _req.items:
-            try:
-                _pl_list.append(self._read_pl_list(_item.pathname))
-            except com_brew.BrewNoSuchFileException:
-                pass
-            except:
-                if __debug__:
-                    raise
+        try:
+            _req=self.protocolclass.PLIndexFile()
+            _buf=prototypes.buffer(
+                self.getfilecontents(self.protocolclass.PLIndexFileName))
+            _req.readfrombuffer(_buf, logtitle='Reading Playlist Index')
+            for _item in _req.items:
+                try:
+                    _pl_list.append(self._read_pl_list(_item.pathname))
+                except com_brew.BrewNoSuchFileException:
+                    pass
+                except:
+                    if __debug__:
+                        raise
+        except com_brew.BrewNoSuchFileException:
+            pass
+        except:
+            if __debug__:
+                raise
         result[playlist.playlist_key]=_pl_list
         return result
 
