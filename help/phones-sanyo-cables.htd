@@ -16,7 +16,7 @@ will charge the phone as well as act as a data cable.
 
 <h3>Futuredial cable</h2>
 The cable from URL(http://www.futuredial.com/,FutureDial) has the product
-id CSAYM03-03.
+ID CSAYM03-03.
 <p align=center><img src="cable-sanyo-usb-futuredial.jpg">
 
 </blockquote>
@@ -27,17 +27,18 @@ id CSAYM03-03.
 URL(http://www.sanyo.com/consumer/communications/usb_driver_install.htm,Sanyo),
 URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial),
 or 
-URL(http://support.susteen.com/ics/support/DLSplash.asp?task=download,DataPilot)
-(Motorola/Sanyo driver).  Most phones will work with any of these
-drivers, but newer phones such as the the SCP-3100, SCP-6600 (Katana) and SCP-7500 only work with the DataPilot driver.</p>
+URL(http://support.susteen.com/ics/support/default.asp?deptID=2623,DataPilot)
+(Go to "Downloads" and then download the "Motorola/Sanyo Phone Driver").
+Most phones will work with any of these
+drivers, but newer phones such as the SCP-3100, SCP-6600 (Katana) only work with the DataPilot driver.</p>
 <h3>Linux</h3>
-<p>The Sanyo phones use the Linux "acm" driver with this cable.  This
+<p>Older Sanyo phones use the Linux "acm" driver with this cable.  This
 driver will automatically install with most modern Linux distributions
 will show up as the device <tt>/dev/usb/ttyACM0</tt>.  If the acm
 driver does not automatically get loaded, load it with <code>/sbin/insmod acm</code>
 while logged on as root.
 </p>
-<p>The SCP-3100, SCP-6600 and SCP-7500  require direct <a href="howto-linuxusb.htm">Direct
+<p>The newer SCP-3100, SCP-6600 and SCP-7500 require direct <a href="howto-linuxusb.htm">Direct
 USB access</a> instead of the acm driver.
 </p>
 <h3>Mac</h3>
