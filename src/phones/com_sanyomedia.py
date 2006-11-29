@@ -62,7 +62,9 @@ class SanyoMedia:
             req=self.protocolclass.sanyonumfilesrequest()
             try:
                 res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
-            except:
+            except com_sanyo.SanyoCommandException, ex:
+                if ex.errnum!=121:
+                    raise
                 self.log("Skipping directory "+`idir`)
                 continue
             
