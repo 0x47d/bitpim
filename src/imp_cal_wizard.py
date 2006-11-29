@@ -57,12 +57,20 @@ class ImportTypePage(setphone_wizard.MyPage):
     def get(self, data):
         # return data to the main wizard, data is a dict
         _idx=self._type_lb.GetSelection()
-        data['type']=self._type_lb.GetString(_idx)
-        _info=self._type_lb.GetClientData(_idx)
-        data['data']=_info['data']
-        data['data_obj']=_info['data']()
-        data['source_class']=_info['source']
-        data['source_obj']=_info['source']()
+        _type=self._type_lb.GetString(_idx)
+        _new_type=data.get('type', None)!=_type
+        if _new_type or not data.has_key('data'):
+            data['type']=_type
+            _info=self._type_lb.GetClientData(_idx)
+            data['data']=_info['data']
+            data['data_obj']=_info['data']()
+            data['source_class']=_info['source']
+            data['source_obj']=_info['source']()
+        if _new_type:
+            # new type selected
+            data['type']=_type
+            if data.has_key('source_id'):
+                del data['source_id']
 
     def set(self, data):
         # pass current data to this page
@@ -96,10 +104,13 @@ class ImportSourcePage(setphone_wizard.MyPage):
         return self._source and self._source.get()
     def get(self, data):
         data['source_obj']=self._source
+        data['source_id']=self._source.id
         data['imported']=False
     def set(self, data):
         self._source=data['source_obj']
         if self._source:
+            if data.has_key('source_id'):
+                self._source.id=data['source_id']
             self._source_lbl.SetValue(self._source.name())
     def GetActiveDatabase(self):
         return self.GetParent().GetActiveDatabase()

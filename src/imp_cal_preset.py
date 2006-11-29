@@ -44,6 +44,11 @@ class ImportCalendarEntry(dict):
     # a dict class that automatically generates an ID for use with
     # BitPim database.
 
+    def __init__(self, data=None):
+        super(ImportCalendarEntry, self).__init__()
+        if data:
+            self.update(data)
+
     _persistrandom=random.Random()
     def _create_id(self):
         "Create a BitPim serial for this entry"
@@ -217,6 +222,134 @@ class ImportCalendarPresetWizard(wiz.Wizard):
         if self._data.get('data_obj', None):
             return self._data['data_obj'].get_category_list()
         return []
+
+#-------------------------------------------------------------------------------
+class ImportCalendarPresetDialog(wx.Dialog):
+    ID_ADD=wx.NewId()
+
+    def __init__(self, parent, id, title):
+        self._parent=parent
+        self._data={}
+        super(ImportCalendarPresetDialog, self).__init__(parent, id,
+                                                         title)
+        _vbs=wx.BoxSizer(wx.VERTICAL)
+        _static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
+                                                  'Available Presets:'),
+                                     wx.VERTICAL)
+        self._name_lb=wx.ListBox(self, -1, style=wx.LB_SINGLE|wx.LB_NEEDED_SB)
+        _static_bs.Add(self._name_lb, 0, wx.EXPAND|wx.ALL, 5)
+        _vbs.Add(_static_bs, 0, wx.EXPAND|wx.ALL, 5)
+        _vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        _hbs=wx.BoxSizer(wx.HORIZONTAL)
+        self._run_btn=wx.Button(self, -1, 'Run')
+        wx.EVT_BUTTON(self, self._run_btn.GetId(), self._OnRun)
+        _hbs.Add(self._run_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'New')
+        wx.EVT_BUTTON(self, _btn.GetId(), self._OnNew)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._edit_btn=wx.Button(self, -1, 'Edit')
+        wx.EVT_BUTTON(self, self._edit_btn.GetId(), self._OnEdit)
+        _hbs.Add(self._edit_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._del_btn=wx.Button(self, -1, 'Delete')
+        wx.EVT_BUTTON(self, self._del_btn.GetId(), self._OnDel)
+        _hbs.Add(self._del_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'),
+                 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _vbs.Add(_hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self.SetSizer(_vbs)
+        self.SetAutoLayout(True)
+        _vbs.Fit(self)
+        self._get_from_fs()
+        self._populate()
+
+    def _OnRun(self, _):
+        pass
+    def _OnNew(self, _):
+        _entry=ImportCalendarEntry()
+        _wiz=ImportCalendarPresetWizard(self, _entry)
+        if _wiz.RunWizard():
+            _entry=_wiz.get()
+            self._data[_entry.id]=_entry
+            self._populate()
+            self._save_to_fs()
+    def _OnEdit(self, _):
+        _idx=self._name_lb.GetSelection()
+        if _idx==wx.NOT_FOUND:
+            return
+        _key=self._name_lb.GetClientData(_idx)
+        _entry=self._data[_key].copy()
+        _wiz=ImportCalendarPresetWizard(self, _entry)
+        if _wiz.RunWizard():
+            _entry=_wiz.get()
+            self._data[_key]=_entry
+            self._populate()
+
+    def _OnDel(self, _):
+        pass
+    def _populate(self):
+        # populate the listbox with the name of the presets
+        self._name_lb.Clear()
+        for _key, _entry in self._data.items():
+            self._name_lb.Append(_entry['name'], _key)
+
+    def _expand_item(self, item):
+        if item.has_key('categories') and item['categories']:
+            _cat=[{ 'category': x } for x in item['categories']]
+            del item['categories']
+            if _cat:
+                item['categories']=_cat
+        if item.has_key('start'):
+            _date=[{'year': item['start'][0], 'month': item['start'][1],
+                    'day': item['start'][2] }]
+            del item['start']
+            item['start']=_date
+        if item.has_key('end'):
+            _date=[{'year': item['end'][0], 'month': item['end'][1],
+                    'day': item['end'][2] }]
+            del item['end']
+            item['end']=_date
+        return item
+    def _collapse_item(self, item):
+        if item.has_key('categories'):
+            _cat=[x['category'] for x in item['categories']]
+            del item['categories']
+            if _cat:
+                item['categories']=_cat
+        if item.has_key('start'):
+            _d0=item['start'][0]
+            _date=(_d0['year'], _d0['month'], _d0['day'])
+            del item['start']
+            item['start']=_date
+        if item.has_key('end'):
+            _d0=item['end'][0]
+            _date=(_d0['year'], _d0['month'], _d0['day'])
+            del item['end']
+            item['end']=_date
+        return item
+
+    def _get_from_fs(self):
+        # read the presets data from DB
+        _data=self._parent.GetActiveDatabase().getmajordictvalues('imp_cal_preset',
+                                                                  importcalendarobjectfactory)
+        self._data={}
+        for _key, _entry in _data.items():
+            self._data[key]=ImportCalendarEntry(self._collapse_item(_entry))
+        self._populate()
+
+    def _save_to_fs(self):
+        _data={}
+        for _key, _entry in self._data.items():
+            _data[_key]=self._expand_item(_entry)
+        database.ensurerecordtype(_data, importcalendarobjectfactory)
+        self._parent.GetActiveDatabase().savemajordict('imp_cal_preset',
+                                                       _data)
+
+    def get(self):
+        pass
+    def get_categories(self):
+        pass
+    def GetActiveDatabase(self):
+        return self._parent.GetActiveDatabase()
 
 #-------------------------------------------------------------------------------
 # Testing

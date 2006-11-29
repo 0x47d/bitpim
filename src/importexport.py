@@ -53,6 +53,8 @@ def GetPhonebookImports():
                    (guihelper.ID_AUTOSYNCEXECUTE, 'Execute',
                     'Perform Auto Calendar Import', None))
                  ))
+    res.append( (wx.NewId(), 'Calendar Import Preset',
+                'Calendar Import Preset', OnCalendarPreset) )
     # CSV - always possible
     res.append( (guihelper.ID_IMPORT_CSV_CONTACTS,"CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     res.append( (guihelper.ID_IMPORT_CSV_CALENDAR,"CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
@@ -1991,6 +1993,12 @@ def OnCalendarWizard(parent):
                        'Import Calendar Wizard',
                        parent.GetActiveCalendarWidget(),
                        'calendar')
+
+def OnCalendarPreset(parent):
+    import imp_cal_preset
+    OnFileImportCommon(parent, imp_cal_preset.ImportCalendarPresetDialog,
+                       'Import Calendar Preset',
+                       parent.GetActiveCalendarWidget(), 'calendar')
 
 def OnFileImportOutlookNotes(parent):
     import native.outlook
