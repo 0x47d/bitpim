@@ -60,7 +60,12 @@ class SanyoMedia:
             req.dirindex=idir
             res=self.sendpbcommand(req, self.protocolclass.sanyochangedirresponse)
             req=self.protocolclass.sanyonumfilesrequest()
-            res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
+            try:
+                res=self.sendpbcommand(req, self.protocolclass.sanyonumfilesresponse)
+            except:
+                self.log("Skipping directory "+`idir`)
+                continue
+            
             self.log("Directory "+`idir`+", File Count="+`res.count`)
             nfiles=res.count
             for ifile in range(nfiles):
