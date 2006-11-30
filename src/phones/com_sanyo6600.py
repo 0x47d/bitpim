@@ -113,6 +113,16 @@ class Phone(com_sanyo8300.Phone):
 
         sortstuff = self.getsanyobuffer(self.protocolclass.pbsortbuffer)
 
+        speedslot=[]
+        speedtype=[]
+        for i in range(self.protocolclass._NUMSPEEDDIALS):
+            speedslot.append(sortstuff.speeddialindex[i].pbslotandtype & 0xfff)
+            numtype=(sortstuff.speeddialindex[i].pbslotandtype>>12)-1
+            if(numtype >= 0 and numtype <= len(self.numbertypetab)):
+                speedtype.append(self.numbertypetab[numtype])
+            else:
+                speedtype.append("")
+
         numentries=sortstuff.slotsused
         self.log("There are %d entries" % (numentries,))
 
@@ -121,14 +131,15 @@ class Phone(com_sanyo8300.Phone):
         numemail = 0 # Number of emails
         numurl = 0 # Number of urls
 
-        self.log("`sortstuff.somecount` Somethings?")
+        self.log("`sortstuff.groupslotsused` Groups")
         self.log("`sortstuff.slotsused` Contacts")
         self.log("`sortstuff.slotsused2` Duplicate Contacts")
         self.log("`sortstuff.numslotsused` Phone numbers")
         self.log("`sortstuff.emailslotsused` Email addresses")
         self.log("`sortstuff.urlslotsused` URLs")
-        self.log("`sortstuff.num_address1` Addresses")
+        self.log("`sortstuff.num_address` Addresses")
         self.log("`sortstuff.num_memo`  Memos")
+        numentries=sortstuff.slotsused
 
         reqindex=self.protocolclass.contactindexrequest()
         reqname=self.protocolclass.namerequest()
@@ -144,18 +155,22 @@ class Phone(com_sanyo8300.Phone):
                 resindex=self.sendpbcommand(reqindex,self.protocolclass.contactindexresponse)
                 ringerid = resindex.entry.ringerid
                 pictureid = resindex.entry.pictureid
+                groupid = resindex.entry.groupid
 
                 reqname.slot = resindex.entry.namep
                 resname=self.sendpbcommand(reqname,self.protocolclass.nameresponse)
                 name=resname.entry.name
                 self.log(name)
-                #cat=result['groups'].get(group, {'name': "Unassigned"})['name']
-            
+                cat=result['groups'].get(groupid, {'name': "Unassigned"})['name']
+                if cat != 'Unassigned':
+                    entry['categories']=[ {'category': cat} ]
                 entry['serials']=[ {'sourcetype': self.serialsname,
 
                                     'slot': slot,
                                     'sourceuniqueid': result['uniqueserial']} ]
                 entry['names']=[ {'full': name} ]
+                if resindex.entry.secret:
+                    entry['flags']=[{'secret': True}]
                 entry['numbers']=[]
                 for numi in range(self.protocolclass.NUMPHONENUMBERS):
                     nump=resindex.entry.numberps[numi].slot
@@ -163,11 +178,17 @@ class Phone(com_sanyo8300.Phone):
                         reqnumber.slot=nump
                         resnumber=self.sendpbcommand(reqnumber,self.protocolclass.numberresponse)
                         numhash={'number':resnumber.entry.number, 'type': self.numbertypetab[resnumber.entry.numbertype-1]}
-                        # Speed dial and secret
-                        entry['numbers'].append(numhash)
+                        if resindex.entry.defaultnum==numi:
+                            entry['numbers'].insert(0,numhash)
+                        else:
+                            entry['numbers'].append(numhash)
 
-                # Still to do:
-                # Speed dial, secrets 
+                for j in range(len(speedslot)):
+                    if(speedslot[j]==slot):
+                        for k in range(len(entry['numbers'])):
+                            if(entry['numbers'][k]['type']==speedtype[j]):
+                                entry['numbers'][k]['speeddial']=j+2
+                                break
 
                 urlp=resindex.entry.urlp
                 if urlp<self.protocolclass.MAXURLS:
@@ -178,24 +199,41 @@ class Phone(com_sanyo8300.Phone):
                 if memop<self.protocolclass.MAXMEMOS:
                     reqmemo.slot=memop
                     resmemo=self.sendpbcommand(reqmemo,self.protocolclass.memoresponse)
+                    self.log("Memo: "+resmemo.entry.memo)
                     entry['memos']=[ {'memo': resmemo.entry.memo} ]
                 addressp=resindex.entry.addressp
                 if addressp<self.protocolclass.MAXADDRESSES:
                     reqaddress.slot=addressp
                     resaddress=self.sendpbcommand(reqaddress,self.protocolclass.addressresponse)
-                    entry['address']=[ {'address': resaddress.entry.address} ]
-                emails=[]
+                    # Need to parse this address for phonebook.py
+                    self.log("Address: "+resaddress.entry.address)
+                    entry['addresses']=[ {'street': resaddress.entry.address} ]
+                entry['emails']=[]
                 for emaili in range(self.protocolclass.NUMEMAILS):
                     emaili=resindex.entry.emailps[emaili].slot
                     if emaili < self.protocolclass.MAXEMAILS:
                         reqemail.slot=emaili
                         resemail=self.sendpbcommand(reqemail,self.protocolclass.emailresponse)
-                        emails.append({'email': resemail.entry.email})
+                        self.log("Email: "+resemail.entry.email)
+                        entry['emails'].append({'email': resemail.entry.email})
                         
                 pbook[count]=entry
+                self.progress(count, numentries, name)
                 count+=1
+                numcount+=len(entry['numbers'])
+                if entry.has_key('emails'):
+                    numemail+=len(entry['emails'])
+                if entry.has_key('urls'):
+                    numurl+=len(entry['urls'])
                 
+                
+        self.progress(numentries, numentries, "Phone book read completed")
+        self.log("Phone contains "+`count`+" contacts, "+`numcount`+" phone numbers, "+`numemail`+" Emails, "+`numurl`+" URLs")
         result['phonebook']=pbook
+        cats=[]
+        for i in result['groups']:
+            cats.append(result['groups'][i]['name'])
+        result['categories']=cats
         return pbook
 
 parentprofile=com_sanyo8300.Profile
@@ -211,7 +249,7 @@ class Profile(parentprofile):
     deviceclasses=("serial",)
     
     _supportedsyncs=(
-        #('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'read', None),  # all phonebook reading
         ('calendar', 'read', None),   # all calendar reading
         #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
