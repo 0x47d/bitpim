@@ -9,13 +9,22 @@
 
 """The various types used in protocol descriptions specific to Samsung phones"""
 
+import calendar
 import datetime
 import time
 
 import prototypes
 
 class DateTime(prototypes.UINTlsb):
+    _daylight=None
     def __init__(self, *args, **kwargs):
+        if DateTime._daylight is None:
+            _tt=datetime.datetime.now().timetuple()
+            if time.daylight and \
+               int(time.mktime(_tt)-calendar.timegm(_tt))==time.altzone:
+                DateTime._daylight=3600
+            else:
+                DateTime._daylight=0
         super(DateTime, self).__init__(*args, **kwargs)
         kwargs.update({ 'sizeinbytes': 4 })
         if self._ismostderived(DateTime):
@@ -36,12 +45,11 @@ class DateTime(prototypes.UINTlsb):
         self._complainaboutunusedargs(DateTime, kwargs)
         assert self._sizeinbytes==4
 
-    _time_delta=315529200.0
+    _time_delta=315532800.0
     def _converttoint(self, date):
         assert len(date)==5
-        year,month,day,hour,min=date
-        _dt=datetime.datetime(*date)
-        return int(time.mktime(_dt.timetuple())-self._time_delta)
+        return int(time.mktime(datetime.datetime(*date).timetuple())-\
+                   self._time_delta-DateTime._daylight)
 
     def getvalue(self):
         """Unpack 32 bit value into date/time
@@ -49,7 +57,7 @@ class DateTime(prototypes.UINTlsb):
         @return: (year, month, day, hour, minute)
         """
         val=super(DateTime, self).getvalue()
-        return time.localtime(val+self._time_delta)[:5]
+        return time.localtime(val+self._time_delta+DateTime._daylight)[:5]
 
 class DateTime1(DateTime):
     # similar to DateTime, except getvalue includes seconds
@@ -65,10 +73,7 @@ class DateTime1(DateTime):
         @return: (year, month, day, hour, minute, second)
         """
         val=prototypes.UINTlsb.getvalue(self)
-        if time.daylight:
-            # account for daylight, which gmtime always ignores
-            val+=3600
-        return time.gmtime(val+self._time_delta)[:6]
+        return time.gmtime(val+self._time_delta+DateTime._daylight)[:6]
 
 class ExpiringTime(prototypes.UINTlsb):
     # Implement a weird expiring time used by Samsung calendar events

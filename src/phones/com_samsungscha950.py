@@ -10,6 +10,7 @@
 """Communicate with the Samsung SCH-A950 Phone"""
 
 # System Models
+import calendar
 import datetime
 import sha
 import time
@@ -1084,11 +1085,16 @@ class CalendarEntry(object):
         if entry.vibrate:
             return self.ALERT_VIBRATE
         return self.ALERT_TONE
+    _tz_code=None
     def _build_tz(self):
-        _tz=self._build_tz_dict.get(time.timezone, self.TZ_EST)
-        if time.daylight:
-            _tz+=1
-        return _tz
+        if CalendarEntry._tz_code is None:
+            CalendarEntry._tz_code=self._build_tz_dict.get(time.timezone, self.TZ_EST)
+            _dt=datetime.datetime.now().timetuple()
+            if time.daylight and \
+               int(time.mktime(_dt)-calendar.timegm(_dt))==time.altzone:
+                # daylight saving time
+                CalendarEntry._tz_code+=1
+        return CalendarEntry._tz_code
 
     def _build(self, entry):
         # populate this object with data from BitPim
