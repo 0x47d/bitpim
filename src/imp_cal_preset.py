@@ -36,7 +36,10 @@ IMP_OPTION_PREVIEW=2
 class ImportCalendarDataObject(common_calendar.FilterDataObject):
     _knownproperties=common_calendar.FilterDataObject._knownproperties+\
                       ['name', 'type', 'source_id', 'option' ]
-
+    _knownlistproperties=common_calendar.FilterDataObject._knownlistproperties
+    allproperties=_knownproperties+\
+                    [x for x in _knownlistproperties]+\
+                    [x for x in common_calendar.FilterDataObject._knowndictproperties]
 importcalendarobjectfactory=database.dataobjectfactory(ImportCalendarDataObject)
 
 #-------------------------------------------------------------------------------
@@ -76,6 +79,16 @@ class ImportCalendarEntry(dict):
                 return
         self.setdefault('serials', []).append({'sourcetype': 'bitpim', 'id': id } )
     id=property(fget=_get_id, fset=_set_id)
+
+    def validate_properties(self):
+        # validate and remove non-persistent properties as defined in
+        # ImportCalendarDataObject class
+        _del_keys=[]
+        for _key in self:
+            if not _key in ImportCalendarDataObject.allproperties:
+                _del_keys.append(_key)
+        for _key in _del_keys:
+            del self[_key]
 
 #-------------------------------------------------------------------------------
 class FilterDialog(common_calendar.FilterDialog):
@@ -151,8 +164,12 @@ class PresetFilterPage(setphone_wizard.MyPage):
         getattr(self, attr).SetLabel(_v is not None and eval(fmt) or '')
     def _populate(self):
         # populate the display with the filter parameters
-        self._display('start', '_start', "'%04d/%02d/%02d'%(_v[0], _v[1], _v[2])")
-        self._display('end', '_end', "'%04d/%02d/%02d'%(_v[0], _v[1], _v[2])")
+        if self._data.get('preset_date', None) is None:
+            _fmt="'%04d/%02d/%02d'%(_v[0], _v[1], _v[2])"
+        else:
+            _fmt="'<Preset>'"
+        self._display('start', '_start', _fmt)
+        self._display('end', '_end', _fmt)
         self._display('preset_date', '_preset',
                       "['This Week', 'This Month', 'This Year'][_v]")
         self._display('rpt_events', '_repeat',
@@ -270,8 +287,8 @@ class ImportCalendarPresetDialog(wx.Dialog):
         if _wiz.RunWizard():
             _entry=_wiz.get()
             self._data[_entry.id]=_entry
-            self._populate()
             self._save_to_fs()
+            self._populate()
     def _OnEdit(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -280,24 +297,30 @@ class ImportCalendarPresetDialog(wx.Dialog):
         _entry=self._data[_key].copy()
         _wiz=ImportCalendarPresetWizard(self, _entry)
         if _wiz.RunWizard():
-            _entry=_wiz.get()
-            self._data[_key]=_entry
+            _entry=ImportCalendarEntry(_wiz.get())
+            del self._data[_key]
+            self._data[_entry.id]=_entry
+            self._save_to_fs()
             self._populate()
-
     def _OnDel(self, _):
-        pass
+        _idx=self._name_lb.GetSelection()
+        if _idx==wx.NOT_FOUND:
+            return
+        _key=self._name_lb.GetClientData(_idx)
+        del self._data[_key]
+        self._save_to_fs()
+        self._populate()
+
     def _populate(self):
         # populate the listbox with the name of the presets
         self._name_lb.Clear()
         for _key, _entry in self._data.items():
             self._name_lb.Append(_entry['name'], _key)
 
-    def _expand_item(self, item):
-        if item.has_key('categories') and item['categories']:
-            _cat=[{ 'category': x } for x in item['categories']]
+    def _expand_item(self, entry):
+        item=entry.copy()
+        if item.has_key('categories'):
             del item['categories']
-            if _cat:
-                item['categories']=_cat
         if item.has_key('start'):
             _date=[{'year': item['start'][0], 'month': item['start'][1],
                     'day': item['start'][2] }]
@@ -309,20 +332,18 @@ class ImportCalendarPresetDialog(wx.Dialog):
             del item['end']
             item['end']=_date
         return item
-    def _collapse_item(self, item):
+    def _collapse_item(self, entry):
+        item=entry.copy()
         if item.has_key('categories'):
-            _cat=[x['category'] for x in item['categories']]
             del item['categories']
-            if _cat:
-                item['categories']=_cat
         if item.has_key('start'):
             _d0=item['start'][0]
-            _date=(_d0['year'], _d0['month'], _d0['day'])
+            _date=[_d0['year'], _d0['month'], _d0['day']]
             del item['start']
             item['start']=_date
         if item.has_key('end'):
             _d0=item['end'][0]
-            _date=(_d0['year'], _d0['month'], _d0['day'])
+            _date=[_d0['year'], _d0['month'], _d0['day']]
             del item['end']
             item['end']=_date
         return item
@@ -332,13 +353,15 @@ class ImportCalendarPresetDialog(wx.Dialog):
         _data=self._parent.GetActiveDatabase().getmajordictvalues('imp_cal_preset',
                                                                   importcalendarobjectfactory)
         self._data={}
-        for _key, _entry in _data.items():
-            self._data[key]=ImportCalendarEntry(self._collapse_item(_entry))
+        for _, _val in _data.items():
+            _entry=ImportCalendarEntry(self._collapse_item(_val))
+            self._data[_entry.id]=_entry
         self._populate()
 
     def _save_to_fs(self):
         _data={}
         for _key, _entry in self._data.items():
+            _entry.validate_properties()
             _data[_key]=self._expand_item(_entry)
         database.ensurerecordtype(_data, importcalendarobjectfactory)
         self._parent.GetActiveDatabase().savemajordict('imp_cal_preset',

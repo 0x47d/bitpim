@@ -618,6 +618,7 @@ class FilterDialog(FilterDialogBase):
             r['start'],r['end']=self._get_preset_date()
             r['preset_date']=self._preset_date.GetSelection()
         else:
+            r['preset_date']=None
             if self._start_date_chkbox.GetValue():
                 dt=self._start_date.GetDate()
                 r['start']=(dt.GetYear(), dt.GetMonth()+1, dt.GetDay())
