@@ -326,28 +326,39 @@ class SanyoPhonebook:
         gsms = {}
         self.log("Getting sms entries")
         req=self.protocolclass.messagerequest()
-        for slot in range(self.protocolclass.NUMMESSAGESLOTS):
-            req.slot=slot
-            res=self.sendpbcommand(req, self.protocolclass.messageresponse)
-            if res.entry.dunno4==2:
-                entry=sms.SMSEntry()
-                entry.folder=entry.Folder_Inbox
-                entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
-                if res.entry.read==17:
-                    entry.read=1
-                else:
-                    entry.read=0
-                entry._from=res.entry.phonenum
-                entry.callback=res.entry.callback
-                entry.subject="%d-%s-%s" % ((res.entry.counter, res.entry.phonenum, res.entry.message[:12]))
-                self.log(res.entry.message[:8])
-                if res.entry.priority==100:
-                    entry.priority=sms.SMSEntry.Priority_Normal
-                if res.entry.priority==200:
-                    entry.priority=sms.SMSEntry.Priority_High
-                entry.text=res.entry.message
-                gsms[entry.id]=entry
-                result['sms']=gsms
+        for box in range(2):
+            if box==0:
+                req=self.protocolclass.messagerequest()
+                respc=self.protocolclass.messageresponse
+            else:
+                req=self.protocolclass.messagesentrequest()
+                respc=self.protocolclass.messagesentresponse
+            for slot in range(self.protocolclass.NUMMESSAGESLOTS):
+                req.slot=slot
+                res=self.sendpbcommand(req, respc)
+                if res.entry.dunno4==2:
+                    entry=sms.SMSEntry()
+                    if box==0:
+                        entry.folder=entry.Folder_Inbox
+                        entry._from=res.entry.phonenum
+                    else:
+                        entry.folder=entry.Folder_Sent
+                        entry._to=res.entry.phonenum
+                    entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
+                    if res.entry.read==17:
+                        entry.read=1
+                    else:
+                        entry.read=0
+                    entry.callback=res.entry.callback
+                    entry.subject=res.entry.message[:12]
+                    self.log(res.entry.message[:8])
+                    if res.entry.priority==100:
+                        entry.priority=sms.SMSEntry.Priority_Normal
+                    if res.entry.priority==200:
+                        entry.priority=sms.SMSEntry.Priority_High
+                    entry.text=res.entry.message
+                    gsms[entry.id]=entry
+                    result['sms']=gsms
         return result
 
     def gettodo(self, result):

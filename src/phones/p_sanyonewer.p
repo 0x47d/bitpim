@@ -272,6 +272,12 @@ PACKET messagerequest:
     1 UINT slot
     501 UNKNOWN +pad
 
+PACKET messagesentrequest:
+    * sanyoheader {'packettype': 0x0d,
+                   'command': 0x55} +header
+    1 UINT slot
+    501 UNKNOWN +pad
+
 PACKET messageentry:
     1 UINT slot
     1 UINT read
@@ -306,7 +312,12 @@ PACKET messageentry:
 PACKET messageresponse:
     * sanyoheader header
     * messageentry entry
-    151 UNKNOWN pad
+    * UNKNOWN pad
+
+PACKET messagesentresponse:
+    * sanyoheader header
+    * messageentry entry
+    * UNKNOWN pad
 
 PACKET foldernamerequest:
     * sanyoheader {'packettype': 0x0b, 'command': 0xef} +header

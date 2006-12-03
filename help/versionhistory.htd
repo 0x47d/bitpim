@@ -6,6 +6,8 @@
       <li>Bug fix: Adding mp3 ringtones crashes BitPim (<B>LG-VX8300</B>)
       <li><b>Windows</b>:  Fixed issue where BitPim would silently fail if <tt>My Documents</tt>
       didn't exist (eg on an external USB drive that isn't plugged in). 
+      <li>Sanyo phones: Read "Sent" messages as well received messages when
+	  reading SMS.
       <li>Bug fix: Timezone issues with Samsung A930/A950 calendar events.
     </ul>
 
