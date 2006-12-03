@@ -18,20 +18,21 @@ import common
 import p_brew
 import p_sanyo8300
 import p_sanyo4930
+import p_sanyo3100
 import p_sanyo7500
 import com_brew
 import com_phone
 import com_sanyo
 import com_sanyomedia
 import com_sanyonewer
-import com_sanyo8300
+import com_sanyo3100
 import prototypes
 import bpcalendar
 
 numbertypetab=( 'cell', 'home', 'office', 'pager',
                     'fax', 'data', 'none' )
 
-class Phone(com_sanyo8300.Phone):
+class Phone(com_sanyo3100.Phone):
     "Talk to the Sanyo MM-7500 cell phone"
 
     desc="MM-7500"
@@ -59,24 +60,25 @@ class Phone(com_sanyo8300.Phone):
     calendar_defaultcaringtone=0
 
     def __init__(self, logtarget, commport):
-        com_sanyo8300.Phone.__init__(self, logtarget, commport)
+        com_sanyo3100.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-parentprofile=com_sanyo8300.Profile
+    my_model='SCP-7500/US'
+    my_manufacturer='SANYO'
+
+parentprofile=com_sanyo3100.Profile
 class Profile(parentprofile):
 
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
-    phone_manufacturer='SANYO'
-    phone_model='SCP-7500/US'
+    phone_manufacturer=Phone.my_manufacturer
+    phone_model=Phone.my_model
 
     WALLPAPER_WIDTH=176
     WALLPAPER_HEIGHT=220
 
     # which usb ids correspond to us
-    usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
-    deviceclasses=("serial",)
     
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

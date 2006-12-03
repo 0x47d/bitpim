@@ -19,6 +19,7 @@ import com_sanyo8300
 import p_brew
 import p_sanyo8300
 import p_sanyo3100
+import commport
 import com_brew
 import com_phone
 import com_sanyo
@@ -63,13 +64,73 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
+    def get_esn(self):
+        req=self.protocolclass.esnrequest()
+        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
+        return '%08X'%res.esn
+
+    # Phone Detection-----------------------------------------------------------
+    def is_mode_brew(self):
+        # Borrowed from the VX4400
+        req=self.protocolclass.firmwarerequest()
+        respc=self.protocolclass.testing0cresponse
+        for baud in 0, 38400, 115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
+    def check_my_phone(self, res):
+        # check if this is an 6600
+        try:
+            _req=self.protocolclass.sanyofirmwarerequest()
+            _resp=self.sendbrewcommand(_req, self.protocolclass.sanyofirmwareresponse)
+            if _resp.phonemodel[:len(self.my_model)]==self.my_model:
+                # yup, this's it!
+                res['model']=self.my_model
+                res['manufacturer']=self.my_manufacturer
+                res['esn']=self.get_esn()
+        except:
+            if __debug__:
+                raise
+
+    def detectphone(coms, likely_ports, res, _module, _log):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
+                if res[port]['mode_brew'] is None:
+                    res[port]['mode_brew']=p.is_mode_brew()
+                if res[port]['mode_brew']:
+                    p.check_my_phone(res[port])
+                p.comm.close()
+            except:
+                if __debug__:
+                    raise
+
+    my_model='SCP-3100/US'
+    my_manufacturer='SANYO'
+
+    detectphone=staticmethod(detectphone)
+
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):
 
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
-    phone_manufacturer='SANYO'
-    phone_model='SCP-3100/US'
+    phone_manufacturer=Phone.my_manufacturer
+    phone_model=Phone.my_model
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

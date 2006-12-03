@@ -18,6 +18,7 @@ from p_sanyo import *
 from p_sanyomedia import *
 from p_sanyonewer import *
 from p_sanyo4930 import *
+from p_sanyo3100 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -69,8 +70,9 @@ PACKET pbsortbuffer:
     P UINT {'constant': 6144} bufsize
     P USTRING {'default': "sort buffer"} +comment
     # Don't know what it is.  A count and list of flags
-    2 UINT somecount
-    * LIST {'length': 21, 'createdefault': True} +someflags:
+    1 UINT groupslotsused
+    2 UNKNOWN +pad
+    * LIST {'length': 20, 'createdefault': True} +groupslotusedflags:
         1 UINT used "1 if slot in use"
     # Contact slots
     2 UINT slotsused
@@ -131,7 +133,7 @@ PACKET contactindexrequest:
 # One name, 7 phone numbers, 2 email, 1 url, one group, 1 ringer, 1 address
 # 1 memo, 1 picture
 PACKET contactindexentry:
-    1 UINT group "Group ID"
+    1 UINT groupid
     2 UINT slot
     2 UINT namep
     * LIST {'length': NUMPHONENUMBERS} +numberps:
@@ -143,6 +145,8 @@ PACKET contactindexentry:
     2 UINT memop
     2 UINT ringerid
     2 UINT pictureid
+    2 UINT defaultnum
+    1 UINT secret
     
 PACKET contactindexresponse:
     * sanyoheader header
@@ -211,10 +215,8 @@ PACKET addressrequest:
                   
 PACKET addressentry:
     2 UINT contactp "Pointer to contact number belongs"
-    1 UINT address_len
-    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +address
-    1 UNKNOWN +pad
-    1 UINT {'default': 9} +type "Always 9 for World Icon"
+    2 UINT address_len
+    256 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +address
 
 PACKET addressresponse:
     * sanyoheader header
@@ -229,10 +231,8 @@ PACKET memorequest:
 
 PACKET memoentry:
     2 UINT contactp "Pointer to contact number belongs"
-    1 UINT memo_len
-    96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +memo
-    1 UNKNOWN +pad
-    1 UINT {'default': 9} +type "Always 9 for World Icon"
+    2 UINT memo_len
+    256 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +memo
 
 PACKET memoresponse:
     * sanyoheader header
@@ -306,3 +306,41 @@ PACKET eventupdaterequest:
     * qcpwriteheader {'packettype': 0x0c, 'command':0x23} +header
     * evententry entry
     56 UNKNOWN +pad
+
+PACKET messagesententry:
+    1 UINT slot
+    1 UINT read
+    1 UINT counter
+    3 UNKNOWN pad1
+    1 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UNKNOWN pad2
+    1 UINT dunno4
+    1 UINT dunno5
+    1 UNKNOWN pad3
+    1 UINT message_len
+    255 USTRING message "Text of the notification"
+    1 UNKNOWN pad4
+    1 UINT pad5
+    1 UINT year
+    1 UINT month
+    1 UINT day
+    1 UINT hour
+    1 UINT minute
+    P UINT {'default': 0} second
+    1 UINT callback_len
+    34 USTRING callback
+    1 UINT phonenum_len
+    37 USTRING phonenum
+    1 UINT dunno6
+    1 UINT priority
+    3 UNKNOWN pad6
+    1 UINT dunno7
+    1 UINT dunno8
+
+PACKET messagesentresponse:
+    * sanyoheader header
+    * messagesententry entry
+    * UNKNOWN pad
+
