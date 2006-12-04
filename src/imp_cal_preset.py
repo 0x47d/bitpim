@@ -241,12 +241,43 @@ class ImportCalendarPresetWizard(wiz.Wizard):
         return []
 
 #-------------------------------------------------------------------------------
+class CalendarPreviewDialog(wx.Dialog):
+    ID_ADD=wx.NewId()
+    ID_REPLACE=wx.NewId()
+    def __init__(self, parent, data):
+        super(CalendarPreviewDialog, self).__init__(parent, -1,
+                                                    'Calendar Import Preview')
+        _vbs=wx.BoxSizer(wx.VERTICAL)
+        _lb=wx.ListBox(self, -1, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB,
+                       choices=['%04d/%02d/%02d %02d:%02d - '%x.start+x.description\
+                                for _,x in data.items()])
+        _vbs.Add(_lb, 0, wx.EXPAND|wx.ALL, 5)
+        _vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        _hbs=wx.BoxSizer(wx.HORIZONTAL)
+        _btn=wx.Button(self, self.ID_REPLACE, 'Replace All')
+        wx.EVT_BUTTON(self, self.ID_REPLACE, self._OnButton)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, self.ID_ADD, 'Add')
+        wx.EVT_BUTTON(self, self.ID_ADD, self._OnButton)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0,
+                 wx.ALIGN_CENTRE|wx.ALL, 5)
+        _vbs.Add(_hbs, 0, wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(_vbs)
+        self.SetAutoLayout(True)
+        _vbs.Fit(self)
+
+    def _OnButton(self, evt):
+        self.EndModal(evt.GetId())
+
+#-------------------------------------------------------------------------------
 class ImportCalendarPresetDialog(wx.Dialog):
     ID_ADD=wx.NewId()
 
     def __init__(self, parent, id, title):
         self._parent=parent
         self._data={}
+        self._import_data=None
         super(ImportCalendarPresetDialog, self).__init__(parent, id,
                                                          title)
         _vbs=wx.BoxSizer(wx.VERTICAL)
@@ -279,8 +310,51 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._get_from_fs()
         self._populate()
 
+    def _preview_data(self):
+        # Display a preview of data just imported
+        _dlg=CalendarPreviewDialog(self, self._import_data.get())
+        _ret_code=_dlg.ShowModal()
+        _dlg.Destroy()
+        if _ret_code==CalendarPreviewDialog.ID_REPLACE:
+            return wx.ID_OK
+        elif _ret_code==CalendarPreviewDialog.ID_ADD:
+            return self.ID_ADD
+        return wx.ID_CANCEL
+
     def _OnRun(self, _):
-        pass
+        _idx=self._name_lb.GetSelection()
+        if _idx==wx.NOT_FOUND:
+            return
+        _key=self._name_lb.GetClientData(_idx)
+        _entry=self._data[_key]
+        _my_type=_entry['type']
+        _info=None
+        for _d in importexport.GetCalendarImports():
+            if _d['type']==_my_type:
+                _info=_d
+                break
+        if _info is None:
+            # Failed to find the import/export info
+            return
+        self._import_data=_info['data']()
+        _source=_info['source']()
+        _source.id=_entry['source_id']
+        wx.BeginBusyCursor()
+        _dlg=wx.ProgressDialog('Calendar Data Import',
+                               'Importing data, please wait ...',
+                               parent=self)
+        self._import_data.read(_source.get(), _dlg)
+        _dlg.Destroy()
+        wx.EndBusyCursor()
+        global IMP_OPTION_PREVIEW, IMP_OPTION_REPLACEALL, IMP_OPTION_ADD
+        if _entry['option']==IMP_OPTION_PREVIEW:
+            _ret_code=self._preview_data()
+        elif _entry['option']==IMP_OPTION_ADD:
+            _ret_code=self.ID_ADD
+        else:
+            _ret_code=wx.ID_OK
+        self.EndModal(_ret_code)
+
     def _OnNew(self, _):
         _entry=ImportCalendarEntry()
         _wiz=ImportCalendarPresetWizard(self, _entry)
@@ -368,9 +442,15 @@ class ImportCalendarPresetDialog(wx.Dialog):
                                                        _data)
 
     def get(self):
-        pass
+        if self._import_data:
+            return self._import_data.get()
+        return {}
+
     def get_categories(self):
-        pass
+        if self._import_data:
+            return self._import_data.get_category_list()
+        return []
+
     def GetActiveDatabase(self):
         return self._parent.GetActiveDatabase()
 
@@ -383,7 +463,5 @@ if __name__=="__main__":
     _data.id
     w=ImportCalendarPresetWizard(f, _data)
     print w.RunWizard()
-    _data=w.get()
-    _data['source_id']=_data['source_obj'].id
-    print _data
+    print w.get()
     w.Destroy()
