@@ -33,6 +33,7 @@ import wx.lib.intctrl
 import wx.lib.newevent
 import wx.lib.mixins.listctrl  as  listmix
 import wx.lib.stattext as stattext
+from wx.lib.masked import NumCtrl
 
 # my modules
 import common
@@ -451,7 +452,15 @@ class ConfigDialog(wx.Dialog):
                                      'Detect phone at bitpim startup')
         gs.Add(self.autodetect_start, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
-
+        # Splashscreen time
+        gs.Add(wx.StaticText(self, -1, 'SplashScreen Time (sec)'),
+               pos=(_row, 0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self.splashscreen=NumCtrl(self, -1,
+                                  integerWidth=2, fractionWidth=1,
+                                  allowNegative=False)
+        gs.Add(self.splashscreen, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
@@ -633,6 +642,7 @@ class ConfigDialog(wx.Dialog):
                 self.taskbaricon1.SetValue(False)
                 self.taskbaricon1.Enable(False)
         self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
+        self.splashscreen.SetValue(self.mw.config.ReadInt('splashscreentime', 2500)/1000.0)
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -687,6 +697,9 @@ class ConfigDialog(wx.Dialog):
             self.mw.config.WriteInt('taskbaricon1', 0)
         # startup autodetect option
         self.mw.config.WriteInt('autodetectstart', self.autodetect_start.GetValue())
+        # SplashScreen Time
+        self.mw.config.WriteInt('splashscreentime',
+                                int(self.splashscreen.GetValue()*1000))
         # ensure config is saved
         self.mw.config.Flush()
         # update the status bar
