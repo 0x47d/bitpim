@@ -11,6 +11,9 @@
 	  SCP-6600, and MM-7500).
       <li>Bug fix: Timezone issues with Samsung A930/A950 calendar events.
       <li>Sanyo SCP-6600 (Katana): Reading the phonebook now supported.
+      <li>Bug fix: bad BREW file date crashes BitPim.
+      <li>New feature: Added Splash Screen Time duration to the Config Dialog.
+      <li>New feature: Calendar Import Preset.
     </ul>
 
    <h2><a name="0.9.08">Changes in 0.9.08</a></h2>
