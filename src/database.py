@@ -500,7 +500,7 @@ class Database:
         for k in dict.keys():
             record=dict[k]
             record["__uid__"]=k
-            rk=record.keys()
+            rk=[x for x,y in record.items() if y is not None]
             rk.sort()
             cmd=["insert into", idquote(tablename), "( [__timestamp__],"]
             cmd.append(",".join([idquote(r) for r in rk]))
