@@ -87,7 +87,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, 'Source of data:'), 0,
                 wx.ALL|wx.EXPAND, 5)
-        self._source_lbl=wx.TextCtrl(self, -1, '')
+        self._source_lbl=wx.StaticText(self, -1, '')
         vbs.Add(self._source_lbl, 0, wx.ALL|wx.EXPAND, 5)
         _btn=wx.Button(self, -1, 'Browse')
         wx.EVT_BUTTON(self, _btn.GetId(), self._OnBrowse)
@@ -98,7 +98,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
         if not self._source:
             return
         self._source.browse(self)
-        self._source_lbl.SetValue(self._source.name())
+        self._source_lbl.SetLabel(self._source.name())
             
     def ok(self):
         return self._source and self._source.get()
@@ -111,7 +111,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
         if self._source:
             if data.has_key('source_id'):
                 self._source.id=data['source_id']
-            self._source_lbl.SetValue(self._source.name())
+            self._source_lbl.SetLabel(self._source.name())
     def GetActiveDatabase(self):
         return self.GetParent().GetActiveDatabase()
 

@@ -13,6 +13,7 @@
 """
 
 # System
+import copy
 import random
 import sha
 
@@ -83,11 +84,9 @@ class ImportCalendarEntry(dict):
     def validate_properties(self):
         # validate and remove non-persistent properties as defined in
         # ImportCalendarDataObject class
-        _del_keys=[]
-        for _key in self:
-            if not _key in ImportCalendarDataObject.allproperties:
-                _del_keys.append(_key)
-        for _key in _del_keys:
+        _del_keys=[x for x in self \
+                   if not x in ImportCalendarDataObject.allproperties]
+        for _key in  _del_keys:
             del self[_key]
 
 #-------------------------------------------------------------------------------
@@ -235,6 +234,7 @@ class ImportCalendarPresetWizard(wiz.Wizard):
 
     def GetActiveDatabase(self):
         return self.GetParent().GetActiveDatabase()
+
     def get_categories(self):
         if self._data.get('data_obj', None):
             return self._data['data_obj'].get_category_list()
@@ -278,6 +278,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._parent=parent
         self._data={}
         self._import_data=None
+        self._buttons=[]
         super(ImportCalendarPresetDialog, self).__init__(parent, id,
                                                          title)
         _vbs=wx.BoxSizer(wx.VERTICAL)
@@ -285,22 +286,26 @@ class ImportCalendarPresetDialog(wx.Dialog):
                                                   'Available Presets:'),
                                      wx.VERTICAL)
         self._name_lb=wx.ListBox(self, -1, style=wx.LB_SINGLE|wx.LB_NEEDED_SB)
+        wx.EVT_LISTBOX(self, self._name_lb.GetId(), self._set_button_states)
         _static_bs.Add(self._name_lb, 0, wx.EXPAND|wx.ALL, 5)
         _vbs.Add(_static_bs, 0, wx.EXPAND|wx.ALL, 5)
         _vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
         _hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self._run_btn=wx.Button(self, -1, 'Run')
-        wx.EVT_BUTTON(self, self._run_btn.GetId(), self._OnRun)
-        _hbs.Add(self._run_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Import')
+        wx.EVT_BUTTON(self, _btn.GetId(), self._OnRun)
+        self._buttons.append(_btn)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         _btn=wx.Button(self, -1, 'New')
         wx.EVT_BUTTON(self, _btn.GetId(), self._OnNew)
         _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self._edit_btn=wx.Button(self, -1, 'Edit')
-        wx.EVT_BUTTON(self, self._edit_btn.GetId(), self._OnEdit)
-        _hbs.Add(self._edit_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self._del_btn=wx.Button(self, -1, 'Delete')
-        wx.EVT_BUTTON(self, self._del_btn.GetId(), self._OnDel)
-        _hbs.Add(self._del_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Edit')
+        wx.EVT_BUTTON(self, _btn.GetId(), self._OnEdit)
+        self._buttons.append(_btn)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, -1, 'Delete')
+        self._buttons.append(_btn)
+        wx.EVT_BUTTON(self, _btn.GetId(), self._OnDel)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         _hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'),
                  0, wx.ALIGN_CENTRE|wx.ALL, 5)
         _vbs.Add(_hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -309,6 +314,12 @@ class ImportCalendarPresetDialog(wx.Dialog):
         _vbs.Fit(self)
         self._get_from_fs()
         self._populate()
+
+    def _set_button_states(self, _=None):
+        # set the appropriate states of the buttons depending on whether a
+        # listbox item is selected or not
+        _flg=self._name_lb.GetSelection()!=wx.NOT_FOUND
+        [x.Enable(_flg) for x in self._buttons]
 
     def _preview_data(self):
         # Display a preview of data just imported
@@ -325,17 +336,13 @@ class ImportCalendarPresetDialog(wx.Dialog):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
             return
-        _key=self._name_lb.GetClientData(_idx)
-        _entry=self._data[_key]
+        _entry=self._data[self._name_lb.GetClientData(_idx)]
         _my_type=_entry['type']
-        _info=None
-        for _d in importexport.GetCalendarImports():
-            if _d['type']==_my_type:
-                _info=_d
-                break
-        if _info is None:
-            # Failed to find the import/export info
+        _info=[x for x in importexport.GetCalendarImports() \
+               if x['type']==_my_type]
+        if not _info:
             return
+        _info=_info[0]
         self._import_data=_info['data']()
         _source=_info['source']()
         _source.id=_entry['source_id']
@@ -344,6 +351,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
                                'Importing data, please wait ...',
                                parent=self)
         self._import_data.read(_source.get(), _dlg)
+        self._import_data.set_filter(_entry)
         _dlg.Destroy()
         wx.EndBusyCursor()
         global IMP_OPTION_PREVIEW, IMP_OPTION_REPLACEALL, IMP_OPTION_ADD
@@ -363,6 +371,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
             self._data[_entry.id]=_entry
             self._save_to_fs()
             self._populate()
+        _wiz.Destroy()
     def _OnEdit(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -376,6 +385,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
             self._data[_entry.id]=_entry
             self._save_to_fs()
             self._populate()
+        _wiz.Destroy()
     def _OnDel(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -390,36 +400,40 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._name_lb.Clear()
         for _key, _entry in self._data.items():
             self._name_lb.Append(_entry['name'], _key)
+        self._set_button_states()
 
     def _expand_item(self, entry):
-        item=entry.copy()
+        item={}
+        item.update(entry)
         if item.has_key('categories'):
             del item['categories']
         if item.has_key('start'):
-            _date=[{'year': item['start'][0], 'month': item['start'][1],
-                    'day': item['start'][2] }]
             del item['start']
-            item['start']=_date
+            if entry['start']:
+                item['start']=[{'year': entry['start'][0],
+                                'month': entry['start'][1],
+                                'day': entry['start'][2] }]
         if item.has_key('end'):
-            _date=[{'year': item['end'][0], 'month': item['end'][1],
-                    'day': item['end'][2] }]
             del item['end']
-            item['end']=_date
+            if entry['end']:
+                item['end']=[{'year': entry['end'][0],
+                              'month': entry['end'][1],
+                              'day': entry['end'][2] }]
         return item
     def _collapse_item(self, entry):
-        item=entry.copy()
-        if item.has_key('categories'):
-            del item['categories']
-        if item.has_key('start'):
+        item={}
+        item.update(entry)
+        item['categories']=None
+        if item.has_key('start') and item['start']:
             _d0=item['start'][0]
-            _date=[_d0['year'], _d0['month'], _d0['day']]
-            del item['start']
-            item['start']=_date
-        if item.has_key('end'):
-            _d0=item['end'][0]
-            _date=[_d0['year'], _d0['month'], _d0['day']]
-            del item['end']
-            item['end']=_date
+            item['start']=(_d0['year'], _d0['month'], _d0['day'])
+        else:
+            item['start']=None
+        if item.has_key('end') and item['end']:
+            _d0=entry['end'][0]
+            item['end']=(_d0['year'], _d0['month'], _d0['day'])
+        else:
+            item['end']=None
         return item
 
     def _get_from_fs(self):
@@ -462,6 +476,6 @@ if __name__=="__main__":
     _data=ImportCalendarEntry()
     _data.id
     w=ImportCalendarPresetWizard(f, _data)
-    print w.RunWizard()
-    print w.get()
+    print 'RunWizard:',w.RunWizard()
+    print 'Data:',w.get()
     w.Destroy()

@@ -46,6 +46,8 @@ def GetPhonebookImports():
     # Calendar Wizard
     res.append( (guihelper.ID_CALENDAR_WIZARD, 'Import Calendar Wizard...',
                  'Import Calendar Wizard', OnCalendarWizard) )
+    res.append( (wx.NewId(), 'Calendar Import Preset...',
+                'Calendar Import Preset...', OnCalendarPreset) )
     res.append( (wx.NewId(), 'Auto Calendar Import',
                  'Auto Calendar Import',
                  ( (guihelper.ID_AUTOSYNCSETTINGS, 'Settings',
@@ -53,8 +55,6 @@ def GetPhonebookImports():
                    (guihelper.ID_AUTOSYNCEXECUTE, 'Execute',
                     'Perform Auto Calendar Import', None))
                  ))
-    res.append( (wx.NewId(), 'Calendar Import Preset',
-                'Calendar Import Preset', OnCalendarPreset) )
     # CSV - always possible
     res.append( (guihelper.ID_IMPORT_CSV_CONTACTS,"CSV Contacts...", "Import a CSV file for the phonebook", OnFileImportCSVContacts) )
     res.append( (guihelper.ID_IMPORT_CSV_CALENDAR,"CSV Calendar...", "Import a CSV file for the calendar", OnFileImportCSVCalendar) )
