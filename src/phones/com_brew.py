@@ -501,7 +501,11 @@ class RealBrewProtocol:
                 return {}
         if _broken_date:
             for _key,_entry in results.items():
-                _entry['date']=self.statfile(_key)['date']
+                _stat=self.statfile(_key)
+                if _stat:
+                    _entry['date']=_stat.get('date', (0, ''))
+                else:
+                    _entry['date']=(0, '')
         return results
 
     def getfilesystem(self, dir="", recurse=0):
