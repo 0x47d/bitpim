@@ -52,8 +52,10 @@ class Phone(com_sanyonewer.Phone):
 
 class Profile(com_sanyonewer.Profile):
 
-    protocolclass=p_sanyo8100_bell
-    serialsname='scp8100bell'
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+    phone_manufacturer='SANYO'
+    phone_model='SCP-8100CA'
 
     WALLPAPER_WIDTH=132
     WALLPAPER_HEIGHT=144

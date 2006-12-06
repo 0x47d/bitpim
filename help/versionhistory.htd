@@ -8,7 +8,7 @@
       didn't exist (eg on an external USB drive that isn't plugged in). 
       <li>Sanyo phones: Read "Sent" messages as well received messages when
 	  reading SMS.  Add auto-detection for newer Sanyo phones (SCP-3100,
-	  SCP-6600, and MM-7500).
+	  SCP-6600, and MM-7500) and Bell SCP-8100.
       <li>Bug fix: Timezone issues with Samsung A930/A950 calendar events.
       <li>Sanyo SCP-6600 (Katana): Reading the phonebook now supported.
       <li>Bug fix: bad BREW file date crashes BitPim.
