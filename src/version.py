@@ -41,7 +41,7 @@ if vendor[1:].startswith("Id:"):
 
 _headurl="$HeadURL$".split()[1]
 # work out our version number
-_rp="https://svn.sourceforge.net/svnroot/bitpim/releases/"
+_rp="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"
 if _headurl.startswith(_rp):
     def isdevelopmentversion(): return False
     version=_headurl[len(_rp):].split("/")[0]
