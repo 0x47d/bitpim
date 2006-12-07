@@ -24,7 +24,7 @@ def sanitycheck():
     print "=== Sanity check ==="
 
     print "svn location",
-    if not "$HeadURL$".split(":",1).startswith("https://bitpim.svn.sourceforge.net"):
+    if not "$HeadURL$".split(":",1)[1].strip().startswith("https://bitpim.svn.sourceforge.net"):
         raise Exception("Needs to be checked out from https://bitpim.svn.sourceforge.net")
     print "  OK"
 
