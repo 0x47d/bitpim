@@ -23,7 +23,6 @@ if len(sys.argv)!=2:
     sys.exit(3)
 release=sys.argv[1]
 
-#branchtarget="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"+sys.argv[1]
 branchtarget="https://svn.sourceforge.net/svnroot/bitpim/releases/"+sys.argv[1]
 
 branchdirs=topdirs
@@ -46,7 +45,23 @@ toproot=str(metadata.documentElement.getElementsByTagName("entry")[0].getElement
 assert topurl.startswith(toproot)
 toppath=topurl[len(toproot):]
 
-cmd='svn copy -m "making a release from rev %d of %s" %s %s' % (toprev, toppath,
-                                                                topurl,
-                                                                branchtarget)
+for d in topdirs:
+    metadata=xml.dom.minidom.parseString(os.popen("svn info --xml "+d, "r").read())
+    url=str(metadata.documentElement.getElementsByTagName("entry")[0].getElementsByTagName("url")[0].firstChild.nodeValue)
+    rev=int(metadata.documentElement.getElementsByTagName("entry")[0].getAttribute("revision"))
+    root=str(metadata.documentElement.getElementsByTagName("entry")[0].getElementsByTagName("repository")[0].getElementsByTagName("root")[0].firstChild.nodeValue)
+    assert url.startswith(root)
+    path=url[len(root):]
+    
+    # same rigmarole for the revision number
+    rev=int(metadata.documentElement.getElementsByTagName("entry")[0].getAttribute("revision"))
+    
+    # we want to branch this one - dir, target, rev, path
+    copies.append( (d, "/".join([branchtarget, d]), rev, "/".join([toppath, d])) )
+
+cmd='svn mkdir -m "making a release from rev %d of %s" %s' % (toprev, toppath, branchtarget)
 run(cmd)
+for src,dest,rev,path in copies:
+    cmd='svn copy -m "release %s from rev %d of %s" %s %s' % (release, rev, path, src, dest)
+    run(cmd)
+
