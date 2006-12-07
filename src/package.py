@@ -23,6 +23,11 @@ def sanitycheck():
     
     print "=== Sanity check ==="
 
+    print "svn location",
+    if not "$HeadURL$".split(":",1).startswith("https://bitpim.svn.sourceforge.net"):
+        raise Exception("Needs to be checked out from https://bitpim.svn.sourceforge.net")
+    print "  OK"
+
     print "python version",
     if sys.version_info[:2]!=(2,3):
        raise Exception("Should be  Python 2.3 - this is "+sys.version)
