@@ -601,7 +601,7 @@ class phonebookslotupdaterequest(BaseProtogenClass):
 
 
 class evententry(BaseProtogenClass):
-    __fields=['slot', 'flag', 'eventname', 'pad1', 'eventname_len', 'start', 'end', 'location', 'pad2', 'location_len', 'ringtone', 'alarmdiff', 'period', 'dom', 'alarm', 'serial']
+    __fields=['slot', 'flag', 'eventname', 'pad1', 'eventname_len', 'start', 'end', 'location', 'pad2', 'location_len', 'pad3', 'alarmdiff', 'period', 'dom', 'alarm', 'serial', 'pad4', 'ringtone']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -650,7 +650,10 @@ class evententry(BaseProtogenClass):
             self.__field_pad2=UNKNOWN(**{'sizeinbytes': 7})
         self.__field_pad2.writetobuffer(buf)
         self.__field_location_len.writetobuffer(buf)
-        self.__field_ringtone.writetobuffer(buf)
+        try: self.__field_pad3
+        except:
+            self.__field_pad3=UNKNOWN(**{'sizeinbytes': 1})
+        self.__field_pad3.writetobuffer(buf)
         self.__field_alarmdiff.writetobuffer(buf)
         self.__field_period.writetobuffer(buf)
         self.__field_dom.writetobuffer(buf)
@@ -659,6 +662,11 @@ class evententry(BaseProtogenClass):
         except:
             self.__field_serial=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_serial.writetobuffer(buf)
+        try: self.__field_pad4
+        except:
+            self.__field_pad4=UNKNOWN(**{'sizeinbytes': 3})
+        self.__field_pad4.writetobuffer(buf)
+        self.__field_ringtone.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -687,8 +695,8 @@ class evententry(BaseProtogenClass):
         self.__field_pad2.readfrombuffer(buf)
         self.__field_location_len=UINT(**{'sizeinbytes': 1})
         self.__field_location_len.readfrombuffer(buf)
-        self.__field_ringtone=UINT(**{'sizeinbytes': 1})
-        self.__field_ringtone.readfrombuffer(buf)
+        self.__field_pad3=UNKNOWN(**{'sizeinbytes': 1})
+        self.__field_pad3.readfrombuffer(buf)
         self.__field_alarmdiff=UINT(**{'sizeinbytes': 4})
         self.__field_alarmdiff.readfrombuffer(buf)
         self.__field_period=UINT(**{'sizeinbytes': 1})
@@ -699,6 +707,10 @@ class evententry(BaseProtogenClass):
         self.__field_alarm.readfrombuffer(buf)
         self.__field_serial=UINT(**{'sizeinbytes': 1, 'default': 0})
         self.__field_serial.readfrombuffer(buf)
+        self.__field_pad4=UNKNOWN(**{'sizeinbytes': 3})
+        self.__field_pad4.readfrombuffer(buf)
+        self.__field_ringtone=UINT(**{'sizeinbytes': 1})
+        self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -838,18 +850,21 @@ class evententry(BaseProtogenClass):
 
     location_len=property(__getfield_location_len, __setfield_location_len, __delfield_location_len, None)
 
-    def __getfield_ringtone(self):
-        return self.__field_ringtone.getvalue()
+    def __getfield_pad3(self):
+        try: self.__field_pad3
+        except:
+            self.__field_pad3=UNKNOWN(**{'sizeinbytes': 1})
+        return self.__field_pad3.getvalue()
 
-    def __setfield_ringtone(self, value):
-        if isinstance(value,UINT):
-            self.__field_ringtone=value
+    def __setfield_pad3(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_pad3=value
         else:
-            self.__field_ringtone=UINT(value,**{'sizeinbytes': 1})
+            self.__field_pad3=UNKNOWN(value,**{'sizeinbytes': 1})
 
-    def __delfield_ringtone(self): del self.__field_ringtone
+    def __delfield_pad3(self): del self.__field_pad3
 
-    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, "0: Beep, 1: Voice, 2: Silent")
+    pad3=property(__getfield_pad3, __setfield_pad3, __delfield_pad3, None)
 
     def __getfield_alarmdiff(self):
         return self.__field_alarmdiff.getvalue()
@@ -919,6 +934,35 @@ class evententry(BaseProtogenClass):
 
     serial=property(__getfield_serial, __setfield_serial, __delfield_serial, "Some kind of serial number")
 
+    def __getfield_pad4(self):
+        try: self.__field_pad4
+        except:
+            self.__field_pad4=UNKNOWN(**{'sizeinbytes': 3})
+        return self.__field_pad4.getvalue()
+
+    def __setfield_pad4(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_pad4=value
+        else:
+            self.__field_pad4=UNKNOWN(value,**{'sizeinbytes': 3})
+
+    def __delfield_pad4(self): del self.__field_pad4
+
+    pad4=property(__getfield_pad4, __setfield_pad4, __delfield_pad4, None)
+
+    def __getfield_ringtone(self):
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,UINT):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, "0: Beep, 1: Voice, 2: Silent")
+
     def iscontainer(self):
         return True
 
@@ -933,12 +977,14 @@ class evententry(BaseProtogenClass):
         yield ('location', self.__field_location, None)
         yield ('pad2', self.__field_pad2, None)
         yield ('location_len', self.__field_location_len, None)
-        yield ('ringtone', self.__field_ringtone, "0: Beep, 1: Voice, 2: Silent")
+        yield ('pad3', self.__field_pad3, None)
         yield ('alarmdiff', self.__field_alarmdiff, "Displayed alarm time")
         yield ('period', self.__field_period, "No, Daily, Weekly, Monthly, Yearly")
         yield ('dom', self.__field_dom, "Day of month for the event")
         yield ('alarm', self.__field_alarm, None)
         yield ('serial', self.__field_serial, "Some kind of serial number")
+        yield ('pad4', self.__field_pad4, None)
+        yield ('ringtone', self.__field_ringtone, "0: Beep, 1: Voice, 2: Silent")
 
 
 
@@ -1083,7 +1129,7 @@ class eventupdaterequest(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
         except:
-            self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x23})
+            self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x23})
         self.__field_header.writetobuffer(buf)
         self.__field_entry.writetobuffer(buf)
         try: self.__field_pad
@@ -1098,7 +1144,7 @@ class eventupdaterequest(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x23})
+        self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x23})
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=evententry()
         self.__field_entry.readfrombuffer(buf)
@@ -1110,14 +1156,14 @@ class eventupdaterequest(BaseProtogenClass):
     def __getfield_header(self):
         try: self.__field_header
         except:
-            self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x23})
+            self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x23})
         return self.__field_header.getvalue()
 
     def __setfield_header(self, value):
-        if isinstance(value,sanyoheader):
+        if isinstance(value,sanyowriteheader):
             self.__field_header=value
         else:
-            self.__field_header=sanyoheader(value,**{'packettype': 0x0c, 'command':0x23})
+            self.__field_header=sanyowriteheader(value,**{'packettype': 0x0c, 'command':0x23})
 
     def __delfield_header(self): del self.__field_header
 
@@ -1646,7 +1692,7 @@ class callalarmupdaterequest(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
         except:
-            self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x24})
+            self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x24})
         self.__field_header.writetobuffer(buf)
         self.__field_entry.writetobuffer(buf)
         try: self.__field_pad
@@ -1661,7 +1707,7 @@ class callalarmupdaterequest(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x24})
+        self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x24})
         self.__field_header.readfrombuffer(buf)
         self.__field_entry=callalarmentry()
         self.__field_entry.readfrombuffer(buf)
@@ -1673,14 +1719,14 @@ class callalarmupdaterequest(BaseProtogenClass):
     def __getfield_header(self):
         try: self.__field_header
         except:
-            self.__field_header=sanyoheader(**{'packettype': 0x0c, 'command':0x24})
+            self.__field_header=sanyowriteheader(**{'packettype': 0x0c, 'command':0x24})
         return self.__field_header.getvalue()
 
     def __setfield_header(self, value):
-        if isinstance(value,sanyoheader):
+        if isinstance(value,sanyowriteheader):
             self.__field_header=value
         else:
-            self.__field_header=sanyoheader(value,**{'packettype': 0x0c, 'command':0x24})
+            self.__field_header=sanyowriteheader(value,**{'packettype': 0x0c, 'command':0x24})
 
     def __delfield_header(self): del self.__field_header
 

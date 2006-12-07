@@ -70,12 +70,14 @@ PACKET evententry:
     14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} location
     7 UNKNOWN +pad2
     1 UINT location_len
-    1 UINT ringtone "0: Beep, 1: Voice, 2: Silent"
+    1 UNKNOWN +pad3
     4 UINT alarmdiff "Displayed alarm time"
     1 UINT period "No, Daily, Weekly, Monthly, Yearly"
     1 UINT dom "Day of month for the event"
     4 UINT alarm
     1 UINT {'default': 0} +serial "Some kind of serial number"
+    3 UNKNOWN +pad4
+    1 UINT ringtone "0: Beep, 1: Voice, 2: Silent"
 
 PACKET eventresponse:
     * sanyoheader header
@@ -83,7 +85,7 @@ PACKET eventresponse:
     * UNKNOWN pad
 
 PACKET eventupdaterequest:
-    * sanyoheader {'packettype': 0x0c, 'command':0x23} +header
+    * sanyowriteheader {'packettype': 0x0c, 'command':0x23} +header
     * evententry entry
     400 UNKNOWN +pad
 
@@ -111,6 +113,6 @@ PACKET callalarmresponse:
     * UNKNOWN pad
 
 PACKET callalarmupdaterequest:
-    * sanyoheader {'packettype': 0x0c, 'command':0x24} +header
+    * sanyowriteheader {'packettype': 0x0c, 'command':0x24} +header
     * callalarmentry entry
     400 UNKNOWN +pad
