@@ -49,7 +49,11 @@ if __name__ == '__main__':
     if sys.platform=="darwin" and len(sys.argv)>1 and sys.argv[1].startswith("-psn_"):
 	# get rid of the process serial number on mac
 	sys.argv=sys.argv[:1]+sys.argv[2:]
-    _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+    try:
+        _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+    except getopt.GetoptError,e:
+        _options=[]
+        _args=[]
     _kwargs={}
     # check for debug flag
     _debug=__debug__ or bool(_args and 'debug' in _args)
