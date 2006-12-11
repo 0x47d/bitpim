@@ -9,7 +9,6 @@ from p_sanyo import *
 from p_sanyomedia import *
 from p_sanyonewer import *
 from p_sanyo4930 import *
-from p_sanyo3100 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -361,51 +360,51 @@ class pbsortbuffer(BaseProtogenClass):
         self.__field_pad.writetobuffer(buf)
         try: self.__field_groupslotusedflags
         except:
-            self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_76, 'length': 20, 'createdefault': True})
+            self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_75, 'length': NUMGROUPS, 'createdefault': True})
         self.__field_groupslotusedflags.writetobuffer(buf)
         self.__field_slotsused.writetobuffer(buf)
         try: self.__field_usedflags
         except:
-            self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_80, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_79, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_usedflags.writetobuffer(buf)
         try: self.__field_speeddialindex
         except:
-            self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_82, 'length': _NUMSPEEDDIALS})
+            self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_81, 'length': _NUMSPEEDDIALS})
         self.__field_speeddialindex.writetobuffer(buf)
         self.__field_slotsused2.writetobuffer(buf)
         try: self.__field_used2flags
         except:
-            self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_86, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_85, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_used2flags.writetobuffer(buf)
         try: self.__field_sortorder
         except:
-            self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_88, 'length': NUMPHONEBOOKENTRIES})
+            self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_87, 'length': NUMPHONEBOOKENTRIES})
         self.__field_sortorder.writetobuffer(buf)
         self.__field_pbfirstletters.writetobuffer(buf)
         self.__field_numslotsused.writetobuffer(buf)
         try: self.__field_numusedflags
         except:
-            self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_93, 'length': MAXNUMBERS, 'createdefault': True})
+            self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_92, 'length': MAXNUMBERS, 'createdefault': True})
         self.__field_numusedflags.writetobuffer(buf)
         self.__field_emailslotsused.writetobuffer(buf)
         try: self.__field_emailusedflags
         except:
-            self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_97, 'length': MAXEMAILS, 'createdefault': True})
+            self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_96, 'length': MAXEMAILS, 'createdefault': True})
         self.__field_emailusedflags.writetobuffer(buf)
         self.__field_urlslotsused.writetobuffer(buf)
         try: self.__field_urlusedflags
         except:
-            self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_100, 'length': MAXURLS, 'createdefault': True})
+            self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_99, 'length': MAXURLS, 'createdefault': True})
         self.__field_urlusedflags.writetobuffer(buf)
         self.__field_num_address.writetobuffer(buf)
         try: self.__field_addressusedflags
         except:
-            self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_104, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_103, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_addressusedflags.writetobuffer(buf)
         self.__field_num_memo.writetobuffer(buf)
         try: self.__field_memousedflags
         except:
-            self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_108, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_107, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_memousedflags.writetobuffer(buf)
         self.__field_junk.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -420,41 +419,41 @@ class pbsortbuffer(BaseProtogenClass):
         self.__field_groupslotsused.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 2})
         self.__field_pad.readfrombuffer(buf)
-        self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_76, 'length': 20, 'createdefault': True})
+        self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_75, 'length': NUMGROUPS, 'createdefault': True})
         self.__field_groupslotusedflags.readfrombuffer(buf)
         self.__field_slotsused=UINT(**{'sizeinbytes': 2})
         self.__field_slotsused.readfrombuffer(buf)
-        self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_80, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+        self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_79, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_usedflags.readfrombuffer(buf)
-        self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_82, 'length': _NUMSPEEDDIALS})
+        self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_81, 'length': _NUMSPEEDDIALS})
         self.__field_speeddialindex.readfrombuffer(buf)
         self.__field_slotsused2=UINT(**{'sizeinbytes': 2})
         self.__field_slotsused2.readfrombuffer(buf)
-        self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_86, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+        self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_85, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_used2flags.readfrombuffer(buf)
-        self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_88, 'length': NUMPHONEBOOKENTRIES})
+        self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_87, 'length': NUMPHONEBOOKENTRIES})
         self.__field_sortorder.readfrombuffer(buf)
         self.__field_pbfirstletters=USTRING(**{'terminator': None, 'sizeinbytes': NUMPHONEBOOKENTRIES})
         self.__field_pbfirstletters.readfrombuffer(buf)
         self.__field_numslotsused=UINT(**{'sizeinbytes': 2})
         self.__field_numslotsused.readfrombuffer(buf)
-        self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_93, 'length': MAXNUMBERS, 'createdefault': True})
+        self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_92, 'length': MAXNUMBERS, 'createdefault': True})
         self.__field_numusedflags.readfrombuffer(buf)
         self.__field_emailslotsused=UINT(**{'sizeinbytes': 2})
         self.__field_emailslotsused.readfrombuffer(buf)
-        self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_97, 'length': MAXEMAILS, 'createdefault': True})
+        self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_96, 'length': MAXEMAILS, 'createdefault': True})
         self.__field_emailusedflags.readfrombuffer(buf)
         self.__field_urlslotsused=UINT(**{'sizeinbytes': 2})
         self.__field_urlslotsused.readfrombuffer(buf)
-        self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_100, 'length': MAXURLS, 'createdefault': True})
+        self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_99, 'length': MAXURLS, 'createdefault': True})
         self.__field_urlusedflags.readfrombuffer(buf)
         self.__field_num_address=UINT(**{'sizeinbytes': 2})
         self.__field_num_address.readfrombuffer(buf)
-        self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_104, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+        self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_103, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_addressusedflags.readfrombuffer(buf)
         self.__field_num_memo=UINT(**{'sizeinbytes': 2})
         self.__field_num_memo.readfrombuffer(buf)
-        self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_108, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+        self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_107, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         self.__field_memousedflags.readfrombuffer(buf)
         self.__field_junk=UNKNOWN(**{'sizeinbytes': 391})
         self.__field_junk.readfrombuffer(buf)
@@ -535,14 +534,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_groupslotusedflags(self):
         try: self.__field_groupslotusedflags
         except:
-            self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_76, 'length': 20, 'createdefault': True})
+            self.__field_groupslotusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_75, 'length': NUMGROUPS, 'createdefault': True})
         return self.__field_groupslotusedflags.getvalue()
 
     def __setfield_groupslotusedflags(self, value):
         if isinstance(value,LIST):
             self.__field_groupslotusedflags=value
         else:
-            self.__field_groupslotusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_76, 'length': 20, 'createdefault': True})
+            self.__field_groupslotusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_75, 'length': NUMGROUPS, 'createdefault': True})
 
     def __delfield_groupslotusedflags(self): del self.__field_groupslotusedflags
 
@@ -564,14 +563,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_usedflags(self):
         try: self.__field_usedflags
         except:
-            self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_80, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_usedflags=LIST(**{'elementclass': _gen_p_sanyo6600_79, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         return self.__field_usedflags.getvalue()
 
     def __setfield_usedflags(self, value):
         if isinstance(value,LIST):
             self.__field_usedflags=value
         else:
-            self.__field_usedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_80, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_usedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_79, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
 
     def __delfield_usedflags(self): del self.__field_usedflags
 
@@ -580,14 +579,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_speeddialindex(self):
         try: self.__field_speeddialindex
         except:
-            self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_82, 'length': _NUMSPEEDDIALS})
+            self.__field_speeddialindex=LIST(**{'elementclass': _gen_p_sanyo6600_81, 'length': _NUMSPEEDDIALS})
         return self.__field_speeddialindex.getvalue()
 
     def __setfield_speeddialindex(self, value):
         if isinstance(value,LIST):
             self.__field_speeddialindex=value
         else:
-            self.__field_speeddialindex=LIST(value,**{'elementclass': _gen_p_sanyo6600_82, 'length': _NUMSPEEDDIALS})
+            self.__field_speeddialindex=LIST(value,**{'elementclass': _gen_p_sanyo6600_81, 'length': _NUMSPEEDDIALS})
 
     def __delfield_speeddialindex(self): del self.__field_speeddialindex
 
@@ -609,14 +608,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_used2flags(self):
         try: self.__field_used2flags
         except:
-            self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_86, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_used2flags=LIST(**{'elementclass': _gen_p_sanyo6600_85, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         return self.__field_used2flags.getvalue()
 
     def __setfield_used2flags(self, value):
         if isinstance(value,LIST):
             self.__field_used2flags=value
         else:
-            self.__field_used2flags=LIST(value,**{'elementclass': _gen_p_sanyo6600_86, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_used2flags=LIST(value,**{'elementclass': _gen_p_sanyo6600_85, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
 
     def __delfield_used2flags(self): del self.__field_used2flags
 
@@ -625,14 +624,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_sortorder(self):
         try: self.__field_sortorder
         except:
-            self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_88, 'length': NUMPHONEBOOKENTRIES})
+            self.__field_sortorder=LIST(**{'elementclass': _gen_p_sanyo6600_87, 'length': NUMPHONEBOOKENTRIES})
         return self.__field_sortorder.getvalue()
 
     def __setfield_sortorder(self, value):
         if isinstance(value,LIST):
             self.__field_sortorder=value
         else:
-            self.__field_sortorder=LIST(value,**{'elementclass': _gen_p_sanyo6600_88, 'length': NUMPHONEBOOKENTRIES})
+            self.__field_sortorder=LIST(value,**{'elementclass': _gen_p_sanyo6600_87, 'length': NUMPHONEBOOKENTRIES})
 
     def __delfield_sortorder(self): del self.__field_sortorder
 
@@ -667,14 +666,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_numusedflags(self):
         try: self.__field_numusedflags
         except:
-            self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_93, 'length': MAXNUMBERS, 'createdefault': True})
+            self.__field_numusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_92, 'length': MAXNUMBERS, 'createdefault': True})
         return self.__field_numusedflags.getvalue()
 
     def __setfield_numusedflags(self, value):
         if isinstance(value,LIST):
             self.__field_numusedflags=value
         else:
-            self.__field_numusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_93, 'length': MAXNUMBERS, 'createdefault': True})
+            self.__field_numusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_92, 'length': MAXNUMBERS, 'createdefault': True})
 
     def __delfield_numusedflags(self): del self.__field_numusedflags
 
@@ -696,14 +695,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_emailusedflags(self):
         try: self.__field_emailusedflags
         except:
-            self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_97, 'length': MAXEMAILS, 'createdefault': True})
+            self.__field_emailusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_96, 'length': MAXEMAILS, 'createdefault': True})
         return self.__field_emailusedflags.getvalue()
 
     def __setfield_emailusedflags(self, value):
         if isinstance(value,LIST):
             self.__field_emailusedflags=value
         else:
-            self.__field_emailusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_97, 'length': MAXEMAILS, 'createdefault': True})
+            self.__field_emailusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_96, 'length': MAXEMAILS, 'createdefault': True})
 
     def __delfield_emailusedflags(self): del self.__field_emailusedflags
 
@@ -725,14 +724,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_urlusedflags(self):
         try: self.__field_urlusedflags
         except:
-            self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_100, 'length': MAXURLS, 'createdefault': True})
+            self.__field_urlusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_99, 'length': MAXURLS, 'createdefault': True})
         return self.__field_urlusedflags.getvalue()
 
     def __setfield_urlusedflags(self, value):
         if isinstance(value,LIST):
             self.__field_urlusedflags=value
         else:
-            self.__field_urlusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_100, 'length': MAXURLS, 'createdefault': True})
+            self.__field_urlusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_99, 'length': MAXURLS, 'createdefault': True})
 
     def __delfield_urlusedflags(self): del self.__field_urlusedflags
 
@@ -754,14 +753,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_addressusedflags(self):
         try: self.__field_addressusedflags
         except:
-            self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_104, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_addressusedflags=LIST(**{'elementclass': _gen_p_sanyo6600_103, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         return self.__field_addressusedflags.getvalue()
 
     def __setfield_addressusedflags(self, value):
         if isinstance(value,LIST):
             self.__field_addressusedflags=value
         else:
-            self.__field_addressusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_104, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_addressusedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_103, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
 
     def __delfield_addressusedflags(self): del self.__field_addressusedflags
 
@@ -783,14 +782,14 @@ class pbsortbuffer(BaseProtogenClass):
     def __getfield_memousedflags(self):
         try: self.__field_memousedflags
         except:
-            self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_108, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_memousedflags=LIST(**{'elementclass': _gen_p_sanyo6600_107, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
         return self.__field_memousedflags.getvalue()
 
     def __setfield_memousedflags(self, value):
         if isinstance(value,LIST):
             self.__field_memousedflags=value
         else:
-            self.__field_memousedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_108, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
+            self.__field_memousedflags=LIST(value,**{'elementclass': _gen_p_sanyo6600_107, 'length': NUMPHONEBOOKENTRIES, 'createdefault': True})
 
     def __delfield_memousedflags(self): del self.__field_memousedflags
 
@@ -841,7 +840,7 @@ class pbsortbuffer(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_76(BaseProtogenClass):
+class _gen_p_sanyo6600_75(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -850,8 +849,8 @@ class _gen_p_sanyo6600_76(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_76,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_76:
+        super(_gen_p_sanyo6600_75,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_75:
             self._update(args,dict)
 
 
@@ -860,7 +859,7 @@ class _gen_p_sanyo6600_76(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_76,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_75,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -868,7 +867,7 @@ class _gen_p_sanyo6600_76(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_76,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_75,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -916,7 +915,7 @@ class _gen_p_sanyo6600_76(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_80(BaseProtogenClass):
+class _gen_p_sanyo6600_79(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -925,8 +924,8 @@ class _gen_p_sanyo6600_80(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_80,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_80:
+        super(_gen_p_sanyo6600_79,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_79:
             self._update(args,dict)
 
 
@@ -935,7 +934,7 @@ class _gen_p_sanyo6600_80(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_80,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_79,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -943,7 +942,7 @@ class _gen_p_sanyo6600_80(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_80,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_79,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -991,7 +990,7 @@ class _gen_p_sanyo6600_80(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_82(BaseProtogenClass):
+class _gen_p_sanyo6600_81(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslotandtype']
 
@@ -1000,8 +999,8 @@ class _gen_p_sanyo6600_82(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_82,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_82:
+        super(_gen_p_sanyo6600_81,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_81:
             self._update(args,dict)
 
 
@@ -1010,7 +1009,7 @@ class _gen_p_sanyo6600_82(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_82,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_81,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1018,7 +1017,7 @@ class _gen_p_sanyo6600_82(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_82,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_81,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2, 'default': 0xffff}
             dict2.update(kwargs)
@@ -1066,7 +1065,7 @@ class _gen_p_sanyo6600_82(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_86(BaseProtogenClass):
+class _gen_p_sanyo6600_85(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1075,8 +1074,8 @@ class _gen_p_sanyo6600_86(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_86,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_86:
+        super(_gen_p_sanyo6600_85,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_85:
             self._update(args,dict)
 
 
@@ -1085,7 +1084,7 @@ class _gen_p_sanyo6600_86(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_86,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_85,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1093,7 +1092,7 @@ class _gen_p_sanyo6600_86(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_86,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_85,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1141,7 +1140,7 @@ class _gen_p_sanyo6600_86(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_88(BaseProtogenClass):
+class _gen_p_sanyo6600_87(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['pbslot']
 
@@ -1150,8 +1149,8 @@ class _gen_p_sanyo6600_88(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_88,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_88:
+        super(_gen_p_sanyo6600_87,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_87:
             self._update(args,dict)
 
 
@@ -1160,7 +1159,7 @@ class _gen_p_sanyo6600_88(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_88,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_87,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1168,7 +1167,7 @@ class _gen_p_sanyo6600_88(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_88,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_87,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2, 'default': 0xffff}
             dict2.update(kwargs)
@@ -1216,7 +1215,7 @@ class _gen_p_sanyo6600_88(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_93(BaseProtogenClass):
+class _gen_p_sanyo6600_92(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1225,8 +1224,8 @@ class _gen_p_sanyo6600_93(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_93,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_93:
+        super(_gen_p_sanyo6600_92,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_92:
             self._update(args,dict)
 
 
@@ -1235,7 +1234,7 @@ class _gen_p_sanyo6600_93(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_93,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_92,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1243,7 +1242,7 @@ class _gen_p_sanyo6600_93(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_93,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_92,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1291,7 +1290,7 @@ class _gen_p_sanyo6600_93(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_97(BaseProtogenClass):
+class _gen_p_sanyo6600_96(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1300,8 +1299,8 @@ class _gen_p_sanyo6600_97(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_97,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_97:
+        super(_gen_p_sanyo6600_96,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_96:
             self._update(args,dict)
 
 
@@ -1310,7 +1309,7 @@ class _gen_p_sanyo6600_97(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_97,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_96,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1318,7 +1317,7 @@ class _gen_p_sanyo6600_97(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_97,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_96,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1366,7 +1365,7 @@ class _gen_p_sanyo6600_97(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_100(BaseProtogenClass):
+class _gen_p_sanyo6600_99(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1375,8 +1374,8 @@ class _gen_p_sanyo6600_100(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_100,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_100:
+        super(_gen_p_sanyo6600_99,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_99:
             self._update(args,dict)
 
 
@@ -1385,7 +1384,7 @@ class _gen_p_sanyo6600_100(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_100,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_99,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1393,7 +1392,7 @@ class _gen_p_sanyo6600_100(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_100,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_99,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1441,7 +1440,7 @@ class _gen_p_sanyo6600_100(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_104(BaseProtogenClass):
+class _gen_p_sanyo6600_103(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1450,8 +1449,8 @@ class _gen_p_sanyo6600_104(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_104,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_104:
+        super(_gen_p_sanyo6600_103,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_103:
             self._update(args,dict)
 
 
@@ -1460,7 +1459,7 @@ class _gen_p_sanyo6600_104(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_104,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_103,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1468,7 +1467,7 @@ class _gen_p_sanyo6600_104(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_104,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_103,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1516,7 +1515,7 @@ class _gen_p_sanyo6600_104(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_108(BaseProtogenClass):
+class _gen_p_sanyo6600_107(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['used']
 
@@ -1525,8 +1524,8 @@ class _gen_p_sanyo6600_108(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_108,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_108:
+        super(_gen_p_sanyo6600_107,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_107:
             self._update(args,dict)
 
 
@@ -1535,7 +1534,7 @@ class _gen_p_sanyo6600_108(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_108,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_107,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1543,7 +1542,7 @@ class _gen_p_sanyo6600_108(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_108,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_107,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1953,11 +1952,11 @@ class contactindexentry(BaseProtogenClass):
         self.__field_namep.writetobuffer(buf)
         try: self.__field_numberps
         except:
-            self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_140, 'length': NUMPHONENUMBERS})
+            self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_139, 'length': NUMPHONENUMBERS})
         self.__field_numberps.writetobuffer(buf)
         try: self.__field_emailps
         except:
-            self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_142, 'length': NUMEMAILS})
+            self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_141, 'length': NUMEMAILS})
         self.__field_emailps.writetobuffer(buf)
         self.__field_urlp.writetobuffer(buf)
         self.__field_addressp.writetobuffer(buf)
@@ -1980,9 +1979,9 @@ class contactindexentry(BaseProtogenClass):
         self.__field_slot.readfrombuffer(buf)
         self.__field_namep=UINT(**{'sizeinbytes': 2})
         self.__field_namep.readfrombuffer(buf)
-        self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_140, 'length': NUMPHONENUMBERS})
+        self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_139, 'length': NUMPHONENUMBERS})
         self.__field_numberps.readfrombuffer(buf)
-        self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_142, 'length': NUMEMAILS})
+        self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_141, 'length': NUMEMAILS})
         self.__field_emailps.readfrombuffer(buf)
         self.__field_urlp=UINT(**{'sizeinbytes': 2})
         self.__field_urlp.readfrombuffer(buf)
@@ -2043,14 +2042,14 @@ class contactindexentry(BaseProtogenClass):
     def __getfield_numberps(self):
         try: self.__field_numberps
         except:
-            self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_140, 'length': NUMPHONENUMBERS})
+            self.__field_numberps=LIST(**{'elementclass': _gen_p_sanyo6600_139, 'length': NUMPHONENUMBERS})
         return self.__field_numberps.getvalue()
 
     def __setfield_numberps(self, value):
         if isinstance(value,LIST):
             self.__field_numberps=value
         else:
-            self.__field_numberps=LIST(value,**{'elementclass': _gen_p_sanyo6600_140, 'length': NUMPHONENUMBERS})
+            self.__field_numberps=LIST(value,**{'elementclass': _gen_p_sanyo6600_139, 'length': NUMPHONENUMBERS})
 
     def __delfield_numberps(self): del self.__field_numberps
 
@@ -2059,14 +2058,14 @@ class contactindexentry(BaseProtogenClass):
     def __getfield_emailps(self):
         try: self.__field_emailps
         except:
-            self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_142, 'length': NUMEMAILS})
+            self.__field_emailps=LIST(**{'elementclass': _gen_p_sanyo6600_141, 'length': NUMEMAILS})
         return self.__field_emailps.getvalue()
 
     def __setfield_emailps(self, value):
         if isinstance(value,LIST):
             self.__field_emailps=value
         else:
-            self.__field_emailps=LIST(value,**{'elementclass': _gen_p_sanyo6600_142, 'length': NUMEMAILS})
+            self.__field_emailps=LIST(value,**{'elementclass': _gen_p_sanyo6600_141, 'length': NUMEMAILS})
 
     def __delfield_emailps(self): del self.__field_emailps
 
@@ -2183,7 +2182,7 @@ class contactindexentry(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_140(BaseProtogenClass):
+class _gen_p_sanyo6600_139(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['slot']
 
@@ -2192,8 +2191,8 @@ class _gen_p_sanyo6600_140(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_140,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_140:
+        super(_gen_p_sanyo6600_139,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_139:
             self._update(args,dict)
 
 
@@ -2202,7 +2201,7 @@ class _gen_p_sanyo6600_140(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_140,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_139,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2210,7 +2209,7 @@ class _gen_p_sanyo6600_140(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_140,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_139,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2, 'default': 0xffff}
             dict2.update(kwargs)
@@ -2264,7 +2263,7 @@ class _gen_p_sanyo6600_140(BaseProtogenClass):
 
 
 
-class _gen_p_sanyo6600_142(BaseProtogenClass):
+class _gen_p_sanyo6600_141(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['slot']
 
@@ -2273,8 +2272,8 @@ class _gen_p_sanyo6600_142(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_sanyo6600_142,self).__init__(**dict)
-        if self.__class__ is _gen_p_sanyo6600_142:
+        super(_gen_p_sanyo6600_141,self).__init__(**dict)
+        if self.__class__ is _gen_p_sanyo6600_141:
             self._update(args,dict)
 
 
@@ -2283,7 +2282,7 @@ class _gen_p_sanyo6600_142(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_sanyo6600_142,self)._update(args,kwargs)
+        super(_gen_p_sanyo6600_141,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2291,7 +2290,7 @@ class _gen_p_sanyo6600_142(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_sanyo6600_142,kwargs)
+            self._complainaboutunusedargs(_gen_p_sanyo6600_141,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2, 'default': 0xffff}
             dict2.update(kwargs)

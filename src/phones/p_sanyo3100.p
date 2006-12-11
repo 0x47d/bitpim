@@ -37,28 +37,6 @@ HASRINGPICBUF=0
 
 %}
 
-PACKET sanyofirmwarerequest:
-    1 UINT {'constant': 0xfa} +fa
-    2 UINT {'constant': 0x00} +command
-
-PACKET sanyofirmwareresponse:
-    1 UINT fa
-    2 UINT command
-    11 USTRING {'terminator': None}  date1
-    8 USTRING {'terminator': None}  time1
-    11 USTRING {'terminator': None}  date2
-    8 USTRING {'terminator': None}  time2
-    8 USTRING {'terminator': None}  string1
-    1 UNKNOWN dunno1
-    11 USTRING {'terminator': None}  date3
-    1 UNKNOWN dunno2
-    8 USTRING {'terminator': None}  time3
-    11 UNKNOWN dunno3
-    10 USTRING {'terminator': None}  firmware
-    7 UNKNOWN dunno4
-    16 USTRING {'terminator': None}  phonemodel
-    * UNKNOWN pad
-
 PACKET req41:
     1 UINT {'default': 0x41} +fortyone
     6 USTRING {'terminator': None} msl
@@ -77,9 +55,6 @@ PACKET fastatusresponse:
     * sanyofaheader +preamble
     1 UINT {'default': 0} status
     1 UINT {'default': 0} packettype
-    
-PACKET testing1crequest:
-    1 UINT {'default': 0x1c} +command
 
 PACKET response:
     * UNKNOWN pad

@@ -18,7 +18,6 @@ from p_sanyo import *
 from p_sanyomedia import *
 from p_sanyonewer import *
 from p_sanyo4930 import *
-from p_sanyo3100 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -72,7 +71,7 @@ PACKET pbsortbuffer:
     # Don't know what it is.  A count and list of flags
     1 UINT groupslotsused
     2 UNKNOWN +pad
-    * LIST {'length': 20, 'createdefault': True} +groupslotusedflags:
+    * LIST {'length': NUMGROUPS, 'createdefault': True} +groupslotusedflags:
         1 UINT used "1 if slot in use"
     # Contact slots
     2 UINT slotsused

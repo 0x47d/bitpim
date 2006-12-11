@@ -37,6 +37,28 @@ _MAXEMAILLEN=96
 #fa 00 02 28 0c
 #fa 00 03 for writing
 
+PACKET sanyofirmwarerequest:
+    1 UINT {'constant': 0xfa} +fa
+    2 UINT {'constant': 0x00} +command
+
+PACKET sanyofirmwareresponse:
+    1 UINT fa
+    2 UINT command
+    11 USTRING {'terminator': None}  date1
+    8 USTRING {'terminator': None}  time1
+    11 USTRING {'terminator': None}  date2
+    8 USTRING {'terminator': None}  time2
+    8 USTRING {'terminator': None}  string1
+    1 UNKNOWN dunno1
+    11 USTRING {'terminator': None}  date3
+    1 UNKNOWN dunno2
+    8 USTRING {'terminator': None}  time3
+    11 UNKNOWN dunno3
+    10 USTRING {'terminator': None}  firmware
+    7 UNKNOWN dunno4
+    16 USTRING {'terminator': None}  phonemodel
+    * UNKNOWN pad
+
 # Eventually move to p_sanyo.p because this header is
 # used by many phones.
 PACKET sanyofaheader:

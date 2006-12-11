@@ -9,7 +9,6 @@ from p_sanyo import *
 from p_sanyomedia import *
 from p_sanyonewer import *
 from p_sanyo4930 import *
-from p_sanyo3100 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb

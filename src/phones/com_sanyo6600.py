@@ -18,7 +18,6 @@ import common
 import p_brew
 import p_sanyo8300
 import p_sanyo4930
-import p_sanyo3100
 import p_sanyo6600
 import com_brew
 import com_phone
@@ -236,6 +235,45 @@ class Phone(com_sanyo3100.Phone):
             cats.append(result['groups'][i]['name'])
         result['categories']=cats
         return pbook
+
+    def savephonebook(self, data):
+        newphonebook={}
+        self.setmode(self.MODEBREW)
+        self.setmode(self.MODEPHONEBOOK)
+        sortstuff=self.protocolclass.pbsortbuffer()
+
+        sortstuff=self.protocolclass.pbsortbuffer()
+
+        for i in range(self.protocolclass.NUMGROUPS):
+            sortstuff.groupslotusedflags.append(0)
+            
+        for i in range(self.protocolclass._NUMSPEEDDIALS):
+            sortstuff.speeddialindex.append(0xffff)
+
+        for i in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            sortstuff.usedflags.append(0)
+            sortstuff.used2flags.append(0)
+            sortstuff.sortorder.append(0xffff)
+            sortstuff.addressusedflags(0)
+            sortstuff.memousedflags(0)
+
+        for i in range(self.protocolclass.MAXNUMBERS):
+            sortstuff.numusedflags(0)
+
+        for i in range(self.protocolclass.MAXEMAILS):
+            sortstuff.emailusedflags(0)
+
+        for i in range(self.protocolclass.MAXURLS):
+            sortstuff.urlusedflags(0)
+
+        indexp=0
+        namep=0
+        nump=0
+        urlp=0
+        memop=0
+        addressp=0
+        emailp=0
+        
 
     my_model='SCP-6600/US'
     my_manufacturer='SANYO'

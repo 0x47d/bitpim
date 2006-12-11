@@ -73,7 +73,7 @@ class Phone(com_sanyo8300.Phone):
     def is_mode_brew(self):
         # Borrowed from the VX4400
         req=self.protocolclass.firmwarerequest()
-        respc=self.protocolclass.testing0cresponse
+        respc=p_brew.testing0cresponse
         for baud in 0, 38400, 115200:
             if baud:
                 if not self.comm.setbaudrate(baud):
