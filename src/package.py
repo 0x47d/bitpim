@@ -232,14 +232,17 @@ def copyresources(destdir):
 
 def resourcefilter(srcfilename, destfilename):
     exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids', '.ico']
+    files=[]
     if sys.platform=='win32':
         # on windows we also want the chm help file 
         exts=exts+['.chm', '.exe', '.dll']
     if sys.platform=='linux2':
         exts=exts+['.lbin', '.htb']
+        files.append('usbcell')
     if sys.platform=='darwin':
         exts=exts+['.mbin', '.htb']
-    if os.path.splitext(srcfilename)[1] in exts:
+    if os.path.splitext(srcfilename)[1] in exts or \
+       os.path.basename(srcfilename) in files:
         return srcfilename, destfilename
     return None
 
