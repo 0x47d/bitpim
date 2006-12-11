@@ -1,52 +1,35 @@
 #!/bin/bash
 # $Id$
 #
-# /etc/hotplug/usb/usbcam
+# /etc/hotplug/usb/usbcell
 #
-# Sets up newly plugged in USB camera so that the user who owns
-# the console according to pam_console can access it from user space
+# Sets up newly plugged in USB cell phone and then notifies BitPim of this
+# new device.
 #
 # Note that for this script to work, you'll need all of the following:
 # a) a line in the file /etc/hotplug/usermap that corresponds to the 
-#    camera you are using. You can get the correct lines for all cameras 
-#    supported by gphoto2 by running "gphoto2 --print-usb-usermap".
+#    phone you are using.
 # b) a setup using pam_console creates the respective lock files
 #    containing the name of the respective user. You can check for that
 #    by executing "echo `cat /var/{run,lock}/console.lock`" and 
 #    verifying the appropriate user is mentioned somewhere there.
-# c) a Linux kernel supporting hotplug and usbdevfs
-# d) the hotplug package (http://linux-hotplug.sourceforge.net/)
+# c) /etc/hotplug/usb/usbcam script to set the proper permission on the device.
+# d) a Linux kernel supporting hotplug and usbdevfs
+# e) the hotplug package (http://linux-hotplug.sourceforge.net/)
 #
 # In the usermap file, the first field "usb module" should be named 
-# "usbcam" like this script.
+# "usbcell" like this script.
 # 
-# Adapted for use with BitPim by Joe Pham <djpham@bitpim.org>
 #
 
 logfile='/var/bitpim/dnotify.log'
 rm -f "${logfile}"
 
-if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
+if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ] && [ -x /etc/hotplug/usb/usbcam ]
 then
-    # New code, using lock files instead of copying /dev/console permissions
-    # This also works with non-gdm logins (e.g. on a virtual terminal)
-    # Idea and code from Nalin Dahyabhai <nalin@redhat.com>
-    if [ -f /var/run/console.lock ]
+    /etc/hotplug/usb/usbcam "$@"
+    if [ -d /var/bitpim ]
     then
-        CONSOLEOWNER=`cat /var/run/console.lock`
-    elif [ -f /var/lock/console.lock ]
-    then
-        CONSOLEOWNER=`cat /var/lock/console.lock`
-    else
-        CONSOLEOWNER=
+        echo add "${DEVICE}" > "${logfile}"
     fi
-    if [ -n "$CONSOLEOWNER" ]
-    then
-        chmod 0000 "${DEVICE}"
-        chown "$CONSOLEOWNER" "${DEVICE}"
-        chmod 0600 "${DEVICE}"
-    fi
-    echo add "${DEVICE}" > "${logfile}"
-else
-    echo del "${DEVICE}" > "${logfile}"
 fi
