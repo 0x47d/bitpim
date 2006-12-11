@@ -1,6 +1,11 @@
 #include "pagestart.h"
 
 
+   <h2><a name="0.9.10">Changes in 0.9.10</a></h2>
+    <ul>
+      <li>Bug fix: Unknown command line parameter crashes BitPim.
+    </ul>
+
    <h2><a name="0.9.09">Changes in 0.9.09</a></h2>
     <ul>
       <li>Bug fix: Adding mp3 ringtones crashes BitPim (<B>LG-VX8300</B>)
