@@ -17,6 +17,8 @@ BEGIN_TOC
         TOCITEM_1(Calendar Import,dialog-calendarimport.htm)
         TOCITEM_1(Image Preview,dialog-imagepreview.htm)
         TOCITEM_1(Calendar Merge,dialog-calendarmerge.htm)
+	TOCITEM_1(Calendar Import Wizard,dialog-calimpwiz.htm)
+	TOCITEM_1(Calendar Import Preset,dialog-calimppreset.htm)
         ENDTOC_1
     TOCITEM_0(Tree Items,tabs.htm)
         TOC_1
