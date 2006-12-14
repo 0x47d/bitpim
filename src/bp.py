@@ -17,6 +17,7 @@ It invokes BitPim in gui or commandline mode as appropriate
 """
 
 import sys
+import wx
 
 # only gui mode support at the moment
 
@@ -51,9 +52,25 @@ if __name__ == '__main__':
 	sys.argv=sys.argv[:1]+sys.argv[2:]
     try:
         _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+        _invalid_args=[x for x in _args if x not in ['debug', 'bitfling']]
+        if _invalid_args:
+            raise getopt.GetoptError('Invalid argument(s): '+','.join(_invalid_args))
     except getopt.GetoptError,e:
-        _options=[]
-        _args=[]
+        _invalid_args=True
+        _error_str=e.msg
+    if _invalid_args:
+        # invalid/unknown arguments
+        try:
+            _msg='%s\nUsage: %s [-c config file]|[-d config dir] [debug] [bitfling]\n'%(_error_str, sys.argv[0])
+            sys.stderr.write(_msg)
+            # try to display an error message box
+            _app=wx.PySimpleApp()
+            _dlg=wx.MessageDialog(None, _msg, 'BitPim Error',
+                                  style=wx.OK|wx.ICON_ERROR)
+            _dlg.ShowModal()
+            _dlg.Destroy()
+        finally:
+            sys.exit(1)
     _kwargs={}
     # check for debug flag
     _debug=__debug__ or bool(_args and 'debug' in _args)
