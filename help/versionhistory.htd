@@ -4,6 +4,7 @@
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>
     <ul>
       <li>Bug fix: Unknown command line parameter crashes BitPim.
+      <li>New phone support: LG VX-8600.
     </ul>
 
    <h2><a name="0.9.09">Changes in 0.9.09</a></h2>
