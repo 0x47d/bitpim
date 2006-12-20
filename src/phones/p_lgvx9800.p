@@ -57,7 +57,7 @@ SMS_CANNED_MAX_LENGTH=101
 
 BREW_FILE_SYSTEM=1
 
-PHONE_ENCODING='iso8859_1'
+PHONE_ENCODING='iso-8859-1'
 
 # playlist constants
 pl_dir='mmc1/my_mp3_playlist'
@@ -77,7 +77,9 @@ broken_filelist_date=True
 PACKET indexentry:
     2 UINT index
     2 UINT type
-    80 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False } filename  "includes full pathname"
+    80 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False,
+                'raiseontruncate': False } filename  "includes full pathname"
     4 UINT {'default':0} +icon
     4 UINT {'default': 0} +date "i think this is bitfield of the date"
     4 UINT dunno
@@ -88,7 +90,9 @@ PACKET indexfile:
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 PACKET playlistentry:
-    84 USTRING { 'raiseonunterminatedread': False, 'raiseontruncate': False } name
+    84 USTRING { 'encoding': PHONE_ENCODING,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False } name
     4 UINT { 'default': 0 } +date
     4 UINT { 'default': 0 } +dunno1
     4 UINT { 'default': 0 } +dunno2
