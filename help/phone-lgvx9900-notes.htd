@@ -1,0 +1,33 @@
+#include "pagestart.h"
+
+<H3>Calendar</H3>
+<UL>
+<LI>BitPim now fully supports all calendar features of this phone.
+</UL>
+
+<H3>Filesystem</H3>
+<UL>
+<LI>LG/Verizon appear to lock out access to the <B>nvm</B> sudirectory.  Though it would show up under the <B>Filesystem</B> view, users will not be able to access its contents.
+</UL>
+
+<H3>Ringtones</H3>
+<UL>
+<LI>BitPim can make use of ringtone files stored on the microSD card, see section <a href="phone-lgvx9900-howtos.htm">Howtos</a> for more details.
+</UL>
+
+<H3>Sounds, Wallpaper, and Video</H3>
+<UL>
+<LI>BitPim can retrieve and save <B>Sounds</B>, <B>Wallpaper</B>, and <B>Video</B> media files from/to the phone memory and microSD card.
+</UL>
+
+<H3>Music</H3>
+<UL>
+<LI>BitPim can save music files to the phone memory or microSD card, though it would be very slow to transfer large files.
+</UL>
+
+<H3>MP3 Play Lists</H3>
+<UL>
+<LI>Users can now retrieve, manage, and save their mp3 playlists to the phones.  See section <a href="phone-lgvx9900-howtos.htm">Howtos</a> for more details.
+</UL>
+
+#include "pageend.h"
