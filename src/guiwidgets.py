@@ -170,7 +170,8 @@ class GetPhoneDialog(wx.Dialog):
                ('Todo', 'todo'),
                ('SMS', 'sms'),
                ('Call History', 'call_history'),
-               ('Play List', 'playlist'))
+               ('Play List', 'playlist'),
+               ('T9 User DB','t9_udb'))
     
     # actions ("Pretty Name", "name used to query profile")
     actions = (  ("Get", "read"), )
@@ -267,6 +268,8 @@ class GetPhoneDialog(wx.Dialog):
         return self._setting("call_history")
     def GetPlaylistSetting(self):
         return self._setting('playlist')
+    def GetT9Setting(self):
+        return self._setting('t9_udb')
 
     def OnHelp(self,_):
         wx.GetApp().displayhelpid(self.HELPID)
@@ -279,7 +282,8 @@ class GetPhoneDialog(wx.Dialog):
         ('ringtone', 'read', MERGE),
         ('memo', 'read', MERGE),
         ('todo', 'read', MERGE),
-        ('playlist', 'read', MERGE))
+        ('playlist', 'read', MERGE),
+        ('t9_udb', 'read', MERGE))
 
     def _dowesupport(self, source, action, type):
         if (source,action,type) in self._notsupported:

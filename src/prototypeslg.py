@@ -475,3 +475,145 @@ class TELUSLGCALREPEAT(prototypes.UINTlsb):
         val|=type
         return val
 
+#-------------------------------------------------------------------------------
+class T9USERDBBLOCK(prototypes.BaseProtogenClass):
+    """
+    Special class to handle data blocks within the LG T9 User Database file.
+    Perhaps, the prototypes syntax should be enhanced to more gracefully
+    handle cases like this!
+    """
+
+    # known types of this block
+    FreeBlock_Type='Free Block'
+    A0FreeBlock_Type='A0 Free Block'
+    WordsList_Type='Words List'
+    C7_Type='C7'
+
+    def __init__(self, *args, **kwargs):
+        super(T9USERDBBLOCK, self).__init__(*args, **kwargs)
+        self._value=None
+        self._type=None
+        if self._ismostderived(T9USERDBBLOCK):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(T9USERDBBLOCK, self)._update(args, kwargs)
+        # we have no special keywords to process so complain away
+        self._complainaboutunusedargs(T9USERDBBLOCK, kwargs)
+        # Set our value if one was specified
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            self._set_value(args[0])
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+
+    def _set_value(self, v):
+        # set the value of this block
+        # the value must be a dict having 2 keys: 'type' and 'value'
+        if not isinstance(v, dict):
+            raise TypeError('Value must be a dict')
+        if not v.has_key('type') or not v.has_key('value'):
+            raise ValueError('Missing type or value keyword')
+        _type=v['type']
+        _value=v['value']
+        if _type==self.FreeBlock_Type or \
+           _type==self.A0FreeBlock_Type:
+            # this is a free block, the value is an integer specifying
+            # the length of this free block
+            if not isinstance(_value, int):
+                raise TypeError('Value must be an int')
+        elif _type==self.WordsList_Type:
+            # this is a list of words, the value is a list of dicts,
+            # each dict should have 2 keys: 'word', 'weight'.
+            # value['word'] is a string
+            # value['weight'] is an int, default to 0xA000
+            if not isinstance(_value, list):
+                raise TypeError('Value must be a list of dicts')
+        else:
+            raise ValueError('Invalid type: '+_type)
+        self._type=_type
+        self._value=_value
+
+    def _extract_words_list(self, buf):
+        # read and construct a word list
+        _res=[]
+        _size=buf.peeknextbyte()
+        while _size<0x80:
+            _size=buf.getnextbyte()
+            _weight=buf.getnextbyte()|(buf.getnextbyte()<<8)
+            _res.append({ 'word': buf.getnextbytes(_size),
+                          'weight': _weight })
+            _size=buf.peeknextbyte()
+        return _res
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        _ch=buf.peeknextbyte()
+        if _ch&0xF0==0xC0:
+            self._type=self.C7_Type
+            self._value=buf.getnextbytes(7)
+        elif _ch&0xF0==0xA0:
+            self._type=self.A0FreeBlock_Type
+            buf.getnextbyte()
+            self._value=((buf.getnextbyte()&0x0F)<<8)|buf.getnextbyte()
+            buf.getnextbytes(self._value-2)
+        elif _ch&0xF0==0x80:
+            self._type=self.FreeBlock_Type
+            self._value=((buf.getnextbyte()&0x0F)<<8)|buf.getnextbyte()
+            buf.getnextbytes(self._value-2)
+        elif _ch<0x80:
+            self._type=self.WordsList_Type
+            self._value=self._extract_words_list(buf)
+        else:
+            raise ValueError('Unknown block type: 0x%02X'%_ch)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def getvalue(self):
+        if self._value is None or self._type is None:
+            raise ValueNotSetException()
+        return { 'type': self._type,
+                 'value': self._value }
+
+    def packetsize(self):
+        # return the size of this packet
+        if self._value is None or self._type is None:
+            raise ValueNotSetException()
+        if self._type==self.C7_Type:
+            return 7
+        if self._type==self.A0FreeBlock_Type:
+            return self._value+1
+        if self._type==self.FreeBlock_Type:
+            return self._value
+        if self._type==self.WordsList_Type:
+            _size=0
+            for _entry in self._value:
+                _size+=len(_entry['word'])+3
+            return _size
+
+    def writetobuffer(self, buf):
+        if self._value is None or self._type is None:
+            raise ValueNotSetException()
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if self._type==self.C7_Type:
+            buf.appendbytes(self._value)
+        elif self._type==self.A0FreeBlock_Type:
+            buf.appendbyte(0xA0)
+            buf.appendbyte(0x80|((self._value&0xF00)>>8))
+            buf.appendbyte(self._value&0xff)
+            for _ in range(self._value-2):
+                buf.appendbyte(0)
+##            buf.appendbytes('\x00'*self._value-2)
+        elif self._type==self.FreeBlock_Type:
+            buf.appendbyte(0x80|((self._value&0xF00)>>8))
+            buf.appendbyte(self._value&0xff)
+            for _ in range(self._value-2):
+                buf.appendbyte(0)
+        elif self._type==self.WordsList_Type:
+            for _entry in self._value:
+                buf.appendbyte(len(_entry['word']))
+                _weight=_entry.get('weight', 0xA000)
+                buf.appendbyte(_weight&0xff)
+                buf.appendbyte((_weight&0xFF00)>>8)
+                buf.appendbytes(_entry['word'])
+        self._bufferendoffset=buf.getcurrentoffset()

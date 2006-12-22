@@ -307,6 +307,7 @@ class HtmlEasyPrinting:
       - You can set the scale for the fonts, otherwise the default
         is way too large (you would get about 80 chars across)
     """
+    import guiwidgets
 
     def __init__(self, parent=None, config=None, configstr=None):
         self.parent=parent
@@ -496,7 +497,7 @@ def drawhtml(dc, rect, html, basepath="", font="", size=10):
 
 
 # done down here to prevent circular imports
-import guiwidgets
+##import guiwidgets
 
         
 if __name__=='__main__':

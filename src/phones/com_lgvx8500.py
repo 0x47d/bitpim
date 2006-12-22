@@ -25,6 +25,8 @@ import fileinfo
 import p_lgvx8500
 import playlist
 import prototypes
+import prototypeslg
+import t9editor
 
 parentphone=com_lgvx8300.Phone
 class Phone(parentphone):
@@ -300,6 +302,26 @@ class Phone(parentphone):
                               _song_info)
         return result
 
+    # T9 DB stuff
+    def gett9db(self, result):
+        try:
+            _buf=prototypes.buffer(self.getfilecontents(
+                self.protocolclass.T9USERDBFILENAME))
+        except com_brew.BrewNoSuchFileException:
+            return result
+        _req=self.protocolclass.t9udbfile()
+        _req.readfrombuffer(_buf, logtitle='Reading T9 User DB File')
+        _t9list=t9editor.T9WordsList()
+        for _item in _req.blocks:
+            _blk=_item.block
+            if _blk['type']==prototypeslg.T9USERDBBLOCK.WordsList_Type:
+                for _word in _blk['value']:
+                    _t9list.append_word(_word['word'])
+        result[t9editor.dict_key]=_t9list
+        return result
+    def savet9db(self, result, _):
+        return result
+
     # Misc Stuff----------------------------------------------------------------
     def _unlock_key(self):
         _req=self.protocolclass.LockKeyReq(lock=1)
@@ -410,6 +432,8 @@ class Profile(parentprofile):
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         ('playlist', 'read', 'OVERWRITE'),
         ('playlist', 'write', 'OVERWRITE'),
+        ('t9_udb', 'read', 'OVERWRITE'),
+        ('t9_udb', 'write', 'OVERWRITE'),
         )
 
     field_color_data={

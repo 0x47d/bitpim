@@ -145,6 +145,7 @@ class Phone:
     getsms=NotImplemented
     getcallhistory=NotImplemented
     getplaylist=NotImplemented
+    gett9db=NotImplemented
 
 class Profile:
 

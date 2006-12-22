@@ -54,6 +54,7 @@ import playlist
 import fileview
 import data_recording
 import analyser
+import t9editor
 
 if guihelper.IsMSWindows():
     import win32api
@@ -1023,6 +1024,9 @@ class MainWindow(wx.Frame):
     def GetActiveSMSWidget(self):
         return self.tree.GetActivePhone().smswidget
 
+    def GetActiveT9EditorWidget(self):
+        return self.tree.GetActivePhone().t9editorwidget
+
     def GetCurrentActiveWidget(self):
         return self.tree.GetActiveWidget()
 
@@ -1455,6 +1459,12 @@ class MainWindow(wx.Frame):
                 raise NotImplementedError
             self.GetActivePlaylistWidget().populatefs(results)
             self.GetActivePlaylistWidget().populate(results)
+        # T9 User DB
+        if results['sync'].has_key(t9editor.dict_key):
+            if results['sync'][t9editor.dict_key]=='MERGE':
+                raise NotImplementedError
+            self.GetActiveT9EditorWidget().populatefs(results)
+            self.GetActiveT9EditorWidget().populate(results)
     ###
     ### Main bit for sending data to the phone
     ###
@@ -1541,6 +1551,13 @@ class MainWindow(wx.Frame):
             merge=v!=dlg.OVERWRITE
             self.GetActivePlaylistWidget().getdata(data)
             todo.append((self.wt.writeplaylist, "Playlist", merge))
+
+        ### T9 User DB
+        v=dlg.GetT9Setting()
+        if v!=dlg.NOTREQUESTED:
+            merge=v!=dlg.OVERWRITE
+            self.GetActiveT9EditorWidget().getdata(data)
+            todo.append((self.wt.writet9, "T9", merge))
 
         data['reboot_delay']=self.phoneprofile.reboot_delay
         self._autodetect_delay=self.phoneprofile.autodetect_delay
@@ -1883,7 +1900,9 @@ class WorkerThread(WorkerThreadFramework):
             (req.GetTodoSetting, self.commphone.gettodo, "Todo", "todo"),
             (req.GetSMSSetting, self.commphone.getsms, "SMS", "sms"),
             (req.GetCallHistorySetting, self.commphone.getcallhistory, 'Call History', 'call_history'),
-            (req.GetPlaylistSetting, self.commphone.getplaylist, 'Play List', 'playlist')):
+            (req.GetPlaylistSetting, self.commphone.getplaylist, 'Play List', 'playlist'),
+            (req.GetT9Setting, self.commphone.gett9db, 'T9 DB', t9editor.dict_key),
+            ):
             st=i[0]()
             if st==req.MERGE:
                 sync[i[3]]="MERGE"
@@ -1971,6 +1990,12 @@ class WorkerThread(WorkerThreadFramework):
         if __debug__: self.checkthread()
         self.setupcomm()
         return self.commphone.saveplaylist(data, merge)
+
+    def writet9(self, data, merge):
+        if __debug__:
+            self.checkthread()
+        self.setupcomm()
+        return self.commphone.savet9db(data, merge)
 
     def getphoneinfo(self):
         if __debug__: self.checkthread()

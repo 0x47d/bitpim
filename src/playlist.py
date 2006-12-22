@@ -307,7 +307,6 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
         if self.dirty or self.ignoredirty:
             # already dirty, no need to make it worse
             return
-        print 'OnMakeDirty'
         self.setdirty(True)
 
     def OnPlaylistSelected(self, evt):

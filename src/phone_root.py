@@ -52,6 +52,7 @@ import filesystem
 import widgets
 import helpids
 import media_root
+import t9editor
 
 if guihelper.IsMSWindows():
     import win32api
@@ -355,6 +356,9 @@ class Phone(today.TodayWidget):
         id=self.tree.AddPage(self.phone_id, self.callhistorywidget, 'Call History', self.tree.callhistory, id)
         self.playlistwidget=playlist.PlaylistWidget(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.playlistwidget, 'Play List', self.tree.playlist,id)
+        self.t9editorwidget=t9editor.T9EditorWidget(self, self.parent)
+        id=self.tree.AddPage(self.phone_id, self.t9editorwidget, 'T9 Editor',
+                          None, id)
 
         # update the the status bar info
         self.mw.SetPhoneModelStatus()
@@ -373,6 +377,7 @@ class Phone(today.TodayWidget):
             self.smswidget.getfromfs(results)
             self.callhistorywidget.getfromfs(results)
             self.playlistwidget.getfromfs(results)
+            self.t9editorwidget.getfromfs(results)
             # update controls
             wx.SafeYield(onlyIfNeeded=True)
             self.phonewidget.populate(results)
@@ -392,6 +397,8 @@ class Phone(today.TodayWidget):
             self.callhistorywidget.populate(results)
             wx.SafeYield(onlyIfNeeded=True)
             self.playlistwidget.populate(results)
+            wx.SafeYield(onlyIfNeeded=True)
+            self.t9editorwidget.populate(results)
         except Exception, e:
             if __debug__:
                 raise Exception, e 

@@ -14,6 +14,7 @@
 from common import PhoneBookBusyException
 
 from prototypes import *
+from prototypeslg import *
 
 # Make all lg stuff available in this module as well
 from p_lg import *
@@ -37,6 +38,13 @@ PLIndexFileName='dload/aodplaylist.lgpl'
 PLFilePath='dload'
 PLExt='.clgpl'
 
+# T9 User Database, how do we handle the Spanish DB?
+T9USERDBFILENAME='t9udb/t9udb_eng.dat'
+Default_Header='\x36\x00' \
+               '\x00\x00\x00\x00\x00\x00\x00\x00' \
+               '\x00\x00\xFB\x07\xF6\x0F\xF1\x17' \
+               '\xEC\x1F\xE7\x27\xE2\x2F\xDD\x37' \
+               '\xD8\x3F\xD3\x47\xA0'
 %}
 
 # Phonebook stuff
@@ -182,3 +190,15 @@ PACKET KeyPressReq:
      1 UINT { 'default': 0 } +hold
      1 STRING { 'terminator': None,
                 'sizeinbytes': 1 } key
+
+# T9 User Database
+    
+PACKET t9udbfile:
+    2 UINT { 'default': 0x5000 } +file_length
+    6 DATA { 'default': '\x00\x00\x00\x00\x00\x00' } +unknown1
+    2 UINT word_count
+    2 UINT { 'default': 0x00 } +unknown2
+    2 UINT free_space
+    31 DATA { 'default': Default_Header } +unknown3
+    * LIST { 'createdefault': True } +blocks:
+        * T9USERDBBLOCK block
