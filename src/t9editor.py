@@ -12,10 +12,8 @@ Code to handle T9 Editor
 The format of the T9 Words data is standardized.  It is a list of dict that
 has the following standard fields:
 
-word: string=the T9 word
-weigh: int=the weigh(priority) of this word within its group.  Highest weigh is
-       0.  The higher the value, the lower the weigh/priority.  The default
-       value is 0.
+"words": an ordered list of dicts, each dict has the following fields:
+         "word": string value of the actual T9 Word.
 
 """
 
@@ -127,7 +125,6 @@ class T9WordsList(object):
         global dict_key
         _dict=db.getmajordictvalues(dict_key, t9wordsdataobjectfactory)
         self.clear()
-        print '_dict',_dict
         for _word in _dict.get(dict_key, {}).get('words', []):
             if _word.get('word', None):
                 self.append_word(_word['word'])
