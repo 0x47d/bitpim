@@ -281,16 +281,12 @@ def formatexception(excinfo=None, lastframes=8):
      traceback.print_exception(*excinfo, **{'file': s})
      tb=excinfo[2]
 
-     while True:
-          if not tb.tb_next:
-               break
-          tb=tb.tb_next
      stack=[]
-     f=tb.tb_frame
-     while f:
-          stack.append(f)
-          f=f.f_back
-     stack.reverse()
+
+     while tb:
+          stack.append(tb.tb_frame)
+          tb=tb.tb_next
+          
      if len(stack)>lastframes:
           stack=stack[-lastframes:]
      print >>s, "\nVariables by last %d frames, innermost last" % (lastframes,)
