@@ -303,23 +303,79 @@ class Phone(parentphone):
         return result
 
     # T9 DB stuff
-    def gett9db(self, result):
+    def _get_current_db(self):
+        _current_db=None
         try:
-            _buf=prototypes.buffer(self.getfilecontents(
-                self.protocolclass.T9USERDBFILENAME))
+            _data=self.getfilecontents(
+                self.protocolclass.T9USERDBFILENAME)
+            if _data:
+                _current_db=self.protocolclass.t9udbfile()
+                _current_db.readfrombuffer(prototypes.buffer(_data),
+                                           logtitle='Reading T9 User DB File')
         except com_brew.BrewNoSuchFileException:
-            return result
-        _req=self.protocolclass.t9udbfile()
-        _req.readfrombuffer(_buf, logtitle='Reading T9 User DB File')
+            pass
+        return _current_db
+    def _copy_fields(self, old, new):
+        for _field in ('unknown1', 'unknown2', 'unknown3'):
+            setattr(new, _field, getattr(old, _field))
+    def gett9db(self, result):
+        _req=self._get_current_db()
         _t9list=t9editor.T9WordsList()
-        for _item in _req.blocks:
-            _blk=_item.block
-            if _blk['type']==prototypeslg.T9USERDBBLOCK.WordsList_Type:
-                for _word in _blk['value']:
-                    _t9list.append_word(_word['word'])
+        if _req:
+            for _item in _req.blocks:
+                _blk=_item.block
+                if _blk['type']==prototypeslg.T9USERDBBLOCK.WordsList_Type:
+                    for _word in _blk['value']:
+                        _t9list.append_word(_word['word'])
         result[t9editor.dict_key]=_t9list
         return result
+    _buffer_data={
+        '1': 0x7FA, '2': 0x7FA, '3': 0x7FA, '4': 0x7FA,
+        '5': 0x7FA, '6': 0x7FA, '7': 0x7FA, '8': 0x7FA,
+        '9': 0x7FA, '0': 0x800 }
+    _t9keys=('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
     def savet9db(self, result, _):
+        _current_db=self._get_current_db()
+        _new_db=self.protocolclass.t9udbfile()
+        if _current_db:
+            self._copy_fields(_current_db, _new_db)
+        _t9words={}
+        _t9list=result.get(t9editor.dict_key, t9editor.T9WordsList())
+        _wordcount=0
+        for _key in _t9list.keys:
+            for _word in _t9list.get_words(_key):
+                _t9words.setdefault(_key[0], []).append(_word)
+                _wordcount+=1
+        _new_db.word_count=_wordcount
+        _total_free_size=0
+        for _key in self._t9keys:
+            _lst=_t9words.get(_key, [])
+            if _lst:
+                _val={ 'type': prototypeslg.T9USERDBBLOCK.WordsList_Type,
+                       'value': [ { 'word': x } for x in _lst ] }
+                _blk=prototypeslg.T9USERDBBLOCK(_val)
+                _free_len=self._buffer_data[_key]-_blk.packetsize()
+                # ugly hack!
+                if _key!='1':
+                    _free_len+=1
+                _total_free_size+=_free_len
+                _new_db.blocks.append(_val)
+                _new_db.blocks.append({ 'type': prototypeslg.T9USERDBBLOCK.FreeBlock_Type,
+                                        'value': _free_len })
+            else:
+                # ugly hack, again!!
+                if _key=='1':
+                    _type=prototypeslg.T9USERDBBLOCK.FreeBlock_Type
+                else:
+                    _type=prototypeslg.T9USERDBBLOCK.A0FreeBlock_Type
+                _new_db.blocks.append({ 'type': _type,
+                                        'value': self._buffer_data[_key] })
+                _total_free_size+=self._buffer_data[_key]
+        _new_db.free_space=_total_free_size
+        _buf=prototypes.buffer()
+        _new_db.writetobuffer(_buf)
+        self.writefile(self.protocolclass.T9USERDBFILENAME,
+                       _buf.getvalue())
         return result
 
     # Misc Stuff----------------------------------------------------------------
