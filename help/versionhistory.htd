@@ -4,10 +4,10 @@
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>
     <ul>
       <li>Bug fix: Unknown command line parameter crashes BitPim.
-      <li>New phone support: LG VX-8600.
-      <li>New phone support: Sanyo SCP-200.
-      <li>New phone support: LG VX-9900.
-      <li>New feature: T9 User Database maintenance.
+      <li>New phone support: <B>LG VX-8600</B>.
+      <li>New phone support: <B>Sanyo SCP-200</B>.
+      <li>New phone support: <B>LG VX-9900</B> (phonebook, wallpapers, and ringtones).
+      <li>New feature: T9 User Database maintenance.  Initially, only the LG VX-8500/8600 supports this feature.
     </ul>
 
    <h2><a name="0.9.09">Changes in 0.9.09</a></h2>
