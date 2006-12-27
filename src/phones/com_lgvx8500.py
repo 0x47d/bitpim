@@ -376,6 +376,8 @@ class Phone(parentphone):
         _new_db.writetobuffer(_buf)
         self.writefile(self.protocolclass.T9USERDBFILENAME,
                        _buf.getvalue())
+        # Need to reboot the phone to take effect
+        result['rebootphone']=True
         return result
 
     # Misc Stuff----------------------------------------------------------------
