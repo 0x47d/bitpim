@@ -5,7 +5,7 @@
     <ul>
       <li>Bug fix: Unknown command line parameter crashes BitPim.
       <li>New phone support: <B>LG VX-8600</B>.
-      <li>New phone support: <B>Sanyo SCP-200</B>.
+      <li>New phone support: <B>Sanyo SCP-200</B> and <B>SCP-2400</B>.
       <li>New phone support: <B>LG VX-9900</B> (phonebook, wallpapers, and ringtones).
       <li>New feature: T9 User Database maintenance.  Initially, only the LG VX-8500/8600 supports this feature.
     </ul>
