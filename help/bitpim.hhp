@@ -37,6 +37,8 @@ dialog-audioconversion.htm
 dialog-calendarimport.htm
 dialog-imagepreview.htm
 dialog-calendarmerge.htm
+dialog-calimpwiz.htm
+dialog-calimppreset.htm
 tabs.htm
 tab-today.htm
 tab-phonebook.htm
@@ -141,10 +143,18 @@ phone-lgvx8500.htm
 phone-lgvx8500-cables.htm
 phone-lgvx8500-notes.htm
 phone-lgvx8500-howtos.htm
+phone-lgvx8600.htm
+phone-lgvx8600-cables.htm
+phone-lgvx8600-notes.htm
+phone-lgvx8600-howtos.htm
 phone-lgvx9800.htm
 phone-lgvx9800-cables.htm
 phone-lgvx9800-notes.htm
 phone-lgvx9800-howtos.htm
+phone-lgvx9900.htm
+phone-lgvx9900-cables.htm
+phone-lgvx9900-notes.htm
+phone-lgvx9900-howtos.htm
 phone-motoe815.htm
 phone-motoe815-notes.htm
 phone-motoe815m.htm

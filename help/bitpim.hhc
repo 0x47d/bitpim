@@ -112,6 +112,14 @@
           <param name="Name" value="Calendar Merge">
           <param name="Local" value="dialog-calendarmerge.htm">
           </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Calendar Import Wizard">
+          <param name="Local" value="dialog-calimpwiz.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Calendar Import Preset">
+          <param name="Local" value="dialog-calimppreset.htm">
+          </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Tree Items">
@@ -572,6 +580,24 @@
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="LG VX-8600">
+        <param name="Local" value="phone-lgvx8600.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Cables">
+          <param name="Local" value="phone-lgvx8600-cables.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-lgvx8600-notes.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Howtos">
+          <param name="Local" value="phone-lgvx8600-howtos.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
         <param name="Name" value="LG VX-9800">
         <param name="Local" value="phone-lgvx9800.htm">
         </OBJECT>
@@ -587,6 +613,24 @@
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Howtos">
           <param name="Local" value="phone-lgvx9800-howtos.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="LG VX-9900">
+        <param name="Local" value="phone-lgvx9900.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Cables">
+          <param name="Local" value="phone-lgvx9900-cables.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-lgvx9900-notes.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Howtos">
+          <param name="Local" value="phone-lgvx9900-howtos.htm">
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
