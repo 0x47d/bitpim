@@ -16,16 +16,8 @@ and form.</font>
 
 <h1>Releases</h1>
 
-<p>There are two series of releases available at the same time.  There is a <b>stable release</b> which
-generally only gets bug fixes and doesn't change much.  There is a <b>development release</b> which is
-what the developers are currently working on.  As the development is completed, a stable release will
-be made and a new development series started.
-
-<p>Stable releases have an even <font color="red">minor</font> number and are generally released
-many months apart.
-
-<p>Development releases have an odd <font color="red">minor</font> number, and are released
-every few weeks.
+<p>There is a new BitPim release approximately once a month.  It incorporates new phone model support, new functionality and 
+bug fixes.
 
 </blockquote>
 #include "pageend.h"
