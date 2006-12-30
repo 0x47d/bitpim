@@ -32,6 +32,7 @@ BEGIN_TOC
         TOCITEM_1(SMS,tab-sms.htm)
         TOCITEM_1(Call History,tab-callhistory.htm)
         TOCITEM_1(Play List,tab-playlist.htm)
+        TOCITEM_1(T9 Editor,tab-t9editor.htm)
         TOCITEM_1(Filesystem,tab-filesystem.htm)
         TOCITEM_1(Log,tab-log.htm)
         TOCITEM_1(Protocol Log,tab-protocollog.htm)
