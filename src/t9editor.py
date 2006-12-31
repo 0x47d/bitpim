@@ -15,6 +15,22 @@ has the following standard fields:
 "words": an ordered list of dicts, each dict has the following fields:
          "word": string value of the actual T9 Word.
 
+To implement T9 Editor feature for your phone, do the following:
+
+1. Add 2 entries into Profile._supportedsyncs:
+        ...
+        ('t9_udb', 'read', 'OVERWRITE'),
+        ('t9_udb', 'write', 'OVERWRITE'),
+
+2. Implement the following 2 methods in your Phone class:
+    def gett9db(self, result)
+    def savet9db(self, result, _merge)
+
+    The result dict should contain:
+    result[t9editor.dict_key]=<instance of t9editor.T9WordsList()>
+
+    See module phones.com_lgxv8500 for an example implementation.
+
 """
 
 # wx Modules
@@ -23,6 +39,7 @@ import wx.gizmos as gizmos
 
 # BitPim modules
 import database
+import helpids
 import widgets
 
 # module constants--------------------------------------------------------------
@@ -168,6 +185,8 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
                 wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, wx.ID_SAVE, self._OnSave)
         wx.EVT_BUTTON(self, wx.ID_REVERT, self._OnRevert)
+        wx.EVT_BUTTON(self, wx.ID_HELP,
+                      lambda _: wx.GetApp().displayhelpid(helpids.ID_TAB_T9EDITOR))
         vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
