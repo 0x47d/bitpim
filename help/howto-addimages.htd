@@ -1,12 +1,12 @@
 #include "pagestart.h"
 
-<P><IMG SRC="howto-addimages.jpg" BORDER="0">
-<P>
 <OL>
 <LI>Switch to the <B>Wallpaper</B> tab.
 <LI>Click on <B>Add</B>.
 <LI>Select an image file to add.
 <LI>An <B>Image Preview Dialog</B> will appear.
+<P><P><IMG SRC="howto-addimages.jpg" BORDER="0">
+<P>
 <LI>Select the <B>Origin</B> of the wallpaper.  Currently, it is always <B>"images"</B>.
 <LI>Select the <B>Target</B> of the wallpaper (how this wallpaper is being used).  This selection determines the format and resolution of the wallpaper.
 <LI>Using the bounding box, select a clip of the source image which would later be converted into the wallpaper.

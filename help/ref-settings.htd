@@ -56,6 +56,9 @@ displays the last tab that was previously viewed.
 phone settings from the previous time it was run. Disable this option if you run BitPim without your phone connected
 to prevent error messages.
 
+<H2>Splash Screen Time</H2>
+<P>This sets the period of time (in seconds) that the BitPim splash screen will be displayed.  Enter 0 to disable the display of the splash screen.
+
 <h2>BitFling</h2>
 
 <p>BitFling is a way for BitPim to run on one machine and communicate

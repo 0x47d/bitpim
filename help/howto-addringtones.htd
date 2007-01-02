@@ -1,11 +1,11 @@
 #include "pagestart.h"
 
-<P><IMG SRC="howto-addringtone.jpg" BORDER="0">
-<p>
 <OL>
 <LI>Switch to the <B>Ringers</B> tab.
 <LI>Click on <B>Add</B>.
 <LI>Select a sound file to add.  If a conversion is not required, the sound file will be added directly to the <B>Ringers</B> tab; otherwise the <B>Convert Audio Dialog</B> will be displayed.
+<P><P><IMG SRC="howto-addringtone.jpg" BORDER="0">
+<p>
 <LI>From the <B>Convert Audio Dialog</B>, set the appropriate conversion parameters and click on <B>Convert</B>.
 <LI>Once the conversion is done, create your sound clip by setting the <B>Clip Start</B>, <B>Clip Duration</B>, and <B>Volume Adjustment</B> parameters and  clicking on <B>Set</B>.
 <LI>Optionally, click on <B>Play Clip</B> to listen to the sound clip and readjust the clip if necessary.
