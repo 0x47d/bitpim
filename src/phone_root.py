@@ -50,7 +50,6 @@ import pubsub
 import playlist
 import filesystem
 import widgets
-import helpids
 import media_root
 import t9editor
 
@@ -351,14 +350,15 @@ class Phone(today.TodayWidget):
         self.todowidget=todo.TodoWidget(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.todowidget, 'Todo', self.tree.todo,id)
         self.smswidget=sms_tab.SMSWidget(self, self.parent)
-        id=self.tree.AddPage(self.phone_id, self.smswidget, 'SMS', self.tree.sms,id)
+        id=self.tree.AddPage(self.phone_id, self.smswidget, 'SMS',
+                             self.tree.sms,id, helpids.ID_TAB_SMS)
         self.callhistorywidget=call_history.CallHistoryWidget(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.callhistorywidget, 'Call History', self.tree.callhistory, id)
         self.playlistwidget=playlist.PlaylistWidget(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.playlistwidget, 'Play List', self.tree.playlist,id)
         self.t9editorwidget=t9editor.T9EditorWidget(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.t9editorwidget, 'T9 Editor',
-                          None, id)
+                          None, id, helpids.ID_TAB_T9EDITOR)
 
         # update the the status bar info
         self.mw.SetPhoneModelStatus()

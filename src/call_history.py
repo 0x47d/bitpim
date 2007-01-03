@@ -46,6 +46,7 @@ import wx.lib.scrolledpanel as scrolled
 import database
 import guiwidgets
 import guihelper
+import helpids
 import phonenumber
 import pubsub
 import today
@@ -608,4 +609,5 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
             self.populate()
             self._stats._save_to_db(self._stats._data)
             self._stats.CalculateStats()
-
+    def GetHelpID(self):
+        return helpids.ID_TAB_CALLHISTORY

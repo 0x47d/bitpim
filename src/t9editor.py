@@ -148,6 +148,7 @@ class T9WordsList(object):
 
 #-------------------------------------------------------------------------------
 class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
+    help_id=helpids.ID_TAB_T9EDITOR
     def __init__(self, mainwindow, parent):
         super(T9EditorWidget, self).__init__(parent, -1)
         self._mw=mainwindow
@@ -186,7 +187,7 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         wx.EVT_BUTTON(self, wx.ID_SAVE, self._OnSave)
         wx.EVT_BUTTON(self, wx.ID_REVERT, self._OnRevert)
         wx.EVT_BUTTON(self, wx.ID_HELP,
-                      lambda _: wx.GetApp().displayhelpid(self.GetHelpID()))
+                      lambda _: wx.GetApp().displayhelpid(self.help_id))
         vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.SetSizer(vbs)
         self.SetAutoLayout(True)
@@ -282,5 +283,3 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         global dict_key
         result[dict_key]=self._t9list
         return result
-    def GetHelpID(self):
-        return helpids.ID_TAB_T9EDITOR

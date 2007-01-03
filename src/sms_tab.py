@@ -25,6 +25,7 @@ import wx.lib.scrolledpanel as scrolled
 # BitPim modules
 import database
 import guiwidgets
+import helpids
 import phonebookentryeditor as pb_editor
 import phonenumber
 import pubsub
@@ -571,3 +572,5 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
                 self._item_list.Select(item, 0)
             self.populate()
             self._stats._save_to_db(self._stats._data)
+    def GetHelpID(self):
+        return helpids.ID_TAB_SMS
