@@ -6,13 +6,13 @@
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">285</long>
+    <long name="doc_count">284</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
     <string name="quote-symbol">"\"</string>
     <string name="custom-preprocessor-options">""</string>
-    <double name="version">1.1700</double>
+    <double name="version">1.1800</double>
     <string name="page-header">"&lt;HTML&gt;
 &lt;head&gt;&lt;title&gt;_HELP_TITLE&lt;/title&gt;&lt;/head&gt;
 
@@ -652,9 +652,9 @@
               <long name="page-break">1</long>
             </document>
             <document>
-              <string name="title">"Wallpaper"</string>
+              <string name="title">"Media"</string>
               <string name="type">"text-editor-document"</string>
-              <string name="filename">"tab-wallpaper.htd"</string>
+              <string name="filename">"tab-media.htd"</string>
               <string name="icon-name">"htmldoc"</string>
               <long name="is-transient">0</long>
               <long name="owns-file">1</long>
@@ -665,25 +665,7 @@
               <long name="link-icon-to-page">1</long>
               <long name="is-visible-in-contents">1</long>
               <long name="is-default-page">0</long>
-              <string name="topic-name">"ID_TAB_WALLPAPER"</string>
-              <long name="use-header-footer">1</long>
-              <long name="page-break">1</long>
-            </document>
-            <document>
-              <string name="title">"Ringers"</string>
-              <string name="type">"text-editor-document"</string>
-              <string name="filename">"tab-ringers.htd"</string>
-              <string name="icon-name">"htmldoc"</string>
-              <long name="is-transient">0</long>
-              <long name="owns-file">1</long>
-              <long name="title-mode">0</long>
-              <long name="locked">0</long>
-              <string name="created">"28/11/2003"</string>
-              <long name="is-folder">0</long>
-              <long name="link-icon-to-page">1</long>
-              <long name="is-visible-in-contents">1</long>
-              <long name="is-default-page">0</long>
-              <string name="topic-name">"ID_TAB_RINGERS"</string>
+              <string name="topic-name">"ID_TAB_MEDIA"</string>
               <long name="use-header-footer">1</long>
               <long name="page-break">1</long>
             </document>

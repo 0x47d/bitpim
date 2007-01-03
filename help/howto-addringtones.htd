@@ -2,7 +2,7 @@
 
 <OL>
 <LI>Switch to the <B>Ringers</B> tab.
-<LI>Click on <B>Add</B>.
+<LI>Click on <B>+</B> taskbar icon, or main menu <B>Edit</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>New...</B>
 <LI>Select a sound file to add.  If a conversion is not required, the sound file will be added directly to the <B>Ringers</B> tab; otherwise the <B>Convert Audio Dialog</B> will be displayed.
 <P><P><IMG SRC="howto-addringtone.jpg" BORDER="0">
 <p>

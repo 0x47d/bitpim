@@ -1,7 +1,6 @@
 #include "pagestart.h"
 
-<p>There is a tree view on the main screen.  Selecting an item in the tree allows you to view
-the contents of a specific feature. 
+<p>There is a tree view on the main screen.  Selecting an item in the tree allows you to view the contents of a specific feature. 
 
 <p align=center><img src="tabs.png">
 
@@ -10,7 +9,7 @@ the contents of a specific feature.
 or you can just drag and drop new files into BitPim.
 <p>For phonebook and calendar, you double click on the item you want to edit.
 
-<p>More detailed help is available in the <a href="tabs.htm">tabs reference</a>.
+<p>More detailed help is available in the <a href="tabs.htm">Tree Items</a> reference.
 
 <p>BitPim automatically saves all changes to your hard disk. There is no need 
 to manually save or load information from disk. 

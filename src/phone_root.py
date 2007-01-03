@@ -342,7 +342,9 @@ class Phone(today.TodayWidget):
         self.phonewidget=phonebook.PhoneWidget(self, self.parent, self.config)
         id=self.tree.AddPage(self.phone_id, self.phonewidget, "PhoneBook", self.tree.phonebook,id)
         self.mediawidget=media_root.MediaWidget(self, self.parent)
-        id=self.tree.AddPage(self.phone_id, self.mediawidget, "Media", self.tree.media,id)
+        id=self.tree.AddPage(self.phone_id, self.mediawidget,
+                             "Media", self.tree.media, id,
+                             helpids.ID_TAB_MEDIA)
         self.calendarwidget=bpcalendar.Calendar(self, self.parent)
         id=self.tree.AddPage(self.phone_id, self.calendarwidget, "Calendar", self.tree.calendar,id)
         self.memowidget=memo.MemoWidget(self, self.parent)

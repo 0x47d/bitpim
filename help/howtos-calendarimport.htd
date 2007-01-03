@@ -2,7 +2,7 @@
 
 <p><IMG SRC="howto-importcalendar1.jpg" align="center" BORDER="0"><P>
 <OL>
-<LI>Choose a specific calendar format to import: <B>File</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Import</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;[<B>CSV Calendar</B> or <B>vCalendar</B> or <B>Outlook Calendar</B>].
+<LI>Choose a specific calendar format to import: <B>File</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Import</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;[<B>CSV Calendar</B>, <B>vCalendar</B>, <B>Google Calendar</B>, or <B>Outlook Calendar</B>].
 <P>
 <P><p><IMG SRC="howto-importcalendar2.jpg" align="center" BORDER="0"><P>
 <LI>From the Import Calendar Dialog, specify the source from which to import calendar data.  The source can either be a file or an Outlook folder.

@@ -6,8 +6,6 @@
 
 <h2>Fields</h2>
 
-<p><b>Origin</b>: The type of target image to which the source image is being converted.  Currently, this field would almost always be <B>images</B>.
-
 <p><b>Target</b>: How the target image is going to be used.  This field determines the size and resolution of the target image.  Typical values for this field include: fullscreen, wallpaper, ringtone ID, etc.
 
 <p><b>Scale</b>: The scale at which the the thumbnail of the original image is displayed.

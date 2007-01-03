@@ -29,6 +29,7 @@ import widgets
 import guiwidgets
 import shutil
 import database
+import helpids
 
 
 basename=common.basename
@@ -219,6 +220,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
     maxlen=-1  # set via phone profile
     # acceptable characters in a filename
     filenamechars=None # set via phone profile
+    # Default Help page, children can override
+    helpid=helpids.ID_TAB_MEDIA
 
     def __init__(self, mainwindow, parent, media_root, watermark=None):
         wx.Panel.__init__(self,parent,style=wx.CLIP_CHILDREN)
@@ -1089,6 +1092,9 @@ class FileView(wx.Panel, widgets.BitPimWidget):
 
     def log(self, log_str):
         self.mainwindow.log(log_str)
+
+    def GetHelpID(self):
+        return self.helpid
 
 class FileViewDisplayItem(object):
 
