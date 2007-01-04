@@ -3,6 +3,8 @@
    <h2><a name="0.9.11">Changes in 0.9.11</a></h2>
     <ul>
       <li>New phone support: <B>SCP-2400</B>.
+      <li>Bug fix: Calendar Import Preset does not adjust dates.
+      <li>Help pages update.
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>

@@ -13,7 +13,9 @@
 """
 
 # System
+import calendar
 import copy
+import datetime
 import random
 import sha
 
@@ -332,6 +334,38 @@ class ImportCalendarPresetDialog(wx.Dialog):
             return self.ID_ADD
         return wx.ID_CANCEL
 
+    def _get_preset_thisweek(self):
+        # return the dates of (today, Sat)
+        _today=datetime.date.today()
+        _dow=_today.isoweekday()%7  #Sun=0, Sat=6
+        _end=_today+datetime.timedelta(6-_dow)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _get_preset_thismonth(self):
+        # return the dates of (today, end-of-month)
+        _today=datetime.date.today()
+        _end=_today.replace(day=calendar.monthrange(_today.year,_today.month)[1])
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _get_preset_thisyear(self):
+        # return the dates of (today, end-of-year)
+        _today=datetime.date.today()
+        _end=_today.replace(month=12, day=31)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
+    def _adjust_filter_dates(self, entry):
+        # Adjust the start/end dates of the filter
+        _preset_date=entry.get('preset_date', None)
+        if _preset_date is None:
+            # No Preset date, bail
+            return
+        entry['start'], entry['end']=getattr(self,
+                                             ['_get_preset_thisweek',
+                                              '_get_preset_thismonth',
+                                              '_get_preset_thisyear'][_preset_date])()
     def _OnRun(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -351,6 +385,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
                                'Importing data, please wait ...',
                                parent=self)
         self._import_data.read(_source.get(), _dlg)
+        self._adjust_filter_dates(_entry)
         self._import_data.set_filter(_entry)
         _dlg.Destroy()
         wx.EndBusyCursor()
