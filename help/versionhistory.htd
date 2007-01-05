@@ -3625,7 +3625,7 @@ for driver information.
 
 	used 0.2, please delete any stored phonebook (defaults to
 
-	<code>My&nbsp;Documents\bitpim\phonebook\index.idx</code>)
+	<code>My&nbsp;Documents\\bitpim\\phonebook\\index.idx</code>)
 
 	otherwise BitPim may refuse to start.
 

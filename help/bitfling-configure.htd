@@ -32,7 +32,7 @@ be accessed in the lower pane.
 <h2>Advanced Configuration</h2>
 
 <p>To alter the settings, edit the configuration.  On Windows, this
-is the registry <code>HKEY_CURRENT_USER\Software\BitFling</code>
+is the registry <code>HKEY_CURRENT_USER\\Software\\BitFling</code>
 and on Linux and Mac is <code>.bitfling</code> in your home
 directory.
 
