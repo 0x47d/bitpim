@@ -3,7 +3,7 @@
 <p>This view dislays a summary of various BitPim events and data items.  It consists
 of 2 sections: <b>Today</b> and <b>This Week</b>.
 
-<p align=center><img src="screen-todaytab.png">
+SCREENSHOT(screen-todaytab.png,)
 
 <h2>Today</h2>
 

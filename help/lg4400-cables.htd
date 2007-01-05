@@ -20,7 +20,7 @@ same thing crop up over and over again.  You have been warned!
 
 <p>Available at RadioShack as catalog# 17-789 marked as for LG 5350 and VX4400.
 
-<p align=center><img src="cable-vx4400-usb.jpg">
+IMAGE(cable-vx4400-usb.jpg,)
 
 <p>This cable connects to the USB interface inside the phone.  The cable is
 marked as for the LG VX4400 and the LG 5350.
@@ -29,7 +29,7 @@ marked as for the LG VX4400 and the LG 5350.
 
 <p>Available at RadioShack as catalog# 17-783 marked as for LG VX1/VX10.
 
-<p align=center><img src="cable-vx4400-usb2serial.jpg">
+IMAGE(cable-vx4400-usb2serial.jpg,)
 
 <p>This cable has a blob half way along the cable that converts from USB to
 serial and then connects to the serial interface in the phone.  The chip inside

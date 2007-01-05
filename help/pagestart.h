@@ -41,7 +41,10 @@
    <img align=center height="30" width="30" src=\"CONCAT(file,.png)\" BORDER=0 ALT="">
 
 #define SCREENSHOT(file, description) \
-   <img align=center src=\"CONCAT(file,.png)\" BORDER=0 ALT=\"description\">
+   <p align="center"><img align=center src=\"file\" BORDER=0 ALT=\"description\"></p>
+
+#define IMAGE(file,description) \
+   <p align="center"><img align=center src=\"file\" BORDER=0 ALT=\"description\"></p>
 
 #define TEXTLINK(file,title,desc) \
    <b>desc:</b> <a href=\"file\">title</a>&nbsp;&nbsp;

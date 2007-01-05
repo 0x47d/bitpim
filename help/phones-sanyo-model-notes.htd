@@ -19,7 +19,7 @@ operating the phone than the manual that comes in the retail packaging.
 <li>The URL(http://www.sanyo.com/wireless/handsets/downloads/PCS-4900_spec.pdf,Sanyo 4900 Specifications) is a two page flyer that summarizes the
 features of the phone.
 </ul>
-<p align=center><img src="sanyo4900.jpg">
+IMAGE(sanyo4900.jpg,)
 <h4>RL-4920</h4>
 
 <p>The RL-4920 is a bar phone that supports   ReadyLink(tm), Sprint's "Walkie-Talkie" service.
@@ -67,14 +67,14 @@ camera.
 <li>URL(http://www.sanyo.com/wireless/handsets/downloads/VM4500-UsersGuide-English-121703.pdf,VM4500 User's Guide)
 <li>URL(http://www.sanyo.com/wireless/handsets/downloads/PCS-5500_SINGLE.pdf,SCP-5500 Specifications)
 </ul>
-<p align=center><img src="sanyo5500.jpg">
+IMAGE(sanyo5500.jpg,)
 
 <H4>MM-5600</H4>
 <p>The MM-5600 is a 1.3 MegaPixel Camera phone with a removable memory
 card.  When connected to a computer with a USB cable, the phone can be
 accessed with several different protocols.  To use the phone with
 BitPim, select the "Standby" option in the USB Connection menu.
-<p align=center><img src="mm5600usbmenu.png">
+IMAGE(mm5600usbmenu.png,)
 
 <h4>SCP-6600</h4>
 <p>The SCP-6600 (Katana) is a thin flip phone with VGA camera.  BitPim
@@ -125,7 +125,7 @@ ReadyLink.
 <li>URL(http://www.sanyo.com/wireless/handsets/downloads/scp-8100_specs.pdf,Sanyo 8100 Specifications)
 </ul>
 
-<p align=center><img src="sanyo8100.jpg">
+IMAGE(sanyo8100.jpg,)
 
 <h4>SCP-8100 (Bell Mobility)</h4>
 

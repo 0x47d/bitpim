@@ -21,7 +21,7 @@ RPI were kind enough to loan a VX6000 to add support to BitPim.  You
 can thank them by placing your order with them.  Don't forget to mention
 that BitPim sent you!
 
-<p align=center><img src="vx6000-cable.jpg">
+IMAGE(vx6000-cable.jpg,)
 
 <p>This is a straight USB cable that also does charging.  There is a red light
 that comes on when USB is connected (independent of whether there is a phone
@@ -52,7 +52,7 @@ using its builtin USB support.
 <p>Available at RadioShack as catalog# 17-792 and will work
 with the VX4500, VX4600 and the VX6000.
 
-<p align=center><img src="futuredial-19-usb2serial.jpg">
+IMAGE(futuredial-19-usb2serial.jpg,Futuredial cable)
 
 <p>This cable has a blob half way along the cable that converts from USB to
 serial and then connects to the serial interface in the phone.  The chip inside

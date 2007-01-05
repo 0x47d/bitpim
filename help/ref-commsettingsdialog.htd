@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-comportsettings.png">
+SCREENSHOT(screen-comportsettings.png,)
 
 <p>This dialog lets you see all the ports on your machine and you
 can select the one you wish to use.  The bottom half shows more details

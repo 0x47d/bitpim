@@ -3,8 +3,8 @@
 <p>This page displays the media items that BitPim currently maintains and allows
 users to perform various actions on them.  The types of media items include pictures for wallpapers, sound clips for ringtones, etc.
 
-<p align=center><img src="screen-wallpapertab.jpg">
-<p align=center><img src="screen-ringerstab.png">
+SCREENSHOT(screen-wallpapertab.jpg,)
+SCREENSHOT(screen-ringerstab.png,)
 
 <h2>Actions</h2>
 

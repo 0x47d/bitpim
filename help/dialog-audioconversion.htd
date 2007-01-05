@@ -16,7 +16,7 @@ be rebooted.)
 
 <h2><a name="using">Using the converter</a></h2>
 
-<p align=center><img src="dialog-audioconvert.png"></p>
+SCREENSHOT(dialog-audioconvert.png,)
 
 <p>This dialog helps you convert an audio item into a format
 that the phone will understand such as MP3 or QCP.  Select the conversion

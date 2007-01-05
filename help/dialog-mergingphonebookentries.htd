@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align="center"><IMG SRC="screen-importphonebook.jpg" BORDER="0">
+SCREENSHOT(screen-importphonebook.jpg,Import Phonebook)
 
 <p>This dialog shows how the new (aka imported) data is being merged with the existing
 data you have.  You can change which entries are matched against which
@@ -8,7 +8,7 @@ and which values are used for fields.
 
 <p>Each entry has a colour coded background:
 
-<p align="center"><IMG SRC="screen-importpbmergecolours.jpg" border="0">
+SCREENSHOT(screen-importpbmergecolours.jpg,)
 
 <ul>
 <li>White - the existing entry is unchanged
@@ -24,30 +24,30 @@ Values in red text have been removed.
 
 <p>Right click on any cell to get this menu:
 
-<p align="center"><IMG SRC="screen-importpb-menu.jpg" BORDER="0">
+SCREENSHOT(screen-importpb-menu.jpg,Import Phonebook Menu)
 
 <dl>
 
-<dt><b>Edit ...</b><br>&nbsp;
+<dt><p><b>Edit ...</b>
 
-<dd>You can edit the entry.<br>&nbsp;
+<dd><p>You can edit the entry.
 
-<dt><b>Revert field to existing/imported value</b><br>&nbsp;
+<dt><p><b>Revert field to existing/imported value</b>
 
-<dd>The field value will be changed to the existing/imported value.  The
+<dd><p>The field value will be changed to the existing/imported value.  The
 options will be grayed out if there is no existing/imported value for the
-field, or if they are the same as the current value.<br>&nbsp;
+field, or if they are the same as the current value.
 
-<dt><b>Clear field</b><br>&nbsp;
+<dt><p><b>Clear field</b>
 
-<dd>Deletes the value in the field.  Note that you will still be shown
-the existing/imported value as appropriate in case you change your mind.<br>&nbsp;
+<dd><p>Deletes the value in the field.  Note that you will still be shown
+the existing/imported value as appropriate in case you change your mind.
 
-<dt><b>Imported entry mismatch...</b><br>&nbsp;
+<dt><p><b>Imported entry mismatch...</b>
 
-<dd>Select this if BitPim made the wrong decision.  You will be able
+<dd><p>Select this if BitPim made the wrong decision.  You will be able
 to say that the imported entry should be a new entry, or match it up
-against an existing entry.<br>&nbsp;
+against an existing entry.
 
 </dl>
 

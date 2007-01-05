@@ -26,7 +26,7 @@ of luck.  <a href="bitpim-user-no-support.htm">This page</a> details why.
 
 <dl>
 
-<dt>Summary<br>&nbsp;
+<dt>Summary
 
 <dd>Start with the following items.  If you leave them out, we will have to ask
 and it will delay getting to a solution for you.  BitPim supports multiple
@@ -39,39 +39,39 @@ phones, operating systems and cables, and they all affect issues you may have.
 <li>What cable you are using to talk to the phone
 
 </ul>
-<br>&nbsp;
 
-<dt>Make notes<br>&nbsp;
+
+<dt>Make notes
 
 <dd>You will need to gather information as described in the following points.
 The most important notes to start with are a description of what happened and a
-description of what you expected to happen.<br>&nbsp;
+description of what you expected to happen.
 
 <dt>If you got an <a href="errors-exception.htm">exception dialog</a>, please
-copy the contents.<br>&nbsp;
+copy the contents.
 <dd>This will show what happened at the point of the problem.  The contents
 of the dialog are in the Log pane. <b>Note</b> that you must include the other
 contents of the log pane in addition to the exception.  This is so we can
-tell what BitPim was doing leading up to the exception.<br>&nbsp;
+tell what BitPim was doing leading up to the exception.
 
-<dt>Get a copy of the contents of the <a href="tab-log.htm">Log</a> pane.<br>&nbsp;
-<dd>This will show the history of actions BitPim was doing<br>&nbsp;
+<dt>Get a copy of the contents of the <a href="tab-log.htm">Log</a> pane.
+<dd>This will show the history of actions BitPim was doing
 
-<dt>What set of steps did you take<br>&nbsp;
+<dt>What set of steps did you take
 <dd>Work out the set of steps you did.  This is to enable others to do the same
-set of steps in order to reproduce your problem.<br>&nbsp;
+set of steps in order to reproduce your problem.
 
-<dt>Is it repeatable?<br>&nbsp;
+<dt>Is it repeatable?
 <dd>Does the problem happen every time.  If it does, it is far easier to track down
 the cause and fix.  Even if it isn't repeatable, there may be enough information
-from the previous steps to diagnose and fix it.<br>&nbsp;
+from the previous steps to diagnose and fix it.
 
-<dt>What have you tried?<br>&nbsp;
+<dt>What have you tried?
 
 <dd>In your attempts to fix the issue, what have you already tried, and what
-happened.?<br>&nbsp;
+happened.?
 
-<dt>Look on the web and in archives<br>&nbsp;
+<dt>Look on the web and in archives
 
 <dd>Do a Google search incorporating lines of the error message, symptoms or
 what you have tried.  You can also search the mailing list archives at
@@ -115,39 +115,39 @@ and often annoys them.  If you do any of them, you will likely just be ignored.
 
 <dl>
 
-<dt>Mail individual developers<br>&nbsp;
+<dt>Mail individual developers
 
 <dd>If the developer responds, the answer won't appear in any archives and so
 won't help other users.  Other users won't be able to comment on the issue
 such as workarounds they have discovered or indications if the issue is unique
 to your configuration or affects everyone.  Additionally the developers schedule
-their time carefully so your answer is unlikely to be timely anyway.<br>&nbsp;
+their time carefully so your answer is unlikely to be timely anyway.
 
-<dt>Mail/post in multiple locations<br>&nbsp;
+<dt>Mail/post in multiple locations
 
 <dd>Some people think they will get quicker answers by posting to mailing lists,
 filling out SourceForge tracker items, and emailing individual developers.  I
 can assure you that no one wants to answer/address the same issue two or more times.
 And if you are seen posting the same thing in more than one location, the people who
 can answer will wait a long time to ensure you aren't also posting in others (remember
-they usually participate in multiple locations as well).<br>&nbsp;
+they usually participate in multiple locations as well).
 
-<dt>Be impatient<br>&nbsp;
+<dt>Be impatient<br>
 
 <dd>Some people seem to get upset if their issues are not answered immediately.
 Remember that other people have their own lives and responsibilities and contribute
 as their own schedules and priorities allow.  If you have given a detailed report,
-they may be doing research.  After all, a good question deserves a good answer.<br>&nbsp;
+they may be doing research.  After all, a good question deserves a good answer.
 
-<dt>Post no information<br>&nbsp;
+<dt>Post no information
 
 <dd>One report consisted of "When BitPim talks to my phone, it gets some sort of exception".
 BitPim does fundamentally work with the phones we support.  There may be some issues
 but we don't release software that just doesn't work.  Furthermore not giving any information
 at all about what happened, the contents of the exception etc means no one can help.  Follow the
-steps at the top of this page.<br>&nbsp;
+steps at the top of this page.
 
-<dt>Ignoring archives<br>&nbsp;
+<dt>Ignoring archives
 
 <dd>Many questions have already been asked and answered (multiple times).  Check the archives!
 

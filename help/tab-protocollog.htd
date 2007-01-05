@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-protocollog.png">
+SCREENSHOT(screen-protocollog.png,)
 
 <p>This page contains detailed information on all data sent to and
 received from your phone.  It is off by default and needs to be

@@ -3,7 +3,7 @@
 <p>Note that the filesystem view is off by default.  You need to turn it on in the
 view menu.  This functionality is suitable for expert users only.
 
-<p align=center><img src="screen-filesystem.png">
+SCREENSHOT(screen-filesystem.png,)
 
 <p><b>Note:</b> You can cause damage to your phone in the filesystem view if
       you make any changes.  <b>Be very careful</b>.  (BitPim itself doesn't
@@ -17,7 +17,7 @@ view menu.  This functionality is suitable for expert users only.
 
 <table cellspacing=5 cellpadding=5>
 <tr>
-<td width=180 valign=top><img src="screen-filesysdirmenu.png"></td>
+<td width=180 valign=top>SCREENSHOT(screen-filesysdirmenu.png,Directory menu)</td>
 
 <td valign=top>Right clicking on a directory brings up this menu.
 Choosing <i>New File</i> will place the file of your choice in 
@@ -46,14 +46,11 @@ contents.
 all subdirectories.  Use it with caution, and it would be prudent
 to make a backup first.
 
-<br>&nbsp;
-<br>&nbsp
-<br>&nbsp;
 
 </tr>
 
 <tr>
-<td width=180 valign=top ><img src="screen-filesysfilemenu.png"></td>
+<td width=180 valign=top >SCREENSHOT(screen-filesysfilemenu.png,File menu)</td>
 
 <td valign=top>Right clicking on a file brings up this menu.   <i>Save</i>
 will let you save the file onto your computer.  <i>Hexdump</i> will show you

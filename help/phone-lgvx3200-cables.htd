@@ -10,7 +10,7 @@ URL(http://www.verizonwireless.com,on the web).  It is also sold
 by a number of other stores and on eBay.  A Prolific PL2303 chip
 is used to perform USB to serial.
 
-<p align=center><img src="vx4500-vmo-cable.jpg">
+IMAGE(vx4500-vmo-cable.jpg,)
 
 
 <blockquote>
@@ -42,7 +42,7 @@ blob half way along the cable (see photo below). This blob is the
 USB-to-serial conversion module. Some RadioShack stores may still have
 the previous version of the cable on the shelves.
 
-<p align=center><img src="futuredial-19-usb2serial.jpg">
+IMAGE(futuredial-19-usb2serial.jpg,)
 
 <p>This cable has a blob half way along the cable that converts from USB to
 serial and then connects to the serial interface in the phone.  The chip inside

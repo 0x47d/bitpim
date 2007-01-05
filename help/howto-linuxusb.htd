@@ -25,7 +25,7 @@ how to configure it.<br>&nbsp;</p>
 
 <ol>
 
-<li><b>Edit <code>/etc/hotplug/usb.usermap</code></b>
+<li><p><b>Edit <code>/etc/hotplug/usb.usermap</code></b>
 
 <p>Add a line to the bottom.<br><br>
 <code>usbcell 0x0003 <i>VID</i> <i>PID</i> 0 0 0 0 0 0 0 0 0</code>
@@ -34,9 +34,9 @@ how to configure it.<br>&nbsp;</p>
 <a href="ref-usbids.htm">vendor and product ids</a>.  The VID and PID can also be obtained from the <a href="ref-commsettingsdialog.htm">Comm Port Settings</a> dialog.
 
 <p><b>Note</b>  For more recent versions of hotplug, it is considered better form
-to create the file <code>/etc/hotplug/usb/usbcell.usermap</code>.<br>&nbsp;
+to create the file <code>/etc/hotplug/usb/usbcell.usermap</code>.
 
-<li><b>Create <code>/etc/hotplug/usb/usbcell</code></b>
+<li><p><b>Create <code>/etc/hotplug/usb/usbcell</code></b>
 
 <p>This script is executed whenever the device is inserted.  Here
 is a simple example that makes the device be owned by root, group owned by
@@ -58,6 +58,7 @@ fi
 </ol>
 
 <h3>Direct USB access - udev</h3>
+
 <p>Recent Linux distributions (based on 2.6 kernel) may use "udev" instead of
 hotplug.  With udev, the usb device ownership and permission can be set by a
 method that is similar in concept, but different in implementation.

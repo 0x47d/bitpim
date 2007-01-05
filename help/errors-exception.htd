@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p><IMG SRC="exceptiondialog.png" BORDER="0">
+SCREENSHOT(exceptiondialog.png,)
 
 <p>An internal error has occurred and this dialog is reporting it.  Please scroll to the
 end of it to see the most pertinent details.  

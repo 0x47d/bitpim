@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-memotab.png">
+SCREENSHOT(screen-memotab.png,)
 
 <p>This page allows users to maintain textual memos/notes that can be
 retrieved/sent from/to the phone.  The list of the available memos is

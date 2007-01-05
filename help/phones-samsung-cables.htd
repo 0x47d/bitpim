@@ -1,7 +1,7 @@
 #include "pagestart.h"
 
 <h3>Straight USB Charging cable</h3>
-<p align=center><img src="scha670-cable.jpg">
+IMAGE(scha670-cable.jpg,)
 
 <h2>Drivers</h2>
 <h3>Windows</h3>

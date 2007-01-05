@@ -15,9 +15,9 @@ being connected and not wanting to talk.
 <p>Also be aware that Windows, Linux and Mac name and number their
 ports differently.  They also have differing permissions defaults.
 
-<p>Follow these steps to try and diagnose your issue:<br>&nbsp;
+<p>Follow these steps to try and diagnose your issue:
 
-<ul>
+<p><ul>
 
 <li>If you are using a USB to serial cable, then you <b>MUST</b> use
 device drivers.  BitPim does not speak the USB to serial protocols.
@@ -37,30 +37,30 @@ listed in the phone specific section then contact whoever sold you the
 cable for support.  Just because your cable looks like one of them,
 does not mean it is one.  This is especially true for the "boxes" in
 the middle of cables.  Other manufacturers may or may not have them
-for both straight USB or USB to serial connections.<br>&nbsp;
+for both straight USB or USB to serial connections.
 
 <li>You should verify from the <a
 href="ref-commsettingsdialog.htm">comm port settings dialog</a> that
 the relevant port is available and the correct drivers are in use.  If
 the port you want to use is listed, but is not in the available
 section then BitPim cannot use it.  Here are some of the usual
-causes:<br>&nbsp;
+causes:
 
 <ul>
 
 <li>Windows: The usual cause is some other program has grabbed the
 port such as Palm HotSync or Microsoft ActiveSync.  You will need to
-disable or reconfigure that software.<br>&nbsp;
+disable or reconfigure that software.
 
 <li>All operating systems: Check permissions on the device.  Note that
 the device may be restricted to the administrator, or it may be owned
-by the person logged in at the time it was connected.<br>&nbsp;
+by the person logged in at the time it was connected.
 
 <li>Windows XP: Windows XP will occasionally refuse to open a device
 claiming it doesn't exist even though the Device Manager and BitPim
 show that it does.  This can sometimes be cured by choosing Advanced
 in the Port Settings for the device in Device Manager and setting it
-to use a different COM port.<br>&nbsp;
+to use a different COM port.
 
 </ul>
 
@@ -70,11 +70,11 @@ autodetection.  Only ports in the available section are marked since
 they are the only ones that can be used. If you select a port that is
 not marked, it is extremely unlikely that port is your phone.  (The
 only exception is if you are using a real serial cable to connect to
-the phone, not a USB to serial cable).<br>&nbsp;
+the phone, not a USB to serial cable).
 
 
 <li>If the port is not listed at all, then the diagnosis is as
-follows:<br>&nbsp;
+follows:
 
 <ul>
 
@@ -83,7 +83,7 @@ files are set so that your user can read and write to them, and that
 there a device driver bound.  Just because the device node exists does
 not mean there is a device driver attached.  There is some <A
 HREF="howto-linuxusb.htm">Linux information</A> if you are using a USB
-cable.<br>&nbsp;
+cable.
 
 <li>Windows: (Note exception above) BitPim should be showing the same
 ports as device manager.  Try unplugging all USB hubs and cables, wait
@@ -94,13 +94,13 @@ example if you plug a cable into one port, it may be assigned the name
 "COM3".  If you then plug it into a different port, it becomes "COM5".
 Windows does this because you could have two cables at the same time,
 and they would need to be distinguished.  Try and always use the same
-port.<br>&nbsp;
+port.
 
 <p>If you are using a hub, try to avoid changing what port it is
-plugged into.<br>&nbsp;
+plugged into.
 
 <li>Mac: Feel free to <A HREF="contributing.htm">contribute</A> some
-text!<br>&nbsp;
+text!
 
 </ul>
 
@@ -108,19 +108,19 @@ text!<br>&nbsp;
 phone is responding.  If you look in the <a href="tab-log.htm">log
 view</a> you will see what errors are happening.  The <a
 href="tab-protocollog.htm">protocol log view</a> gives even more
-details.<br>&nbsp;
+details.
 
 <li>If your phone is not sending back any data at all you may need to
 configure something on the phone.  BitPim will indicate if it is
 getting any data back in the protocol log.  Read the section about
 your <a href="phones.htm">phone</a> cables for any specific
-information.<br>&nbsp;
+information.
 
 <li>If you are still reading, you are likely to be very frustrated.
 As stated at the top, each machine is different and the names and
 numbers assigned depend on how you have used the machine in the past,
 the drivers installed etc.  It is extremely difficult for anyone to
-diagnose the cause on your exact setup.<br>&nbsp;
+diagnose the cause on your exact setup.
 
 <li>At this point, you are out of luck.  You will receive no support
 from the BitPim groups.  <a href="bitpim-user-no-support.htm">Read more</a>.

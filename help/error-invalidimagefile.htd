@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-invalidimagefile.png">
+SCREENSHOT(screen-invalidimagefile.png,)
 
 <p>The named file is not a valid image and BitPim can't process it.
 It is recommended that you delete the file.  You can also tell BitPim

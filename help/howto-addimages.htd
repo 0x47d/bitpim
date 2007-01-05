@@ -5,7 +5,7 @@
 <LI>Click on <B>+</B> taskbar icon, or main menu <B>Edit</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>New...</B>
 <LI>Select an image file to add.
 <LI>An <B>Image Preview Dialog</B> will appear.
-<P><P><IMG SRC="howto-addimages.jpg" BORDER="0">
+SCREENSHOT(howto-addimages.jpg,)
 <P>
 <LI>Select the <B>Target</B> of the wallpaper (how this wallpaper is being used).  This selection determines the format and resolution of the wallpaper.
 <LI>Using the bounding box, select a clip of the source image which would later be converted into the wallpaper.

@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-nopvconv.png">
+SCREENSHOT(screen-nopvconv.png,No pvconv)
 
 <p>Phones that use CDMA chipsets from Qualcomm use the Qualcomm
 PureVoice format for storing audio.  In order to convert audio

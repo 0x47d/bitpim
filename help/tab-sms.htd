@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-smstab.png">
+SCREENSHOT(screen-smstab.png,)
 
 <p>This page allows users to retrieve, store, and view SMS messages from the
 phone.  Expand the SMS tree item to show separate items for Inbox, Sent and Saved messages.
@@ -27,7 +27,7 @@ DESC(Delete, Use the Delete button on the toolbar to delete the selected message
 
 <p>If you select the SMS item itself you can manage the quick text message stored on your phone.
 
-<p align=center><img src="screen-smstab2.png">
+SCREENSHOT(screen-smstab2.png,)
 
 
 #include "pageend.h"

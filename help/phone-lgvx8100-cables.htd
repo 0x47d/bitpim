@@ -31,7 +31,7 @@ also runs down the battery, turning it off after use will preserve battery power
 
 You can also get help on a phone forum like URL(www.howardforums.com,www.howardforums.com).
 Autodetect does not work with BT in tests so far, this is planned for a later release.
-<p align=center><img src="vx7000-cable.jpg">
+IMAGE(vx7000-cable.jpg,)
 
 
 #include "pageend.h"

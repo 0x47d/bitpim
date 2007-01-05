@@ -2,11 +2,11 @@
 
 <p>Press the 'Send Phone Data' on the toolbar.
 
-<p align=center><img src="toolbar-senddata.png">
+SCREENSHOT(toolbar-senddata.png,Toolbar Send Data)
 
 <p>You will then get a choice of what to send to the phone.
 
-<p align=center><img src="screen-datasendchoices.png">
+SCREENSHOT(screen-datasendchoices.png,Data Send Choices)
 
 <p>In the left column you can choose what to send.  You will generally
 only want to send what you have changed.  For example, you would only
@@ -18,16 +18,16 @@ aren't available on all data types)
 
 <dl>
 
-<dt>Add<br>&nbsp;
+<dt><p>Add
 
-<dd>The items you have in BitPim will be added to those already on the phone.  For example,
+<dd><p>The items you have in BitPim will be added to those already on the phone.  For example,
 if you only have <i>mycat.bmp</i> in the wallpaper folder, then that will be added to the
 existing wallpapers on the phone.  <b>Note</b> that if there is already an item with the same
-name, then it will be overwritten with the new item of the same name.<br>&nbsp;
+name, then it will be overwritten with the new item of the same name.
 
-<dt>Replace<br>&nbsp;
+<dt><p>Replace
 
-<dd>All items in BitPim will replace those in the same category on the phone.  For example,
+<dd><p>All items in BitPim will replace those in the same category on the phone.  For example,
 if you have 3 wallpaper items in BitPim, you will end up with <b>only</b> the same 3 items
 on the phone. <b>All others will be removed</b>.
 

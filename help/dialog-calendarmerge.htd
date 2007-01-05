@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen_calendarmerge.png">
+SCREENSHOT(screen_calendarmerge.png,)
 
 <P>This dialog allows users to either merge or replace calendar data being read from the phone into BitPim.
 
@@ -25,4 +25,5 @@
 	</OL>
 <P><B>Cancel:</B> Cancel this operation.
 <P><B>Help:</B> Bring up this Help.
+
 #include "pageend.h"

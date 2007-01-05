@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><IMG SRC="screenshot-settingsdialog.png" BORDER="0">
+SCREENSHOT(screenshot-settingsdialog.png,)
 
 <h2>Read Only</h2>
 

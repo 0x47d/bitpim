@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-playlisttab.jpg">
+SCREENSHOT(screen-playlisttab.jpg,)
 
 <p>This page allows users to retrieve, edit, and send their mp3 playlists from/to the phone.
 

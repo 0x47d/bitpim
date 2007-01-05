@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><IMG SRC="deviceneedsattention.png" BORDER="0">
+SCREENSHOT(deviceneedsattention.png,)
 
 
 <p>Something has gone wrong while talking to the phone.  The dialog

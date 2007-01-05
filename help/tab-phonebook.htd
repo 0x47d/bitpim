@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-phonebooktab.png">
+SCREENSHOT(screen-phonebooktab.png,)
 
 <p>This page displays the list of contacts BitPim currently maintains.  
 To edit a contact, simply double-click on any of its cells.  

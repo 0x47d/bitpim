@@ -11,14 +11,13 @@ the display on the phone will look as it normally does.  However, when
 phonebook data is being sent to the phone, the display will show this
 or something similar (model dependent):
 
-<p align=center><img src="sanyo4900-scarymessage.jpg" alt="Service
-required.  Please call 1-888-211-4727 for assistance.">
+IMAGE(sanyo4900-scarymessage.jpg,Service required.  Please call 1-888-211-4727 for assistance.)
 
 <p>This is normal, do not interrupt BitPim or disconnect the cable until
 the transfer is done.  When the transfer is done, the phone will be
 rebooted:
 
-<p align=center><img src="sanyo4900-poweroff.jpg" alt="Powering Off">
+IMAGE(sanyo4900-poweroff.jpg,Powering Off)
 
 <h4>Phonebook Notes</h4>
 

@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-todotab.png">
+SCREENSHOT(screen-todotab.png,)
 
 <p>This page allows users to retrieve, maintain, and send to-do task items
 from/to the phone.  The list of task items is displayed on the left listbox,

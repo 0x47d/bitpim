@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-failedtoautodetectport.png">
+SCREENSHOT(screen-failedtoautodetectport.png,Failed to autodetect port)
 
 <p>BitPim has tried to autodetect which port you are using, but couldn't
 find a phone on any of them.  The ports tried are listed.  You will need

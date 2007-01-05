@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-t9editortab.png">
+SCREENSHOT(screen-t9editortab.png,T9 Editor)
 
 <p>This page allows users to retrieve, manage, and send their T9 User Database Words from/to the phone.
 

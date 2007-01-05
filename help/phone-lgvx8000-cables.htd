@@ -10,7 +10,7 @@ can thank them by placing your order with them.  Don't forget to mention
 that BitPim sent you!  Note that the VX7000 and VX8000 use exactly the
 same cable.
 
-<p align=center><img src="vx7000-cable.jpg">
+IMAGE(vx7000-cable.jpg,)
 
 
 #include "pageend.h"

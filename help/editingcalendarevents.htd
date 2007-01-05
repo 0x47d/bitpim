@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-editingcalendarevent1.png">
+SCREENSHOT(screen-editingcalendarevent1.png,)
 
 <p>This dialog shows the entries for a particular day.  The entries
 are shown in the list on the left, and details for the selected

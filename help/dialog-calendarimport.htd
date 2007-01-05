@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-import-calendar1.png">
+SCREENSHOT(screen-import-calendar1.png,)
 
 <p>This dialog allows users to initiate the import of calendar data from external
 sources into BitPim, set filtering parameters, preview the data items being imported,
@@ -25,7 +25,7 @@ DESC(Help,Bring up this dialog.)
 
 <h2>Import Filter Parameters</h2>
 
-<p align=center><img src="screen-import-calendar2.png">
+SCREENSHOT(screen-import-calendar2.png,)
 
 <p>This dialog allows users to set various filtering paramters to tailor/limit
 the amount of import data.  Individual parameters can be enabled or disabled by

@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<p align=center><img src="screen-filecontentshex.png">
+SCREENSHOT(screen-filecontentshex.png,)
 
 <p>This shows the contents of a file.  The left hand column is the offset
 into a file (in hexadecimal).  The 16 bytes are then shown in hex, and
