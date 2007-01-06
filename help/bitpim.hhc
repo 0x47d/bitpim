@@ -5,6 +5,9 @@
 <meta name="GENERATOR" content="HelpBlocks">
 <!-- Sitemap 1.0 -->
 </HEAD><BODY>
+<OBJECT type="text/site properties">
+<param name="Font" value="MS Sans Serif,8,0">
+</OBJECT>
 <UL>
   <LI><OBJECT type="text/sitemap">
       <param name="Name" value="Table of Contents">
@@ -135,12 +138,8 @@
           <param name="Local" value="tab-phonebook.htm">
           </OBJECT>
       <LI><OBJECT type="text/sitemap">
-          <param name="Name" value="Wallpaper">
-          <param name="Local" value="tab-wallpaper.htm">
-          </OBJECT>
-      <LI><OBJECT type="text/sitemap">
-          <param name="Name" value="Ringers">
-          <param name="Local" value="tab-ringers.htm">
+          <param name="Name" value="Media">
+          <param name="Local" value="tab-media.htm">
           </OBJECT>
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Calendar">
@@ -165,6 +164,10 @@
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Play List">
           <param name="Local" value="tab-playlist.htm">
+          </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="T9 Editor">
+          <param name="Local" value="tab-t9editor.htm">
           </OBJECT>
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Filesystem">

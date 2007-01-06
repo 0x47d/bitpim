@@ -41,8 +41,7 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Phone,tab-today.htm)
             TOCITEM_2(Phonebook,tab-phonebook.htm)
-            TOCITEM_2(Wallpaper,tab-wallpaper.htm)
-            TOCITEM_2(Ringers,tab-ringers.htm)
+            TOCITEM_2(Media,tab-media.htm)
             TOCITEM_2(Calendar,tab-calendar.htm)
             TOCITEM_2(Memo,tab-memo.htm)
             TOCITEM_2(Todo,tab-todo.htm)

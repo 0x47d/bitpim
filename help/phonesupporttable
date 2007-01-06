@@ -1,4 +1,4 @@
-<table cellpadding=5 cellspacing=5 border=1>
+<table cellpadding=5 cellspacing=5 border=1 class="grid center">
 <tr><th>
 <th>PHONEBOOK
 <th>CALENDAR
@@ -544,6 +544,18 @@
 <td align=center>R W
 <td align=center>&nbsp;
 <td align=center>&nbsp;
+<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>R 
+<td align=center>R 
+<td align=center>&nbsp;
+<td align=center>X
+</tr>
+<tr><th>SCP-2400
+<td align=center>R W
+<td align=center>R W
+<td align=center>R 
+<td align=center>R 
 <td align=center>&nbsp;
 <td align=center>R 
 <td align=center>R 

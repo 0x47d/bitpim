@@ -5,6 +5,8 @@ Contents file=bitpim.hhc
 Compiled file=bitpim.chm
 Default Window=Help
 Default topic=welcome.htm
+Language=0x809 English (United Kingdom)
+Default Font=MS Sans Serif,8,0
 Index file=bitpim.hhk
 Title=BitPim
 
@@ -42,14 +44,14 @@ dialog-calimppreset.htm
 tabs.htm
 tab-today.htm
 tab-phonebook.htm
-tab-wallpaper.htm
-tab-ringers.htm
+tab-media.htm
 tab-calendar.htm
 tab-memo.htm
 tab-todo.htm
 tab-sms.htm
 tab-callhistory.htm
 tab-playlist.htm
+tab-t9editor.htm
 tab-filesystem.htm
 tab-log.htm
 tab-protocollog.htm
