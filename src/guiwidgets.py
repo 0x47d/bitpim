@@ -465,6 +465,16 @@ class ConfigDialog(wx.Dialog):
                                   allowNegative=False)
         gs.Add(self.splashscreen, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
+        # Developer's Console
+        if __debug__:
+            gs.Add(wx.StaticText(self, -1, 'Developer Console'),
+                   pos=(_row,0),
+                   flag=wx.ALIGN_CENTER_VERTICAL)
+            self.dev_console=wx.CheckBox(self, wx.NewId(),
+                                         'Display Developer Console')
+            gs.Add(self.dev_console, pos=(_row, 1),
+                   flag=wx.ALIGN_CENTER_VERTICAL)
+            _row+=1
         # bitfling
         if bitflingscan.IsBitFlingEnabled():
             self.SetupBitFlingCertVerification()
@@ -647,6 +657,8 @@ class ConfigDialog(wx.Dialog):
                 self.taskbaricon1.Enable(False)
         self.autodetect_start.SetValue(self.mw.config.ReadInt("autodetectstart", 0))
         self.splashscreen.SetValue(self.mw.config.ReadInt('splashscreentime', 2500)/1000.0)
+        if __debug__:
+            self.dev_console.SetValue(self.mw.config.ReadInt('console', 0))
 
     def setdefaults(self):
         if self.commbox.GetValue()==self.setme:
@@ -704,6 +716,10 @@ class ConfigDialog(wx.Dialog):
         # SplashScreen Time
         self.mw.config.WriteInt('splashscreentime',
                                 int(self.splashscreen.GetValue()*1000))
+        # developer console
+        if __debug__:
+            self.mw.config.WriteInt('console',
+                                    self.dev_console.GetValue())
         # ensure config is saved
         self.mw.config.Flush()
         # update the status bar
