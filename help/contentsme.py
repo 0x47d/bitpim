@@ -9,13 +9,13 @@ class HHCParser(HTMLParser.HTMLParser):
 
     def __init__(self):
         HTMLParser.HTMLParser.__init__(self)
+        self.seenul=False
 
     def handle_starttag(self, tag, attrs):
         getattr(self, "handle_start_"+tag)(attrs)
 
     def handle_endtag(self, tag):
         getattr(self, "handle_end_"+tag)()
-
 
     def handle_start_html(self, attrs):
         pass
@@ -35,6 +35,7 @@ class HHCParser(HTMLParser.HTMLParser):
 
     def handle_start_ul(self, attrs):
         self.hier.append([])
+        self.seenul=True
 
     def handle_end_ul(self):
         if len(self.hier)>1:
@@ -48,6 +49,7 @@ class HHCParser(HTMLParser.HTMLParser):
         pass
 
     def handle_start_param(self, attrs):
+        if not self.seenul: return
         name=None
         value=None
         for a,v in attrs:
@@ -59,6 +61,7 @@ class HHCParser(HTMLParser.HTMLParser):
         self.item[name]=value
 
     def handle_end_object(self):
+        if not self.seenul: return
         self.hier[-1].append(self.item)
 
 
