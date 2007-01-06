@@ -711,7 +711,7 @@ class MainWindow(wx.Frame):
         ### Art
         # establish the custom art provider for custom icons
         # this is a global setting, so no need to call it for each toolbar
-        wx.ArtProvider_PushProvider(guihelper.ArtProvider())
+        wx.ArtProvider.PushProvider(guihelper.ArtProvider())
 
         # frame icon
         ib=wx.IconBundle()
