@@ -11,12 +11,12 @@ fields.
    <p><b>title</b>: desc
 
 <h2>Fields</h2>
-<P>The labels of these fields are color coded to indicate their applicability
+<p>The labels of these fields are color coded to indicate their applicability
 to the current phone:
 <UL>
-<LI><FONT COLOR="blue" SIZE="" FACE="Arial, Lucida Sans">Blue: Applicable to this phone.</FONT>
-<LI><FONT COLOR="red" SIZE="" FACE="Arial, Lucida Sans">Red: Not applicable to this phone.</FONT>
-<LI><FONT COLOR="black" SIZE="" FACE="Arial, Lucida Sans">Black: Unknown applicability.</FONT>
+<li><p><FONT COLOR="blue" SIZE="" FACE="Arial, Lucida Sans">Blue: Applicable to this phone.</FONT>
+<li><p><FONT COLOR="red" SIZE="" FACE="Arial, Lucida Sans">Red: Not applicable to this phone.</FONT>
+<li><p><FONT COLOR="black" SIZE="" FACE="Arial, Lucida Sans">Black: Unknown applicability.</FONT>
 </UL>
 
 DESC(Summary,The summary/title of the current task item.)

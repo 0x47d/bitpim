@@ -11,14 +11,14 @@ END_TOC
 <h2>What works</h2>
 
 <ul>
-	<li>Phonebook </li>
-	<li>Wallpaper</li>
-	<li>Ringers (including reading voice memos) </li>
-	<li>Filesystem </li>
-	<li>Call History </li>
-	<li>SMS (Messages)</li>
-	<li>Memo (Notepad) </li>
-	<li>Calendar (Scheduler)</li>
+	<li><p>Phonebook </li>
+	<li><p>Wallpaper</li>
+	<li><p>Ringers (including reading voice memos) </li>
+	<li><p>Filesystem </li>
+	<li><p>Call History </li>
+	<li><p>SMS (Messages)</li>
+	<li><p>Memo (Notepad) </li>
+	<li><p>Calendar (Scheduler)</li>
 	</ul>
 	
 	<p><b>Phonebook</b><p>Phonebook support&nbsp; includes the ability to 

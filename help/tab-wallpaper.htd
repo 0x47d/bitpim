@@ -24,13 +24,13 @@ an image, or conext menu <B>Open</B>.
 
 <p><b>Paste</b>: To paste one or more image files from the clipboard, go to main menu <B>Edit</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Paste</B>, or context menu <B>Paste</B>, or pressing <B>Ctrl+V</B>.
 
-<P><B>Replace</B>: To replace the content of the selected image with another image, go to context menu <B>Replace</B> and enter the file name of the new image file.
+<p><B>Replace</B>: To replace the content of the selected image with another image, go to context menu <B>Replace</B> and enter the file name of the new image file.
 
-<P><B>Refresh</B>: Refresh the list of images on this page.
+<p><B>Refresh</B>: Refresh the list of images on this page.
 
 <p><b>Drag and Drop</b>: On Windows, BitPim supports drag-and-drop image files from other applications
 into BitPim (which is equivalent to adding files); and drag-and-drop files from BitPim to other applications.
 
-<P><B>Move to</B>: Move the selected image to a different media page.
+<p><B>Move to</B>: Move the selected image to a different media page.
 
 #include "pageend.h"

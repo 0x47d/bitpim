@@ -66,9 +66,9 @@ The following will work on Fedora Core 5.  A similar procedure should work on
 other distributions that use udev.</p>
 
 <ol>
-<li>As done with the hotplug method above, create a <code>cellusers</code>
+<li><p>As done with the hotplug method above, create a <code>cellusers</code>
 group and put the users that will use BitPim in that group.
-<li><b>Create <code>/etc/udev/rules.d/60-cell.rules</code></b>
+<li><p><b>Create <code>/etc/udev/rules.d/60-cell.rules</code></b>
 
 <pre>
 SUBSYSTEM!="usb_device", ACTION!="add", GOTO="cell_rules_end"

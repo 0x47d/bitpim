@@ -12,15 +12,15 @@ these wallpapers you must perform the following steps on your phone for each
 type of wallpaper you want BitPim to customize:
 
 <p><ul>
-<li>select Menu</li>
-<li>6-Settings</li>
-<li>2-Display</li>
-<li>3-Screens</li>
-<li>1-Wallpaper (or 2-Power On, or 3-Power Off)</li>
-<li>More</li>
-<li>2-EMS</li>
-<li>Select any item from this list (will be replaced later by BitPim)</li>
-<li>Save</li>
+<li><p>select Menu</li>
+<li><p>6-Settings</li>
+<li><p>2-Display</li>
+<li><p>3-Screens</li>
+<li><p>1-Wallpaper (or 2-Power On, or 3-Power Off)</li>
+<li><p>More</li>
+<li><p>2-EMS</li>
+<li><p>Select any item from this list (will be replaced later by BitPim)</li>
+<li><p>Save</li>
 </ul>
 
 <p>Repeat the steps above for each of the Wallpaper types (wallpaper,
@@ -42,17 +42,17 @@ the image you want for your wallpaper. For this example this file will
 be named "myimage.bmp".
 
 <ul>
-<li>First, follow the steps in section "Changing the Wallpaper" above
+<li><p>First, follow the steps in section "Changing the Wallpaper" above
 to create a wallpaper entry if you have not already
 done this on your phone.</li>
-<li>Start BitPim and verify that your phone has a wallpaper entry by
+<li><p>Start BitPim and verify that your phone has a wallpaper entry by
 doing Data -&gt; Get&nbsp;Phone&nbsp;Data -&gt; Wallpaper.</li>
-<li>On the Wallpaper tab in BitPim use the "Add" button to import your
+<li><p>On the Wallpaper tab in BitPim use the "Add" button to import your
 custom wallpaper, "myimage.bmp".</li>
-<li>Right-click on the phone wallpaper icon and Delete it.</li>
-<li>Right-click on your custom wallpaper icon and Rename it 
+<li><p>Right-click on the phone wallpaper icon and Delete it.</li>
+<li><p>Right-click on your custom wallpaper icon and Rename it 
 to "wallpaper.bmp".</li>
-<li>Now send your custom wallpaper to the phone by doing
+<li><p>Now send your custom wallpaper to the phone by doing
 Data -&gt; Send&nbsp;Phone&nbsp;Data -&gt; Wallpaper.</li>
 </ul>
 
@@ -67,29 +67,29 @@ custom wallpaper from phone A to your computer and it will be
 named "customwp.bit".
 
 <ul>
-<li>Phone A:</li>
+<li><p>Phone A:</li>
 <ul>
-<li>Start BitPim and grab the custom wallpaper from phone A by
+<li><p>Start BitPim and grab the custom wallpaper from phone A by
 doing Data -&gt; Get&nbsp;Phone&nbsp;Data -&gt; Wallpaper.</li>
-<li>On the Wallpaper tab in BitPim right-click on the phone 
+<li><p>On the Wallpaper tab in BitPim right-click on the phone 
 wallpaper icon and Save it to
 a file named "customwp.bit".</li>
 </ul>
-<li>Phone B:</li>
+<li><p>Phone B:</li>
 <ul>
-<li>First, follow the steps in section "Changing the Wallpaper" above
+<li><p>First, follow the steps in section "Changing the Wallpaper" above
 to create a wallpaper entry if you have not already
 done this on phone B.</li>
-<li>Start BitPim and verify that your phone has a wallpaper entry by
+<li><p>Start BitPim and verify that your phone has a wallpaper entry by
 doing Data -&gt; Get&nbsp;Phone&nbsp;Data -&gt; Wallpaper.</li>
-<li>On the Wallpaper tab in BitPim use the "Add" button to import 
+<li><p>On the Wallpaper tab in BitPim use the "Add" button to import 
 the wallpaper you are copying, "customwp.bit".
 <br>Note: the custom wallpaper will be converted to BMP format
 when it is imported.</li>
-<li>Right-click on the phone wallpaper icon and Delete it.</li>
-<li>Right-click on your custom wallpaper icon and Rename it 
+<li><p>Right-click on the phone wallpaper icon and Delete it.</li>
+<li><p>Right-click on your custom wallpaper icon and Rename it 
 to "wallpaper.bmp".</li>
-<li>Now send your custom wallpaper to the phone by doing
+<li><p>Now send your custom wallpaper to the phone by doing
 Data -&gt; Send&nbsp;Phone&nbsp;Data -&gt; Wallpaper.</li>
 </ul>
 </ul>
@@ -109,13 +109,13 @@ on your computer called "customwp.bit" and we will convert
 it to a BMP file called "customwp.bmp".
 
 <ul>
-<li>Start BitPim. (You do not need your phone attached 
+<li><p>Start BitPim. (You do not need your phone attached 
 to BitPim for this operation.)</li>
-<li>On the Wallpaper tab in BitPim use the "Add" button to import 
+<li><p>On the Wallpaper tab in BitPim use the "Add" button to import 
 the wallpaper you are converting, "customwp.bit".
 <br>Note: the custom wallpaper will be converted to BMP format
 when it is imported.</li>
-<li>Right-click on this image icon and Save as "customwp.bmp".</li>
+<li><p>Right-click on this image icon and Save as "customwp.bmp".</li>
 </ul>
 
 You can now edit this BMP file and use it as your new
@@ -129,12 +129,12 @@ with ringers. Here are the steps on your phone to assign to one of
 your main ringers:
 
 <p><ul>
-<li>select Menu</li>
-<li>6-Settings</li>
-<li>1-Sounds</li>
-<li>1-Ringers</li>
-<li>1-Caller ID (or 2-No Caller ID, or 3-Restrict)</li>
-<li>select your ringtone from this list</li>
+<li><p>select Menu</li>
+<li><p>6-Settings</li>
+<li><p>1-Sounds</li>
+<li><p>1-Ringers</li>
+<li><p>1-Caller ID (or 2-No Caller ID, or 3-Restrict)</li>
+<li><p>select your ringtone from this list</li>
 </ul>
 
 <p>Note that you can also associate your custom ringers with people in

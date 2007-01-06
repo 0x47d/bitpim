@@ -36,7 +36,7 @@ DESC(Start Date,Inclusive starting date of the periodic during which active\
 calendar events would be imported.)
 DESC(End Date,Inclusive ending dat of the periodic during which active\
 calendar events would be imported.)
-<P><B>Preset Duration</B>: Select one of 3 preset durations: <B>This Week</B>,
+<p><B>Preset Duration</B>: Select one of 3 preset durations: <B>This Week</B>,
 <B>This Month</B>, or <B>This Year</B>.  The <B>Preset Duration</B> starts from today
 and lasts through the end of the week, month, or year.  This parameter takes precedence
 over the <B>Start Date</B> and <B>End Date</B> parameter.
@@ -45,7 +45,7 @@ This feature is useful for phones that do not support repeat events natively.)
 DESC(Disable All Alarms,Turn off the alarms of all events being imported.)
 DESC(Use Alarm Settings From Calender, Import as-is settings from source data.)
 DESC(Set Alarm On All Events, Turn on the alarms of all events being imported.)
-<P><B>Alarm Vibrate</B>: Enable phone vibrate with alarm for all events.
+<p><B>Alarm Vibrate</B>: Enable phone vibrate with alarm for all events.
 DESC(Alarm Ringtone, Select an alarm ringtone for all events.)
 DESC(Alert Before, Set alarm to go off X minutes before the event start time.)
 DESC(Categories,Define the categories against which calendar events must match\

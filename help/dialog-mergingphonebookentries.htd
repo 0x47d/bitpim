@@ -11,10 +11,10 @@ and which values are used for fields.
 SCREENSHOT(screen-importpbmergecolours.jpg,)
 
 <ul>
-<li>White - the existing entry is unchanged
-<li>Green - the imported entry has become a new entry
-<li>Yellow - an imported entry matched an existing entry and they have been merged
-<li>Red - the entry has been deleted
+<li><p>White - the existing entry is unchanged
+<li><p>Green - the imported entry has become a new entry
+<li><p>Yellow - an imported entry matched an existing entry and they have been merged
+<li><p>Red - the entry has been deleted
 </ul>
 
 <p>For individual fields, values that are underlined are new or changed values from

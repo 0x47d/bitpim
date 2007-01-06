@@ -2,38 +2,38 @@
 
 <H3>List available downloaded ringtones</H3>
 <OL>
-<LI>Menu <B>Data</B> -> <B>Get Phone Data</B>.
-<LI>Check on <B>Ringtone</B>, and click on <B>OK</B>.
-<P>The list of download ringtones will be displayed on the <B>Ringers</B> tab.
+<li><p>Menu <B>Data</B> -> <B>Get Phone Data</B>.
+<li><p>Check on <B>Ringtone</B>, and click on <B>OK</B>.
+<p>The list of download ringtones will be displayed on the <B>Ringers</B> tab.
 </OL>
 
 <H3>List available downloaded images</H3>
 <OL>
-<LI>Menu <B>Data</B> -> <B>Get Phone Data</B>.
-<LI>Check on <B>Wallpaper</B>, and click on <B>OK</B>.
-<P>The list of download images will be displayed on the <B>Wallpapers</B> tab.
+<li><p>Menu <B>Data</B> -> <B>Get Phone Data</B>.
+<li><p>Check on <B>Wallpaper</B>, and click on <B>OK</B>.
+<p>The list of download images will be displayed on the <B>Wallpapers</B> tab.
 </OL>
 
 <H3>Delete a downloaded ringtone</H3>
 <OL>
-<LI>Get the list of downloaded ringtones.
-<LI>Click on the <B>Ringers</B> tab.
-<LI>Select the ringtone to be deleted, and click on <B>Delete</B>.
-<LI>Menu <B>Data</B> -> <B>Send Phone Data</B>.
-<LI>Check on <B>Ringtone</B>, and click on <B>OK</B>.
-<LI>Verify on the phone that the ringtone has been deleted, if not delete it manually.
+<li><p>Get the list of downloaded ringtones.
+<li><p>Click on the <B>Ringers</B> tab.
+<li><p>Select the ringtone to be deleted, and click on <B>Delete</B>.
+<li><p>Menu <B>Data</B> -> <B>Send Phone Data</B>.
+<li><p>Check on <B>Ringtone</B>, and click on <B>OK</B>.
+<li><p>Verify on the phone that the ringtone has been deleted, if not delete it manually.
 </OL>
 
 <H3>Transfer a ringtone to the phone</H3>
 <OL>
-<LI>Get the list of downloaded ringtones.
-<LI>Click on the <B>Ringers</B> tab.
-<LI>Click on <B>Add</B>.
-<LI>From the <B>File Dialog</B>, select a sound file and click on <B>Open</B>.
-<LI>Menu <B>Data</B> -> <B>Send Phone Data</B>.
-<LI>Check on <B>Ringtone</B>, and click on <B>OK</B>.
+<li><p>Get the list of downloaded ringtones.
+<li><p>Click on the <B>Ringers</B> tab.
+<li><p>Click on <B>Add</B>.
+<li><p>From the <B>File Dialog</B>, select a sound file and click on <B>Open</B>.
+<li><p>Menu <B>Data</B> -> <B>Send Phone Data</B>.
+<li><p>Check on <B>Ringtone</B>, and click on <B>OK</B>.
 </OL>
 
-<P>The steps for deleting and transferring images to the phone are similar to those of ringtones.
+<p>The steps for deleting and transferring images to the phone are similar to those of ringtones.
 
 #include "pageend.h"

@@ -2,7 +2,7 @@
 
 <h2>Version 0.9</h2>
 
-<P>The focus of version 0.9 is to fix all known major bugs, complete the development of all basic BitPim features, and ensure that the help files are up-to-date and accurate.
+<p>The focus of version 0.9 is to fix all known major bugs, complete the development of all basic BitPim features, and ensure that the help files are up-to-date and accurate.
 
 <h2>Next version</h2>
 
@@ -13,11 +13,11 @@
 <p>These items are intended to be done in the future, but are not planned for a specific release of BitPim.  
 
 <ul>
-      <li>A hex editor for the filesystem view
-      <li>Being able to do things to the midis (convert to type 0, reduce length, alter volume)
-      <li>Doing something with audio on the phone (eg QCP/voice memos stuff)
-      <li>Undo
-      <li>Database export/backup.
+      <li><p>A hex editor for the filesystem view
+      <li><p>Being able to do things to the midis (convert to type 0, reduce length, alter volume)
+      <li><p>Doing something with audio on the phone (eg QCP/voice memos stuff)
+      <li><p>Undo
+      <li><p>Database export/backup.
 </ul>
 
 #include "pageend.h"

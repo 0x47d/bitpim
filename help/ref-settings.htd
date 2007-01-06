@@ -22,7 +22,7 @@ you download data from the phone it deletes <b>ALL</b> the contents of these fol
 puts new content in them.
 
 <H2>Config File</H2>
-<P>This is the name and path of the configuration file that BitPim is using.
+<p>This is the name and path of the configuration file that BitPim is using.
 
 <h2>Phone Type</h2>
 
@@ -48,16 +48,16 @@ displays the last tab that was previously viewed.
 
 <H2>TaskBar Icon (Windows only)</H2>
 
-<P>Enabling this option places the BitPim icon in the System Tray when BitPim is minimized.
+<p>Enabling this option places the BitPim icon in the System Tray when BitPim is minimized.
 
 <H2>Autodetect at Startup</H2>
 
-<P>Enabling this option causes BitPim to automatically detect the phone at startup. If disabled BitPim will use the 
+<p>Enabling this option causes BitPim to automatically detect the phone at startup. If disabled BitPim will use the 
 phone settings from the previous time it was run. Disable this option if you run BitPim without your phone connected
 to prevent error messages.
 
 <H2>Splash Screen Time</H2>
-<P>This sets the period of time (in seconds) that the BitPim splash screen will be displayed.  Enter 0 to disable the display of the splash screen.
+<p>This sets the period of time (in seconds) that the BitPim splash screen will be displayed.  Enter 0 to disable the display of the splash screen.
 
 <h2>BitFling</h2>
 

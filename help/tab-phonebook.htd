@@ -11,7 +11,7 @@ or Delete from the Edit menu.
 <p>The Historical Data Status displays the status of the data being displayed 
 ('Current Data' or 'Historical Data as of mm/dd/yy hh:mm:ss').
 
-<P>The Preview Panel can be turned on/off by checking/unchecking Menu View -> Phonebook Preview.
+<p>The Preview Panel can be turned on/off by checking/unchecking Menu View -> Phonebook Preview.
 
 <p>If you enter any punctuation in phone numbers (eg <code>(555) 555-5555</code>) then
 the punctuation is stripped when sent to most phones, as they do not store the

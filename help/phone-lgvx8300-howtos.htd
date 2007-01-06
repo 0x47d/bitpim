@@ -1,24 +1,24 @@
 #include "pagestart.h"
 
 <H3>Access Ringtones from a miniSD card:</H3>
-<P>Transferring files to the miniSD card through the phone using BitPim is very slow, users should transfer files to the card directly from a PC.
+<p>Transferring files to the miniSD card through the phone using BitPim is very slow, users should transfer files to the card directly from a PC.
 <OL>
-<LI>On the miniSD card, create a subdir called <B>ringers</B>
-<LI>Copy your ringtone files to the <B>ringers</B> subdir.
-<LI>Insert the card back into the phone and start BitPim.
-<LI>Retrieve Ringtone data from the phone:
+<li><p>On the miniSD card, create a subdir called <B>ringers</B>
+<li><p>Copy your ringtone files to the <B>ringers</B> subdir.
+<li><p>Insert the card back into the phone and start BitPim.
+<li><p>Retrieve Ringtone data from the phone:
 	<OL>
-	<LI>Menu <B>Data</B> -> <B>Get Phone Data</B>.
-	<LI>Check on <B>Ringtone</B>, and click on <B>OK</B>.
+	<li><p>Menu <B>Data</B> -> <B>Get Phone Data</B>.
+	<li><p>Check on <B>Ringtone</B>, and click on <B>OK</B>.
 	</OL>
-<LI>Write Ringtone data back to the phone:
+<li><p>Write Ringtone data back to the phone:
 	<OL>
-	<LI>Menu <B>Data</B> -> <B>Send Phone Data</B>.
-	<LI>Check on <B>Ringtone</B> and <B>Replace All</B>, and click on <B>OK</B>.
+	<li><p>Menu <B>Data</B> -> <B>Send Phone Data</B>.
+	<li><p>Check on <B>Ringtone</B> and <B>Replace All</B>, and click on <B>OK</B>.
 	</OL>
-<LI>All of the ringtones stored on both the phone and the card are now available for assignment.
+<li><p>All of the ringtones stored on both the phone and the card are now available for assignment.
 </OL>
-<P>Step <B>3</B> through <B>5</B> should be repeated for all changes made to the <B>ringers</B> subdir.
+<p>Step <B>3</B> through <B>5</B> should be repeated for all changes made to the <B>ringers</B> subdir.
 
 
 #include "pageend.h"

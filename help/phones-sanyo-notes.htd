@@ -116,14 +116,14 @@ sometimes reject the file and BitPim will report a numerical error
 code.  These errors codes will be displayed in the Log pane.  Some of
 the reasons for an error are:
 <ul>
-<li>Invalid file type: Sanyo phones only accept PNG wallpapers and MIDI
+<li><p>Invalid file type: Sanyo phones only accept PNG wallpapers and MIDI
 ringers.  Other file types, such as QCP ringers, will not be accepted.
 (This is a limitation of the phone, not BitPim.)
-<li>Too many files on phone:  If too many wall paper or ringer files have been
+<li><p>Too many files on phone:  If too many wall paper or ringer files have been
 transferred, some will need to be deleted through the PC Sync menu on the
 phone.  BitPim does not have the capability to delete or overwrite media files
 on Sanyo phones.
-<li>File too large:  Sanyo phones appear to have a image file size
+<li><p>File too large:  Sanyo phones appear to have a image file size
 limit of 16K bytes.  Ringer files have a similar limitation, although
 it is reported that some phones allow one larger MIDI file.
 </ul>

@@ -12,7 +12,7 @@ format so you can use it to listen to the video as well.
 
 <H3>Ringtones</H3>
 <UL>
-<LI>BitPim can make use of ringtone files stored on the miniSD card, see section <a href="phone-lgvx8300-howtos.htm">Howtos</a> for more details.
+<li><p>BitPim can make use of ringtone files stored on the miniSD card, see section <a href="phone-lgvx8300-howtos.htm">Howtos</a> for more details.
 </UL>
 
 #include "pageend.h"

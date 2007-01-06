@@ -26,54 +26,54 @@ of luck.  <a href="bitpim-user-no-support.htm">This page</a> details why.
 
 <dl>
 
-<dt>Summary
+<dt><p>Summary
 
-<dd>Start with the following items.  If you leave them out, we will have to ask
+<dd><p>Start with the following items.  If you leave them out, we will have to ask
 and it will delay getting to a solution for you.  BitPim supports multiple
 phones, operating systems and cables, and they all affect issues you may have.
 
 <p><ul>
-<li>Which version of BitPim you are using
-<li>What operating system you are using
-<li>Which cell phone you are talking to (make and model)
-<li>What cable you are using to talk to the phone
+<li><p>Which version of BitPim you are using
+<li><p>What operating system you are using
+<li><p>Which cell phone you are talking to (make and model)
+<li><p>What cable you are using to talk to the phone
 
 </ul>
 
 
-<dt>Make notes
+<dt><p>Make notes
 
-<dd>You will need to gather information as described in the following points.
+<dd><p>You will need to gather information as described in the following points.
 The most important notes to start with are a description of what happened and a
 description of what you expected to happen.
 
-<dt>If you got an <a href="errors-exception.htm">exception dialog</a>, please
+<dt><p>If you got an <a href="errors-exception.htm">exception dialog</a>, please
 copy the contents.
-<dd>This will show what happened at the point of the problem.  The contents
+<dd><p>This will show what happened at the point of the problem.  The contents
 of the dialog are in the Log pane. <b>Note</b> that you must include the other
 contents of the log pane in addition to the exception.  This is so we can
 tell what BitPim was doing leading up to the exception.
 
-<dt>Get a copy of the contents of the <a href="tab-log.htm">Log</a> pane.
-<dd>This will show the history of actions BitPim was doing
+<dt><p>Get a copy of the contents of the <a href="tab-log.htm">Log</a> pane.
+<dd><p>This will show the history of actions BitPim was doing
 
-<dt>What set of steps did you take
-<dd>Work out the set of steps you did.  This is to enable others to do the same
+<dt><p>What set of steps did you take
+<dd><p>Work out the set of steps you did.  This is to enable others to do the same
 set of steps in order to reproduce your problem.
 
-<dt>Is it repeatable?
-<dd>Does the problem happen every time.  If it does, it is far easier to track down
+<dt><p>Is it repeatable?
+<dd><p>Does the problem happen every time.  If it does, it is far easier to track down
 the cause and fix.  Even if it isn't repeatable, there may be enough information
 from the previous steps to diagnose and fix it.
 
-<dt>What have you tried?
+<dt><p>What have you tried?
 
-<dd>In your attempts to fix the issue, what have you already tried, and what
+<dd><p>In your attempts to fix the issue, what have you already tried, and what
 happened.?
 
-<dt>Look on the web and in archives
+<dt><p>Look on the web and in archives
 
-<dd>Do a Google search incorporating lines of the error message, symptoms or
+<dd><p>Do a Google search incorporating lines of the error message, symptoms or
 what you have tried.  You can also search the mailing list archives at
 URL(http://sourceforge.net/mailarchive/forum.php?forum_id=31264,SourceForge) or at URL(http://news.gmane.org/gmane.comp.mobile.bitpim.user,Gmane).
 Phone specific groups should also have their archives and search facilities.
@@ -115,41 +115,41 @@ and often annoys them.  If you do any of them, you will likely just be ignored.
 
 <dl>
 
-<dt>Mail individual developers
+<dt><p>Mail individual developers
 
-<dd>If the developer responds, the answer won't appear in any archives and so
+<dd><p>If the developer responds, the answer won't appear in any archives and so
 won't help other users.  Other users won't be able to comment on the issue
 such as workarounds they have discovered or indications if the issue is unique
 to your configuration or affects everyone.  Additionally the developers schedule
 their time carefully so your answer is unlikely to be timely anyway.
 
-<dt>Mail/post in multiple locations
+<dt><p>Mail/post in multiple locations
 
-<dd>Some people think they will get quicker answers by posting to mailing lists,
+<dd><p>Some people think they will get quicker answers by posting to mailing lists,
 filling out SourceForge tracker items, and emailing individual developers.  I
 can assure you that no one wants to answer/address the same issue two or more times.
 And if you are seen posting the same thing in more than one location, the people who
 can answer will wait a long time to ensure you aren't also posting in others (remember
 they usually participate in multiple locations as well).
 
-<dt>Be impatient<br>
+<dt><p>Be impatient<br>
 
-<dd>Some people seem to get upset if their issues are not answered immediately.
+<dd><p>Some people seem to get upset if their issues are not answered immediately.
 Remember that other people have their own lives and responsibilities and contribute
 as their own schedules and priorities allow.  If you have given a detailed report,
 they may be doing research.  After all, a good question deserves a good answer.
 
-<dt>Post no information
+<dt><p>Post no information
 
-<dd>One report consisted of "When BitPim talks to my phone, it gets some sort of exception".
+<dd><p>One report consisted of "When BitPim talks to my phone, it gets some sort of exception".
 BitPim does fundamentally work with the phones we support.  There may be some issues
 but we don't release software that just doesn't work.  Furthermore not giving any information
 at all about what happened, the contents of the exception etc means no one can help.  Follow the
 steps at the top of this page.
 
-<dt>Ignoring archives
+<dt><p>Ignoring archives
 
-<dd>Many questions have already been asked and answered (multiple times).  Check the archives!
+<dd><p>Many questions have already been asked and answered (multiple times).  Check the archives!
 
 </dl>
 

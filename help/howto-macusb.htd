@@ -2,7 +2,7 @@
 
 <h2>USB device drivers</h2>
 
-<P>MacOS X provides a kernel extension  that can talk to the modem
+<p>MacOS X provides a kernel extension  that can talk to the modem
 interface on phones connected via a direct USB cable.  This kernel
 extension is named <code>USBAppleCDCMDriver.kext</code> and will be
 autodetected and used if the chipset in the phone is supported. This
