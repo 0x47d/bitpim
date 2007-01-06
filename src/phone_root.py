@@ -336,7 +336,7 @@ class Phone(today.TodayWidget):
 
         self.EnsureDatabase(self.path, self.path, database_name)
         # create all the panels for this phone
-        if __debug__ and self.config.ReadInt("console", 0):
+        if self.config.ReadInt("console", 0):
             import developer
             id=self.tree.AddPage(self.phone_id, developer.DeveloperPanel(self.parent, {'mw': self.mw, 'db': self.database} ), "Console", self.tree.console)
         self.phonewidget=phonebook.PhoneWidget(self, self.parent, self.config)
