@@ -30,15 +30,16 @@ look like it will result in partial files.
 <p>The various fields have maximum lengths when writing to the
 phonebook.  Values longer than the allowed length will be silently truncated
 when loaded to the phone.
-	<blockquote>
-	<table border=0 cellspacing=5 cellpadding=5 width="20%">
+
+
+TABLE
 	  <tr><td>Name</td><td>22</td></tr>
 	  <tr><td>Email</td><td>48</td></tr>
 	  <tr><td>Url</td><td>48</td></tr>
 	  <tr><td>Memo</td><td>32</td></tr>
 	  <tr><td>Phone number</td><td>48</td></tr>
 	    </table>
-	</blockquote>
+
 
 <p>Only digits are allowed in phone numbers (ie you can't have
 punctuation such as parentheses or dashes).  BitPim will remove all

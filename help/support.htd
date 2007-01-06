@@ -1,6 +1,6 @@
 #include "pagestart.h"
 
-<blockquote>We do not offer <b>ANY</b> support for versions of BitPim that were
+<blockquote><p>We do not offer <b>ANY</b> support for versions of BitPim that were
 not downloaded by following the link on the BitPim home page at 
 URL(http://www.bitpim.org,www.bitpim.org).  You <b>MUST</b> go back
 to whomever you downloaded BitPim from.
@@ -108,7 +108,7 @@ operating systems or for configuring device drivers.  If you cannot get BitPim t
 for <A HREF="phones.htm">the phones</A> list various web pages, forums and mailings
 specific to those phones.
 
-<h1><a name="donotdo">Do not do</a></h1>
+<h2><a name="donotdo">Do not do</a></h2>
 
 <p>Do not do any of the following.  It takes up lots of other people's valuable time,
 and often annoys them.  If you do any of them, you will likely just be ignored.

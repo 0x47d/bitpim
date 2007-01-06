@@ -14,10 +14,9 @@ and form.</font>
 
 </blockquote>
 
-<h1>Releases</h1>
+<h2>Releases</h2>
 
 <p>There is a new BitPim release approximately once a month.  It incorporates new phone model support, new functionality and 
 bug fixes.
 
-</blockquote>
 #include "pageend.h"

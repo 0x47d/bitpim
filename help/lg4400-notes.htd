@@ -39,15 +39,13 @@ phonebook.  I will be making this user friendly shortly (most probably
 by silently truncating the value).  Opinions welcome.  Here is a
 listing of field lengths:
 
-	<blockquote>
-	<table border=0 cellspacing=5 cellpadding=5 width="20%">
+TABLE
 	  <tr><td>Name</td><td>22</td></tr>
 	  <tr><td>Email</td><td>48</td></tr>
 	  <tr><td>Url</td><td>48</td></tr>
 	  <tr><td>Memo</td><td>32</td></tr>
 	  <tr><td>Phone number</td><td>48</td></tr>
 	    </table>
-	</blockquote>
 
 <p>Only digits are allowed in phone numbers (ie you can't have
 punctuation such as parentheses or dashes).  BitPim will remove all

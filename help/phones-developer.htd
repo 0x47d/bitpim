@@ -6,7 +6,7 @@ We appreciate <a href="contributing.htm#phoneloan">phone loans</a>.
 <p>Phones that are listed here, but not in the list of supported phones are
 still being worked on.  URL(http://bitpim.org/papers/phonespecs/,How to get phonespecs)
 
-<p><table width="100%" border=1>
+<p>TABLE_GRID
 <tr>
 <th>Manufacturer
 <th>Model

@@ -38,7 +38,8 @@ directory.
 
 <p>The following configuration directives are available:
 
-<table width="100%" cellspacing=5 cellpadding=5>
+TABLE
+
 <tr>
 <th>Key<th>Default<th>Description
 </tr>

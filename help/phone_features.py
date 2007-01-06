@@ -67,7 +67,7 @@ def generate_phone_features():
     return r
 
 def html_results(r):
-    print '<table cellpadding=5 cellspacing=5 border=1>'
+    print '<table cellpadding=5 cellspacing=5 border=1 class="grid center">'
     print '<tr><th>'
     for n in features+misc_features:
         print '<th>%s'%n.replace('_', ' ').upper()

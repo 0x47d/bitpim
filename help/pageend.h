@@ -1,5 +1,5 @@
 <hr> 
 #include "navbar.h" 
 #include "version.h"
-<p align=center><b>BitPim Online Help</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;built DATENOW</p>
+<p align=center class="build-line"><b>BitPim Online Help</b> built DATENOW</p>
 </body></html>

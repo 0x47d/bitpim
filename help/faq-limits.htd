@@ -39,8 +39,8 @@ cable.
 <p>Here are the sizes of the embedded filesystem for some phones.
 Note that there are already many files stored there.
 
-<blockquote>
-<table cellpadding=5 cellspacing=5>
+TABLE
+
 <tr><th>Model<th>EFS size</tr>
 
 <tr><td>LG VX-4400<td align=right>1.5MB</tr>
@@ -48,6 +48,5 @@ Note that there are already many files stored there.
 <tr><td>LG VX-7000<td align=right>38MB</tr>
 <tr><td>LG VX-8000<td align=right>100MB</tr>
 </table>
-</blockquote>
 
 #include "pageend.h"

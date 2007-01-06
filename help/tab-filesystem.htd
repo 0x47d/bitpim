@@ -15,7 +15,7 @@ SCREENSHOT(screen-filesystem.png,)
 
 <h2>Menus</h2>
 
-<table cellspacing=5 cellpadding=5>
+TABLE
 <tr>
 <td width=180 valign=top>SCREENSHOT(screen-filesysdirmenu.png,Directory menu)</td>
 

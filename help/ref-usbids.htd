@@ -7,7 +7,7 @@ straight USB cables the vendor and product id will be that of the phone.
 Note that some phones, such as many models from LG, can be accessed with
 a straight USB cable or a USB to serial cable.
 
-<table cellpadding="5" cellspacing="5">
+TABLE
 <tr><th>Manufacturer<th>Models<th>Vendor id<th>Product id</tr>
 
 <tr valign="top">
