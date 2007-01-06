@@ -58,3 +58,25 @@ class Profile(parentprofile):
                                       {'width': 128, 'height': 160, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
                                       {'width': 128, 'height': 142, 'format': "JPEG"}))
+
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('calendar', 'read', None),   # all calendar reading
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+##        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),         # all SMS list reading
+        ('memo', 'read', None),        # all memo list reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
+        ('wallpaper', 'write', 'OVERWRITE'),
+        ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
+        ('ringtone', 'write', 'OVERWRITE'),
+        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
+        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
+        ('playlist', 'read', 'OVERWRITE'),
+        ('playlist', 'write', 'OVERWRITE'),
+##        ('t9_udb', 'read', 'OVERWRITE'),
+##        ('t9_udb', 'write', 'OVERWRITE'),
+        )
