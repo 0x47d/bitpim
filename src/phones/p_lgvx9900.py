@@ -16,16 +16,34 @@ from p_lgvx9800 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-class indexentry(BaseProtogenClass):
-    __fields=['filename', 'size', 'date', 'type']
+CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
+
+from p_lgvx8300 import scheduleexception
+from p_lgvx8300 import scheduleevent
+from p_lgvx8300 import scheduleexceptionfile
+from p_lgvx8300 import schedulefile
+from p_lgvx8300 import indexentry
+from p_lgvx8300 import indexfile
+from p_lgvx8300 import call
+from p_lgvx8300 import callhistory
+from p_lgvx8500 import msg_record
+from p_lgvx8500 import recipient_record
+from p_lgvx8500 import sms_saved
+from p_lgvx8500 import sms_out
+from p_lgvx8500 import SMSINBOXMSGFRAGMENT
+from p_lgvx8500 import sms_in
+from p_lgvx8500 import sms_quick_text
+
+class textmemo(BaseProtogenClass):
+    __fields=['text', 'dunno', 'memotime']
 
     def __init__(self, *args, **kwargs):
         dict={}
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(indexentry,self).__init__(**dict)
-        if self.__class__ is indexentry:
+        super(textmemo,self).__init__(**dict)
+        if self.__class__ is textmemo:
             self._update(args,dict)
 
 
@@ -34,7 +52,7 @@ class indexentry(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(indexentry,self)._update(args,kwargs)
+        super(textmemo,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -42,7 +60,7 @@ class indexentry(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(indexentry,kwargs)
+            self._complainaboutunusedargs(textmemo,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -50,13 +68,12 @@ class indexentry(BaseProtogenClass):
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_filename.writetobuffer(buf)
-        self.__field_size.writetobuffer(buf)
-        try: self.__field_date
+        self.__field_text.writetobuffer(buf)
+        try: self.__field_dunno
         except:
-            self.__field_date=UINT(**{'sizeinbytes': 4, 'default': 0})
-        self.__field_date.writetobuffer(buf)
-        self.__field_type.writetobuffer(buf)
+            self.__field_dunno=UINT(**{'sizeinbytes': 4, 'default' : 0x1000000})
+        self.__field_dunno.writetobuffer(buf)
+        self.__field_memotime.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -65,95 +82,78 @@ class indexentry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_filename=USTRING(**{'sizeinbytes': 256, 'encoding': PHONE_ENCODING,                 'raiseonunterminatedread': False,                 'raiseontruncate': False })
-        self.__field_filename.readfrombuffer(buf)
-        self.__field_size=UINT(**{'sizeinbytes': 4})
-        self.__field_size.readfrombuffer(buf)
-        self.__field_date=UINT(**{'sizeinbytes': 4, 'default': 0})
-        self.__field_date.readfrombuffer(buf)
-        self.__field_type=UINT(**{'sizeinbytes': 4})
-        self.__field_type.readfrombuffer(buf)
+        self.__field_text=USTRING(**{'sizeinbytes': 304, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+        self.__field_text.readfrombuffer(buf)
+        self.__field_dunno=UINT(**{'sizeinbytes': 4, 'default' : 0x1000000})
+        self.__field_dunno.readfrombuffer(buf)
+        self.__field_memotime=LGCALDATE(**{'sizeinbytes': 4})
+        self.__field_memotime.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
-    def __getfield_filename(self):
-        return self.__field_filename.getvalue()
+    def __getfield_text(self):
+        return self.__field_text.getvalue()
 
-    def __setfield_filename(self, value):
+    def __setfield_text(self, value):
         if isinstance(value,USTRING):
-            self.__field_filename=value
+            self.__field_text=value
         else:
-            self.__field_filename=USTRING(value,**{'sizeinbytes': 256, 'encoding': PHONE_ENCODING,                 'raiseonunterminatedread': False,                 'raiseontruncate': False })
+            self.__field_text=USTRING(value,**{'sizeinbytes': 304, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
 
-    def __delfield_filename(self): del self.__field_filename
+    def __delfield_text(self): del self.__field_text
 
-    filename=property(__getfield_filename, __setfield_filename, __delfield_filename, "full pathname")
+    text=property(__getfield_text, __setfield_text, __delfield_text, None)
 
-    def __getfield_size(self):
-        return self.__field_size.getvalue()
-
-    def __setfield_size(self, value):
-        if isinstance(value,UINT):
-            self.__field_size=value
-        else:
-            self.__field_size=UINT(value,**{'sizeinbytes': 4})
-
-    def __delfield_size(self): del self.__field_size
-
-    size=property(__getfield_size, __setfield_size, __delfield_size, None)
-
-    def __getfield_date(self):
-        try: self.__field_date
+    def __getfield_dunno(self):
+        try: self.__field_dunno
         except:
-            self.__field_date=UINT(**{'sizeinbytes': 4, 'default': 0})
-        return self.__field_date.getvalue()
+            self.__field_dunno=UINT(**{'sizeinbytes': 4, 'default' : 0x1000000})
+        return self.__field_dunno.getvalue()
 
-    def __setfield_date(self, value):
+    def __setfield_dunno(self, value):
         if isinstance(value,UINT):
-            self.__field_date=value
+            self.__field_dunno=value
         else:
-            self.__field_date=UINT(value,**{'sizeinbytes': 4, 'default': 0})
+            self.__field_dunno=UINT(value,**{'sizeinbytes': 4, 'default' : 0x1000000})
 
-    def __delfield_date(self): del self.__field_date
+    def __delfield_dunno(self): del self.__field_dunno
 
-    date=property(__getfield_date, __setfield_date, __delfield_date, None)
+    dunno=property(__getfield_dunno, __setfield_dunno, __delfield_dunno, None)
 
-    def __getfield_type(self):
-        return self.__field_type.getvalue()
+    def __getfield_memotime(self):
+        return self.__field_memotime.getvalue()
 
-    def __setfield_type(self, value):
-        if isinstance(value,UINT):
-            self.__field_type=value
+    def __setfield_memotime(self, value):
+        if isinstance(value,LGCALDATE):
+            self.__field_memotime=value
         else:
-            self.__field_type=UINT(value,**{'sizeinbytes': 4})
+            self.__field_memotime=LGCALDATE(value,**{'sizeinbytes': 4})
 
-    def __delfield_type(self): del self.__field_type
+    def __delfield_memotime(self): del self.__field_memotime
 
-    type=property(__getfield_type, __setfield_type, __delfield_type, None)
+    memotime=property(__getfield_memotime, __setfield_memotime, __delfield_memotime, None)
 
     def iscontainer(self):
         return True
 
     def containerelements(self):
-        yield ('filename', self.__field_filename, "full pathname")
-        yield ('size', self.__field_size, None)
-        yield ('date', self.__field_date, None)
-        yield ('type', self.__field_type, None)
+        yield ('text', self.__field_text, None)
+        yield ('dunno', self.__field_dunno, None)
+        yield ('memotime', self.__field_memotime, None)
 
 
 
 
-class indexfile(BaseProtogenClass):
-    "Used for tracking wallpaper and ringtones"
-    __fields=['items']
+class textmemofile(BaseProtogenClass):
+    __fields=['itemcount', 'items']
 
     def __init__(self, *args, **kwargs):
         dict={}
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(indexfile,self).__init__(**dict)
-        if self.__class__ is indexfile:
+        super(textmemofile,self).__init__(**dict)
+        if self.__class__ is textmemofile:
             self._update(args,dict)
 
 
@@ -162,7 +162,7 @@ class indexfile(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(indexfile,self)._update(args,kwargs)
+        super(textmemofile,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -170,21 +170,18 @@ class indexfile(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(indexfile,kwargs)
-        if len(args):
-            dict2={'elementclass': indexentry, 'createdefault': True}
-            dict2.update(kwargs)
-            kwargs=dict2
-            self.__field_items=LIST(*args,**dict2)
+            self._complainaboutunusedargs(textmemofile,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_itemcount.writetobuffer(buf)
         try: self.__field_items
         except:
-            self.__field_items=LIST(**{'elementclass': indexentry, 'createdefault': True})
+            self.__field_items=LIST(**{ 'elementclass': textmemo })
         self.__field_items.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -194,22 +191,37 @@ class indexfile(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_items=LIST(**{'elementclass': indexentry, 'createdefault': True})
+        self.__field_itemcount=UINT(**{'sizeinbytes': 4})
+        self.__field_itemcount.readfrombuffer(buf)
+        self.__field_items=LIST(**{ 'elementclass': textmemo })
         self.__field_items.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
+    def __getfield_itemcount(self):
+        return self.__field_itemcount.getvalue()
+
+    def __setfield_itemcount(self, value):
+        if isinstance(value,UINT):
+            self.__field_itemcount=value
+        else:
+            self.__field_itemcount=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_itemcount(self): del self.__field_itemcount
+
+    itemcount=property(__getfield_itemcount, __setfield_itemcount, __delfield_itemcount, None)
+
     def __getfield_items(self):
         try: self.__field_items
         except:
-            self.__field_items=LIST(**{'elementclass': indexentry, 'createdefault': True})
+            self.__field_items=LIST(**{ 'elementclass': textmemo })
         return self.__field_items.getvalue()
 
     def __setfield_items(self, value):
         if isinstance(value,LIST):
             self.__field_items=value
         else:
-            self.__field_items=LIST(value,**{'elementclass': indexentry, 'createdefault': True})
+            self.__field_items=LIST(value,**{ 'elementclass': textmemo })
 
     def __delfield_items(self): del self.__field_items
 
@@ -219,6 +231,7 @@ class indexfile(BaseProtogenClass):
         return True
 
     def containerelements(self):
+        yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
 
 
