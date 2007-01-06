@@ -28,14 +28,6 @@ import common
 ###  Enhanced HTML Widget
 ###
 
-##_basefonts=[wx.html.HTML_FONT_SIZE_1, wx.html.HTML_FONT_SIZE_2,
-##wx.html.HTML_FONT_SIZE_3, wx.html.HTML_FONT_SIZE_4,
-##wx.html.HTML_FONT_SIZE_5, wx.html.HTML_FONT_SIZE_6,
-##wx.html.HTML_FONT_SIZE_7 ]
-##
-##def getbasefontsizes(scale=1.0):
-##    return [int(scale*sz) for sz in _basefonts]
-
 class HTMLWindow(wx.html.HtmlWindow):
     """BitPim customised HTML Window
 
@@ -51,10 +43,8 @@ class HTMLWindow(wx.html.HtmlWindow):
         self.thetext=""
         self._normal_font_size=max(wx.NORMAL_FONT.GetPointSize(), 10)
         self.SetFontScale(relsize)
-##        print 'HTML_FONT_SIZE_3',_basefonts[2],'normal font',self._normal_font_size
 
     def SetFontScale(self, scale):
-##        self.SetFonts("", "", getbasefontsizes(scale))
         self.SetStandardFonts(int(scale*self._normal_font_size), '', '')
         # the html widget clears itself if you set the scale
         if len(self.thetext):
