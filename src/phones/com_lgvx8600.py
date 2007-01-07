@@ -17,14 +17,14 @@ the VX-8500
 # BitPim modules
 import common
 import com_lgvx8500
-import p_lgvx8500
+import p_lgvx8600
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8500.Phone
 class Phone(parentphone):
     desc="LG-VX8600"
 
-    protocolclass=p_lgvx8500
+    protocolclass=p_lgvx8600
     serialsname='lgvx8600'
 
     my_model='VX8600'
@@ -64,7 +64,7 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-##        ('call_history', 'read', None),# all call history list reading
+        ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None),         # all SMS list reading
         ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
