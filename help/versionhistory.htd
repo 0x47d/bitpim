@@ -5,6 +5,10 @@
       <li><p>New phone support: <B>SCP-2400</B>.
       <li><p>Bug fix: Calendar Import Preset does not adjust dates.
       <li><p>Help pages update.
+      <li><p>Bug fix: <B>LG VX-8600</B> Call History feature.
+      <li><p>Additional support features for <B>LG VX-9900</B>.
+      <li><p>Bug fix: Added the "Secret" field to the Phone Entry Editor Dialog.
+      <li><p>Bug fix: Print preview crashed BitPim.
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>
