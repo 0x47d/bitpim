@@ -21,6 +21,7 @@ import wx.html
 
 # my modules
 import guihelper
+import guiwidgets
 import fixedwxpTag
 import common
 
