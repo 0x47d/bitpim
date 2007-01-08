@@ -1150,15 +1150,13 @@ class NameEditor(DirtyUIBase):
                 res[name]=widget.GetValue()
         return res
 
-# StorageEditor-----------------------------------------------------------------
-class StorageEditor(DirtyUIBase):
+# MiscEditor-----------------------------------------------------------------
+class MiscEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
-        super(StorageEditor, self).__init__(parent)
-        vs=wx.StaticBoxSizer(field_color.build_color_field(self,
-                                                           wx.StaticBox,
-                                                           (self, -1, "Storage Details"),
-                                                           'storage'),
+        super(MiscEditor, self).__init__(parent)
+        vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Misc Details"),
                              wx.VERTICAL)
+        # storage field
         hs=wx.BoxSizer(wx.HORIZONTAL)
         hs.Add(field_color.build_color_field(self, wx.StaticText,
                                              (self, -1, "Storage Option:"),
@@ -1166,25 +1164,32 @@ class StorageEditor(DirtyUIBase):
                0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self._storage=wx.ComboBox(self, -1, 'Phone', choices=["Phone", "SIM"],
                                   style=wx.CB_READONLY)
+        wx.EVT_COMBOBOX(self, self._storage.GetId(), self.OnDirtyUI)
         hs.Add(self._storage, 0, wx.EXPAND|wx.LEFT, 5)
         vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
+        # secret field
+        self._secret=field_color.build_color_field(self, wx.CheckBox,
+                                                   (self, -1,
+                                                    'This entry is private/secret'),
+                                                   'secret')
+
+        wx.EVT_CHECKBOX(self, self._secret.GetId(), self.OnDirtyUI)
+        vs.Add(self._secret, 0, wx.EXPAND|wx.ALL, 5)
+        # all done
         self.SetSizer(vs)
         vs.Fit(self)
 
     def Set(self, data):
-        _value=False
-        for d in data.get('flags', []):
-            if d.has_key('sim'):
-                _value=d['sim']
-                break
-        if _value:
-            _choice='SIM'
-        else:
-            _choice='Phone'
-        self._storage.SetValue(_choice)
+        self._storage.SetValue(data.get('sim', False) and 'SIM' or 'Phone')
+        self._secret.SetValue(data.get('secret', False))
 
     def Get(self):
-        return { 'flags': [{'sim': self._storage.GetValue()=='SIM' }]}
+        _res={}
+        if self._storage.GetValue()=='SIM':
+            _res['sim']=True
+        if self._secret.GetValue():
+            _res['secret']=True
+        return _res
 
 # EditorManager-----------------------------------------------------------------
 class EditorManager(fixedscrolledpanel.wxScrolledPanel):
@@ -1503,7 +1508,7 @@ class Editor(wx.Dialog):
         ("Categories", "categories", CategoryEditor),
         ("Wallpapers", "wallpapers", WallpaperEditor),
         ("Ringtones", "ringtones", RingtoneEditor),
-        ("Storage", None, StorageEditor),
+        ("Misc", 'flags', MiscEditor),
         ]
 
     def __init__(self, parent, data, title="Edit PhoneBook Entry",
@@ -1564,7 +1569,7 @@ class Editor(wx.Dialog):
         for name,key,klass in self.tabsfactory:
             widget=EditorManager(self.nb, klass)
             nb.AddPage(widget,name)
-            if key==keytoopenon:
+            if key==keytoopenon or keytoopenon in key:
                 nb.SetSelection(len(self.tabs))
             self.tabs.append(widget)
         # populate the data

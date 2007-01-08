@@ -215,12 +215,11 @@ def formatnumber(number):
         return phonenumber.format(number['number'])
     return "%s [%d]" % (phonenumber.format(number['number']), sd)
 
-def formatstorage(flags):
-    for l in flags:
-        if l.has_key('sim'):
-            if l['sim']:
-                return 'SIM'
-    return ''
+def formatstorage(flag):
+    return flag.get('sim', False) and 'SIM' or ''
+
+def formatsecret(flag):
+    return flag.get('secret', False) and 'True' or ''
 
 # this is specified here as a list so that we can get the
 # keys in the order below for the settings UI (alpha sorting
@@ -288,8 +287,8 @@ _getdatalist=[
 
     "Wallpaper", ("wallpapers", 0, None, "wallpaper", True),
 
-    "Secret", ("flags", 0, ("secret", True), "secret", True),
-    "Storage", ("flags", None, None, formatstorage, True),
+    "Secret", ("flags", 0, ("secret", True), formatsecret, True),
+    "Storage", ("flags", 0,('sim', True), formatstorage, True),
     "Memo", ("memos", 0, None, "memo", True),
     "Memo2", ("memos", 1, None, "memo", True),
     "Memo3", ("memos", 2, None, "memo", True),
