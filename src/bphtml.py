@@ -21,7 +21,6 @@ import wx.html
 
 # my modules
 import guihelper
-import guiwidgets
 import fixedwxpTag
 import common
 
@@ -353,7 +352,7 @@ class HtmlEasyPrinting:
             assert False, "preview problem"
             return
         self.frame=wx.PreviewFrame(preview, self.parent, "Print Preview")
-        guiwidgets.set_size("PrintPreview", self.frame, screenpct=90, aspect=0.58)
+        self.guiwidgets.set_size("PrintPreview", self.frame, screenpct=90, aspect=0.58)
         wx.EVT_CLOSE(self.frame, self.OnPreviewClose)
         self.frame.Initialize()
         # self.frame.SetPosition(self.parent.GetPosition())
@@ -439,7 +438,7 @@ class HtmlEasyPrinting:
         self.margins=[tl[1],br[1],tl[0],br[0]]
 
     def OnPreviewClose(self, event):
-        guiwidgets.save_size("PrintPreview", self.frame.GetRect())
+        self.guiwidgets.save_size("PrintPreview", self.frame.GetRect())
         event.Skip()
 
 # scaling factor for the various font sizes
