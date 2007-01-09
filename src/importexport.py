@@ -21,7 +21,7 @@ import wx.grid
 import wx.html
 
 # Others
-from DSV import DSV
+from thirdparty import DSV
 
 # My modules
 import common

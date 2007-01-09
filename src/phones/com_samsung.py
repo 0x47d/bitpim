@@ -16,7 +16,7 @@ import re
 import time
 
 # site-packages
-from DSV import DSV
+from thirdparty import DSV
 
 # BitPim modules
 import bpcalendar
