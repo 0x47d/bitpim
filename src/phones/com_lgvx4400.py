@@ -383,9 +383,12 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 else:
                     dupecheck[res.entry.serial1]=entry
                 self.progress(i, numentries, res.entry.name)
-            except:
+            except common.PhoneBookBusyException:
+                raise
+            except Exception, e:
                 # Something's wrong with this entry, log it and skip
                 self.log('Failed to read entry %d'%i)
+                self.log('Exception %s raised'%`e`)
                 if __debug__:
                     raise
             #### Advance to next entry
