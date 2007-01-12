@@ -525,17 +525,6 @@ class CategoryEditor(pb_editor.DirtyUIBase):
 #------------------------------------------------------------------------------
 class Editor(wx.Dialog):
 
-    # ids for the various controls
-    ID_PREV=1
-    ID_NEXT=2
-    ID_ADD=3
-    ID_DELETE=4
-    ID_CLOSE=5
-    ID_LISTBOX=6
-    ID_SAVE=11
-    ID_HELP=12
-    ID_REVERT=13
-
     # results on asking if the user wants to change the original (repeating) entry, just
     # this instance, or cancel
     ANSWER_ORIGINAL=1
@@ -589,8 +578,8 @@ class Editor(wx.Dialog):
         # overall container
         vbs=wx.BoxSizer(wx.VERTICAL)
         
-        self._prev_btn=wx.BitmapButton(self, self.ID_PREV, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Previous Day")
-        self._next_btn=wx.BitmapButton(self, self.ID_NEXT, wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Day")
+        self._prev_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_LEFT), name="Previous Day")
+        self._next_btn=wx.BitmapButton(self, wx.NewId(), wx.ArtProvider.GetBitmap(guihelper.ART_ARROW_RIGHT), name="Next Day")
         self.title=wx.StaticText(self, -1, "Date here", style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
 
         # top row container 
@@ -601,8 +590,8 @@ class Editor(wx.Dialog):
         vbs.Add(hbs1, 0, wx.TOP|wx.EXPAND, 10)
 
         # list box and two buttons below
-        self.listbox=wx.ListBox(self, self.ID_LISTBOX, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        self._add_btn=wx.Button(self, self.ID_ADD, "New")
+        self.listbox=wx.ListBox(self, wx.NewId(), style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+        self._add_btn=wx.Button(self, wx.ID_NEW)
         hbs2=wx.BoxSizer(wx.HORIZONTAL)
         hbs2.Add(self._add_btn, 1, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, border=5)
         
@@ -624,9 +613,9 @@ class Editor(wx.Dialog):
                 widgets_list.append((self._widgets[i].static_box, color_name))
             
         # buttons below fields
-        self._delete_btn=wx.Button(self, self.ID_DELETE, "Delete")
-        self._revert_btn=wx.Button(self, self.ID_REVERT, "Revert")
-        self._save_btn=wx.Button(self, self.ID_SAVE, "Save")
+        self._delete_btn=wx.Button(self, wx.ID_DELETE)
+        self._revert_btn=wx.Button(self, wx.ID_REVERT_TO_SAVED)
+        self._save_btn=wx.Button(self, wx.ID_SAVE)
 
         hbs4=wx.BoxSizer(wx.HORIZONTAL)
         hbs4.Add(self._delete_btn, 1, wx.ALIGN_CENTRE|wx.LEFT, border=10)
@@ -653,14 +642,14 @@ class Editor(wx.Dialog):
         # delete is disabled until an item is selected
         self._delete_btn.Enable(False)
 
-        wx.EVT_LISTBOX(self, self.ID_LISTBOX, self.OnListBoxItem)
-        wx.EVT_LISTBOX_DCLICK(self, self.ID_LISTBOX, self.OnListBoxItem)
-        wx.EVT_BUTTON(self, self.ID_SAVE, self.OnSaveButton)
-        wx.EVT_BUTTON(self, self.ID_REVERT, self.OnRevertButton)
-        wx.EVT_BUTTON(self, self.ID_ADD, self.OnNewButton)
-        wx.EVT_BUTTON(self, self.ID_DELETE, self.OnDeleteButton)
-        wx.EVT_BUTTON(self, self.ID_PREV, self.OnPrevDayButton)
-        wx.EVT_BUTTON(self, self.ID_NEXT, self.OnNextDayButton)
+        wx.EVT_LISTBOX(self, self.listbox.GetId(), self.OnListBoxItem)
+        wx.EVT_LISTBOX_DCLICK(self, self.listbox.GetId(), self.OnListBoxItem)
+        wx.EVT_BUTTON(self, wx.ID_SAVE, self.OnSaveButton)
+        wx.EVT_BUTTON(self, wx.ID_REVERT_TO_SAVED, self.OnRevertButton)
+        wx.EVT_BUTTON(self, wx.ID_NEW, self.OnNewButton)
+        wx.EVT_BUTTON(self, wx.ID_DELETE, self.OnDeleteButton)
+        wx.EVT_BUTTON(self, self._prev_btn.GetId(), self.OnPrevDayButton)
+        wx.EVT_BUTTON(self, self._next_btn.GetId(), self.OnNextDayButton)
         # callbacks for the standard buttons
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
@@ -682,7 +671,8 @@ class Editor(wx.Dialog):
     def OnListBoxItem(self, evt=None):
         """Callback for when user clicks on an event in the listbox"""
         self._current_entry=self.getcurrententry()
-        self.updatefields(self._current_entry)
+        if self._current_entry:
+            self.updatefields(self._current_entry)
         self.setdirty(False)
         self._delete_btn.Enable(True)
 
@@ -783,7 +773,8 @@ class Editor(wx.Dialog):
     
     def OnRevertButton(self, evt):
         # We basically pretend the user has selected the item in the listbox again (which they
-        # can't actually do as it is disabled)
+        # can't actually do as it is disabled
+        self.listbox.Enable()
         self.OnListBoxItem()
 
     def OnNewButton(self, evt):

@@ -299,9 +299,9 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
         self._memo_editor_w=self._w[2]
         # the bottom buttons
         hbs1=wx.BoxSizer(wx.HORIZONTAL)
-        self._save_btn=wx.Button(self, wx.NewId(), "Save")
-        self._revert_btn=wx.Button(self, wx.NewId(), "Revert")
-        help_btn=wx.Button(self, wx.ID_HELP, "Help")
+        self._save_btn=wx.Button(self, wx.ID_SAVE)
+        self._revert_btn=wx.Button(self, wx.ID_REVERT_TO_SAVED)
+        help_btn=wx.Button(self, wx.ID_HELP)
         hbs1.Add(self._save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs1.Add(help_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs1.Add(self._revert_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -516,8 +516,11 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
 
     def _OnRevert(self, evt):
         self.ignoredirty=True
+        # Enable the list to get the selection
+        self._item_list.Enable()
         sel_idx=self._item_list.GetSelection()
-        k=self._item_list.GetClientData(sel_idx)
-        self._populate_each(k)
+        if sel_idx!=wx.NOT_FOUND:
+            k=self._item_list.GetClientData(sel_idx)
+            self._populate_each(k)
         self.ignoredirty=False
         self.setdirty(False)

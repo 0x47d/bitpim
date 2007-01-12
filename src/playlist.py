@@ -168,9 +168,9 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
         hbs.Add(hbs1, 3, wx.EXPAND|wx.ALL, 5)
         # the bottom buttons
         hbs1=wx.BoxSizer(wx.HORIZONTAL)
-        self._save_btn=wx.Button(self, wx.NewId(), "Save")
-        self._revert_btn=wx.Button(self, wx.NewId(), "Revert")
-        help_btn=wx.Button(self, wx.ID_HELP, "Help")
+        self._save_btn=wx.Button(self, wx.ID_SAVE)
+        self._revert_btn=wx.Button(self, wx.ID_REVERT_TO_SAVED)
+        help_btn=wx.Button(self, wx.ID_HELP)
         hbs1.Add(self._save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs1.Add(help_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs1.Add(self._revert_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -377,12 +377,13 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
         self.setdirty(False)
 
     def OnRevert(self, _):
+        self._item_list.Enable()
         _pl_idx=self._item_list_w.GetNextItem(-1, state=wx.LIST_STATE_SELECTED)
         # discard all changes
         _res={}
         self.getfromfs(_res)
         self.populate(_res)
-        if _pl_idx!=-1:
+        if _pl_idx!=wx.NOT_FOUND:
             self._item_list_w.SetItemState(_pl_idx, wx.LIST_STATE_SELECTED,
                                            wx.LIST_MASK_STATE)
         self.setdirty(False)

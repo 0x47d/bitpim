@@ -9,6 +9,8 @@
       <li><p>Additional support features for <B>LG VX-9900</B>.
       <li><p>Bug fix: Added the "Secret" field to the Phone Entry Editor Dialog.
       <li><p>Bug fix: Print preview crashed BitPim.
+      <li><p>Bug fix: Revert-to-saved not working in GTK.
+      <li><p>Bug fix: Switched to OS native buttons in dialogs.
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>

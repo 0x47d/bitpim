@@ -169,7 +169,7 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
         vbs1.Add(self.builtin_canned_list, 1, wx.EXPAND|wx.ALL, 5)
         static_bs1.Add(vbs1, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(static_bs1, 1, wx.EXPAND|wx.ALL, 5)
-        self.save_btn=wx.Button(self, wx.NewId(), 'Save')
+        self.save_btn=wx.Button(self, wx.ID_SAVE)
         vbs.Add(self.save_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self.list_widget=SMSList(self._main_window, self._parent, self)
         wx.EVT_BUTTON(self, self.save_btn.GetId(), self.OnSaveCannedMsg)

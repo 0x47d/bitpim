@@ -176,12 +176,12 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         vbs.Add(hbs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
         hbs=wx.BoxSizer(wx.HORIZONTAL)
-        self._save_btn=wx.Button(self, wx.ID_SAVE, 'Save')
+        self._save_btn=wx.Button(self, wx.ID_SAVE)
         hbs.Add(self._save_btn, 0,
                 wx.ALIGN_CENTRE|wx.ALL, 5)
-        hbs.Add(wx.Button(self, wx.ID_HELP, 'Help'), 0,
+        hbs.Add(wx.Button(self, wx.ID_HELP), 0,
                 wx.ALIGN_CENTRE|wx.ALL, 5)
-        self._revert_btn=wx.Button(self, wx.ID_REVERT, 'Revert')
+        self._revert_btn=wx.Button(self, wx.ID_REVERT_TO_SAVED)
         hbs.Add(self._revert_btn, 0,
                 wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, wx.ID_SAVE, self._OnSave)
