@@ -300,6 +300,10 @@ class IntegrityCheckFailed(Exception): pass
 
 class Database:
 
+    def __del__(self):
+        # connections have to be closed now
+        self.connection.close(True)
+
     def __init__(self, filename):
         self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
