@@ -15,23 +15,11 @@ still being worked on.  URL(http://bitpim.org/papers/phonespecs/,How to get phon
 
 <tr>
 <td>Audiovox
-<td>CDM 8410
-<td>Kindly loaned by URL(http://www.ahcellular.com,A&amp;H Cellular) of Idaho.
-</tr>
-
-<tr>
-<td>Audiovox
 <td>CDM8900
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).  
 Unfortunately the internal software on this phone proved to be
-too fragile and the phone is not supported by BitPim.  
-</tr>
-
-<tr>
-<td>Audiovox
-<td>CDM8900
-<td>Kindly loaned by URL(http://www.ahcellular.com,A&amp;H Cellular) of Idaho
-in order to try and track down the fragility issues and work around them.
+too fragile and the phone is not supported by BitPim.  The phone is also bricked
+after having been replaced 3 times in prior brickings!
 </tr>
 
 <tr>
@@ -82,6 +70,13 @@ in order to try and track down the fragility issues and work around them.
 <td>VX-7000
 <td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
 </tr>
+
+<tr>
+<td>LG
+<td>VX-8000
+<td>Kindly loaned by URL(misc-rpiwireless.htm,RPI Wireless).
+</tr>
+
 
 <tr>
 <td>Motorola
