@@ -398,8 +398,8 @@ except:  pass
 try:
      import encodings.utf_16
      _boms.append( (codecs.BOM_UTF16, "utf_16") )
-     _boms.append( (codecs.BOM_UTF16_BE, "utf_16") )
-     _boms.append( (codecs.BOM_UTF16_LE, "utf_16") )
+     _boms.append( (codecs.BOM_UTF16_BE, "utf_16_be") )
+     _boms.append( (codecs.BOM_UTF16_LE, "utf_16_le") )
 except:  pass
 
 # 8 bit
@@ -407,6 +407,12 @@ try:
      import encodings.utf_8
      _boms.append( (codecs.BOM_UTF8, "utf_8") )
 except: pass
+
+# Work arounds for the idiots at Apple that decided not to even
+# include BOMs
+_boms.append( ("\0B\0E\0G\0I\0N\0:\0V\0C\0A\0R\0D", "utf_16_be") )
+_boms.append( ("B\0E\0G\0I\0N\0:\0V\0C\0A\0R\0D\0", "utf_16_le") )
+
 
 # NB: the 32 bit and 64 bit versions have the BOM constants defined in Py 2.3
 # but no corresponding encodings module.  They are here for completeness.

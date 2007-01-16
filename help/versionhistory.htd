@@ -5,6 +5,7 @@
       <li><p>New phone support: <B>SCP-2400</B>.
       <li><p>Bug fix: Calendar Import Preset does not adjust dates.
       <li><p>Help pages update.
+      <li><p>VCard import now detects Apple's files that are in Unicode format but without byte order markers
       <li><p>Bug fix: <B>LG VX-8600</B> Call History feature.
       <li><p>Additional support features for <B>LG VX-9900</B>.
       <li><p>Bug fix: Added the "Secret" field to the Phone Entry Editor Dialog.
