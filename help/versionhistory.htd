@@ -12,7 +12,9 @@
       <li><p>Bug fix: Print preview crashed BitPim.
       <li><p>Bug fix: Revert-to-saved not working in GTK.
       <li><p>Bug fix: Switched to OS native buttons in dialogs.
-      <li><p>Bug fix: <B>LG VX</B>Busy phonebook crashed BitPim.
+      <li><p>Bug fix: <B>LG VX</B> Busy phonebook crashed BitPim.
+      <li><p>New phone support: <B>LG VX-5300</B>
+      <li><p>New feature: Help menu item that takes users directly to the Help page of the current phone model (if available).
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>

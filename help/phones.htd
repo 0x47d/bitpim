@@ -64,6 +64,10 @@ BEGIN_TOC
         TOCITEM_1(Cables,phone-lgvx5200-cables.htm)
         TOCITEM_1(Notes,phone-lgvx5200-notes.htm)
         ENDTOC_1
+    TOCITEM_0(LG VX-5300,phone-lgvx5300.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-lgvx5300-notes.htm)
+        ENDTOC_1
     TOCITEM_0(LG VX-6000,phone-lgvx6000.htm)
         TOC_1
         TOCITEM_1(Cables,lg6000-cables.htm)

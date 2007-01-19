@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">353</long>
+    <long name="name_counter">356</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">284</long>
+    <long name="doc_count">286</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
     <string name="quote-symbol">"\"</string>
     <string name="custom-preprocessor-options">""</string>
-    <double name="version">1.1800</double>
+    <double name="version">1.19</double>
     <string name="page-header">"&lt;HTML&gt;
 &lt;head&gt;&lt;title&gt;_HELP_TITLE&lt;/title&gt;&lt;/head&gt;
 
@@ -1529,7 +1529,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGC2000"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1583,7 +1583,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGG4015"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1655,7 +1655,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGPM225"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1691,7 +1691,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX3200"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1763,7 +1763,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX4400"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1835,7 +1835,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX4500"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1907,7 +1907,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX4650"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1960,7 +1960,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX5200"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -1999,6 +1999,42 @@
             </document>
           </document>
           <document>
+            <string name="title">"LG VX-5300"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgvx5300.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"18/1/2007"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_PHONE_LGVX5300"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx5300-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"18/1/2007"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
             <string name="title">"LG VX-6000"</string>
             <string name="type">"text-editor-document"</string>
             <string name="filename">"phone-lgvx6000.htd"</string>
@@ -2012,7 +2048,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX6000"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2084,7 +2120,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX6100"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2156,7 +2192,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX7000"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2210,7 +2246,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX8000"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2264,7 +2300,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX8100"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2336,7 +2372,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX8300"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2408,7 +2444,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX8500"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2480,7 +2516,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX8600"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2552,7 +2588,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX9800"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2624,7 +2660,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_LGVX9900"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2696,7 +2732,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOE815"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2732,7 +2768,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOE815M"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2768,7 +2804,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOV3C"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2804,7 +2840,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOV3CM"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2840,7 +2876,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOV710"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2912,7 +2948,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_MOTOV710M"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -2948,7 +2984,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_SAMSUNGSCHA930"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -3002,7 +3038,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_SAMSUNGSCHA950"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -3056,7 +3092,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_SAMSUNGOTHERS"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -3128,7 +3164,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_SANYOOTHERS"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
@@ -3200,7 +3236,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_TOSHIBAVM4050"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
