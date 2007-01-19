@@ -26,6 +26,7 @@ import p_brew
 import com_brew
 import com_phone
 import com_lg
+import helpids
 import prototypes
 import fileinfo
 import call_history
@@ -36,6 +37,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     "Talk to the LG VX4400 cell phone"
 
     desc="LG-VX4400"
+    helpid=helpids.ID_PHONE_LGVX4400
     wallpaperindexfilename="dloadindex/brewImageIndex.map"
     ringerindexfilename="dloadindex/brewRingerIndex.map"
     protocolclass=p_lgvx4400

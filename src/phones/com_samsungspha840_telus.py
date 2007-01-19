@@ -66,6 +66,7 @@ import p_samsungspha840_telus
 import com_brew
 import com_phone
 import com_samsung_packet
+import helpids
 
 numbertypetab=('home','office','cell','pager','fax')
 
@@ -83,7 +84,7 @@ class Phone(parentphone):
     _cal_max_events_per_day=5
 
     desc="SPH-A840 (Telus)"
-
+    helpid=helpids.ID_PHONE_SAMSUNGOTHERS
     protocolclass=p_samsungspha840_telus
     serialsname='spha840T'
     

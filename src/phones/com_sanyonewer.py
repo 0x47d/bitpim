@@ -21,11 +21,11 @@ import com_phone
 import com_sanyo
 import com_sanyomedia
 import prototypes
-
+import helpids
 
 class Phone(com_sanyomedia.SanyoMedia,com_sanyo.Phone):
     "Talk to a Sanyo SCP-5500 style cell phone"
-
+    helpid=helpids.ID_PHONE_SANYOOTHERS
     builtinringtones=( 'None', 'Vibrate', 'Ringer & Voice', '', '', '', '', '', '', 
                        'Tone 1', 'Tone 2', 'Tone 3', 'Tone 4', 'Tone 5',
                        'Tone 6', 'Tone 7', 'Tone 8', '', '', '', '', '',

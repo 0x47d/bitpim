@@ -17,6 +17,7 @@ import common
 import com_lg
 import com_lgvx9800
 import p_lgvx9900
+import helpids
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx9800.Phone
@@ -24,6 +25,7 @@ class Phone(com_lg.LGUncountedIndexedMedia, parentphone):
     "Talk to the LG VX9900 cell phone"
 
     desc="LG-VX9900"
+    helpid=helpids.ID_PHONE_LGVX9900
     protocolclass=p_lgvx9900
     serialsname='lgvx9900'
     my_model='VX9900'

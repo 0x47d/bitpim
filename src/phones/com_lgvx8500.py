@@ -21,6 +21,7 @@ import datetime
 import common
 import com_brew
 import com_lgvx8300
+import helpids
 import fileinfo
 import p_lgvx8500
 import playlist
@@ -31,6 +32,7 @@ import t9editor
 parentphone=com_lgvx8300.Phone
 class Phone(parentphone):
     desc="LG-VX8500"
+    helpid=helpids.ID_PHONE_LGVX8500
 
     protocolclass=p_lgvx8500
     serialsname='lgvx8500'

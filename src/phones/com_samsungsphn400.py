@@ -20,6 +20,7 @@ import com_phone
 import prototypes
 import common
 import commport
+import helpids
 
 class N400CommandException(Exception):
     def __init__(self, errnum, str=None):
@@ -34,7 +35,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Samsung SPH-N400 cell phone"
 
     desc="SPH-N400"
-
+    helpid=helpids.ID_PHONE_SAMSUNGOTHERS
     MODEPHONEBOOK="modephonebook"
     
     protocolclass=p_samsungsphn400

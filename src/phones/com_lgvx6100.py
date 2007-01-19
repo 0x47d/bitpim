@@ -36,12 +36,13 @@ import com_phone
 import com_lg
 import prototypes
 import call_history
+import helpids
 
 class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX6100 cell phone"
 
     desc="LG-VX6100"
-
+    helpid=helpids.ID_PHONE_LGVX6100
     protocolclass=p_lgvx6100
     serialsname='lgvx6100'
 

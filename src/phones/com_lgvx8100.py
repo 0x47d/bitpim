@@ -37,6 +37,7 @@ import bpcalendar
 import call_history
 import sms
 import memo
+import helpids
 
 
 from prototypes import *
@@ -47,7 +48,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
     "Talk to the LG VX8100 cell phone"
 
     desc="LG-VX8100"
-
+    helpid=helpids.ID_PHONE_LGVX8100
     protocolclass=p_lgvx8100
     serialsname='lgvx8100'
 

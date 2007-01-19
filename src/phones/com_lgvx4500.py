@@ -26,13 +26,14 @@ import com_lgvx4400
 import com_brew
 import com_phone
 import com_lg
+import helpids
 import prototypes
 
 class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX4500 cell phone"
 
     desc="LG-VX4500"
-
+    helpid=helpids.ID_PHONE_LGVX4500
     protocolclass=p_lgvx4500
     serialsname='lgvx4500'
 

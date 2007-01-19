@@ -38,7 +38,7 @@ class Phone(com_lgvx4400.Phone):
     "Talk to the LG LX5450 cell phone"
 
     desc="LG-LX5450"
-
+    helpid=None
     protocolclass=p_lglx5450
     serialsname='lglx5450'
 

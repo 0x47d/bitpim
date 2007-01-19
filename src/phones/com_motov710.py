@@ -22,10 +22,12 @@ import fileinfo
 import nameparser
 import prototypes
 import p_motov710
+import helpids
 
 class Phone(com_moto.Phone):
     """ Talk to a Motorola V710 phone"""
     desc='Moto-V710'
+    helpid=helpids.ID_PHONE_MOTOV710
     protocolclass=p_motov710
     serialsname='motov710'
 

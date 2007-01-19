@@ -32,7 +32,7 @@ class Phone(com_lgvx4400.Phone):
     "Talk to the LG VI5225 cell phone"
 
     desc="LG-VI5225"
-
+    helpid=None
     protocolclass=p_lgvi5225
     serialsname='lgvi5225'
 

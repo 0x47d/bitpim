@@ -18,12 +18,13 @@ the VX-8500
 import common
 import com_lgvx8500
 import p_lgvx8600
+import helpids
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8500.Phone
 class Phone(parentphone):
     desc="LG-VX8600"
-
+    helpid=helpids.ID_PHONE_LGVX8600
     protocolclass=p_lgvx8600
     serialsname='lgvx8600'
 

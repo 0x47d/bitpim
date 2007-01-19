@@ -35,6 +35,7 @@ class Phone(com_lgpm225.Phone):
     "Talk to the LG LX325/PM325 cell phone"
 
     desc="LG PM325"
+    helpid=None
     protocolclass=p_lgpm325
     serialsname='lgpm325'
 

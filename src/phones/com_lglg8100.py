@@ -43,7 +43,7 @@ class Phone(com_lgvx8100.Phone):
     "Talk to the LG LG8100 cell phone (Telus)"
 
     desc="LG-LG8100"
-
+    helpid=None
     protocolclass=p_lglg8100
     serialsname='lglg8100'
 

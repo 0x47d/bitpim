@@ -806,6 +806,7 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
         menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
+        menu.Append(guihelper.ID_HELPPHONE, "Your &Phone", "Help on specific phonemodel")
         if version.vendor=='official':
             menu.AppendSeparator()
             menu.Append(guihelper.ID_HELP_UPDATE, "&Check for Update", "Check for any BitPim Update")
@@ -888,6 +889,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPSUPPORT, self.OnHelpSupport)
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
+        wx.EVT_MENU(self, guihelper.ID_HELPPHONE, self.OnHelpPhone)
         wx.EVT_MENU(self, guihelper.ID_EDITPHONEINFO, self.OnPhoneInfo)
         wx.EVT_MENU(self, guihelper.ID_EDITDETECT, self.OnDetectPhone)
         wx.EVT_MENU(self, guihelper.ID_AUTOSYNCSETTINGS, self.OnAutoSyncSettings)
@@ -939,6 +941,7 @@ class MainWindow(wx.Frame):
         wx.EVT_UPDATE_UI(self, guihelper.ID_EDITRENAME, self.tree.EditRenameUpdateUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWLOGDATA, self.tree.ViewLogDataUIEvent)
         wx.EVT_UPDATE_UI(self, guihelper.ID_VIEWFILESYSTEM, self.tree.ViewFileSystemUIEvent)
+        wx.EVT_UPDATE_UI(self, guihelper.ID_HELPPHONE, self.OnHelpPhoneUpdateUI)
 
         # Retrieve saved settings... Use 90% of screen if not specified
         guiwidgets.set_size("MainWin", self, screenpct=90)
@@ -1130,6 +1133,15 @@ class MainWindow(wx.Frame):
     def OnHelpTour(self, _=None):
         wx.GetApp().displayhelpid(helpids.ID_TOUR)
 
+    def OnHelpPhoneUpdateUI(self, event):
+        if self.phonemodule and hasattr(self.phonemodule.Phone, 'desc'):
+            event.SetText(self.phonemodule.Phone.desc)
+        else:
+            event.SetText('Phone')  
+        event.Enable(bool(hasattr(self.phonemodule.Phone, "helpid") and\
+                     self.phonemodule.Phone.helpid))
+    def OnHelpPhone(self, _):
+        wx.GetApp().displayhelpid(self.phonemodule.Phone.helpid)
     def DoCheckUpdate(self):
         s=update.check_update()
         if not len(s):

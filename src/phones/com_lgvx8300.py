@@ -36,12 +36,13 @@ import call_history
 import sms
 import memo
 import fileinfo
+import helpids
 
 class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
     "Talk to the LG VX8300 cell phone"
 
     desc="LG-VX8300"
-
+    helpid=helpids.ID_PHONE_LGVX8300
     protocolclass=p_lgvx8300
     serialsname='lgvx8300'
 

@@ -16,11 +16,13 @@ import bp_obex
 import common
 import com_motov710
 import p_motov710
+import helpids
 
 parentphone=com_motov710.Phone
 class Phone(parentphone):
     """ Talk to a Motorola V710 phone"""
     desc='Moto-V710m'
+    helpid=helpids.ID_PHONE_MOTOV710M
     protocolclass=p_motov710
     serialsname='motov710m'
     MODEOBEX='modeobex'

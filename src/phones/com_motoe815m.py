@@ -11,10 +11,12 @@
 
 # BitPim modules
 import com_motov710m
+import helpids
 
 parentphone=com_motov710m.Phone
 class Phone(parentphone):
     desc='Moto-E815m'
+    helpid=helpids.ID_PHONE_MOTOE815M
     serialsname='motoe815m'
 
 #------------------------------------------------------------------------------

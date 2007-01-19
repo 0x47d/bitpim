@@ -12,25 +12,15 @@
 # System Models
 
 # BitPim modules
-##import bpcalendar
-##import call_history
 import common
-##import commport
-##import com_brew
-##import com_phone
 import com_samsungscha950 as com_a950
-##import fileinfo
-##import memo
-##import nameparser
-##import prototypes
-##import pubsub
 import p_samsungscha950 as p_a950
 import p_samsungscha930 as p_a930
-##import sqlite2_file
-##import sms
+import helpids
 
 class Phone(com_a950.Phone):
     desc='SCH-A930'
+    helpid=helpids.ID_PHONE_SAMSUNGSCHA930
     protocolclass=p_a930
     serialsname='scha930'
 

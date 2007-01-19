@@ -32,6 +32,7 @@ import p_samsungscha870 as p_a870
 
 class Phone(com_a950.Phone):
     desc='SCH-A870'
+    helpid=None
     protocolclass=p_a870
     serialsname='scha870'
 

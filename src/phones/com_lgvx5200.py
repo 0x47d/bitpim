@@ -37,12 +37,13 @@ import bpcalendar
 import call_history
 import sms
 import memo
+import helpids
 
 class Phone(com_lgvx8100.Phone):
     "Talk to the LG VX5200 cell phone"
 
     desc="LG-VX5200"
-
+    helpid=helpids.ID_PHONE_LGVX5200
     protocolclass=p_lgvx5200
     serialsname='lgvx5200'
 

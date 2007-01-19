@@ -33,7 +33,7 @@ class Phone(com_lg.LGDirectoryMedia,com_lgvx4400.Phone):
     "Talk to the LG VX4600 cell phone"
 
     desc="LG-VX4600"
-
+    helpid=None
     protocolclass=p_lgvx4600
     serialsname='lgvx4600'
 

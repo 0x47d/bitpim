@@ -21,6 +21,7 @@ import common
 import commport
 import com_gsm
 import guihelper
+import helpids
 import memo
 import nameparser
 import p_lgg4015
@@ -31,6 +32,7 @@ class Phone(com_gsm.Phone):
     """ Talk to the LG G4015 Phone"""
 
     desc='LG-G4015'
+    helpid=helpids.ID_PHONE_LGG4015
     protocolclass=p_lgg4015
     serialsname='lgg4015'
 

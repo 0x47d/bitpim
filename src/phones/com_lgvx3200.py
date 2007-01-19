@@ -23,6 +23,7 @@ import re
 # my modules
 import common
 import copy
+import helpids
 import p_lgvx3200
 import com_lgvx4400
 import com_brew
@@ -39,6 +40,7 @@ class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX3200 cell phone"
 
     desc="LG-VX3200"
+    helpid=helpids.ID_PHONE_LGVX3200
 
     wallpaperindexfilename="download/dloadindex/brewImageIndex.map"
     ringerindexfilename="download/dloadindex/brewRingerIndex.map"

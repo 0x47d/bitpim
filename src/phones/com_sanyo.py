@@ -27,6 +27,7 @@ import bpcalendar
 import call_history
 import sms
 import todo
+import helpids
 
 numbertypetab=( 'home', 'office', 'cell', 'pager',
                     'data', 'fax', 'none' )
@@ -1484,7 +1485,7 @@ class Profile(com_phone.Profile):
 class Phone(SanyoPhonebook,com_phone.Phone,com_brew.BrewProtocol):
     "Talk to a Sanyo Sprint Phone such as SCP-4900, SCP-5300, or SCP-8100"
     desc="Sanyo"
-    
+    helpid=helpids.ID_PHONE_SANYOOTHERS
     imagelocations=()
     
     ringtonelocations=()

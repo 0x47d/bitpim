@@ -34,6 +34,7 @@ class Phone(com_lgvx4400.Phone):
     "Talk to the LG 6190 cell phone"
 
     desc="LG 6190"
+    helpid=None
     protocolclass=p_lglg6190
     serialsname='lg6190'
 
@@ -471,7 +472,6 @@ class Phone(com_lgvx4400.Phone):
         except:
             pass
         return
-
 
 parentprofile=com_lgvx4400.Profile
 class Profile(parentprofile):

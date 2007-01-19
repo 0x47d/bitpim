@@ -14,10 +14,12 @@
 # BitPim modules
 import com_motov710
 import p_motov3c
+import helpids
 
 parentphone=com_motov710.Phone
 class Phone(parentphone):
     desc='Moto-V3c'
+    helpid=helpids.ID_PHONE_MOTOV3C
     serialsname='motov3c'
     protocolclass=p_motov3c
 

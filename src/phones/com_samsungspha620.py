@@ -23,6 +23,7 @@ import com_phone
 import com_samsung_packet
 import prototypes
 import fileinfo
+import helpids
 
 numbertypetab=('home','office','cell','pager','fax','none')
 
@@ -30,7 +31,7 @@ class Phone(com_samsung_packet.Phone):
     "Talk to a Samsung SPH-A620 phone"
 
     desc="SPH-A620"
-
+    helpid=helpids.ID_PHONE_SAMSUNGOTHERS
     protocolclass=p_samsungspha620
     serialsname='spha620'
 

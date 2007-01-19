@@ -33,9 +33,11 @@ import pubsub
 import p_samsungscha950
 import sqlite2_file
 import sms
+import helpids
 
 class Phone(com_phone.Phone, com_brew.BrewProtocol):
     desc='SCH-A950'
+    helpid=helpids.ID_PHONE_SAMSUNGSCHA950
     protocolclass=p_samsungscha950
     serialsname='scha950'
 

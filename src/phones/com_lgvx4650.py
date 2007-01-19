@@ -33,6 +33,7 @@ import com_brew
 import com_phone
 import com_lg
 import commport
+import helpids
 import memo
 import prototypes
 import sms
@@ -41,7 +42,7 @@ class Phone(com_lgvx4400.Phone):
     "Talk to the LG VX4650 cell phone"
 
     desc="LG-VX4650"
-
+    helpid=helpids.ID_PHONE_LGVX4650
     protocolclass=p_lgvx4650
     serialsname='lgvx4650'
 

@@ -22,11 +22,13 @@ import prototypes
 import commport
 import p_brew
 import p_toshibavm4050
+import helpids
 
 class Phone(com_phone.Phone, com_brew.BrewProtocol):
     "Talk to Toshiba VM4050 cell phone"
 
     desc="Toshiba VM4050"
+    helpid=helpids.ID_PHONE_TOSHIBAVM4050
     protocolclass=p_toshibavm4050
     serialsname='toshibavm4050'
     
