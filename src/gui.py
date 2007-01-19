@@ -7,7 +7,7 @@
 ###
 ### $Id$
 
-"""The main gui code for BitPim"""
+"""The main gui code for BitPim""" 
 
 # System modules
 import ConfigParser
