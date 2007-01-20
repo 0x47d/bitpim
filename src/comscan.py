@@ -378,6 +378,7 @@ def _comscanlinux(maxnum=9):
         ("/dev/cua", "Standard serial port", "serial"), 
         ("/dev/ttyUSB", "USB to serial convertor", "serial"),
         ("/dev/ttyACM", "USB modem", "modem"),
+	("/dev/rfcomm", "Bluetooth", "modem"),
         ("/dev/usb/ttyUSB", "USB to serial convertor", "serial"), 
         ("/dev/usb/tts/", "USB to serial convertor", "serial"),
         ("/dev/usb/acm/", "USB modem", "modem"),
