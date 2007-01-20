@@ -11,6 +11,9 @@
 	0701  CDMA Phone
 		01  Modem/Diagnostics Interface
 
+22b8 Motorola PCS
+	4902  GSM Razr V3r
+
 # USB to serial cables
 
 067b  Prolific Technology chip
