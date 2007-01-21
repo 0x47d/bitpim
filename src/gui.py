@@ -766,9 +766,6 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_EDITDELETEENTRY, "&Delete", "Delete currently selected entry")
         menu.Append(guihelper.ID_EDITRENAME, "&Rename\tF2", "Rename currently selected entry")
         menu.AppendSeparator()
-        menu.Append(guihelper.ID_EDITPHONEINFO,
-                    "Phone &Info", "Display Phone Information")
-        menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITDETECT,
                     "D&etect Phone", "Auto Detect Phone")
         if guihelper.IsMac():
@@ -793,6 +790,9 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_VIEWCLEARLOGS, "Clear &Logs", "Clears the contents of the log panes")
         menu.AppendSeparator()
         menu.AppendCheckItem(guihelper.ID_VIEWFILESYSTEM, "View &Filesystem", "View filesystem on the phone")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_EDITPHONEINFO,
+                    "Phone &Info", "Display Phone Information")
         menu.AppendSeparator()
         menu.Append(guihelper.ID_DR_SETTINGS, 'Data Recording',
                     'Data Recording Settings')
