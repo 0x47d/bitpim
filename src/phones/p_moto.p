@@ -13,7 +13,7 @@
 
 from prototypes import *
 from prototypes_moto import *
-from p_gsm import *
+from p_etsi import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb

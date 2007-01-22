@@ -19,7 +19,7 @@ import time
 import bpcalendar
 import common
 import commport
-import com_gsm
+import com_etsi
 import guihelper
 import helpids
 import memo
@@ -28,7 +28,7 @@ import p_lgg4015
 import prototypes
 import sms
 
-class Phone(com_gsm.Phone):
+class Phone(com_etsi.Phone):
     """ Talk to the LG G4015 Phone"""
 
     desc='LG-G4015'
@@ -37,7 +37,7 @@ class Phone(com_gsm.Phone):
     serialsname='lgg4015'
 
     def __init__(self, logtarget, commport):
-        com_gsm.Phone.__init__(self, logtarget, commport)
+        super(Phone,self).__init__(logtarget, commport)
         self.mode=self.MODENONE
 
     def getfundamentals(self, results):
@@ -773,7 +773,7 @@ class Phone(com_gsm.Phone):
         return result
 
 #-------------------------------------------------------------------------------
-parent_profile=com_gsm.Profile
+parent_profile=com_etsi.Profile
 class Profile(parent_profile):
 
     serialsname=Phone.serialsname

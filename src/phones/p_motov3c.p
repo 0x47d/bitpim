@@ -13,7 +13,7 @@
 
 from prototypes import *
 from prototypes_moto import *
-from p_gsm import *
+from p_etsi import *
 from p_moto import *
 from p_motov710 import *
 

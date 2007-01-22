@@ -7,31 +7,29 @@
 ###
 ### $Id$
 
-"""Communicate with Motorola phones using AT commands"""
+"""Communicate with Motorola phones using AT commands.  This code is for all Motorola phones
+with specific subclasses for CDMA and GSM variants"""
 
 # system modules
 import sha
 
 # BitPim modules
 import commport
-import com_brew
-import com_gsm
+import com_etsi
 import phoneinfo
 import prototypes
 import p_moto
 import sms
 
-class Phone(com_gsm.Phone, com_brew.BrewProtocol):
+class Phone(com_etsi.Phone):
     """Talk to a generic Motorola phone.
     """
     desc='Motorola'
     protocolclass=p_moto
-    _switch_mode_cmd='\x44\x58\xf4\x7e'
     MODEPHONEBOOK="modephonebook"
 
     def __init__(self, logtarget, commport):
-        com_gsm.Phone.__init__(self, logtarget, commport)
-        com_brew.BrewProtocol.__init__(self)
+        super(Phone,self).__init__(logtarget, commport)
         self.mode=self.MODENONE
 
     # Common/Support routines
@@ -47,6 +45,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         _req=self.protocolclass.charset_set_req()
         _req.charset=self.protocolclass.CHARSET_ASCII
         self.sendATcommand(_req, None)
+        
     def charset_ucs2(self):
         """Set the charset to UCS-2, used for most string values"""
         _req=self.protocolclass.charset_set_req()
@@ -66,56 +65,6 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         """convert an ascii string to UCS-2"""
         return v.encode('utf_16be').encode('hex').upper()
 
-    def _setmodephonebooktobrew(self):
-        self.setmode(self.MODEMODEM)
-        self.setmode(self.MODEBREW)
-        return True
-
-    def _setmodemodemtobrew(self):
-        self.log('Switching from modem to BREW')
-        try:
-            self.comm.sendatcommand('$QCDMG')
-            return True
-        except:
-            pass
-        # give it another try
-        self.log('Retry switching from modem to BREW')
-        try:
-            self.comm.sendatcommand('$QCDMG')
-            return True
-        except commport.ATError:
-	    return False
-	except:
-            if __debug__:
-                self.log('Got an excepetion')
-            return False
-
-    def _setmodebrew(self):
-        # switch from None to BREW
-        self.log('Switching from None to BREW')
-        # do it the long, but sure, way: 1st try to switch to modem
-        if not self._setmodemodem():
-            # can't switch to modem, give up
-            return False
-        # then switch from modem to BREW
-        return self._setmodemodemtobrew()
-
-    def _setmodebrewtomodem(self):
-        self.log('Switching from BREW to modem')
-        try:
-            self.comm.write(self._switch_mode_cmd, False)
-            self.comm.readsome(numchars=5, log=False)
-            return True
-        except:
-            pass
-        # give it a 2nd try
-        try:
-            self.comm.write(self._switch_mode_cmd, False)
-            self.comm.readsome(numchars=5, log=False)
-            return True
-        except:
-            return False
-
     def _setmodemodemtophonebook(self):
         self.log('Switching from modem to phonebook')
         self.set_mode(self.protocolclass.MODE_PHONEBOOK)
@@ -123,16 +72,6 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
 
     def _setmodemodem(self):
         self.log('Switching to modem')
-        try:
-            self.comm.sendatcommand('E0V1')
-            self.set_mode(self.protocolclass.MODE_MODEM)
-            return True
-        except:
-            pass
-        # could be in BREW mode, try switch over
-        self.log('trying to switch from BREW mode')
-        if not self._setmodebrewtomodem():
-            return False
         try:
             self.comm.sendatcommand('E0V1')
             self.set_mode(self.protocolclass.MODE_MODEM)
@@ -316,7 +255,7 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
 
     # Phonebook stuff
     def _build_pb_entry(self, entry, pb_book, fundamentals):
-        """Build a BitPim phonebook entry based on phon data.
+        """Build a BitPim phonebook entry based on phone data.
         Need to to implement in subclass for each phone
         """
         raise NotImplementedError
@@ -442,55 +381,6 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         self.setmode(self.MODEMODEM)
         return result
 
-    # Ringtones & wallpaper sutff------------------------------------------------------------
-    def _read_media(self, index_key, fundamentals):
-        """Read the contents of media files and return"""
-        _media={}
-        for _key,_entry in fundamentals.get(index_key, {}).items():
-            if _entry.get('filename', None):
-                # this one associates with a file, try to read it
-                try:
-                    _media[_entry['name']]=self.getfilecontents(_entry['filename'],
-                                                                True)
-                except (com_brew.BrewNoSuchFileException,
-                        com_brew.BrewBadPathnameException,
-                        com_brew.BrewNameTooLongException,
-                        com_brew.BrewAccessDeniedException):
-                    self.log("Failed to read media file: %s"%_entry['name'])
-                except:
-                    self.log('Failed to read media file.')
-                    if __debug__:
-                        raise
-        return _media
-
-    def getringtones(self, fundamentals):
-        """Retrieve ringtones data"""
-        self.log('Reading ringtones')
-        self.setmode(self.MODEPHONEBOOK)
-        self.setmode(self.MODEBREW)
-        try:
-            fundamentals['ringtone']=self._read_media('ringtone-index',
-                                                      fundamentals)
-        except:
-            if __debug__:
-                raise
-        self.setmode(self.MODEMODEM)
-        return fundamentals
-
-    def getwallpapers(self, fundamentals):
-        """Retrieve wallpaper data"""
-        self.log('Reading wallpapers')
-        self.setmode(self.MODEPHONEBOOK)
-        self.setmode(self.MODEBREW)
-        try:
-            fundamentals['wallpapers']=self._read_media('wallpaper-index',
-                                                        fundamentals)
-        except:
-            if __debug__:
-                raise
-        self.setmode(self.MODEMODEM)
-        return fundamentals
-
     # SMS stuff----------------------------------------------------------------
     def select_default_SMS(self):
         """Select the default SMS storage"""
@@ -569,6 +459,6 @@ class Phone(com_gsm.Phone, com_brew.BrewProtocol):
         return fundamentals
 
 #------------------------------------------------------------------------------
-parentprofile=com_gsm.Profile
+parentprofile=com_etsi.Profile
 class Profile(parentprofile):
     BP_Calendar_Version=3

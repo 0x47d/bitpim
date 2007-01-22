@@ -15,13 +15,13 @@
 import com_phone
 import commport
 import prototypes
-import p_gsm
+import p_etsi
 
 class Phone(com_phone.Phone):
     """ Talk to generic GSM phones
     """
     desc='GSM'
-    protocolclass=p_gsm
+    protocolclass=p_etsi
 
     def __init__(self, logtarget, commport):
         super(Phone,self).__init__(logtarget, commport)

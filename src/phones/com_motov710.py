@@ -17,14 +17,14 @@ import bpcalendar
 import common
 import commport
 import com_brew
-import com_moto
+import com_moto_cdma
 import fileinfo
 import nameparser
 import prototypes
 import p_motov710
 import helpids
 
-class Phone(com_moto.Phone):
+class Phone(com_moto_cdma.Phone):
     """ Talk to a Motorola V710 phone"""
     desc='Moto-V710'
     helpid=helpids.ID_PHONE_MOTOV710
@@ -46,7 +46,7 @@ class Phone(com_moto.Phone):
         )
 
     def __init__(self, logtarget, commport):
-        com_moto.Phone.__init__(self, logtarget, commport)
+        com_moto_cdma.Phone.__init__(self, logtarget, commport)
 
     # fundamentals stuff--------------------------------------------------------
     def _get_groups(self):
@@ -642,7 +642,7 @@ class Phone(com_moto.Phone):
     detectphone=staticmethod(_detectphone)
     
 #------------------------------------------------------------------------------
-parentprofile=com_moto.Profile
+parentprofile=com_moto_cdma.Profile
 class Profile(parentprofile):
 
     serialsname=Phone.serialsname

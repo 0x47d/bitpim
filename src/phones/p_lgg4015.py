@@ -6,7 +6,7 @@ from prototypes import *
 from prototypeslg import *
 
 # Make all lg stuff available in this module as well
-from p_gsm import *
+from p_etsi import *
 from p_lg import *
 
 # We use LSB for all integer like fields

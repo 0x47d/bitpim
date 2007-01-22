@@ -20,6 +20,8 @@ c_sprint='Sprint'
 c_pelephone='Pelephone'
 c_sti='STI Mobile'
 c_other='Other'
+if __debug__:
+    c_tmobileusa='T-Mobile USA'
 
 # phone brands
 b_lg='LG'
@@ -328,6 +330,10 @@ if __debug__:
                         'SPH-A790': { 'module': 'com_samsungspha790',
                                       'brand': b_samsung,
                                       'carrier': [c_sprint],
+                                      },
+                        'RAZR V3r': { 'module': 'com_motov3r',
+                                      'brand': b_moto,
+                                      'carrier': [c_tmobileusa],
                                       },
                         })
 

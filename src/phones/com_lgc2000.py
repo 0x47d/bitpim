@@ -24,7 +24,6 @@ import time
 import bpcalendar
 import common
 import commport
-import com_gsm
 import com_lgg4015
 import guihelper
 import helpids
@@ -43,7 +42,7 @@ class Phone(com_lgg4015.Phone):
     serialsname='lgc2000'
 
     def __init__(self, logtarget, commport):
-        com_gsm.Phone.__init__(self, logtarget, commport)
+        super(Phone,self).__init__(logtarget, commport)
         self.mode=self.MODENONE
 
     def getfundamentals(self, results):

@@ -34,7 +34,7 @@ except:
 modeignoreerrortypes=tuple(modeignoreerrortypes) 
 
 
-class Phone:
+class Phone(object):
     """Base class for all phones"""
     
     MODENONE="modenone"  # not talked to yet
@@ -147,7 +147,7 @@ class Phone:
     getplaylist=NotImplemented
     gett9db=NotImplemented
 
-class Profile:
+class Profile(object):
 
     BP_Calendar_Version=2
 
