@@ -34,12 +34,16 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
-_MAXNUMBERLEN=32
-_MAXEMAILLEN=96
+MAXNUMBERLEN=32
+MAXEMAILLEN=96
+MAXURLLEN=96
+MAXMEMOLEN=96
 HASRINGPICBUF=0
 NUMGROUPS=20
 NUMPHONENUMBERS=7
 NUMEMAILS=2
+FIRSTSPEEDDIAL=2
+LASTSPEEDDIAL=9
 
 
 %}
@@ -78,10 +82,10 @@ PACKET pbsortbuffer:
     * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +usedflags:
         1 UINT used "1 if slot in use"
     * LIST {'length': _NUMSPEEDDIALS} +speeddialindex:
-        2 UINT {'default': 0xffff} pbslotandtype
-    # Duplicate Contact count and slots used array?
-    2 UINT slotsused2  "Always seems to be the same.  Why duplicated?"
-    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +used2flags:
+        2 UINT {'default': 0xffff} numslot
+    # Name slots used
+    2 UINT nameslotsused  "Always seems to be the same.  Why duplicated?"
+    * LIST {'length': NUMPHONEBOOKENTRIES, 'createdefault': True} +nameusedflags:
         1 UINT used "1 if slot in use"
     * LIST {'length': NUMPHONEBOOKENTRIES} +sortorder:
         2 UINT {'default': 0xffff} pbslot
@@ -107,7 +111,7 @@ PACKET pbsortbuffer:
         1 UINT used "1 if slot in use"
     # We see stuff repeating here, so 6*1024 must be enough.
     # Pad out the rest of the buffer
-    391 UNKNOWN junk
+    391 UNKNOWN +junk
 
 # No group assignments in pbsortbuffer
 
@@ -134,18 +138,18 @@ PACKET contactindexrequest:
 PACKET contactindexentry:
     1 UINT groupid
     2 UINT slot
-    2 UINT namep
+    2 UINT {'default': 0xffff} +namep
     * LIST {'length': NUMPHONENUMBERS} +numberps:
-        2 UINT {'default': 0xffff} +slot
+        2 UINT {'default': 0xffff} slot
     * LIST {'length': NUMEMAILS} +emailps:
-        2 UINT {'default': 0xffff} +slot
-    2 UINT urlp
-    2 UINT addressp
-    2 UINT memop
-    2 UINT ringerid
-    2 UINT pictureid
-    2 UINT defaultnum
-    1 UINT secret
+        2 UINT {'default': 0xffff} slot
+    2 UINT {'default': 0xffff} +urlp
+    2 UINT {'default': 0xffff} +addressp
+    2 UINT {'default': 0xffff} +memop
+    2 UINT {'default': 0xfff0} +ringerid
+    2 UINT {'default': 0xfffe} +pictureid
+    2 UINT {'default': 0} +defaultnum
+    1 UINT {'default': 0} +secret
     
 PACKET contactindexresponse:
     * sanyoheader header
@@ -153,6 +157,12 @@ PACKET contactindexresponse:
     * contactindexentry entry
     * UNKNOWN pad
 
+PACKET contactindexupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x88} +header
+    2 UINT slot
+    * contactindexentry +entry
+    
 PACKET numberrequest:
     * sanyoheader {'packettype': 0x16,
                    'command': 0x8f} +header
@@ -172,22 +182,34 @@ PACKET numberresponse:
     * numberentry entry
     * UNKNOWN pad
 
+PACKET numberupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x8f} +header
+    2 UINT slot
+    * numberentry +entry
+    
 PACKET namerequest:
     * sanyoheader {'packettype': 0x16,
                    'command': 0x8c} +header
     2 UINT slot
                   
 PACKET nameentry:
-    2 UINT slot
+    2 UINT contactp
     1 UINT name_len
     1 UINT name_len2
-    32 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +name
+    32 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} name
 
 PACKET nameresponse:
     * sanyoheader header
     2 UINT slot
     * nameentry entry
     * UNKNOWN pad
+                  
+PACKET nameupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x8c} +header
+    2 UINT slot
+    * nameentry +entry
                   
 PACKET urlrequest:
     * sanyoheader {'packettype': 0x16,
@@ -207,6 +229,12 @@ PACKET urlresponse:
     * urlentry entry
     * UNKNOWN pad
 
+PACKET urlupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x98} +header
+    2 UINT slot
+    * urlentry +entry
+                  
 PACKET addressrequest:
     * sanyoheader {'packettype': 0x16,
                    'command': 0x9b} +header
@@ -223,6 +251,12 @@ PACKET addressresponse:
     * addressentry entry
     * UNKNOWN pad
                   
+PACKET addressupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x9b} +header
+    2 UINT slot
+    * addressentry +entry
+
 PACKET memorequest:
     * sanyoheader {'packettype': 0x16,
                    'command': 0x9e} +header
@@ -239,6 +273,11 @@ PACKET memoresponse:
     * memoentry entry
     * UNKNOWN pad
 
+PACKET memoupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x9e} +header
+    2 UINT slot
+    * memoentry +entry
 
 PACKET emailrequest:
     * sanyoheader {'packettype': 0x16,
@@ -250,13 +289,19 @@ PACKET emailentry:
     1 UINT email_len
     96 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +email
     1 UNKNOWN +pad
-    1 UINT type "7: Mobile, 8: Internet"
+    1 UINT {'default': 8} +type "7: Mobile, 8: Internet"
     
 PACKET emailresponse:
     * sanyoheader header
     2 UINT slot
     * emailentry entry
 
+PACKET emailupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x93} +header
+    2 UINT slot
+    * emailentry +entry
+                  
 PACKET grouprequest:
     * sanyoheader {'packettype': 0x16,
                    'command': 0x87} +header
@@ -272,6 +317,13 @@ PACKET groupentry:
 
 PACKET groupresponse:
     * sanyoheader header
+    1 UINT slot
+    * groupentry entry
+    * UNKNOWN pad
+
+PACKET groupupdaterequest:
+    * sanyowriteheader {'packettype': 0x16,
+                   'command': 0x87} +header
     1 UINT slot
     * groupentry entry
     * UNKNOWN pad
@@ -327,11 +379,11 @@ PACKET messagesententry:
     1 UINT day
     1 UINT hour
     1 UINT minute
-    P UINT {'default': 0} second
+    1 UINT second
     1 UINT callback_len
     34 USTRING callback
     1 UINT phonenum_len
-    37 USTRING phonenum
+    36 USTRING phonenum
     1 UINT dunno6
     1 UINT priority
     3 UNKNOWN pad6
