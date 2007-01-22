@@ -24,7 +24,7 @@ class Phone(com_phone.Phone):
     protocolclass=p_gsm
 
     def __init__(self, logtarget, commport):
-        com_phone.Phone.__init__(self, logtarget, commport)
+        super(Phone,self).__init__(logtarget, commport)
         self.mode=self.MODENONE
 
     def sendATcommand(self, request, responseclass, ignoreerror=False):
