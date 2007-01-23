@@ -304,7 +304,17 @@ class Database:
         # connections have to be closed now
         self.connection.close(True)
 
-    def __init__(self, filename):
+    def __init__(self, filename, virtualtables=None):
+        """
+        @params filename: database filename
+        @params virtualtables: a list of dict specifying the virtual tables
+            Each dict is expected to have the following keys:
+            'tablename': the name of the virtual table
+            'modulename': the name of the module that implements this virtual
+                table
+            'module': an instance of ModuleBase subclassthat implements this
+                virtual table
+        """
         self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
         # first tell sqlite to use the pre 3.4 format.  this will allow downgrades
@@ -331,6 +341,16 @@ class Database:
         if TRACE:
             self.cursor.setexectrace(self._sqltrace)
             self.cursor.setrowtrace(self._rowtrace)
+        if virtualtables is not None:
+            # virtual tables are specified
+            for vtable in virtualtables:
+                # register the module
+                self.connection.createmodule(vtable['modulename'],
+                                             vtable['module'])
+                if not self.doestableexist(vtable['tablename']):
+                    # and declare the virtual table
+                    self.sql('CREATE VIRTUAL TABLE %s USING %s;'%(idquote(vtable['tablename']),
+                                                                  idquote(vtable['modulename'])))
 
     def _sqltrace(self, cmd, bindings):
         print "SQL:",cmd
@@ -852,6 +872,150 @@ class Database:
                 existing_uid[uid]=None
                 res[tt]['add']+=1
         return res
+
+class ModuleBase(object):
+    """
+    Base class to implement a specific Virtual Table module with apsw.
+    For more info:
+    http://www.sqlite.org/cvstrac/wiki/wiki?p=VirtualTables
+    http://www.sqlite.org/cvstrac/wiki/wiki?p=VirtualTableMethods
+    http://www.sqlite.org/cvstrac/wiki/wiki?p=VirtualTableBestIndexMethod
+    """
+    def __init__(self, field_names):
+        self.connection=None
+        self.table_name=None
+        # the first field is ALWAYS __rowid__ to be consistent with Database
+        self.field_names=('__rowid__',)+field_names
+    def Create(self, connection, modulename, databasename, vtablename, *args):
+        """Called when the virtual table is created.
+        @params connection: an instance of apsw.Connection
+        @params modulename: string name of the module being invoked
+        @params databasename: string name of this database
+        @params vtablename: string name of this new virtual table
+        @params args: addtional arguments sent from the CREATE VIRTUAL TABLE
+            statement
+        @returns: a tuple of 2 values: an sql string describing the table, and
+            an object implementing it: Me!
+        """
+        self.table_name=vtablename
+        fields=['__rowid__ integer primary key']
+        for field in self.field_names[1:]:
+            fields.append(idquote(field)+' blob')
+        fields='(%s)'%','.join(fields)
+        return ('create table %s %s;'%(idquote(vtablename), fields), self)
+
+    def Connect(self, connection, modulename, databasename, vtablename, *args):
+        """Connect to an existing virtual table, by default it is identical
+        to Create
+        """
+        return self.Create(connection, modulename, databasename, vtablename,
+                           *args)
+
+    def Destroy(self):
+        """Release a connection to a virtual table and destroy the underlying
+        table implementation.  By default, we do nothing.
+        """
+        pass
+    def Disconnect(self):
+        """Release a connection to a virtual table.  By default, we do nothing.
+        """
+        pass
+
+    def BestIndex(self, constraints, orderby):
+        """
+        Provide information on how to best access this table.
+        Must be overriden by subclass.
+        @params constraints: a tuple of (column #, op) defining a constraints
+        @params orderby: a tuple of (column #, desc) defining the order by
+        @returns a tuple of up to 5 values:
+            0: aConstraingUsage: a tuple of the same size as constraints.
+                Each item is either None, argv index(int), or (argv index, omit(Bool)).
+            1: idxNum(int)
+            2: idxStr(string)
+            3: orderByConsumed(Bool)
+            4: estimatedCost(float)
+        """
+        raise NotImplementedError
+
+    def Begin(self):
+        pass
+    def Sync(self):
+        pass
+    def Commit(self):
+        pass
+    def Rollback(self):
+        pass
+
+    def Open(self):
+        """Create/prepare a cursor used for subsequent reading.
+        @returns: the implementor object: Me!
+        """
+        return self
+    def Close(self):
+        """Close a cursor previously created by Open
+        By default, do nothing
+        """
+        pass
+    def Filter(self, idxNum, idxStr, argv):
+        """
+        Begin a search of a virtual table.
+        @params idxNum: int value passed by BestIndex
+        @params idxStr: string valued passed by BestIndex
+        @params argv: constraint parameters requested by BestIndex
+        @returns: None
+        """
+        raise NotImplementedError
+    def Eof(self):
+        """
+        Determines if the current cursor points to a valid row.
+        The Sqlite doc is wrong on this.
+        @params True if NOT valid row, False otherwise
+        """
+        raise NotImplementedError
+    def Column(self, N):
+        """
+        Find the value for the N-th column of the current row.
+        @params N: the N-th column
+        @returns: value of the N-th column
+        """
+        raise NotImplementedError
+    def Next(self):
+        """
+        Move the cursor to the next row.
+        @returns: None
+        """
+    def Rowid(self):
+        """
+        Return the rowid of the current row.
+        @returns: the rowid(int) of the current row.
+        """
+        raise NotImplementedError
+    def UpdateDeleteRow(self, rowid):
+        """
+        Delete row rowid
+        @params rowid:
+        @returns: None
+        """
+        raise NotImplementedError
+    def UpdateInsertRow(self, rowid, fields):
+        """
+        Insert a new row of data into the table
+        @params rowid: if not None, use this rowid.  If None, create a new rowid
+        @params fields: a tuple of the field values in the order declared in
+            Create/Connet
+        @returns: rowid of the new row.
+        """
+        raise NotImplementedError
+    def UpdateChangeRow(self, rowid, newrowid, fields):
+        """
+        Change the row of the current rowid with the new rowid and new values
+        @params rowid: rowid of the current row
+        @params newrowid: new rowid
+        @params fields: a tuple of the field values in the order declared in
+            Create/Connect
+        @returns: rowid of the new row
+        """
+        raise NotImplementedError
 
 if __name__=='__main__':
     import common
