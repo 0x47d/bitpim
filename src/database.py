@@ -312,8 +312,9 @@ class Database:
             'tablename': the name of the virtual table
             'modulename': the name of the module that implements this virtual
                 table
-            'module': an instance of ModuleBase subclassthat implements this
+            'moduleclass': the ModuleBase subclass that implements this
                 virtual table
+            'args': arguments passed to instantion of the module class
         """
         self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
@@ -346,7 +347,7 @@ class Database:
             for vtable in virtualtables:
                 # register the module
                 self.connection.createmodule(vtable['modulename'],
-                                             vtable['module'])
+                                             vtable['moduleclass'](*vtable['args']))
                 if not self.doestableexist(vtable['tablename']):
                     # and declare the virtual table
                     self.sql('CREATE VIRTUAL TABLE %s USING %s;'%(idquote(vtable['tablename']),

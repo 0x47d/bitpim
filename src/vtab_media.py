@@ -34,6 +34,9 @@ class Media(database.ModuleBase):
         @params pathname: full path in which to stores data files
         """
         super(Media, self).__init__(('mediadata',))
+        # make sure the path exists
+        if not os.path.exists(pathname):
+            os.makedirs(pathname)
         self.pathname=os.path.abspath(pathname)
         self.rowidfilename=os.path.join(self.pathname, 'rowid')
         self.getnextrowid()
