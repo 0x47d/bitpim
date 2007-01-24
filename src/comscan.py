@@ -192,8 +192,8 @@ def _comscanwindows():
     k=r"SYSTEM\CurrentControlSet\Services"
     for service in reg.safegetchildren(k):
         # we will just take largest number
-        count=reg.safegetvalue(k+"\\"+service+"\\Enum", "Count", 0)
-        next=reg.safegetvalue(k+"\\"+service+"\\Enum", "NextInstance", 0)
+        count=int(reg.safegetvalue(k+"\\"+service+"\\Enum", "Count", 0))
+        next=int(reg.safegetvalue(k+"\\"+service+"\\Enum", "NextInstance", 0))
         for id in range(max(count,next)):
             hw=reg.safegetvalue(k+"\\"+service+"\\Enum", `id`)
             if hw is None:

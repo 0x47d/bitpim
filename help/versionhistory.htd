@@ -16,7 +16,9 @@
       <li><p>New phone support: <B>LG VX-5300</B>
       <li><p>New feature: Help menu item that takes users directly to the Help page of the current phone model (if available).
       <li><p>Moved menu item <b>Phone Info</b> from main menu <b>Edit</b> to <b>View</b>.
+<<<<<<< .mine
       <li><p>Sanyo SCP-6600 (Katana): Writing the phonebook now supported.
+      <li><p>Bug fix: Windows comscan crashed BitPim.
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>
