@@ -59,7 +59,6 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
         ( 'ringers',    'dload/myringtone.dat','brew/16452/lk/mr','mmc1/ringers', 100, 0x01, None),
         ( 'sounds',     'dload/mysound.dat',   'brew/16452/ms',   '',             100, 0x02, None),
         ( 'mp3',        'dload/my_mp3.dat',    'mmc1/my_mp3',     '',             100, 0x15, None),
-       #( 'music',      'dload/sd_music.dat',  'mmc1/my_music',   '',             100, 0x14, None), # .wma files
         )
 
     calendarlocation="sch/schedule.dat"
@@ -72,9 +71,7 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
     wallpaperlocations= (
         #  type          index file            default dir     external dir  max  type Index
         ( 'images',     'dload/image.dat',    'brew/16452/mp', '',           100, 0x00, None),
-        ( 'images(sd)', 'dload/sd_image.dat', 'mmc1/my_pix',   '',           100, 0x10, None),
         ( 'video',      'dload/video.dat',    'brew/16452/mf', '',           100, 0x03, None),
-        ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
         )
 
     def __init__(self, logtarget, commport):
@@ -149,8 +146,6 @@ class Profile(parentprofile):
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
-    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images(sd)"))
-    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video(sd)"))
     def GetImageOrigins(self):
         return self.imageorigins
 
