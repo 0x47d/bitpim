@@ -35,7 +35,7 @@ import memo
 import playlist
 import helpids
 
-class Phone(com_lg.LGNewIndexedMedia2,com_lgvx8100.Phone):
+class Phone(com_lgvx8100.Phone):
     "Talk to the LG VX9800 cell phone"
 
     desc="LG-VX9800"
