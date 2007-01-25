@@ -110,7 +110,7 @@ class Media(database.ModuleBase):
         Find the value for the N-th column of the current row.
         @params N: the N-th column
         @returns: value of the N-th column
-        We only have 2 columns: __rowid__ and data
+        We only have 2 columns: __rowid__ and mediadata
         """
         filename=self.filenames[self.cursor]
         if N==0:
