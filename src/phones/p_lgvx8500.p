@@ -41,10 +41,10 @@ PLExt='.clgpl'
 # T9 User Database, how do we handle the Spanish DB?
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 Default_Header='\x36\x00' \
-               '\x00\x00\x00\x00\x00\x00\x00\x00' \
-               '\x00\x00\xFB\x07\xF6\x0F\xF1\x17' \
-               '\xEC\x1F\xE7\x27\xE2\x2F\xDD\x37' \
-               '\xD8\x3F\xD3\x47\xA0'
+               '\x00\x00\x00\x00\x00\x00\x00\x00'
+Default_Header2=        '\xFB\x07\xF6\x0F\xF1\x17' \
+                '\xEC\x1F\xE7\x27\xE2\x2F\xDD\x37' \
+                '\xD8\x3F\xD3\x47'
 %}
 
 # Phonebook stuff
@@ -195,10 +195,16 @@ PACKET KeyPressReq:
     
 PACKET t9udbfile:
     2 UINT { 'default': 0x5000 } +file_length
-    6 DATA { 'default': '\x00\x00\x00\x00\x00\x00' } +unknown1
+    6 DATA { 'default': '\x7B\x1B\x00\x00\x01\x00' } +unknown1
     2 UINT word_count
     2 UINT { 'default': 0x00 } +unknown2
     2 UINT free_space
-    31 DATA { 'default': Default_Header } +unknown3
+    10 DATA { 'default': Default_Header } +unknown3
+    2 UINT { 'default': 0 } +extra_cnt
+    18 DATA { 'default': Default_Header2 } +unknown4
+    if self.extra_cnt:
+        * LIST { 'length': self.extra_cnt } +extras:
+            1 UINT { 'default': 0 } +extra
+    1 UINT { 'constant': 0xA0 } +A0
     * LIST { 'createdefault': True } +blocks:
         * T9USERDBBLOCK block

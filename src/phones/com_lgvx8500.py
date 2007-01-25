@@ -318,7 +318,7 @@ class Phone(parentphone):
             pass
         return _current_db
     def _copy_fields(self, old, new):
-        for _field in ('unknown1', 'unknown2', 'unknown3'):
+        for _field in ('unknown1', 'unknown2', 'unknown3', 'unknown4'):
             setattr(new, _field, getattr(old, _field))
     def gett9db(self, result):
         _req=self._get_current_db()
@@ -365,11 +365,10 @@ class Phone(parentphone):
                 _new_db.blocks.append({ 'type': prototypeslg.T9USERDBBLOCK.FreeBlock_Type,
                                         'value': _free_len })
             else:
-                # ugly hack, again!!
-                if _key=='1':
-                    _type=prototypeslg.T9USERDBBLOCK.FreeBlock_Type
-                else:
-                    _type=prototypeslg.T9USERDBBLOCK.A0FreeBlock_Type
+                if _key!='1':
+                    _new_db.blocks.append({ 'type': prototypeslg.T9USERDBBLOCK.A0_Type,
+                                            'value': 0xA0 })
+                _type=prototypeslg.T9USERDBBLOCK.FreeBlock_Type
                 _new_db.blocks.append({ 'type': _type,
                                         'value': self._buffer_data[_key] })
                 _total_free_size+=self._buffer_data[_key]

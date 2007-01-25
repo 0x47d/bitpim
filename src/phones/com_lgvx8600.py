@@ -78,6 +78,6 @@ class Profile(parentprofile):
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         ('playlist', 'read', 'OVERWRITE'),
         ('playlist', 'write', 'OVERWRITE'),
-##        ('t9_udb', 'read', 'OVERWRITE'),
-##        ('t9_udb', 'write', 'OVERWRITE'),
+        ('t9_udb', 'read', 'OVERWRITE'),
+        ('t9_udb', 'write', 'OVERWRITE'),
         )

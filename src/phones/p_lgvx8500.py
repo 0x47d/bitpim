@@ -32,10 +32,10 @@ PLExt='.clgpl'
 # T9 User Database, how do we handle the Spanish DB?
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 Default_Header='\x36\x00' \
-               '\x00\x00\x00\x00\x00\x00\x00\x00' \
-               '\x00\x00\xFB\x07\xF6\x0F\xF1\x17' \
-               '\xEC\x1F\xE7\x27\xE2\x2F\xDD\x37' \
-               '\xD8\x3F\xD3\x47\xA0'
+               '\x00\x00\x00\x00\x00\x00\x00\x00'
+Default_Header2=        '\xFB\x07\xF6\x0F\xF1\x17' \
+                '\xEC\x1F\xE7\x27\xE2\x2F\xDD\x37' \
+                '\xD8\x3F\xD3\x47'
 class pbfileentry(BaseProtogenClass):
     __fields=['serial1', 'entrynumber', 'data1', 'ringtone', 'msgringtone', 'wallpaper', 'data2']
 
@@ -2949,7 +2949,7 @@ class KeyPressReq(BaseProtogenClass):
 
 
 class t9udbfile(BaseProtogenClass):
-    __fields=['file_length', 'unknown1', 'word_count', 'unknown2', 'free_space', 'unknown3', 'blocks']
+    __fields=['file_length', 'unknown1', 'word_count', 'unknown2', 'free_space', 'unknown3', 'extra_cnt', 'unknown4', 'extras', 'A0', 'blocks']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -2988,7 +2988,7 @@ class t9udbfile(BaseProtogenClass):
         self.__field_file_length.writetobuffer(buf)
         try: self.__field_unknown1
         except:
-            self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x00\x00\x00\x00\x00\x00' })
+            self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x7B\x1B\x00\x00\x01\x00' })
         self.__field_unknown1.writetobuffer(buf)
         self.__field_word_count.writetobuffer(buf)
         try: self.__field_unknown2
@@ -2998,11 +2998,28 @@ class t9udbfile(BaseProtogenClass):
         self.__field_free_space.writetobuffer(buf)
         try: self.__field_unknown3
         except:
-            self.__field_unknown3=DATA(**{'sizeinbytes': 31,  'default': Default_Header })
+            self.__field_unknown3=DATA(**{'sizeinbytes': 10,  'default': Default_Header })
         self.__field_unknown3.writetobuffer(buf)
+        try: self.__field_extra_cnt
+        except:
+            self.__field_extra_cnt=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_extra_cnt.writetobuffer(buf)
+        try: self.__field_unknown4
+        except:
+            self.__field_unknown4=DATA(**{'sizeinbytes': 18,  'default': Default_Header2 })
+        self.__field_unknown4.writetobuffer(buf)
+        if self.extra_cnt:
+            try: self.__field_extras
+            except:
+                self.__field_extras=LIST(**{'elementclass': _gen_p_lgvx8500_207,  'length': self.extra_cnt })
+            self.__field_extras.writetobuffer(buf)
+        try: self.__field_A0
+        except:
+            self.__field_A0=UINT(**{'sizeinbytes': 1,  'constant': 0xA0 })
+        self.__field_A0.writetobuffer(buf)
         try: self.__field_blocks
         except:
-            self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_204,  'createdefault': True })
+            self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_210,  'createdefault': True })
         self.__field_blocks.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -3014,7 +3031,7 @@ class t9udbfile(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_file_length=UINT(**{'sizeinbytes': 2,  'default': 0x5000 })
         self.__field_file_length.readfrombuffer(buf)
-        self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x00\x00\x00\x00\x00\x00' })
+        self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x7B\x1B\x00\x00\x01\x00' })
         self.__field_unknown1.readfrombuffer(buf)
         self.__field_word_count=UINT(**{'sizeinbytes': 2})
         self.__field_word_count.readfrombuffer(buf)
@@ -3022,9 +3039,18 @@ class t9udbfile(BaseProtogenClass):
         self.__field_unknown2.readfrombuffer(buf)
         self.__field_free_space=UINT(**{'sizeinbytes': 2})
         self.__field_free_space.readfrombuffer(buf)
-        self.__field_unknown3=DATA(**{'sizeinbytes': 31,  'default': Default_Header })
+        self.__field_unknown3=DATA(**{'sizeinbytes': 10,  'default': Default_Header })
         self.__field_unknown3.readfrombuffer(buf)
-        self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_204,  'createdefault': True })
+        self.__field_extra_cnt=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_extra_cnt.readfrombuffer(buf)
+        self.__field_unknown4=DATA(**{'sizeinbytes': 18,  'default': Default_Header2 })
+        self.__field_unknown4.readfrombuffer(buf)
+        if self.extra_cnt:
+            self.__field_extras=LIST(**{'elementclass': _gen_p_lgvx8500_207,  'length': self.extra_cnt })
+            self.__field_extras.readfrombuffer(buf)
+        self.__field_A0=UINT(**{'sizeinbytes': 1,  'constant': 0xA0 })
+        self.__field_A0.readfrombuffer(buf)
+        self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_210,  'createdefault': True })
         self.__field_blocks.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -3048,14 +3074,14 @@ class t9udbfile(BaseProtogenClass):
     def __getfield_unknown1(self):
         try: self.__field_unknown1
         except:
-            self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x00\x00\x00\x00\x00\x00' })
+            self.__field_unknown1=DATA(**{'sizeinbytes': 6,  'default': '\x7B\x1B\x00\x00\x01\x00' })
         return self.__field_unknown1.getvalue()
 
     def __setfield_unknown1(self, value):
         if isinstance(value,DATA):
             self.__field_unknown1=value
         else:
-            self.__field_unknown1=DATA(value,**{'sizeinbytes': 6,  'default': '\x00\x00\x00\x00\x00\x00' })
+            self.__field_unknown1=DATA(value,**{'sizeinbytes': 6,  'default': '\x7B\x1B\x00\x00\x01\x00' })
 
     def __delfield_unknown1(self): del self.__field_unknown1
 
@@ -3106,30 +3132,94 @@ class t9udbfile(BaseProtogenClass):
     def __getfield_unknown3(self):
         try: self.__field_unknown3
         except:
-            self.__field_unknown3=DATA(**{'sizeinbytes': 31,  'default': Default_Header })
+            self.__field_unknown3=DATA(**{'sizeinbytes': 10,  'default': Default_Header })
         return self.__field_unknown3.getvalue()
 
     def __setfield_unknown3(self, value):
         if isinstance(value,DATA):
             self.__field_unknown3=value
         else:
-            self.__field_unknown3=DATA(value,**{'sizeinbytes': 31,  'default': Default_Header })
+            self.__field_unknown3=DATA(value,**{'sizeinbytes': 10,  'default': Default_Header })
 
     def __delfield_unknown3(self): del self.__field_unknown3
 
     unknown3=property(__getfield_unknown3, __setfield_unknown3, __delfield_unknown3, None)
 
+    def __getfield_extra_cnt(self):
+        try: self.__field_extra_cnt
+        except:
+            self.__field_extra_cnt=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_extra_cnt.getvalue()
+
+    def __setfield_extra_cnt(self, value):
+        if isinstance(value,UINT):
+            self.__field_extra_cnt=value
+        else:
+            self.__field_extra_cnt=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_extra_cnt(self): del self.__field_extra_cnt
+
+    extra_cnt=property(__getfield_extra_cnt, __setfield_extra_cnt, __delfield_extra_cnt, None)
+
+    def __getfield_unknown4(self):
+        try: self.__field_unknown4
+        except:
+            self.__field_unknown4=DATA(**{'sizeinbytes': 18,  'default': Default_Header2 })
+        return self.__field_unknown4.getvalue()
+
+    def __setfield_unknown4(self, value):
+        if isinstance(value,DATA):
+            self.__field_unknown4=value
+        else:
+            self.__field_unknown4=DATA(value,**{'sizeinbytes': 18,  'default': Default_Header2 })
+
+    def __delfield_unknown4(self): del self.__field_unknown4
+
+    unknown4=property(__getfield_unknown4, __setfield_unknown4, __delfield_unknown4, None)
+
+    def __getfield_extras(self):
+        try: self.__field_extras
+        except:
+            self.__field_extras=LIST(**{'elementclass': _gen_p_lgvx8500_207,  'length': self.extra_cnt })
+        return self.__field_extras.getvalue()
+
+    def __setfield_extras(self, value):
+        if isinstance(value,LIST):
+            self.__field_extras=value
+        else:
+            self.__field_extras=LIST(value,**{'elementclass': _gen_p_lgvx8500_207,  'length': self.extra_cnt })
+
+    def __delfield_extras(self): del self.__field_extras
+
+    extras=property(__getfield_extras, __setfield_extras, __delfield_extras, None)
+
+    def __getfield_A0(self):
+        try: self.__field_A0
+        except:
+            self.__field_A0=UINT(**{'sizeinbytes': 1,  'constant': 0xA0 })
+        return self.__field_A0.getvalue()
+
+    def __setfield_A0(self, value):
+        if isinstance(value,UINT):
+            self.__field_A0=value
+        else:
+            self.__field_A0=UINT(value,**{'sizeinbytes': 1,  'constant': 0xA0 })
+
+    def __delfield_A0(self): del self.__field_A0
+
+    A0=property(__getfield_A0, __setfield_A0, __delfield_A0, None)
+
     def __getfield_blocks(self):
         try: self.__field_blocks
         except:
-            self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_204,  'createdefault': True })
+            self.__field_blocks=LIST(**{'elementclass': _gen_p_lgvx8500_210,  'createdefault': True })
         return self.__field_blocks.getvalue()
 
     def __setfield_blocks(self, value):
         if isinstance(value,LIST):
             self.__field_blocks=value
         else:
-            self.__field_blocks=LIST(value,**{'elementclass': _gen_p_lgvx8500_204,  'createdefault': True })
+            self.__field_blocks=LIST(value,**{'elementclass': _gen_p_lgvx8500_210,  'createdefault': True })
 
     def __delfield_blocks(self): del self.__field_blocks
 
@@ -3145,22 +3235,27 @@ class t9udbfile(BaseProtogenClass):
         yield ('unknown2', self.__field_unknown2, None)
         yield ('free_space', self.__field_free_space, None)
         yield ('unknown3', self.__field_unknown3, None)
+        yield ('extra_cnt', self.__field_extra_cnt, None)
+        yield ('unknown4', self.__field_unknown4, None)
+        if self.extra_cnt:
+            yield ('extras', self.__field_extras, None)
+        yield ('A0', self.__field_A0, None)
         yield ('blocks', self.__field_blocks, None)
 
 
 
 
-class _gen_p_lgvx8500_204(BaseProtogenClass):
+class _gen_p_lgvx8500_207(BaseProtogenClass):
     'Anonymous inner class'
-    __fields=['block']
+    __fields=['extra']
 
     def __init__(self, *args, **kwargs):
         dict={}
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx8500_204,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx8500_204:
+        super(_gen_p_lgvx8500_207,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx8500_207:
             self._update(args,dict)
 
 
@@ -3169,7 +3264,7 @@ class _gen_p_lgvx8500_204(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx8500_204,self)._update(args,kwargs)
+        super(_gen_p_lgvx8500_207,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -3177,7 +3272,88 @@ class _gen_p_lgvx8500_204(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx8500_204,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx8500_207,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 1,  'default': 0 }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_extra=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_extra
+        except:
+            self.__field_extra=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_extra.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_extra=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_extra.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_extra(self):
+        try: self.__field_extra
+        except:
+            self.__field_extra=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_extra.getvalue()
+
+    def __setfield_extra(self, value):
+        if isinstance(value,UINT):
+            self.__field_extra=value
+        else:
+            self.__field_extra=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_extra(self): del self.__field_extra
+
+    extra=property(__getfield_extra, __setfield_extra, __delfield_extra, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('extra', self.__field_extra, None)
+
+
+
+
+class _gen_p_lgvx8500_210(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['block']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_lgvx8500_210,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx8500_210:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_lgvx8500_210,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_lgvx8500_210,kwargs)
         if len(args):
             dict2={}
             dict2.update(kwargs)

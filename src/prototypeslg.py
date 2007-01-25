@@ -485,9 +485,10 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
 
     # known types of this block
     FreeBlock_Type='Free Block'
-    A0FreeBlock_Type='A0 Free Block'
+    A0_Type='A0 Block'
     WordsList_Type='Words List'
-    C7_Type='C7'
+    C_Type='C'
+    Garbage_Type='Garbage'
 
     def __init__(self, *args, **kwargs):
         super(T9USERDBBLOCK, self).__init__(*args, **kwargs)
@@ -517,8 +518,7 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
             raise ValueError('Missing type or value keyword')
         _type=v['type']
         _value=v['value']
-        if _type==self.FreeBlock_Type or \
-           _type==self.A0FreeBlock_Type:
+        if _type==self.FreeBlock_Type:
             # this is a free block, the value is an integer specifying
             # the length of this free block
             if not isinstance(_value, int):
@@ -530,6 +530,8 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
             # value['weight'] is an int, default to 0xA000
             if not isinstance(_value, list):
                 raise TypeError('Value must be a list of dicts')
+        elif _type==self.A0_Type:
+            _value=0xA0
         else:
             raise ValueError('Invalid type: '+_type)
         self._type=_type
@@ -546,27 +548,37 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
                           'weight': _weight })
             _size=buf.peeknextbyte()
         return _res
-
     def readfrombuffer(self, buf):
-        self._bufferstartoffset=buf.getcurrentoffset()
-        _ch=buf.peeknextbyte()
-        if _ch&0xF0==0xC0:
-            self._type=self.C7_Type
-            self._value=buf.getnextbytes(7)
-        elif _ch&0xF0==0xA0:
-            self._type=self.A0FreeBlock_Type
-            buf.getnextbyte()
-            self._value=((buf.getnextbyte()&0x0F)<<8)|buf.getnextbyte()
-            buf.getnextbytes(self._value-2)
-        elif _ch&0xF0==0x80:
-            self._type=self.FreeBlock_Type
-            self._value=((buf.getnextbyte()&0x0F)<<8)|buf.getnextbyte()
-            buf.getnextbytes(self._value-2)
-        elif _ch<0x80:
-            self._type=self.WordsList_Type
-            self._value=self._extract_words_list(buf)
-        else:
-            raise ValueError('Unknown block type: 0x%02X'%_ch)
+        try:
+            self._bufferstartoffset=buf.getcurrentoffset()
+            _ch=buf.peeknextbyte()
+            if _ch&0xF0==0xC0:
+                self._type=self.C_Type
+                self._value=''
+                while True:
+                    b=buf.getnextbytes(1)
+                    self._value+=b
+                    if b=='\x09':
+                        self._value+=buf.getnextbytes(1)
+                        break
+            elif _ch&0xF0==0xA0:
+                self._type=self.A0_Type
+                self._value=buf.getnextbyte()
+            elif _ch&0xF0==0x80:
+                self._type=self.FreeBlock_Type
+                self._value=((buf.getnextbyte()&0x0F)<<8)|buf.getnextbyte()
+                buf.getnextbytes(self._value-2)
+            elif _ch<0x80:
+                self._type=self.WordsList_Type
+                self._value=self._extract_words_list(buf)
+            else:
+                raise ValueError('Unknown block type: 0x%02X'%_ch)
+        except IndexError:
+            # ignore garbage at the end
+            self._type=self.Garbage_Type
+            self._value=0
+        print 'type:',self._type
+        print 'value:',self._value
         self._bufferendoffset=buf.getcurrentoffset()
 
     def getvalue(self):
@@ -579,10 +591,9 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
         # return the size of this packet
         if self._value is None or self._type is None:
             raise ValueNotSetException()
-        if self._type==self.C7_Type:
-            return 7
-        if self._type==self.A0FreeBlock_Type:
-            return self._value+1
+        if self._type==self.C_Type or \
+           self._type==self.A0_Type:
+            return len(self._value)
         if self._type==self.FreeBlock_Type:
             return self._value
         if self._type==self.WordsList_Type:
@@ -595,15 +606,10 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
         if self._value is None or self._type is None:
             raise ValueNotSetException()
         self._bufferstartoffset=buf.getcurrentoffset()
-        if self._type==self.C7_Type:
+        if self._type==self.C_Type:
             buf.appendbytes(self._value)
-        elif self._type==self.A0FreeBlock_Type:
+        elif self._type==self.A0_Type:
             buf.appendbyte(0xA0)
-            buf.appendbyte(0x80|((self._value&0xF00)>>8))
-            buf.appendbyte(self._value&0xff)
-            for _ in range(self._value-2):
-                buf.appendbyte(0)
-##            buf.appendbytes('\x00'*self._value-2)
         elif self._type==self.FreeBlock_Type:
             buf.appendbyte(0x80|((self._value&0xF00)>>8))
             buf.appendbyte(self._value&0xff)
