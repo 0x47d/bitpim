@@ -643,10 +643,12 @@ class Database:
         # now get the indirects
         for name,values in indirects.iteritems():
             for uid,v,type in values:
-                if type=="indirectBLOB":
-                    res[uid][name]=self._getindirect(v)
-                else:
-                    res[uid][name]=self._getindirect(v)[0]
+                fieldvalue=self._getindirect(v)
+                if fieldvalue:
+                    if type=="indirectBLOB":
+                        res[uid][name]=fieldvalue
+                    else:
+                        res[uid][name]=fieldvalue[0]
         return res
 
     def _getindirect(self, what):
@@ -669,9 +671,9 @@ class Database:
                     continue
                 assert type=="indirectBLOB" or type=="indirectdictBLOB"
                 assert False, "indirect in indirect not handled"
-            assert len(record)
+            assert len(record),"Database._getindirect has zero len record"
             res.append(record)
-        assert len(res)
+        assert len(res), "Database._getindirect has zero len res"
         return res
         
     def _altertable(self, tablename, columnstoadd, createindex=0):
@@ -901,7 +903,7 @@ class ModuleBase(object):
         self.table_name=vtablename
         fields=['__rowid__ integer primary key']
         for field in self.field_names[1:]:
-            fields.append(idquote(field)+' blob')
+            fields.append(idquote(field)+' valueBLOB')
         fields='(%s)'%','.join(fields)
         return ('create table %s %s;'%(idquote(vtablename), fields), self)
 

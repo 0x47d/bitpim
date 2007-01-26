@@ -311,10 +311,13 @@ def formatexception(excinfo=None, lastframes=8):
                     print >>s,"(Exception occurred printing value)"
      return s.getvalue()
                     
-def gettempfilename(extension):
+def gettempfilename(extension=None):
     "Returns a filename to be used for a temporary file"
     # safest Python 2.3 method
-    x=tempfile.NamedTemporaryFile(suffix="."+extension)
+    if extension:
+        x=tempfile.NamedTemporaryFile(suffix="."+extension)
+    else:
+        x=tempfile.NamedTemporaryFile()
     n=x.name
     x.close()
     del x

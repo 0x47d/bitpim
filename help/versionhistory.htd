@@ -19,6 +19,7 @@
       <li><p>Sanyo SCP-6600 (Katana): Writing the phonebook now supported.
       <li><p>Bug fix: Windows comscan crashed BitPim.
       <li><p>Bug fix: <b>LG VX-8500/8600</B> T9 User Database feature.
+      <li><p>Design change: storing media data via Sqlite virtual tables.
     </ul>
 
    <h2><a name="0.9.10">Changes in 0.9.10</a></h2>

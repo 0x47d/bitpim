@@ -52,6 +52,7 @@ import filesystem
 import widgets
 import media_root
 import t9editor
+import vtab_media
 
 if guihelper.IsMSWindows():
     import win32api
@@ -404,7 +405,6 @@ class Phone(today.TodayWidget):
         except Exception, e:
             if __debug__:
                 raise Exception, e 
-   	        pass
    	wx.CallAfter(self.tree.SetStartupPage)
 
     def OnPhoneChanged(self, _):
@@ -421,7 +421,17 @@ class Phone(today.TodayWidget):
             if os.path.exists(olddbpath) and not os.path.exists(newdbpath):
                 shutil.copyfile(olddbpath, newdbpath)
         self.database=None # allow gc
-        self.database=database.Database(newdbpath)
+        # Preparing for virtual tables to store media data
+        vtabs=[ { 'tablename': 'ringtone-index__mediadata',
+                  'modulename': 'ringtonemodule',
+                  'moduleclass': vtab_media.Media,
+                  'args': (self.ringerpath,) },
+                { 'tablename': 'wallpaper-index__mediadata',
+                  'modulename': 'wallpapermodule',
+                  'moduleclass': vtab_media.Media,
+                  'args': (self.wallpaperpath,) }
+                ]
+        self.database=database.Database(newdbpath, vtabs)
             
     def GetDatabase(self):
         return self.database

@@ -33,7 +33,7 @@ class Media(database.ModuleBase):
         """
         @params pathname: full path in which to stores data files
         """
-        super(Media, self).__init__(('mediadata',))
+        super(Media, self).__init__(('data',))
         # make sure the path exists
         if not os.path.exists(pathname):
             os.makedirs(pathname)
@@ -118,7 +118,7 @@ class Media(database.ModuleBase):
             return self.idfromfilename(filename)
         else:
             # mediadata
-            return file(filename, 'rb').read()
+            return buffer(file(filename, 'rb').read())
     def Next(self):
         """
         Move the cursor to the next row.
