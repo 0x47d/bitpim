@@ -185,7 +185,7 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         hbs.Add(self._revert_btn, 0,
                 wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, wx.ID_SAVE, self._OnSave)
-        wx.EVT_BUTTON(self, wx.ID_REVERT, self._OnRevert)
+        wx.EVT_BUTTON(self, wx.ID_REVERT_TO_SAVED, self._OnRevert)
         wx.EVT_BUTTON(self, wx.ID_HELP,
                       lambda _: wx.GetApp().displayhelpid(self.help_id))
         vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -277,6 +277,12 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         if _idx==-1:
             return
         self._words_lb.DeleteItem(_idx)
+        # Check if this key is empty, if it is, delete it from the keys LB
+        if self._words_lb.GetItemCount()<2:
+            # this key is empty, delete it as well
+            _idx=self._keys_lb.GetSelection()
+            if _idx!=wx.NOT_FOUND:
+                self._keys_lb.Delete(_idx)
         self.OnMakeDirty()
         wx.CallAfter(self._re_order)
     def getdata(self, result):
