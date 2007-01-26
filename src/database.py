@@ -314,7 +314,7 @@ class Database:
                 table
             'moduleclass': the ModuleBase subclass that implements this
                 virtual table
-            'args': arguments passed to instantion of the module class
+            'args': arguments passed to instantiaion of the module class
         """
         self.connection=apsw.Connection(filename)
         self.cursor=self.connection.cursor()
@@ -895,7 +895,7 @@ class ModuleBase(object):
         @params modulename: string name of the module being invoked
         @params databasename: string name of this database
         @params vtablename: string name of this new virtual table
-        @params args: addtional arguments sent from the CREATE VIRTUAL TABLE
+        @params args: additional arguments sent from the CREATE VIRTUAL TABLE
             statement
         @returns: a tuple of 2 values: an sql string describing the table, and
             an object implementing it: Me!
@@ -972,7 +972,7 @@ class ModuleBase(object):
         """
         Determines if the current cursor points to a valid row.
         The Sqlite doc is wrong on this.
-        @params True if NOT valid row, False otherwise
+        @returns: True if NOT valid row, False otherwise
         """
         raise NotImplementedError
     def Column(self, N):
@@ -987,6 +987,7 @@ class ModuleBase(object):
         Move the cursor to the next row.
         @returns: None
         """
+        raise NotImplementedError
     def Rowid(self):
         """
         Return the rowid of the current row.

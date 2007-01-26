@@ -324,12 +324,6 @@ class Phone(today.TodayWidget):
 
         blob_path=database_name+"_blobs"
         self.blob_path=self._fixup(os.path.join(self.path, blob_path))
-        try:
-            os.makedirs(self.blob_path)
-        except:
-            pass
-        if not os.path.isdir(self.blob_path):
-            raise Exception("Unable to create database object directory "+self.blob_path)
         self.ringerpath=self._fixup(os.path.join(self.path, "ringer"))
         self.wallpaperpath=self._fixup(os.path.join(self.path, "wallpaper"))
         self.phonebookpath=self._fixup(os.path.join(self.path, "phonebook"))

@@ -102,7 +102,7 @@ class Media(database.ModuleBase):
     def Eof(self):
         """
         Determines if the current cursor points to a valid row.
-        @params False if valid row, True otherwise
+        @returns: False if valid row, True otherwise
         """
         return self.cursor is None or self.cursor>=len(self.filenames)
     def Column(self, N):
