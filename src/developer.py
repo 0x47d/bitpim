@@ -87,11 +87,14 @@ Useful variables:
         html+="</table>"
         self.htmlw.SetPage(html)
 
-    def rows(self, table):
+    def rows(self, table, wheres=None):
         "Shows rows from table"
         cursor=self.locals['db'].cursor
         html="<h1>All rows in %s</h1>" % (htmlify(table),)
-        cursor.execute("select * from "+table)
+        statement="select * from [%s]"%table
+        if wheres:
+            statement+=" where "+wheres
+        cursor.execute(statement)
         try:
             cursor.getdescription()
         except:
@@ -107,7 +110,10 @@ Useful variables:
         for vals in cursor:
             html+="<tr>"
             for v in vals:
-                html+="<td>%s" % (htmlify(str(v)),)
+                try:
+                    html+="<td>%s" % (htmlify(str(v)),)
+                except Exception,e:
+                    html+="<td>Exception: %s"%htmlify(str(e))
             html+="</tr>"
         html+="</table>"
         self.htmlw.SetPage(html)
