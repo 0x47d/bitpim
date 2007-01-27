@@ -174,12 +174,17 @@ class PhoneModelPage(MyPage):
                                    style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_ALWAYS_SB)
         wx.EVT_LISTBOX(self, self._models_lb.GetId(), self.OnModelsLB)
         _sbs.Add(self._models_lb, 1, wx.EXPAND|wx.ALL, 5)
+        self.help_btn=wx.Button(self, wx.ID_HELP)
+        _sbs.Add(self.help_btn, 0, wx.ALL, 5)
+        wx.EVT_BUTTON(self, self.help_btn.GetId(), self.OnHelp)
+        self.help_btn.Enable(False)
         hs.Add(_sbs, 1, wx.EXPAND|wx.ALL, 5)
         return hs
 
     def _populate_models(self, carriers=None, brand=None):
         # populate the list of phones based on the carrier and/or brand
         self._models_lb.Clear()
+        self.help_btn.Enable(False)
         _l=phones.phoneslist(brand, None)
         if carriers:
             for _c in carriers:
@@ -235,7 +240,16 @@ class PhoneModelPage(MyPage):
         self._populate_carriers()
         for s in phones.carriers(_model):
             self._carriers_lb.SetStringSelection(s)
+        self.help_btn.Enable(phones.helpid(_model) is not None)
         self._setbyme=False
+
+    def OnHelp(self, _):
+        model=self._models_lb.GetStringSelection()
+        if not model:
+            return
+        helpid=phones.helpid(model)
+        if helpid:
+            wx.GetApp().displayhelpid(helpid)
 
 #-------------------------------------------------------------------------------
 class SummaryPage(MyPage):
