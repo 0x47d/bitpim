@@ -413,6 +413,11 @@ if __debug__:
                                       'carrier': [c_tmobileusa],
                                       'helpid': None,
                                       },
+                        'SCP-8400': { 'module': 'com_sanyo8400',
+                                      'carrier': [c_sprint],
+                                      'brand': b_sanyo,
+                                      'helpid': helpids.ID_PHONE_SANYOOTHERS,
+                                      },
                         })
 
 # update the module path
