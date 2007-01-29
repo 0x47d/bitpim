@@ -55,6 +55,7 @@ import fileview
 import data_recording
 import analyser
 import t9editor
+import newdb_wiz
 
 if guihelper.IsMSWindows():
     import win32api
@@ -780,6 +781,9 @@ class MainWindow(wx.Frame):
         menu.Append(guihelper.ID_DATAGETPHONE, "Get Phone &Data ...", "Loads data from the phone")
         menu.Append(guihelper.ID_DATASENDPHONE, "&Send Phone Data ...", "Sends data to the phone")
         menu.Append(guihelper.ID_DATAHISTORICAL, "&Historical Data ...", "View Current & Historical Data")
+        menu.AppendSeparator()
+        menu.Append(guihelper.ID_DATANEWDB, 'Create New Storage ...',
+                    'Create a New BitPim Storage Area')
         menuBar.Append(menu, "&Data")
 
         menu=wx.Menu()
@@ -872,6 +876,7 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_DATAGETPHONE, self.OnDataGetPhone)
         wx.EVT_MENU(self, guihelper.ID_DATASENDPHONE, self.OnDataSendPhone)
         wx.EVT_MENU(self, guihelper.ID_DATAHISTORICAL, self.tree.OnDataHistorical)
+        wx.EVT_MENU(self, guihelper.ID_DATANEWDB, self.OnNewDB)
         wx.EVT_MENU(self, guihelper.ID_VIEWCOLUMNS, self.tree.OnViewColumns)
         wx.EVT_MENU(self, guihelper.ID_VIEWPREVIEW, self.tree.OnViewPreview)
         wx.EVT_MENU(self, guihelper.ID_VIEWCLEARLOGS, self.tree.OnViewClearLogs)
@@ -1376,6 +1381,9 @@ class MainWindow(wx.Frame):
 
     def update_cache_path(self):
         com_brew.file_cache.set_path(self.configpath)
+
+    def OnNewDB(self, _):
+        newdb_wiz.create_new_db(self, self.config)
 
     ### 
     ### Main bit for getting stuff from phone

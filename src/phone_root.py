@@ -398,7 +398,7 @@ class Phone(today.TodayWidget):
             self.t9editorwidget.populate(results)
         except Exception, e:
             if __debug__:
-                raise Exception, e 
+                raise
    	wx.CallAfter(self.tree.SetStartupPage)
 
     def OnPhoneChanged(self, _):

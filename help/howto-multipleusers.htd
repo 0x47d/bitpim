@@ -61,4 +61,6 @@ directory with your right mouse button and drop it onto your desktop
 or into your menus.  When prompted say that you want to create a
 shortcut.
 
+<P>Additionally, BitPim automates the above process via the <a href="dialog-newdb.htm">Create New BitPim Data Storage</a> wizard.
+
 #include "pageend.h"
