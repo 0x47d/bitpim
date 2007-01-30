@@ -408,7 +408,7 @@ if __debug__:
                                       'carrier': [c_sprint],
                                       'helpid': None,
                                       },
-                        'RAZR V3r': { 'module': 'com_motov3r',
+                        'RAZR V3t': { 'module': 'com_motov3t',
                                       'brand': b_moto,
                                       'carrier': [c_tmobileusa],
                                       'helpid': None,

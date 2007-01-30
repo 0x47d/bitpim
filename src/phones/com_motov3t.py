@@ -7,15 +7,15 @@
 ###
 ### $Id: com_motov3c.py 3460 2006-07-08 23:55:09Z djpham $
 
-"""Motorola V3r GSM phone"""
+"""Motorola V3t GSM phone"""
 
 import common
 import com_moto_gsm
 
 class Phone(com_moto_gsm.Phone):
-    """Talk to a Motorola RAZR V3r GSM phone"""
-    desc="Moto-RAZR-V3r"
-    serialsname="motov3r"
+    """Talk to a Motorola RAZR V3t GSM phone"""
+    desc="Moto-RAZR-V3t"
+    serialsname="motov3t"
 
     def __init__(self, logtarget, commport):
         com_moto_gsm.Phone.__init__(self, logtarget, commport)
@@ -38,7 +38,7 @@ class Profile(parentprofile):
 
     # use for auto-detection
     phone_manufacturer='Motorola'
-    phone_model='V7r '
+    phone_model='V3t '
     common_model_name='V710'
     generic_phone_model='Motorola CDMA v710 Phone'
 
