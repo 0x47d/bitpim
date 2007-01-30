@@ -812,7 +812,7 @@ class PopupCalendar(wx.Dialog):
         wx.calendar.EVT_CALENDAR(self, self.control.GetId(), self.OnCalSelected)
 
     def Popup(self, year, month, day, event):
-        d=wx.DateTimeFromDMY(day, month, year)
+        d=wx.DateTimeFromDMY(day, month-1, year)
         self.control.SetDate(d)
         btn=event.GetEventObject()
         pos=btn.ClientToScreen( (0,0) )

@@ -487,7 +487,12 @@ class RepeatEntry(object):
     def _set_dow(self, dow):
         if self._type==self.yearly:
             raise AttributeError
-        self._data[self._dow]=dow
+        if isinstance(dow, int):
+            self._data[self._dow]=dow
+        elif isinstance(dow, (list, tuple)):
+            self._data[self._dow]=1<<(datetime.date(*dow[:3]).isoweekday()%7)
+        else:
+            raise TypeError,"Must be an int or a list/tuple"
     dow=property(fget=_get_dow, fset=_set_dow)
     def _get_dow_str(self):
         try:

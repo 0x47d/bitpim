@@ -160,7 +160,10 @@ class VCalendarImportData(object):
             rp.repeat_type=rp_type
             rp.interval=rp_interval
             rp.interval2=rp_interval2
-            rp.dow=rp_dow
+            if rp_dow:
+                rp.dow=rp_dow
+            else:
+                rp.dow=ce.start
         elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly
         else:
