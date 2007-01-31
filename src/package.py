@@ -57,7 +57,7 @@ def sanitycheck():
     print "  OK"
 
     print "paramiko version",
-    expect='1.4 (oddish)'
+    expect='1.6.4 (yanma)'
     import paramiko
     if paramiko.__version__!=expect:
         raise Exception("Should be %s version of paramiko - you have %s" % (expect, paramiko.__version__))
@@ -79,7 +79,7 @@ def sanitycheck():
     print "  OK"
 
     print "sqlite",
-    ver="3.3.10"
+    ver="3.3.12"
     if apsw.sqlitelibversion()!=ver:
         raise Exception("Should be sqlite version %s - you have %s" % (ver, apsw.sqlitelibversion()))
     print "  OK"
@@ -149,8 +149,7 @@ def isofficialbuild():
     import socket
     h=socket.gethostname().lower()
     # not built by rogerb (or stevep/n9yty) are unofficial
-    return h in ('rh9bitpim.rogerbinns.com', "roger-sqyvr14d3",
-             "smpbook.n9yty.com", "smpbook.local.", "rogerbmac.rogerbinns.com", "rogerbmac.local")
+    return h in ('rh9bitpim.rogerbinns.com', "roger-ba470eb54", "rogerbmac.rogerbinns.com")
 
 def ensureofficial():
     """If this is not an official build then ensure that version.vendor doesn't say it is"""

@@ -123,6 +123,10 @@
           <param name="Name" value="Calendar Import Preset">
           <param name="Local" value="dialog-calimppreset.htm">
           </OBJECT>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Create New BitPim Data Storage">
+          <param name="Local" value="dialog-newdb.htm">
+          </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">
         <param name="Name" value="Tree Items">
@@ -462,6 +466,16 @@
       <LI><OBJECT type="text/sitemap">
           <param name="Name" value="Notes">
           <param name="Local" value="phone-lgvx5200-notes.htm">
+          </OBJECT>
+    </UL>
+    <LI><OBJECT type="text/sitemap">
+        <param name="Name" value="LG VX-5300">
+        <param name="Local" value="phone-lgvx5300.htm">
+        </OBJECT>
+    <UL>
+      <LI><OBJECT type="text/sitemap">
+          <param name="Name" value="Notes">
+          <param name="Local" value="phone-lgvx5300-notes.htm">
           </OBJECT>
     </UL>
     <LI><OBJECT type="text/sitemap">

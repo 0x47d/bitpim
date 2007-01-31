@@ -50,8 +50,7 @@ copytowebsite() {
 
 # nice little function to see if a file is in subversion
 isinsvn() {
-    efile=`dirname $1`/.svn/entries
-    grep -s "name=\"`basename $1`\"" $efile >/dev/null
+    svn info "$1" 2>/dev/null | grep "$1" >/dev/null
 }
 
 # we look for all .py files in SVN

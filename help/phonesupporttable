@@ -263,6 +263,18 @@
 <td align=center>X
 <td align=center>X
 </tr>
+<tr><th>LG-VX5300
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>R W
+<td align=center>&nbsp;
+<td align=center>&nbsp;
+<td align=center>R W
+<td align=center>R 
+<td align=center>X
+<td align=center>X
+</tr>
 <tr><th>LG-VX6000
 <td align=center>R W
 <td align=center>R W
@@ -373,13 +385,13 @@
 </tr>
 <tr><th>LG-VX9900
 <td align=center>R W
-<td align=center>&nbsp;
+<td align=center>R W
+<td align=center>R W
 <td align=center>R W
 <td align=center>R W
 <td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
-<td align=center>&nbsp;
+<td align=center>R 
+<td align=center>R 
 <td align=center>X
 <td align=center>X
 </tr>
@@ -624,7 +636,7 @@
 <td align=center>X
 </tr>
 <tr><th>SCP-6600 (Katana)
-<td align=center>R 
+<td align=center>R W
 <td align=center>R W
 <td align=center>R 
 <td align=center>R 
