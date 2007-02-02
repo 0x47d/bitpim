@@ -14,7 +14,7 @@ SCREENSHOT(screen-newdb3.png,)
 <DT><P><B>Options:</B>
 <DD><P><B>Use Default Settings:</B> Create an empty BitPim configuration file, which uses all default settings.
 <DD><P><B>Use Current Settings:</B> Create the new BitPim configuration file based on the settings of the current BitPim configuration.
-<DD><P><B>Desktop Shortcut (Windows only):</B> Create a shortcut to the Windows <B>Desktop</B> which, when activated, would start BitPim using this new data storage and configuration.  The name of the shortcut will be <B>[Storage Name]</B>, and the shortcut will be stored in a folder named <B>Phones</B> located on the <B>Desktop</B>.
-<DD><P><B>Start Menu Shortcut (Windows only):</B> Create a shortcut to the Windows <B>Start Menu</B> which, when activated, would start BitPim using this new data storage and configuration.  The named of the shortcut will be <B>[Storage Name]</B>, and the shortcut will be listed under the menu item <B>Phones</B> located under the <B>Start Menu</B>.
+<DD><P><B>Desktop Shortcut (Windows only):</B> Create a shortcut on the Windows <B>Desktop</B> which, when activated, would start BitPim using this new data storage and configuration.  The name of the shortcut will be <B>[Storage Name]</B>, and the shortcut will be stored in a folder named <B>Phones</B> located on the <B>Desktop</B>.
+<DD><P><B>Start Menu Shortcut (Windows only):</B> Create a shortcut in the Windows <B>Start Menu</B> which, when activated, would start BitPim using this new data storage and configuration.  The named of the shortcut will be <B>[Storage Name]</B>, and the shortcut will be listed under the menu item <B>Phones</B> located in the <B>Start Menu</B>.
 </DL>
 #include "pageend.h"
