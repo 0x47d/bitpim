@@ -104,10 +104,10 @@ class OptionsPage(parentpage):
         if guihelper.IsMSWindows():
             sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Shortcut Options:'),
                                   wx.VERTICAL)
-            self.desktop=wx.CheckBox(self, -1, 'Create a shortcut to your Desktop')
+            self.desktop=wx.CheckBox(self, -1, 'Create a shortcut on your Desktop')
             sbs.Add(self.desktop, 0, wx.EXPAND|wx.ALL, 5)
             self.startmenu=wx.CheckBox(self, -1,
-                                       'Create a shortcut to your Start Menu')
+                                       'Create a shortcut in your Start Menu')
             sbs.Add(self.startmenu, 0, wx.EXPAND|wx.ALL, 5)
             vbs.Add(sbs, 0, wx.EXPAND|wx.ALL, 5)
         return vbs
@@ -145,9 +145,9 @@ class SummaryPage(parentpage):
             text.append('Use default BitPim settings.')
         if guihelper.IsMSWindows():
             if data.get('desktop', False):
-                text.append('Create a shortcut to your Desktop.')
+                text.append('Create a shortcut on your Desktop.')
             if data.get('startmenu', False):
-                text.append('Create a shortcut to your Start Menu.')
+                text.append('Create a shortcut in your Start Menu.')
         self.summary.SetLabel('\n'.join(text))
 
 #-------------------------------------------------------------------------------
