@@ -61,6 +61,10 @@ if guihelper.IsMSWindows():
     import win32api
     import win32con
     import win32gui
+    import msvcrt
+
+if guihelper.IsGtk():
+    import fcntl
 
 ###
 ### Used to check our threading
@@ -421,7 +425,27 @@ class MainApp(wx.App):
         codecs.register(phone_media_codec.search_func)
         self._config_filename=config_filename
         wx.App.__init__(self, redirect=False, useBestVisual=True)
-        
+
+    def lock_file(self, filename):
+        # if the file can be locked, lock it and return True.
+        # return False otherwise.
+        self.lockedfile=file(filename, 'w')
+        try:
+            if guihelper.IsMSWindows():
+                msvcrt.locking(self.lockedfile.fileno(),
+                               msvcrt.LK_NBLCK, 1)
+            else:
+                # Linux & Mac
+                fcntl.flock(self.lockedfile.fileno(),
+                            fcntl.LOCK_EX|fcntl.LOCK_NB)
+            return True
+        except IOError,e:
+            return False
+
+    def usingsamedb(self):
+        # using a simple file locking method
+        return not self.lock_file(os.path.join(self.config._path, '.lock'))
+
     def OnInit(self):
         self.made=False
         # Routine maintenance
@@ -438,6 +462,13 @@ class MainApp(wx.App):
 
         # Establish config stuff
         self.config=Config(self._config_filename)
+        # Check to see if we're the 2nd instance running on the same DB
+        if self.usingsamedb():
+            wx.MessageDialog(None,
+                             'Another copy of BitPim is using the same data dir:\n%s'%self.config._path,
+                             'BitPim Error',
+                             style=wx.OK|wx.ICON_ERROR).ShowModal()
+            return False
         # this is for wx native use, like the freaking help controller !
         self.wxconfig=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
 
