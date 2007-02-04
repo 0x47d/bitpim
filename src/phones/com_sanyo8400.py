@@ -39,7 +39,7 @@ class Phone(com_sanyo6600.Phone):
     desc="SCP-8400"
 
     FIRST_MEDIA_DIRECTORY=1
-    LAST_MEDIA_DIRECTORY=3
+    LAST_MEDIA_DIRECTORY=2
 
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
@@ -71,6 +71,19 @@ class Phone(com_sanyo6600.Phone):
         com_sanyo6600.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
+
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI."""
+        req=self.protocolclass.esnrequest()
+        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
+        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
+        self.getmediaindices(results)
+
+        #results['groups']=self.read_groups()
+
+        self.log("Fundamentals retrieved")
+
+        return results
 
     my_model='SCP-8400/US'
     my_manufacturer='SANYO'
