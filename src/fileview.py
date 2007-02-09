@@ -235,7 +235,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
 
     def __init__(self, mainwindow, parent, media_root, watermark=None):
         wx.Panel.__init__(self,parent,style=wx.CLIP_CHILDREN)
-
+        # adjust the DB to accommodate the new schema if necessary
+        self._fixupdb(mainwindow.database)
         # item attributes
         if self.item_selection_brush is None:
             self.item_selection_brush=wx.TheBrushList.FindOrCreateBrush("MEDIUMPURPLE2", wx.SOLID)
@@ -616,30 +617,6 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         self.aggdisp.SelectAll()
         self.item_list.SelectAll()
 
-##  Do we need this???
-##
-##    def EndSelectedFilesContext(self, context, deleteitems=False):
-##        # We have a fun additional problem.  By default Windows
-##        # returns a code that it is copying, when in fact it is
-##        # moving.  Consequently we do a delete if either the
-##        # source file is gone, or deleteitems is true
-##        if not deleteitems:
-##            for item in context:
-##                me=self._data[self.database_key][item.key]
-##                fname=self.filename(me)
-##                if not os.path.exists(fname):
-##                    deleteitems=True
-##                    break
-##        if deleteitems:
-##            for item in context:
-##                me=self._data[self.database_key][item.key]
-##                fname=self.filename(me)
-##                if os.path.exists(fname):
-##                    os.remove(fname)
-##            for item in context:
-##                item.RemoveFromIndex()
-##            self.OnRefresh()
-
     def OnSave(self, _):
         # If one item is selected we ask for a filename to save.  If
         # multiple then we ask for a directory, and users don't get
@@ -751,6 +728,19 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         entry.timestamp=timestamp
         dict[self.database_key][entry.id]=entry
         self.modified=True
+
+    def _fixupdb(self, db):
+        # fixup the database to accommodate the new schema
+        adjustflg=False
+        for _,_name,_type in db.getcolumns(self.database_key):
+            if _name=='mediadata' and _type!='indirectBLOB':
+                # old schema, need to adjust
+                adjustflg=True
+                break
+        # adjust the table: replace the mediadata field
+        if adjustflg:
+            db._altertable(self.database_key, [('mediadata', 'indirectBLOB')],
+                           ['mediadata'], 1)
 
     def _gettempfile(self, item):
         # store the the media data in a temporary file and return the full file
@@ -938,17 +928,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         return result
 
     def delete_old_media(self):
-        try:
-            if os.path.isdir(self.thedir):
-                # delete all files we don't know about
-                for f in os.listdir(self.thedir):
-                    # delete them all except windows magic ones which we ignore
-                    if f.lower() not in self.skiplist:
-                        os.remove(os.path.join(self.thedir, f))
-                    if not len(os.listdir(self.thedir)):
-                        os.rmdir(self.thedir)
-        except:
-            pass
+        # No longer do this since it messes up the virtual tables setup!
+        pass
 
     def OnDropFiles(self, _, dummy, filenames):
         # There is a bug in that the most recently created tab

@@ -255,7 +255,8 @@ def ExclusiveWrapper(method):
         self.excounter+=1
         self.transactionwrite=False
         if self.excounter==1:
-            print "BEGIN EXCLUSIVE TRANSACTION"
+            if TRACE:
+                print "BEGIN EXCLUSIVE TRANSACTION"
             self.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
             self._schemacache={}
         try:
@@ -279,7 +280,8 @@ def ExclusiveWrapper(method):
                         cmd="ROLLBACK TRANSACTION"
                     else:
                         cmd="END TRANSACTION"
-                print cmd
+                if TRACE:
+                    print cmd
                 self.cursor.execute(cmd)
                 
     setattr(_transactionwrapper, "__doc__", getattr(method, "__doc__"))
@@ -497,7 +499,7 @@ class Database:
                     continue
                 assert False, "You can't possibly get here!"
             if len(creates):
-                self._altertable(tablename, creates, createindex=1)
+                self._altertable(tablename, creates, [], createindex=1)
 
         # write out indirect values
         dbtkeys=self.getcolumns(tablename)
@@ -560,7 +562,7 @@ class Database:
         # are any missing?
         missing=[k for k in datakeys if k not in dbkeys]
         if len(missing):
-            self._altertable(tablename, [(m,"valueBLOB") for m in missing], createindex=2)
+            self._altertable(tablename, [(m,"valueBLOB") for m in missing], [], createindex=2)
         # for each row we now work out the indirect information
         for r in indirects:
             res=tablename+","
@@ -676,37 +678,37 @@ class Database:
         assert len(res), "Database._getindirect has zero len res"
         return res
         
-    def _altertable(self, tablename, columnstoadd, createindex=0):
-        """Alters the named table by adding the listed columns
+    def _altertable(self, tablename, columnstoadd, columnstodel, createindex=0):
+        """Alters the named table by deleting the specified columns, and
+        adding the listed columns
 
         @param tablename: name of the table to alter
         @param columnstoadd: a list of (name,type) of the columns to add
+        @param columnstodel: a list name of the columns to delete
         @param createindex: what sort of index to create.  0 means none, 1 means on just __uid__ and 2 is on all data columns
         """
         # indexes are automatically dropped when table is dropped so we don't need to
-        dbtkeys=self.getcolumns(tablename)
+        dbtkeys=[x for x in self.getcolumns(tablename) \
+                 if x[1] not in columnstodel]
         # clean out cache entry since we are about to invalidate it
         del self._schemacache[tablename]
         self.transactionwrite=True
-        cmd=["create", "temporary", "table", idquote("backup_"+tablename), "("]
-        for _,n,t in dbtkeys:
-            if cmd[-1]!="(":
-                cmd.append(",")
-            cmd.append(idquote(n))
-            cmd.append(t)
-        cmd.append(")")
+        cmd=["create", "temporary", "table", idquote("backup_"+tablename),
+             "(",
+             ','.join(['%s %s'%(idquote(n), t) for _,n,t in dbtkeys]),
+             ")"]
         self.sql(" ".join(cmd))
         # copy the values into the temporary table
-        self.sql("insert into %s select * from %s" % (idquote("backup_"+tablename), idquote(tablename)))
+        self.sql("insert into %s select %s from %s" % (idquote("backup_"+tablename),
+                                                       ','.join([idquote(n) for _,n,_ in dbtkeys]),
+                                                       idquote(tablename)))
         # drop the source table
         self.sql("drop table %s" % (idquote(tablename),))
         # recreate the source table with new columns
         del cmd[1] # remove temporary
         cmd[2]=idquote(tablename) # change tablename
-        del cmd[-1] # remove trailing )
-        for n,t in columnstoadd:
-            cmd.extend((',', idquote(n), t))
-        cmd.append(')')
+        cmd[-2]=','.join(['%s %s'%(idquote(n), t) for _,n,t in dbtkeys]+\
+                         ['%s %s'%(idquote(n), t) for n,t in columnstoadd]) # new list of columns
         self.sql(" ".join(cmd))
         # create index if needed
         if createindex:
@@ -725,12 +727,9 @@ class Database:
                 raise ValueError("bad createindex "+`createindex`)
             self.sql(" ".join(cmd))
         # put values back in
-        cmd=["insert into", idquote(tablename), '(']
-        for _,n,_ in dbtkeys:
-            if cmd[-1]!="(":
-                cmd.append(",")
-            cmd.append(idquote(n))
-        cmd.extend([")", "select * from", idquote("backup_"+tablename)])
+        cmd=["insert into", idquote(tablename), '(',
+             ','.join([idquote(n) for _,n,_ in dbtkeys]),
+             ")", "select * from", idquote("backup_"+tablename)]
         self.sql(" ".join(cmd))
         self.sql("drop table "+idquote("backup_"+tablename))
 
