@@ -60,12 +60,12 @@ fi
 cd ..
 
 # copy into website
-if [ -d ../bpweb/site/.svn ]
+if [ -d ../website/site/.svn ]
 then
     echo "Copying help into web site tree"
-    webhelp="`pwd`/../bpweb/site/help"
+    webhelp="../website/site/help"
     rm -rf "$webhelp"
     mkdir -p "$webhelp"
-    $PYTHON ../hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
+    $PYTHON ../website/hb2web/hb2web.py --colour "#99ffcc" help/bitpim.htb "$webhelp"
     rm -rf "$webhelp/../testhelp"
 fi
