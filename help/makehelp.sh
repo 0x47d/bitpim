@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This should only run on Windows since we also need to build CHM files
 # although in theory it could run against the Linux and Mac versions
@@ -14,8 +14,19 @@
 # windows fudge
 PATH=/usr/bin:$PATH
 
+if [ "$(uname -o)" = "Cygwin" ]
+then
+    cygwin=true
+else
+    cygwin=false
+fi
+
 PYTHON=python
 HBDIR="/c/program files/helpblocks"
+if $cygwin
+then
+    HBDIR="/cygdrive"$HBDIR
+fi
 
 # version info for helpblocks pre-processor
 $PYTHON src/version.py > help/version.h
@@ -27,16 +38,13 @@ cd help
 $PYTHON contentsme.py bitpim.hhc
 
 # remove old files
-rm *.htm bitpim.chm bitpim.htb ../resources/bitpim.chm ../resources/bitpim.htb
+rm -f *.htm bitpim.chm bitpim.htb ../resources/bitpim.chm ../resources/bitpim.htb
 
 # Run helpblocks
-# hb errors unless the cwd is its install dir
-oldpwd="`pwd`"
+echo "Building the help files using HelpBlocks..."
+"$HBDIR"/helpblocks --rebuild --chm --wxhtml bitpim.wxh
 
-cd "$HBDIR"
-./helpblocks.exe --rebuild --chm --wxhtml "$oldpwd/bitpim.wxh"
-cd "$oldpwd"
-
+echo "generate various ids"
 # generate various ids
 $PYTHON genids.py bitpim_alias.h ../src/helpids.py
 cp bitpim.htb bitpim.chm ../resources
