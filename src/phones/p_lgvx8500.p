@@ -37,6 +37,7 @@ pb_file_name='pim/pbentry.dat'
 PLIndexFileName='dload/aodplaylist.lgpl'
 PLFilePath='dload'
 PLExt='.clgpl'
+PLMaxSize=50    # Max number of items per playlist
 
 # T9 User Database, how do we handle the Spanish DB?
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'

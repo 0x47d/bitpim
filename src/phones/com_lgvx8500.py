@@ -248,6 +248,7 @@ class Phone(parentphone):
         _pl_file=self.protocolclass.PLPlayListFile()
         _dt=datetime.datetime.now()
         _onesec=datetime.timedelta(seconds=1)
+        _plsize=0
         for _song in pl.songs:
             if song_info.has_key(_song):
                 _dt-=_onesec
@@ -256,6 +257,10 @@ class Phone(parentphone):
                     date=_dt.timetuple()[:6],
                     size=song_info[_song]['size'])
                 _pl_file.items.append(_entry)
+                _plsize+=1
+                if _plsize>=self.protocolclass.PLMaxSize:
+                    # reached max size
+                    break
         _buf=prototypes.buffer()
         _pl_file.writetobuffer(_buf,
                                logtitle='Writing Playlist '+pl.name)
