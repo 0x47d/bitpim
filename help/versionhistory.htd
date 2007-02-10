@@ -3,7 +3,9 @@
    <h2><a name="0.9.12">Changes in 0.9.12</a></h2>
     <ul>
       <li><p>New feature: prevent two BitPim instances using the same storage area.
-      <li><p>Bug fix: Build 0.9.11 compatibility issue.
+      <li><p>Bug fix: Build 0.9.11 database compatibility issue.
+      <li><p>Bug fix: <B>LG VX-8500:</B> limit the size of each playlist to 50 songs.
+      <li><p>Bug fix: <B>LG VX-8600:</B> disable Play List feature.
     </ul>
 
    <h2><a name="0.9.11">Changes in 0.9.11</a></h2>

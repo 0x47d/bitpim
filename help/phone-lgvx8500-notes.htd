@@ -36,6 +36,7 @@
 <li><p>Users can now retrieve, manage, and save their music playlists from/to the phones.  See section <a href="phone-lgvx8500-howtos.htm">Howtos</a> for more details.
 <li><p>Within each playlist, to keep the order of the songs as appeared in BitPim, sort them by dates on the phone.
 <li><p>When saving playlists to the phone, BitPim sets the Artist, Album, and Genre info of all songs to 'Unknown'.
+<li><p>The max size of each playlist is limited to 50 songs.
 </UL>
 
 #include "pageend.h"
