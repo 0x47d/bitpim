@@ -76,8 +76,8 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
-        ('playlist', 'read', 'OVERWRITE'),
-        ('playlist', 'write', 'OVERWRITE'),
+##        ('playlist', 'read', 'OVERWRITE'),
+##        ('playlist', 'write', 'OVERWRITE'),
         ('t9_udb', 'read', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
         )
