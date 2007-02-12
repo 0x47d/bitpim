@@ -429,7 +429,12 @@ class MainApp(wx.App):
     def lock_file(self, filename):
         # if the file can be locked, lock it and return True.
         # return False otherwise.
-        self.lockedfile=file(filename, 'w')
+        try:
+            self.lockedfile=file(filename, 'w')
+        except IOError:
+            # failed to create the file, just bail
+            self.lockedfile=None
+            return True
         try:
             if guihelper.IsMSWindows():
                 msvcrt.locking(self.lockedfile.fileno(),
@@ -439,7 +444,7 @@ class MainApp(wx.App):
                 fcntl.flock(self.lockedfile.fileno(),
                             fcntl.LOCK_EX|fcntl.LOCK_NB)
             return True
-        except IOError,e:
+        except IOError:
             return False
 
     def usingsamedb(self):
