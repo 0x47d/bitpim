@@ -308,8 +308,8 @@ class Database:
 
     def __init__(self, filename, virtualtables=None):
         """
-        @params filename: database filename
-        @params virtualtables: a list of dict specifying the virtual tables
+        @param filename: database filename
+        @param virtualtables: a list of dict specifying the virtual tables
             Each dict is expected to have the following keys:
             'tablename': the name of the virtual table
             'modulename': the name of the module that implements this virtual
@@ -876,8 +876,7 @@ class Database:
         return res
 
 class ModuleBase(object):
-    """
-    Base class to implement a specific Virtual Table module with apsw.
+    """Base class to implement a specific Virtual Table module with apsw.
     For more info:
     http://www.sqlite.org/cvstrac/wiki/wiki?p=VirtualTables
     http://www.sqlite.org/cvstrac/wiki/wiki?p=VirtualTableMethods
@@ -890,11 +889,11 @@ class ModuleBase(object):
         self.field_names=('__rowid__',)+field_names
     def Create(self, connection, modulename, databasename, vtablename, *args):
         """Called when the virtual table is created.
-        @params connection: an instance of apsw.Connection
-        @params modulename: string name of the module being invoked
-        @params databasename: string name of this database
-        @params vtablename: string name of this new virtual table
-        @params args: additional arguments sent from the CREATE VIRTUAL TABLE
+        @param connection: an instance of apsw.Connection
+        @param modulename: string name of the module being invoked
+        @param databasename: string name of this database
+        @param vtablename: string name of this new virtual table
+        @param args: additional arguments sent from the CREATE VIRTUAL TABLE
             statement
         @returns: a tuple of 2 values: an sql string describing the table, and
             an object implementing it: Me!
@@ -924,11 +923,10 @@ class ModuleBase(object):
         pass
 
     def BestIndex(self, constraints, orderby):
-        """
-        Provide information on how to best access this table.
+        """Provide information on how to best access this table.
         Must be overriden by subclass.
-        @params constraints: a tuple of (column #, op) defining a constraints
-        @params orderby: a tuple of (column #, desc) defining the order by
+        @param constraints: a tuple of (column #, op) defining a constraints
+        @param orderby: a tuple of (column #, desc) defining the order by
         @returns a tuple of up to 5 values:
             0: aConstraingUsage: a tuple of the same size as constraints.
                 Each item is either None, argv index(int), or (argv index, omit(Bool)).
@@ -959,62 +957,54 @@ class ModuleBase(object):
         """
         pass
     def Filter(self, idxNum, idxStr, argv):
-        """
-        Begin a search of a virtual table.
-        @params idxNum: int value passed by BestIndex
-        @params idxStr: string valued passed by BestIndex
-        @params argv: constraint parameters requested by BestIndex
+        """Begin a search of a virtual table.
+        @param idxNum: int value passed by BestIndex
+        @param idxStr: string valued passed by BestIndex
+        @param argv: constraint parameters requested by BestIndex
         @returns: None
         """
         raise NotImplementedError
     def Eof(self):
-        """
-        Determines if the current cursor points to a valid row.
+        """Determines if the current cursor points to a valid row.
         The Sqlite doc is wrong on this.
         @returns: True if NOT valid row, False otherwise
         """
         raise NotImplementedError
     def Column(self, N):
-        """
-        Find the value for the N-th column of the current row.
-        @params N: the N-th column
+        """Find the value for the N-th column of the current row.
+        @param N: the N-th column
         @returns: value of the N-th column
         """
         raise NotImplementedError
     def Next(self):
-        """
-        Move the cursor to the next row.
+        """Move the cursor to the next row.
         @returns: None
         """
         raise NotImplementedError
     def Rowid(self):
-        """
-        Return the rowid of the current row.
+        """Return the rowid of the current row.
         @returns: the rowid(int) of the current row.
         """
         raise NotImplementedError
     def UpdateDeleteRow(self, rowid):
-        """
-        Delete row rowid
-        @params rowid:
+        """Delete row rowid
+        @param rowid:
         @returns: None
         """
         raise NotImplementedError
     def UpdateInsertRow(self, rowid, fields):
-        """
-        Insert a new row of data into the table
-        @params rowid: if not None, use this rowid.  If None, create a new rowid
-        @params fields: a tuple of the field values in the order declared in
+        """Insert a new row of data into the table
+        @param rowid: if not None, use this rowid.  If None, create a new rowid
+        @param fields: a tuple of the field values in the order declared in
             Create/Connet
         @returns: rowid of the new row.
         """
         raise NotImplementedError
     def UpdateChangeRow(self, rowid, newrowid, fields):
-        """
-        Change the row of the current rowid with the new rowid and new values
-        @params rowid: rowid of the current row
-        @params newrowid: new rowid
-        @params fields: a tuple of the field values in the order declared in
+        """Change the row of the current rowid with the new rowid and new values
+        @param rowid: rowid of the current row
+        @param newrowid: new rowid
+        @param fields: a tuple of the field values in the order declared in
             Create/Connect
         @returns: rowid of the new row
         """
