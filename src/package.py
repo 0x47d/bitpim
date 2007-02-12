@@ -149,7 +149,10 @@ def isofficialbuild():
     import socket
     h=socket.gethostname().lower()
     # not built by rogerb (or stevep/n9yty) are unofficial
-    return h in ('rh9bitpim.rogerbinns.com', "roger-ba470eb54", "rogerbmac.rogerbinns.com")
+    return h in ('rh9bitpim.rogerbinns.com', "roger-ba470eb54",
+                 "rogerbmac.rogerbinns.com",
+                 "tinyone",
+                 )
 
 def ensureofficial():
     """If this is not an official build then ensure that version.vendor doesn't say it is"""
@@ -157,18 +160,24 @@ def ensureofficial():
     version.__freeze()
     print "Reloading version"
     reload(version)
-    if not isofficialbuild():
-        if version.vendor=="official":
-            # so modify file
-            versionpy=os.path.join(os.path.dirname(__file__), "version.py")
-            out=[]
-            for line in open(versionpy, "rt"):
-                if line.startswith('vendor="'):
-                    line='vendor="$%s %s $"\n' % ("Id:", "unofficial")
-                out.append(line)
-                    
-            open(versionpy, "wt").write("".join(out))
-            reload(version)
+    officialbuild=isofficialbuild()
+    if officialbuild and version.vendor=='unofficial':
+        vendor='official'
+    elif not officialbuild and version.vendor=='official':
+        vendor='unofficial'
+    else:
+        vendor=None
+    if vendor:
+        # so modify file
+        versionpy=os.path.join(os.path.dirname(__file__), "version.py")
+        out=[]
+        for line in open(versionpy, "rt"):
+            if line.startswith('vendor="'):
+                line='vendor="$%s %s $"\n' % ("Id:", vendor)
+            out.append(line)
+                
+        open(versionpy, "wt").write("".join(out))
+        reload(version)
 
 def getversion():
     return version.version

@@ -45,7 +45,8 @@ _rp="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"
 if _headurl.startswith(_rp):
     def isdevelopmentversion(): return False
     version=_headurl[len(_rp):].split("/")[0]
-    vendor="official"
+    if not vendor:
+        vendor="official"
 else:
     def isdevelopmentversion(): return True
     prefix="https://svn.sourceforge.com/svnroot/bitpim/"
@@ -54,7 +55,8 @@ else:
     # were we frozen?
     if svnrevision:
         version=version+"-"+`svnrevision`
-    vendor="developer build"
+    if not vendor:
+        vendor="developer build"
 
 del _headurl
 del _rp
