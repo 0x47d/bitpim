@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.13">Changes in 0.9.13</a></h2>
+    <ul>
+      <li><p>
+    </ul>
+
    <h2><a name="0.9.12">Changes in 0.9.12</a></h2>
     <ul>
       <li><p>New feature: prevent two BitPim instances using the same storage area.
