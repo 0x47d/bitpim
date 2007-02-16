@@ -22,6 +22,7 @@ import wx
 import wx.wizard as wiz
 
 # BitPim modules
+import bp_config
 import guihelper
 import setphone_wizard
 
@@ -221,6 +222,7 @@ def create_new_db(parent, config=None):
     wz=NewDBWizard(parent)
     if wz.RunWizard():
         data=wz.get()
+        name=data.get('name', '')
         # Dir should aleady exist, but check anyway
         path=data.get('path', '')
         if not os.path.isdir(path):
@@ -229,11 +231,10 @@ def create_new_db(parent, config=None):
         filename=os.path.join(path, '.bitpim')
         if data.get('currentsettings', False) and config:
             config.write(file(filename, 'wt'))
-        else:
-            file(filename, 'wt').write('')
+        conf=bp_config.Config(filename)
+        conf.Write('name', name)
         # and optionally create shortcuts (Windows only)
         if guihelper.IsMSWindows():
-            name=data.get('name', '')
             if data.get('desktop', False):
                 create_desktop_shortcut(name, filename)
             if data.get('startmenu', False):

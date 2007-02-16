@@ -10,7 +10,6 @@
 """The main gui code for BitPim""" 
 
 # System modules
-import ConfigParser
 import thread, threading
 import Queue
 import time
@@ -56,6 +55,7 @@ import data_recording
 import analyser
 import t9editor
 import newdb_wiz
+import bp_config
 
 if guihelper.IsMSWindows():
     import win32api
@@ -307,102 +307,6 @@ class WorkerThreadFramework(threading.Thread):
             wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.logdatacb, str, data, klass,
                                                             data_type))
 
-###
-###  BitPim Config class
-###
-class Config(ConfigParser.ConfigParser):
-    _default_config_filename='.bitpim'
-
-    def __init__(self, config_file_name=None):
-        ConfigParser.ConfigParser.__init__(self)
-        # get/set path & filename
-        if config_file_name:
-            self._filename=os.path.abspath(config_file_name)
-            self._path=os.path.dirname(self._filename)
-        else:
-            self._path, self._filename=self._getdefaults()
-        # read in the config if exist
-        if self._filename:
-            try:
-                self.read([self._filename])
-            except:
-                # something is wrong with the config file, just bail
-                if __debug__:
-                    raise
-            self.Write('path', self._path)
-            self.Write('config', self._filename)
-
-    def _getdefaults(self):
-        # return the default path & config file name
-        # consistent with the previous BitPim way
-        if guihelper.IsMSWindows(): # we want subdir of my documents on windows
-            # nice and painful
-            from win32com.shell import shell, shellcon
-            try:
-                path=shell.SHGetFolderPath(0, shellcon.CSIDL_PERSONAL, None, 0)
-            except: # it will fail if path doesn't exist.  one example was a user
-                # putting my docs on an external usb drive that isn't plugged in
-                # when starting bitpim
-                path=r"c:\My BitPim Files"
-            path=os.path.join(path, "bitpim")
-        else:
-            path=os.path.expanduser("~/.bitpim-files")
-        return path,os.path.join(path, Config._default_config_filename)
-
-    def _expand(self, key):
-        # return a tuple of (section, option) based on the key
-        _l=key.split('/')
-        return (len(_l)>1 and '/'.join(_l[:-1]) or 'DEFAULT', _l[-1])
-        
-    def _check_section(self, section):
-        if section and section!='DEFAULT' and not self.has_section(section):
-            self.add_section(section)
-
-    def Read(self, key, default=''):
-        try:
-            return self.get(*self._expand(key))
-        except:
-            return default
-
-    def ReadInt(self, key, default=0):
-        _section,_option=self._expand(key)
-        try:
-            # first try for an int value
-            return self.getint(_section, _option)
-        except:
-            pass
-        try:
-            # then check for a bool value
-            return self.getboolean(_section, _option)
-        except:
-            # none found, return the default
-            return default
-
-    def ReadFloat(self, key, default=0.0):
-        try:
-            return self.getfloat(*self._expand(key))
-        except:
-            return default
-
-    def Write(self, key, value):
-        try:
-            _section,_option=self._expand(key)
-            if not _section:
-                _section='DEFAULT'
-            self._check_section(_section)
-            self.set(_section, _option, str(value))
-            self.write(file(self._filename, 'wb'))
-            return True
-        except:
-            return False
-    WriteInt=Write
-    WriteFloat=Write
-
-    def HasEntry(self, key):
-        return self.has_option(*self._expand(key))
-    def Flush(self):
-        pass
-
 ####
 #### Main application class.  Runs the event loop etc
 ####
@@ -466,7 +370,7 @@ class MainApp(wx.App):
         self.SetVendorName(cfgstr)
 
         # Establish config stuff
-        self.config=Config(self._config_filename)
+        self.config=bp_config.Config(self._config_filename)
         # Check to see if we're the 2nd instance running on the same DB
         if self.usingsamedb():
             wx.MessageDialog(None,
@@ -617,7 +521,11 @@ class MainApp(wx.App):
             return # already been called
         self.made=True
         # make the main frame
-        self.frame=MainWindow(None, -1, "BitPim", self.config)
+        title='BitPim'
+        name=self.config.Read('name', None)
+        if name:
+            title+=' - '+name
+        self.frame=MainWindow(None, -1, title, self.config)
         self.frame.Connect(-1, -1, EVT_CALLBACK, self.frame.OnCallback)
         if guihelper.IsMac():
             self.frame.MacSetMetalAppearance(True)
