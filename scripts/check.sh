@@ -5,6 +5,13 @@
 # This script does various checks on the source code
 # including epydoc and pychecker
 
+if [ "$(uname -o)" = "Cygwin" ]
+then
+    cygwin=true
+else
+    cygwin=false
+fi
+
 EPYDOC=epydoc
 PYCHECKERARGS="--only --limit 10000"
 PYCHECKER="pychecker $PYCHECKERARGS"
@@ -21,6 +28,13 @@ case $MACHTYPE in
     # other platforms fill in here
 esac
 
+if $cygwin
+then
+    EPYDOC="python $(cygpath -w /cygdrive/c/python23/scripts/epydoc.py)"
+    PYCHECKER="python $(cygpath -w /cygdrive/c/python23/lib/site-packages/pychecker/checker.py) $PYCHECKERARGS pychecker"
+    PYXRDIR="/cygdrive/c/python23/lib/site-packages/pyxr/"
+fi
+
 # clean everything up
 rm -rf apidoc pyxr
 rm -f check.out
@@ -35,17 +49,17 @@ copytowebsite() {
 	exit 1
     fi
 
-    # this is how we detect the website - look for a bpweb checkout alongside this
+    # this is how we detect the website - look for a website checkout alongside this
     # directory
-    if [ ! -d ../bpweb/site/.svn ]
+    if [ ! -d ../website/site/.svn ]
     then
 	return  # not found
     fi
 
     # ok, lets copy
     echo "Copying directory $1 to be on web site at url /$2"
-    rm -rf ../bpweb/site/$2
-    cp -r $1 ../bpweb/site/$2
+    rm -rf ../website/site/$2
+    cp -r $1 ../website/site/$2
 }
 
 # nice little function to see if a file is in subversion
