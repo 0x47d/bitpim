@@ -633,6 +633,9 @@ class MainApp(wx.App):
         self.ApplySafeMode()
         wx.CallAfter(self.CheckDetectPhone)
         wx.CallAfter(self.CheckUpdate)
+        # double-check the locked file
+        if self.lockedfile is None:
+            self.usingsamedb()
 
     update_delta={ 'Daily': 1, 'Weekly': 7, 'Monthly': 30 }
     def CheckUpdate(self):
