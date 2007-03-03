@@ -23,6 +23,7 @@ import com_brew
 import com_lgvx8300
 import helpids
 import fileinfo
+import p_brew
 import p_lgvx8500
 import playlist
 import prototypes
@@ -387,6 +388,12 @@ class Phone(parentphone):
         return result
 
     # Misc Stuff----------------------------------------------------------------
+    def get_firmware_version(self):
+        # return the firmware version
+        req=p_brew.firmwarerequest()
+        res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+        return res.firmware
+
     def _unlock_key(self):
         _req=self.protocolclass.LockKeyReq(lock=1)
         self.sendbrewcommand(_req, self.protocolclass.data)
@@ -405,10 +412,14 @@ class Phone(parentphone):
 
     def enter_DM(self):
         try:
+            _fw_version=self.get_firmware_version()[-1]
+            if _fw_version>'4':
+                raise NotImplementedError
             self._lock_key()
             self._press_key('\x06\x513733929\x51')
             self._unlock_key()
             self._in_DM=True
+            self.log('Now in DM')
         except:
             self.log('Failed to enter DM')
             self._in_DM=False
