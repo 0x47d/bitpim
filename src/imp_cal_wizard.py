@@ -17,6 +17,7 @@
 # wx
 import wx
 import wx.wizard as wiz
+import  wx.lib.scrolledpanel as scrolled
 
 # BitPim
 import common_calendar
@@ -87,18 +88,32 @@ class ImportSourcePage(setphone_wizard.MyPage):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, 'Source of data:'), 0,
                 wx.ALL|wx.EXPAND, 5)
-        self._source_lbl=wx.StaticText(self, -1, '')
-        vbs.Add(self._source_lbl, 0, wx.ALL|wx.EXPAND, 5)
+        # set the label in a scrolled panel, so the user can scroll to view
+        # the file name if it's too long.
+        sp=scrolled.ScrolledPanel(self, -1, size=(-1, 50))
+        boxsizer=wx.BoxSizer(wx.VERTICAL)
+        self._source_lbl=wx.StaticText(sp, -1, '')
+        boxsizer.Add(self._source_lbl, 1, wx.ALL|wx.EXPAND, 5)
+        sp.SetSizer(boxsizer)
+        sp.SetAutoLayout(True)
+        sp.SetupScrolling(scroll_y=False)
+        vbs.Add(sp, 0, wx.ALL|wx.EXPAND, 5)
+        self.sp=sp
         _btn=wx.Button(self, -1, 'Browse')
         wx.EVT_BUTTON(self, _btn.GetId(), self._OnBrowse)
         vbs.Add(_btn, 0, wx.ALL, 5)
         return vbs
 
+    def setlabel(self):
+        self._source_lbl.SetLabel(self._source.name())
+        # update the scrolled panel
+        self.sp.SetVirtualSize(self.sp.GetBestVirtualSize())
+
     def _OnBrowse(self, _=None):
         if not self._source:
             return
         self._source.browse(self)
-        self._source_lbl.SetLabel(self._source.name())
+        self.setlabel()
             
     def ok(self):
         return self._source and self._source.get()
@@ -111,7 +126,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
         if self._source:
             if data.has_key('source_id'):
                 self._source.id=data['source_id']
-            self._source_lbl.SetLabel(self._source.name())
+            self.setlabel()
     def GetActiveDatabase(self):
         return self.GetParent().GetActiveDatabase()
 
@@ -192,7 +207,9 @@ class ImportOptionPage(setphone_wizard.MyPage):
 class ImportCalendarWizard(wiz.Wizard):
     ID_ADD=wx.NewId()
     def __init__(self, parent, id=-1, title='Calendar Import Wizard'):
-        super(ImportCalendarWizard, self).__init__(parent, id, title)
+        super(ImportCalendarWizard, self).__init__(parent, id, title,
+                                                   style=wx.DEFAULT_DIALOG_STYLE|\
+                                                   wx.RESIZE_BORDER)
         self._data={}
         _import_type_page=ImportTypePage(self)
         _import_source_page=ImportSourcePage(self)
