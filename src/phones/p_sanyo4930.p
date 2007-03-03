@@ -90,21 +90,6 @@ PACKET calleridbuffer:
     * LIST {'length': self.maxentries, 'elementclass': calleridentry, 'createdefault': True} +items
     * UNKNOWN +pad
 
-PACKET eventresponse:
-    * sanyoheader header
-    * evententry entry
-    * UNKNOWN pad
-
-PACKET eventrequest:
-    * qcpheader {'packettype': 0x0c, 'command': 0x23} +header
-    1 UINT slot
-    129 UNKNOWN +pad
-
-PACKET eventslotinuserequest:
-    * qcpheader {'readwrite': 0x26, 'packettype': 0x0d, 'command': 0x74} +header
-    1 UINT slot
-    129 UNKNOWN +pad
-    
 PACKET evententry:
     1 UINT slot
     14 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} eventname
@@ -124,11 +109,21 @@ PACKET evententry:
     3 UNKNOWN +pad4
     2 UINT ringtone
     
+PACKET eventrequest:
+    * qcpheader {'packettype': 0x0c, 'command': 0x23} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+
 PACKET eventresponse:
     * qcpheader header
     * evententry entry
     * UNKNOWN pad
 
+PACKET eventslotinuserequest:
+    * qcpheader {'readwrite': 0x26, 'packettype': 0x0d, 'command': 0x74} +header
+    1 UINT slot
+    129 UNKNOWN +pad
+    
 PACKET eventslotinuseresponse:
     * qcpheader header
     1 UINT slot
