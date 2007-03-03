@@ -23,7 +23,7 @@ DESC(Cancel,Discard the preview data and close this dialog.)
 DESC(Filter,Bring up the Filter Setting Dialog.)
 DESC(Help,Bring up this dialog.)
 
-<h2>Import Filter Parameters</h2>
+<h2><a name="importfilter">Import Filter Parameters</a></h2>
 
 SCREENSHOT(screen-import-calendar2.png,)
 
