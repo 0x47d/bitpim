@@ -209,3 +209,25 @@ PACKET t9udbfile:
     1 UINT { 'constant': 0xA0 } +A0
     * LIST { 'createdefault': True } +blocks:
         * T9USERDBBLOCK block
+
+# DM stuff
+PACKET DMKeyReq:
+    1 UINT { 'default': 0xFE } +cmd
+    6 STRING { 'terminator': None,
+               'default': '\x00\x00\x00\x00\x00\x00' } +body
+PACKET DMKeyResp:
+    1 UINT cmd
+    1 UINT code
+    4 UINT key
+    1 UINT one
+
+PACKET DMReq:
+    1 UINT { 'default': 0xFE } +cmd
+    1 UINT { 'default': 1 } +one
+    4 STRING key
+    1 UINT { 'default': 0 } +zero
+PACKET DMResp:
+    1 UINT cmd
+    1 UINT one
+    4 STRING key
+    1 UINT zero2one

@@ -18,11 +18,13 @@ import datetime
 # wx modules
 
 # BitPim modules
+import bz2
 import common
 import com_brew
 import com_lgvx8300
 import helpids
 import fileinfo
+import guihelper
 import p_brew
 import p_lgvx8500
 import playlist
@@ -410,15 +412,31 @@ class Phone(parentphone):
             _req.key=_k
             self.sendbrewcommand(_req, self.protocolclass.data)
 
+    def _enter_DMv4(self):
+        self._lock_key()
+        self._press_key('\x06\x513733929\x51')
+        self._unlock_key()
+        self._in_DM=True
+
+    keyfile='VX8500v5.dat.bz2'
+    def _enter_DMv5(self):
+        _keyfile=bz2.BZ2File(guihelper.getresourcefile(self.keyfile), 'r')
+        _req=self.protocolclass.DMKeyReq()
+        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
+        _keyfile.seek(_resp.key*3L)
+        _req=self.protocolclass.DMReq()
+        _req.key=_keyfile.read(3)+'\x80'
+        _keyfile.close()
+        self.sendbrewcommand(_req, self.protocolclass.DMResp)
+        self._in_DM=True
+
     def enter_DM(self):
         try:
             _fw_version=self.get_firmware_version()[-1]
-            if _fw_version>'4':
-                raise NotImplementedError
-            self._lock_key()
-            self._press_key('\x06\x513733929\x51')
-            self._unlock_key()
-            self._in_DM=True
+            if self.my_model=='VX8500' and _fw_version>'4':
+                self._enter_DMv5()
+            else:
+                self._enter_DMv4()
             self.log('Now in DM')
         except:
             self.log('Failed to enter DM')
