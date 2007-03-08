@@ -418,17 +418,8 @@ class Phone(parentphone):
         self._unlock_key()
         self._in_DM=True
 
-    keyfile='VX8500v5.dat.bz2'
     def _enter_DMv5(self):
-        _keyfile=bz2.BZ2File(guihelper.getresourcefile(self.keyfile), 'r')
-        _req=self.protocolclass.DMKeyReq()
-        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
-        _keyfile.seek(_resp.key*3L)
-        _req=self.protocolclass.DMReq()
-        _req.key=_keyfile.read(3)+'\x80'
-        _keyfile.close()
-        self.sendbrewcommand(_req, self.protocolclass.DMResp)
-        self._in_DM=True
+        raise NotImplementedError
 
     def enter_DM(self):
         try:
@@ -439,6 +430,7 @@ class Phone(parentphone):
                 self._enter_DMv4()
             self.log('Now in DM')
         except:
+            if __debug__: raise
             self.log('Failed to enter DM')
             self._in_DM=False
 

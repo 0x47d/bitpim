@@ -3681,7 +3681,7 @@ class DMReq(BaseProtogenClass):
         self.__field_cmd.readfrombuffer(buf)
         self.__field_one=UINT(**{'sizeinbytes': 1,  'default': 1 })
         self.__field_one.readfrombuffer(buf)
-        self.__field_key=STRING(**{'sizeinbytes': 4})
+        self.__field_key=UINT(**{'sizeinbytes': 4})
         self.__field_key.readfrombuffer(buf)
         self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_zero.readfrombuffer(buf)
@@ -3724,10 +3724,10 @@ class DMReq(BaseProtogenClass):
         return self.__field_key.getvalue()
 
     def __setfield_key(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,UINT):
             self.__field_key=value
         else:
-            self.__field_key=STRING(value,**{'sizeinbytes': 4})
+            self.__field_key=UINT(value,**{'sizeinbytes': 4})
 
     def __delfield_key(self): del self.__field_key
 
@@ -3811,7 +3811,7 @@ class DMResp(BaseProtogenClass):
         self.__field_cmd.readfrombuffer(buf)
         self.__field_one=UINT(**{'sizeinbytes': 1})
         self.__field_one.readfrombuffer(buf)
-        self.__field_key=STRING(**{'sizeinbytes': 4})
+        self.__field_key=UINT(**{'sizeinbytes': 4})
         self.__field_key.readfrombuffer(buf)
         self.__field_zero2one=UINT(**{'sizeinbytes': 1})
         self.__field_zero2one.readfrombuffer(buf)
@@ -3848,10 +3848,10 @@ class DMResp(BaseProtogenClass):
         return self.__field_key.getvalue()
 
     def __setfield_key(self, value):
-        if isinstance(value,STRING):
+        if isinstance(value,UINT):
             self.__field_key=value
         else:
-            self.__field_key=STRING(value,**{'sizeinbytes': 4})
+            self.__field_key=UINT(value,**{'sizeinbytes': 4})
 
     def __delfield_key(self): del self.__field_key
 

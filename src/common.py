@@ -860,3 +860,17 @@ def get_main_dir():
         return os.path.abspath(os.path.dirname(sys.executable))
     # running from src, up one
     return os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
+
+if sys.platform=='win32':
+    # From Tim Golden's Win32 How Do I ...?
+    from win32api import GetFileVersionInfo, LOWORD, HIWORD
+    def get_version_number (filename):
+        """Return the version of a Windows DLL or EXE file
+        """
+        try:
+            info = GetFileVersionInfo (filename, "\\")
+            ms = info['FileVersionMS']
+            ls = info['FileVersionLS']
+            return HIWORD (ms), LOWORD (ms), HIWORD (ls), LOWORD (ls)
+        except:
+            return None

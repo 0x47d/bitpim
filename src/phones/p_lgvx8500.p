@@ -224,10 +224,10 @@ PACKET DMKeyResp:
 PACKET DMReq:
     1 UINT { 'default': 0xFE } +cmd
     1 UINT { 'default': 1 } +one
-    4 STRING key
+    4 UINT key
     1 UINT { 'default': 0 } +zero
 PACKET DMResp:
     1 UINT cmd
     1 UINT one
-    4 STRING key
+    4 UINT key
     1 UINT zero2one
