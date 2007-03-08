@@ -279,7 +279,7 @@ class ExportDialog(ExportDialogParent):
         f.write(out_line('BEGIN', None, 'STANDARD', None))
         f.write(out_line('DTSTART', None, '20051030T020000', None))
         f.write(out_line('RRULE', None,
-                         'FREQ=YEARLY;INTERVAL=1;BYDAY=-1SU;BYMONTH=10', None))
+                         'FREQ=YEARLY;INTERVAL=1;BYDAY=1SU;BYMONTH=11', None))
         f.write(out_line('TZOFFSETFROM', None,
                          '%05d'%_offset_daylight, None))
         f.write(out_line('TZOFFSETTO', None,
@@ -289,7 +289,7 @@ class ExportDialog(ExportDialogParent):
         f.write(out_line('BEGIN', None, 'DAYLIGHT', None))
         f.write(out_line('DTSTART', None, '20060402T020000', None))
         f.write(out_line('RRULE', None,
-                         'FREQ=YEARLY;INTERVAL=1;BYDAY=1SU;BYMONTH=4', None))
+                         'FREQ=YEARLY;INTERVAL=1;BYDAY=2SU;BYMONTH=3', None))
         f.write(out_line('TZOFFSETFROM', None,
                          '%05d'%_offset_standard, None))
         f.write(out_line('TZOFFSETTO', None,
