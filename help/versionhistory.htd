@@ -7,6 +7,7 @@
       <li><p>Bug fix: New daylight saving time in iCal calendar export.
       <li><p>Bug fix: Motorola V710 support.
       <li><p>Bug fix: T9 Editor failed to delete words.
+      <li><p>Bug fix: <B>VX8500:</B> failed to send T9 data to the phone.
     </ul>
 
    <h2><a name="0.9.12">Changes in 0.9.12</a></h2>
