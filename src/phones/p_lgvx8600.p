@@ -20,6 +20,12 @@ from p_lgvx8500 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+#Play List stuff
+PLIndexFileName='dload/pl_mgr.dat'
+PLFilePath='my_music'
+PLExt='.vpl'
+PLMaxSize=50    # Max number of items per playlist
+
 %}
 
 PACKET call:
@@ -39,3 +45,31 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unknown1
     * LIST {'elementclass': call} +calls
+
+# Playlist stuff
+PACKET PLIndexEntry:
+    264 USTRING { 'encoding': PHONE_ENCODING } pathname
+    4   UINT { 'default': 0x105 } +dunno
+
+PACKET PLIndexFile:
+    * LIST { 'elementclass': PLIndexEntry,
+             'createdefault': True } +items
+
+PACKET PLSongEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING } pathname
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': self.pathname } +tunename
+    100 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +artistname
+    100 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +albumname
+    102 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': 'Unknown' } +genre
+    4 UINT { 'default': 2 } +dunno1
+    4 GPSDATE { 'default': GPSDATE.now() } +date
+    4 UINT size
+    4 UINT { 'default': 0 } +zero
+
+PACKET PLPlayListFile:
+    * LIST { 'elementclass': PLSongEntry,
+             'createdefault': True } +items

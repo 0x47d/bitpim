@@ -12,6 +12,12 @@ from p_lgvx8500 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+#Play List stuff
+PLIndexFileName='dload/pl_mgr.dat'
+PLFilePath='my_music'
+PLExt='.vpl'
+PLMaxSize=50    # Max number of items per playlist
+
 class call(BaseProtogenClass):
     __fields=['GPStime', 'dunno1', 'duration', 'dunno2', 'pbentrynum', 'numberlength', 'dunno3', 'pbnumbertype', 'dunno4', 'name', 'number']
 
@@ -358,6 +364,507 @@ class callhistory(BaseProtogenClass):
         yield ('numcalls', self.__field_numcalls, None)
         yield ('unknown1', self.__field_unknown1, None)
         yield ('calls', self.__field_calls, None)
+
+
+
+
+class PLIndexEntry(BaseProtogenClass):
+    __fields=['pathname', 'dunno']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PLIndexEntry,self).__init__(**dict)
+        if self.__class__ is PLIndexEntry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PLIndexEntry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PLIndexEntry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_pathname.writetobuffer(buf)
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=UINT(**{'sizeinbytes': 4,  'default': 0x105 })
+        self.__field_dunno.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_pathname=USTRING(**{'sizeinbytes': 264,  'encoding': PHONE_ENCODING })
+        self.__field_pathname.readfrombuffer(buf)
+        self.__field_dunno=UINT(**{'sizeinbytes': 4,  'default': 0x105 })
+        self.__field_dunno.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_pathname(self):
+        return self.__field_pathname.getvalue()
+
+    def __setfield_pathname(self, value):
+        if isinstance(value,USTRING):
+            self.__field_pathname=value
+        else:
+            self.__field_pathname=USTRING(value,**{'sizeinbytes': 264,  'encoding': PHONE_ENCODING })
+
+    def __delfield_pathname(self): del self.__field_pathname
+
+    pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
+
+    def __getfield_dunno(self):
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=UINT(**{'sizeinbytes': 4,  'default': 0x105 })
+        return self.__field_dunno.getvalue()
+
+    def __setfield_dunno(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno=value
+        else:
+            self.__field_dunno=UINT(value,**{'sizeinbytes': 4,  'default': 0x105 })
+
+    def __delfield_dunno(self): del self.__field_dunno
+
+    dunno=property(__getfield_dunno, __setfield_dunno, __delfield_dunno, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('pathname', self.__field_pathname, None)
+        yield ('dunno', self.__field_dunno, None)
+
+
+
+
+class PLIndexFile(BaseProtogenClass):
+    __fields=['items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PLIndexFile,self).__init__(**dict)
+        if self.__class__ is PLIndexFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PLIndexFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PLIndexFile,kwargs)
+        if len(args):
+            dict2={ 'elementclass': PLIndexEntry,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_items=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PLIndexEntry,             'createdefault': True })
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_items=LIST(**{ 'elementclass': PLIndexEntry,             'createdefault': True })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_items(self):
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PLIndexEntry,             'createdefault': True })
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': PLIndexEntry,             'createdefault': True })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('items', self.__field_items, None)
+
+
+
+
+class PLSongEntry(BaseProtogenClass):
+    __fields=['pathname', 'tunename', 'artistname', 'albumname', 'genre', 'dunno1', 'date', 'size', 'zero']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PLSongEntry,self).__init__(**dict)
+        if self.__class__ is PLSongEntry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PLSongEntry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PLSongEntry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_pathname.writetobuffer(buf)
+        try: self.__field_tunename
+        except:
+            self.__field_tunename=USTRING(**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING,                  'default': self.pathname })
+        self.__field_tunename.writetobuffer(buf)
+        try: self.__field_artistname
+        except:
+            self.__field_artistname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_artistname.writetobuffer(buf)
+        try: self.__field_albumname
+        except:
+            self.__field_albumname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_albumname.writetobuffer(buf)
+        try: self.__field_genre
+        except:
+            self.__field_genre=USTRING(**{'sizeinbytes': 102,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_genre.writetobuffer(buf)
+        try: self.__field_dunno1
+        except:
+            self.__field_dunno1=UINT(**{'sizeinbytes': 4,  'default': 2 })
+        self.__field_dunno1.writetobuffer(buf)
+        try: self.__field_date
+        except:
+            self.__field_date=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+        self.__field_date.writetobuffer(buf)
+        self.__field_size.writetobuffer(buf)
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 4,  'default': 0 })
+        self.__field_zero.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_pathname=USTRING(**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING })
+        self.__field_pathname.readfrombuffer(buf)
+        self.__field_tunename=USTRING(**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING,                  'default': self.pathname })
+        self.__field_tunename.readfrombuffer(buf)
+        self.__field_artistname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_artistname.readfrombuffer(buf)
+        self.__field_albumname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_albumname.readfrombuffer(buf)
+        self.__field_genre=USTRING(**{'sizeinbytes': 102,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        self.__field_genre.readfrombuffer(buf)
+        self.__field_dunno1=UINT(**{'sizeinbytes': 4,  'default': 2 })
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_date=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+        self.__field_date.readfrombuffer(buf)
+        self.__field_size=UINT(**{'sizeinbytes': 4})
+        self.__field_size.readfrombuffer(buf)
+        self.__field_zero=UINT(**{'sizeinbytes': 4,  'default': 0 })
+        self.__field_zero.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_pathname(self):
+        return self.__field_pathname.getvalue()
+
+    def __setfield_pathname(self, value):
+        if isinstance(value,USTRING):
+            self.__field_pathname=value
+        else:
+            self.__field_pathname=USTRING(value,**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING })
+
+    def __delfield_pathname(self): del self.__field_pathname
+
+    pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
+
+    def __getfield_tunename(self):
+        try: self.__field_tunename
+        except:
+            self.__field_tunename=USTRING(**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING,                  'default': self.pathname })
+        return self.__field_tunename.getvalue()
+
+    def __setfield_tunename(self, value):
+        if isinstance(value,USTRING):
+            self.__field_tunename=value
+        else:
+            self.__field_tunename=USTRING(value,**{'sizeinbytes': 255,  'encoding': PHONE_ENCODING,                  'default': self.pathname })
+
+    def __delfield_tunename(self): del self.__field_tunename
+
+    tunename=property(__getfield_tunename, __setfield_tunename, __delfield_tunename, None)
+
+    def __getfield_artistname(self):
+        try: self.__field_artistname
+        except:
+            self.__field_artistname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        return self.__field_artistname.getvalue()
+
+    def __setfield_artistname(self, value):
+        if isinstance(value,USTRING):
+            self.__field_artistname=value
+        else:
+            self.__field_artistname=USTRING(value,**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+
+    def __delfield_artistname(self): del self.__field_artistname
+
+    artistname=property(__getfield_artistname, __setfield_artistname, __delfield_artistname, None)
+
+    def __getfield_albumname(self):
+        try: self.__field_albumname
+        except:
+            self.__field_albumname=USTRING(**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        return self.__field_albumname.getvalue()
+
+    def __setfield_albumname(self, value):
+        if isinstance(value,USTRING):
+            self.__field_albumname=value
+        else:
+            self.__field_albumname=USTRING(value,**{'sizeinbytes': 100,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+
+    def __delfield_albumname(self): del self.__field_albumname
+
+    albumname=property(__getfield_albumname, __setfield_albumname, __delfield_albumname, None)
+
+    def __getfield_genre(self):
+        try: self.__field_genre
+        except:
+            self.__field_genre=USTRING(**{'sizeinbytes': 102,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+        return self.__field_genre.getvalue()
+
+    def __setfield_genre(self, value):
+        if isinstance(value,USTRING):
+            self.__field_genre=value
+        else:
+            self.__field_genre=USTRING(value,**{'sizeinbytes': 102,  'encoding': PHONE_ENCODING,                  'default': 'Unknown' })
+
+    def __delfield_genre(self): del self.__field_genre
+
+    genre=property(__getfield_genre, __setfield_genre, __delfield_genre, None)
+
+    def __getfield_dunno1(self):
+        try: self.__field_dunno1
+        except:
+            self.__field_dunno1=UINT(**{'sizeinbytes': 4,  'default': 2 })
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=UINT(value,**{'sizeinbytes': 4,  'default': 2 })
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_date(self):
+        try: self.__field_date
+        except:
+            self.__field_date=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+        return self.__field_date.getvalue()
+
+    def __setfield_date(self, value):
+        if isinstance(value,GPSDATE):
+            self.__field_date=value
+        else:
+            self.__field_date=GPSDATE(value,**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+
+    def __delfield_date(self): del self.__field_date
+
+    date=property(__getfield_date, __setfield_date, __delfield_date, None)
+
+    def __getfield_size(self):
+        return self.__field_size.getvalue()
+
+    def __setfield_size(self, value):
+        if isinstance(value,UINT):
+            self.__field_size=value
+        else:
+            self.__field_size=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_size(self): del self.__field_size
+
+    size=property(__getfield_size, __setfield_size, __delfield_size, None)
+
+    def __getfield_zero(self):
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 4,  'default': 0 })
+        return self.__field_zero.getvalue()
+
+    def __setfield_zero(self, value):
+        if isinstance(value,UINT):
+            self.__field_zero=value
+        else:
+            self.__field_zero=UINT(value,**{'sizeinbytes': 4,  'default': 0 })
+
+    def __delfield_zero(self): del self.__field_zero
+
+    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('pathname', self.__field_pathname, None)
+        yield ('tunename', self.__field_tunename, None)
+        yield ('artistname', self.__field_artistname, None)
+        yield ('albumname', self.__field_albumname, None)
+        yield ('genre', self.__field_genre, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('date', self.__field_date, None)
+        yield ('size', self.__field_size, None)
+        yield ('zero', self.__field_zero, None)
+
+
+
+
+class PLPlayListFile(BaseProtogenClass):
+    __fields=['items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PLPlayListFile,self).__init__(**dict)
+        if self.__class__ is PLPlayListFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PLPlayListFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PLPlayListFile,kwargs)
+        if len(args):
+            dict2={ 'elementclass': PLSongEntry,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_items=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PLSongEntry,             'createdefault': True })
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_items=LIST(**{ 'elementclass': PLSongEntry,             'createdefault': True })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_items(self):
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PLSongEntry,             'createdefault': True })
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': PLSongEntry,             'createdefault': True })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('items', self.__field_items, None)
 
 
 
