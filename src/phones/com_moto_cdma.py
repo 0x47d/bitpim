@@ -9,6 +9,7 @@
 
 """Communicate with Motorola CDMA phones using AT commands"""
 
+import commport
 import com_moto
 import com_brew
 
