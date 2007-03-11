@@ -64,11 +64,6 @@ class Phone(com_sanyo8300.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def get_esn(self):
-        req=self.protocolclass.esnrequest()
-        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
-        return '%08X'%res.esn
-
     # Phone Detection-----------------------------------------------------------
     def is_mode_brew(self):
         # Borrowed from the VX4400

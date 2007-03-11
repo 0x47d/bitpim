@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2003-2004 Stephen Wood <sawecw@users.sf.net>
+### Copyright (C) 2003-2007 Stephen Wood <sawecw@users.sf.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -57,6 +57,11 @@ class SanyoPhonebook:
     def __init__(self):
         self.numbertypetab=numbertypetab
     
+    def get_esn(self):
+        req=self.protocolclass.esnrequest()
+        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
+        return '%08X'%res.esn
+
     def _setmodephonebook(self):
         self.setmode(self.MODEBREW)
         req=p_sanyo.firmwarerequest()
@@ -339,13 +344,14 @@ class SanyoPhonebook:
                 res=self.sendpbcommand(req, respc)
                 if res.entry.dunno4==2:
                     entry=sms.SMSEntry()
+                    entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
                     if box==0:
                         entry.folder=entry.Folder_Inbox
                         entry._from=res.entry.phonenum
                     else:
                         entry.folder=entry.Folder_Sent
                         entry._to=res.entry.phonenum
-                    entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
+                        #entry.add_recipient(res.entry.phonenum,confirmed=True)
                     if res.entry.read==17:
                         entry.read=1
                     else:
@@ -1294,6 +1300,36 @@ class SanyoPhonebook:
             entry.datetime=((call.entry.date))
             res[entry.id]=entry
     
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        try:
+            phone_info.append('Model:', self.desc)
+            phone_info.append('ESN:', self.get_esn())
+            phone_info.append('Manufacturer:', 'Sanyo')
+            req=self.protocolclass.lockcoderequest()
+            res=self.sendpbcommand(req, self.protocolclass.lockcoderesponse)
+            phone_info.append('Lock Code:', res.lockcode)
+            req=self.protocolclass.sanyofirmwarerequest()
+            res=self.sendpbcommand(req, self.protocolclass.sanyofirmwareresponse)
+            phone_info.append('Firmware Version:',res.firmware)
+            if 'prl' in res.getfields():
+                phone_info.append('PRL:', res.prl)
+            req=self.protocolclass.phonenumberrequest()
+            res=self.sendpbcommand(req, self.protocolclass.phonenumberresponse)
+            phone_info.append('Phone Number:', res.myphonenumber)
+           
+            req=self.protocolclass.reconditionedrequest()
+            res=self.sendpbcommand(req, self.protocolclass.reconditionedresponse)
+            if res.reconditioned:
+                recon='Yes'
+            else:
+                recon='No'
+            phone_info.append('Reconditioned:',recon)
+        except:
+            pass
+
+        return
+
     def decodedate(self,val):
         """Unpack 32 bit value into date/time
 

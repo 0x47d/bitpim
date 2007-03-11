@@ -18,7 +18,6 @@ import common
 import p_brew
 import p_sanyo8300
 import p_sanyo4930
-import p_sanyo3100
 import p_sanyo7500
 import com_brew
 import com_phone

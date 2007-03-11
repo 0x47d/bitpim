@@ -29,6 +29,8 @@ NUMPHONENUMBERS=7
 NUMMESSAGESLOTS=128
 NUMTODOSLOTS=20
 HASRINGPICBUF=1
+FIRSTSPEEDDIAL=2
+LASTSPEEDDIAL=9
 
 OUTGOING=0
 INCOMING=1
@@ -86,10 +88,53 @@ PACKET statusresponse:
     1 UINT flag3
     * UNKNOWN unknown
     
+PACKET lockcoderequest:
+    1 UINT {'constant': 0x26} +command1
+    2 UINT {'constant': 0x52} +command2
+    130 UNKNOWN +pad
+    
+PACKET lockcoderesponse:
+    1 UINT {'constant': 0x26} +command1
+    2 UINT {'constant': 0x52} +command2
+    4 USTRING {'raiseonunterminatedread': False} lockcode
+    * UNKNOWN pad
+
+PACKET sanyofirmwarerequest:
+    1 UINT {'constant': 0x00} +command
+
+PACKET sanyofirmwareresponse:
+    1 UINT command
+    11 USTRING {'terminator': None} date1
+    8 USTRING {'terminator': None} time1
+    11 USTRING {'terminator': None} date2
+    8 USTRING {'terminator': None} time2
+    8 USTRING {'terminator': None} string1
+    1 UNKNOWN dunno1
+    11 USTRING {'terminator': None} date3
+    1 UNKNOWN dunno2
+    8 USTRING {'terminator': None} time3
+    11 UNKNOWN dunno3
+    10 USTRING {'terminator': None} firmware
+    7 UNKNOWN pad
+    16 USTRING {'terminator': None} model
+    5 USTRING {'terminator': None} prl
+
+PACKET reconditionedrequest:
+    1 UINT {'constant': 0x26} +command1
+    2 UINT {'constant': 0x0c1b} +command2
+    130 UNKNOWN +pad
+    
+PACKET reconditionedresponse:
+    1 UINT {'constant': 0x26} command1
+    2 UINT {'constant': 0x0c1b} command2
+    1 UINT reconditioned
+    * UNKNOWN pad
+
 PACKET phonenumberrequest:
     1 UINT {'constant': 0x26} +command1
     1 UINT {'constant': 0xb2} +command2
-    131 UNKNOWN +pad
+    1 UINT {'constant': 0} +zero
+    130 UNKNOWN +pad
 
 PACKET phonenumberresponse:
     1 UINT {'constant': 0x26} command1
