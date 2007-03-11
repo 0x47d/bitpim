@@ -106,6 +106,18 @@ class T9WordsList(object):
         else:
             return self._data.get(key, [])
 
+    def del_word(self, word):
+        # delete the specified word from the list
+        _key=self._keyof(word)
+        if self._data.has_key(_key):
+            for _idx,_word in enumerate(self._data[_key]):
+                if _word==word:
+                    del self._data[_key][_idx]
+                    if not self._data[_key]:
+                        # empty list
+                        del self._data[_key]
+                    return
+
     def append_word(self, word):
         # Append this word to our existing list
         self._data.setdefault(self._keyof(word), []).append(word)
@@ -276,6 +288,7 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
         _idx=self._words_lb.GetNextItem(-1, state=wx.LIST_STATE_SELECTED)
         if _idx==-1:
             return
+        self._t9list.del_word(self._words_w.GetStrings()[_idx])
         self._words_lb.DeleteItem(_idx)
         # Check if this key is empty, if it is, delete it from the keys LB
         if self._words_lb.GetItemCount()<2:

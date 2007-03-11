@@ -577,8 +577,8 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
             # ignore garbage at the end
             self._type=self.Garbage_Type
             self._value=0
-        print 'type:',self._type
-        print 'value:',self._value
+##        print 'type:',self._type
+##        print 'value:',self._value
         self._bufferendoffset=buf.getcurrentoffset()
 
     def getvalue(self):
