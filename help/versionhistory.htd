@@ -5,6 +5,7 @@
       <li><p>Bug fix: prevent two BitPim instances using the same storage area.
       <li><p>New feature: display the storage name (if available) on the BitPim main window.
       <li><p>Bug fix: New daylight saving time in iCal calendar export.
+      <li><p>Bug fix: Motorola V710 support.
     </ul>
 
    <h2><a name="0.9.12">Changes in 0.9.12</a></h2>
