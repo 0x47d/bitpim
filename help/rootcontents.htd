@@ -248,7 +248,12 @@ BEGIN_TOC
             TOCITEM_2(Notes,phones-samsung-notes.htm)
             TOCITEM_2(Model Specific Notes,phones-samsung-model-specific-notes.htm)
             ENDTOC_2
-        TOCITEM_1(Sanyo Phones,phones-sanyo.htm)
+        TOCITEM_1(Sanyo SCP-6600 (Katana),phones-sanyo-scp6600.htm)
+            TOC_2
+            TOCITEM_2(Cables,phones-sanyo-scp6600-cables.htm)
+            TOCITEM_2(Notes,phones-sanyo-scp6600-notes.htm)
+            ENDTOC_2
+        TOCITEM_1(Other Sanyo Phones,phones-sanyo.htm)
             TOC_2
             TOCITEM_2(Cables,phones-sanyo-cables.htm)
             TOCITEM_2(Notes,phones-sanyo-notes.htm)
