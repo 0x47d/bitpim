@@ -3182,7 +3182,7 @@
             <long name="link-icon-to-page">1</long>
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
-            <string name="topic-name">""</string>
+            <string name="topic-name">"ID_PHONE_SANYOSCP6600"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
             <document>
