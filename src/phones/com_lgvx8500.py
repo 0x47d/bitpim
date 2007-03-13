@@ -350,10 +350,13 @@ class Phone(parentphone):
         '9': 0x7FA, '0': 0x800 }
     _t9keys=('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
     def savet9db(self, result, _):
-        _current_db=self._get_current_db()
         _new_db=self.protocolclass.t9udbfile()
-        if _current_db:
-            self._copy_fields(_current_db, _new_db)
+        try:
+            _current_db=self._get_current_db()
+            if _current_db:
+                self._copy_fields(_current_db, _new_db)
+        except:
+            _current_db=None
         _t9words={}
         _t9list=result.get(t9editor.dict_key, t9editor.T9WordsList())
         _wordcount=0
