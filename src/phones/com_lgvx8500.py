@@ -427,11 +427,13 @@ class Phone(parentphone):
     def _get_DLL_path(self):
         """Return the full path to the DLL file.
         """
-        if os.path.isfile(self._lg_dll_path):
-            return self._lg_dll_path
+        # first check for a local copy
         _local_dll_path=os.path.join(common.get_main_dir(), 'VX8500.dll')
         if os.path.isfile(_local_dll_path):
             return _local_dll_path
+        # then at the default location
+        if os.path.isfile(self._lg_dll_path):
+            return self._lg_dll_path
                 
     def _enter_DMv5(self):
         self._in_DM=True
