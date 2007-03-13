@@ -25,12 +25,17 @@ import com_lgvx8300
 import helpids
 import fileinfo
 import guihelper
+import os
 import p_brew
 import p_lgvx8500
 import playlist
 import prototypes
 import prototypeslg
 import t9editor
+try:
+    import pyvx8500
+except ImportError:
+    pyvx8500=None
 
 parentphone=com_lgvx8300.Phone
 class Phone(parentphone):
@@ -418,8 +423,40 @@ class Phone(parentphone):
         self._unlock_key()
         self._in_DM=True
 
+    _lg_dll_path='C:\\LG Electronics\\LGDownload\\Model\\VX8500\\VX8500.dll'
+    def _get_DLL_path(self):
+        """Return the full path to the DLL file.
+        """
+        if os.path.isfile(self._lg_dll_path):
+            return self._lg_dll_path
+        _local_dll_path=os.path.join(common.get_main_dir(), 'VX8500.dll')
+        if os.path.isfile(_local_dll_path):
+            return _local_dll_path
+                
     def _enter_DMv5(self):
-        raise NotImplementedError
+        self._in_DM=True
+        if pyvx8500 is None:
+            return
+        # get the path to the VX8500 DLL
+        _dllpath=self._get_DLL_path()
+        if not _dllpath:
+            # could not find the DLL
+            return
+        self.log('Using VX8500 DLL: '+_dllpath)
+        # check for the correct version
+        _version=common.get_version_number(_dllpath)
+        if not _version or _version!=(0,2,44,0):
+            self.log('VX8500 DLL has wrong version')
+            return
+        # go for it
+        _req=self.protocolclass.DMKeyReq()
+        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
+        _key=pyvx8500.get_key(_resp.key, _dllpath)
+        if _key is None:
+            self.log('Failed to get the key.')
+            return
+        _req=self.protocolclass.DMReq(key=_key)
+        self.sendbrewcommand(_req, self.protocolclass.DMResp)
 
     def enter_DM(self):
         try:
@@ -432,7 +469,7 @@ class Phone(parentphone):
         except:
             if __debug__: raise
             self.log('Failed to enter DM')
-            self._in_DM=False
+            self._in_DM=True
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8300.Profile
