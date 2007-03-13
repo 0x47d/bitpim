@@ -76,21 +76,6 @@ accessed with several different protocols.  To use the phone with
 BitPim, select the "Standby" option in the USB Connection menu.
 IMAGE(mm5600usbmenu.png,)
 
-<h4>SCP-6600</h4>
-<p>The SCP-6600 (Katana) is a thin flip phone with VGA camera.  BitPim
-current supports read/write of the calendar, and reading of wallpaper
-(and camera images), ringers, call history and messages.
-
-<p>BitPim does
-not have support for reading or writing the Katana phonebook.  However,
-contacts can be retrieved using the software usually included with
-Bluetooth devices.  To send contacts from BitPim to the phone, select
-"vCards..." from the "File/Export" menu.  In the vCard dialog, select
-the "Sanyo SCP-6600 (Katana)" dialect.  The resulting "vcf" file can
-then be sent to the phone with Bluetooth.  See the
-URL(http://www.sanyo.com/wireless/handsets/downloads/Sprint_Katana_Users_Guide.pdf,
-Katana Users Guide) for more information on using Bluetooth with this phone.
-
 <h4>SCP-7200</h4>
 
 <p>The SCP-7200, also known as the RL2000 is a rugged phone which supports
