@@ -15,6 +15,7 @@ import sha
 
 # my modules
 import common
+import helpids
 import p_brew
 import p_sanyo8300
 import p_sanyo4930
@@ -35,6 +36,7 @@ class Phone(com_sanyo3100.Phone):
     "Talk to the Sanyo Katana (SCP-6600) cell phone"
 
     desc="SCP-6600"
+    helpid=helpids.ID_PHONE_SANYOSCP6600
 
     FIRST_MEDIA_DIRECTORY=1
     LAST_MEDIA_DIRECTORY=2
