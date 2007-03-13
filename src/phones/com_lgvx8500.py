@@ -438,7 +438,7 @@ class Phone(parentphone):
     def _enter_DMv5(self):
         self._in_DM=True
         if pyvx8500 is None:
-            return
+            raise ImportError
         # get the path to the VX8500 DLL
         _dllpath=self._get_DLL_path()
         if not _dllpath:
@@ -469,7 +469,6 @@ class Phone(parentphone):
                 self._enter_DMv4()
             self.log('Now in DM')
         except:
-            if __debug__: raise
             self.log('Failed to enter DM')
             self._in_DM=True
 
