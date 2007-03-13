@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">361</long>
+    <long name="name_counter">363</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">290</long>
+    <long name="doc_count">291</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
@@ -1694,6 +1694,24 @@
               <long name="use-header-footer">1</long>
               <long name="page-break">1</long>
             </document>
+          </document>
+          <document>
+            <string name="title">"LG UX-5000"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phones-lgux5000.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"13/3/2007"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_PHONE_LGUX5000"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
           </document>
           <document>
             <string name="title">"LG VX-3200"</string>

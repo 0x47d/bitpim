@@ -116,6 +116,7 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-lgpm225-notes.htm)
             ENDTOC_2
+        TOCITEM_1(LG UX-5000,phones-lgux5000.htm)
         TOCITEM_1(LG VX-3200,phone-lgvx3200.htm)
             TOC_2
             TOCITEM_2(Cables,phone-lgvx3200-cables.htm)
