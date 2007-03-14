@@ -18,7 +18,6 @@ import datetime
 # wx modules
 
 # BitPim modules
-import bz2
 import common
 import com_brew
 import com_lgvx8300
