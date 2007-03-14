@@ -151,7 +151,7 @@ def isofficialbuild():
     # not built by rogerb (or stevep/n9yty) are unofficial
     return h in ('rh9bitpim.rogerbinns.com', "roger-ba470eb54",
                  "rogerbmac.rogerbinns.com",
-                 "tinyone",
+                 "tinyone", "tiny2one",
                  )
 
 def ensureofficial():
