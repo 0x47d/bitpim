@@ -62,8 +62,7 @@ if guihelper.IsMSWindows():
     import win32con
     import win32gui
     import msvcrt
-
-if guihelper.IsGtk():
+else:
     import fcntl
 
 ###
