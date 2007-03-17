@@ -94,7 +94,8 @@ class Media(database.ModuleBase):
 
         Todo: evaluate actual constraints, will let sqlite do the orderby.
         """
-        self.filenames=glob.glob(os.path.join(self.pathname, 'F*'))
+        self.filenames=glob.glob(os.path.join(self.pathname,
+                                              'F[0-9][0-9][0-9][0-9][0-9][0-9][0-9]'))
         if self.filenames:
             self.cursor=0
         else:

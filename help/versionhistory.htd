@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
+    <ul>
+      <li><p>Bug fix: media vtable reads wrong files.
+    </ul>
+
    <h2><a name="0.9.13">Changes in 0.9.13</a></h2>
     <ul>
       <li><p>Bug fix: prevent two BitPim instances using the same storage area.
