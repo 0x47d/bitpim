@@ -15,4 +15,9 @@ format so you can use it to listen to the video as well.
 <li><p>BitPim can make use of ringtone files stored on the miniSD card, see section <a href="phone-lgvx8300-howtos.htm">Howtos</a> for more details.
 </UL>
 
+<H3>Known Issues</H3>
+<UL>
+<LI><P>When writing phonebook contacts from BitPim to the phone, contacts' wallpaper and ringtone assignments may not always be set correctly.
+</UL>
+
 #include "pageend.h"

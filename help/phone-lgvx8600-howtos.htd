@@ -21,26 +21,4 @@
 <p>Step <B>3</B> through <B>5</B> should be repeated for all changes made to the <B>ringers</B> subdir.
 <p>Ringtones stored on the microSD card will not show up in the <B>Ringers</B> tab, since BitPim does not add or delete those files.
 
-<H3>Manage Music Play Lists</H3>
-<p>To use this feature, perform the following steps:
-<OL>
-<li><p>Make sure that the microSD card is in the phone.
-<li><p>Retrieve the list of music files and play lists from your phone:
-	<OL>
-	<li><p>Menu <B>Data</B> -> <B>Get Phone Data</B>.
-	<li><p>Check on <B>Play List</B>, and click on <B>OK</B>.
-	</OL>
-<li><p>In BitPim, click on the <B>Play List</B> tab, and edit (and save) your play lists.
-<li><p>Write the play lists back to the phone:
-	<OL>
-	<li><p>Menu <B>Data</B> -> <B>Send Phone Data</B>.
-	<li><p>Check on <B>Play List</B> and click on <B>OK</B>.
-	</OL>
-<li><p>Verify your new play list data on the phone.
-</OL>
-<p>Notes:
-<UL>
-<li><p>BitPim will not write non-existent music file(s) (as part of a play list) to the phone.
-</UL>
-
 #include "pageend.h"

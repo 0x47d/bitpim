@@ -26,11 +26,9 @@
 <li><p>BitPim can save music files to the phone memory or microSD card, though it would be very slow to transfer large files.
 </UL>
 
-<H3>Music Play Lists</H3>
+<H3>Known Issues</H3>
 <UL>
-<li><p>Users can now retrieve, manage, and save their music playlists from/to the phones.  See section <a href="phone-lgvx8500-howtos.htm">Howtos</a> for more details.
-<li><p>Within each playlist, to keep the order of the songs as appeared in BitPim, sort them by dates on the phone.
-<li><p>When saving playlists to the phone, BitPim sets the Artist, Album, and Genre info of all songs to 'Unknown'.
+<LI><P>Reading T9 User data from the phone into BitPim may not always succeed.  However, writing T9 User data from BitPim to the phone should always work.
 </UL>
 
 #include "pageend.h"

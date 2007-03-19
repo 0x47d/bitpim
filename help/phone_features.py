@@ -26,7 +26,7 @@ def check_auto_detect(module):
     return False
 
 features=('phonebook', 'calendar', 'ringtone', 'wallpaper', 'memo', 'todo',
-          'sms', 'call_history')
+          'sms', 'call_history', 'playlist', 't9_udb')
 misc_features=('Phone Info', 'Auto Detect')
 req_attrs={ 'phonebook': { 'r': 'getphonebook', 'w': 'savephonebook' },
             'calendar': { 'r': 'getcalendar', 'w': 'savecalendar' },
@@ -36,13 +36,12 @@ req_attrs={ 'phonebook': { 'r': 'getphonebook', 'w': 'savephonebook' },
             'todo': { 'r': 'gettodo', 'w': 'savetodo' },
             'sms': { 'r': 'getsms', 'w': 'savesms' },
             'call_history': { 'r': 'getcallhistory', 'w': None },
+            'playlist': { 'r': 'getplaylist', 'w': 'saveplaylist' },
+            't9_udb': { 'r': 'gett9db', 'w': 'savet9db' },
             'Phone Info': check_phone_info,
             'Auto Detect': check_auto_detect
             }
 def generate_phone_features():
-##    pm=phones.phonemodels
-##    models=pm.keys()
-##    models.sort()
     r={}
     for model in phones.phonemodels:
         module=common.importas(phones.module(model))

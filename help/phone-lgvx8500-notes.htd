@@ -39,4 +39,9 @@
 <li><p>The max size of each playlist is limited to 50 songs.
 </UL>
 
+<H3>Known Issues</H3>
+<UL>
+<LI><P>Reading T9 User data from the phone into BitPim may not always succeed.  However, writing T9 User data from BitPim to the phone should always work.
+</UL>
+
 #include "pageend.h"
