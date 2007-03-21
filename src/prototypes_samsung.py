@@ -45,7 +45,7 @@ class DateTime(prototypes.UINTlsb):
         self._complainaboutunusedargs(DateTime, kwargs)
         assert self._sizeinbytes==4
 
-    _time_delta=315532800.0
+    _time_delta=315525600.0
     def _converttoint(self, date):
         assert len(date)==5
         return int(time.mktime(datetime.datetime(*date).timetuple())-\
