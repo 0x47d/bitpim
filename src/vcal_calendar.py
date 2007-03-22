@@ -40,6 +40,37 @@ class vCalendarFile(object):
     def _open(self, name):
         return file(name, 'rt')
 
+    def _read_block(self, vfile):
+        """Read a BEGIN/END block and return a dict of values/params
+        """
+        global module_debug
+        d={}
+        _inblk=False
+        for n,l in vfile:
+            if n[0]=='BEGIN':
+                _blkname=l
+                _inblk=True
+                _vdata=[]
+            elif n[0]=='END' and l==_blkname:
+                d['BEGIN-END']={ 'value': l,
+                                 'params': self._read_block(_vdata) }
+                _inblk=False
+            elif _inblk:
+                _vdata.append((n, l))
+            else:
+                _params={}
+                for _item in n[1:]:
+                    _l=_item.split('=')
+                    if len(_l)==1:
+                        _params[_l[0]]=None
+                    else:
+                        _params[_l[0]]=_l[1]
+                d[n[0]]={ 'value': l,
+                          'params': _params }
+        if module_debug:
+            print d,'\n'
+        return d
+
     def read(self, file_name=None):
         self._data=[]
         if file_name is not None:
@@ -53,23 +84,13 @@ class vCalendarFile(object):
             has_data=False
             for n,l in vfile:
                 if n[0]=='BEGIN' and l=='VEVENT':
-                    # start of an event, turn on data loggin
-                    d={}
                     has_data=True
+                    _vdata=[]
                 elif n[0]=='END' and l=='VEVENT':
-                    self._data.append(d)
-                    d={}
                     has_data=False
+                    self._data.append(self._read_block(_vdata))
                 elif has_data:
-                    _params={}
-                    for _item in n[1:]:
-                        _l=_item.split('=')
-                        if len(_l)==1:
-                            _params[_l[0]]=None
-                        else:
-                            _params[_l[0]]=_l[1]
-                    d[n[0]]={ 'value': l,
-                              'params': _params }
+                    _vdata.append((n, l))
             f.close()
         except:
             if __debug__:
@@ -251,6 +272,7 @@ class VCalendarImportData(object):
         return l
         
     def get(self):
+        global module_debug
         res={}
         single_rpt=self._filter.get('rpt_events', False)
         for k in self._data:
@@ -341,6 +363,7 @@ class VCalendarImportData(object):
         return True
 
     def _process_monthly_rule(self, v, dd):
+        global module_debug
         try:
             # acceptable format: MD1 <day number> <end date | #duration>
             # or MP1 <[1-4]+ | 1-> <SU-SA> <end date | #duration>
@@ -373,6 +396,7 @@ class VCalendarImportData(object):
             if module_debug: raise
             return False
     def _process_yearly_rule(self, v, dd):
+        global module_debug
         try:
             # acceptable format YM1 <Month number> <end date | #duration>
             s=v['value'].split(' ')
@@ -424,6 +448,7 @@ class VCalendarImportData(object):
         ('EXDATE', 'exceptions', _conv_exceptions),
         ]
     def _convert(self, vcal, d):
+        global module_debug
         for i in vcal:
             try:
                 dd={'start': None, 'end': None }

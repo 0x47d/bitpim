@@ -90,6 +90,15 @@ class iCalendarImportData(parentclass):
                 raise
             return False
 
+    def _conv_valarm(self, v, dd):
+        # convert a VALARM block to alarm value, if available/applicable
+        if v.get('value', None)!='VALARM':
+            return False
+        _trigger=v.get('params', {}).get('TRIGGER', None)
+        if _trigger:
+            return self._conv_alarm(_trigger, dd)
+        return False
+        
     def _conv_duration(self, v, dd):
         # compute the 'end' date based on the duration
         return (datetime.datetime(*dd['start'])+\
@@ -238,9 +247,9 @@ class iCalendarImportData(parentclass):
         ('LOCATION', 'location', parentclass._conv_str),
         ('PRIORITY', 'priority', parentclass._conv_priority),
         ('SUMMARY', 'description', parentclass._conv_str),
-        ('TRIGGER', 'alarm', _conv_alarm),
         ('RRULE', 'repeat', _conv_repeat),
         ('EXDATE', 'exceptions', _conv_exceptions),
+        ('BEGIN-END', 'alarm', _conv_valarm),
         ]
 
 #-------------------------------------------------------------------------------
