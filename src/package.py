@@ -57,7 +57,7 @@ def sanitycheck():
     print "  OK"
 
     print "paramiko version",
-    expect='1.6.4 (yanma)'
+    expect='1.7 (zubat)'
     import paramiko
     if paramiko.__version__!=expect:
         raise Exception("Should be %s version of paramiko - you have %s" % (expect, paramiko.__version__))
