@@ -594,6 +594,10 @@ class ImportDialog(wx.Dialog):
                     else:
                         if k2=='speeddial':
                             d[k2]=int(item)
+                        elif k2=='secret':
+                            d[k2]=True
+                            if item.lower() in ("false", "no", 0, "0"):
+                                d[k2]=False
             l=[x for x in entry[k] if len(x)]
             if len(l):
                 entry[k]=l
