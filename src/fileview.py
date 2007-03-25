@@ -196,17 +196,17 @@ class MyFileDropTarget(wx.FileDropTarget):
     def OnDragOver(self, x, y, d):
         if self.drag_over:
             return self.target.OnDragOver(x,y,d)
-        return wx.FileDropTarget.base_OnDragOver(self, x, y, d)
+        return wx.FileDropTarget.OnDragOver(self, x, y, d)
 
     def OnEnter(self, x, y, d):
         if self.enter_leave:
             return self.target.OnEnter(x,y,d)
-        return wx.FileDropTarget.base_OnEnter(self, x, y, d)
+        return wx.FileDropTarget.OnEnter(self, x, y, d)
 
     def OnLeave(self):
         if self.enter_leave:
             return self.target.OnLeave()
-        return wx.FileDropTarget.base_OnLeave(self)
+        return wx.FileDropTarget.OnLeave(self)
 
 class FileView(wx.Panel, widgets.BitPimWidget):
 
