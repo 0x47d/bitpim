@@ -273,6 +273,10 @@ class OutlookCalendarImportData:
             rp.interval=r_interval
             rp.interval2=r_interval2
             rp.dow=r_dow
+        # check for invalid monthly type
+        if rp.repeat_type==rp.monthly and \
+           rp.dow in (rp.dow_weekday, rp.dow_weekend):
+            rp.dow=0
         # add the list of exceptions
         for k in e.get('exceptions', []):
             rp.add_suppressed(*k[:3])

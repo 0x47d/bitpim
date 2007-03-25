@@ -183,6 +183,9 @@ class RepeatEntry(object):
                64: wx.DateTime.Sat }
     dow_names={ 'Sun': 1, 'Mon': 2, 'Tue': 4, 'Wed': 8,
                 'Thu': 16, 'Fri': 32, 'Sat': 64 }
+    dow_weekday=0x3E
+    dow_weekend=0x41
+
     def __init__(self, repeat_type=daily):
         self._type=repeat_type
         self._data=[0,0,0]

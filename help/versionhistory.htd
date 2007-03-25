@@ -6,6 +6,7 @@
       <li><p>Maintenance: update component package versions.
       <li><p>Bug fix: <B>Samsung SCH-A930/950</B> calendar timezone.
       <li><p>Bug fix: iCalendar import failed to correctly set ALARM value.
+      <li><p>Bug fix: BitPim imports invalid Outlook montly events, which are failed to send to the <B>LG VX8100/8300/8500</B>.
     </ul>
 
    <h2><a name="0.9.13">Changes in 0.9.13</a></h2>
