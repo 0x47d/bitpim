@@ -5,9 +5,11 @@
       <li><p>Bug fix: media vtable reads wrong files.
       <li><p>Maintenance: update component package versions.
       <li><p>Bug fix: <B>Samsung SCH-A930/950</B> calendar timezone.
-      <li><p>Bug fix: iCalendar import failed to correctly set ALARM value.
+      <li><p>Bug fix: iCalendar import fails to correctly set ALARM value.
       <li><p>Bug fix: BitPim imports invalid Outlook montly events, which are failed to send to the <B>LG VX8100/8300/8500</B>.
       <li><p>Maintenance: Upgrade to wxPython-2.8.3.0.
+      <li><p>Bug fix: Calendar Import Wizard truncates path name.
+      <li><p>Bug fix: Create Data Storage Wizard truncates path name.
     </ul>
 
    <h2><a name="0.9.13">Changes in 0.9.13</a></h2>
