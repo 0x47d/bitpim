@@ -35,7 +35,7 @@ def sanitycheck():
 
     print "wxPython version",
     import wx
-    if wx.VERSION[:4]!=(2,6,3,3):
+    if wx.VERSION[:4]!=(2,8,3,0):
         raise Exception("Should be wxPython 2.6.3.3.  This is "+`wx.VERSION`)
     print "  OK"
 
