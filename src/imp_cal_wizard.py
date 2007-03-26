@@ -18,6 +18,7 @@
 import wx
 import wx.wizard as wiz
 import  wx.lib.scrolledpanel as scrolled
+from wx.lib.expando import ExpandoTextCtrl
 
 # BitPim
 import common_calendar
@@ -88,17 +89,10 @@ class ImportSourcePage(setphone_wizard.MyPage):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, 'Source of data:'), 0,
                 wx.ALL|wx.EXPAND, 5)
-        # set the label in a scrolled panel, so the user can scroll to view
-        # the file name if it's too long.
-        sp=scrolled.ScrolledPanel(self, -1, size=(-1, 50))
-        boxsizer=wx.BoxSizer(wx.VERTICAL)
-        self._source_lbl=wx.StaticText(sp, -1, '')
-        boxsizer.Add(self._source_lbl, 1, wx.ALL|wx.EXPAND, 5)
-        sp.SetSizer(boxsizer)
-        sp.SetAutoLayout(True)
-        sp.SetupScrolling(scroll_y=False)
-        vbs.Add(sp, 0, wx.ALL|wx.EXPAND, 5)
-        self.sp=sp
+        self._source_lbl=ExpandoTextCtrl(self, -1, '', style=wx.TE_READONLY)
+        self._source_lbl.SetBackgroundColour(self.GetBackgroundColour())
+        vbs.Add(self._source_lbl, 0, wx.ALL|wx.EXPAND, 5)
+
         _btn=wx.Button(self, -1, 'Browse')
         wx.EVT_BUTTON(self, _btn.GetId(), self._OnBrowse)
         vbs.Add(_btn, 0, wx.ALL, 5)
@@ -106,8 +100,6 @@ class ImportSourcePage(setphone_wizard.MyPage):
 
     def setlabel(self):
         self._source_lbl.SetLabel(self._source.name())
-        # update the scrolled panel
-        self.sp.SetVirtualSize(self.sp.GetBestVirtualSize())
 
     def _OnBrowse(self, _=None):
         if not self._source:
@@ -207,9 +199,7 @@ class ImportOptionPage(setphone_wizard.MyPage):
 class ImportCalendarWizard(wiz.Wizard):
     ID_ADD=wx.NewId()
     def __init__(self, parent, id=-1, title='Calendar Import Wizard'):
-        super(ImportCalendarWizard, self).__init__(parent, id, title,
-                                                   style=wx.DEFAULT_DIALOG_STYLE|\
-                                                   wx.RESIZE_BORDER)
+        super(ImportCalendarWizard, self).__init__(parent, id, title)
         self._data={}
         _import_type_page=ImportTypePage(self)
         _import_source_page=ImportSourcePage(self)

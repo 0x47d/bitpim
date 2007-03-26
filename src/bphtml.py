@@ -466,7 +466,7 @@ class Renderer:
         if Renderer._lastsize!=size or Renderer._lastfont!=font:
             Renderer._hdc.SetFonts(font, "", [int(x*size) for x in _scales])
         Renderer._hdc.SetHtmlText(html, basepath)
-        Renderer._hdc.Render(0,0,0,False)
+        Renderer._hdc.Render(0, 0, (), 0, False)
         return (Renderer._mdc.MaxX(), Renderer._mdc.MaxY())
 
     getbestsize=staticmethod(getbestsize)
@@ -485,7 +485,7 @@ def drawhtml(dc, rect, html, basepath="", font="", size=10):
     hdc.SetDC(dc, 1)
     hdc.SetSize(rect.width, rect.height)
     hdc.SetHtmlText(html, basepath)
-    hdc.Render(rect.x, rect.y, 0, False)
+    hdc.Render(rect.x, rect.y, (), 0, False)
     dc.SetUserScale(*origscale)
 
 

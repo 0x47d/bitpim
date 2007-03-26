@@ -20,6 +20,7 @@ import os.path
 # wx modules
 import wx
 import wx.wizard as wiz
+from wx.lib.expando import ExpandoTextCtrl
 
 # BitPim modules
 import bp_config
@@ -66,7 +67,8 @@ class PathPage(parentpage):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(wx.StaticText(self, -1, 'Storage Dir:'),
                 0, wx.EXPAND|wx.ALL, 5)
-        self.path=wx.StaticText(self, -1, '')
+        self.path=ExpandoTextCtrl(self, -1, '', style=wx.TE_READONLY)
+        self.path.SetBackgroundColour(self.GetBackgroundColour())
         vbs.Add(self.path, 0, wx.EXPAND|wx.ALL, 5)
         btn=wx.Button(self, -1, 'Browse')
         wx.EVT_BUTTON(self, btn.GetId(), self.OnBrowse)
@@ -134,12 +136,14 @@ class SummaryPage(parentpage):
     def GetMyControls(self):
         vbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Selection Summary:'),
                               wx.VERTICAL)
-        self.summary=wx.StaticText(self, -1, '')
+        self.summary=ExpandoTextCtrl(self, -1, '')
+        self.summary.SetBackgroundColour(self.GetBackgroundColour())
         vbs.Add(self.summary, 0, wx.EXPAND|wx.ALL, 5)
+        self._box=vbs
         return vbs
     def set(self, data):
-        text=['Name: %s'%data.get('name', '')]
-        text.append('Dir: %s'%data.get('path', ''))
+        text=['Name:\t%s'%data.get('name', '')]
+        text.append('Dir:\t%s'%data.get('path', ''))
         if data.get('currentsettings', False):
             text.append('Use current BitPim settings.')
         else:
@@ -149,7 +153,7 @@ class SummaryPage(parentpage):
                 text.append('Create a shortcut on your Desktop.')
             if data.get('startmenu', False):
                 text.append('Create a shortcut in your Start Menu.')
-        self.summary.SetLabel('\n'.join(text))
+        self.summary.SetLabel('\n\n'.join(text))
 
 #-------------------------------------------------------------------------------
 class NewDBWizard(wiz.Wizard):
