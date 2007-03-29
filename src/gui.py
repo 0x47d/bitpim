@@ -1064,13 +1064,7 @@ class MainWindow(wx.Frame):
     # about and help
 
     def OnHelpAbout(self,_):
-        import version
-
-        str="BitPim Version "+version.versionstring+" - "+version.vendor
-
-        d=wx.MessageDialog(self, str, "About BitPim", wx.OK|wx.ICON_INFORMATION)
-        d.ShowModal()
-        d.Destroy()
+        guiwidgets.show_about_dlg(self)
         
     def OnHelpHelp(self, _):
         wx.GetApp().displayhelpid(self.GetCurrentActiveWidget().GetHelpID())

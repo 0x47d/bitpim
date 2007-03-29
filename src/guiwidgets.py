@@ -1906,3 +1906,63 @@ class DRRecFileDialog(wx.Dialog):
         if _dlg.ShowModal()==wx.ID_OK:
             data_recording.set_start(_dlg.GetSelection())
         _dlg.Destroy()
+
+# About Dialog-----------------------------------------------------------------
+_license="""The BitPim code is under the GNU General Public License as detailed
+below.  Specific permission is granted for this code to be linked to
+OpenSSL (this is necessary because the OpenSSL license is not
+GPL-compatible).
+
+   In addition, as a special exception, the BitPim copyright holders
+   give permission to link the code of this program with the OpenSSL
+   library (or with modified versions of OpenSSL), and distribute
+   linked combinations including the two. You must obey the GNU
+   General Public License in all respects for all of the code used
+   other than OpenSSL. If you modify any files, you may extend this
+   exception to your version of the file, but you are not obligated to
+   do so. If you do not wish to do so, delete this exception statement
+   from your version.
+
+Please also note that some code is taken from other projects with a
+GPL compatible license.  This is noted in the specific files.
+
+BitPim also uses several other components with GPL compatible
+licenses.  The online help details those components, credits the
+authors and details the licenses.
+---------------------------------------------------------------------
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.  Also see the BitPim Help for more details
+"""
+
+_copyright="""(C) 2003-2007 The code in BitPim is copyright by several people.  Please note the
+comments at the top of each file, as well as version control history.
+"""
+_description="""    BitPim is a program that allows you to view and manipulate data on many CDMA phones
+    from LG, Samsung, Sanyo and other manufacturers. This includes the PhoneBook,
+    Calendar, WallPapers, RingTones (functionality varies by phone) and the
+    Filesystem for most Qualcomm CDMA chipset based phones. To see when phones will
+    be supported, which ones are already supported and which features are supported,
+    see online help.
+"""
+def show_about_dlg(parent):
+    global _license, _copyright, _description
+    info = wx.AboutDialogInfo()
+    info.Name = "BitPim"
+    info.Version = version.versionstring+" - "+version.vendor
+    info.Copyright=_copyright
+    info.Description = _description
+    info.WebSite = ("http://www.bitpim.org", "www.bitpim.org")
+    info.Developers = [ "Roger Binns",
+                        "Joe Pham",
+                        "Stephen Wood",
+                        "and others ..."]
+
+    info.License = _license
+    # Then we call wx.AboutBox giving it that info object
+    wx.AboutBox(info)
