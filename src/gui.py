@@ -327,7 +327,8 @@ class MainApp(wx.App):
         self.SAFEMODE=False
         codecs.register(phone_media_codec.search_func)
         self._config_filename=config_filename
-        wx.App.__init__(self, redirect=False, useBestVisual=True)
+        wx.App.__init__(self, redirect=False,
+                        useBestVisual=not guihelper.IsGtk())
 
     def lock_file(self, filename):
         # if the file can be locked, lock it and return True.
