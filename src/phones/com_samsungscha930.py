@@ -10,6 +10,7 @@
 """Communicate with the Samsung SCH-A930 Phone"""
 
 # System Models
+import fnmatch
 
 # BitPim modules
 import common
@@ -66,6 +67,58 @@ class Phone(com_a950.Phone):
         'Preloaded8': 'range_f_wallpaper_preloaded_el_08',
         }
 
+# adding video to the wallpaper stuff
+    def _get_video_index(self, idx, result):
+        # just scan the dir for *.3g2 files
+        _files=self.listfiles(self.protocolclass.FLIX_PATH)
+        for _,_f in _files.items():
+            _filename=_f['name']
+            _name=common.basename(_filename)
+            if fnmatch.fnmatch(_name, '*.3g2'):
+                result[idx]= { 'name': _name,
+                               'filename': _filename,
+                               'origin': 'video',
+                               }
+                idx+=1
+        return idx
+        
+    def get_wallpaper_index(self):
+        _res={}
+        _idx=self._get_file_wallpaper_index(0, _res)
+        self._get_video_index(_idx, _res)
+        return _res
+
+    def savewallpapers(self, fundamentals, merge):
+        # send wallpapers to the phone
+        """Save ringtones to the phone"""
+        self.log('Writing wallpapers to the phone')
+        try:
+            _del_list, _new_list=self._get_del_new_list('wallpaper-index',
+                                                        'wallpapers',
+                                                        merge,
+                                                        fundamentals,
+                                                        ('video',))
+            if __debug__:
+                self.log('Delete list: '+','.join(_del_list))
+                self.log('New list: '+','.join(_new_list))
+            self._replace_files('wallpaper-index', 'wallpapers',
+                                _new_list, fundamentals)
+            self._del_files('wallpaper-index',
+                            _del_list, fundamentals)
+            self._add_files('wallpaper-index', 'wallpapers',
+                            _new_list, fundamentals)
+            self._update_media_index(self.protocolclass.WPictureIndexFile,
+                                     self.protocolclass.WPictureIndexEntry,
+                                     [self.protocolclass.PIC_PATH,
+                                      self.protocolclass.PIC_PATH2],
+                                     self.protocolclass.PIC_EXCLUDED_FILES,
+                                     self.protocolclass.PIC_INDEX_FILE_NAME)
+            fundamentals['rebootphone']=True
+        except:
+            if __debug__:
+                raise
+        return fundamentals
+
 #-------------------------------------------------------------------------------
 parentprofile=com_a950.Profile
 class Profile(parentprofile):
@@ -78,9 +131,12 @@ class Profile(parentprofile):
         'MAXSIZE': 290000
     }
 
+    # fill in the list of ringtone/sound origins on your phone
+    ringtoneorigins=('ringers',)
     # all dumped in "images"
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
     def GetImageOrigins(self):
         return self.imageorigins
 

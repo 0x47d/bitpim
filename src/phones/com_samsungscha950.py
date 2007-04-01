@@ -298,13 +298,16 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         return self._get_media_from_index('ringtone-index', 'ringtone',
                                           fundamentals)
 
-    def _get_del_new_list(self, index_key, media_key, merge, fundamentals):
+    def _get_del_new_list(self, index_key, media_key, merge, fundamentals,
+                          ignored_origins=()):
         """Return a list of media being deleted and being added"""
         _index=fundamentals.get(index_key, {})
         _media=fundamentals.get(media_key, {})
         _index_file_list=[_entry['name'] for _,_entry in _index.items() \
-                          if _entry.has_key('filename')]
-        _bp_file_list=[_entry['name'] for _,_entry in _media.items()]
+                          if _entry.has_key('filename') and \
+                             _entry.get('origin', None) not in ignored_origins]
+        _bp_file_list=[_entry['name'] for _,_entry in _media.items() \
+                       if _entry.get('origin', None) not in ignored_origins]
         if merge:
             # just add the new files, don't delete anything
             _del_list=[]

@@ -31,6 +31,9 @@ CAL_REMINDER_ONCE=0
 CAL_REMINDER_2MIN=1
 CAL_REMINDER_15MIN=2
 
+# vide stuff
+FLIX_PATH='brew/16452/mf'
+
 # Call log/history
 CL_MAX_ENTRIES=90
 
