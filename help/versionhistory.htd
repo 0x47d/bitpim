@@ -10,6 +10,7 @@
       <li><p>Maintenance: Upgrade to wxPython-2.8.3.0.
       <li><p>Bug fix: Calendar Import Wizard truncates path name.
       <li><p>Bug fix: Create Data Storage Wizard truncates path name.
+      <li><p>New feature: <B>Samsung SCH-A930:</B> retrieve video files along with wallpapers.
     </ul>
 
    <h2><a name="0.9.13">Changes in 0.9.13</a></h2>
