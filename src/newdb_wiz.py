@@ -76,20 +76,20 @@ class PathPage(parentpage):
         return vbs
 
     def ok(self):
-        return bool(self.path.GetLabel())
+        return bool(self.path.GetValue())
     def get(self, data):
-        data['path']=self.path.GetLabel()
+        data['path']=self.path.GetValue()
     def set(self, data):
         path=data.get('path', '')
         if not path:
             path=os.path.join(self.defaultdir, data.get('name', ''))
-        self.path.SetLabel(path)
+        self.path.SetValue(path)
 
     def OnBrowse(self, _):
         dlg=wx.DirDialog(self, defaultPath=self.path.GetLabel(),
                          style=wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal()==wx.ID_OK:
-            self.path.SetLabel(dlg.GetPath())
+            self.path.SetValue(dlg.GetPath())
         dlg.Destroy()
 
 #-------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ class SummaryPage(parentpage):
                 text.append('Create a shortcut on your Desktop.')
             if data.get('startmenu', False):
                 text.append('Create a shortcut in your Start Menu.')
-        self.summary.SetLabel('\n\n'.join(text))
+        self.summary.SetValue('\n\n'.join(text))
 
 #-------------------------------------------------------------------------------
 class NewDBWizard(wiz.Wizard):

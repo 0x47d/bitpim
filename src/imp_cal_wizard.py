@@ -99,7 +99,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
         return vbs
 
     def setlabel(self):
-        self._source_lbl.SetLabel(self._source.name())
+        self._source_lbl.SetValue(self._source.name())
 
     def _OnBrowse(self, _=None):
         if not self._source:
