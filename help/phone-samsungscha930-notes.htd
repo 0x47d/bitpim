@@ -50,4 +50,10 @@
 <li><p>The maximum length of a notepad item is 130 characters.
 </UL>
 
+<H3>Video</H3>
+<UL>
+<LI><P>BitPim can now retrieve video files along with wallpaper images.
+<LI><P>BitPim will neither delete nor add new video files from BitPim to the phone.  Users will have to manually delete them from the phone.
+</UL>
+
 #include "pageend.h"
