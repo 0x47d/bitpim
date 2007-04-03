@@ -34,6 +34,7 @@ import setphone_wizard
 IMP_OPTION_REPLACEALL=0
 IMP_OPTION_ADD=1
 IMP_OPTION_PREVIEW=2
+IMP_OPTION_MERGE=3
 
 #-------------------------------------------------------------------------------
 class ImportCalendarDataObject(common_calendar.FilterDataObject):
@@ -172,7 +173,7 @@ class PresetFilterPage(setphone_wizard.MyPage):
         self._display('start', '_start', _fmt)
         self._display('end', '_end', _fmt)
         self._display('preset_date', '_preset',
-                      "['This Week', 'This Month', 'This Year'][_v]")
+                      "['This Week', 'This Month', 'This Year', 'Next 7 Days'][_v]")
         self._display('rpt_events', '_repeat',
                       "{ True: 'Import as mutil-single events', False: ''}[_v]")
         if self._data.get('no_alarm', None):
@@ -194,7 +195,7 @@ class PresetFilterPage(setphone_wizard.MyPage):
 
 #-------------------------------------------------------------------------------
 class ImportOptionPage(imp_cal_wizard.ImportOptionPage):
-    _choices=('Replace All', 'Add', 'Preview')
+    _choices=('Replace All', 'Add', 'Preview', 'Merge')
 
 #-------------------------------------------------------------------------------
 class ImportCalendarPresetWizard(wiz.Wizard):
@@ -246,6 +247,7 @@ class ImportCalendarPresetWizard(wiz.Wizard):
 class CalendarPreviewDialog(wx.Dialog):
     ID_ADD=wx.NewId()
     ID_REPLACE=wx.NewId()
+    ID_MERGE=wx.NewId()
     def __init__(self, parent, data):
         super(CalendarPreviewDialog, self).__init__(parent, -1,
                                                     'Calendar Import Preview')
@@ -262,6 +264,9 @@ class CalendarPreviewDialog(wx.Dialog):
         _btn=wx.Button(self, self.ID_ADD, 'Add')
         wx.EVT_BUTTON(self, self.ID_ADD, self._OnButton)
         _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        _btn=wx.Button(self, self.ID_MERGE, 'Merge')
+        wx.EVT_BUTTON(self, self.ID_MERGE, self._OnButton)
+        _hbs.Add(_btn, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         _hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0,
                  wx.ALIGN_CENTRE|wx.ALL, 5)
         _vbs.Add(_hbs, 0, wx.EXPAND|wx.ALL, 5)
@@ -275,6 +280,7 @@ class CalendarPreviewDialog(wx.Dialog):
 #-------------------------------------------------------------------------------
 class ImportCalendarPresetDialog(wx.Dialog):
     ID_ADD=wx.NewId()
+    ID_MERGE=wx.NewId()
 
     def __init__(self, parent, id, title):
         self._parent=parent
@@ -332,6 +338,8 @@ class ImportCalendarPresetDialog(wx.Dialog):
             return wx.ID_OK
         elif _ret_code==CalendarPreviewDialog.ID_ADD:
             return self.ID_ADD
+        elif _ret_code==CalendarPreviewDialog.ID_MERGE:
+            return self.ID_MERGE
         return wx.ID_CANCEL
 
     def _get_preset_thisweek(self):
@@ -356,6 +364,13 @@ class ImportCalendarPresetDialog(wx.Dialog):
         return ((_today.year, _today.month, _today.day),
                 (_end.year, _end.month, _end.day))
 
+    def _get_preset_next7(self):
+        # return the dates of (today, today+6)
+        _today=datetime.date.today()
+        _end=_today+datetime.timedelta(days=6)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
     def _adjust_filter_dates(self, entry):
         # Adjust the start/end dates of the filter
         _preset_date=entry.get('preset_date', None)
@@ -365,7 +380,8 @@ class ImportCalendarPresetDialog(wx.Dialog):
         entry['start'], entry['end']=getattr(self,
                                              ['_get_preset_thisweek',
                                               '_get_preset_thismonth',
-                                              '_get_preset_thisyear'][_preset_date])()
+                                              '_get_preset_thisyear',
+                                              '_get_preset_next7'][_preset_date])()
     def _OnRun(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -389,11 +405,14 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._import_data.set_filter(_entry)
         _dlg.Destroy()
         wx.EndBusyCursor()
-        global IMP_OPTION_PREVIEW, IMP_OPTION_REPLACEALL, IMP_OPTION_ADD
-        if _entry['option']==IMP_OPTION_PREVIEW:
+        global IMP_OPTION_PREVIEW, IMP_OPTION_REPLACEALL, IMP_OPTION_ADD, IMP_OPTION_MERGE
+        _option=_entry.get('option', IMP_OPTION_PREVIEW)
+        if _option==IMP_OPTION_PREVIEW:
             _ret_code=self._preview_data()
-        elif _entry['option']==IMP_OPTION_ADD:
+        elif _option==IMP_OPTION_ADD:
             _ret_code=self.ID_ADD
+        elif _option==IMP_OPTION_MERGE:
+            _ret_code=self.ID_MERGE
         else:
             _ret_code=wx.ID_OK
         self.EndModal(_ret_code)

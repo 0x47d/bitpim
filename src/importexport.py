@@ -1977,6 +1977,12 @@ def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
         # and save it
         widget.populate(data_dict)
         widget.populatefs(data_dict)
+    elif res==dlg_class.ID_MERGE:
+        # ask phonebook to merge our categories
+        pubsub.publish(pubsub.MERGE_CATEGORIES,
+                       dlg.get_categories()[:])
+        # and merge the data
+        widget.mergedata({ dict_key: dlg.get() })
     # all done
     dlg.Destroy
 

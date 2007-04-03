@@ -497,7 +497,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         ('alarm', 'Alarm', 80, common_calendar.bp_alarm_str),
         ('categories', 'Category', 150, common_calendar.category_str)
         ]
-    ID_ADD=wx.NewId()
+
     _config_name='import/calendar/outlookdialog'
     _browse_label='Outlook Calendar Folder:'
     _progress_dlg_title='Outlook Calendar Import'
@@ -536,6 +536,7 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         hbs.Add(wx.Button(self, id_import, 'Import'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_OK, 'Replace All'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, self.ID_ADD, 'Add'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        hbs.Add(wx.Button(self, self.ID_MERGE, 'Merge'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         hbs.Add(wx.Button(self, wx.ID_CANCEL, 'Cancel'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         id_filter=wx.NewId()
         hbs.Add(wx.Button(self, id_filter, 'Filter'), 0, wx.ALIGN_CENTRE|wx.ALL, 5)
@@ -543,7 +544,8 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         main_bs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
         wx.EVT_BUTTON(self, id_import, self.OnImport)
         wx.EVT_BUTTON(self, id_filter, self.OnFilter)
-        wx.EVT_BUTTON(self, self.ID_ADD, self.OnAdd)
+        wx.EVT_BUTTON(self, self.ID_ADD, self.OnEndModal)
+        wx.EVT_BUTTON(self, self.ID_MERGE, self.OnEndModal)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
     def OnImport(self, evt):
@@ -574,13 +576,12 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
     def OnFilter(self, evt):
         cat_list=self._oc.get_category_list()
         dlg=self._filter_dlg_class(self, -1, 'Filtering Parameters', cat_list)
-##        dlg.set(self._oc.get_filter())
         if dlg.ShowModal()==wx.ID_OK:
             self._oc.set_filter(dlg.get())
             self.populate(self._oc.get_display_data())
 
-    def OnAdd(self, evt):
-        self.EndModal(self.ID_ADD)
+    def OnEndModal(self, evt):
+        self.EndModal(evt.GetId())
 
     def get(self):
         return self._oc.get()

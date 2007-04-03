@@ -121,6 +121,9 @@ class ImportDataSource(object):
 
 #-------------------------------------------------------------------------------
 class PreviewDialog(wx.Dialog, listmix.ColumnSorterMixin):
+    ID_ADD=wx.NewId()
+    ID_MERGE=wx.NewId()
+
     def __init__(self, parent, id, title, col_labels, data={},
                  config_name=None,
                  style=wx.CAPTION|wx.MAXIMIZE_BOX| \
@@ -531,7 +534,8 @@ class FilterDialog(FilterDialogBase):
                 wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL, 0)
         self._preset_date=wx.Choice(self, -1, choices=('This Week',
                                                        'This Month',
-                                                       'This Year'))
+                                                       'This Year',
+                                                       'Next 7 Days',))
         self._preset_date.SetSelection(1)
         self._preset_date.Disable()
         fgs.Add(self._preset_date, 0, wx.ALIGN_LEFT, 5)
@@ -601,6 +605,13 @@ class FilterDialog(FilterDialogBase):
         return ((_today.year, _today.month, _today.day),
                 (_end.year, _end.month, _end.day))
 
+    def _get_preset_next7(self):
+        # return the dates of (today, today+6)
+        _today=datetime.date.today()
+        _end=_today+datetime.timedelta(days=6)
+        return ((_today.year, _today.month, _today.day),
+                (_end.year, _end.month, _end.day))
+
     def _get_preset_date(self):
         _choice=self._preset_date.GetSelection()
         if _choice==wx.NOT_FOUND:
@@ -609,8 +620,10 @@ class FilterDialog(FilterDialogBase):
             return self._get_preset_thisweek()
         elif _choice==1:
             return self._get_preset_thismonth()
-        else:
+        elif _choice==2:
             return self._get_preset_thisyear()
+        else:
+            return self._get_preset_next7()
 
     def get(self):
         r={}

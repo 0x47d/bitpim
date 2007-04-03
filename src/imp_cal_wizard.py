@@ -28,6 +28,7 @@ import setphone_wizard
 # modules constants
 IMP_OPTION_REPLACEALL=0
 IMP_OPTION_ADD=1
+IMP_OPTION_MERGE=2
 
 #-------------------------------------------------------------------------------
 class ImportTypePage(setphone_wizard.MyPage):
@@ -178,7 +179,7 @@ class ImportDataAll(setphone_wizard.MyPage):
 
 #-------------------------------------------------------------------------------
 class ImportOptionPage(setphone_wizard.MyPage):
-    _choices=('Replace All', 'Add')
+    _choices=('Replace All', 'Add', 'Merge')
     def __init__(self, parent):
         super(ImportOptionPage, self).__init__(parent,
                                                'Import Options')
@@ -198,6 +199,7 @@ class ImportOptionPage(setphone_wizard.MyPage):
 #-------------------------------------------------------------------------------
 class ImportCalendarWizard(wiz.Wizard):
     ID_ADD=wx.NewId()
+    ID_MERGE=wx.NewId()
     def __init__(self, parent, id=-1, title='Calendar Import Wizard'):
         super(ImportCalendarWizard, self).__init__(parent, id, title)
         self._data={}
@@ -240,11 +242,11 @@ class ImportCalendarWizard(wiz.Wizard):
         return []
 
     def ShowModal(self):
+        global IMP_OPTION_REPLACEALL
         # run the wizard and return a code
         if self.RunWizard():
-            if self._data.get('option', None)==IMP_OPTION_REPLACEALL:
-                return wx.ID_OK
-            return self.ID_ADD
+            return [wx.ID_OK, self.ID_ADD, self.ID_MERGE][self._data.get('option',
+                                                                         IMP_OPTION_REPLACEALL)]
         return wx.ID_CANCEL
 
 #-------------------------------------------------------------------------------
