@@ -19,6 +19,7 @@ DESC(Replace All,Discard current BitPim calendar data and replace them with \
 the preview data.)
 DESC(Add,Add the preview data to existing BitPim calendar data.  This may cause \
 duplicate events.)
+DESC(Merge,Bring up the <a href="dialog-calendarmerge.htm">Calendar Merge</a> dialog.)
 DESC(Cancel,Discard the preview data and close this dialog.)
 DESC(Filter,Bring up the Filter Setting Dialog.)
 DESC(Help,Bring up this dialog.)
@@ -37,8 +38,8 @@ calendar events would be imported.)
 DESC(End Date,Inclusive ending dat of the periodic during which active\
 calendar events would be imported.)
 <p><B>Preset Duration</B>: Select one of 3 preset durations: <B>This Week</B>,
-<B>This Month</B>, or <B>This Year</B>.  The <B>Preset Duration</B> starts from today
-and lasts through the end of the week, month, or year.  This parameter takes precedence
+<B>This Month</B>, <B>This Year</B>, or <B>Next 7 Days</B>.  The <B>Preset Duration</B> starts from today
+and lasts through the end of the week, month, year, or the next 7 days.  This parameter takes precedence
 over the <B>Start Date</B> and <B>End Date</B> parameter.
 DESC(Repeat Events,Import/translate repeat events into multiple single events.\
 This feature is useful for phones that do not support repeat events natively.)
