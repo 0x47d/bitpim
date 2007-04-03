@@ -84,6 +84,33 @@ class DirtyUIBase(wx.Panel):
         super(DirtyUIBase, self).Enable(enable)
         self.Refresh()
 
+# My ListBox class--------------------------------------------------------------
+class ListBox(wx.ListBox):
+    """BitPim ListBox class that caches the selection string necessary for this
+    implementation.
+    """
+    def __init__(self, *args, **kwargs):
+        super(ListBox, self).__init__(*args,  **kwargs)
+        self._selstr=''
+        wx.EVT_LISTBOX(self, self.GetId(), self._OnSelected)
+    def _OnSelected(self, evt):
+        self._selstr=evt.GetString()
+        evt.Skip()
+    def GetStringSelection(self):
+        return self._selstr
+    def SetStringSelection(self, selection):
+        try:
+            super(ListBox, self).SetStringSelection(selection)
+            self._selstr=selection
+        except:
+            self._selstr=''
+    def SetSelection(self, idx):
+        try:
+            super(ListBox, self).SetSelection(idx)
+            self._selstr=self.GetString(idx)
+        except:
+            self._selstr=''
+
 # RingtoneEditor----------------------------------------------------------------
 class RingtoneEditor(DirtyUIBase):
     "Edit a ringtone"
@@ -120,7 +147,7 @@ class RingtoneEditor(DirtyUIBase):
 
         hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
 
-        self.ringtone=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
+        self.ringtone=ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200))
         hs.Add(self.ringtone, 1, wx.EXPAND|wx.ALL, 5)
         if navtoolbar:
             hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
@@ -252,7 +279,7 @@ class WallpaperEditor(DirtyUIBase):
 
         hs.Add(vs, 1, wx.EXPAND|wx.ALL, 5)
 
-        self.wallpaper=wx.ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200), style=wx.LB_SINGLE)
+        self.wallpaper=ListBox(self, self.ID_LIST, choices=[self.unnamed], size=(-1,200), style=wx.LB_SINGLE)
         hs.Add(self.wallpaper, 1, wx.EXPAND|wx.ALL, 5)
         if navtoolbar:
             hs.Add(NavToolBar(self, False), 0, wx.EXPAND|wx.BOTTOM, 5)
