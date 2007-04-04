@@ -14,6 +14,7 @@
       <li><p>New feature: Add <B>Next 7 Days</B> preset option to calendar import filter.
       <li><p>Bug fix: Phone contact editor incorrectly displays wallpaper and ringtone assignments.
       <li><p>New feature: Add <B>Merge</B> option to the calendar import process.
+      <li><p>New feature: Add <B>HowTos</B> and <B>FAQ</B> to the <B>Help</B> menu.
     </ul>
 
    <h2><a name="0.9.13">Changes in 0.9.13</a></h2>

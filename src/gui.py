@@ -756,6 +756,8 @@ class MainWindow(wx.Frame):
             menu.Append(guihelper.ID_HELPHELP, "&Help", "Help for the panel you are looking at")
         menu.Append(guihelper.ID_HELPTOUR, "&Tour", "Tour of BitPim")
         menu.Append(guihelper.ID_HELPCONTENTS, "&Contents", "Table of contents for the online help")
+        menu.Append(guihelper.ID_HELPHOWTOS, "H&owTos", "Help on how to do certain function")
+        menu.Append(guihelper.ID_HELPFAQ, "&FAQ", "Frequently Asked Questions")
         menu.Append(guihelper.ID_HELPSUPPORT, "&Support", "Getting support for BitPim")
         menu.Append(guihelper.ID_HELPPHONE, "Your &Phone", "Help on specific phonemodel")
         if version.vendor=='official':
@@ -838,6 +840,8 @@ class MainWindow(wx.Frame):
         wx.EVT_MENU(self, guihelper.ID_HELPABOUT, self.OnHelpAbout)
         wx.EVT_MENU(self, guihelper.ID_HELPHELP, self.OnHelpHelp)
         wx.EVT_MENU(self, guihelper.ID_HELPCONTENTS, self.OnHelpContents)
+        wx.EVT_MENU(self, guihelper.ID_HELPHOWTOS, self.OnHelpHowtos)
+        wx.EVT_MENU(self, guihelper.ID_HELPFAQ, self.OnHelpFAQ)
         wx.EVT_MENU(self, guihelper.ID_HELPSUPPORT, self.OnHelpSupport)
         wx.EVT_MENU(self, guihelper.ID_HELPTOUR, self.OnHelpTour)
         wx.EVT_MENU(self, guihelper.ID_HELP_UPDATE, self.OnCheckUpdate)
@@ -1069,6 +1073,12 @@ class MainWindow(wx.Frame):
         
     def OnHelpHelp(self, _):
         wx.GetApp().displayhelpid(self.GetCurrentActiveWidget().GetHelpID())
+
+    def OnHelpHowtos(self, _):
+        wx.GetApp().displayhelpid(helpids.ID_HOWTOS)
+
+    def OnHelpFAQ(self, _):
+        wx.GetApp().displayhelpid(helpids.ID_FAQ)
 
     def OnHelpContents(self, _):
         wx.GetApp().displayhelpid(None)
