@@ -559,7 +559,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def __init__(self, mainwindow, parent, config):
         wx.Panel.__init__(self, parent,-1)
         self.sash_pos=config.ReadInt('phonebooksashpos', -300)
-        self.update_sash=True
+        self.update_sash=False
         # keep this around while we exist
         self.categorymanager=CategoryManager
 ##        self.SetBackgroundColour("ORANGE")
