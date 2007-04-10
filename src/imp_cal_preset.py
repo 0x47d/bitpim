@@ -26,6 +26,7 @@ import wx.wizard as wiz
 # BitPim
 import common_calendar
 import database
+import guihelper
 import imp_cal_wizard
 import importexport
 import setphone_wizard
@@ -288,7 +289,8 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._import_data=None
         self._buttons=[]
         super(ImportCalendarPresetDialog, self).__init__(parent, id,
-                                                         title)
+                                                         title,
+                                                         size=(500, 500))
         _vbs=wx.BoxSizer(wx.VERTICAL)
         _static_bs=wx.StaticBoxSizer(wx.StaticBox(self, -1,
                                                   'Available Presets:'),
@@ -317,9 +319,10 @@ class ImportCalendarPresetDialog(wx.Dialog):
         _hbs.Add(wx.Button(self, wx.ID_CANCEL),
                  0, wx.ALIGN_CENTRE|wx.ALL, 5)
         _vbs.Add(_hbs, 0, wx.ALIGN_CENTRE|wx.ALL, 5)
-        self.SetSizer(_vbs)
-        self.SetAutoLayout(True)
-        _vbs.Fit(self)
+        self.SetSizerAndFit(_vbs)
+        if guihelper.IsGtk():
+            # On Linux, without this, the dialog clips the buttons
+            self.SetSizeHints(-1, 175)
         self._get_from_fs()
         self._populate()
 
