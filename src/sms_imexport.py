@@ -118,7 +118,8 @@ class ExportSMSDialog(wx.Dialog):
                 _msg['From']=e._from or 'self'
                 _msg['To']=e._to or 'self'
                 _msg['Subject']=e.subject
-                _msg['Date']=formatdate(bptime.BPTime(e.datetime).mktime(), True)
+                if e.datetime:
+                    _msg['Date']=formatdate(bptime.BPTime(e.datetime).mktime(), True)
                 _email_generator.flatten(_msg, True)
                 _email_generator.write(_lfs)
             except:
@@ -130,8 +131,10 @@ class ExportSMSDialog(wx.Dialog):
             return 'Yes'
         return 'No'
     def _datetime_str(self, v):
-        _dt=bptime.BPTime(v)
-        return _dt.date_str()+' '+_dt.time_str()
+        if v:
+            _dt=bptime.BPTime(v)
+            return _dt.date_str()+' '+_dt.time_str()
+        return ''
     def _priority_str(self, v):
         return sms.SMSEntry._priority_name.get(v, '')
 

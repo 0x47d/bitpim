@@ -4,6 +4,7 @@
     <ul>
       <LI><P>Bug fix: Calendar Import Preset dialog does not work properly in Linux.
       <LI><P>Bug fix: Phonebook preview pane does not work at startup in Linux.
+      <LI><P>Bug fix: BitPim failed to export SMS entries with no dates.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
