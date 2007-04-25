@@ -23,6 +23,7 @@ import wx.gizmos as gizmos
 import wx.lib.scrolledpanel as scrolled
 
 # BitPim modules
+import common
 import database
 import guiwidgets
 import helpids
@@ -33,6 +34,7 @@ import sms
 import today
 import guihelper
 import widgets
+import xyaptu
 
 #-------------------------------------------------------------------------------
 class StaticText(wx.StaticText):
@@ -339,6 +341,13 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
             self._main_window.OnBusyEnd()
         dlg.Destroy()
 
+    def OnPrintDialog(self, mainwindow, config):
+        dlg=SMSPrintDialog(self, mainwindow, config)
+        dlg.ShowModal()
+        dlg.Destroy()
+    def CanPrint(self):
+        return True
+
 #-------------------------------------------------------------------------------
 class SMSList(wx.Panel, widgets.BitPimWidget):
     _by_type=0
@@ -574,3 +583,90 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
             self._stats._save_to_db(self._stats._data)
     def GetHelpID(self):
         return helpids.ID_TAB_SMS
+    def OnPrintDialog(self, mainwindow, config):
+        self._stats.OnPrintDialog(mainwindow, config)
+    def CanPrint(self):
+        return True
+
+#-------------------------------------------------------------------------------
+class SMSPrintDialog(wx.Dialog):
+
+    _template='sms.xy'
+
+    def __init__(self, smswidget, mainwindow, config):
+        super(SMSPrintDialog, self).__init__(mainwindow, -1, 'SMS Print')
+        self._smswidget=smswidget
+        self._sel_data=self._smswidget.get_selected_data()
+        self._data=self._smswidget.get_data()
+        self._xcp=self._html=self._dns=None
+        self._tmp_file=common.gettempfilename("htm")
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "SMS Messages"), wx.VERTICAL)
+        lsel=len(self._sel_data)
+        lall=len(self._data)
+        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
+        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
+        if lsel==0:
+            self.rows_selected.Enable(False)
+            self.rows_selected.SetValue(0)
+            self.rows_all.SetValue(1)
+        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
+        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
+        # and the bottom buttons
+        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        for b in ((None, wx.ID_PRINT, self.OnPrint),
+                  ('Page Setup', wx.ID_PAGE_SETUP, self.OnPageSetup),
+                  ('Print Preview', -1, self.OnPrintPreview),
+                  (None, wx.ID_CLOSE, self.OnClose)):
+            if b[0]:
+                btn=wx.Button(self, b[1], b[0])
+            else:
+                btn=wx.Button(self, b[1])
+            hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+            if b[2] is not None:
+                wx.EVT_BUTTON(self, btn.GetId(), b[2])
+        # all done
+        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def _gen_print_data(self):
+        if self._xcp is None:
+            # build the whole document template
+            self._xcp=xyaptu.xcopier(None)
+            tmpl=file(guihelper.getresourcefile(self._template),
+                      'rt').read()
+            self._xcp.setupxcopy(tmpl)
+        if self._dns is None:
+            self._dns={ 'common': __import__('common') }
+            self._dns['guihelper']=__import__('guihelper')
+            self._dns['smsitems']={}
+            self._dns['smskeys']=[]
+        if self.rows_all.GetValue():
+            _sms=self._data
+        else:
+            _sms=self._sel_data
+        _keys=_sms.keys()
+        _keys.sort()
+        self._dns['smsitems']=_sms
+        self._dns['smskeys']=_keys
+        self._html=self._xcp.xcopywithdns(self._dns.copy())
+
+    def OnPrint(self, _):
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PrintText(self._html)
+    def OnPageSetup(self, _):
+        wx.GetApp().htmlprinter.PageSetup()
+    def OnPrintPreview(self, _):
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PreviewText(self._html)
+    def OnClose(self, _):
+        try:
+            # remove the temp file, ignore exception if file does not exist
+            os.remove(self._tmp_file)
+        except:
+            pass
+        self.EndModal(wx.ID_CANCEL)
