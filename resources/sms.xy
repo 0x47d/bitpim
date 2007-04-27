@@ -2,6 +2,7 @@
 <!--
 <py-line code="Id=''"/>
 $Id$
+
 Need to pass in the following data:
 dns['smsitems']=a dict of sms.SMSEntry
 dns['smskeys']=a list of (sorted) keys of dns['smsitems']
@@ -13,24 +14,24 @@ dns['smskeys']=a list of (sorted) keys of dns['smsitems']
 <py-open code="for k in smskeys:"/>
 <py-line code="_sms=smsitems[k]"/>
 <p>
-<b>Folder:</b> ${_sms.folder}<br>
-<b>Priority:</b> ${_sms.priority_str}<br>
+<b>Folder:</b> ${_sms.folder}<br/>
+<b>Priority:</b> ${_sms.priority_str}<br/>
 <py-open code="if _sms.datetime:"/>
-<b>Date:</b> ${_sms.get_date_time_str()}<br>
+<b>Date:</b> ${_sms.get_date_time_str()}<br/>
 <py-close/>
 <py-open code="if _sms._from:"/>
-<b>From:</b> ${_sms._from}<br>
+<b>From:</b> ${_sms._from}<br/>
 <py-close/>
 <py-open code="if _sms._to:"/>
-<b>To:</b> ${_sms._to}<br>
+<b>To:</b> ${_sms._to}<br/>
 <py-close/>
 <py-open code="if _sms.callback:"/>
-<b>Callback Number:</b> ${_sms.callback}<br>
+<b>Callback Number:</b> ${_sms.callback}<br/>
 <py-close/>
 <py-open code="if _sms.subject!='&lt;None&gt;':"/>
-<b>Subject:</b> ${_sms.subject}<br>
+<b>Subject:</b> ${_sms.subject}<br/>
 <py-close/>
-<b>Text:</b> ${_sms.text}<br>
+<b>Text:</b> ${_sms.text}<br/>
 </p>
 <py-close/>
 

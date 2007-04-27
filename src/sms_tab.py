@@ -33,6 +33,7 @@ import pubsub
 import sms
 import today
 import guihelper
+import guiwidgets
 import widgets
 import xyaptu
 
@@ -589,18 +590,17 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         return True
 
 #-------------------------------------------------------------------------------
-class SMSPrintDialog(wx.Dialog):
+class SMSPrintDialog(guiwidgets.PrintDialog):
 
-    _template='sms.xy'
+    _template_filename='sms.xy'
 
     def __init__(self, smswidget, mainwindow, config):
-        super(SMSPrintDialog, self).__init__(mainwindow, -1, 'SMS Print')
-        self._smswidget=smswidget
-        self._sel_data=self._smswidget.get_selected_data()
-        self._data=self._smswidget.get_data()
-        self._xcp=self._html=self._dns=None
-        self._tmp_file=common.gettempfilename("htm")
-        vbs=wx.BoxSizer(wx.VERTICAL)
+        self._sel_data=smswidget.get_selected_data()
+        self._data=smswidget.get_data()
+        super(SMSPrintDialog, self).__init__(smswidget, mainwindow,
+                                             config, 'SMS Print')
+
+    def _create_contents(self, vbs):
         rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "SMS Messages"), wx.VERTICAL)
         lsel=len(self._sel_data)
         lall=len(self._data)
@@ -613,38 +613,13 @@ class SMSPrintDialog(wx.Dialog):
         rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
         rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
         vbs.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
-        # and the bottom buttons
-        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        for b in ((None, wx.ID_PRINT, self.OnPrint),
-                  ('Page Setup', wx.ID_PAGE_SETUP, self.OnPageSetup),
-                  ('Print Preview', -1, self.OnPrintPreview),
-                  (None, wx.ID_CLOSE, self.OnClose)):
-            if b[0]:
-                btn=wx.Button(self, b[1], b[0])
-            else:
-                btn=wx.Button(self, b[1])
-            hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
-            if b[2] is not None:
-                wx.EVT_BUTTON(self, btn.GetId(), b[2])
-        # all done
-        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.EXPAND|wx.ALL, 5)
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
 
-    def _gen_print_data(self):
-        if self._xcp is None:
-            # build the whole document template
-            self._xcp=xyaptu.xcopier(None)
-            tmpl=file(guihelper.getresourcefile(self._template),
-                      'rt').read()
-            self._xcp.setupxcopy(tmpl)
-        if self._dns is None:
-            self._dns={ 'common': __import__('common') }
-            self._dns['guihelper']=__import__('guihelper')
-            self._dns['smsitems']={}
-            self._dns['smskeys']=[]
+    def _init_print_data(self):
+        # Initialize the dns dict with empty data
+        self._dns['smsitems']={}
+        self._dns['smskeys']=[]
+
+    def _get_print_data(self):
         if self.rows_all.GetValue():
             _sms=self._data
         else:
@@ -653,20 +628,4 @@ class SMSPrintDialog(wx.Dialog):
         _keys.sort()
         self._dns['smsitems']=_sms
         self._dns['smskeys']=_keys
-        self._html=self._xcp.xcopywithdns(self._dns.copy())
 
-    def OnPrint(self, _):
-        self._gen_print_data()
-        wx.GetApp().htmlprinter.PrintText(self._html)
-    def OnPageSetup(self, _):
-        wx.GetApp().htmlprinter.PageSetup()
-    def OnPrintPreview(self, _):
-        self._gen_print_data()
-        wx.GetApp().htmlprinter.PreviewText(self._html)
-    def OnClose(self, _):
-        try:
-            # remove the temp file, ignore exception if file does not exist
-            os.remove(self._tmp_file)
-        except:
-            pass
-        self.EndModal(wx.ID_CANCEL)

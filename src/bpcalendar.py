@@ -1448,7 +1448,7 @@ class Calendar(calendarcontrol.Calendar):
         return r
 
 #-------------------------------------------------------------------------------
-class CalendarPrintDialog(wx.Dialog):
+class CalendarPrintDialog(guiwidgets.PrintDialog):
 
     _regular_template='cal_regular.xy'
     _regular_style='cal_regular_style.xy'
@@ -1456,14 +1456,12 @@ class CalendarPrintDialog(wx.Dialog):
     _monthly_style='cal_monthly_style.xy'
         
     def __init__(self, calwidget, mainwindow, config):
-        super(CalendarPrintDialog, self).__init__(mainwindow, -1, 'Print Calendar')
-        self._cal_widget=calwidget
-        self._xcp=self._html=self._dns=None
+        super(CalendarPrintDialog, self).__init__(calwidget, mainwindow,
+                                                  config, 'Print Calendar')
         self._dt_index=self._dt_start=self._dt_end=None
         self._date_changed=self._style_changed=False
-        self._tmp_file=common.gettempfilename("htm")
-        # main box sizer
-        vbs=wx.BoxSizer(wx.VERTICAL)
+
+    def _create_contents(self, vbs):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         # the print range box
         sbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, 'Print Range'),
@@ -1489,23 +1487,6 @@ class CalendarPrintDialog(wx.Dialog):
         wx.EVT_RADIOBOX(self, self._print_style.GetId(), self.OnStyleChanged)
         hbs.Add(self._print_style, 0, wx.ALL, 5)
         vbs.Add(hbs, 0, wx.ALL, 5)
-        # and the bottom buttons
-        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
-        hbs=wx.BoxSizer(wx.HORIZONTAL)
-        for b in (('Print', -1, self.OnPrint),
-                  ('Page Setup', -1, self.OnPageSetup),
-                  ('Print Preview', -1, self.OnPrintPreview),
-##                  ('Help', wx.ID_HELP, self.OnHelp),
-                  ('Close', wx.ID_CANCEL, self.OnClose)):
-            btn=wx.Button(self, b[1], b[0])
-            hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
-            if b[2] is not None:
-                wx.EVT_BUTTON(self, btn.GetId(), b[2])
-        # all done
-        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.EXPAND|wx.ALL, 5)
-        self.SetSizer(vbs)
-        self.SetAutoLayout(True)
-        vbs.Fit(self)
 
     # constant class variables
     _one_day=wx.DateSpan(days=1)
@@ -1515,7 +1496,7 @@ class CalendarPrintDialog(wx.Dialog):
         r=[str(self._dt_index.GetDay())]
         events=[]
         if self._dt_start<=self._dt_index<=self._dt_end:
-            entries=self._cal_widget.getentrydata(self._dt_index.GetYear(),
+            entries=self._widget.getentrydata(self._dt_index.GetYear(),
                                                    self._dt_index.GetMonth()+1,
                                                    self._dt_index.GetDay())
         else:
@@ -1570,7 +1551,7 @@ class CalendarPrintDialog(wx.Dialog):
             y=self._dt_index.GetYear()
             m=self._dt_index.GetMonth()
             d=self._dt_index.GetDay()
-            entries=self._cal_widget.getentrydata(y, m+1, d)
+            entries=self._widget.getentrydata(y, m+1, d)
             self._dt_index+=self._one_day
             if not len(entries):
                 # no events on this day
@@ -1656,23 +1637,6 @@ class CalendarPrintDialog(wx.Dialog):
         self._date_changed=True
     def OnStyleChanged(self, _):
         self._style_changed=True
-    def OnPrint(self, _):
-        self._gen_print_data()
-        wx.GetApp().htmlprinter.PrintText(self._html)
-    def OnPageSetup(self, _):
-        wx.GetApp().htmlprinter.PageSetup()
-    def OnPrintPreview(self, _):
-        self._gen_print_data()
-        wx.GetApp().htmlprinter.PreviewText(self._html)
-    def OnHelp(self, _):
-        pass
-    def OnClose(self, _):
-        try:
-            # remove the temp file, ignore exception if file does not exist
-            os.remove(self._tmp_file)
-        except:
-            pass
-        self.EndModal(wx.ID_CANCEL)
 
 #-------------------------------------------------------------------------------
 

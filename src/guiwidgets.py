@@ -54,6 +54,7 @@ import widgets
 import phones
 import setphone_wizard
 import data_recording
+import xyaptu
 
 ###
 ### BitFling cert stuff
@@ -1966,3 +1967,98 @@ def show_about_dlg(parent):
     info.License = _license
     # Then we call wx.AboutBox giving it that info object
     wx.AboutBox(info)
+
+# Generic Print Dialog----------------------------------------------------------
+class PrintDialog(wx.Dialog):
+    """A generic print dialog from which other can subclass for their own use"""
+    _template_filename=None
+    _style_filename=None
+
+    def __init__(self, widget, mainwindow, config, title):
+        super(PrintDialog, self).__init__(mainwindow, -1, title)
+        self._widget=widget
+        self._xcp=self._html=self._dns=None
+        self._tmp_file=common.gettempfilename("htm")
+        # main box sizer
+        vbs=wx.BoxSizer(wx.VERTICAL)
+        # create the main contents of the dialog
+        self._create_contents(vbs)
+        # create the separator & default buttons
+        self._create_buttons(vbs)
+        # all done
+        self.SetSizer(vbs)
+        self.SetAutoLayout(True)
+        vbs.Fit(self)
+
+    def _create_contents(self, vbs):
+        # subclass must implement
+        raise NotImplementedError
+
+    def _create_buttons(self, vbs):
+        vbs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        for b in ((None, wx.ID_PRINT, self.OnPrint),
+                  ('Page Setup', wx.ID_PAGE_SETUP, self.OnPageSetup),
+                  ('Print Preview', -1, self.OnPrintPreview),
+                  (None, wx.ID_CLOSE, self.OnClose)):
+            if b[0]:
+                btn=wx.Button(self, b[1], b[0])
+            else:
+                btn=wx.Button(self, b[1])
+            hbs.Add(btn, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+            if b[2] is not None:
+                wx.EVT_BUTTON(self, btn.GetId(), b[2])
+        vbs.Add(hbs, 0, wx.ALIGN_CENTRE|wx.EXPAND|wx.ALL, 5)
+
+    def _init_print_data(self):
+        # Initialize the dns dict with empty data
+        pass
+    def _get_print_data(self):
+        raise NotImplementedError
+
+    def _gen_print_data(self):
+        # generate the html page of the print data
+        if self._xcp is None:
+            # build the whole document template
+            self._xcp=xyaptu.xcopier(None)
+            tmpl=file(guihelper.getresourcefile(self._template_filename),
+                      'rt').read()
+            self._xcp.setupxcopy(tmpl)
+        if self._dns is None:
+            self._dns={ 'common': __import__('common') }
+            self._dns['guihelper']=__import__('guihelper')
+            self._init_print_data()
+        self._get_print_data()
+        self._html=self._xcp.xcopywithdns(self._dns.copy())
+        # apply styles
+        sd={'styles': {}, '__builtins__': __builtins__ }
+        try:
+            if self._style_filename:
+                execfile(guihelper.getresourcefile(self._style_filename),
+                         sd, sd)
+        except UnicodeError:
+            common.unicode_execfile(guihelper.getresourcefile(self._style_filename),
+                                    sd, sd)
+        try:
+            self._html=bphtml.applyhtmlstyles(self._html, sd['styles'])
+        except:
+            if __debug__:
+                file('debug.html', 'wt').write(self._html)
+            raise
+
+    # standard handlers
+    def OnPrint(self, _):
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PrintText(self._html)
+    def OnPageSetup(self, _):
+        wx.GetApp().htmlprinter.PageSetup()
+    def OnPrintPreview(self, _):
+        self._gen_print_data()
+        wx.GetApp().htmlprinter.PreviewText(self._html)
+    def OnClose(self, _):
+        try:
+            # remove the temp file, ignore exception if file does not exist
+            os.remove(self._tmp_file)
+        except:
+            pass
+        self.EndModal(wx.ID_CANCEL)
