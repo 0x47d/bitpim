@@ -43,6 +43,13 @@ struct usb_endpoint_descriptor *usb_endpoint_descriptor_index(struct usb_endpoin
 typedef unsigned short u_int16_t;
 typedef unsigned char u_int8_t;
 
+// Debian's usb.h now uses these type names instead for ANSI compliance,
+// but SWIG doesn't automatically recognize them either.
+typedef unsigned short uint16_t;
+typedef unsigned char uint8_t;
+
+#define __attribute__(x)
+
 %include usb.h
 
 // various wrappers and convenience functions
