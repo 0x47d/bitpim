@@ -7,6 +7,7 @@
       <LI><P>Bug fix: BitPim failed to export SMS entries with no dates.
       <LI><P>New feature: SMS Print.
       <LI><P>Bug fix: libusb on Debian.
+      <LI><P>Bug fix: auto-detection for <B>Motorola E815(m) and V3c(m)</B>.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>

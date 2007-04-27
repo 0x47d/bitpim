@@ -25,6 +25,6 @@ class Profile(parentprofile):
     serialsname=Phone.serialsname
     # use for auto-detection
     phone_manufacturer='Motorola'
-    phone_model='E815M'
+    phone_model='E815m'
     common_model_name='E815'
     generic_phone_model='Motorola CDMA e815 Phone'

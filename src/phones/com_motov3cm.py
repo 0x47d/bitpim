@@ -24,12 +24,12 @@ class Phone(parentphone):
     def __init__(self, logtarget, commport):
         parentphone.__init__(self, logtarget, commport)
 
-    def _detectphone(coms, likely_ports, res, _module, _log):
-        pass
-    detectphone=staticmethod(_detectphone)
-
 #------------------------------------------------------------------------------
 parentprofile=com_motov710m.Profile
 class Profile(parentprofile):
     serialsname=Phone.serialsname
-    phone_model='Motorola CDMA V3cM'
+    # use for auto-detection
+    phone_manufacturer='Motorola'
+    phone_model='V3cm'
+    common_model_name='V3cm'
+    generic_phone_model='V3cm'
