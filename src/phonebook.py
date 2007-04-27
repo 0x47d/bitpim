@@ -2842,6 +2842,7 @@ class PhonebookPrintDialog(wx.Dialog):
     ID_CLOSE=wx.ID_CANCEL
     ID_HELP=wx.NewId()
     ID_TEXTSCALE=wx.NewId()
+    ID_SAVEASHTML=wx.NewId()
 
     textscales=[ (0.4, "Teeny"), (0.6, "Tiny"), (0.8, "Small"), (1.0, "Normal"), (1.2, "Large"), (1.4, "Ginormous") ]
     # we reverse the order so the slider seems more natural
@@ -2933,7 +2934,7 @@ class PhonebookPrintDialog(wx.Dialog):
         vbs2.Add(wx.Button(self, self.ID_PRINT, "Print"), 0, wx.EXPAND|wx.ALL, 2)
         vbs2.Add(wx.Button(self, self.ID_PAGESETUP, "Page Setup..."), 0, wx.EXPAND|wx.ALL, 2)
         vbs2.Add(wx.Button(self, self.ID_PRINTPREVIEW, "Print Preview"), 0, wx.EXPAND|wx.ALL, 2)
-        vbs2.Add(wx.Button(self, self.ID_HELP, "Help"), 0, wx.EXPAND|wx.ALL, 2)
+        vbs2.Add(wx.Button(self, self.ID_SAVEASHTML, "Save as HTML"), 0, wx.EXPAND|wx.ALL, 2)
         vbs2.Add(wx.Button(self, self.ID_CLOSE, "Close"), 0, wx.EXPAND|wx.ALL, 2)
         hbs.Add(vbs2, 0, wx.EXPAND|wx.ALL, 2)
 
@@ -2955,6 +2956,7 @@ class PhonebookPrintDialog(wx.Dialog):
         wx.EVT_BUTTON(self, self.ID_PRINTPREVIEW, self.OnPrintPreview)
         wx.EVT_BUTTON(self, self.ID_PRINT, self.OnPrint)
         wx.EVT_BUTTON(self, self.ID_PAGESETUP, self.OnPageSetup)
+        wx.EVT_BUTTON(self, self.ID_SAVEASHTML, self.OnSaveHTML)
         wx.EVT_RADIOBUTTON(self, self.selected.GetId(), self.UpdateHtml)
         wx.EVT_RADIOBUTTON(self, self.all.GetId(), self.UpdateHtml)
         for i in self.sortkeyscb:
@@ -3033,6 +3035,12 @@ class PhonebookPrintDialog(wx.Dialog):
     def OnPageSetup(self, _):
         wx.GetApp().htmlprinter.PageSetup()
 
+    def OnSaveHTML(self, _):
+        _dlg=wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
+                           style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+        if _dlg.ShowModal()==wx.ID_OK:
+            file(_dlg.GetPath(), 'wt').write(self.html)
+        _dlg.Destroy()
 
 def htmlify(string):
     return common.strorunicode(string).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")

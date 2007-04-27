@@ -343,7 +343,7 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
         dlg.Destroy()
 
     def OnPrintDialog(self, mainwindow, config):
-        dlg=SMSPrintDialog(self, mainwindow, config)
+        dlg=guiwidgets.SMSPrintDialog(self, mainwindow, config)
         dlg.ShowModal()
         dlg.Destroy()
     def CanPrint(self):
@@ -588,44 +588,3 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         self._stats.OnPrintDialog(mainwindow, config)
     def CanPrint(self):
         return True
-
-#-------------------------------------------------------------------------------
-class SMSPrintDialog(guiwidgets.PrintDialog):
-
-    _template_filename='sms.xy'
-
-    def __init__(self, smswidget, mainwindow, config):
-        self._sel_data=smswidget.get_selected_data()
-        self._data=smswidget.get_data()
-        super(SMSPrintDialog, self).__init__(smswidget, mainwindow,
-                                             config, 'SMS Print')
-
-    def _create_contents(self, vbs):
-        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "SMS Messages"), wx.VERTICAL)
-        lsel=len(self._sel_data)
-        lall=len(self._data)
-        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
-        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
-        if lsel==0:
-            self.rows_selected.Enable(False)
-            self.rows_selected.SetValue(0)
-            self.rows_all.SetValue(1)
-        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
-        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
-        vbs.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
-
-    def _init_print_data(self):
-        # Initialize the dns dict with empty data
-        self._dns['smsitems']={}
-        self._dns['smskeys']=[]
-
-    def _get_print_data(self):
-        if self.rows_all.GetValue():
-            _sms=self._data
-        else:
-            _sms=self._sel_data
-        _keys=_sms.keys()
-        _keys.sort()
-        self._dns['smsitems']=_sms
-        self._dns['smskeys']=_keys
-

@@ -8,6 +8,8 @@
       <LI><P>New feature: SMS Print.
       <LI><P>Bug fix: libusb on Debian.
       <LI><P>Bug fix: auto-detection for <B>Motorola E815(m) and V3c(m)</B>.
+      <LI><P>New feature: Memo Print.
+      <LI><P>New feature: Generate HTML files from Print Dialog.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>

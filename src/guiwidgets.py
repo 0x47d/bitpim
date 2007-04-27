@@ -2000,6 +2000,7 @@ class PrintDialog(wx.Dialog):
         for b in ((None, wx.ID_PRINT, self.OnPrint),
                   ('Page Setup', wx.ID_PAGE_SETUP, self.OnPageSetup),
                   ('Print Preview', -1, self.OnPrintPreview),
+                  ('Save as HTML', -1, self.OnSaveHTML),
                   (None, wx.ID_CLOSE, self.OnClose)):
             if b[0]:
                 btn=wx.Button(self, b[1], b[0])
@@ -2055,6 +2056,13 @@ class PrintDialog(wx.Dialog):
     def OnPrintPreview(self, _):
         self._gen_print_data()
         wx.GetApp().htmlprinter.PreviewText(self._html)
+    def OnSaveHTML(self, _):
+        _dlg=wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
+                           style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+        if _dlg.ShowModal()==wx.ID_OK:
+            self._gen_print_data()
+            file(_dlg.GetPath(), 'wt').write(self._html)
+        _dlg.Destroy()
     def OnClose(self, _):
         try:
             # remove the temp file, ignore exception if file does not exist
@@ -2062,3 +2070,51 @@ class PrintDialog(wx.Dialog):
         except:
             pass
         self.EndModal(wx.ID_CANCEL)
+
+# SMS Print Dialog--------------------------------------------------------------
+class SMSPrintDialog(PrintDialog):
+
+    _template_filename='sms.xy'
+    _title='SMS Print'
+    _item_name='SMS Messages'
+
+    def __init__(self, smswidget, mainwindow, config):
+        self._sel_data=smswidget.get_selected_data()
+        self._data=smswidget.get_data()
+        super(SMSPrintDialog, self).__init__(smswidget, mainwindow,
+                                             config, self._title)
+
+    def _create_contents(self, vbs):
+        rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, self._item_name), wx.VERTICAL)
+        lsel=len(self._sel_data)
+        lall=len(self._data)
+        self.rows_selected=wx.RadioButton(self, wx.NewId(), "Selected (%d)" % (lsel,), style=wx.RB_GROUP)
+        self.rows_all=wx.RadioButton(self, wx.NewId(), "All (%d)" % (lall,))
+        if lsel==0:
+            self.rows_selected.Enable(False)
+            self.rows_selected.SetValue(0)
+            self.rows_all.SetValue(1)
+        rbs.Add(self.rows_selected, 0, wx.EXPAND|wx.ALL, 2)
+        rbs.Add(self.rows_all, 0, wx.EXPAND|wx.ALL, 2)
+        vbs.Add(rbs, 0, wx.EXPAND|wx.ALL, 5)
+
+    def _init_print_data(self):
+        # Initialize the dns dict with empty data
+        self._dns['items']={}
+        self._dns['keys']=[]
+
+    def _get_print_data(self):
+        if self.rows_all.GetValue():
+            _items=self._data
+        else:
+            _items=self._sel_data
+        _keys=_items.keys()
+        _keys.sort()
+        self._dns['items']=_items
+        self._dns['keys']=_keys
+
+# Memo Print Dialog-------------------------------------------------------------
+class MemoPrintDialog(SMSPrintDialog):
+    _template_filename='memo.xy'
+    _title='Memo Print'
+    _item_name='Memo Entries'

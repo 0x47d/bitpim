@@ -4,15 +4,15 @@
 $Id$
 
 Need to pass in the following data:
-dns['smsitems']=a dict of sms.SMSEntry
-dns['smskeys']=a list of (sorted) keys of dns['smsitems']
+dns['items']=a dict of sms.SMSEntry
+dns['keys']=a list of (sorted) keys of dns['smsitems']
 -->
 
 <head></head>
 <body>
 
-<py-open code="for k in smskeys:"/>
-<py-line code="_sms=smsitems[k]"/>
+<py-open code="for k in keys:"/>
+<py-line code="_sms=items[k]"/>
 <p>
 <b>Folder:</b> ${_sms.folder}<br/>
 <b>Priority:</b> ${_sms.priority_str}<br/>
@@ -32,7 +32,7 @@ dns['smskeys']=a list of (sorted) keys of dns['smsitems']
 <b>Subject:</b> ${_sms.subject}<br/>
 <py-close/>
 <b>Text:</b> ${_sms.text}<br/>
-</p>
+</p><br/>
 <py-close/>
 
 </body>

@@ -64,6 +64,7 @@ import phonebookentryeditor as pb_editor
 import pubsub
 import today
 import guihelper
+import guiwidgets
 import widgets
 
 widgets_list=[]
@@ -463,6 +464,18 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
         dict['memo']=copy.deepcopy(self._data)
         return dict
 
+    def get_selected_data(self):
+        # return a dict of selected items
+        res={}
+        for _idx in self._item_list.GetSelections():
+            _key=self._item_list.GetClientData(_idx)
+            if _key:
+                res[_key]=self._data[_key]
+        return res
+
+    def get_data(self):
+        return self._data
+
     def populate(self, dict):
         self._data=dict.get('memo', {})
         self._populate()
@@ -524,3 +537,10 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
             self._populate_each(k)
         self.ignoredirty=False
         self.setdirty(False)
+
+    def OnPrintDialog(self, mainwindow, config):
+        dlg=guiwidgets.MemoPrintDialog(self, mainwindow, config)
+        dlg.ShowModal()
+        dlg.Destroy()
+    def CanPrint(self):
+        return True
