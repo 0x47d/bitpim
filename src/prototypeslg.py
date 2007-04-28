@@ -191,7 +191,11 @@ class LGCALREPEAT(prototypes.UINTlsb):
         if type==2:
             val|=dow
         elif type==6:
-            val|=self._caldomvalues[dow]
+            if self._caldomvalues.has_key(dow):
+                val|=self._caldomvalues[dow]
+            else:
+                # invalid day-of-week for monthly type, just bail
+                return 0
         val<<=1
         val|=exceptions
         val<<=4
