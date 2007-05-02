@@ -129,6 +129,7 @@ class PlaylistEntry(object):
 
 #-------------------------------------------------------------------------------
 class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
+
     def __init__(self, mainwindow, parent):
         super(PlaylistWidget, self).__init__(parent, -1)
         self._mw=mainwindow
@@ -154,10 +155,14 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
         # the detailed panel
         hbs1=wx.BoxSizer(wx.HORIZONTAL)
         # the playlist
+        _vbs1=wx.BoxSizer(wx.VERTICAL)
         self._pl_list=gizmos.EditableListBox(self, -1, "Play List Content:",
                                              style=gizmos.EL_ALLOW_DELETE)
         self._pl_list_w=self._pl_list.GetListCtrl()
-        hbs1.Add(self._pl_list, 1, wx.EXPAND|wx.ALL, 5)
+        _vbs1.Add(self._pl_list, 1, wx.EXPAND, 0)
+        self._count_lbl=wx.StaticText(self, -1, '')
+        _vbs1.Add(self._count_lbl, 0, wx.EXPAND|wx.TOP, 5)
+        hbs1.Add(_vbs1, 1, wx.EXPAND|wx.ALL, 5)
         _add_btn=wx.Button(self, -1, '<-Add')
         hbs1.Add(_add_btn, 0, wx.ALL, 5)
         self._master_list=gizmos.EditableListBox(self, -1, 'Available Songs:', style=0)
@@ -234,12 +239,14 @@ class PlaylistWidget(wx.Panel, widgets.BitPimWidget):
                 return i
     def _populate_each(self, name):
         self._pl_list_w.DeleteAllItems()
+        self._count_lbl.SetLabel('')
         if name is None:
             return
         self.ignoredirty=True
         _list_idx=self._name2idx(name)
         if _list_idx is not None:
             self._pl_list.SetStrings(self._data[_list_idx].songs)
+            self._count_lbl.SetLabel('Playlist Size: %d'%len(self._data[_list_idx].songs))
         self.ignoredirty=False
         if not self.dirty:
             self.setdirty(False)
