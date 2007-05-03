@@ -102,17 +102,20 @@ def getpvconvbinary():
 def _expand(x):
     return os.path.expandvars(os.path.expanduser(x))
 
-
 def run(*args):
     """Runs the specified command (args[0]) with supplied parameters.
 
     Note that your path is not searched for the command, and the shell
     is not involved so no I/O redirection etc is possible."""
     print args
-    ret=os.spawnl( *( (os.P_WAIT, args[0])+args)) # looks like C code ...
+    ret=os.spawnv(os.P_WAIT, args[0], args)
     if ret!=0:
-        raise common.CommandExecutionFailed(ret, args)
-    
+        # a cumpsy attempt to capture the output when an error occurred:
+        _tmpfilename=common.gettempfilename('txt')
+        os.system(' '.join(args+('>', _tmpfilename, '2>&1')))
+        _logstr=file(_tmpfilename, 'rt').read()
+        print _logstr
+        raise common.CommandExecutionFailed(ret, args, _logstr)
 
 def convertto8bitpng(pngdata, maxsize):
     "Convert a PNG file to 8bit color map"
@@ -238,10 +241,10 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     try:
         try:
             run(ffmpeg, "-i", shortfilename(inputfilename), "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
-        except common.CommandExecutionFailed:
+        except common.CommandExecutionFailed, e:
             # we get this exception on bad parameters, or any other
             # issue so we assume bad parameters for the moment.
-            raise ConversionFailed()
+            raise ConversionFailed, ' '.join(e.args)+'\n'+e.logstr
         return open(mp3file, "rb").read()
     finally:
         try: os.remove(mp3file)

@@ -48,10 +48,11 @@ class HelperBinaryNotFound(Exception):
           self.paths=paths
 
 class CommandExecutionFailed(Exception):
-     def __init__(self, retcode, args):
+     def __init__(self, retcode, args, logstr=None):
           Exception.__init__(self, "Command execution failed with code %d: %s" % (retcode, " ".join(args)))
           self.retcode=retcode
           self.args=args
+          self.logstr=logstr
           
 class ConversionNotSupported(Exception):
      def __init__(self, msg):
