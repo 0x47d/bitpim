@@ -659,7 +659,10 @@ def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1,
     various wxPython bugs it instead returns the parameters to make a
     wx.FSFile since a new one has to be made every time.
     """
-        # special fast path if we aren't resizing or converting image
+    # if this is a bad or non-existing image file, use the dummy one!
+    if name is None and img is None:
+        name=guihelper.getresourcefile('wallpaper.png')
+    # special fast path if we aren't resizing or converting image
     if img is None and width<0 and height<0:
         mime=guihelper.getwxmimetype(name)
         # wxPython 2.5.3 has a new bug and fails to read bmp files returned as a stream

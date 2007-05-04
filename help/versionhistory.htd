@@ -13,6 +13,7 @@
       <LI><P>Bug fix: <B>LG VX8100/8300/8500:</B> Invalid monthly events crashed BitPim.
       <LI><P>New feature: Added the <B>Playlist Size</B> field to the <B>Playlist</B> display.
       <LI><P>Maintenance: Display more info when ringtone conversions fail.
+      <LI><P>Bug fix: bad/non-existing wallpaper image crashes Phonebook view.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
