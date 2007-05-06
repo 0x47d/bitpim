@@ -56,7 +56,7 @@ class FileSystemView(wx.SplitterWindow, widgets.BitPimWidget):
         self.tree=FileSystemDirectoryView(mainwindow, self, wx.NewId(), style=(wx.TR_DEFAULT_STYLE|wx.TR_NO_LINES)&~wx.TR_TWIST_BUTTONS)
         self.list=FileSystemFileView(mainwindow, self, wx.NewId())
         self.sash_pos=mainwindow.config.ReadInt("filesystemsplitterpos", 200)
-        self.update_sash=True
+        self.update_sash=False
         self.SplitVertically(self.tree, self.list, self.sash_pos)
         self.SetMinimumPaneSize(20)
         wx.EVT_SPLITTER_SASH_POS_CHANGED(self, id, self.OnSplitterPosChanged)

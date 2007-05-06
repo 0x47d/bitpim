@@ -2,8 +2,8 @@
 
    <h2><a name="0.9.15">Changes in 0.9.15</a></h2>
     <ul>
-      <LI><P>Bug fix: Calendar Import Preset dialog does not work properly in Linux.
-      <LI><P>Bug fix: Phonebook preview pane does not work at startup in Linux.
+      <LI><P>Bug fix: Calendar Import Preset dialog does not work properly on Linux.
+      <LI><P>Bug fix: Phonebook preview pane does not work at startup on Linux.
       <LI><P>Bug fix: BitPim failed to export SMS entries with no dates.
       <LI><P>New feature: SMS Print.
       <LI><P>Bug fix: libusb on Debian.
@@ -14,6 +14,7 @@
       <LI><P>New feature: Added the <B>Playlist Size</B> field to the <B>Playlist</B> display.
       <LI><P>Maintenance: Display more info when ringtone conversions fail.
       <LI><P>Bug fix: bad/non-existing wallpaper image crashes Phonebook view.
+      <LI><P>Bug fix: Phone filesystem view does not properly set the sash position on Linux.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
