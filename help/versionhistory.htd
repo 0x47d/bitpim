@@ -15,6 +15,7 @@
       <LI><P>Maintenance: Display more info when ringtone conversions fail.
       <LI><P>Bug fix: bad/non-existing wallpaper image crashes Phonebook view.
       <LI><P>Bug fix: Phone filesystem view does not properly set the sash position on Linux.
+      <LI><P>New feature: Enable drag-and-drop feature for Linux.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>

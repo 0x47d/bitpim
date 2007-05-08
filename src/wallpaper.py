@@ -281,8 +281,7 @@ class WallpaperView(fileview.FileView):
         """
         if not wx.TheClipboard.Open():
             return False
-        r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)) or\
-           wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_BITMAP))
+        r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_BITMAP))
         wx.TheClipboard.Close()
         return r
 
@@ -934,22 +933,6 @@ class ImageCropSelect(wx.ScrolledWindow):
     def GetPreview(self):
         w,h=self.resultsize
         l,t,r,b=self.anchors
-        scale=max(float(w+0.99999)/(r-l), float(h+0.99999)/(b-t))
-
-        # we are fine using this to scale down
-        if True and scale<1:
-            sub=wx.EmptyBitmap(w,h)
-            mdcsub=wx.MemoryDC()
-            mdcsub.SelectObject(sub)
-            mdcsub.SetUserScale(scale, scale)
-            mdc=wx.MemoryDC()
-            mdc.SelectObject(self.thebmp)
-            mdcsub.Blit(0,0,r-l,b-t,mdc,l,t)
-
-            mdc.SelectObject(wx.NullBitmap)
-            mdcsub.SelectObject(wx.NullBitmap)
-            return sub
-
         sub=self.thebmp.GetSubBitmap( (l,t,(r-l),(b-t)) )
         sub=sub.ConvertToImage()
         sub.Rescale(w,h)
@@ -1015,7 +998,7 @@ class ImagePreviewDialog(wx.Dialog):
         self.vbs.Add(self.colourselect, 0, wx.ALL|wx.EXPAND, 5)
         wx.lib.colourselect.EVT_COLOURSELECT(self, self.colourselect.GetId(), self.OnBackgroundColour)
         self.vbs.Add(wx.StaticText(self, -1, "Target"), 0, wx.ALL, 5)
-        self.targetbox=wx.ListBox(self, size=(-1,100))
+        self.targetbox=wx.ListBox(self, -1, size=(-1,100))
         self.vbs.Add(self.targetbox, 0, wx.EXPAND|wx.ALL, 5)
         self.vbs.Add(wx.StaticText(self, -1, "Scale"), 0, wx.ALL, 5)
 
@@ -1078,12 +1061,11 @@ class ImagePreviewDialog(wx.Dialog):
 
     def OnTargetSelect(self, _):
         self.target=self.targetbox.GetStringSelection()
-        w,h=self.targets[self.target]['width'],self.targets[self.target]['height']
-        self.SetupControls(self.vbsouter)
-        self.imagepreview.SetSize( (w,h) )
-        self.cropselect.setresultsize( (w, h) )
-        self.vbsouter.Layout()
-        self.Refresh(True)
+        if self.targets.has_key(self.target):
+            w,h=self.targets[self.target]['width'],self.targets[self.target]['height']
+            self.imagepreview.SetSize( (w,h) )
+            self.cropselect.setresultsize( (w, h) )
+            self.Refresh(True)
         
     def GetResultImage(self):
         if self.skip:

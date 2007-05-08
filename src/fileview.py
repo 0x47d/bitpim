@@ -302,8 +302,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         self.motionpos=None
         wx.EVT_MOUSE_EVENTS(self.aggdisp, self.OnMouseEvent)
         self.tipwindow=None
-        if guihelper.IsMSWindows():
-            # turn on drag-and-drag for windows
+        if True: # guihelper.IsMSWindows() or guihelper.IsGtk():
+            # turn on drag-and-drag for all platforms
             wx.EVT_MOTION(self.aggdisp, self.OnStartDrag)
 
         # Menus
@@ -516,8 +516,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             wx.Execute(cmd, wx.EXEC_ASYNC)
         wx.EndBusyCursor()
 
-    if guihelper.IsMSWindows():
-        # drag-and-drop files only works in Windows
+    if True: # guihelper.IsMSWindows() or guihelper.IsGtk():
+        # drag-and-drop files should work on all platforms
         def OnStartDrag(self, evt):
             evt.Skip()
             if not evt.LeftIsDown():
