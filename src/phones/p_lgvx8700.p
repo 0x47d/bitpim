@@ -15,12 +15,15 @@ from p_lg import *
 
 # we are the same as lgvx9900 except as noted below
 from p_lgvx9900 import *
-
+from p_lgvx8500 import t9udbfile
+ 
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
 
 BREW_FILE_SYSTEM=2
+
+T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 
 %}
 
