@@ -425,37 +425,69 @@ class Phone(parentphone):
         self._unlock_key()
         self._in_DM=True
 
-    _lg_dll_path='C:\\LG Electronics\\LGDownload\\Model\\VX8500\\VX8500.dll'
-    def _get_DLL_path(self):
-        """Return the full path to the DLL file.
-        """
-        # first check for a local copy
-        _local_dll_path=os.path.join(common.get_main_dir(), 'VX8500.dll')
-        if os.path.isfile(_local_dll_path):
-            return _local_dll_path
-        # then at the default location
-        if os.path.isfile(self._lg_dll_path):
-            return self._lg_dll_path
-                
+    def _rotate_left(self, value, nbits):
+        return ((value << nbits) | (value >> (32-nbits))) & 0xffffffffL
+    
+    def get_challenge_response(self, challenge):
+        # Reverse engineered and contributed by Nathan Hjelm <hjelmn@users.sourceforge.net>
+        # get_challenge_response(challenge):
+        #    - Takes the SHA-1 hash of a 16-byte block containing the challenge and returns the proper response.
+        #    - The hash used by the vx8700 differs from the standard implementation only in that it does not append a
+        #      1 bit before padding the message with 0's.
+        #
+        #  Return value:
+        #    Last three bytes of the SHA-1 hash or'd with 0x80000000.
+        # IV = (0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0)
+        input_vector = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
+        hash_result  = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
+        hash_data = []
+        hash_data.append(long(challenge))
+        # pad message with zeros as well and zero first word of bit length
+        # if this were standard SHA-1 then 0x00000080 would be appended here as its a 56-bit message
+        for i in range(14):
+            hash_data.append(0L)
+        # append second word of the bit length (56 bit message?)
+        hash_data.append(56L)
+        for i in range(80):
+            j = i & 0x0f
+            if i > 15:
+                index1 = (i -  3) & 0x0f
+                index2 = (i -  8) & 0x0f
+                index3 = (i - 14) & 0x0f
+                hash_data[j] = hash_data[index1] ^ hash_data[index2] ^ hash_data[index3] ^ hash_data[j]
+                hash_data[j] = self._rotate_left (hash_data[j], 1)
+            if i < 20:
+                # f = (B and C) or ((not B) and C), k = 0x5a827999
+                f = (hash_result[1] & hash_result[2]) | ((~hash_result[1]) & hash_result[3])
+                k = 0x5a827999L
+            elif i < 40:
+                # f = B xor C xor D, k = 0x6ed9eba1
+                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
+                k = 0x6ed9eba1L
+            elif i < 60:
+                # f = (B and C) or (B and D) or (B and C), k = 0x8f1bbcdc
+                f = (hash_result[1] & hash_result[2]) | (hash_result[1] & hash_result[3]) | (hash_result[2] & hash_result[3])
+                k = 0x8f1bbcdcL
+            else:
+                # f = B xor C xor D, k = 0xca62c1d6
+                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
+                k = 0xca62c1d6L
+            # A = E + rotate_left (A, 5) + w[j] + f + k
+            newA = (hash_result[4] + self._rotate_left(hash_result[0], 5) + hash_data[j] + f + k) & 0xffffffffL
+            # B = oldA, C = rotate_left(B, 30), D = C, E = D
+            hash_result = [newA] + hash_result[0:4]
+            hash_result[2] = self._rotate_left (hash_result[2], 30)
+        for i in range(5):
+            hash_result[i] = (hash_result[i] + input_vector[i]) & 0xffffffffL
+        return 0x80000000L | (hash_result[4] & 0x00ffffffL)
+
     def _enter_DMv5(self):
         self._in_DM=True
-        if pyvx8500 is None:
-            raise ImportError
-        # get the path to the VX8500 DLL
-        _dllpath=self._get_DLL_path()
-        if not _dllpath:
-            # could not find the DLL
-            return
-        self.log('Using VX8500 DLL: '+_dllpath)
-        # check for the correct version
-        _version=common.get_version_number(_dllpath)
-        if not _version or _version!=(0,2,44,0):
-            self.log('VX8500 DLL has wrong version')
-            return
-        # go for it
+        # request the seed
         _req=self.protocolclass.DMKeyReq()
         _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
-        _key=pyvx8500.get_key(_resp.key, _dllpath)
+        # respond with the key
+        _key=self.get_challenge_response(_resp.key)
         if _key is None:
             self.log('Failed to get the key.')
             return
@@ -471,6 +503,8 @@ class Phone(parentphone):
                 self._enter_DMv4()
             self.log('Now in DM')
         except:
+            if __debug__:
+                raise
             self.log('Failed to enter DM')
             self._in_DM=True
 
