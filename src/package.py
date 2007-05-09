@@ -233,12 +233,32 @@ def getpy2exeoptions(defaults):
     defaults['options']['py2exe']['compressed']=0 # make setup.exe smaller but installed code larger
     return defaults
 
+udevrules_filename='60-bitpim.rules'
+udevrules_line='ACTION=="add", SYSFS{idProduct}=="%04x", SYSFS{idVendor}=="%04x", RUN+="/usr/bin/bpudev $env{DEVNAME} $number $sysfs{devnum}"'
+from common import importas
+def generate_udevrules():
+    """Generate the udev rules file based on all the known VIDs and PIDs"""
+    global udevrules_filename, udevrules_line
+    _ids={}
+    for _f in phones.getallmodulenames():
+        _profile=importas(_f)
+        if hasattr(_profile.Profile, 'usbids'):
+            for _id in _profile.Profile.usbids:
+                _ids[_id]=True
+    _rules=[]
+    for _entry in _ids:
+        _rules.append(udevrules_line%(_entry[1], _entry[0]))
+    _f=file('resources/%s'%udevrules_filename, 'wt').write('\n'.join(_rules))
+    
 def copyresources(destdir):
+    if sys.platform=='linux2':
+        generate_udevrules()
     import packageutils
     packageutils.copysvndir('resources', os.path.join(destdir, 'resources'), resourcefilter)
     packageutils.copysvndir('helpers', os.path.join(destdir, 'helpers'), resourcefilter)
 
 def resourcefilter(srcfilename, destfilename):
+    global udevrules_filename
     exts=[ '.xy', '.png', '.ttf', '.wav', '.jpg', '.css', '.pdc', '.ids', '.ico']
     files=[]
     if sys.platform=='win32':
@@ -246,7 +266,7 @@ def resourcefilter(srcfilename, destfilename):
         exts=exts+['.chm', '.exe', '.dll']
     if sys.platform=='linux2':
         exts=exts+['.lbin', '.htb']
-        files.append('usbcell')
+        files+=['bpudev', udevrules_filename]
     if sys.platform=='darwin':
         exts=exts+['.mbin', '.htb']
     if os.path.splitext(srcfilename)[1] in exts or \

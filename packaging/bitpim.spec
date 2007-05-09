@@ -40,6 +40,22 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 tar xvf dist.tar -C $RPM_BUILD_ROOT
 
+%post
+if [ -x /usr/bin/udevinfo ] && \
+   [ -d /etc/udev/rules.d ] && \
+   [ $(/usr/bin/udevinfo -V | cut -d' ' -f3) -ge 95 ]
+then
+    respath=/usr/lib/%%NAME%%-%%VERSION%%/resources
+    cp -f $respath/60-bitpim.rules /etc/udev/rules.d
+    cp -f $respath/bpudev /usr/bin
+    chmod 755 /usr/bin/bpudev
+    mkdir -p /var/bitpim
+fi
+
+%postun
+rm -rf /usr/lib/%%NAME%%-%%VERSION%% /var/bitpim \
+   /usr/bin/bpudev /etc/udev/rules.d/60-bitpim.rules
+
 %clean
 find $RPM_BUILD_ROOT -type d -print0 | xargs -0 chmod +w || true
 rm -rf $RPM_BUILD_ROOT
@@ -48,5 +64,3 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 
 %doc
-
-

@@ -37,7 +37,8 @@ class CommNotification(object):
     def add(self, comm):
         # a new comm has just been added
         self.evt.type=CommNotificationEvent.add
-        if comm.startswith('/proc/bus/usb/'):
+        if comm.startswith('/proc/bus/usb/') or \
+           comm.startswith('/dev/bus/usb/'):
             # this is a Linux hotplug USB port, which may have many interfaces.
             # can't figure which one so scan for all ports.
             self.evt.comm=None
@@ -48,7 +49,8 @@ class CommNotification(object):
 
     def remove(self, comm):
         # a new comm has just been deleted
-        if comm.startswith('/proc/bus/usb/'):
+        if comm.startswith('/proc/bus/usb/') or \
+           comm.startswith('/dev/bus/usb/'):
             # This is a Linux hotplug USB port, just ignore it
             return False
         self.evt.type=CommNotificationEvent.remove

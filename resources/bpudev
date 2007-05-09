@@ -1,0 +1,55 @@
+#!/bin/bash
+###
+### BITPIM
+###
+### Copyright (C) 2007 Joe Pham <djpham@bitpim.org>
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the BitPim license as detailed in the LICENSE file.
+###
+### $Id$
+#
+# $1=$DEVNUM
+# $2=kernel number
+# $3=SYSFS{devnum}
+#
+
+# Some basic checking for args
+if [ $# -ne 3 ]; then
+     exit 1
+fi
+ 
+# udev fires off a whole bunch of devices, most of which we don't need.
+# By visual inspection, the one that we want has the same Kernel No and
+# SYSFS{devnum}.
+if [ "$2" != "$3" ]; then
+     exit 2
+fi
+
+# Setting the the permission on the device
+# code portion lifted from the old /etc/hotplug/usb/usbcam
+if [ -f /var/run/console/console.lock ]
+then
+    CONSOLEOWNER=`cat /var/run/console/console.lock`
+elif [ -f /var/run/console.lock ]
+then
+    CONSOLEOWNER=`cat /var/run/console.lock`
+elif [ -f /var/lock/console.lock ]
+then
+    CONSOLEOWNER=`cat /var/lock/console.lock`
+else
+    CONSOLEOWNER=
+fi
+if [ -n "$CONSOLEOWNER" ]
+then
+    chmod 0000 "$1"
+    chown "${CONSOLEOWNER}:${CONSOLEOWNER}" "$1"
+    chmod 0600 "$1"
+fi
+
+# Notify BitPim that there's a new USB device
+if [ ! -d /var/bitpim ]
+then
+     mkdir /var/bitpim
+fi
+echo add $1 > /var/bitpim/dnotify.log
