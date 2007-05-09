@@ -261,30 +261,6 @@ class WallpaperView(fileview.FileView):
     def GetFileInfo(self, filename):
         return fileinfo.identify_imagefile(filename)
 
-    def OnPaste(self, evt=None):
-        super(WallpaperView, self).OnPaste(evt)
-        if not wx.TheClipboard.Open():
-            # can't access the clipboard
-            return
-        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_BITMAP)):
-            do=wx.BitmapDataObject()
-            success=wx.TheClipboard.GetData(do)
-        else:
-            success=False
-        wx.TheClipboard.Close()
-        if success:
-            # work out a name for it
-            self.OnAddImage(wx.ImageFromBitmap(do.GetBitmap()), None)
-
-    def CanPaste(self):
-        """ Return True if can accept clipboard data, False otherwise
-        """
-        if not wx.TheClipboard.Open():
-            return False
-        r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_BITMAP))
-        wx.TheClipboard.Close()
-        return r
-
     def OnAddFiles(self, filenames):
         for file in filenames:
             file_stat=os.stat(file)

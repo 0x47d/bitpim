@@ -666,27 +666,62 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         def CanCopy(self):
             return len(self.GetSelectedItems())
 
-    def OnPaste(self, _=None):
-        if not wx.TheClipboard.Open():
-            # can't access the clipboard
-            return
-        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)):
-            file_names=wx.FileDataObject()
-            has_data=wx.TheClipboard.GetData(file_names)
-        else:
-            has_data=False
-        wx.TheClipboard.Close()
-        if has_data:
-            self.OnAddFiles(file_names.GetFilenames())
+    if guihelper.IsGtk():
+        # Gtk just pastes the file names as text onto the Clipboard
+        def OnPaste(self, _=None):
+            if not wx.TheClipboard.Open():
+                # can't access the clipboard
+                return
+            if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_UNICODETEXT)):
+                file_names=wx.TextDataObject()
+                has_data=wx.TheClipboard.GetData(file_names)
+            else:
+                has_data=False
+            wx.TheClipboard.Close()
+            if has_data:
+                # collect file names if any.
+                _names=[x for x in file_names.GetText().split('\n') \
+                        if os.path.isfile(x) ]
+                if _names:
+                    self.OnAddFiles(_names)
+        def CanPaste(self):
+            """ Return True if can accept clipboard data, False otherwise
+            """
+            if not wx.TheClipboard.Open():
+                return False
+            r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_UNICODETEXT))
+            if r:
+                file_names=wx.TextDataObject()
+                r=wx.TheClipboard.GetData(file_names)
+                if r:
+                    for _name in file_names.GetText().split('\n'):
+                        if not os.path.isfile(_name):
+                            r=False
+                            break
+            wx.TheClipboard.Close()
+            return r
+    else:
+        def OnPaste(self, _=None):
+            if not wx.TheClipboard.Open():
+                # can't access the clipboard
+                return
+            if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME)):
+                file_names=wx.FileDataObject()
+                has_data=wx.TheClipboard.GetData(file_names)
+            else:
+                has_data=False
+            wx.TheClipboard.Close()
+            if has_data:
+                self.OnAddFiles(file_names.GetFilenames())
 
-    def CanPaste(self):
-        """ Return True if can accept clipboard data, False otherwise
-        """
-        if not wx.TheClipboard.Open():
-            return False
-        r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME))
-        wx.TheClipboard.Close()
-        return r
+        def CanPaste(self):
+            """ Return True if can accept clipboard data, False otherwise
+            """
+            if not wx.TheClipboard.Open():
+                return False
+            r=wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_FILENAME))
+            wx.TheClipboard.Close()
+            return r
 
     def CanDelete(self):
         if len(self.GetSelectedItems()):

@@ -22,6 +22,7 @@
       <LI><P>Bug fix: Right-click in filesystem view does not immediately pop
       up the context menu.
       <LI><P>New feature: Phone auto-detection on Linux.
+      <LI><P>New feature: Copy-and-paste files from GTK to BitPim.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
