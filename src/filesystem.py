@@ -493,6 +493,7 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_OFFLINEPHONE, parent.OnPhoneOffline)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_REBOOTPHONE, parent.OnPhoneReboot)
         wx.EVT_MENU(self.dirmenu, guihelper.ID_FV_MODEMMODE, parent.OnModemMode)
+        wx.EVT_RIGHT_DOWN(self, self.OnRightDown)
         wx.EVT_RIGHT_UP(self, self.OnRightUp)
         self.image_list=wx.ImageList(16, 16)
         self.img_dir=self.image_list.Add(wx.ArtProvider_GetBitmap(guihelper.ART_FOLDER,
@@ -611,6 +612,10 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.SelectItem(self.item)
             self.PopupMenu(self.genericmenu, pt)
                     
+    def OnRightDown(self, _):
+        # You have to capture right down otherwise it doesn't feed you right up
+        pass
+
     def OnItemSelected(self,_):
         if not self.dragging and not self.first_time:
             item=self.GetSelection()
