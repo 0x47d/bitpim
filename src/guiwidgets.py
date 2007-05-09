@@ -1962,6 +1962,8 @@ def show_about_dlg(parent):
     info.Developers = [ "Roger Binns",
                         "Joe Pham",
                         "Stephen Wood",
+                        "Sean Burke",
+                        "Nathan Hjelm",
                         "and others ..."]
 
     info.License = _license
