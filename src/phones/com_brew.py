@@ -889,8 +889,6 @@ class RealBrewProtocol2:
             handle=self.openfile(name, p_brew.new_fileopen_mode_write, p_brew.new_fileopen_flag_existing)
         else:
             handle=self.openfile(name, p_brew.new_fileopen_mode_write, p_brew.new_fileopen_flag_create)
-        if not handle:
-            raise BrewNoSuchFileException
         try:
             remain=size
             pos=0
@@ -934,8 +932,6 @@ class RealBrewProtocol2:
         desc="Reading "+file
         data=cStringIO.StringIO()
         handle=self.openfile(file, p_brew.new_fileopen_mode_read)
-        if not handle:
-            raise BrewNoSuchFileException
         try:
             filesize=node['size']
             read=0
