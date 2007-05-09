@@ -83,5 +83,14 @@ and <i>PID</i>.  (For the Sanyo SCP-3100 the VID/PID is 0474/071f).</p>
 mode of 0666 and leave off the <code>GROUP</code> item.
 </ol>
 
+<H2>Auto Detection</H2>
+<P>BitPim can now auto-detect known USB devices (cell phones with USB cables) being connected to the computer (it is not aware if a device is disconnected from the computer).  This feature is only available on systems runing <code>udev</code> version 095 or later (<code>udevinfo -V</code>) when BitPim is installed.
+
+<P>When a known device is connected, this feature sets the the device owner to the user currently logged in at the console (or default to <code>root</code>), and initiates the BitPim phone detection process.  The end result is that BitPim will be able to:
+<OL>
+<LI>Detect that a known device is connected,
+<LI>Set the appropriate owner/group and permission for that device,
+<LI>Try to detect the model of that device.
+</OL>
 
 #include "pageend.h"
