@@ -16,6 +16,11 @@
       <LI><P>Bug fix: bad/non-existing wallpaper image crashes Phonebook view.
       <LI><P>Bug fix: Phone filesystem view does not properly set the sash position on Linux.
       <LI><P>New feature: Enable drag-and-drop feature for Linux.
+      <LI><P>New phone support: <B>Verizon Wireless LG VX-8700</B>
+      <LI><P>New feature: <B>LG VX8500/8600/8700</B> BitPim can now "request"
+      the phone to enter Diagnostic Mode (DM).
+      <LI><P>Bug fix: Right-click in filesystem view does not immediately pop
+      up the context menu.
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
