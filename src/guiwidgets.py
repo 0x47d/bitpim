@@ -2001,7 +2001,7 @@ class PrintDialog(wx.Dialog):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         for b in ((None, wx.ID_PRINT, self.OnPrint),
                   ('Page Setup', wx.ID_PAGE_SETUP, self.OnPageSetup),
-                  ('Print Preview', -1, self.OnPrintPreview),
+                  (None, wx.ID_PREVIEW, self.OnPrintPreview),
                   ('Save as HTML', -1, self.OnSaveHTML),
                   (None, wx.ID_CLOSE, self.OnClose)):
             if b[0]:

@@ -278,7 +278,8 @@ class PrintData(wx.PrintData):
     """
     # the names of Get/Set attributes to copy from source to dest object
     _attr_names=("Collate", "Colour", "Duplex", "NoCopies",
-                 "Orientation", "PaperId", "PrinterName")
+                 "Orientation", "PaperId", "PrinterName",
+                 "PaperSize")
     def __init__(self, rhs=None):
         super(PrintData, self).__init__()
         if rhs is not None:
@@ -345,7 +346,8 @@ class HtmlEasyPrinting:
             pd=self.printData.copy()
         else:
             pd=PrintData()
-        pd.SetOrientation(wx.PORTRAIT)
+        if not pd.Orientation:
+            pd.SetOrientation(wx.PORTRAIT)
         preview=wx.PrintPreview(printout1, printout2, pd)
         if not preview.Ok():
             print "preview problem"
@@ -363,6 +365,7 @@ class HtmlEasyPrinting:
         pdd=wx.PrintDialogData()
         if self.printData.Ok():
             pdd.SetPrintData(self.printData.copy())
+        if not pdd.GetPrintData().Orientation:
             pdd.GetPrintData().SetOrientation(wx.PORTRAIT)
         printer=wx.Printer(pdd)
         printout=self._getprintout(htmltext, basepath, scale)
@@ -370,7 +373,6 @@ class HtmlEasyPrinting:
         printout.Destroy()
 
     def _getprintout(self, htmltext, basepath, scale):
-##        print "scale is",scale," margins are", self.margins
         printout=wx.html.HtmlPrintout()
         basesizes=[7,8,10,12,16,22,30]
         printout.SetFonts("", "", [int(sz*scale) for sz in basesizes])
