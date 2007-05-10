@@ -299,7 +299,11 @@ def GetOpenCommand(mimetypes, filename):
         ft=wx.TheMimeTypesManager.GetFileTypeFromMimeType(mt)
         if ft is None:
             continue
-        cmd=ft.GetOpenCommand(filename)
+        if IsGtk():
+            # protect file names with spaces
+            cmd=ft.GetOpenCommand('"%s"'%filename)
+        else:
+            cmd=ft.GetOpenCommand(filename)
         if cmd is not None and len(cmd):
             return cmd
     return None
