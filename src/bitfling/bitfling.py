@@ -453,12 +453,10 @@ class MainWindow(wx.Frame):
     def setuphelp(self):
         """Does all the nonsense to get help working"""
         import wx.html
-        # htmlhelp isn't correctly wrapper in wx package
-        from wxPython.htmlhelp import wxHtmlHelpController
         # Add the Zip filesystem
         wx.FileSystem_AddHandler(wx.ZipFSHandler())
         # Get the help working
-        self.helpcontroller=wxHtmlHelpController()
+        self.helpcontroller=wx.html.HtmlHelpController()
         self.helpcontroller.AddBook(guihelper.getresourcefile("bitpim.htb"))
         self.helpcontroller.UseConfig(self.config, "help")
 
