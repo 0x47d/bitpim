@@ -50,6 +50,9 @@ class ExportSMSDialog(wx.Dialog):
         vbs.Fit(self)
 
     _formats=('mbox', 'CSV')
+    _wildcards={ _formats[0]: 'mbox files (*.mbox)|*.mbox',
+                 _formats[1]: 'CSV files (*.csv)|*.csv',
+                 }
     def GetSelectionGui(self, parent):
         hbs=wx.BoxSizer(wx.HORIZONTAL)
         rbs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "SMS Messages"), wx.VERTICAL)
@@ -76,7 +79,8 @@ class ExportSMSDialog(wx.Dialog):
 
     def OnBrowse(self, _):
         dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="mbox files (*.mbox)|*.mbox", style=wx.SAVE|wx.CHANGE_DIR)
+                          wildcard=self._wildcards[self._format.GetValue()],
+                          style=wx.SAVE|wx.CHANGE_DIR)
         if dlg.ShowModal()==wx.ID_OK:
             self.filenamectrl.SetValue(dlg.GetPath())
         dlg.Destroy()
