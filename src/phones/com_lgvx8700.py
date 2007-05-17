@@ -90,14 +90,17 @@ class Phone(parentphone, com_brew.RealBrewProtocol2):
         return False
 
     def listsubdirs(self, dir='', recurse=0):
-        # BREW2's get filesystem is used here because BREW1's does not appear not to work well on the vx8700
         return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories=1, files=0)
 
-    def getfilesystem(self, dir="", recurse=0, directories=1, files=1):
-        return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories, files)
-
     def listfiles(self, dir=''):
+        if self._in_DM==False and self.my_model=='VX8700':
+            # enter DM to enable file reading/writing
+            self.enter_DM()
         return com_brew.RealBrewProtocol2.listfiles(self, dir)
+
+    def getfilesystem(self, dir="", recurse=0, directories=1, files=1):
+        # BREW2's get filesystem is used here because BREW1's does not appear not to work well on the vx8700
+        return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories, files)
 
     def enter_DM (self):
         # request challenge

@@ -25,6 +25,7 @@
       <LI><P>New feature: Copy-and-paste files from GTK to BitPim.
       <LI><P>Bug fix: bitfling process does not start.
       <LI><P>Bug fix: SMS Export Browse dialog does not show CSV files.
+      <LI><P>Maintenance: Upgrade to wxPython-2.8.4.0
     </ul>
 
    <h2><a name="0.9.14">Changes in 0.9.14</a></h2>
