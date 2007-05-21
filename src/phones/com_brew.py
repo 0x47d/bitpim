@@ -1034,14 +1034,15 @@ class RealBrewProtocol2:
         res=self.sendbrewcommand(req, p_brew.new_statfileresponse)
         if res.flags==2:
             raise BrewNoSuchFileException
-        if res.type==1:
+        if res.type==1 or res.type==0x86:
+            # files on external media have type 0x86
             results={ 'name': name, 'type': 'file', 'size': res.size }
-            if res.created_date==0:
-                results['date']=(0, '')
-            else:
-                results['date']=(res.created_date, time.strftime("%x %X", time.localtime(res.created_date)))
         else:
             results={ 'name': name, 'type': 'directory' }
+        if res.created_date==0:
+            results['date']=(0, '')
+        else:
+            results['date']=(res.created_date, time.strftime("%x %X", time.localtime(res.created_date)))
         return results
 
 class BrewProtocol(RealBrewProtocol):

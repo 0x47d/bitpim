@@ -16,29 +16,57 @@ from p_lg import *
 # we are the same as lgvx9900 except as noted below
 from p_lgvx9900 import *
 from p_lgvx8500 import t9udbfile
- 
+
 # We use LSB for all integer like fields
 UINT=UINTlsb
 BOOL=BOOLlsb
 
 BREW_FILE_SYSTEM=2
 
+# Phonebook stuff
+RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
+WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+pb_file_name='pim/pbentry.dat'
+
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 
 %}
 
+# phonebook
 PACKET pbgroup:
-    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } name
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } name
+    2  UINT groupid
+    1  UINT {'default': 0} +unknown0
 
 PACKET pbgroups:
     "Phonebook groups"
     * LIST {'elementclass': pbgroup} +groups
 
+PACKET pbfileentry:
+    4   UINT    serial1
+    2   UINT    entrynumber
+    133 DATA    data1
+    2   UINT    ringtone
+    2   UINT    wallpaper
+    15  DATA    data2
+
+PACKET pbfile:
+    * LIST { 'elementclass': pbfileentry } items
+
+PACKET PathIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': '' } +pathname
+PACKET PathIndexFile:
+    * LIST { 'elementclass': PathIndexEntry,
+             'createdefault': True,
+             'length': NUMPHONEBOOKENTRIES } +items
+
+# calendar
 PACKET scheduleevent:
     4  UINT pos "position within file, used as an event id"
     33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } description
-    4  GPSDATE cdate      # creation date
-    4  GPSDATE mdate      # modification date
+    4  GPSDATE { 'default': GPSDATE.now() } +cdate      # creation date
+    4  GPSDATE { 'default': GPSDATE.now() } +mdate      # modification date
     4  LGCALDATE start
     4  LGCALDATE end_time
     4  LGCALDATE end_date

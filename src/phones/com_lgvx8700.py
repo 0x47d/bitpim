@@ -20,12 +20,13 @@ import prototypes
 import commport
 import p_brew
 import helpids
+import com_lgvx8300
 import com_lgvx8500
 import p_lgvx8700
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8500.Phone
-class Phone(parentphone, com_brew.RealBrewProtocol2):
+class Phone(com_brew.RealBrewProtocol2, parentphone):
     "Talk to LG VX-8700 cell phone"
 
     desc="LG-VX8700"
@@ -34,6 +35,9 @@ class Phone(parentphone, com_brew.RealBrewProtocol2):
     serialsname='lgvx8700'
 
     my_model='VX8700'
+    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell', 'VZW Default Ringtone') + \
+                      tuple(['Ringtone '+`n` for n in range(1,12)]) + \
+                      ('No Ring',)
 
     ringtonelocations= (
         # type           index file             default dir                 external dir  max  type   index
@@ -72,12 +76,88 @@ class Phone(parentphone, com_brew.RealBrewProtocol2):
         """
         if not self._in_DM:
             self.enter_DM()
-        return parentphone.getfundamentals(self, results)
+        results = parentphone.getfundamentals(self, results)
+
+        if self.my_model=='VX8700':
+            self.getgroups(results)
+        return results
+
+    # phonebook
+    def _update_pb_file(self, pb, fundamentals, pbinfo):
+        # update the pbentry file
+        update_flg=False
+        for e in pb.items:
+            _info=pbinfo.get(e.serial1, None)
+            if _info:
+                wp=_info.get('wallpaper', None)
+                if wp is not None and wp!=e.wallpaper:
+                    update_flg=True
+                    e.wallpaper=wp
+        if update_flg:
+            self.log('Updating wallpaper index')
+            buf=prototypes.buffer()
+            pb.writetobuffer(buf, logtitle="Updated index "+self.protocolclass.pb_file_name)
+            self.writefile(self.protocolclass.pb_file_name, buf.getvalue())
+
+    def savephonebook(self, data):
+        "Saves out the phonebook"
+        res=com_lgvx8300.Phone.savephonebook(self, data)
+        # retrieve the phonebook entries
+        _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.pb_file_name))
+        _pb_entries=self.protocolclass.pbfile()
+        _pb_entries.readfrombuffer(_buf, logtitle="Read phonebook file "+self.protocolclass.pb_file_name)
+        _rt_index=data.get('ringtone-index', {})
+        _wp_index=data.get('wallpaper-index', {})
+        # update info that the phone software failed to do!!
+        self._update_pb_info(_pb_entries, data)
+        # fix up ringtone index
+        self._write_path_index(_pb_entries, 'ringtone',
+                               _rt_index,
+                               self.protocolclass.RTPathIndexFile,
+                               (0xffff,))
+        # fix up wallpaer index
+        self._write_path_index(_pb_entries, 'wallpaper',
+                               _wp_index,
+                               self.protocolclass.WPPathIndexFile,
+                               (0, 0xffff,))
+        return res
+
+    # groups
+    def getgroups(self, results):
+        "Read groups"
+        # Reads groups that use explicit IDs
+        self.log("Reading group information")
+        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
+        g=self.protocolclass.pbgroups()
+        g.readfrombuffer(buf, logtitle="Groups read")
+        groups={}
+        for i in range(len(g.groups)):
+            if len(g.groups[i].name) and (g.groups[i].groupid or i==0):
+                groups[g.groups[i].groupid]={'name': g.groups[i].name }
+        results['groups'] = groups
+        return groups
+
+    def savegroups(self, data):
+        groups=data['groups']
+        keys=groups.keys()
+        keys.sort()
+        g=self.protocolclass.pbgroups()
+        for k in keys:
+            e=self.protocolclass.pbgroup()
+            e.name=groups[k]['name']
+            if 'groupid' in e.getfields():
+                e.groupid = k
+                if k != 0:
+                    e.unknown0 = 1
+            g.groups.append(e)
+        buffer=prototypes.buffer()
+        g.writetobuffer(buffer, logtitle="New group file")
+        self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
     def is_mode_brew(self):
         req=p_brew.memoryconfigrequest()
         respc=p_brew.memoryconfigresponse
-        
+
         for baud in 0, 38400, 115200:
             if baud:
                 if not self.comm.setbaudrate(baud):
@@ -97,11 +177,7 @@ class Phone(parentphone, com_brew.RealBrewProtocol2):
             # enter DM to enable file reading/writing
             self.enter_DM()
         return com_brew.RealBrewProtocol2.listfiles(self, dir)
-
-    def getfilesystem(self, dir="", recurse=0, directories=1, files=1):
-        # BREW2's get filesystem is used here because BREW1's does not appear not to work well on the vx8700
-        return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories, files)
-
+    
     def enter_DM (self):
         # request challenge
         req = self.protocolclass.ULReq(unlock_key=0)
@@ -117,33 +193,6 @@ class Phone(parentphone, com_brew.RealBrewProtocol2):
             self._in_DM=True
         else:
             self.log('Failed to enter DM mode')
-
-    def sendbrewcommand(self, request, responseclass, callsetmode=True):
-        if callsetmode:
-            self.setmode(self.MODEBREW)
-        buffer=prototypes.buffer()
-        request.writetobuffer(buffer, logtitle="com_lgvx8700: sendbrewcommand")
-        data=buffer.getvalue()
-
-        # the memory config request does not need to be unlocked
-        if (data[0]=="\x59" or data[0]=="\x4b") and data[1]!="\x0c":
-            # "unlock" the brew command by sending a 0x5c command with the same data
-            # unlocking works with the LG vx9400 as well (tested)
-            if data[0]=="\x59":
-                uldata = "\x5c" + data[1:]
-            else:
-                # do we need to drop a character from a brew2 command? it works.
-                uldata = "\x5c" + data[2:]
-            uldata=common.pppescape(uldata+common.crcs(uldata))+common.pppterminator
-            self.logdata("Unlock brew command", uldata, None)
-            try:
-                data=self.comm.writethenreaduntil(uldata, False, common.pppterminator, logreaduntilsuccess=False) 
-            except modeignoreerrortypes:
-                self.mode=self.MODENONE
-                self.raisecommsdnaexception("unlocking filesystem command")
-            self.logdata("Unlock brew command response", data, None)
-        return com_brew.RealBrewProtocol.sendbrewcommand(self, request, responseclass, callsetmode=False)
-
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile
