@@ -434,15 +434,10 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
 
         buf=prototypes.buffer()
         eventsf.writetobuffer(buf, logtitle="New Calendar")
-        # We check the existing calender as changes require a reboot for the alarms
-        # to work properly, also no point writing the file if it is not changing
-        if buf.getvalue()!=self.getfilecontents(self.calendarlocation):
-            self.writefile(self.calendarlocation, buf.getvalue())
-            if contains_alarms or self.calenderrequiresreboot:
-                self.log("Your phone has to be rebooted due to the calendar changing")
-                dict["rebootphone"]=True
-        else:
-            self.log("Phone calendar unchanged, no update required")
+        self.writefile(self.calendarlocation, buf.getvalue())
+        if contains_alarms or self.calenderrequiresreboot:
+            self.log("Your phone has to be rebooted due to the calendar changing")
+            dict["rebootphone"]=True
 
         buf=prototypes.buffer()
         exceptionsf.writetobuffer(buf, logtitle="Writing calendar exceptions")
