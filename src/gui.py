@@ -461,15 +461,16 @@ class MainApp(wx.App):
 
     def _setuphelp(self):
         """Does all the nonsense to get help working"""
-        if guihelper.IsMac():
+        if guihelper.IsMSWindows():
+            self.helpcontroller=True
+            return
+        elif guihelper.IsMac():
             # we use apple's help mechanism
             from Carbon import AH
             path=os.path.abspath(os.path.join(guihelper.resourcedirectory, "..", "..", ".."))
             # path won't exist if we aren't a bundle
             if  os.path.exists(path) and path.endswith(".app"):
-                print "registering help book for bundle",path
                 res=AH.AHRegisterHelpBook(path)
-                print "result was",res
                 self.helpcontroller=True
                 return
 
@@ -488,33 +489,30 @@ class MainApp(wx.App):
         # wx.HelpProvider_Set(provider)
 
     def displayhelpid(self, id):
+        """Display a specific Help Topic"""
+        if self.helpcontroller is None:
+            self._setuphelp()
+
         if guihelper.IsMSWindows():
             import win32help
             fname=guihelper.gethelpfilename()+".chm>Help"
             if id is None:
                 id=helpids.ID_WELCOME
             # display the topic
-            win32help.HtmlHelp(self.frame.GetHandle(), fname,
-                               win32help.HH_DISPLAY_TOPIC, id)
+            _hwnd=win32gui.GetDesktopWindow()
+            win32help.HtmlHelp(_hwnd, fname, win32help.HH_DISPLAY_TOPIC, id)
             # and sync the TOC
-            win32help.HtmlHelp(self.frame.GetHandle(), fname,
-                               win32help.HH_SYNC, id)
-            return
-        elif guihelper.IsMac():
-            if self.helpcontroller is None:
-                self._setuphelp()
-            if self.helpcontroller is True:
-                from Carbon import AH
-                res=AH.AHGotoPage('BitPim Help', id, None)
-                print "gotopage",id,"returned",res
-                return
+            win32help.HtmlHelp(_hwnd, fname, win32help.HH_SYNC, id)
 
-        if self.helpcontroller is None:
-            self._setuphelp()
-        if id is None:
-            self.helpcontroller.DisplayContents()
+        elif guihelper.IsMac() and self.helpcontroller is True:
+            from Carbon import AH
+            res=AH.AHGotoPage('BitPim Help', id, None)
+
         else:
-            self.helpcontroller.Display(id)
+            if id is None:
+                self.helpcontroller.DisplayContents()
+            else:
+                self.helpcontroller.Display(id)
 
     def makemainwindow(self):
         if self.made:
