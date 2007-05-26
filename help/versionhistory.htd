@@ -4,6 +4,7 @@
     <ul>
       <LI><P>Improvement (Windows): users can now toggle between the Help window and BitPim window.
       <LI><P>Bug fix: <B>LG VX-8100/8300/8500/8600/8700:</B> non-existing calendar file raised exception during calendar send.
+      <LI><P>Bug fix: <B>LG VX-8700</B>: bad phone file date crashed BitPim.
     </ul>
 
    <h2><a name="0.9.15">Changes in 0.9.15</a></h2>

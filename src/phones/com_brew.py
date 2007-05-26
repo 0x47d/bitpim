@@ -1003,10 +1003,13 @@ class RealBrewProtocol2:
                 if files and res.type==0: # file
                     results[direntry]={ 'name': direntry, 'type': 'file',
                                     'size': res.size }
-                    if res.date==0:
+                    try:
+                        if res.date<=0:
+                            results[direntry]['date']=(0, "")
+                        else:
+                            results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
+                    except:
                         results[direntry]['date']=(0, "")
-                    else:
-                        results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
                 elif directories and res.type: # directory
                     results[direntry]={ 'name': direntry, 'type': 'directory' }
                     if recurse>0:
@@ -1039,10 +1042,14 @@ class RealBrewProtocol2:
             results={ 'name': name, 'type': 'file', 'size': res.size }
         else:
             results={ 'name': name, 'type': 'directory' }
-        if res.created_date==0:
+        try:
+            if res.created_date<=0:
+                results['date']=(0, '')
+            else:
+                results['date']=(res.created_date, time.strftime("%x %X", time.localtime(res.created_date)))
+        except:
+            # the date value got screwed up, just ignore it.
             results['date']=(0, '')
-        else:
-            results['date']=(res.created_date, time.strftime("%x %X", time.localtime(res.created_date)))
         return results
 
 class BrewProtocol(RealBrewProtocol):
