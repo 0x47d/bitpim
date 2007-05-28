@@ -32,6 +32,6 @@ class Profile(parentprofile):
     serialsname=Phone.serialsname
     # use for auto-detection
     phone_manufacturer='Motorola'
-    phone_model='V3c'
+    phone_model='V3c '
     common_model_name='V3c'
-    generic_phone_model='V3c'
+    generic_phone_model='Motorola CDMA V3c Phone'

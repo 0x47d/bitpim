@@ -31,5 +31,5 @@ class Profile(parentprofile):
     # use for auto-detection
     phone_manufacturer='Motorola'
     phone_model='V3cm'
-    common_model_name='V3cm'
-    generic_phone_model='V3cm'
+    common_model_name='V3c'
+    generic_phone_model='Motorola CDMA V3c Phone'
