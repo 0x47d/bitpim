@@ -22,4 +22,8 @@ SCREENSHOT(dialog-imagepreview.jpg,)
 
 <p><b>Help</b>: Bring up this Help.
 
+<h2>Tip</h2>
+
+<p><b>Bypass Automatic Resize</b>: To bypass the image preview dialog (and consequently the automatic image resize), hold the shift key down while clicking the "Add Wallpaper" button (Shift + Add Wallpaper). Be sure the "images" folder is highlighted when you click the "Add Wallpaper" button. <em>Warning:</em> If you bypass the image resize, you are responsible for ensuring that the unconverted image is compatible with your phone.
+
 #include "pageend.h"
