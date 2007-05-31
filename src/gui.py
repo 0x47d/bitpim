@@ -247,6 +247,8 @@ class MySplashScreen(wx.SplashScreen):
         self.goforit()
         evt.Skip()
 
+class BitPimExit(Exception):
+    pass
 
 class WorkerThreadFramework(threading.Thread):
     def __init__(self):
@@ -285,8 +287,9 @@ class WorkerThreadFramework(threading.Thread):
                     ex.gui_exc_info=sys.exc_info()
                 
             wx.PostEvent(self.dispatchto, HelperReturnEvent(resultcb, ex, res))
-            if isinstance(ex, SystemExit):
-                raise ex
+            if isinstance(ex, BitPimExit):
+                # gracefully end this thread!
+                break
 
     def progressminor(self, pos, max, desc=""):
         wx.PostEvent(self.dispatchto, HelperReturnEvent(self.dispatchto.progressminorcb, pos, max, desc))
@@ -1041,12 +1044,11 @@ class MainWindow(wx.Frame):
         self.MakeCall( Request(self.wt.exit), Callback(self.OnCloseResults) )
 
     def OnCloseResults(self, exception, _):
-        assert isinstance(exception, SystemExit)
+        assert isinstance(exception, BitPimExit)
         # assume it worked
         if self._taskbar:
             self._taskbar.Destroy()
         self.Destroy()
-        wx.GetApp().ExitMainLoop()
 
     def OnIconize(self, evt):
         if evt.Iconized():
@@ -1803,7 +1805,7 @@ class WorkerThread(WorkerThreadFramework):
             self.progressmajor(i, 2, "Shutting down helper thread")
             time.sleep(1)
         self.log("helper thread shut down")
-        raise SystemExit("helper thread shutdown")
+        raise BitPimExit("helper thread shutdown")
 
 
     def clearcomm(self):
