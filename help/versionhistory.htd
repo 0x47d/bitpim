@@ -6,6 +6,7 @@
       <LI><P>Bug fix: <B>LG VX-8100/8300/8500/8600/8700:</B> non-existing calendar file raised exception during calendar send.
       <LI><P>Bug fix: <B>LG VX-8700</B>: bad phone file date crashed BitPim.
       <LI><P>Bug fix: Motorola E815/E815m/V3c/V3cm auto-detection.
+      <LI><P>Bug fix (Linux): Contact entry editor does not work properly with 2 or more ringtones or wallpapers.
     </ul>
 
    <h2><a name="0.9.15">Changes in 0.9.15</a></h2>

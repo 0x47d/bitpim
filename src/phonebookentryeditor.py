@@ -165,31 +165,31 @@ class RingtoneEditor(DirtyUIBase):
         super(RingtoneEditor, self).__del__()
 
     def OnRingtoneUpdates(self, msg):
-        "Receives pubsub message with ringtone list"
+        # wxPython/wxWidget bug: ListBox.Clear emits a wx.EVT_LISTBOX event
+        # it shouldn't
+        self.Ignore()
         tones=msg.data[:]
-        cur=self.Get()
+        cur=self._get()
         self.ringtone.Clear()
         self.ringtone.Append(self.unnamed)
         for p in tones:
             self.ringtone.Append(p)
-        self.Set(cur)
+        self._set(cur)
+        self.Clean()
 
     def OnLBClicked(self, evt=None):
         self.OnDirtyUI(evt)
         self._updaterequested=False
-        v=self.Get().get('ringtone', None)
+        v=self._get().get('ringtone', None)
         self.SetPreview(v)
 
     def SetPreview(self, name):
         if name is None:
             self.preview.SetPage('')
         else:
-            pass
             self.preview.SetPage('<img src="bpimage:ringer.png;width=24;height=24"><br>At some point there will be info about the ringtone as well as the ability to play it here')
-            pass
 
-    def Set(self, data):
-        self.Ignore(True)
+    def _set(self, data):
         if data is None:
             wp=self.unnamed
             type='call'
@@ -208,13 +208,11 @@ class RingtoneEditor(DirtyUIBase):
         # zero len?
         if len(wp)==0:
             self.ringtone.SetSelection(0)
-            self.Clean()
             return
 
         # try using straight forward name
         try:
             self.ringtone.SetStringSelection(wp)
-            self.Clean()
             return
         except:
             pass
@@ -222,7 +220,6 @@ class RingtoneEditor(DirtyUIBase):
         # ok, with unknownselprefix
         try:
             self.ringtone.SetStringSelection(self.unknownselprefix+wp)
-            self.Clean()
             return
         except:
             pass
@@ -230,10 +227,13 @@ class RingtoneEditor(DirtyUIBase):
         # ok, just add it
         self.ringtone.InsertItems([self.unknownselprefix+wp], 1)
         self.ringtone.SetStringSelection(self.unknownselprefix+wp)
+
+    def Set(self, data):
+        self.Ignore(True)
+        self._set(data)
         self.Clean()
 
-    def Get(self):
-        self.Clean()
+    def _get(self):
         res={}
         rt=self.ringtone.GetStringSelection()
         if rt==self.unnamed:
@@ -244,6 +244,10 @@ class RingtoneEditor(DirtyUIBase):
             res['ringtone']=rt
             res['use']=self.type.GetStringSelection()
         return res
+        
+    def Get(self):
+        self.Clean()
+        return self._get()
         
 # WallpaperEditor---------------------------------------------------------------
 class WallpaperEditor(DirtyUIBase):
@@ -298,13 +302,17 @@ class WallpaperEditor(DirtyUIBase):
 
     def OnWallpaperUpdates(self, msg):
         "Receives pubsub message with wallpaper list"
+        # wxPython/wxWidget bug: ListBox.Clear emits a wx.EVT_LISTBOX event
+        # it shouldn't
+        self.Ignore()
         papers=msg.data[:]
-        cur=self.Get()
+        cur=self._get()
         self.wallpaper.Clear()
         self.wallpaper.Append(self.unnamed)
         for p in papers:
             self.wallpaper.Append(p)
-        self.Set(cur)
+        self._set(cur)
+        self.Clean()
 
     def OnLBClicked(self, evt=None):
         self.OnDirtyUI(evt)
@@ -317,8 +325,7 @@ class WallpaperEditor(DirtyUIBase):
         else:
             self.preview.SetImage(name)        
 
-    def Set(self, data):
-        self.Ignore()
+    def _set(self, data):
         if data is None:
             wp=self.unnamed
             type='call'
@@ -336,13 +343,11 @@ class WallpaperEditor(DirtyUIBase):
 
         if len(wp)==0:
             self.wallpaper.SetSelection(0)
-            self.Clean()
             return
 
         # try using straight forward name
         try:
             self.wallpaper.SetStringSelection(wp)
-            self.Clean()
             return
         except:
             pass
@@ -350,7 +355,6 @@ class WallpaperEditor(DirtyUIBase):
         # ok, with unknownselprefix
         try:
             self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
-            self.Clean()
             return
         except:
             pass
@@ -358,10 +362,13 @@ class WallpaperEditor(DirtyUIBase):
         # ok, just add it
         self.wallpaper.InsertItems([self.unknownselprefix+wp], 1)
         self.wallpaper.SetStringSelection(self.unknownselprefix+wp)
+
+    def Set(self, data):
+        self.Ignore()
+        self._set(data)
         self.Clean()
 
-    def Get(self):
-        self.Clean()
+    def _get(self):
         res={}
         wp=self.wallpaper.GetStringSelection()
         if wp==self.unnamed:
@@ -372,6 +379,10 @@ class WallpaperEditor(DirtyUIBase):
             res['wallpaper']=wp
             res['use']=self.type.GetStringSelection()
         return res
+
+    def Get(self):
+        self.Clean()
+        return self._get()
 
 # CategoryManager---------------------------------------------------------------
 class CategoryManager(wx.Dialog):
