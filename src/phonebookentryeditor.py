@@ -178,6 +178,8 @@ class RingtoneEditor(DirtyUIBase):
         self.Clean()
 
     def OnLBClicked(self, evt=None):
+        if self.ringtone.GetSelection()==wx.NOT_FOUND:
+            return
         self.OnDirtyUI(evt)
         self._updaterequested=False
         v=self._get().get('ringtone', None)
@@ -315,6 +317,8 @@ class WallpaperEditor(DirtyUIBase):
         self.Clean()
 
     def OnLBClicked(self, evt=None):
+        if self.wallpaper.GetSelection()==wx.NOT_FOUND:
+            return
         self.OnDirtyUI(evt)
         v=self.Get().get('wallpaper', None)
         self.SetPreview(v)
