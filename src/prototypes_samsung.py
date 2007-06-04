@@ -19,12 +19,7 @@ class DateTime(prototypes.UINTlsb):
     _daylight=None
     def __init__(self, *args, **kwargs):
         if DateTime._daylight is None:
-            _tt=datetime.datetime.now().timetuple()
-            if time.daylight and \
-               int(time.mktime(_tt)-calendar.timegm(_tt))==time.altzone:
-                DateTime._daylight=3600
-            else:
-                DateTime._daylight=0
+            DateTime._daylight=time.localtime()[-1]
         super(DateTime, self).__init__(*args, **kwargs)
         kwargs.update({ 'sizeinbytes': 4 })
         if self._ismostderived(DateTime):
@@ -45,11 +40,12 @@ class DateTime(prototypes.UINTlsb):
         self._complainaboutunusedargs(DateTime, kwargs)
         assert self._sizeinbytes==4
 
-    _time_delta=315525600.0
+    _time_delta=315525600.0+3600.0
     def _converttoint(self, date):
         assert len(date)==5
-        return int(time.mktime(datetime.datetime(*date).timetuple())-\
-                   self._time_delta-DateTime._daylight)
+        _timetuple=datetime.datetime(*date).timetuple()
+        _timetuple[-1]=DateTime._daylight
+        return int(time.mktime(_timetuple)-self._time_delta)
 
     def getvalue(self):
         """Unpack 32 bit value into date/time
@@ -57,7 +53,7 @@ class DateTime(prototypes.UINTlsb):
         @return: (year, month, day, hour, minute)
         """
         val=super(DateTime, self).getvalue()
-        return time.localtime(val+self._time_delta+DateTime._daylight)[:5]
+        return time.localtime(val+self._time_delta)[:5]
 
 class DateTime1(DateTime):
     # similar to DateTime, except getvalue includes seconds

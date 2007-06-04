@@ -1093,10 +1093,9 @@ class CalendarEntry(object):
     _tz_code=None
     def _build_tz(self):
         if CalendarEntry._tz_code is None:
-            CalendarEntry._tz_code=self._build_tz_dict.get(time.timezone, self.TZ_EST)
-            _dt=datetime.datetime.now().timetuple()
-            if time.daylight and \
-               int(time.mktime(_dt)-calendar.timegm(_dt))==time.altzone:
+            CalendarEntry._tz_code=self._build_tz_dict.get(time.timezone,
+                                                           self.TZ_EST)
+            if time.localtime()[-1]==1:
                 # daylight saving time
                 CalendarEntry._tz_code+=1
         return CalendarEntry._tz_code
