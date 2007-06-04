@@ -216,13 +216,11 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 176, 'height': 220, 'format': "JPEG"}))
+                                      {'width': 238, 'height': 246, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
-                                      {'width': 128, 'height': 160, 'format': "JPEG"}))
+                                      {'width': 240, 'height': 274, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 128, 'height': 142, 'format': "JPEG"}))
+                                      {'width': 120, 'height': 100, 'format': "JPEG"}))
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
