@@ -40,11 +40,10 @@ class DateTime(prototypes.UINTlsb):
         self._complainaboutunusedargs(DateTime, kwargs)
         assert self._sizeinbytes==4
 
-    _time_delta=315525600.0+3600.0
+    _time_delta=315529200.0
     def _converttoint(self, date):
         assert len(date)==5
-        _timetuple=datetime.datetime(*date).timetuple()
-        _timetuple[-1]=DateTime._daylight
+        _timetuple=datetime.datetime(*date).timetuple()[:-1]+(DateTime._daylight,)
         return int(time.mktime(_timetuple)-self._time_delta)
 
     def getvalue(self):
