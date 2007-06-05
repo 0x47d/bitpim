@@ -93,7 +93,7 @@ mode of 0666 and leave off the <code>GROUP</code> item.
 <LI>Group <CODE>cellusers</CODE> exists and you belong to that group.
 </UL>
 
-<P>When a known device is connected, this feature sets the the device owner to the user currently logged in at the console (or default to <code>root</code>), and initiates the BitPim phone detection process.  The end result is that BitPim will be able to:
+<P>When a known device is connected, this feature sets the the device group to <CODE>cellusers</CODE>, permission to <CODE>0664</CODE>, and initiates the BitPim phone detection process.  The end result is that BitPim will be able to:
 <OL>
 <LI>Detect that a known device is connected,
 <LI>Set the appropriate group and permission for that device,
