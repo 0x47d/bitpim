@@ -26,26 +26,10 @@ if [ "$2" != "$3" ]; then
      exit 2
 fi
 
-# Setting the the permission on the device
-# code portion lifted from the old /etc/hotplug/usb/usbcam
-if [ -f /var/run/console/console.lock ]
-then
-    CONSOLEOWNER=`cat /var/run/console/console.lock`
-elif [ -f /var/run/console.lock ]
-then
-    CONSOLEOWNER=`cat /var/run/console.lock`
-elif [ -f /var/lock/console.lock ]
-then
-    CONSOLEOWNER=`cat /var/lock/console.lock`
-else
-    CONSOLEOWNER=
-fi
-if [ -n "$CONSOLEOWNER" ]
-then
-    chmod 0000 "$1"
-    chown "${CONSOLEOWNER}:${CONSOLEOWNER}" "$1"
-    chmod 0600 "$1"
-fi
+# Change the device file group to "cellusers", if such group exists.
+chgrp cellusers "$1" || true
+# ensure the proper permission
+chmod 0664 "$1" || true
 
 # Notify BitPim that there's a new USB device
 if [ ! -d /var/bitpim ]
