@@ -11,6 +11,7 @@
       <LI><P>New phone support: <B>LG VX-9400</B>.
       <LI><P>Maintenance: <B>LG VX-8700</B>: updated default image resolutions.
       <LI><P>Maintenance (Linux): Auto port detection and phone detection.  See the Linux USB Help for more details.
+      <LI><P>Maintenance (Linux): Build binary deb package.
     </ul>
 
    <h2><a name="0.9.15">Changes in 0.9.15</a></h2>
