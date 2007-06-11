@@ -51,11 +51,12 @@ if __name__ == '__main__':
 	# get rid of the process serial number on mac
 	sys.argv=sys.argv[:1]+sys.argv[2:]
     try:
-        _options, _args=getopt.getopt(sys.argv[1:], 'c:d:')
+        _options, _args=getopt.gnu_getopt(sys.argv[1:], 'c:d:')
         _invalid_args=[x for x in _args if x not in ['debug', 'bitfling']]
         if _invalid_args:
             raise getopt.GetoptError('Invalid argument(s): '+','.join(_invalid_args))
-    except getopt.GetoptError,e:
+    except getopt.GetoptError:
+        e=sys.exc_info()[1]
         _invalid_args=True
         _error_str=e.msg
     if _invalid_args:
