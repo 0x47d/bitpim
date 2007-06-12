@@ -8,7 +8,7 @@ Standards-Version: 3.7.2
 Package: bitpim
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: interfaces with the phonebook, calendar, wallpaper of many CDMA phones
+Description: Manage data on CDMA phones from LG, Samsung, Sanyo and others
  BitPim is a program that allows you to view and manipulate data on
  many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This
  includes the PhoneBook, Calendar, WallPapers, RingTones (functionality
