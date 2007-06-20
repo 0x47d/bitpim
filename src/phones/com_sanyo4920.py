@@ -33,7 +33,7 @@ class Phone(com_sanyonewer.Phone):
     desc="SCP-4920"
 
     FIRST_MEDIA_DIRECTORY=2
-    LAST_MEDIA_DIRECTORY=3
+    LAST_MEDIA_DIRECTORY=5
 
     imagelocations=(
         # offset, directory #, indexflag, type, maximumentries
