@@ -10,6 +10,8 @@
 
 """Phonebook conversations with LG phones"""
 
+import threading
+
 import com_brew
 import com_phone
 import p_lg
@@ -1499,6 +1501,189 @@ class LGUncountedIndexedMedia:
     def saveringtones(self, results, merge):
         return self.savemedia('ringtone', 'ringtone-index', self.ringtonelocations, results, merge, self.getringtoneindices)
 
+class EnterDMError(Exception):
+    pass
+
+class LGDMPhone:
+    """Class to handle getting the phone into Diagnostic Mode (DM) for later
+    Lg model phones.  Subclass should set the following in __init__:
+        self._timeout: how long (in seconds) before the phone gets kicked out of DM
+    Subclass may also override the following methods:
+        self.setDMversion(): set self._DMv5 to True or False.
+    """
+
+    def _rotate_left(self, value, nbits):
+        return ((value << nbits) | (value >> (32-nbits))) & 0xffffffffL
+
+    def get_challenge_response(self, challenge):
+        # Reverse engineered and contributed by Nathan Hjelm <hjelmn@users.sourceforge.net>
+        # get_challenge_response(challenge):
+        #    - Takes the SHA-1 hash of a 16-byte block containing the challenge and returns the proper response.
+        #    - The hash used by the vx8700 differs from the standard implementation only in that it does not append a
+        #      1 bit before padding the message with 0's.
+        #
+        #  Return value:
+        #    Last three bytes of the SHA-1 hash or'd with 0x80000000.
+        # IV = (0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0)
+        input_vector = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
+        hash_result  = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
+        hash_data = []
+        hash_data.append(long(challenge))
+        # pad message with zeros as well and zero first word of bit length
+        # if this were standard SHA-1 then 0x00000080 would be appended here as its a 56-bit message
+        for i in range(14):
+            hash_data.append(0L)
+        # append second word of the bit length (56 bit message?)
+        hash_data.append(56L)
+        for i in range(80):
+            j = i & 0x0f
+            if i > 15:
+                index1 = (i -  3) & 0x0f
+                index2 = (i -  8) & 0x0f
+                index3 = (i - 14) & 0x0f
+                hash_data[j] = hash_data[index1] ^ hash_data[index2] ^ hash_data[index3] ^ hash_data[j]
+                hash_data[j] = self._rotate_left (hash_data[j], 1)
+            if i < 20:
+                # f = (B and C) or ((not B) and C), k = 0x5a827999
+                f = (hash_result[1] & hash_result[2]) | ((~hash_result[1]) & hash_result[3])
+                k = 0x5a827999L
+            elif i < 40:
+                # f = B xor C xor D, k = 0x6ed9eba1
+                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
+                k = 0x6ed9eba1L
+            elif i < 60:
+                # f = (B and C) or (B and D) or (B and C), k = 0x8f1bbcdc
+                f = (hash_result[1] & hash_result[2]) | (hash_result[1] & hash_result[3]) | (hash_result[2] & hash_result[3])
+                k = 0x8f1bbcdcL
+            else:
+                # f = B xor C xor D, k = 0xca62c1d6
+                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
+                k = 0xca62c1d6L
+            # A = E + rotate_left (A, 5) + w[j] + f + k
+            newA = (hash_result[4] + self._rotate_left(hash_result[0], 5) + hash_data[j] + f + k) & 0xffffffffL
+            # B = oldA, C = rotate_left(B, 30), D = C, E = D
+            hash_result = [newA] + hash_result[0:4]
+            hash_result[2] = self._rotate_left (hash_result[2], 30)
+        for i in range(5):
+            hash_result[i] = (hash_result[i] + input_vector[i]) & 0xffffffffL
+        return 0x80000000L | (hash_result[4] & 0x00ffffffL)
+
+    def _unlock_key(self):
+        _req=self.protocolclass.LockKeyReq(lock=1)
+        self.sendbrewcommand(_req, self.protocolclass.data)
+
+    def _lock_key(self):
+        _req=self.protocolclass.LockKeyReq()
+        self.sendbrewcommand(_req, self.protocolclass.data)
+
+    def _press_key(self, keys):
+        # simulate a series of keypress
+        if not keys:
+            return
+        _req=self.protocolclass.KeyPressReq()
+        for _k in keys:
+            _req.key=_k
+            self.sendbrewcommand(_req, self.protocolclass.data)
+
+    def _enter_DMv4(self):
+        self._lock_key()
+        self._press_key('\x06\x513733929\x51')
+        self._unlock_key()
+
+    def _enter_DMv5(self):
+        # request the seed
+        _req=self.protocolclass.ULReq(unlock_key=0)
+        _resp=self.sendbrewcommand(_req, self.protocolclass.ULRes)
+
+        # respond with the key
+        _key=self.get_challenge_response(_resp.unlock_key)
+        if _key is None:
+            self.log('Failed to get the key.')
+            raise EnterDMError('Failed to get the key')
+
+        _req=self.protocolclass.ULReq(unlock_code=1, unlock_key=_key)
+        _resp=self.sendbrewcommand(_req, self.protocolclass.ULRes)
+        if _resp.unlock_ok!=1:
+            raise EnterDMError('Bad response - unlock_ok: %d'%_resp.unlock_ok)
+
+    def enter_DM(self, e=None):
+        # do nothing if (1) the phone is already in DM, or (2) the phone failed
+        # to previously enter DM
+        if self._in_DM is not None:
+            return
+        # check for DMv5 applicability
+        if self._DMv5 is None:
+            self.setDMversion()
+        # enter DMv5
+        if self._DMv5:
+            try:
+                self._enter_DMv5()
+            except:
+                self._in_DM=False
+                if __debug__:
+                    raise
+                return
+        # enter DMv4
+        try:
+            self._enter_DMv4()
+            self._in_DM=True
+        except:
+            self._in_DM=False
+            if __debug__:
+                raise
+        self.log('Successfully transitioned to DM')
+        # DM entered successfully, kick off the timer if specified
+        if self._timeout:
+            # clear existing timer
+            if self._timer:
+                self._timer.cancel()
+                del self._timer
+            # and set a new one
+            self.log('Starting DM timeout for %s seconds'%self._timeout)
+            self._timer=threading.Timer(self._timeout, self._OnTimer)
+            self._timer.start()
+
+    def _OnTimer(self):
+        if self._in_DM:
+            self.log('Transitioned out of DM assumed.')
+            self._in_DM=None
+        del self._timer
+        self._timer=None
+
+    def _getfilecontents(self, name, use_cache=False):
+        self.enter_DM()
+        return self._real_getfilecontents(name, use_cache)
+
+    def _writefile(self, name, contents):
+        self.enter_DM()
+        return self._real_writefile(name, contents)
+                            
+    def _statfile(self, name):
+        self.enter_DM()
+        return self._real_statfile(name)
+
+    def setDMversion(self):
+        """Define the DM version required for this phone, default to DMv5"""
+        self._DMv5=True
+
+    def __init__(self):
+        self._in_DM=None
+        self._timer=None
+        self._DMv5=None
+        self._timeout=None
+        if not hasattr(self, '_real_getfilecontents'):
+            (self._real_getfilecontents,
+             self.getfilecontents)=(self.getfilecontents,
+                                   self._getfilecontents)
+            (self._real_writefile,
+             self.writefile)=(self.writefile, self._writefile)
+            (self._real_statfile,
+             self.statfile)=(self.statfile, self._statfile)
+
+    def __del__(self):
+        if self._timer:
+            self._timer.cancel()
+            del self._timer
 
 def basename(name):
     if name.rfind('/')>=0:

@@ -20,6 +20,7 @@ import datetime
 # BitPim modules
 import common
 import com_brew
+import com_lg
 import com_lgvx8300
 import helpids
 import fileinfo
@@ -31,10 +32,6 @@ import playlist
 import prototypes
 import prototypeslg
 import t9editor
-try:
-    import pyvx8500
-except ImportError:
-    pyvx8500=None
 
 parentphone=com_lgvx8300.Phone
 class Phone(parentphone):
@@ -66,9 +63,14 @@ class Phone(parentphone):
         ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
         )
 
-    def __init__(self, logtarget, commport):
-        parentphone.__init__(self, logtarget, commport)
-        self._in_DM=False
+##    def __init__(self, logtarget, commport):
+##        parentphone.__init__(self, logtarget, commport)
+##        self._timeout=20
+
+    def setDMversion(self):
+        """Define the DM version required for this phone, default to DMv5"""
+        _fw_version=self.get_firmware_version()[-1]
+        self._DMv5=self.my_model=='VX8500' and _fw_version>'4'
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -83,8 +85,7 @@ class Phone(parentphone):
         This method is called before we read phone data or before we
         write phone data.
         """
-        if not self._in_DM:
-            self.enter_DM()
+        self.enter_DM()
         return parentphone.getfundamentals(self, results)
 
     # Phonebook stuff-----------------------------------------------------------
@@ -402,111 +403,6 @@ class Phone(parentphone):
         req=p_brew.firmwarerequest()
         res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
         return res.firmware
-
-    def _unlock_key(self):
-        _req=self.protocolclass.LockKeyReq(lock=1)
-        self.sendbrewcommand(_req, self.protocolclass.data)
-    def _lock_key(self):
-        _req=self.protocolclass.LockKeyReq()
-        self.sendbrewcommand(_req, self.protocolclass.data)
-
-    def _press_key(self, keys):
-        # simulate a series of keypress
-        if not keys:
-            return
-        _req=self.protocolclass.KeyPressReq()
-        for _k in keys:
-            _req.key=_k
-            self.sendbrewcommand(_req, self.protocolclass.data)
-
-    def _enter_DMv4(self):
-        self._lock_key()
-        self._press_key('\x06\x513733929\x51')
-        self._unlock_key()
-        self._in_DM=True
-
-    def _rotate_left(self, value, nbits):
-        return ((value << nbits) | (value >> (32-nbits))) & 0xffffffffL
-    
-    def get_challenge_response(self, challenge):
-        # Reverse engineered and contributed by Nathan Hjelm <hjelmn@users.sourceforge.net>
-        # get_challenge_response(challenge):
-        #    - Takes the SHA-1 hash of a 16-byte block containing the challenge and returns the proper response.
-        #    - The hash used by the vx8700 differs from the standard implementation only in that it does not append a
-        #      1 bit before padding the message with 0's.
-        #
-        #  Return value:
-        #    Last three bytes of the SHA-1 hash or'd with 0x80000000.
-        # IV = (0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0)
-        input_vector = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
-        hash_result  = [0x67452301L, 0xefcdab89L, 0x98badcfeL, 0x10325476L, 0xc3d2e1f0L]
-        hash_data = []
-        hash_data.append(long(challenge))
-        # pad message with zeros as well and zero first word of bit length
-        # if this were standard SHA-1 then 0x00000080 would be appended here as its a 56-bit message
-        for i in range(14):
-            hash_data.append(0L)
-        # append second word of the bit length (56 bit message?)
-        hash_data.append(56L)
-        for i in range(80):
-            j = i & 0x0f
-            if i > 15:
-                index1 = (i -  3) & 0x0f
-                index2 = (i -  8) & 0x0f
-                index3 = (i - 14) & 0x0f
-                hash_data[j] = hash_data[index1] ^ hash_data[index2] ^ hash_data[index3] ^ hash_data[j]
-                hash_data[j] = self._rotate_left (hash_data[j], 1)
-            if i < 20:
-                # f = (B and C) or ((not B) and C), k = 0x5a827999
-                f = (hash_result[1] & hash_result[2]) | ((~hash_result[1]) & hash_result[3])
-                k = 0x5a827999L
-            elif i < 40:
-                # f = B xor C xor D, k = 0x6ed9eba1
-                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
-                k = 0x6ed9eba1L
-            elif i < 60:
-                # f = (B and C) or (B and D) or (B and C), k = 0x8f1bbcdc
-                f = (hash_result[1] & hash_result[2]) | (hash_result[1] & hash_result[3]) | (hash_result[2] & hash_result[3])
-                k = 0x8f1bbcdcL
-            else:
-                # f = B xor C xor D, k = 0xca62c1d6
-                f = hash_result[1] ^ hash_result[2] ^ hash_result[3]
-                k = 0xca62c1d6L
-            # A = E + rotate_left (A, 5) + w[j] + f + k
-            newA = (hash_result[4] + self._rotate_left(hash_result[0], 5) + hash_data[j] + f + k) & 0xffffffffL
-            # B = oldA, C = rotate_left(B, 30), D = C, E = D
-            hash_result = [newA] + hash_result[0:4]
-            hash_result[2] = self._rotate_left (hash_result[2], 30)
-        for i in range(5):
-            hash_result[i] = (hash_result[i] + input_vector[i]) & 0xffffffffL
-        return 0x80000000L | (hash_result[4] & 0x00ffffffL)
-
-    def _enter_DMv5(self):
-        self._in_DM=True
-        # request the seed
-        _req=self.protocolclass.DMKeyReq()
-        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
-        # respond with the key
-        _key=self.get_challenge_response(_resp.key)
-        if _key is None:
-            self.log('Failed to get the key.')
-            return
-        _req=self.protocolclass.DMReq(key=_key)
-        self.sendbrewcommand(_req, self.protocolclass.DMResp)
-
-    def enter_DM(self):
-        try:
-            _fw_version=self.get_firmware_version()[-1]
-            if self.my_model=='VX8500' and _fw_version>'4':
-                self._enter_DMv5()
-            else:
-                self._enter_DMv4()
-            self.log('Now in DM')
-        except:
-            if __debug__:
-                raise
-            self.log('Failed to enter DM')
-            self._in_DM=True
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8300.Profile

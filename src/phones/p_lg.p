@@ -125,3 +125,33 @@ PACKET pbappendentryresponse:
 # 0x05   delete entry
 # 0x04   write entry  (advances to next entry)
 # 0x03   append entry  (advances to next entry)
+
+
+# download mode
+PACKET LockKeyReq:
+    1 UINT { 'default': 0x21 } +cmd
+    2 UINT { 'default': 0 } +lock "0=Lock, 1=Unlock"
+
+PACKET KeyPressReq:
+     1 UINT { 'default': 0x20 } +cmd
+     1 UINT { 'default': 0 } +hold
+     1 STRING { 'terminator': None,
+                'sizeinbytes': 1 } key
+
+PACKET ULReq:
+    ""
+    1 UINT { 'default': 0xFE } +cmd
+    1 UINT { 'default': 0x00 } +unlock_code
+    4 UINT unlock_key
+    1 UINT { 'default': 0x00 } +zero
+    
+PACKET ULRes:
+    ""
+    1 UINT cmd
+    1 UINT unlock_code
+    4 UINT unlock_key
+    1 UINT unlock_ok
+
+
+PACKET data:
+    * DATA bytes

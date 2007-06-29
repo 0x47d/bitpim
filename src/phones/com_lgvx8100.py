@@ -44,7 +44,7 @@ from prototypes import *
 
 
 
-class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
+class Phone(com_lg.LGNewIndexedMedia2, com_lg.LGDMPhone, com_lgvx7000.Phone):
     "Talk to the LG VX8100 cell phone"
 
     desc="LG-VX8100"
@@ -124,7 +124,13 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
 
     def __init__(self, logtarget, commport):
         com_lgvx4400.Phone.__init__(self, logtarget, commport)
+        com_lg.LGDMPhone.__init__(self)
         self.mode=self.MODENONE
+
+    def setDMversion(self):
+        """Define the DM version required for this phone, default to DMv5"""
+        # not sure what the 8100 requirements are, default to v4 only
+        self._DMv5=False
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -139,7 +145,7 @@ class Phone(com_lg.LGNewIndexedMedia2,com_lgvx7000.Phone):
         This method is called before we read the phonebook data or before we
         write phonebook data.
         """
-
+        self.enter_DM()
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
