@@ -89,6 +89,11 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
 
     my_model='VX5300'
 
+    def setDMversion(self):
+        _fw_version=self.get_firmware_version()[-1]
+        # T53VZV04 uses DMv5
+        self._DMv5=self.my_model=='VX5300' and _fw_version>'3'
+
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
 

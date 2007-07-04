@@ -35,6 +35,11 @@ BOOL=BOOLlsb
 
 CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
 
+# Phonebook stuff
+RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
+WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+pb_file_name='pim/pbentry.dat'
+
 %}
 
 PACKET scheduleevent:
@@ -65,3 +70,14 @@ PACKET scheduleevent:
     #   3            esn
     #   4            phone software version
     64  USTRING { 'default': '000000c9-00000000-00000000-T9MVZV02', 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } +serial_number
+
+PACKET pbfileentry:
+    4   UINT    serial1
+    2   UINT    entrynumber
+    127 UNKNOWN data1
+    2   UINT    ringtone
+    2   UINT    wallpaper
+    248 UNKNOWN data2
+
+PACKET pbfile:
+    * LIST { 'elementclass': pbfileentry } items

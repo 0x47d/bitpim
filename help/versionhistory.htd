@@ -2,7 +2,9 @@
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>
     <ul>
-      <LI><P>Maintenance:  Gentoo tbz2 package.
+      <LI><P>Maintenance: Gentoo tbz2 package.
+      <LI><P>Maintenance: Improved support for <B>LG VX-5300, VX-8500, VX8600,
+      VX-8700, VX-9400.</B>
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>

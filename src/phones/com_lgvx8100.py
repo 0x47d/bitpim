@@ -127,6 +127,12 @@ class Phone(com_lg.LGNewIndexedMedia2, com_lg.LGDMPhone, com_lgvx7000.Phone):
         com_lg.LGDMPhone.__init__(self)
         self.mode=self.MODENONE
 
+    def get_firmware_version(self):
+        # return the firmware version
+        req=p_brew.firmwarerequest()
+        res=self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+        return res.firmware
+
     def setDMversion(self):
         """Define the DM version required for this phone, default to DMv5"""
         # not sure what the 8100 requirements are, default to v4 only

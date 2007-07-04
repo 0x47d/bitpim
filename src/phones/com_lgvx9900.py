@@ -57,6 +57,11 @@ class Phone(com_lg.LGUncountedIndexedMedia, parentphone):
     def __init__(self, logtarget, commport):
         parentphone.__init__(self, logtarget, commport)
 
+    def setDMversion(self):
+        _fw_version=self.get_firmware_version()[-1]
+        # T99VZV02 uses DMv5
+        self._DMv5=self.my_model=='VX9900' and _fw_version>'1'
+
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx9800.Profile
 class Profile(parentprofile):

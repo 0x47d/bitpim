@@ -26,6 +26,11 @@ BOOL=BOOLlsb
 
 CALENDAR_HAS_SEPARATE_END_TIME_AND_DATE=1
 
+# Phonebook stuff
+RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
+WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+pb_file_name='pim/pbentry.dat'
+
 class scheduleevent(BaseProtogenClass):
     __fields=['pos', 'description', 'cdate', 'mdate', 'start', 'end_time', 'end_date', 'repeat', 'alarmindex_vibrate', 'ringtone', 'unknown1', 'alarmminutes', 'alarmhours', 'unknown2', 'unknown3', 'unknown4', 'serial_number']
 
@@ -400,6 +405,235 @@ class scheduleevent(BaseProtogenClass):
         yield ('unknown3', self.__field_unknown3, None)
         yield ('unknown4', self.__field_unknown4, None)
         yield ('serial_number', self.__field_serial_number, None)
+
+
+
+
+class pbfileentry(BaseProtogenClass):
+    __fields=['serial1', 'entrynumber', 'data1', 'ringtone', 'wallpaper', 'data2']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(pbfileentry,self).__init__(**dict)
+        if self.__class__ is pbfileentry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(pbfileentry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(pbfileentry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_serial1.writetobuffer(buf)
+        self.__field_entrynumber.writetobuffer(buf)
+        self.__field_data1.writetobuffer(buf)
+        self.__field_ringtone.writetobuffer(buf)
+        self.__field_wallpaper.writetobuffer(buf)
+        self.__field_data2.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_serial1=UINT(**{'sizeinbytes': 4})
+        self.__field_serial1.readfrombuffer(buf)
+        self.__field_entrynumber=UINT(**{'sizeinbytes': 2})
+        self.__field_entrynumber.readfrombuffer(buf)
+        self.__field_data1=UNKNOWN(**{'sizeinbytes': 127})
+        self.__field_data1.readfrombuffer(buf)
+        self.__field_ringtone=UINT(**{'sizeinbytes': 2})
+        self.__field_ringtone.readfrombuffer(buf)
+        self.__field_wallpaper=UINT(**{'sizeinbytes': 2})
+        self.__field_wallpaper.readfrombuffer(buf)
+        self.__field_data2=UNKNOWN(**{'sizeinbytes': 248})
+        self.__field_data2.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_serial1(self):
+        return self.__field_serial1.getvalue()
+
+    def __setfield_serial1(self, value):
+        if isinstance(value,UINT):
+            self.__field_serial1=value
+        else:
+            self.__field_serial1=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_serial1(self): del self.__field_serial1
+
+    serial1=property(__getfield_serial1, __setfield_serial1, __delfield_serial1, None)
+
+    def __getfield_entrynumber(self):
+        return self.__field_entrynumber.getvalue()
+
+    def __setfield_entrynumber(self, value):
+        if isinstance(value,UINT):
+            self.__field_entrynumber=value
+        else:
+            self.__field_entrynumber=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_entrynumber(self): del self.__field_entrynumber
+
+    entrynumber=property(__getfield_entrynumber, __setfield_entrynumber, __delfield_entrynumber, None)
+
+    def __getfield_data1(self):
+        return self.__field_data1.getvalue()
+
+    def __setfield_data1(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_data1=value
+        else:
+            self.__field_data1=UNKNOWN(value,**{'sizeinbytes': 127})
+
+    def __delfield_data1(self): del self.__field_data1
+
+    data1=property(__getfield_data1, __setfield_data1, __delfield_data1, None)
+
+    def __getfield_ringtone(self):
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,UINT):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, None)
+
+    def __getfield_wallpaper(self):
+        return self.__field_wallpaper.getvalue()
+
+    def __setfield_wallpaper(self, value):
+        if isinstance(value,UINT):
+            self.__field_wallpaper=value
+        else:
+            self.__field_wallpaper=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_wallpaper(self): del self.__field_wallpaper
+
+    wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, None)
+
+    def __getfield_data2(self):
+        return self.__field_data2.getvalue()
+
+    def __setfield_data2(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_data2=value
+        else:
+            self.__field_data2=UNKNOWN(value,**{'sizeinbytes': 248})
+
+    def __delfield_data2(self): del self.__field_data2
+
+    data2=property(__getfield_data2, __setfield_data2, __delfield_data2, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('serial1', self.__field_serial1, None)
+        yield ('entrynumber', self.__field_entrynumber, None)
+        yield ('data1', self.__field_data1, None)
+        yield ('ringtone', self.__field_ringtone, None)
+        yield ('wallpaper', self.__field_wallpaper, None)
+        yield ('data2', self.__field_data2, None)
+
+
+
+
+class pbfile(BaseProtogenClass):
+    __fields=['items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(pbfile,self).__init__(**dict)
+        if self.__class__ is pbfile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(pbfile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(pbfile,kwargs)
+        if len(args):
+            dict2={ 'elementclass': pbfileentry }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_items=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_items=LIST(**{ 'elementclass': pbfileentry })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_items(self):
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': pbfileentry })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('items', self.__field_items, None)
 
 
 

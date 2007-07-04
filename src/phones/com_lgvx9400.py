@@ -39,11 +39,10 @@ class Phone(parentphone):
 
     my_model='VX9400'
 
-    # Joe Pham: defer this along with other LG patches.
-##    def __init__(self, logtarget, commport):
-##        parentphone.__init__(self, logtarget, commport)
-##        if self.my_model == 'VX9400':
-##            self._DM_vers = 5
+    def setDMversion(self):
+        self._DMv5=True
+        # T9MVZV02 takes about 30 seconds to kick out of DM
+        self._timer = 30
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8700.Profile

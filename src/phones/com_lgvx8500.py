@@ -63,30 +63,10 @@ class Phone(parentphone):
         ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
         )
 
-##    def __init__(self, logtarget, commport):
-##        parentphone.__init__(self, logtarget, commport)
-##        self._timeout=20
-
     def setDMversion(self):
         """Define the DM version required for this phone, default to DMv5"""
         _fw_version=self.get_firmware_version()[-1]
         self._DMv5=self.my_model=='VX8500' and _fw_version>'4'
-
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI.
-
-        Currently this is:
-
-          - 'uniqueserial'     a unique serial number representing the phone
-          - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
-
-        This method is called before we read phone data or before we
-        write phone data.
-        """
-        self.enter_DM()
-        return parentphone.getfundamentals(self, results)
 
     # Phonebook stuff-----------------------------------------------------------
     def _build_pb_info(self, fundamentals):

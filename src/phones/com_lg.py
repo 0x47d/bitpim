@@ -1614,23 +1614,21 @@ class LGDMPhone:
         # check for DMv5 applicability
         if self._DMv5 is None:
             self.setDMversion()
-        # enter DMv5
-        if self._DMv5:
-            try:
-                self._enter_DMv5()
-            except:
-                self._in_DM=False
-                if __debug__:
-                    raise
-                return
-        # enter DMv4
         try:
-            self._enter_DMv4()
+            if self._DMv5:
+                # enter DMv5
+                self._enter_DMv5()
+            else:
+                # enter DMv4
+                self._enter_DMv4()
             self._in_DM=True
         except:
+            self.log('Failed to transition to DM')
             self._in_DM=False
             if __debug__:
                 raise
+            return
+        
         self.log('Successfully transitioned to DM')
         # DM entered successfully, kick off the timer if specified
         if self._timeout:

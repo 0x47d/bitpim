@@ -782,20 +782,15 @@ class RealBrewProtocol:
         # Starting with the vx8100/9800 verizon started to block access to some file and directories
         # it reports a bad command packet as the error when it really means access denied
         if ord(data[0])==0x13:
-            if firsttwo[0]=="Y": # brew command
+            if firsttwo[0]=="Y" or firsttwo[0]=="\x4b": # brew command
                 raise BrewAccessDeniedException()
             else:
                 raise BrewBadBrewCommandException()
         if ord(data[0])==0x14:
             raise BrewMalformedBrewCommandException()
-        # the vx8300 returns yet another error for access denied (probably related to the new brew protocol)
-        if ord(data[0])==0x4b and ord(data[1])==0x04 and ord(data[2])==0x1c:
-            raise BrewAccessDeniedException()
-        # the lx550 returns yet another error for access denied listing directories (probably related to the new brew protocol)
-        if ord(data[0])==0x4b and ord(data[1])==0x0a and ord(data[2])==0x1c:
-            raise BrewAccessDeniedException()
-        # the lx550 returns yet another error for access denied listing files in a dir (probably related to the new brew protocol)
-        if ord(data[0])==0x4b and ord(data[1])==0x0b and ord(data[2])==0x1c:
+
+        # access denied error
+        if ord(data[0])==0x4b and ord(data[2])==0x1c:
             raise BrewAccessDeniedException()
 
         # parse data

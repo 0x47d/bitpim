@@ -59,7 +59,9 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
 
     def __init__(self, logtarget, commport):
         parentphone.__init__(self, logtarget, commport)
-        self._in_DM = False
+
+    def setDMversion(self):
+        self._DMv5=True
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI.
@@ -154,45 +156,8 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
         g.writetobuffer(buffer, logtitle="New group file")
         self.writefile("pim/pbgroup.dat", buffer.getvalue())
 
-    def is_mode_brew(self):
-        req=p_brew.memoryconfigrequest()
-        respc=p_brew.memoryconfigresponse
-
-        for baud in 0, 38400, 115200:
-            if baud:
-                if not self.comm.setbaudrate(baud):
-                    continue
-            try:
-                self.sendbrewcommand(req, respc, callsetmode=False)
-                return True
-            except com_phone.modeignoreerrortypes:
-                pass
-        return False
-
     def listsubdirs(self, dir='', recurse=0):
         return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories=1, files=0)
-
-    def listfiles(self, dir=''):
-        if self._in_DM==False and self.my_model=='VX8700':
-            # enter DM to enable file reading/writing
-            self.enter_DM()
-        return com_brew.RealBrewProtocol2.listfiles(self, dir)
-    
-    def enter_DM (self):
-        # request challenge
-        req = self.protocolclass.ULReq(unlock_key=0)
-        res = self.sendbrewcommand(req, self.protocolclass.ULRes)
-
-        # generate and send response
-        key = self.get_challenge_response(res.unlock_key);
-        req = self.protocolclass.ULReq(unlock_code=1, unlock_key=key)
-        res = self.sendbrewcommand(req, self.protocolclass.ULRes)
-
-        if res.unlock_ok == 1:
-            self.log('Phone is now in DM mode')
-            self._in_DM=True
-        else:
-            self.log('Failed to enter DM mode')
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile

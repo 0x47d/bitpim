@@ -30,6 +30,14 @@ class Phone(parentphone):
 
     my_model='VX8600'
 
+    def setDMversion(self):
+        _fw_version=self.get_firmware_version()[-1]
+        # T86VZV03 uses DMv5
+        self._DMv5=self.my_model=='VX8600' and _fw_version>'2'
+        if self._DMv5:
+            # takes about 30 seconds for T86VZV03 to kick out of DM
+            self._timeout = 30
+
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile
 class Profile(parentprofile):
