@@ -5,7 +5,7 @@ SCREENSHOT(deviceneedsattention.png,)
 
 <p>Something has gone wrong while talking to the phone.  The dialog
 gives the details.  If BitPim can't talk to your phone then you need
-to follow the instructions in <a href="trouble-serial.htd">port/serial
+to follow the instructions in <a href="trouble-serial.htm">port/serial
 trouble shooting</a>.
 
 <p>The most frequent issue for LG VX4400 users are the

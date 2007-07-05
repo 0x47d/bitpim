@@ -11,7 +11,7 @@ URL(http://support.susteen.com/ics/support/default.asp?deptID=2623,DataPilot)
 Other Sanyo drivers may not work with this phone.
 <h3>Linux</h3>
 <p>BitPim uses direct USB access to communicate with this phone under Linux.
-See the URL(howto-linuxusb.htd,Linux USB Setup Howto) for information
+See the URL(howto-linuxusb.htm,Linux USB Setup Howto) for information
 on setting up device permissions.
 </blockquote>
 

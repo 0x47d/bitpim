@@ -8,7 +8,7 @@ Note that some phones, such as many models from LG, can be accessed with
 a straight USB cable or a USB to serial cable.
 
 TABLE
-<tr><th>Manufacturer<th>Models<th>Vendor id<th>Product id</tr>
+<tr><th>Manufacturer</th><th>Models</th><th>Vendor id</th><th>Product id</th></tr>
 
 <tr valign="top">
 <td valign="top">Some OEM USB to serial cables
