@@ -12,12 +12,6 @@ from p_lg import *
 # below
 from p_lgvx9900 import *
 
-#Joe Pham: defer along with other LG patches.
-##from p_lgvx8500 import DMKeyReq
-##from p_lgvx8500 import DMKeyResp
-##from p_lgvx8500 import DMReq
-##from p_lgvx8500 import DMResp
-
 from p_lgvx8700 import ULReq, ULRes
 
 # We use LSB for all integer like fields
@@ -405,6 +399,99 @@ class scheduleevent(BaseProtogenClass):
         yield ('unknown3', self.__field_unknown3, None)
         yield ('unknown4', self.__field_unknown4, None)
         yield ('serial_number', self.__field_serial_number, None)
+
+
+
+
+class schedulefile(BaseProtogenClass):
+    __fields=['numactiveitems', 'events']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(schedulefile,self).__init__(**dict)
+        if self.__class__ is schedulefile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(schedulefile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(schedulefile,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_numactiveitems.writetobuffer(buf)
+        try: self.__field_events
+        except:
+            self.__field_events=LIST(**{'elementclass': scheduleevent})
+        self.__field_events.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_numactiveitems=UINT(**{'sizeinbytes': 2})
+        self.__field_numactiveitems.readfrombuffer(buf)
+        self.__field_events=LIST(**{'elementclass': scheduleevent})
+        self.__field_events.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_numactiveitems(self):
+        return self.__field_numactiveitems.getvalue()
+
+    def __setfield_numactiveitems(self, value):
+        if isinstance(value,UINT):
+            self.__field_numactiveitems=value
+        else:
+            self.__field_numactiveitems=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_numactiveitems(self): del self.__field_numactiveitems
+
+    numactiveitems=property(__getfield_numactiveitems, __setfield_numactiveitems, __delfield_numactiveitems, None)
+
+    def __getfield_events(self):
+        try: self.__field_events
+        except:
+            self.__field_events=LIST(**{'elementclass': scheduleevent})
+        return self.__field_events.getvalue()
+
+    def __setfield_events(self, value):
+        if isinstance(value,LIST):
+            self.__field_events=value
+        else:
+            self.__field_events=LIST(value,**{'elementclass': scheduleevent})
+
+    def __delfield_events(self): del self.__field_events
+
+    events=property(__getfield_events, __setfield_events, __delfield_events, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('numactiveitems', self.__field_numactiveitems, None)
+        yield ('events', self.__field_events, None)
 
 
 

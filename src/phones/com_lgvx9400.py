@@ -41,8 +41,8 @@ class Phone(parentphone):
 
     def setDMversion(self):
         self._DMv5=True
-        # T9MVZV02 takes about 30 seconds to kick out of DM
-        self._timer = 30
+        # T9MVZV02 takes about 15 seconds to kick out of DM
+        self._timer = 15
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8700.Profile

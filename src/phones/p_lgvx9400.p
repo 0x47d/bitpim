@@ -21,12 +21,6 @@ from p_lg import *
 # below
 from p_lgvx9900 import *
 
-#Joe Pham: defer along with other LG patches.
-##from p_lgvx8500 import DMKeyReq
-##from p_lgvx8500 import DMKeyResp
-##from p_lgvx8500 import DMReq
-##from p_lgvx8500 import DMResp
-
 from p_lgvx8700 import ULReq, ULRes
 
 # We use LSB for all integer like fields
@@ -70,6 +64,10 @@ PACKET scheduleevent:
     #   3            esn
     #   4            phone software version
     64  USTRING { 'default': '000000c9-00000000-00000000-T9MVZV02', 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } +serial_number
+
+PACKET schedulefile:
+    2 UINT numactiveitems
+    * LIST {'elementclass': scheduleevent} +events
 
 PACKET pbfileentry:
     4   UINT    serial1
