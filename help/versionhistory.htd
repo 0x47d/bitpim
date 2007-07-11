@@ -6,6 +6,7 @@
       <LI><P>Maintenance: Improved support for <B>LG VX-5300, VX-8500, VX8600,
       VX-8700, VX-9400.</B>
       <LI><P>Bug fix: <B>LG VX-9400</B> calendar support.
+      <lI><p>Improvement: Reading ringtones on RL4930 also reads voice memos
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>
