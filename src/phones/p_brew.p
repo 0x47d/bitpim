@@ -27,6 +27,18 @@ import com_brew
 DEFAULT_PHONE_ENCODING='ascii'
 PHONE_ENCODING=DEFAULT_PHONE_ENCODING
 
+# These parameters only work with BREW2 at the moment.
+# Note about read block size:
+#  - Largest successful read size: 1KB
+#  - The LG VX-8700 returns 1KB of data if req.bytes >= 1KB.
+#  - If all phones behave in this way it would be safe to change the default read size to 1KB.
+BREW_READ_SIZE=0xEB
+
+# Note about write block size:
+#  - Largest successful write size: 7.9kB
+#  - Too large a write block will cause a timeout error.
+BREW_WRITE_SIZE=0xEA
+
 %}
 
 # Note that we don't include the trailing CRC and 7f

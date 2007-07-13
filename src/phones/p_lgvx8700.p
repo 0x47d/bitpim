@@ -21,7 +21,9 @@ from p_lgvx8500 import t9udbfile
 UINT=UINTlsb
 BOOL=BOOLlsb
 
-BREW_FILE_SYSTEM=2
+BREW_FILE_SYSTEM = 2
+BREW_READ_SIZE = 0x400
+BREW_WRITE_SIZE = 0x1F00
 
 # Phonebook stuff
 RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
@@ -88,16 +90,3 @@ PACKET schedulefile:
     2 UINT numactiveitems
     * LIST {'elementclass': scheduleevent} +events
 
-PACKET ULReq:
-    ""
-    1 UINT { 'default': 0xFE } +cmd
-    1 UINT { 'default': 0x00 } +unlock_code
-    4 UINT unlock_key
-    1 UINT { 'default': 0x00 } +zero
-    
-PACKET ULRes:
-    ""
-    1 UINT cmd
-    1 UINT unlock_code
-    4 UINT unlock_key
-    1 UINT unlock_ok

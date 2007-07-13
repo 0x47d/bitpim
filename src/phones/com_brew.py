@@ -875,6 +875,10 @@ class RealBrewProtocol2:
             current_size=info['size']
         else:
             current_size=0
+        try:
+            block_size = self.protocolclass.BREW_WRITE_SIZE
+        except AttributeError:
+            block_size = p_brew.BREW_WRITE_SIZE
         # if the current file is longer than the new one we have to 
         # delete it because the write operation does not truncate it
         if exists and size<current_size:
@@ -891,8 +895,8 @@ class RealBrewProtocol2:
             while remain:
                 req=p_brew.new_writefilerequest()
                 req.handle=handle
-                if remain>243:
-                    req.bytes=243
+                if remain > block_size:
+                    req.bytes=block_size
                 else:
                     req.bytes=remain
                 req.position=size-remain
@@ -904,10 +908,8 @@ class RealBrewProtocol2:
                 if res.bytes!=req.bytes:
                     self.raisecommsexception("Brew file write error", common.CommsDataCorruption)
                 remain-=req.bytes
-        except Exception, e: # MUST close handle to file
+        finally: # MUST close handle to file
             self.closefile(handle)
-            raise Exception, e 
-        self.closefile(handle)
         self.progress(1,1,desc)
         end=time.time()
         if end-start>3:
@@ -922,6 +924,10 @@ class RealBrewProtocol2:
                 if _data:
                     return _data
                 self.log('Cache file corrupted and discarded')
+        try:
+            block_size = self.protocolclass.BREW_READ_SIZE
+        except AttributeError:
+            block_size = p_brew.BREW_READ_SIZE
         start=time.time()
         self.log("Getting file contents '"+file+"'")
         desc="Reading "+file
@@ -937,7 +943,7 @@ class RealBrewProtocol2:
                     self.progress(data.tell(), filesize, desc)
                 req=p_brew.new_readfilerequest()
                 req.handle=handle
-                req.bytes=0xEB
+                req.bytes=block_size
                 req.position=read
                 res=self.sendbrewcommand(req, p_brew.new_readfileresponse)
                 if res.bytes:
@@ -947,10 +953,8 @@ class RealBrewProtocol2:
                     break
                 if read==filesize:
                     break
-        except Exception, e: # MUST close handle to file
+        finally: # MUST close handle to file
             self.closefile(handle)
-            raise Exception, e 
-        self.closefile(handle)
         self.progress(1,1,desc)
         data=data.getvalue()
         # give the download speed if we got a non-trivial amount of data
@@ -995,9 +999,11 @@ class RealBrewProtocol2:
                     direntry=dir+"/"+res.entryname
                 else:
                     direntry=res.entryname
-                if files and res.type==0: # file
+                if files and (res.type == 0 or res.type == 0xf): # file or special file
                     results[direntry]={ 'name': direntry, 'type': 'file',
                                     'size': res.size }
+                    if res.type == 0xf:
+                        results[direntry]['locked'] = True
                     try:
                         if res.date<=0:
                             results[direntry]['date']=(0, "")
@@ -1005,20 +1011,16 @@ class RealBrewProtocol2:
                             results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
                     except:
                         results[direntry]['date']=(0, "")
-                elif directories and res.type: # directory
+                elif directories and res.type != 0 and res.type != 0xf: # directory
                     results[direntry]={ 'name': direntry, 'type': 'directory' }
                     if recurse>0:
                         dirs[count]=direntry
                         count+=1
-        except Exception, e: # we MUST close the handle regardless or we wont be able to list the filesystem
+        finally: # we MUST close the handle regardless or we wont be able to list the filesystem
             # reliably again without rebooting it
             req=p_brew.new_closedirectoryrequest()
             req.handle=handle
             res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
-            raise Exception, e
-        req=p_brew.new_closedirectoryrequest()
-        req.handle=handle
-        res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
         # recurse the subdirectories
         for i in range(count):
             results.update(self.getfilesystem(dirs[i], recurse-1))

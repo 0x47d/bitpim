@@ -121,6 +121,9 @@ class Phone(com_lgvx8100.Phone):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
         self.mode=self.MODENONE
 
+    def __del__(self):
+        pass
+
     def getcalendar(self,result):
         res={}
         # Read exceptions file first

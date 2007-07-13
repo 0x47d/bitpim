@@ -9,7 +9,7 @@
 
 %{
 
-"""Various descriptions of data specific to LG VX9900"""
+"""Various descriptions of data specific to LG VX9400"""
 
 from prototypes import *
 from prototypeslg import *
@@ -21,7 +21,9 @@ from p_lg import *
 # below
 from p_lgvx9900 import *
 
-from p_lgvx8700 import ULReq, ULRes
+BREW_FILE_SYSTEM = 2
+BREW_READ_SIZE = 0x400
+BREW_WRITE_SIZE = 0x1F00
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -79,3 +81,12 @@ PACKET pbfileentry:
 
 PACKET pbfile:
     * LIST { 'elementclass': pbfileentry } items
+
+PACKET PathIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': '' } +pathname
+
+PACKET PathIndexFile:
+    * LIST { 'elementclass': PathIndexEntry,
+             'createdefault': True,
+             'length': NUMPHONEBOOKENTRIES } +items

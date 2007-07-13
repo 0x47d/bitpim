@@ -72,6 +72,9 @@ class Phone(com_lgvx8100.Phone):
         com_lgvx4400.Phone.__init__(self,logtarget,commport)
         self.mode=self.MODENONE
 
+    def __del__(self):
+        pass
+
     my_model='VX5200'
 
     # Media stuff---------------------------------------------------------------

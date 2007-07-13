@@ -18,6 +18,18 @@ import com_brew
 DEFAULT_PHONE_ENCODING='ascii'
 PHONE_ENCODING=DEFAULT_PHONE_ENCODING
 
+# These parameters only work with BREW2 at the moment.
+# Note about read block size:
+#  - Largest successful read size: 1KB
+#  - The LG VX-8700 returns 1KB of data if req.bytes >= 1KB.
+#  - If all phones behave in this way it would be safe to change the default read size to 1KB.
+BREW_READ_SIZE=0xEB
+
+# Note about write block size:
+#  - Largest successful write size: 7.9kB
+#  - Too large a write block will cause a timeout error.
+BREW_WRITE_SIZE=0xEA
+
 class requestheader(BaseProtogenClass):
     "The bit in front on all Brew request packets"
     __fields=['commandmode', 'command']
@@ -1259,7 +1271,7 @@ class listdirectoriesresponse(BaseProtogenClass):
         if self.numentries>0:
             self.__field_datalen=UINT(**{'sizeinbytes': 2})
             self.__field_datalen.readfrombuffer(buf)
-            self.__field_items=LIST(**{'elementclass': _gen_p_brew_102, 'length': self.numentries})
+            self.__field_items=LIST(**{'elementclass': _gen_p_brew_114, 'length': self.numentries})
             self.__field_items.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1310,7 +1322,7 @@ class listdirectoriesresponse(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_items=value
         else:
-            self.__field_items=LIST(value,**{'elementclass': _gen_p_brew_102, 'length': self.numentries})
+            self.__field_items=LIST(value,**{'elementclass': _gen_p_brew_114, 'length': self.numentries})
 
     def __delfield_items(self): del self.__field_items
 
@@ -1329,7 +1341,7 @@ class listdirectoriesresponse(BaseProtogenClass):
 
 
 
-class _gen_p_brew_102(BaseProtogenClass):
+class _gen_p_brew_114(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['subdir']
 
@@ -1338,8 +1350,8 @@ class _gen_p_brew_102(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_brew_102,self).__init__(**dict)
-        if self.__class__ is _gen_p_brew_102:
+        super(_gen_p_brew_114,self).__init__(**dict)
+        if self.__class__ is _gen_p_brew_114:
             self._update(args,dict)
 
 
@@ -1348,7 +1360,7 @@ class _gen_p_brew_102(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_brew_102,self)._update(args,kwargs)
+        super(_gen_p_brew_114,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1356,7 +1368,7 @@ class _gen_p_brew_102(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_brew_102,kwargs)
+            self._complainaboutunusedargs(_gen_p_brew_114,kwargs)
         if len(args):
             dict2={ 'encoding': PHONE_ENCODING }
             dict2.update(kwargs)
