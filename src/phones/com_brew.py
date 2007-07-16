@@ -999,11 +999,9 @@ class RealBrewProtocol2:
                     direntry=dir+"/"+res.entryname
                 else:
                     direntry=res.entryname
-                if files and (res.type == 0 or res.type == 0xf): # file or special file
+                if files and res.type==0: # file or special file
                     results[direntry]={ 'name': direntry, 'type': 'file',
                                     'size': res.size }
-                    if res.type == 0xf:
-                        results[direntry]['locked'] = True
                     try:
                         if res.date<=0:
                             results[direntry]['date']=(0, "")
@@ -1011,7 +1009,7 @@ class RealBrewProtocol2:
                             results[direntry]['date']=(res.date, time.strftime("%x %X", time.localtime(res.date)))
                     except:
                         results[direntry]['date']=(0, "")
-                elif directories and res.type != 0 and res.type != 0xf: # directory
+                elif directories and res.type: # directory
                     results[direntry]={ 'name': direntry, 'type': 'directory' }
                     if recurse>0:
                         dirs[count]=direntry
