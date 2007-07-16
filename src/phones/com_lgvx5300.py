@@ -28,7 +28,7 @@ import copy
 import com_lgvx4400
 import p_brew
 import p_lgvx5300
-import com_lgvx8100
+import com_lgvx8300
 import com_brew
 import com_phone
 import com_lg
@@ -40,13 +40,15 @@ import memo
 import fileinfo
 import helpids
 
-class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
+parentphone=com_lgvx8300.Phone
+class Phone(parentphone):
     "Talk to the LG VX5300 cell phone"
 
     desc="LG-VX5300"
     helpid=helpids.ID_PHONE_LGVX5300
     protocolclass=p_lgvx5300
     serialsname='lgvx5300'
+    my_model='VX5300'
 
     external_storage_root='mmc1/'
 
@@ -74,60 +76,19 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
         ( 'video',      'dload/video.dat',    'brew/16452/mf', '',           100, 0x03, None),
         )
 
-    def __init__(self, logtarget, commport):
-        com_lgvx8100.Phone.__init__(self, logtarget, commport)
-        p_brew.PHONE_ENCODING=self.protocolclass.PHONE_ENCODING
-        self.mode=self.MODENONE
-
-    def get_esn(self, data=None):
-        # return the ESN of this phone
-        return self.get_brew_esn()
-
-    def get_detect_data(self, res):
-        com_lgvx8100.Phone.get_detect_data(self, res)
-        res[self.esn_file_key]=self.get_esn()
-
-    my_model='VX5300'
-
     def setDMversion(self):
         _fw_version=self.get_firmware_version()[-1]
         # T53VZV04 uses DMv5
         self._DMv5=self.my_model=='VX5300' and _fw_version>'3'
 
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI.
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGNewIndexedMedia2
+    #  - getringtoneindices  - LGNewIndexedMedia2
+    #  - DM Version          - T53VZV01 - T53VZV03: N/A, T53VZV04: 5
 
-        Currently this is:
-
-          - 'uniqueserial'     a unique serial number representing the phone
-          - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
-
-        This method is called before we read the phonebook data or before we
-        write phonebook data.
-        """
-
-        # use a hash of ESN and other stuff (being paranoid)
-        self.log("Retrieving fundamental phone information")
-        self.log("Phone serial number")
-        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
-        # now read groups
-        self.log("Reading group information")
-        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-        g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf, logtitle="Groups read")
-        groups={}
-        for i in range(len(g.groups)):
-            if len(g.groups[i].name): # sometimes have zero length names
-                groups[i]={'name': g.groups[i].name }
-        results['groups']=groups
-        self.getwallpaperindices(results)
-        self.getringtoneindices(results)
-        self.log("Fundamentals retrieved")
-        return results
-
-parentprofile=com_lgvx8100.Profile
+parentprofile=com_lgvx8300.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname

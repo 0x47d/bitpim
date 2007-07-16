@@ -93,20 +93,14 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         # use a hash of ESN and other stuff (being paranoid)
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
-        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
-        # now read groups
-        self.log("Reading group information")
-        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-        g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf, logtitle="Groups read")
-        groups={}
-        for i in range(len(g.groups)):
-            if len(g.groups[i].name): # sometimes have zero length names
-                groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
-        results['groups']=groups
+        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
+
+        self.getgroups(results)
         self.getwallpaperindices(results)
         self.getringtoneindices(results)
+
         self.log("Fundamentals retrieved")
+
         return results
 
     def savesms(self, result, merge):
@@ -415,6 +409,18 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         result['categories']=cats
         print "returning keys",result.keys()
         return pbook
+
+    def getgroups(self, results):
+        self.log("Reading group information")
+        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
+        g=self.protocolclass.pbgroups()
+        g.readfrombuffer(buf, logtitle="Groups read")
+        groups={}
+        for i in range(len(g.groups)):
+            if len(g.groups[i].name): # sometimes have zero length names
+                groups[i]={ 'icon': g.groups[i].icon, 'name': g.groups[i].name }
+        results['groups']=groups
+        return groups
 
     def savegroups(self, data):
         groups=data['groups']

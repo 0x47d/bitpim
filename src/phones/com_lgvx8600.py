@@ -38,6 +38,13 @@ class Phone(parentphone):
             # takes about 30 seconds for T86VZV03 to kick out of DM
             self._timeout = 30
 
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGUncountedIndexedMedia
+    #  - getrintoneindices   - LGUncountedIndexedMedia
+    #  - DM Version          - T86VZV01 - T86VZV02: 4, T86VZV03: 5
+
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile
 class Profile(parentprofile):
@@ -86,6 +93,9 @@ class Profile(parentprofile):
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
 ##        ('playlist', 'read', 'OVERWRITE'),
 ##        ('playlist', 'write', 'OVERWRITE'),
-        ('t9_udb', 'read', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
+        )
+    if __debug__:
+        _supportedsyncs+=(
+        ('t9_udb', 'read', 'OVERWRITE'),
         )

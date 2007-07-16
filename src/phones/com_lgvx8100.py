@@ -138,25 +138,14 @@ class Phone(com_lg.LGNewIndexedMedia2, com_lg.LGDMPhone, com_lgvx7000.Phone):
         # not sure what the 8100 requirements are, default to v4 only
         self._DMv5=False
 
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI.
+    # Fundamentals:
+    #  - get_esn             - /nvm/$ESN.SYS (same as LG VX-4400)
+    #  - getgroups           - defined below
+    #  - getwallpaperindices - LGNewIndexedMedia2
+    #  - getringtoneindices  - LGNewIndexedMedia2
+    #  - DM Version          - 4 to access brew/16452/lk/mr on newer firmwares
 
-        Currently this is:
-
-          - 'uniqueserial'     a unique serial number representing the phone
-          - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
-
-        This method is called before we read the phonebook data or before we
-        write phonebook data.
-        """
-        self.enter_DM()
-        # use a hash of ESN and other stuff (being paranoid)
-        self.log("Retrieving fundamental phone information")
-        self.log("Phone serial number")
-        results['uniqueserial']=sha.new(self.getfilecontents("nvm/$SYS.ESN")).hexdigest()
-        # now read groups
+    def getgroups(self, results):
         self.log("Reading group information")
         buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
         g=self.protocolclass.pbgroups()
@@ -166,10 +155,7 @@ class Phone(com_lg.LGNewIndexedMedia2, com_lg.LGDMPhone, com_lgvx7000.Phone):
             if len(g.groups[i].name): # sometimes have zero length names
                 groups[i]={'name': g.groups[i].name }
         results['groups']=groups
-        self.getwallpaperindices(results)
-        self.getringtoneindices(results)
-        self.log("Fundamentals retrieved")
-        return results
+        return groups
 
     def savegroups(self, data):
         groups=data['groups']

@@ -62,6 +62,13 @@ class Phone(com_lg.LGUncountedIndexedMedia, parentphone):
         # T99VZV02 uses DMv5
         self._DMv5=self.my_model=='VX9900' and _fw_version>'1'
 
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGUncountedIndexedMedia
+    #  - getrintoneindices   - LGUncountedIndexedMedia
+    #  - DM Version          - T99VZV01: N/A, T99VZV02: 5
+        
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx9800.Profile
 class Profile(parentprofile):

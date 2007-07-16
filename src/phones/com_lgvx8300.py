@@ -90,38 +90,12 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
 
     my_model='VX8300'
 
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI.
-
-        Currently this is:
-
-          - 'uniqueserial'     a unique serial number representing the phone
-          - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
-
-        This method is called before we read the phonebook data or before we
-        write phonebook data.
-        """
-
-        # use a hash of ESN and other stuff (being paranoid)
-        self.log("Retrieving fundamental phone information")
-        self.log("Phone serial number")
-        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
-        # now read groups
-        self.log("Reading group information")
-        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-        g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf, logtitle="Groups read")
-        groups={}
-        for i in range(len(g.groups)):
-            if len(g.groups[i].name): # sometimes have zero length names
-                groups[i]={'name': g.groups[i].name }
-        results['groups']=groups
-        self.getwallpaperindices(results)
-        self.getringtoneindices(results)
-        self.log("Fundamentals retrieved")
-        return results
+    # Fundamentals:
+    #  - get_esn             - Brew
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGUncountedIndexedMedia
+    #  - getringtoneindices  - LGUncountedIndexedMedia
+    #  - DM Version          - 4 to access brew/16452/lk/mr on newer firmwares
 
 parentprofile=com_lgvx8100.Profile
 class Profile(parentprofile):

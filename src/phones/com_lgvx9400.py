@@ -24,6 +24,7 @@ import commport
 import p_brew
 import helpids
 import com_lgvx8700
+import com_lgvx8100
 import p_lgvx9400
 
 #-------------------------------------------------------------------------------
@@ -43,6 +44,16 @@ class Phone(parentphone):
         self._DMv5=True
         # T9MVZV02 takes about 15 seconds to kick out of DM
         self._timer = 15
+
+    def getgroups(self, results):
+        return com_lgvx8100.getgroups (self, results)
+
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGUncountedIndexedMedia
+    #  - getringtoneindices  - LGUncountedIndexedMedia
+    #  - DM Version          - 5
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8700.Profile
@@ -84,6 +95,9 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
-        ('t9_udb', 'read', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
+        )
+    if __debug__:
+        _supportedsyncs+=(
+        ('t9_udb', 'read', 'OVERWRITE'),
         )

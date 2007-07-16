@@ -63,26 +63,10 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
     def setDMversion(self):
         self._DMv5=True
 
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI.
-
-        Currently this is:
-
-          - 'uniqueserial'     a unique serial number representing the phone
-          - 'groups'           the phonebook groups
-          - 'wallpaper-index'  map index numbers to names
-          - 'ringtone-index'   map index numbers to ringtone names
-
-        This method is called before we read the phonebook data or before we
-        write phonebook data.
-        """
-        if not self._in_DM:
-            self.enter_DM()
-        results = parentphone.getfundamentals(self, results)
-
-        if self.my_model=='VX8700':
-            self.getgroups(results)
-        return results
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getringtoneindices  - LGUncountedIndexedMedia
+    #  - getwallpaperindices - LGUncountedIndexedMedia
 
     # phonebook
     def _update_pb_file(self, pb, fundamentals, pbinfo):
@@ -203,6 +187,9 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
-        ('t9_udb', 'read', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
+        )
+    if __debug__:
+        _supportedsyncs+=(
+        ('t9_udb', 'read', 'OVERWRITE'),
         )

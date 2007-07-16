@@ -68,6 +68,13 @@ class Phone(parentphone):
         _fw_version=self.get_firmware_version()[-1]
         self._DMv5=self.my_model=='VX8500' and _fw_version>'4'
 
+    # Fundamentals:
+    #  - get_esn             - same as LG VX-8300
+    #  - getgroups           - same as LG VX-8100
+    #  - getwallpaperindices - LGUncountedIndexedMedia
+    #  - getrintoneindices   - LGUncountedIndexedMedia
+    #  - DM Version          - T85VZV01 - T85VZV04: 4, T85VZV05 - : 5
+
     # Phonebook stuff-----------------------------------------------------------
     def _build_pb_info(self, fundamentals):
         # build a dict of info to update pbentry
@@ -467,10 +474,13 @@ class Profile(parentprofile):
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
         ('playlist', 'read', 'OVERWRITE'),
         ('playlist', 'write', 'OVERWRITE'),
-        ('t9_udb', 'read', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
         )
-
+    if __debug__:
+        _supportedsyncs+=(
+        ('t9_udb', 'read', 'OVERWRITE'),
+        )
+   
     field_color_data={
         'phonebook': {
             'name': {
