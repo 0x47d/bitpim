@@ -250,7 +250,9 @@ class DetectPhone(object):
             if found_port is not None:
                 found_model=model
                 break
-        if found_port is None:
+        if found_port is None and using_port is None and using_model is None:
+            # if we're not looking for a specific model on a specific port,
+            # scan for other CDMA phone
             found_port, found_model=self.__check_for_other_cdma()
         if found_port is not None and found_model is not None:
             self.log('Found phone:'+found_model+' port:'+`found_port`)
