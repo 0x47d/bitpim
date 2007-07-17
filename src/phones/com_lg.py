@@ -106,11 +106,6 @@ class LGPhonebook:
         # turn it back to normal
         data=common.pppunescape(data)
 
-        if data[:2] != firsttwo:
-            # phonebook is busy
-            self.logdata("LG Phonebook busy response", data, None)
-            raise common.PhoneBookBusyException()
-
         # take off crc and terminator
         crc=data[-3:-1]
         data=data[:-3]
