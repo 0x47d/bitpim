@@ -10,6 +10,7 @@
       <LI><P>Improvement: Increase read/write data block size for <B>LG VX-8700/9400</B>.
       <LI><P>New phone support: <B>LG VX-8550</B>.
       <LI><P>Maintenance: Disable T9 User Database read.
+      <LI><P>Bug fix: BitPim fails to auto-detect when a phone is disconnected and a differnte model is connected.
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>
