@@ -8,7 +8,7 @@
       <LI><P>Bug fix: <B>LG VX-9400</B> calendar support.
       <lI><p>Improvement: Reading ringtones on RL4930 also reads voice memos
       <LI><P>Improvement: Increase read/write data block size for <B>LG VX-8700/9400</B>.
-      <LI><P>New phone support: <B>LG VX-8550</B>.
+      <LI><P>New phone support: <B>LG VX-8550</B> (initial).
       <LI><P>Maintenance: Disable T9 User Database read.
       <LI><P>Bug fix: BitPim fails to auto-detect when a phone is disconnected and a different model is connected.
     </ul>
