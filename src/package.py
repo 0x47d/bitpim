@@ -184,6 +184,8 @@ def ensureofficial():
 
 def getversion():
     return version.version
+def setversion(versionstring, vendorstring='Test'):
+    version.setversion(versionstring, vendorstring)
 
 import phones
 import encodings

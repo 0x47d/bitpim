@@ -26,6 +26,11 @@ release=0  # when rereleases of the same version happen, this gets incremented
 contact="The BitPim home page is at http://www.bitpim.org.  You can post any " \
          "questions or feedback to the mailing list detailed on that page." # where users are sent to contact with feedback
 
+# user defined version
+userdefined=False
+userversion=""
+uservendor=""
+
 svnrevision=0  # we don't know
 # were we frozen?
 f=__FROZEN__.split()
@@ -42,7 +47,12 @@ if vendor[1:].startswith("Id:"):
 _headurl="$HeadURL$".split()[1]
 # work out our version number
 _rp="https://bitpim.svn.sourceforge.net/svnroot/bitpim/releases/"
-if _headurl.startswith(_rp):
+
+if userdefined:
+    def isdevelopmentversion(): return True
+    version=userversion
+    vendor=uservendor
+elif _headurl.startswith(_rp):
     def isdevelopmentversion(): return False
     version=_headurl[len(_rp):].split("/")[0]
     if not vendor:
@@ -82,12 +92,40 @@ dqverstr=".".join([`x` for x in dqver])
 
 del x
 
-
-
 url="http://www.bitpim.org"
 
 description="BitPim "+versionstring
 copyright="(C) 2003-2006 Roger Binns and others - see http://www.bitpim.org"
+
+def setversion(versionstring, vendorstring='Test'):
+    """Set the version and vendor based on user's input"""
+    # my filename
+    myfilename=os.path.splitext(__file__)[0]+".py"
+    # update with new version and vendor
+    result=[]
+    if versionstring:
+        # user specifies a version
+        _versionflg='True'
+        _version=versionstring
+        _vendor=vendorstring
+    else:
+        _versionflg='False'
+        _version=_vendor=''
+    for line in file(myfilename, "rtU"):
+        if line.startswith('userversion'):
+            line='userversion="%s"\n'%_version
+        elif line.startswith('uservendor'):
+            line='uservendor="%s"\n'%_vendor
+        elif line.startswith('userdefined'):
+            line='userdefined=%s\n'%_versionflg
+        result.append(line)
+    file(myfilename, "wt").write("".join(result))
+    # python doesn't check .pyc/.pyo files correctly so we proactively delete them
+    for ext in (".pyc", ".pyo"):
+        try:
+            os.remove(os.path.splitext(__file__)[0]+ext)
+        except OSError:
+            pass
 
 def __freeze():
     # my filename
