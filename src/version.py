@@ -59,7 +59,7 @@ elif _headurl.startswith(_rp):
         vendor="official"
 else:
     def isdevelopmentversion(): return True
-    prefix="https://svn.sourceforge.com/svnroot/bitpim/"
+    prefix="https://bitpim.svn.sourceforge.net/svnroot/bitpim/"
     version="-".join(_headurl[len(prefix):].split("/")[:-2]) # -2 to prune off src/version.py
     del prefix
     # were we frozen?
