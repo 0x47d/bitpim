@@ -627,3 +627,89 @@ class T9USERDBBLOCK(prototypes.BaseProtogenClass):
                 buf.appendbyte((_weight&0xFF00)>>8)
                 buf.appendbytes(_entry['word'])
         self._bufferendoffset=buf.getcurrentoffset()
+
+class LGHEXPN(prototypes.DATA):
+    """ Phone numbers stored as hex. i.e. 0x5555551212f0 == 555-555-1212
+    """
+    def __init__(self, *args, **kwargs):
+        """A date/time as used in the LG calendar"""
+        super(LGHEXPN,self).__init__(*args, **kwargs)
+        self._update(args, kwargs)
+
+    def _update (self, args, kwargs):
+        for k in 'constant', 'default', 'value':
+            if kwargs.has_key(k):
+                kwargs[k]=self._string_to_lghexpn (kwargs[k])
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            args = (self._string_to_lghexpn (args[0]),)
+        else:
+            raise TypeError("Expected phone number string as arg")
+
+        super(LGHEXPN,self)._update(args, kwargs)
+
+    def _digit_to_char (self, digit):
+        if digit <= 0x09:
+            return chr (digit + ord('0'))
+        elif digit == 0x0A:
+            return '*'
+        elif digit == 0x0B:
+            return '#'
+        elif digit == 0x0C:
+            return 'W'
+        elif digit == 0x0D:
+            return 'P'
+        else:
+            # 0x0f is not an error
+            raise
+
+    def _char_to_digit (self, char):
+        if char >= '0' and char <= '9':
+            return ord(char) - ord('0')
+        elif char == '*':
+            return 0x0A
+        elif char == '#':
+            return 0x0B
+        elif char == 'W':
+            return 0x0C
+        elif char == 'P':
+            return 0x0D
+        else:
+            raise ValueError
+
+    def _string_to_lghexpn (self, pn):
+        val = ''
+        
+        byte = 0xf0
+        for i in range(0, len (pn)):
+            digit = self._char_to_digit (pn[i])
+            if i % 2:
+                val += chr(byte & (0xf0 | digit))
+                byte = 0xf0
+            else:
+                byte = (digit << 4) | 0x0f
+        # write terminating byte
+        val += chr(byte)
+
+        return val
+    
+    def getvalue(self):
+        """Unpack hex phone number
+
+        @rtype: string
+        @return: phone number
+        """
+        val=super(LGHEXPN,self).getvalue()
+        pn = ''
+        for byte in val:
+            fd = ord(byte) >> 4
+            sd = ord(byte) & 0x0f
+
+            try:
+                pn += self._digit_to_char(fd)
+                pn += self._digit_to_char(sd)
+            except:
+                # end of packed number, not an error
+                break
+        return pn
