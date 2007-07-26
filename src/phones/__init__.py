@@ -34,7 +34,12 @@ b_other='Other'
 b_audiovox='Audiovox'
 b_moto='Motorola'
 
-_phonedata= { 'LG-G4015': { 'module': 'com_lgg4015',
+_phonedata= { 'LG-AX8600': { 'module': 'com_lgax8600',
+	    		     'carrier': [c_alltel],
+			     'brand': b_lg,
+			     'helpid': None,
+	    		     },
+	      'LG-G4015': { 'module': 'com_lgg4015',
                             'carrier': [c_att],
                             'brand': b_lg,
                             'helpid': helpids.ID_PHONE_LGG4015,
