@@ -19,12 +19,12 @@ import copy
 import StringIO
 import getpass
 import sha,md5
-import zlib
+import gzip
 import base64
 import thread
 import Queue
 import shutil
-import time
+import platform
 
 # wx. modules
 import wx
@@ -154,7 +154,10 @@ class LogWindow(wx.Panel, widgets.BitPimWidget):
             self.theanalyser.Show()
             self.theanalyser.newdata(data)
             evt.Skip()
-            
+
+    def GetValue(self):
+        """return the log text"""
+        return self.tb.GetValue()
 
 
 ###
@@ -1133,15 +1136,18 @@ class ExceptionDialog(wx.Dialog):
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(self.maintext, 1, wx.EXPAND|wx.ALL, 5)
 
-        buttsizer=wx.GridSizer(1, 3)
+        buttsizer=wx.GridSizer(1, 4)
         buttsizer.Add(wx.Button(self, wx.ID_CANCEL, "Abort BitPim"), 0, wx.ALL, 10)
         buttsizer.Add(wx.Button(self, wx.ID_HELP, "Help"), 0, wx.ALL, 10)
         buttsizer.Add(wx.Button(self, wx.ID_OK, "Continue"), 0, wx.ALL, 10)
+        _id=wx.NewId()
+        buttsizer.Add(wx.Button(self, _id, "Create Trouble Report"), 0, wx.ALL, 10)
 
         vbs.Add(buttsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 5)
 
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.abort)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_EXCEPTION_DIALOG))
+        wx.EVT_BUTTON(self, _id, self.OnCreateReport)
         
         self.SetSizer(vbs)
         self._text=""
@@ -1163,6 +1169,126 @@ class ExceptionDialog(wx.Dialog):
         
     def getexceptiontext(self):
         return self._text
+
+    def OnCreateReport(self, _):
+        _dlg=CreateTroubleReportDialog(self.GetParent())
+        if _dlg.ShowModal()==wx.ID_OK:
+            try:
+                self._create_report(_dlg.GetValue())
+                _msg=wx.MessageDialog(self,
+                                      'Trouble Report created successfully!',
+                                      'BitPim Trouble Report', style=wx.OK)
+            except:
+                _msg=wx.MessageDialog(self,
+                                      'Failed to Create Trouble Report',
+                                      'Trouble Report Error',
+                                      style=wx.OK|wx.ICON_ERROR)
+            _msg.ShowModal()
+            _msg.Destroy()
+        _dlg.Destroy()
+    def _create_report(self, vals):
+        _s=gzip.GzipFile(vals['filename'], 'wb')
+        _s.write('BitPim Trouble Report\n')
+        _s.write(time.asctime()+'\n')
+        _s.write('BitPim Version: %s - %s\n'%(version.versionstring, version.vendor))
+        _s.write('Platorm: %s, Architecture: %s %s, Dist: %s %s %s\n'%\
+                    ((platform.platform(),)+platform.architecture()+\
+                     platform.dist()))
+        # phone model if available
+        try:
+            _model=self.GetParent().phonemodule.Phone.desc
+        except:
+            _model='Not Available'
+        _s.write('Phone Model: %s\n'%_model)
+        _s.write('Name: %s\n'%vals['name'])
+        _s.write('email: %s\n'%vals['email'])
+        _s.write('Description: %s\n'%vals['description'])
+        _s.write('Exception:\n%s\n'%self._text)
+        # write out log data if evailable
+        try:
+            _log=self.GetParent().tree.lw.GetValue()
+        except:
+            # don't care if we can't get the log
+            _log='Not Available'
+        _s.write('BitPim Log:\n%s\n'%_log)
+        # write out protocol data if available
+        try:
+            _log=self.GetParent().tree.lwdata.GetValue()
+        except:
+            _log='Not Available'
+        _s.write('BitPim Protocol Data:\n%s\n'%_log)
+        _s.close()
+
+class CreateTroubleReportDialog(wx.Dialog):
+
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, -1, 'BitPim Trouble Report',
+                          style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
+
+        gs=wx.GridBagSizer(10, 10)
+        gs.AddGrowableCol(1)
+        _width=300
+        _row=0
+        # Name
+        gs.Add( wx.StaticText(self, -1, "Name:"), pos=(_row,0),
+                flag=wx.ALIGN_CENTER_VERTICAL)
+        self._name=wx.TextCtrl(self, -1, '', size=(_width,-1))
+        gs.Add(self._name, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+        # email
+        gs.Add( wx.StaticText(self, -1, "email:"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self._email=wx.TextCtrl(self, -1, '', size=(_width,-1))
+        gs.Add(self._email, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+        # trouble report file name
+        gs.Add( wx.StaticText(self, -1, "File Name:"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self._filename=wx.TextCtrl(self, -1, '', size=(_width,-1))
+        gs.Add(self._filename, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _browseid=wx.NewId()
+        gs.Add(wx.Button(self, _browseid, 'Browse ...'), pos=(_row, 2),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+        # Trouble Description
+        gs.Add(wx.StaticText(self, -1, 'Trouble Description:'), pos=(_row, 0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self._desc=wx.TextCtrl(self, -1, '',
+                               style=wx.TE_MULTILINE|wx.TE_BESTWRAP,
+                               size=(_width, 100))
+        gs.Add(self._desc, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
+
+        # crud at the bottom
+        bs=wx.BoxSizer(wx.VERTICAL)
+        bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
+        bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
+        
+        but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
+        bs.Add(but, 0, wx.CENTER|wx.ALL, 10)
+
+        wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
+        wx.EVT_BUTTON(self, _browseid, self.OnBrowse)
+
+        self.SetSizer(bs)
+        self.SetAutoLayout(True)
+        bs.Fit(self)
+
+    def OnHelp(self, _):
+        wx.GetApp().displayhelpid(helpids.ID_TROUBLEREPORT)
+    def OnBrowse(self, _):
+        # how to select a source, default to select a file
+        dlg=wx.FileDialog(self, self._filename.GetValue(),
+                          style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
+                          wildcard='gzip files|*.gz')
+        if dlg.ShowModal()==wx.ID_OK:
+            self._filename.SetValue(dlg.GetPath())
+        dlg.Destroy()
+    def GetValue(self):
+        # return a dict of values of this dialog
+        return { 'name': self._name.GetValue(),
+                 'email': self._email.GetValue(),
+                 'filename': self._filename.GetValue(),
+                 'description': self._desc.GetValue(),
+                 }
 
 ###
 ###  Too much freaking effort for a simple statusbar.  Mostly copied from the demo.
