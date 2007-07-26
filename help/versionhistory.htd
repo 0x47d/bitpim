@@ -11,6 +11,7 @@
       <LI><P>New phone support: <B>LG VX-8550</B> (initial).
       <LI><P>Maintenance: Disable T9 User Database read.
       <LI><P>Bug fix: BitPim fails to auto-detect when a phone is disconnected and a different model is connected.
+      <LI><P>Improvement: Feature to allow users to automatically create trouble reports suitable for posting to the BitPim Development List or emailing to BitPim developers.
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>

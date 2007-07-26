@@ -18,6 +18,7 @@ BEGIN_TOC
     TOCITEM_0(Calendar Import Wizard,dialog-calimpwiz.htm)
     TOCITEM_0(Calendar Import Preset,dialog-calimppreset.htm)
     TOCITEM_0(Create New BitPim Data Storage,dialog-newdb.htm)
+    TOCITEM_0(Create Trouble Report,dialog-troublereport.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->
