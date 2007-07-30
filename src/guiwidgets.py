@@ -1221,6 +1221,7 @@ class ExceptionDialog(wx.Dialog):
 
 class CreateTroubleReportDialog(wx.Dialog):
 
+    _default_filename='bpbug.gz'
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, 'BitPim Trouble Report',
                           style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE)
@@ -1242,7 +1243,8 @@ class CreateTroubleReportDialog(wx.Dialog):
         _row+=1
         # trouble report file name
         gs.Add( wx.StaticText(self, -1, "File Name:"), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self._filename=wx.TextCtrl(self, -1, '', size=(_width,-1))
+        self._filename=wx.TextCtrl(self, -1, self._default_filename,
+                                   size=(_width,-1))
         gs.Add(self._filename, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         _browseid=wx.NewId()
         gs.Add(wx.Button(self, _browseid, 'Browse ...'), pos=(_row, 2),
@@ -1277,6 +1279,7 @@ class CreateTroubleReportDialog(wx.Dialog):
     def OnBrowse(self, _):
         # how to select a source, default to select a file
         dlg=wx.FileDialog(self, self._filename.GetValue(),
+                          defaultFile=self._filename.GetValue(),
                           style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
                           wildcard='gzip files|*.gz')
         if dlg.ShowModal()==wx.ID_OK:
