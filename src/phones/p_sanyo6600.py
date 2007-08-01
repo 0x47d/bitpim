@@ -25,7 +25,7 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
-MAXNUMBERLEN=32
+MAXNUMBERLEN=48
 MAXEMAILLEN=96
 MAXURLLEN=96
 MAXMEMOLEN=96
@@ -2721,7 +2721,7 @@ class numberrequest(BaseProtogenClass):
 
 
 class numberentry(BaseProtogenClass):
-    __fields=['contactp', 'numberlen', 'number', 'pad', 'pad2', 'numbertype']
+    __fields=['contactp', 'numberlen', 'number', 'pad', 'numbertype']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -2758,16 +2758,12 @@ class numberentry(BaseProtogenClass):
         self.__field_numberlen.writetobuffer(buf)
         try: self.__field_number
         except:
-            self.__field_number=USTRING(**{'sizeinbytes': 32, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_number=USTRING(**{'sizeinbytes': 48, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         self.__field_number.writetobuffer(buf)
         try: self.__field_pad
         except:
-            self.__field_pad=UNKNOWN(**{'sizeinbytes': 16})
+            self.__field_pad=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_pad.writetobuffer(buf)
-        try: self.__field_pad2
-        except:
-            self.__field_pad2=UNKNOWN(**{'sizeinbytes': 1})
-        self.__field_pad2.writetobuffer(buf)
         self.__field_numbertype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -2781,12 +2777,10 @@ class numberentry(BaseProtogenClass):
         self.__field_contactp.readfrombuffer(buf)
         self.__field_numberlen=UINT(**{'sizeinbytes': 1})
         self.__field_numberlen.readfrombuffer(buf)
-        self.__field_number=USTRING(**{'sizeinbytes': 32, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+        self.__field_number=USTRING(**{'sizeinbytes': 48, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         self.__field_number.readfrombuffer(buf)
-        self.__field_pad=UNKNOWN(**{'sizeinbytes': 16})
+        self.__field_pad=UNKNOWN(**{'sizeinbytes': 1})
         self.__field_pad.readfrombuffer(buf)
-        self.__field_pad2=UNKNOWN(**{'sizeinbytes': 1})
-        self.__field_pad2.readfrombuffer(buf)
         self.__field_numbertype=UINT(**{'sizeinbytes': 1})
         self.__field_numbertype.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2821,14 +2815,14 @@ class numberentry(BaseProtogenClass):
     def __getfield_number(self):
         try: self.__field_number
         except:
-            self.__field_number=USTRING(**{'sizeinbytes': 32, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_number=USTRING(**{'sizeinbytes': 48, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
         return self.__field_number.getvalue()
 
     def __setfield_number(self, value):
         if isinstance(value,USTRING):
             self.__field_number=value
         else:
-            self.__field_number=USTRING(value,**{'sizeinbytes': 32, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
+            self.__field_number=USTRING(value,**{'sizeinbytes': 48, 'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None})
 
     def __delfield_number(self): del self.__field_number
 
@@ -2837,34 +2831,18 @@ class numberentry(BaseProtogenClass):
     def __getfield_pad(self):
         try: self.__field_pad
         except:
-            self.__field_pad=UNKNOWN(**{'sizeinbytes': 16})
+            self.__field_pad=UNKNOWN(**{'sizeinbytes': 1})
         return self.__field_pad.getvalue()
 
     def __setfield_pad(self, value):
         if isinstance(value,UNKNOWN):
             self.__field_pad=value
         else:
-            self.__field_pad=UNKNOWN(value,**{'sizeinbytes': 16})
+            self.__field_pad=UNKNOWN(value,**{'sizeinbytes': 1})
 
     def __delfield_pad(self): del self.__field_pad
 
     pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
-
-    def __getfield_pad2(self):
-        try: self.__field_pad2
-        except:
-            self.__field_pad2=UNKNOWN(**{'sizeinbytes': 1})
-        return self.__field_pad2.getvalue()
-
-    def __setfield_pad2(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_pad2=value
-        else:
-            self.__field_pad2=UNKNOWN(value,**{'sizeinbytes': 1})
-
-    def __delfield_pad2(self): del self.__field_pad2
-
-    pad2=property(__getfield_pad2, __setfield_pad2, __delfield_pad2, None)
 
     def __getfield_numbertype(self):
         return self.__field_numbertype.getvalue()
@@ -2887,7 +2865,6 @@ class numberentry(BaseProtogenClass):
         yield ('numberlen', self.__field_numberlen, None)
         yield ('number', self.__field_number, None)
         yield ('pad', self.__field_pad, None)
-        yield ('pad2', self.__field_pad2, None)
         yield ('numbertype', self.__field_numbertype, None)
 
 

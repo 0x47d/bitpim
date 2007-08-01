@@ -34,7 +34,7 @@ _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
-MAXNUMBERLEN=32
+MAXNUMBERLEN=48
 MAXEMAILLEN=96
 MAXURLLEN=96
 MAXMEMOLEN=96
@@ -171,9 +171,8 @@ PACKET numberrequest:
 PACKET numberentry:
     2 UINT contactp "Pointer to contact number belongs"
     1 UINT numberlen
-    32 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +number
-    16 UNKNOWN +pad
-    1 UNKNOWN +pad2
+    48 USTRING {'default': "", 'raiseonunterminatedread': False, 'raiseontruncate': False, 'terminator': None} +number
+    1 UNKNOWN +pad
     1 UINT numbertype
     
 PACKET numberresponse:

@@ -12,6 +12,8 @@
       <LI><P>Maintenance: Disable T9 User Database read.
       <LI><P>Bug fix: BitPim fails to auto-detect when a phone is disconnected and a different model is connected.
       <LI><P>Improvement: Feature to allow users to automatically create trouble reports suitable for posting to the BitPim Development List or emailing to BitPim developers.
+      <li><p>Improvement: <b>Sanyo SCP-6600</b> Change maximum phone number
+		length from 32 to 48 digits.
       <LI><P>New phone support: <B>LG AX-8600</B> (initial).
     </ul>
 
