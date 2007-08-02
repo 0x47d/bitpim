@@ -1052,3 +1052,183 @@ class schedulefile(BaseProtogenClass):
 
 
 
+class textmemo(BaseProtogenClass):
+    __fields=['text', 'memotime']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(textmemo,self).__init__(**dict)
+        if self.__class__ is textmemo:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(textmemo,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(textmemo,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_text.writetobuffer(buf)
+        self.__field_memotime.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_text=USTRING(**{'sizeinbytes': 301, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+        self.__field_text.readfrombuffer(buf)
+        self.__field_memotime=LGCALDATE(**{'sizeinbytes': 4})
+        self.__field_memotime.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_text(self):
+        return self.__field_text.getvalue()
+
+    def __setfield_text(self, value):
+        if isinstance(value,USTRING):
+            self.__field_text=value
+        else:
+            self.__field_text=USTRING(value,**{'sizeinbytes': 301, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+
+    def __delfield_text(self): del self.__field_text
+
+    text=property(__getfield_text, __setfield_text, __delfield_text, None)
+
+    def __getfield_memotime(self):
+        return self.__field_memotime.getvalue()
+
+    def __setfield_memotime(self, value):
+        if isinstance(value,LGCALDATE):
+            self.__field_memotime=value
+        else:
+            self.__field_memotime=LGCALDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_memotime(self): del self.__field_memotime
+
+    memotime=property(__getfield_memotime, __setfield_memotime, __delfield_memotime, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('text', self.__field_text, None)
+        yield ('memotime', self.__field_memotime, None)
+
+
+
+
+class textmemofile(BaseProtogenClass):
+    __fields=['itemcount', 'items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(textmemofile,self).__init__(**dict)
+        if self.__class__ is textmemofile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(textmemofile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(textmemofile,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_itemcount.writetobuffer(buf)
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': textmemo })
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_itemcount=UINT(**{'sizeinbytes': 4})
+        self.__field_itemcount.readfrombuffer(buf)
+        self.__field_items=LIST(**{ 'elementclass': textmemo })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_itemcount(self):
+        return self.__field_itemcount.getvalue()
+
+    def __setfield_itemcount(self, value):
+        if isinstance(value,UINT):
+            self.__field_itemcount=value
+        else:
+            self.__field_itemcount=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_itemcount(self): del self.__field_itemcount
+
+    itemcount=property(__getfield_itemcount, __setfield_itemcount, __delfield_itemcount, None)
+
+    def __getfield_items(self):
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': textmemo })
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': textmemo })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('itemcount', self.__field_itemcount, None)
+        yield ('items', self.__field_items, None)
+
+
+
+

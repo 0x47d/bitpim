@@ -90,3 +90,10 @@ PACKET schedulefile:
     2 UINT numactiveitems
     * LIST {'elementclass': scheduleevent} +events
 
+PACKET textmemo:
+    301 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    4 LGCALDATE memotime # time the memo was writen LG time
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items

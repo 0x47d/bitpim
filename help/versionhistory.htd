@@ -15,6 +15,7 @@
       <li><p>Improvement: <b>Sanyo SCP-6600</b> Change maximum phone number
 		length from 32 to 48 digits.
       <LI><P>New phone support: <B>LG AX-8600</B> (initial).
+      <LI><P>Improvement: <B>LG VX-8700</B> memo support.
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>
