@@ -11,11 +11,13 @@
       <LI><P>New phone support: <B>LG VX-8550</B> (initial).
       <LI><P>Maintenance: Disable T9 User Database read.
       <LI><P>Bug fix: BitPim fails to auto-detect when a phone is disconnected and a different model is connected.
-      <LI><P>Improvement: Feature to allow users to automatically create trouble reports suitable for posting to the BitPim Development List or emailing to BitPim developers.
+      <LI><P>Improvement: Feature to allow users to automatically create trouble reports suitable for posting to the BitPim Developer List or emailing to BitPim developers.
       <li><p>Improvement: <b>Sanyo SCP-6600</b> Change maximum phone number
 		length from 32 to 48 digits.
       <LI><P>New phone support: <B>LG AX-8600</B> (initial).
       <LI><P>Improvement: <B>LG VX-8700</B> memo support.
+      <LI><P>Bug fix: <B>Samsung SCH-A930/A950</B>: Calendar time off by 1 hour (again!).
+      <LI><P>Bug fix: Float file timestamp values raised exception.
     </ul>
 
    <h2><a name="1.0.0">Changes in 1.0.0</a></h2>
