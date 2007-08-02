@@ -144,8 +144,10 @@ class MediaEntry(object):
     def _get_timestamp(self):
         return self._data.get('timestamp', None)
     def _set_timestamp(self, v):
-        if v is not None and not isinstance(v, int):
-            raise TypeError('duration property is an int arg')
+        if v is not None:
+            if not isinstance(v, (int, float)):
+                raise TypeError('timestamp property is an int arg')
+            v=int(v)
         self._set_or_del('timestamp', v)
     timestamp=property(fget=_get_timestamp, fset=_set_timestamp)
 
