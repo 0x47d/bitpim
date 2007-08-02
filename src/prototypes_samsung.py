@@ -40,11 +40,11 @@ class DateTime(prototypes.UINTlsb):
         self._complainaboutunusedargs(DateTime, kwargs)
         assert self._sizeinbytes==4
 
-    _time_delta=315529200.0
+    _time_delta=315514800.0
     def _converttoint(self, date):
         assert len(date)==5
         _timetuple=datetime.datetime(*date).timetuple()[:-1]+(DateTime._daylight,)
-        return int(time.mktime(_timetuple)-self._time_delta)
+        return int(calendar.timegm(_timetuple)-self._time_delta)
 
     def getvalue(self):
         """Unpack 32 bit value into date/time
@@ -52,7 +52,7 @@ class DateTime(prototypes.UINTlsb):
         @return: (year, month, day, hour, minute)
         """
         val=super(DateTime, self).getvalue()
-        return time.localtime(val+self._time_delta)[:5]
+        return time.gmtime(val+self._time_delta)[:5]
 
 class DateTime1(DateTime):
     # similar to DateTime, except getvalue includes seconds
