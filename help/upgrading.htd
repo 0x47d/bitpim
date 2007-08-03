@@ -1,9 +1,5 @@
 #include "pagestart.h"
 
-<p><b>Note</b>  The current versions of 0.7 development series do not
-upgrade the 0.6 data.  You need to delete the data before running 0.7.
-As 0.7 nears it final release code will be added to do the upgrade.
-
 <h2>Windows</h2>
 
 <p>You can safely upgrade to newer versions of BitPim.  When downgrading to
@@ -13,7 +9,7 @@ not understand the newer data formats - default <code>My Documents\\BitPim</code
 
 <h2>Linux</h2>
 
-<p>Install newer and older RPMs as you see fit.  When downgrading from
+<p>Install newer and older RPMs as you see fit.  When downgrading to
 older versions, you  must also
 delete the contents of the data directory as the older versions do
 not understand the newer data formats - default <code>$HOME/.bitpim-files</Code>

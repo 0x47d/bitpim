@@ -16,7 +16,6 @@ and form.</font>
 
 <h2>Releases</h2>
 
-<p>There is a new BitPim release approximately once a month.  It incorporates new phone model support, new functionality and 
-bug fixes.
+<p>There is a new BitPim release approximately once a month.  It incorporates new phone model support, new functionality and bug fixes.  In between official BitPim releases, there are incremental test releases that are available approximately once a week.  These test releases offer an opportunity for users and developers to try and test the upcoming bug fixes, new features, and new phone support, and provide feedbacks to the developers.  The goal is to reduce the risk of having new bugs and surprises with the official releases.
 
 #include "pageend.h"

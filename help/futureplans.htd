@@ -1,9 +1,5 @@
 #include "pagestart.h"
 
-<h2>Version 0.9</h2>
-
-<p>The focus of version 0.9 is to fix all known major bugs, complete the development of all basic BitPim features, and ensure that the help files are up-to-date and accurate.
-
 <h2>Next version</h2>
 
 <p>The focus for the following version is to improve and optimize the stability, performance, and the GUI of BitPim.  Adding support to new phones is considered an ongoing task based on the availability of those phones.
