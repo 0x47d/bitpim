@@ -37,7 +37,7 @@ b_moto='Motorola'
 _phonedata= { 'LG-AX8600': { 'module': 'com_lgax8600',
 	    		     'carrier': [c_alltel],
 			     'brand': b_lg,
-			     'helpid': None,
+			     'helpid': helpids.ID_PHONE_LGAX8600,
 	    		     },
 	      'LG-G4015': { 'module': 'com_lgg4015',
                             'carrier': [c_att],

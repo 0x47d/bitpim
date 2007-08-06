@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">367</long>
+    <long name="name_counter">369</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
     <string name="description">""</string>
-    <long name="doc_count">294</long>
+    <long name="doc_count">295</long>
     <long name="use-preprocessor">1</long>
     <long name="use-c-style-comments">0</long>
     <long name="auto-generate-filenames">1</long>
@@ -1548,6 +1548,24 @@
             <long name="is-visible-in-contents">1</long>
             <long name="is-default-page">0</long>
             <string name="topic-name">""</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+          </document>
+          <document>
+            <string name="title">"LG AX-8600"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lgax8600.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"6/8/2007"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_PHONE_LGAX8600"</string>
             <long name="use-header-footer">1</long>
             <long name="page-break">1</long>
           </document>

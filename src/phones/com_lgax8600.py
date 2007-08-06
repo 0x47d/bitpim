@@ -51,7 +51,7 @@ class Phone(parentphone):
     "Talk to LG AX-8600 cell phone"
 
     desc="LG-AX8600"
-    helpid=None
+    helpid=helpids.ID_PHONE_LGAX8600
     protocolclass=p_lgax8600
     serialsname='lgax8600'
 

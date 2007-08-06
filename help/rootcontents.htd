@@ -102,6 +102,7 @@ BEGIN_TOC
         TOCITEM_1(What phones do the developers have?,phones-developer.htm)
         TOCITEM_1(What phones do the developers want?,phones-requested.htm)
         TOCITEM_1(Audiovox CDM8900,phone-audiovoxcdm8900.htm)
+        TOCITEM_1(LG AX-8600,phone-lgax8600.htm)
         TOCITEM_1(LG C2000,phone-lgc2000.htm)
             TOC_2
             TOCITEM_2(Cables,lgc2000-cables.htm)
