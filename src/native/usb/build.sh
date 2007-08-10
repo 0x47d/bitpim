@@ -1,4 +1,4 @@
-PYTHONVER=python2.3
+PYTHONVER=python2.5
 INCLUDEDIR=`$PYTHONVER -c "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"`
 
 swig -python -I/usr/include libusb.i

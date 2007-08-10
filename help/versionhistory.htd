@@ -2,7 +2,10 @@
 
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>
     <ul>
-      <LI><P>
+      <LI><P>Maintenance: upgrade to Python 2.5.1
+      <LI><P>Maintenance: Upgrade to SQLITE 3.4.1
+      <LI><P>Maintenance: Upgrade to paramiko 2.7.1 (Amy)
+      <LI><P>Improvement: List software components used by BitPim in the <B>About Dialog</B>.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>

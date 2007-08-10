@@ -29,8 +29,8 @@ def sanitycheck():
     print "  OK"
 
     print "python version",
-    if sys.version_info[:2]!=(2,3):
-       raise Exception("Should be  Python 2.3 - this is "+sys.version)
+    if sys.version_info[:2]!=(2,5):
+       raise Exception("Should be  Python 2.5 - this is "+sys.version)
     print "  OK"
 
     print "wxPython version",
