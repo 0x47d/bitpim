@@ -36,7 +36,7 @@ def sanitycheck():
     print "wxPython version",
     import wx
     if wx.VERSION[:4]!=(2,8,4,0):
-        raise Exception("Should be wxPython 2.6.3.3.  This is "+`wx.VERSION`)
+        raise Exception("Should be wxPython 2.8.4.0.  This is "+`wx.VERSION`)
     print "  OK"
 
     print "wxPython is unicode build",
@@ -57,7 +57,7 @@ def sanitycheck():
     print "  OK"
 
     print "paramiko version",
-    expect='1.7 (zubat)'
+    expect='1.7.1 (Amy)'
     import paramiko
     if paramiko.__version__!=expect:
         raise Exception("Should be %s version of paramiko - you have %s" % (expect, paramiko.__version__))
@@ -79,7 +79,7 @@ def sanitycheck():
     print "  OK"
 
     print "sqlite",
-    ver="3.3.17"
+    ver="3.4.1"
     if apsw.sqlitelibversion()!=ver:
         raise Exception("Should be sqlite version %s - you have %s" % (ver, apsw.sqlitelibversion()))
     print "  OK"
