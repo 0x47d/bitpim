@@ -36,6 +36,7 @@ import wx.lib.stattext as stattext
 from wx.lib.masked import NumCtrl
 
 # my modules
+import apsw
 import common
 import version
 import helpids
@@ -55,6 +56,7 @@ import phones
 import setphone_wizard
 import data_recording
 import xyaptu
+import serial
 
 ###
 ### BitFling cert stuff
@@ -2079,14 +2081,40 @@ _description="""    BitPim is a program that allows you to view and manipulate d
     Filesystem for most Qualcomm CDMA chipset based phones. To see when phones will
     be supported, which ones are already supported and which features are supported,
     see online help.
+    
+[%s]
 """
+def _component_string():
+    """return a CSV string of various software components being used by BitPim"""
+    _res=[]
+    _str=[]
+    # Python version
+    _str.append('Python %s'%sys.version.split()[0])
+    _str.append('wxPython %s'%wx.version())
+    _res.append(', '.join(_str))
+    _str=[]
+    _str.append('APSW %s'%apsw.apswversion())
+    _str.append('SQLITE %s'%apsw.sqlitelibversion())
+    _res.append(', '.join(_str))
+    _str=[]
+    _str.append('serial %s'%serial.VERSION)
+    # pywin32 version
+    try:
+        _pywin32ver=file(os.path.join(sys.prefix,'lib','site-packages', 'pywin32.version.txt'),
+                         'rt').read()[:-1]        
+        _str.append('pywin32 %s'%_pywin32ver)
+    except:
+        pass
+    _res.append(', '.join(_str))
+    return '\n'.join(_res)
+
 def show_about_dlg(parent):
     global _license, _copyright, _description
     info = wx.AboutDialogInfo()
     info.Name = "BitPim"
     info.Version = version.versionstring+" - "+version.vendor
     info.Copyright=_copyright
-    info.Description = _description
+    info.Description = _description%_component_string()
     info.WebSite = ("http://www.bitpim.org", "www.bitpim.org")
     info.Developers = [ "Roger Binns",
                         "Joe Pham",
