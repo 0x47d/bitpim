@@ -4,7 +4,8 @@
     <ul>
       <LI><P>Maintenance: upgrade to Python 2.5.1
       <LI><P>Maintenance: Upgrade to SQLITE 3.4.1
-      <LI><P>Maintenance: Upgrade to paramiko 2.7.1 (Amy)
+      <LI><P>Maintenance: Upgrade to paramiko 1.7.1 (Amy)
+      <LI><P>Maintenance: Upgrade to wxPython 2.8.4.2
       <LI><P>Improvement: List software components used by BitPim in the <B>About Dialog</B>.
     </ul>
 
