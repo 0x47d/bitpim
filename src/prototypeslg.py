@@ -241,9 +241,9 @@ class GPSDATE(prototypes.UINTlsb):
     def _converttoint(self, date):
         assert len(date)==6
         return calendar.timegm(date)-self._time_t_ofs
-    def _now():
+    @classmethod
+    def now(_):
         return time.gmtime()[:6]
-    now=staticmethod(_now)
 
 class GSMCALDATE(prototypes.CSVSTRING):
     """ Represent date string with format "YYMMDD*"

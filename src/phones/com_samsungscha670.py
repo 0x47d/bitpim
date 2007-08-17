@@ -733,8 +733,6 @@ class Phone(com_samsung.Phone):
 
     getmedia=None
 
-    detectphone=staticmethod(parent_phone._detectphone)
-
 class Profile(com_samsung.Profile):
 
     serialsname='scha670'

@@ -114,9 +114,9 @@ class BaseEvent(object):
     def broadcast(self):
         # broadcast this event
         pubsub.publish(pubsub.NEW_DATA_AVAILABLE, data=self)
-    def _bind(func):
+    @classmethod
+    def bind(_, func):
         pubsub.subscribe(func, pubsub.NEW_DATA_AVAILABLE)
-    bind=staticmethod(_bind)
 
 #-------------------------------------------------------------------------------
 class TodayCalendarEvent(BaseEvent):

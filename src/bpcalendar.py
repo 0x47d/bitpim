@@ -865,14 +865,15 @@ class CalendarEntry(object):
             alarm_str='%d:%02d'%(self.alarm/60, self.alarm%60)
         return [t0, '', t1, self.description, rp_str, alarm_str]
     print_data=property(fget=_get_print_data)
-    def cmp_by_time(a, b):
+    @classmethod
+    def cmp_by_time(cls, a, b):
         """ compare 2 objects by start times.
         -1 if a<b, 0 if a==b, and 1 if a>b
         allday is always less than having start times.
         Mainly used for sorting list of events
         """
-        if not isinstance(a, CalendarEntry) or \
-           not isinstance(b, CalendarEntry):
+        if not isinstance(a, cls) or \
+           not isinstance(b, cls):
             raise TypeError, 'must be a CalendarEntry object'
         if a.allday and b.allday:
             return 0
@@ -888,7 +889,6 @@ class CalendarEntry(object):
             return 0
         if t0>t1:
             return 1
-    cmp_by_time=staticmethod(cmp_by_time)
 
     def _summary(self):
         # provide a one-liner summary string for this event

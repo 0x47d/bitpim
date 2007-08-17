@@ -898,8 +898,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             s=res.get(self.esn_file_key, None)
             if s:
                 res['esn']=self.get_esn(s)
-
-    def detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not likely_ports:
             # cannot detect any likely ports
             return None
@@ -926,8 +926,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
                 if __debug__:
                     raise
     
-    detectphone=staticmethod(detectphone)
-
     # Calendar stuff------------------------------------------------------------
     def getcalendar(self,result):
         # Read exceptions file first

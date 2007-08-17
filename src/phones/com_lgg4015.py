@@ -269,7 +269,8 @@ class Phone(com_etsi.Phone):
         r['firmware_version']=self.get_firmware_version()
         r['esn']=self.get_sim_id()
 
-    def _detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not len(likely_ports):
             return None
         for port in likely_ports:
@@ -292,7 +293,6 @@ class Phone(com_etsi.Phone):
                 # this port is not available
                 if __debug__:
                     raise
-    detectphone=staticmethod(_detectphone)
 
     # Phonebook stuff-----------------------------------------------------------
     def _build_bp_entry(self, entry, groups, in_sim=False):

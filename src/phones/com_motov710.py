@@ -615,7 +615,8 @@ class Phone(com_moto_cdma.Phone):
         return fundamentals
 
     # Phone Detection routine
-    def _detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         for port in likely_ports:
             _model=res.get(port, {}).get('model', None)
             if _model==_module.Profile.phone_model:
@@ -639,7 +640,6 @@ class Phone(com_moto_cdma.Phone):
                     _comm.close()
                     if __debug__:
                         raise
-    detectphone=staticmethod(_detectphone)
     
 #------------------------------------------------------------------------------
 parentprofile=com_moto_cdma.Profile

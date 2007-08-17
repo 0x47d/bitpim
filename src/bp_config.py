@@ -68,7 +68,7 @@ class Config(ConfigParser.ConfigParser):
     def _expand(self, key):
         # return a tuple of (section, option) based on the key
         _l=key.split('/')
-        return (len(_l)>1 and '/'.join(_l[:-1]) or 'DEFAULT', _l[-1])
+        return ('/'.join(_l[:-1]) if len(_l)>1 else 'DEFAULT', _l[-1])
         
     def _check_section(self, section):
         if section and section!='DEFAULT' and not self.has_section(section):

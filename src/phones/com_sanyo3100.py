@@ -93,7 +93,8 @@ class Phone(com_sanyo8300.Phone):
             if __debug__:
                 raise
 
-    def detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not likely_ports:
             # cannot detect any likely ports
             return None
@@ -116,8 +117,6 @@ class Phone(com_sanyo8300.Phone):
 
     my_model='SCP-3100/US'
     my_manufacturer='SANYO'
-
-    detectphone=staticmethod(detectphone)
 
 parentprofile=com_sanyo8300.Profile
 class Profile(parentprofile):

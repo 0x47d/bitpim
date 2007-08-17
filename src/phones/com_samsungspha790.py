@@ -223,9 +223,10 @@ class Phone(parentphone):
 
     getringtones=NotImplemented
 
-    def _detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         pass
-    detectphone=staticmethod(_detectphone)
+
 #-------------------------------------------------------------------------------
 parentprofile=com_samsung_packet.Profile
 class Profile(parentprofile):

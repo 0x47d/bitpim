@@ -437,7 +437,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         res['esn']=self.comm.sendatcommand('+GSN')[0][2:] # strip off the 0x
         return
 
-    def detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not likely_ports:
             # cannot detect any likely ports
             return None
@@ -462,8 +463,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 if __debug__:
                     raise
     
-    detectphone=staticmethod(detectphone)
-        
 class Profile(com_phone.Profile):
 
     protocolclass=Phone.protocolclass

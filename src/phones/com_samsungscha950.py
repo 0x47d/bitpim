@@ -690,8 +690,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         except:
             if __debug__:
                 raise
-
-    def detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not likely_ports:
             # cannot detect any likely ports
             return None
@@ -717,8 +717,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 if __debug__:
                     raise
     
-    detectphone=staticmethod(detectphone)
-
     #Phonebook stuff------------------------------------------------------------
     def _del_private_dicts(self, fundamentals):
         # delete the stuff that we created

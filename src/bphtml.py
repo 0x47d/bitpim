@@ -456,7 +456,8 @@ class Renderer:
     _bmp=None
     _hdc=None
 
-    def getbestsize(html, basepath, font, size):
+    @classmethod
+    def getbestsize(_, html, basepath, font, size):
         if Renderer._bmp is None:
             Renderer._bmp=wx.EmptyBitmap(1,1)
             Renderer._mdc=wx.MemoryDC()
@@ -469,10 +470,7 @@ class Renderer:
             Renderer._hdc.SetFonts(font, "", [int(x*size) for x in _scales])
         Renderer._hdc.SetHtmlText(html, basepath)
         Renderer._hdc.Render(0, 0, (), 0, False)
-        return (Renderer._mdc.MaxX(), Renderer._mdc.MaxY())
-
-    getbestsize=staticmethod(getbestsize)
-        
+        return (Renderer._mdc.MaxX(), Renderer._mdc.MaxY())        
 
 def getbestsize(dc, html, basepath="", font="", size=10):
     return Renderer.getbestsize(html, basepath, font, size)

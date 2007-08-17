@@ -726,7 +726,8 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
         r['firmware_version']=self._send_at_and_get('+GMR')
         r['esn']=self._send_at_and_get('+GSN')
 
-    def _detectphone(coms, likely_ports, res, _module, _log):
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
         if not len(likely_ports):
             return None
         for port in likely_ports:
@@ -749,7 +750,6 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol):
                 # this port is not available
                 if __debug__:
                     raise
-    _detectphone=staticmethod(_detectphone)
 
 #------------------------------------------------------------------------------
 class Profile(com_phone.Profile):
