@@ -1222,7 +1222,7 @@ class MiscEditor(DirtyUIBase):
         vs.Fit(self)
 
     def Set(self, data):
-        self._storage.SetValue(data.get('sim', False) and 'SIM' or 'Phone')
+        self._storage.SetValue('SIM' if data.get('sim', False) else 'Phone')
         self._secret.SetValue(data.get('secret', False))
 
     def Get(self):
