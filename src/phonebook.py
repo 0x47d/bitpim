@@ -216,10 +216,10 @@ def formatnumber(number):
     return "%s [%d]" % (phonenumber.format(number['number']), sd)
 
 def formatstorage(flag):
-    return flag.get('sim', False) and 'SIM' or ''
+    return 'SIM' if flag.get('sim', False) else ''
 
 def formatsecret(flag):
-    return flag.get('secret', False) and 'True' or ''
+    return 'True' if flag.get('secret', False) else ''
 
 # this is specified here as a list so that we can get the
 # keys in the order below for the settings UI (alpha sorting
