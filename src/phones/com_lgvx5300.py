@@ -80,6 +80,8 @@ class Phone(parentphone):
         _fw_version=self.get_firmware_version()[-1]
         # T53VZV04 uses DMv5
         self._DMv5=self.my_model=='VX5300' and _fw_version>'3'
+        if self._DMv5:
+            self._timeout = 20
 
     # Fundamentals:
     #  - get_esn             - same as LG VX-8300
