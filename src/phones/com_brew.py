@@ -72,6 +72,11 @@ class BrewFileSystemFullException(BrewCommandException):
     def __init__(self, errnum=0x16, filename=None):
         BrewCommandException.__init__(self, errnum, "The phone has run out of space to store any more files")
 
+class BrewStatFileException(BrewCommandException):
+    def __init__(self, errnum, filename):
+        BrewCommandException.__init__(self, errnum,
+                                      "Stat File %s errno %d"%(filename, errnum))
+
 
 modeignoreerrortypes=com_phone.modeignoreerrortypes+(BrewCommandException,common.CommsDataCorruption)
 
@@ -1030,8 +1035,13 @@ class RealBrewProtocol2:
         req=p_brew.new_statfilerequest()
         req.filename=name
         res=self.sendbrewcommand(req, p_brew.new_statfileresponse)
-        if res.flags==2:
+        if res.error==2:    # ENOENT
             raise BrewNoSuchFileException
+        elif res.error==0x13: # ENODEV
+            # locked system file. example: /dev.null
+            raise BrewFileLockedException
+        elif res.error != 0:
+            raise BrewStatFileException(res.error, name)
         if res.type==1 or res.type==0x86:
             # files on external media have type 0x86
             results={ 'name': name, 'type': 'file', 'size': res.size }

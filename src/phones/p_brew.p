@@ -268,7 +268,7 @@ PACKET new_openfilerequest:
 PACKET new_openfileresponse:
     * new_responseheader header
     4 UINT handle
-    4 UINT pad # zeros
+    4 UINT error # matches unix error codes
 
 PACKET new_closefilerequest:
     * new_requestheader {'command': 0x03} +header
@@ -276,7 +276,7 @@ PACKET new_closefilerequest:
 
 PACKET new_closefileresponse:
     * new_responseheader header
-    4 UINT pad # zeros
+    4 UINT error # matches unix error codes
 
 PACKET new_readfilerequest:
     * new_requestheader {'command': 0x04} +header
@@ -290,8 +290,8 @@ PACKET new_readfileresponse:
     4 UINT position # position the bytes were read from
     4 UINT bytes # less than requested if EOF
                  # there is no EOF flag in the packet
-    4 UINT pad # zeros
-    * DATA {'sizeinbytes': self.bytes} data 
+    4 UINT error # matches unix error codes
+    * DATA {'sizeinbytes': self.bytes} data
 
 PACKET new_writefilerequest:
     * new_requestheader {'command': 0x05} +header
@@ -305,7 +305,7 @@ PACKET new_writefileresponse:
     4 UINT handle
     4 UINT position # position the bytes were written to
     4 UINT bytes
-    4 UINT pad # zeros
+    4 UINT error # matches unix error codes
 
 PACKET new_rmfilerequest:
     """Remove file, full path should be provided, 
@@ -321,7 +321,7 @@ PACKET new_mkdirrequest:
     provided, but the root character / is not required at the start of the name
     """
     * new_requestheader {'command': 0x09} +header
-    2 UINT {'constant': 0x01ff} +unknown
+    2 UINT {'constant': 0x01ff} +mode # mode_t type. example 0777 == 0x1ff == rwxrwxrwx
     * USTRING {'terminator': 0,
                'encoding': PHONE_ENCODING } dirname
 
@@ -341,7 +341,7 @@ PACKET new_opendirectoryrequest:
 PACKET new_opendirectoryresponse:
     * new_responseheader header
     4 UINT handle
-    4 UINT pad # zeros
+    4 UINT error # matches unix error codes
 
 PACKET new_listentryrequest:
     * new_requestheader {'command': 0x0c} +header
@@ -367,7 +367,7 @@ PACKET new_closedirectoryrequest:
 
 PACKET new_closedirectoryresponse:
     * new_responseheader header
-    4 UINT pad # zeros
+    4 UINT error # matches unix error codes
 
 PACKET new_statfilerequest:
     "Get the status of the file"
@@ -377,14 +377,23 @@ PACKET new_statfilerequest:
 
 PACKET new_statfileresponse:
     * new_responseheader header
-    4 UINT flags # 0 for files, 2 for non-existant and rest of packet is invalid
+    4 UINT error # matches unix error codes
     4 UNKNOWN dunno # flags of some sort
-    4 UINT size # for directories this is the number of entries+2 (maybe '.' and'..' are counted internally)
+    4 UINT size # for directories this is the number of entries+2 (maybe '.' and'..' are counted internally) aka. link count (man ls)
     4 UINT type # 1=file, 2+=directory (if 2+ this field is number of subdirectories + 2)
     4 UINT accessed_date
     4 UINT modified_date
     4 UINT created_date
-             
+
+PACKET new_chmodrequest:
+    * new_requestheader {'command': 0x12} +header
+    2 UINT +mode # mode_t
+    * USTRING {'terminator': 0, 'encoding': PHONE_ENCODING } +filename
+
+PACKET new_chmodresponse:
+    * new_responseheader header
+    4 UINT error # matches unix error codes
+
 PACKET new_reconfigfilesystemrequest:
     """Called after mkdir/rmdir and writing files,
     possibly a filesystem status request with space used/free etc.

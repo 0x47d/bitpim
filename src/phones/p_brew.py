@@ -4112,7 +4112,7 @@ class new_openfilerequest(BaseProtogenClass):
 
 
 class new_openfileresponse(BaseProtogenClass):
-    __fields=['header', 'handle', 'pad']
+    __fields=['header', 'handle', 'error']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -4147,7 +4147,7 @@ class new_openfileresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
         self.__field_handle.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -4160,8 +4160,8 @@ class new_openfileresponse(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_handle=UINT(**{'sizeinbytes': 4})
         self.__field_handle.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -4191,18 +4191,18 @@ class new_openfileresponse(BaseProtogenClass):
 
     handle=property(__getfield_handle, __setfield_handle, __delfield_handle, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def iscontainer(self):
         return True
@@ -4210,7 +4210,7 @@ class new_openfileresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('handle', self.__field_handle, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
 
 
 
@@ -4309,7 +4309,7 @@ class new_closefilerequest(BaseProtogenClass):
 
 
 class new_closefileresponse(BaseProtogenClass):
-    __fields=['header', 'pad']
+    __fields=['header', 'error']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -4343,7 +4343,7 @@ class new_closefileresponse(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -4354,8 +4354,8 @@ class new_closefileresponse(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_responseheader()
         self.__field_header.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -4372,25 +4372,25 @@ class new_closefileresponse(BaseProtogenClass):
 
     header=property(__getfield_header, __setfield_header, __delfield_header, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def iscontainer(self):
         return True
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
 
 
 
@@ -4523,7 +4523,7 @@ class new_readfilerequest(BaseProtogenClass):
 
 
 class new_readfileresponse(BaseProtogenClass):
-    __fields=['header', 'handle', 'position', 'bytes', 'pad', 'data']
+    __fields=['header', 'handle', 'position', 'bytes', 'error', 'data']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -4560,7 +4560,7 @@ class new_readfileresponse(BaseProtogenClass):
         self.__field_handle.writetobuffer(buf)
         self.__field_position.writetobuffer(buf)
         self.__field_bytes.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self.__field_data.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -4578,8 +4578,8 @@ class new_readfileresponse(BaseProtogenClass):
         self.__field_position.readfrombuffer(buf)
         self.__field_bytes=UINT(**{'sizeinbytes': 4})
         self.__field_bytes.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self.__field_data=DATA(**{'sizeinbytes': self.bytes})
         self.__field_data.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4637,18 +4637,18 @@ class new_readfileresponse(BaseProtogenClass):
 
     bytes=property(__getfield_bytes, __setfield_bytes, __delfield_bytes, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def __getfield_data(self):
         return self.__field_data.getvalue()
@@ -4671,7 +4671,7 @@ class new_readfileresponse(BaseProtogenClass):
         yield ('handle', self.__field_handle, None)
         yield ('position', self.__field_position, None)
         yield ('bytes', self.__field_bytes, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
         yield ('data', self.__field_data, None)
 
 
@@ -4822,7 +4822,7 @@ class new_writefilerequest(BaseProtogenClass):
 
 
 class new_writefileresponse(BaseProtogenClass):
-    __fields=['header', 'handle', 'position', 'bytes', 'pad']
+    __fields=['header', 'handle', 'position', 'bytes', 'error']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -4859,7 +4859,7 @@ class new_writefileresponse(BaseProtogenClass):
         self.__field_handle.writetobuffer(buf)
         self.__field_position.writetobuffer(buf)
         self.__field_bytes.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -4876,8 +4876,8 @@ class new_writefileresponse(BaseProtogenClass):
         self.__field_position.readfrombuffer(buf)
         self.__field_bytes=UINT(**{'sizeinbytes': 4})
         self.__field_bytes.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -4933,18 +4933,18 @@ class new_writefileresponse(BaseProtogenClass):
 
     bytes=property(__getfield_bytes, __setfield_bytes, __delfield_bytes, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def iscontainer(self):
         return True
@@ -4954,7 +4954,7 @@ class new_writefileresponse(BaseProtogenClass):
         yield ('handle', self.__field_handle, None)
         yield ('position', self.__field_position, None)
         yield ('bytes', self.__field_bytes, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
 
 
 
@@ -5082,7 +5082,7 @@ class new_mkdirrequest(BaseProtogenClass):
     """Make a new directory, full path of the new directory should be
     provided, but the root character / is not required at the start of the name
     """
-    __fields=['header', 'unknown', 'dirname']
+    __fields=['header', 'mode', 'dirname']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5119,10 +5119,10 @@ class new_mkdirrequest(BaseProtogenClass):
         except:
             self.__field_header=new_requestheader(**{'command': 0x09})
         self.__field_header.writetobuffer(buf)
-        try: self.__field_unknown
+        try: self.__field_mode
         except:
-            self.__field_unknown=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
-        self.__field_unknown.writetobuffer(buf)
+            self.__field_mode=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
+        self.__field_mode.writetobuffer(buf)
         self.__field_dirname.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -5134,8 +5134,8 @@ class new_mkdirrequest(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_requestheader(**{'command': 0x09})
         self.__field_header.readfrombuffer(buf)
-        self.__field_unknown=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
-        self.__field_unknown.readfrombuffer(buf)
+        self.__field_mode=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
+        self.__field_mode.readfrombuffer(buf)
         self.__field_dirname=USTRING(**{'terminator': 0,               'encoding': PHONE_ENCODING })
         self.__field_dirname.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -5157,21 +5157,21 @@ class new_mkdirrequest(BaseProtogenClass):
 
     header=property(__getfield_header, __setfield_header, __delfield_header, None)
 
-    def __getfield_unknown(self):
-        try: self.__field_unknown
+    def __getfield_mode(self):
+        try: self.__field_mode
         except:
-            self.__field_unknown=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
-        return self.__field_unknown.getvalue()
+            self.__field_mode=UINT(**{'sizeinbytes': 2, 'constant': 0x01ff})
+        return self.__field_mode.getvalue()
 
-    def __setfield_unknown(self, value):
+    def __setfield_mode(self, value):
         if isinstance(value,UINT):
-            self.__field_unknown=value
+            self.__field_mode=value
         else:
-            self.__field_unknown=UINT(value,**{'sizeinbytes': 2, 'constant': 0x01ff})
+            self.__field_mode=UINT(value,**{'sizeinbytes': 2, 'constant': 0x01ff})
 
-    def __delfield_unknown(self): del self.__field_unknown
+    def __delfield_mode(self): del self.__field_mode
 
-    unknown=property(__getfield_unknown, __setfield_unknown, __delfield_unknown, None)
+    mode=property(__getfield_mode, __setfield_mode, __delfield_mode, None)
 
     def __getfield_dirname(self):
         return self.__field_dirname.getvalue()
@@ -5191,7 +5191,7 @@ class new_mkdirrequest(BaseProtogenClass):
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
-        yield ('unknown', self.__field_unknown, None)
+        yield ('mode', self.__field_mode, None)
         yield ('dirname', self.__field_dirname, None)
 
 
@@ -5387,7 +5387,7 @@ class new_opendirectoryrequest(BaseProtogenClass):
 
 
 class new_opendirectoryresponse(BaseProtogenClass):
-    __fields=['header', 'handle', 'pad']
+    __fields=['header', 'handle', 'error']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5422,7 +5422,7 @@ class new_opendirectoryresponse(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
         self.__field_handle.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -5435,8 +5435,8 @@ class new_opendirectoryresponse(BaseProtogenClass):
         self.__field_header.readfrombuffer(buf)
         self.__field_handle=UINT(**{'sizeinbytes': 4})
         self.__field_handle.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -5466,18 +5466,18 @@ class new_opendirectoryresponse(BaseProtogenClass):
 
     handle=property(__getfield_handle, __setfield_handle, __delfield_handle, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def iscontainer(self):
         return True
@@ -5485,7 +5485,7 @@ class new_opendirectoryresponse(BaseProtogenClass):
     def containerelements(self):
         yield ('header', self.__field_header, None)
         yield ('handle', self.__field_handle, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
 
 
 
@@ -5917,7 +5917,7 @@ class new_closedirectoryrequest(BaseProtogenClass):
 
 
 class new_closedirectoryresponse(BaseProtogenClass):
-    __fields=['header', 'pad']
+    __fields=['header', 'error']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5951,7 +5951,7 @@ class new_closedirectoryresponse(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
-        self.__field_pad.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -5962,8 +5962,8 @@ class new_closedirectoryresponse(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_responseheader()
         self.__field_header.readfrombuffer(buf)
-        self.__field_pad=UINT(**{'sizeinbytes': 4})
-        self.__field_pad.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -5980,25 +5980,25 @@ class new_closedirectoryresponse(BaseProtogenClass):
 
     header=property(__getfield_header, __setfield_header, __delfield_header, None)
 
-    def __getfield_pad(self):
-        return self.__field_pad.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_pad(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_pad=value
+            self.__field_error=value
         else:
-            self.__field_pad=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_pad(self): del self.__field_pad
+    def __delfield_error(self): del self.__field_error
 
-    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def iscontainer(self):
         return True
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
-        yield ('pad', self.__field_pad, None)
+        yield ('error', self.__field_error, None)
 
 
 
@@ -6098,7 +6098,7 @@ class new_statfilerequest(BaseProtogenClass):
 
 
 class new_statfileresponse(BaseProtogenClass):
-    __fields=['header', 'flags', 'dunno', 'size', 'type', 'accessed_date', 'modified_date', 'created_date']
+    __fields=['header', 'error', 'dunno', 'size', 'type', 'accessed_date', 'modified_date', 'created_date']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -6132,7 +6132,7 @@ class new_statfileresponse(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_header.writetobuffer(buf)
-        self.__field_flags.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
         self.__field_dunno.writetobuffer(buf)
         self.__field_size.writetobuffer(buf)
         self.__field_type.writetobuffer(buf)
@@ -6149,8 +6149,8 @@ class new_statfileresponse(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_header=new_responseheader()
         self.__field_header.readfrombuffer(buf)
-        self.__field_flags=UINT(**{'sizeinbytes': 4})
-        self.__field_flags.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
         self.__field_dunno=UNKNOWN(**{'sizeinbytes': 4})
         self.__field_dunno.readfrombuffer(buf)
         self.__field_size=UINT(**{'sizeinbytes': 4})
@@ -6179,18 +6179,18 @@ class new_statfileresponse(BaseProtogenClass):
 
     header=property(__getfield_header, __setfield_header, __delfield_header, None)
 
-    def __getfield_flags(self):
-        return self.__field_flags.getvalue()
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
 
-    def __setfield_flags(self, value):
+    def __setfield_error(self, value):
         if isinstance(value,UINT):
-            self.__field_flags=value
+            self.__field_error=value
         else:
-            self.__field_flags=UINT(value,**{'sizeinbytes': 4})
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
 
-    def __delfield_flags(self): del self.__field_flags
+    def __delfield_error(self): del self.__field_error
 
-    flags=property(__getfield_flags, __setfield_flags, __delfield_flags, None)
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
 
     def __getfield_dunno(self):
         return self.__field_dunno.getvalue()
@@ -6275,13 +6275,222 @@ class new_statfileresponse(BaseProtogenClass):
 
     def containerelements(self):
         yield ('header', self.__field_header, None)
-        yield ('flags', self.__field_flags, None)
+        yield ('error', self.__field_error, None)
         yield ('dunno', self.__field_dunno, None)
         yield ('size', self.__field_size, None)
         yield ('type', self.__field_type, None)
         yield ('accessed_date', self.__field_accessed_date, None)
         yield ('modified_date', self.__field_modified_date, None)
         yield ('created_date', self.__field_created_date, None)
+
+
+
+
+class new_chmodrequest(BaseProtogenClass):
+    __fields=['header', 'mode', 'filename']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(new_chmodrequest,self).__init__(**dict)
+        if self.__class__ is new_chmodrequest:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(new_chmodrequest,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(new_chmodrequest,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_header
+        except:
+            self.__field_header=new_requestheader(**{'command': 0x12})
+        self.__field_header.writetobuffer(buf)
+        try: self.__field_mode
+        except:
+            self.__field_mode=UINT(**{'sizeinbytes': 2})
+        self.__field_mode.writetobuffer(buf)
+        try: self.__field_filename
+        except:
+            self.__field_filename=USTRING(**{'terminator': 0, 'encoding': PHONE_ENCODING })
+        self.__field_filename.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_header=new_requestheader(**{'command': 0x12})
+        self.__field_header.readfrombuffer(buf)
+        self.__field_mode=UINT(**{'sizeinbytes': 2})
+        self.__field_mode.readfrombuffer(buf)
+        self.__field_filename=USTRING(**{'terminator': 0, 'encoding': PHONE_ENCODING })
+        self.__field_filename.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_header(self):
+        try: self.__field_header
+        except:
+            self.__field_header=new_requestheader(**{'command': 0x12})
+        return self.__field_header.getvalue()
+
+    def __setfield_header(self, value):
+        if isinstance(value,new_requestheader):
+            self.__field_header=value
+        else:
+            self.__field_header=new_requestheader(value,**{'command': 0x12})
+
+    def __delfield_header(self): del self.__field_header
+
+    header=property(__getfield_header, __setfield_header, __delfield_header, None)
+
+    def __getfield_mode(self):
+        try: self.__field_mode
+        except:
+            self.__field_mode=UINT(**{'sizeinbytes': 2})
+        return self.__field_mode.getvalue()
+
+    def __setfield_mode(self, value):
+        if isinstance(value,UINT):
+            self.__field_mode=value
+        else:
+            self.__field_mode=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_mode(self): del self.__field_mode
+
+    mode=property(__getfield_mode, __setfield_mode, __delfield_mode, None)
+
+    def __getfield_filename(self):
+        try: self.__field_filename
+        except:
+            self.__field_filename=USTRING(**{'terminator': 0, 'encoding': PHONE_ENCODING })
+        return self.__field_filename.getvalue()
+
+    def __setfield_filename(self, value):
+        if isinstance(value,USTRING):
+            self.__field_filename=value
+        else:
+            self.__field_filename=USTRING(value,**{'terminator': 0, 'encoding': PHONE_ENCODING })
+
+    def __delfield_filename(self): del self.__field_filename
+
+    filename=property(__getfield_filename, __setfield_filename, __delfield_filename, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('header', self.__field_header, None)
+        yield ('mode', self.__field_mode, None)
+        yield ('filename', self.__field_filename, None)
+
+
+
+
+class new_chmodresponse(BaseProtogenClass):
+    __fields=['header', 'error']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(new_chmodresponse,self).__init__(**dict)
+        if self.__class__ is new_chmodresponse:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(new_chmodresponse,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(new_chmodresponse,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_header.writetobuffer(buf)
+        self.__field_error.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_header=new_responseheader()
+        self.__field_header.readfrombuffer(buf)
+        self.__field_error=UINT(**{'sizeinbytes': 4})
+        self.__field_error.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_header(self):
+        return self.__field_header.getvalue()
+
+    def __setfield_header(self, value):
+        if isinstance(value,new_responseheader):
+            self.__field_header=value
+        else:
+            self.__field_header=new_responseheader(value,)
+
+    def __delfield_header(self): del self.__field_header
+
+    header=property(__getfield_header, __setfield_header, __delfield_header, None)
+
+    def __getfield_error(self):
+        return self.__field_error.getvalue()
+
+    def __setfield_error(self, value):
+        if isinstance(value,UINT):
+            self.__field_error=value
+        else:
+            self.__field_error=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_error(self): del self.__field_error
+
+    error=property(__getfield_error, __setfield_error, __delfield_error, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('header', self.__field_header, None)
+        yield ('error', self.__field_error, None)
 
 
 
