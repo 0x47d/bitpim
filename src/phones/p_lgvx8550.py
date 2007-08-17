@@ -102,7 +102,7 @@ class pbfileentry(BaseProtogenClass):
         self.__field_numberindices.writetobuffer(buf)
         try: self.__field_memo
         except:
-            self.__field_memo=USTRING(**{'sizeinbytes': 69,  'default': '', 'raiseonunterminatedread': False })
+            self.__field_memo=USTRING(**{'sizeinbytes': 69,  'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING })
         self.__field_memo.writetobuffer(buf)
         try: self.__field_exit_tag
         except:
@@ -142,7 +142,7 @@ class pbfileentry(BaseProtogenClass):
         self.__field_numbertypes.readfrombuffer(buf)
         self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx8550_57, 'length': NUMPHONENUMBERS})
         self.__field_numberindices.readfrombuffer(buf)
-        self.__field_memo=USTRING(**{'sizeinbytes': 69,  'default': '', 'raiseonunterminatedread': False })
+        self.__field_memo=USTRING(**{'sizeinbytes': 69,  'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING })
         self.__field_memo.readfrombuffer(buf)
         self.__field_exit_tag=USTRING(**{'sizeinbytes': 6,  'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PE>'})
         self.__field_exit_tag.readfrombuffer(buf)
@@ -354,14 +354,14 @@ class pbfileentry(BaseProtogenClass):
     def __getfield_memo(self):
         try: self.__field_memo
         except:
-            self.__field_memo=USTRING(**{'sizeinbytes': 69,  'default': '', 'raiseonunterminatedread': False })
+            self.__field_memo=USTRING(**{'sizeinbytes': 69,  'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING })
         return self.__field_memo.getvalue()
 
     def __setfield_memo(self, value):
         if isinstance(value,USTRING):
             self.__field_memo=value
         else:
-            self.__field_memo=USTRING(value,**{'sizeinbytes': 69,  'default': '', 'raiseonunterminatedread': False })
+            self.__field_memo=USTRING(value,**{'sizeinbytes': 69,  'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING })
 
     def __delfield_memo(self): del self.__field_memo
 

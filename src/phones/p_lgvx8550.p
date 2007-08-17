@@ -55,7 +55,7 @@ PACKET pbfileentry:
        1 UINT { 'default': 0 } numbertype
     * LIST {'length': NUMPHONENUMBERS} +numberindices:
        2 UINT { 'default': 0xffff } numberindex
-    69  USTRING { 'default': '', 'raiseonunterminatedread': False } +memo # maybe
+    69  USTRING { 'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING } +memo # maybe
     6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PE>'} +exit_tag
 
 PACKET pbfile:

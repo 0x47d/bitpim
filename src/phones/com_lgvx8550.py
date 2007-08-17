@@ -147,7 +147,7 @@ class Phone(parentphone):
         # We check the existing speed dial file as changes require a reboot
         self.log("Checking existing speed dials")
         if buffer.getvalue()!=self.getfilecontents(self.protocolclass.speed_file_name):
-            self.writefile("pim/pbspeed.dat", buffer.getvalue())
+            self.writefile(self.protocolclass.speed_file_name, buffer.getvalue())
             self.log("Your phone has to be rebooted due to the speed dials changing")
             self.progress(1, 1, "Rebooting phone")
             data["rebootphone"]=True
@@ -318,6 +318,8 @@ class Phone(parentphone):
 
         # memos
         if  'memo' in entry.getfields() and len(entry.memo):
+            while len(entry.memo) and ord(entry.memo[-1]) == 0xff:
+                entry.memo = entry.memo[:-1]
             res['memos']=[ {'memo': entry.memo } ]
 
         # wallpapers
