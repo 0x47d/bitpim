@@ -581,7 +581,7 @@ class VCard:
         # handle a few PALM custom fields
         ff=field[0].split(".")
         f0=ff[0]
-        f1=len(ff)>1 and ff[1] or ''
+        f1=ff[1] if len(ff)>1 else ''
         if f0.startswith('X-PALM-CATEGORY') or f1.startswith('X-PALM-CATEGORY'):
             self._field_CATEGORIES(['CATEGORIES'], value, result)
         elif f0=='X-PALM-NICKNAME' or f1=='X-PALM-NICKNAME':
@@ -593,7 +593,7 @@ class VCard:
     def _default_field(self, field, value, result):
         ff=field[0].split(".")
         f0=ff[0]
-        f1=len(ff)>1 and ff[1] or ''
+        f1=ff[1] if len(ff)>1 else ''
         if f0.startswith('X-PALM-') or f1.startswith('X-PALM-'):
             self._field_X_PALM(field, value, result)
             return
@@ -867,7 +867,7 @@ def out_tel_scp6600(vals, formatter):
     _pref=len(vals)>1
     for v in vals:
         res+=out_line("TEL",
-                      ["TYPE=%s%s" % (_pref and "PREF," or "",
+                      ["TYPE=%s%s" % ("PREF," if _pref else "",
                                       _out_tel_mapping[v['type']])],
                       phonenumber.format(v['number']), formatter)
         _pref=False
