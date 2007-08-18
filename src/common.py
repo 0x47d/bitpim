@@ -11,6 +11,9 @@
 # Documentation
 """Various classes and functions that are used by GUI and command line versions of BitPim"""
 
+from __future__ import with_statement
+from contextlib import contextmanager
+
 # standard modules
 import string
 import cStringIO
@@ -875,3 +878,12 @@ if sys.platform=='win32':
             return HIWORD (ms), LOWORD (ms), HIWORD (ls), LOWORD (ls)
         except:
             return None
+
+# simple generator that generates temp file name and del it afterward
+@contextmanager
+def usetempfile(ext):
+    _name=gettempfilename(ext)
+    try:
+        yield _name
+    finally:
+        os.remove(_name)

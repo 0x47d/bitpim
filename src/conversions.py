@@ -9,12 +9,14 @@
 ### $Id$
 
 "Routines to do various file format conversions"
-
+from __future__ import with_statement
+import contextlib
 import os
 import tempfile
 import struct
 import sys
 import wx
+
 
 import common
 
@@ -237,18 +239,14 @@ def converttomp3(inputfilename, bitrate, samplerate, channels):
     @param channels: 1 is mono, 2 is stereo
     """
     ffmpeg=gethelperbinary("ffmpeg")
-    mp3file=common.gettempfilename("mp3")
-    try:
+    with common.usetempfile('mp3') as mp3file:
         try:
             run(ffmpeg, "-i", shortfilename(inputfilename), "-hq", "-ab", `bitrate`, "-ar", `samplerate`, "-ac", `channels`, shortfilename(mp3file))
         except common.CommandExecutionFailed, e:
             # we get this exception on bad parameters, or any other
             # issue so we assume bad parameters for the moment.
             raise ConversionFailed, ' '.join(e.args)+'\n'+e.logstr
-        return open(mp3file, "rb").read()
-    finally:
-        try: os.remove(mp3file)
-        except: pass
+        return file(mp3file, "rb").read()
 
 def converttowav(mp3filename, wavfilename, samplerate=None,
                     channels=None, start=None, duration=None):
@@ -308,39 +306,34 @@ def convertqcptowav(qcpfile, wavfile):
 def adjustwavfilevolume(wavfilename, gain):
     """ Ajdust the volume of a wav file.
     """
-    f=open(wavfilename, 'rb')
-    # read in the headers
-    headers=f.read(20)
-    subchunk1size=common.LSBUint32(headers[16:20])
-    headers+=f.read(subchunk1size)
-    headers+=f.read(8)  # 4 byte ID and 4 byte length
-    subchunk2size=common.LSBUint32(headers[-4:])
-    bitspersample=common.LSBUint16(headers[34:36])
-    if bitspersample!=16:
-        print 'Volume adjustment only works with 16-bit wav file',bitspersample
-        f.close()
-        return
-    sample_num=subchunk2size/2  # always 16-bit per channel per sample
-    temp_name=common.gettempfilename("wav")
-    f_temp=file(temp_name, 'wb')
-    f_temp.write(headers)
-    delta=pow(10.0, (gain/10.0))
-    for i in range(sample_num):
-        d=int(struct.unpack('<h', f.read(2))[0]*delta)
-        if d>32767:
-            d=32767
-        elif d<-32768:
-            d=-32768
-        f_temp.write(struct.pack('<h', d))
-    f_temp.close()
-    f.close()
+    with file(wavfilename, 'rb') as f:
+        # read in the headers
+        headers=f.read(20)
+        subchunk1size=common.LSBUint32(headers[16:20])
+        headers+=f.read(subchunk1size)
+        headers+=f.read(8)  # 4 byte ID and 4 byte length
+        subchunk2size=common.LSBUint32(headers[-4:])
+        bitspersample=common.LSBUint16(headers[34:36])
+        if bitspersample!=16:
+            print 'Volume adjustment only works with 16-bit wav file',bitspersample
+            return
+        sample_num=subchunk2size/2  # always 16-bit per channel per sample
+        temp_name=common.gettempfilename("wav")
+        with file(temp_name, 'wb') as f_temp:
+            f_temp.write(headers)
+            delta=pow(10.0, (gain/10.0))
+            for i in range(sample_num):
+                d=int(struct.unpack('<h', f.read(2))[0]*delta)
+                if d>32767:
+                    d=32767
+                elif d<-32768:
+                    d=-32768
+                f_temp.write(struct.pack('<h', d))
     os.remove(wavfilename)
     os.rename(temp_name, wavfilename)
 
 def trimwavfile(wavfilename, wavoutfilename, start, duration=None, gain=None):
-    f=None
-    try:
-        f=open(wavfilename, 'rb')
+    with file(wavfilename, 'rb') as f:
         # read in the headers
         headers=f.read(20)
         subchunk1size=common.LSBUint32(headers[16:20])
@@ -373,9 +366,6 @@ def trimwavfile(wavfilename, wavoutfilename, start, duration=None, gain=None):
                                                   f.read(new_size)]))
         if gain is not None:
             adjustwavfilevolume(wavoutfilename, gain)
-    finally:
-        if f is not None:
-            f.close()
 
 def trimwavdata(wavedatain, start, duration=None):
     # check for a PCM file format
@@ -411,54 +401,35 @@ def convertjpgtoavi(jpg_data, avi_file_name, fps=4, new_file=False):
         except:
             pass
     # convert the jpg data to bmp data
-    jpg_name=shortfilename(common.gettempfilename("jpg"))
-    bmp_name=shortfilename(common.gettempfilename("bmp"))
-    open(jpg_name, "wb").write(jpg_data)
-    wx.Image(jpg_name).SaveFile(bmp_name, wx.BITMAP_TYPE_BMP)
-    # add the bmp frame to the avi file
-    run(bmp2avi, '-f', `fps`, '-i', bmp_name, '-o', avi_file_name)
-    # del temp files
-    try:
-        os.remove(jpg_name)
-        os.remove(bmp_name)
-    except:
-        pass
+    with contextlib.nested(common.usetempfile('jpg'),
+                           common.usetempfile('bmp')) as (_jpg, _bmp):
+        jpg_name=shortfilename(_jpg)
+        bmp_name=shortfilename(_bmp)
+        file(jpg_name, "wb").write(jpg_data)
+        wx.Image(jpg_name).SaveFile(bmp_name, wx.BITMAP_TYPE_BMP)
+        # add the bmp frame to the avi file
+        run(bmp2avi, '-f', `fps`, '-i', bmp_name, '-o', avi_file_name)
 
 def convertavitobmp(avi_data, frame_num=0):
-    avi_file=shortfilename(common.gettempfilename("avi"))
-    f=open(avi_file, "wb")
-    f.write(avi_data)
-    f.close()
-    img=convertfileavitobmp(avi_file, frame_num)
-    try:
-        os.remove(avi_file)
-    except:
-        pass
-    return img
+    with common.usetempfile('avi') as _avi:
+        avi_file=shortfilename(_avi)
+        file(avi_file, 'wb').write(avi_data)
+        return convertfileavitobmp(avi_file, frame_num)
 
 def convertfileavitobmp(avi_file_name, frame_num=0):
     bmp2avi=shortfilename(gethelperbinary('bmp2avi'))
-    bmp_file_name=shortfilename(common.gettempfilename("bmp"))
-    run(bmp2avi, '-t', `frame_num`, '-i', shortfilename(avi_file_name),
-        '-o', bmp_file_name)
-    img=wx.Image(bmp_file_name)
-    try:
-        os.remove(bmp_file_name)
-    except:
-        pass
-    return img
+    with common.usetempfile('bmp') as _bmp:
+        bmp_file_name=shortfilename(_bmp)
+        run(bmp2avi, '-t', `frame_num`, '-i', shortfilename(avi_file_name),
+            '-o', bmp_file_name)
+        return wx.Image(bmp_file_name)
 
 def convertfilelgbittobmp(bit_file_name):
     "File-based wrapper for convertlgbittobmp."
-    bmp=common.gettempfilename("png")
-    bmpdata=convertlgbittobmp(open(bit_file_name,"rb").read())
-    open(bmp, "wb").write(bmpdata)
-    img=wx.Image(bmp)
-    try:
-        os.remove(bmp)
-    except:
-        pass
-    return img
+    with common.usetempfile('png') as bmp:
+        bmpdata=convertlgbittobmp(file(bit_file_name,"rb").read())
+        file(bmp, "wb").write(bmpdata)
+        return wx.Image(bmp)
     
 def convertlgbittobmp(bit_data):
     """Takes a BIT image file (LG proprietary) and returns BMP
