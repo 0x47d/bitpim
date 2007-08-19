@@ -8,6 +8,8 @@
 ###
 ### $Id$
 
+from __future__ import with_statement
+
 import os
 import time
 import wx
@@ -595,17 +597,12 @@ class ConvertDialog(wx.Dialog):
 
     def _trim_mp3(self, start, duration):
         # mp3 writing out
-        f=None
-        try:
-            frames=self.afi.frames
-            offset=frames[self.beginframe].offset
-            length=frames[self.endframe-1].nextoffset-offset
-            f=open(self.mp3file, "rb", 0)
+        frames=self.afi.frames
+        offset=frames[self.beginframe].offset
+        length=frames[self.endframe-1].nextoffset-offset
+        with file(self.mp3file, 'rb', 0) as f:
             f.seek(offset)
             return f.read(length)
-        finally:
-            if f is not None:
-                f.close()
 
     def _trim_and_adjust_vol_mp3(self, start, duration, volume):
         # trim, adjust volume, and write mp3 out
@@ -660,4 +657,4 @@ class ConvertDialog(wx.Dialog):
             conversions.adjustwavfilevolume(self.wavfile, volume)
         conversions.convertwavtoqcp(self.wavfile, self.qcpfile,
                                     self.optimization.GetSelection())
-        return open(self.qcpfile, "rb").read()
+        return file(self.qcpfile, "rb").read()

@@ -10,6 +10,7 @@
 "Deals with wallpaper and related views"
 
 # standard modules
+from __future__ import with_statement
 import os
 import sys
 import cStringIO
@@ -363,46 +364,25 @@ class WallpaperView(fileview.FileView):
     def saveimage_BMP(self, img, imgparams):
         if img.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less
             img.SetOptionInt(wx.IMAGE_OPTION_BMP_FORMAT, wx.BMP_8BPP)
-        f=common.gettempfilename("bmp")
-        rc = img.SaveFile(f, wx.BITMAP_TYPE_BMP)
-        if rc:
-            data = open(f, 'rb').read()
-        try:    
-            os.remove(f)
-        except: 
-            pass
-        if not rc:
+        with common.usetempfile('bmp') as f:
+            if img.SaveFile(f, wx.BITMAP_TYPE_BMP):
+                return file(f, 'rb').read()
             return False
-        return data
 
     def saveimage_JPEG(self, img, imgparams):
         img.SetOptionInt("quality", 100)        
-        f=common.gettempfilename("jpg")
-        rc = img.SaveFile(f, wx.BITMAP_TYPE_JPEG)
-        if rc:
-            data = open(f, 'rb').read()
-        try:    
-            os.remove(f)
-        except: 
-            pass
-        if not rc:
+        with common.usetempfile('jpg') as f:
+            if img.SaveFile(f, wx.BITMAP_TYPE_JPEG):
+                return file(f, 'rb').read()
             return False
-        return data
 
     def saveimage_PNG(self, img, imgparams):
         # ::TODO:: this is where the file size constraints should be examined
         # and obeyed
-        f=common.gettempfilename("png")
-        rc = img.SaveFile(f, wx.BITMAP_TYPE_PNG)
-        if rc:
-            data = open(f, 'rb').read()
-        try:    
-            os.remove(f)
-        except: 
-            pass
-        if not rc:
+        with common.usetempfile('png') as f:
+            if img.SaveFile(f, wx.BITMAP_TYPE_PNG):
+                return file(f, 'rb').read()
             return False
-        return data
     
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk
@@ -652,14 +632,11 @@ def BPFSImageFile(fshandler, location, name=None, img=None, width=-1, height=-1,
     else:
         b=img.ConvertToBitmap()
 
-    f=common.gettempfilename("png")
-    if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
-        raise Exception, "Saving to png failed"
-
-    data=open(f, "rb").read()
-    os.remove(f)
-
-    return (cStringIO.StringIO(data), location, "image/png", "", wx.DateTime_Now())
+    with common.usetempfile('png') as f:
+        if not b.SaveFile(f, wx.BITMAP_TYPE_PNG):
+            raise Exception, "Saving to png failed"
+        data=open(f, "rb").read()
+        return (cStringIO.StringIO(data), location, "image/png", "", wx.DateTime_Now())
 
     
 class ImageCropSelect(wx.ScrolledWindow):
