@@ -252,15 +252,14 @@ def readversionedindexfile(filename, dict, versionhandlerfunc, currentversion):
 
 def writeversionindexfile(filename, dict, currentversion):
      assert currentversion>0
-     f=open(filename, "w")
-     for key in dict:
-          v=dict[key]
-          if isinstance(v, type({})):
-               f.write("result['%s']=%s\n" % (key, prettyprintdict(dict[key])))
-          else:
-               f.write("result['%s']=%s\n" % (key, `v`))
-     f.write("FILEVERSION=%d\n" % (currentversion,))
-     f.close()
+     with file(filename, 'w') as f:
+          for key in dict:
+               v=dict[key]
+               if isinstance(v, type({})):
+                    f.write("result['%s']=%s\n" % (key, prettyprintdict(dict[key])))
+               else:
+                    f.write("result['%s']=%s\n" % (key, `v`))
+          f.write("FILEVERSION=%d\n" % (currentversion,))
 
 def formatexceptioneh(*excinfo):
      print formatexception(excinfo)
@@ -433,17 +432,15 @@ def opentextfile(name):
      uses the codecs module instead to open the file instead with
      appropriate unicode decoding, else returns the file using standard
      open function"""
-     f=open(name, "rb")
-     start=f.read(_maxbomlen)
-     for bom,codec in _boms:
-          if start.startswith(bom):
-               f.close()
-               # some codecs don't do readline, so we have to vector via stringio
-               # many postings also claim that the BOM is returned as the first
-               # character but that hasn't been the case in my testing
-               return StringIO.StringIO(codecs.open(name, "r", codec).read())
-     f.close()
-     return open(name, "rtU")
+     with file(name, 'rb') as f:
+          start=f.read(_maxbomlen)
+          for bom,codec in _boms:
+               if start.startswith(bom):
+                    # some codecs don't do readline, so we have to vector via stringio
+                    # many postings also claim that the BOM is returned as the first
+                    # character but that hasn't been the case in my testing
+                    return StringIO.StringIO(codecs.open(name, "r", codec).read())
+     return file(name, "rtU")
 
 
 # don't you just love i18n

@@ -49,6 +49,8 @@ wW   driverdescription  string   some generic description of the driver
   L  driver             string   the driver name from /proc/devices (eg ttyS or ttyUSB)
 """
 
+from __future__ import with_statement
+
 version="$Revision$"
 
 import sys
@@ -359,15 +361,14 @@ def _comscanlinux(maxnum=9):
     drivers={}
 
     # get the list of char drivers from /proc/drivers
-    f=open("/proc/devices", "r")
-    f.readline()  # skip "Character devices:" header
-    for line in f.readlines():
-        line=line.split()
-        if len(line)!=2:
-            break # next section
-        major,driver=line
-        drivers[int(major)]=driver
-    f.close()
+    with file('/proc/devices', 'r') as f:
+        f.readline()  # skip "Character devices:" header
+        for line in f.readlines():
+            line=line.split()
+            if len(line)!=2:
+                break # next section
+            major,driver=line
+            drivers[int(major)]=driver
 
     # device nodes we have seen so we don't repeat them in listing
     devcache={}
@@ -394,9 +395,8 @@ def _comscanlinux(maxnum=9):
             res['description']=description+" ("+name+")"
             dev=os.stat(name).st_rdev
             try:
-                f=open(name, "rw")
-                f.close()
-                res['available']=True
+                with file(name, 'rw'):
+                    res['available']=True
             except:
                 res['available']=False
             # linux specific, and i think they do funky stuff on kernel 2.6
@@ -447,9 +447,8 @@ def _comscanmac():
            res['description']="Serial"+" ("+name+")"
            res['class']="serial"
        try:
-          f=open(name, "rw")
-          f.close()
-          res['available']=True
+            with file(name, 'rw'):
+                res['available']=True
        except:
           res['available']=False
        results[resultscount]=res
