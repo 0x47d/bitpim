@@ -10,6 +10,8 @@
 "Deals with importing and exporting stuff"
 
 # System modules
+from __future__ import with_statement
+import contextlib
 import string
 import re
 import StringIO
@@ -1033,9 +1035,8 @@ class ImportCSVDialog(ImportDialog):
         column"""
         self.predefinedcolumns=[]
         for i in guihelper.getresourcefiles("*.pdc"):
-            f=common.opentextfile(i)
-            self.predefinedcolumns.append(f.readline().strip())
-            f.close()
+            with contextlib.closing(common.opentextfile(i)) as f:
+                self.predefinedcolumns.append(f.readline().strip())
 
     def OnHeaderToggle(self, _):
         self.columns=None
@@ -1097,18 +1098,16 @@ class ImportCSVDialog(ImportDialog):
             return
         str=self.wcolumnsname.GetValue()
         for file in guihelper.getresourcefiles("*.pdc"):
-            f=common.opentextfile(file)
-            desc=f.readline().strip()
-            if desc==str:
-                self.columns=map(string.strip, f.readlines())
-                for i in range(len(self.columns)):
-                    if self.columns[i] not in self.possiblecolumns:
-                        print self.columns[i],"is not a valid column name!"
-                        self.columns[i]="<ignore>"
-                self.DataNeedsUpdate()
-                f.close()
-                return
-            f.close()
+            with contextlib.closing(common.opentextfile(file)) as f:
+                desc=f.readline().strip()
+                if desc==str:
+                    self.columns=map(string.strip, f.readlines())
+                    for i in range(len(self.columns)):
+                        if self.columns[i] not in self.possiblecolumns:
+                            print self.columns[i],"is not a valid column name!"
+                            self.columns[i]="<ignore>"
+                    self.DataNeedsUpdate()
+                    return
         print "didn't find pdc for",str
 
     def ReReadData(self):
@@ -2301,10 +2300,9 @@ class ExportVCardDialog(BaseExportDialog):
         assert dialect is not None
 
         # ::TODO:: ask about overwriting existing file
-        f=open(filename, "wt")
-        for record in self.GetPhoneBookItems():
-            print >>f, vcard.output_entry(record, vcard.profiles[dialect]['profile'])
-        f.close()
+        with file(filename, "wt") as f:
+            for record in self.GetPhoneBookItems():
+                print >>f, vcard.output_entry(record, vcard.profiles[dialect]['profile'])
         
         # save settings since we were succesful
         wx.GetApp().config.Write("vcard/export-file", filename)
@@ -2368,31 +2366,30 @@ class ExportCSVDialog(BaseExportDialog):
             for k in record:
                 if key_count.has_key(k):
                     key_count[k]=max(key_count[k], len(record[k]))
-        f=open(filename, 'wt')
-        l=[]
-        for e in self.__pb_keys:
-            if key_count[e[0]]:
-                ll=[e[0]+'_'+x for x in e[1]]
-                l+=ll*key_count[e[0]]
-        f.write(','.join(l)+'\n')
-        for record in self.GetPhoneBookItems():
-            ll=[]
+        with file(filename, 'wt') as f:
+            l=[]
             for e in self.__pb_keys:
-                key=e[0]
-                if key_count[key]:
-                    for i in range(key_count[key]):
-                        try:
-                            entry=record[key][i]
-                        except (KeyError, IndexError):
-                            entry={}
-                        for field in e[1]:
-                            _v=entry.get(field, '')
-                            if isinstance(_v, unicode):
-                                _v=_v.encode('ascii', 'ignore')
-                            ll.append('"'+str(_v).replace('"', '')+'"')
-            f.write(','.join(ll)+'\n')
-        f.flush()
-        f.close()
+                if key_count[e[0]]:
+                    ll=[e[0]+'_'+x for x in e[1]]
+                    l+=ll*key_count[e[0]]
+            f.write(','.join(l)+'\n')
+            for record in self.GetPhoneBookItems():
+                ll=[]
+                for e in self.__pb_keys:
+                    key=e[0]
+                    if key_count[key]:
+                        for i in range(key_count[key]):
+                            try:
+                                entry=record[key][i]
+                            except (KeyError, IndexError):
+                                entry={}
+                            for field in e[1]:
+                                _v=entry.get(field, '')
+                                if isinstance(_v, unicode):
+                                    _v=_v.encode('ascii', 'ignore')
+                                ll.append('"'+str(_v).replace('"', '')+'"')
+                f.write(','.join(ll)+'\n')
+                f.flush()
         self.EndModal(wx.ID_OK)
         
 class ExporteGroupwareDialog(BaseExportDialog):

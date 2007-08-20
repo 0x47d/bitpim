@@ -8,6 +8,8 @@
 
 
 # standard modules
+from __future__ import with_statement
+import contextlib
 import os
 import cStringIO
 import copy
@@ -159,9 +161,8 @@ class MediaWidget(wx.Panel, widgets.BitPimWidget):
                 me=widget._data[item.datakey][item.key]
                 if me.mediadata!=None and me.mediadata!='':
                     fpath=self._main_window._fixup(os.path.join(opath, me.name))
-                    f=open(fpath, "wb")
-                    f.write(me.mediadata)
-                    f.close()
+                    with file(fpath, "wb") as f:
+                        f.write(me.mediadata)
                     if me.timestamp!=None:
                         os.utime(fpath, (me.timestamp, me.timestamp))
 
@@ -170,13 +171,12 @@ class MediaWidget(wx.Panel, widgets.BitPimWidget):
         # create the zipfile in a buffer
         # and write to disk after it is all created
         op=cStringIO.StringIO()
-        zip=zipfile.ZipFile(op, "w", zipfile.ZIP_DEFLATED)
-        if self.widget_to_save==None:
-            self.SaveWidgetToZip(zip, self.ringerwidget)
-            self.SaveWidgetToZip(zip, self.wallpaperwidget)
-        else:
-            self.SaveWidgetToZip(zip, self.widget_to_save, self.origin_to_save)
-        zip.close()
+        with contextlib.closing(zipfile.ZipFile(op, "w", zipfile.ZIP_DEFLATED)) as zip:
+            if self.widget_to_save==None:
+                self.SaveWidgetToZip(zip, self.ringerwidget)
+                self.SaveWidgetToZip(zip, self.wallpaperwidget)
+            else:
+                self.SaveWidgetToZip(zip, self.widget_to_save, self.origin_to_save)
         open(zip_file, "wb").write(op.getvalue())
 
     def SaveWidgetToZip(self, zip, widget, filter=""):

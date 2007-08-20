@@ -12,6 +12,8 @@
 """Most of the graphical user interface elements making up BitPim"""
 
 # standard modules
+from __future__ import with_statement
+import contextlib
 import os
 import sys
 import time
@@ -1189,37 +1191,36 @@ class ExceptionDialog(wx.Dialog):
             _msg.Destroy()
         _dlg.Destroy()
     def _create_report(self, vals):
-        _s=gzip.GzipFile(vals['filename'], 'wb')
-        _s.write('BitPim Trouble Report\n')
-        _s.write(time.asctime()+'\n')
-        _s.write('BitPim Version: %s - %s\n'%(version.versionstring, version.vendor))
-        _s.write('Platorm: %s, Architecture: %s %s, Dist: %s %s %s\n'%\
-                    ((platform.platform(),)+platform.architecture()+\
-                     platform.dist()))
-        # phone model if available
-        try:
-            _model=self.GetParent().phonemodule.Phone.desc
-        except:
-            _model='Not Available'
-        _s.write('Phone Model: %s\n'%_model)
-        _s.write('Name: %s\n'%vals['name'])
-        _s.write('email: %s\n'%vals['email'])
-        _s.write('Description: %s\n'%vals['description'])
-        _s.write('Exception:\n%s\n'%self._text)
-        # write out log data if evailable
-        try:
-            _log=self.GetParent().tree.lw.GetValue()
-        except:
-            # don't care if we can't get the log
-            _log='Not Available'
-        _s.write('BitPim Log:\n%s\n'%_log)
-        # write out protocol data if available
-        try:
-            _log=self.GetParent().tree.lwdata.GetValue()
-        except:
-            _log='Not Available'
-        _s.write('BitPim Protocol Data:\n%s\n'%_log)
-        _s.close()
+        with contextlib.closing(gzip.GzipFile(vals['filename'], 'wb')) as _s:
+            _s.write('BitPim Trouble Report\n')
+            _s.write(time.asctime()+'\n')
+            _s.write('BitPim Version: %s - %s\n'%(version.versionstring, version.vendor))
+            _s.write('Platorm: %s, Architecture: %s %s, Dist: %s %s %s\n'%\
+                        ((platform.platform(),)+platform.architecture()+\
+                         platform.dist()))
+            # phone model if available
+            try:
+                _model=self.GetParent().phonemodule.Phone.desc
+            except:
+                _model='Not Available'
+            _s.write('Phone Model: %s\n'%_model)
+            _s.write('Name: %s\n'%vals['name'])
+            _s.write('email: %s\n'%vals['email'])
+            _s.write('Description: %s\n'%vals['description'])
+            _s.write('Exception:\n%s\n'%self._text)
+            # write out log data if evailable
+            try:
+                _log=self.GetParent().tree.lw.GetValue()
+            except:
+                # don't care if we can't get the log
+                _log='Not Available'
+            _s.write('BitPim Log:\n%s\n'%_log)
+            # write out protocol data if available
+            try:
+                _log=self.GetParent().tree.lwdata.GetValue()
+            except:
+                _log='Not Available'
+            _s.write('BitPim Protocol Data:\n%s\n'%_log)
 
 class CreateTroubleReportDialog(wx.Dialog):
 

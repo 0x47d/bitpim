@@ -96,6 +96,7 @@ serials:
 """
 
 # Standard imports
+from __future__ import with_statement
 import os
 import cStringIO
 import re
@@ -2858,17 +2859,15 @@ class PhonebookPrintDialog(wx.Dialog):
         # sort out available layouts and styles
         # first line is description
         self.layoutfiles={}
-        for file in guihelper.getresourcefiles("pbpl-*.xy"):
-            f=open(file, "rt")
-            desc=f.readline().strip()
-            self.layoutfiles[desc]=f.read()
-            f.close()
+        for _file in guihelper.getresourcefiles("pbpl-*.xy"):
+            with file(_file, 'rt') as f:
+                desc=f.readline().strip()
+                self.layoutfiles[desc]=f.read()
         self.stylefiles={}
-        for file in guihelper.getresourcefiles("pbps-*.xy"):
-            f=open(file, "rt")
-            desc=f.readline().strip()
-            self.stylefiles[desc]=f.read()
-            f.close()
+        for _file in guihelper.getresourcefiles("pbps-*.xy"):
+            with file(_file, 'rt') as f:
+                desc=f.readline().strip()
+                self.stylefiles[desc]=f.read()
 
         # Layouts
         vbs=wx.BoxSizer(wx.VERTICAL)  # main vertical sizer
@@ -3015,9 +3014,8 @@ class PhonebookPrintDialog(wx.Dialog):
             html=bphtml.applyhtmlstyles(html, sd['styles'])
         except:
             if __debug__:
-                f=open("debug.html", "wt")
-                f.write(html)
-                f.close()
+                with file("debug.html", "wt") as f:
+                    f.write(html)
             raise
         return html
 

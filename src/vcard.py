@@ -11,7 +11,7 @@
 
 VCARD is defined in RFC 2425 and 2426
 """
-
+from __future__ import with_statement
 import sys
 import quopri
 import base64
@@ -997,10 +997,9 @@ if __name__=='__main__':
         except UnicodeError:
             common.unicode_execfile(sys.argv[1], d,d)
     
-        f=open(sys.argv[2], "wt")
-        for k in d['result']['phonebook']:
-            print >>f, output_entry(d['result']['phonebook'][k], profile)
-        f.close()
+        with file(sys.argv[2], "wt") as f:
+            for k in d['result']['phonebook']:
+                print >>f, output_entry(d['result']['phonebook'][k], profile)
 
     if len(sys.argv)==2:
         # import bp

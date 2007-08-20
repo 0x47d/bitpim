@@ -10,6 +10,8 @@
 "Deals with vcard calendar import stuff"
 
 # system modules
+from __future__ import with_statement
+import contextlib
 import copy
 import datetime
 
@@ -79,19 +81,18 @@ class vCalendarFile(object):
             # no file name specified
             return
         try:
-            f=self._open(self._file_name)
-            vfile=vcard.VFile(f)
-            has_data=False
-            for n,l in vfile:
-                if n[0]=='BEGIN' and l=='VEVENT':
-                    has_data=True
-                    _vdata=[]
-                elif n[0]=='END' and l=='VEVENT':
-                    has_data=False
-                    self._data.append(self._read_block(_vdata))
-                elif has_data:
-                    _vdata.append((n, l))
-            f.close()
+            with contextlib.closing(self._open(self._file_name)) as f:
+                vfile=vcard.VFile(f)
+                has_data=False
+                for n,l in vfile:
+                    if n[0]=='BEGIN' and l=='VEVENT':
+                        has_data=True
+                        _vdata=[]
+                    elif n[0]=='END' and l=='VEVENT':
+                        has_data=False
+                        self._data.append(self._read_block(_vdata))
+                    elif has_data:
+                        _vdata.append((n, l))
         except:
             if __debug__:
                 raise

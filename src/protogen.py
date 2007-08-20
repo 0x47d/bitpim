@@ -9,7 +9,8 @@
 ### $Id$
 
 "Generate Python code from packet descriptions"
-
+from __future__ import with_statement
+import contextlib
 import tokenize
 import sys
 import token
@@ -683,14 +684,12 @@ def processfile(inputfilename, outputfilename):
     print "Processing",inputfilename,"to",outputfilename
     fn=os.path.basename(outputfilename)
     fn=os.path.splitext(fn)[0]
-    f=open(inputfilename, "rtU")
-    tokens=tokenize.generate_tokens(f.readline)
-    tt=protogentokenizer(tokens, "_gen_"+fn+"_")
-    f2=open(outputfilename, "wt")
-    cg=codegen(tt)
-    f2.write(cg.gencode())
-    f2.close()
-    
+    with contextlib.nested(file(inputfilename, "rtU"),
+                           file(outputfilename, "wt")) as (f, f2):
+        tokens=tokenize.generate_tokens(f.readline)
+        tt=protogentokenizer(tokens, "_gen_"+fn+"_")
+        cg=codegen(tt)
+        f2.write(cg.gencode())
 
 if __name__=='__main__':
     if len(sys.argv)>3 or (len(sys.argv)==2 and sys.argv[1]=="--help"):
