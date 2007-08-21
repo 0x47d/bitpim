@@ -14,6 +14,8 @@ The VX4600 is substantially similar to the VX4400.
 """
 
 # standard modules
+from __future__ import with_statement
+import contextlib
 import datetime
 import time
 import cStringIO
@@ -134,25 +136,20 @@ class Phone(com_lgvx4400.Phone):
             return result
         media=result['ringtone']
         # get& convert the voice memo files
-        _qcp_file=common.gettempfilename('qcp')
-        _wav_file=common.gettempfilename('wav')
-        try:
-            vmemo_files=self.listfiles(self.VoiceMemoDir)
-            keys=vmemo_files.keys()
-            for k in keys:
-                if k.endswith('.qcp'):
-                    key_name='VoiceMemo'+k[-8:-4]
-                    file(_qcp_file, 'wb').write(self.getfilecontents(k, True))
-                    conversions.convertqcptowav(_qcp_file, _wav_file)
-                    media[key_name]=file(_wav_file, 'rb').read()
-        except:
-            if __debug__:
-                raise
-        try:
-            os.remove(_qcp_file)
-            os.remove(_wav_file)
-        except:
-            pass
+        with contextlib.nested(common.usetempfile('qcp'),
+                               common.usetempfile('wav')) as (_qcp_file, _wav_file):
+            try:
+                vmemo_files=self.listfiles(self.VoiceMemoDir)
+                keys=vmemo_files.keys()
+                for k in keys:
+                    if k.endswith('.qcp'):
+                        key_name='VoiceMemo'+k[-8:-4]
+                        file(_qcp_file, 'wb').write(self.getfilecontents(k, True))
+                        conversions.convertqcptowav(_qcp_file, _wav_file)
+                        media[key_name]=file(_wav_file, 'rb').read()
+            except:
+                if __debug__:
+                    raise
         result['ringtone']=media
         return result
 

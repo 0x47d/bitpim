@@ -15,6 +15,8 @@ save and outbox, to is not required for inbox etc.
 
 """
 # standard modules
+from __future__ import with_statement
+
 import copy
 
 # wx modules
@@ -324,28 +326,27 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
                                             historical_events=\
                                             self._main_window.database.getchangescount(self._data_key))
         if dlg.ShowModal()==wx.ID_OK:
-            self._main_window.OnBusyStart()
-            current_choice, self.historical_date=dlg.GetValue()
-            r={}
-            if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
-                self.read_only=False
-                msg_str='Current Data'
-                self.getfromfs(r)
-            else:
-                self.read_only=True
-                msg_str='Historical Data as of %s'%\
-                         str(wx.DateTimeFromTimeT(self.historical_date))
-                self.getfromfs(r, self.historical_date)
-            self.populate(r, True)
-            self.historical_data_label.SetLabel(msg_str)
-            self.list_widget.historical_data_label.SetLabel(msg_str)
-            self._main_window.OnBusyEnd()
+            with guihelper.MWBusyWrapper(self._main_window):
+                current_choice, self.historical_date=dlg.GetValue()
+                r={}
+                if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                    self.read_only=False
+                    msg_str='Current Data'
+                    self.getfromfs(r)
+                else:
+                    self.read_only=True
+                    msg_str='Historical Data as of %s'%\
+                             str(wx.DateTimeFromTimeT(self.historical_date))
+                    self.getfromfs(r, self.historical_date)
+                self.populate(r, True)
+                self.historical_data_label.SetLabel(msg_str)
+                self.list_widget.historical_data_label.SetLabel(msg_str)
         dlg.Destroy()
 
     def OnPrintDialog(self, mainwindow, config):
-        dlg=guiwidgets.SMSPrintDialog(self, mainwindow, config)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(guiwidgets.SMSPrintDialog(self, mainwindow, config),
+                                       True):
+            pass
     def CanPrint(self):
         return True
 

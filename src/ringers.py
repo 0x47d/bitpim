@@ -181,7 +181,8 @@ class RingerView(fileview.FileView):
             if dlg_resp==wx.ID_NO:
                 return
         self.AddToIndex(name, origin, filedata, self._data, mtime)
-        
+
+    @guihelper.BusyWrapper
     def OnAddFiles(self, filenames):
         for file in filenames:
             if file is None: continue  # failed dragdrop?
@@ -224,8 +225,6 @@ class RingerView(fileview.FileView):
                 target=self.get_media_name_from_filename(file, newext)
                 self.AddToIndex(target, self.active_section, filedata, self._data, mtime)
         self.OnRefresh()
-
-    OnAddFiles=guihelper.BusyWrapper(OnAddFiles)
 
     def ConvertFormat(self, file, convertinfo):
         dlg=ConvertDialog(self, file, convertinfo)
@@ -449,7 +448,7 @@ class ConvertDialog(wx.Dialog):
                       self.clip_duration.GetId(), self.clip_volume.GetId(),
                       clip_set_btn.GetId()]
 
-
+    @guihelper.BusyWrapper
     def OnConvert(self, _):
         self.OnStop()
         for i in self.cropids:
@@ -464,9 +463,6 @@ class ConvertDialog(wx.Dialog):
         for i in self.cropids:
             self.FindWindowById(i).Enable(True)
         self.FindWindowById(wx.ID_OK).Enable(True)
-
-    OnConvert=guihelper.BusyWrapper(OnConvert)
-
 
     def UpdateCrop(self):
         self.positionlabel.SetLabel("%.1f secs" % (self.slider.GetCurrent()*self.wfi.duration),)
@@ -542,7 +538,8 @@ class ConvertDialog(wx.Dialog):
         for file in self.temporaryfiles:
             if os.path.exists(file):
                 os.remove(file)
-        
+
+    @guihelper.BusyWrapper
     def OnOk(self, evt):
         self.OnStop()
         # make new data

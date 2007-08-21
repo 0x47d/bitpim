@@ -8,7 +8,7 @@
 ### $Id$
 
 """Interface to the database"""
-
+from __future__ import with_statement
 import os
 import copy
 import time
@@ -232,13 +232,9 @@ dictdataobjectfactory=dataobjectfactory(dict)
 ###
 
 
-if __debug__:
-    # Change this to True to see what is going on under the hood.  It
-    # will produce a lot of output!
-    TRACE=False
-else:
-    TRACE=False
-
+# Change this to True to see what is going on under the hood.  It
+# will produce a lot of output!
+TRACE=False
 
 def ExclusiveWrapper(method):
     """Wrap a method so that it has an exclusive lock on the database
@@ -246,47 +242,14 @@ def ExclusiveWrapper(method):
 
     # note that the existing threading safety checks in apsw will
     # catch any thread abuse issues.
-
-
     def _transactionwrapper(*args, **kwargs):
+        # arg[0] should be a Database instance
+        assert isinstance(args[0], Database)
+        with args[0]:
+            return method(*args, **kwargs)
 
-        # nb self is the Database instance
-        self=args[0]
-        self.excounter+=1
-        self.transactionwrite=False
-        if self.excounter==1:
-            if TRACE:
-                print "BEGIN EXCLUSIVE TRANSACTION"
-            self.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
-            self._schemacache={}
-        try:
-            try:
-                success=True
-                return method(*args, **kwargs)
-            except:
-                success=False
-                raise
-        finally:
-            self.excounter-=1
-            if self.excounter==0:
-                w=self.transactionwrite
-                if success:
-                    if w:
-                        cmd="COMMIT TRANSACTION"
-                    else:
-                        cmd="END TRANSACTION"
-                else:
-                    if w:
-                        cmd="ROLLBACK TRANSACTION"
-                    else:
-                        cmd="END TRANSACTION"
-                if TRACE:
-                    print cmd
-                self.cursor.execute(cmd)
-                
     setattr(_transactionwrapper, "__doc__", getattr(method, "__doc__"))
     return _transactionwrapper
-
 
 def sqlquote(s):
     "returns an sqlite quoted string (the return value will begin and end with single quotes)"
@@ -301,6 +264,31 @@ def idquote(s):
 class IntegrityCheckFailed(Exception): pass
 
 class Database:
+
+    # Make this class a context manager so it can be used with WITH blocks
+    def __enter__(self):
+        self.excounter+=1
+        self.transactionwrite=False
+        if self.excounter==1:
+            if TRACE:
+                print "BEGIN EXCLUSIVE TRANSACTION"
+            self.cursor.execute("BEGIN EXCLUSIVE TRANSACTION")
+            self._schemacache={}
+        return self
+
+    def __exit__(self, ex_type, ex_value, tb):
+        self.excounter-=1
+        if self.excounter==0:
+            w=self.transactionwrite
+            if tb is None:
+                # no exception, so commit
+                cmd="COMMIT TRANSACTION" if w else "END TRANSACTION"
+            else:
+                # an exception occurred, so rollback
+                cmd="ROLLBACK TRANSACTION" if w else "END TRANSACTION"
+            if TRACE:
+                print cmd
+            self.cursor.execute(cmd)
 
     def __del__(self):
         # connections have to be closed now
@@ -393,6 +381,7 @@ class Database:
             return [name for colnum,name,type in res]
         return res
 
+    @ExclusiveWrapper
     def savemajordict(self, tablename, dict, timestamp=None):
         """This is the entrypoint for saving a first level dictionary
         such as the phonebook or calendar.
@@ -607,9 +596,10 @@ class Database:
                 res+=`found`+","
             indirects[r]=res
                         
-
+    @ExclusiveWrapper
     def getmajordictvalues(self, tablename, factory=dictdataobjectfactory,
                            at_time=None):
+
         if not self.doestableexist(tablename):
             return {}
 
@@ -733,6 +723,7 @@ class Database:
         self.sql(" ".join(cmd))
         self.sql("drop table "+idquote("backup_"+tablename))
 
+    @ExclusiveWrapper
     def deleteold(self, tablename, uids=None, minvalues=3, maxvalues=5, keepoldest=93):
         """Deletes old entries from the database.  The deletion is based
         on either criterion of maximum values or age of values matching.
@@ -787,6 +778,7 @@ class Database:
 
         return len(deleterows), self.sql("select count(*) from "+idquote(tablename)).next()[0]
 
+    @ExclusiveWrapper
     def savelist(self, tablename, values):
         """Just save a list of items (eg categories).  There is no versioning or transaction history.
 
@@ -828,19 +820,14 @@ class Database:
             vv.sort()
             assert vdup==vv
 
+    @ExclusiveWrapper
     def loadlist(self, tablename):
         """Loads a list of items (eg categories)"""
         if not self.doestableexist(tablename):
             return []
         return [v[0] for v in self.sql("select item from %s where __deleted__=0" % (idquote(tablename),))]
         
-    # various operations need exclusive access to the database
-    savemajordict=ExclusiveWrapper(savemajordict)
-    getmajordictvalues=ExclusiveWrapper(getmajordictvalues)
-    deleteold=ExclusiveWrapper(deleteold)
-    savelist=ExclusiveWrapper(savelist)
-    loadlist=ExclusiveWrapper(loadlist)
-
+    @ExclusiveWrapper
     def getchangescount(self, tablename):
         """Return the number of additions, deletions, and modifications
         made to this table over time.

@@ -15,7 +15,7 @@ It invokes BitPim in gui or commandline mode as appropriate
 
 @Note: Only gui mode is supported at the moment
 """
-
+from __future__ import with_statement
 import sys
 import wx
 
@@ -62,14 +62,15 @@ if __name__ == '__main__':
     if _invalid_args:
         # invalid/unknown arguments
         try:
+            import guihelper
             _msg='%s\nUsage: %s [-c config file]|[-d config dir] [debug] [bitfling]\n'%(_error_str, sys.argv[0])
             sys.stderr.write(_msg)
             # try to display an error message box
             _app=wx.PySimpleApp()
-            _dlg=wx.MessageDialog(None, _msg, 'BitPim Error',
-                                  style=wx.OK|wx.ICON_ERROR)
-            _dlg.ShowModal()
-            _dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(None, _msg, 'BitPim Error',
+                                                         style=wx.OK|wx.ICON_ERROR),
+                                           True):
+                pass
         finally:
             sys.exit(1)
     _kwargs={}

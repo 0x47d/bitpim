@@ -13,6 +13,8 @@
 # which confused the heck out of pychecker
 
 # standard modules
+from __future__ import with_statement
+import contextlib
 import os
 import glob
 import sys
@@ -166,6 +168,22 @@ def BusyWrapper(method):
     setattr(_busywrapper, "__doc__", getattr(method, "__doc__"))
 
     return _busywrapper
+
+@contextlib.contextmanager
+def MWBusyWrapper(mw):
+    mw.OnBusyStart()
+    try:
+        yield mw
+    finally:
+        mw.OnBusyEnd()
+
+@contextlib.contextmanager
+def WXDialogWrapper(dlg, showmodal=False):
+    """ A wrapper for the wx.Dialog class that automatically calls Destroy"""
+    try:
+        yield (dlg, dlg.ShowModal()) if showmodal else dlg
+    finally:
+        dlg.Destroy()
 
 # Filename functions.  These work on brew names which use forward slash /
 # as the directory delimiter.  The builtin Python functions can't be used

@@ -685,7 +685,8 @@ class ImportDialog(wx.Dialog):
                 self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
             self.DataNeedsUpdate()
         dlg.Destroy()
-    
+
+    @guihelper.BusyWrapper
     def UpdateData(self):
         "Actually update the preview data"
         if not self.needsupdate:
@@ -736,8 +737,6 @@ class ImportDialog(wx.Dialog):
             self.data=newdata
 
         self.FillPreview()
-
-    UpdateData=guihelper.BusyWrapper(UpdateData)
 
     def _preview_format_name_none(self, row, col, names_col):
         # no format needed

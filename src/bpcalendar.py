@@ -106,6 +106,7 @@ exceptions:
 """
 
 # Standard modules
+from __future__ import with_statement
 import os
 import copy
 import calendar
@@ -936,9 +937,9 @@ class Calendar(calendarcontrol.Calendar):
         pubsub.subscribe(self.OnTodayButton, pubsub.MIDNIGHT)
 
     def OnPrintDialog(self, mainwindow, config):
-        dlg=CalendarPrintDialog(self, mainwindow, config)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(CalendarPrintDialog(self, mainwindow, config),
+                                       True):
+            pass
     def CanPrint(self):
         return True
 
@@ -1256,11 +1257,11 @@ class Calendar(calendarcontrol.Calendar):
     def mergedata(self, result):
         """ Merge the newdata (from the phone) into current data
         """
-        dlg=MergeDialog(self, self._data, result.get('calendar', {}))
-        if dlg.ShowModal()==wx.ID_OK:
-            self._data=dlg.get()
-            self.updateonchange()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(MergeDialog(self, self._data, result.get('calendar', {})),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._data=dlg.get()
+                self.updateonchange()
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk

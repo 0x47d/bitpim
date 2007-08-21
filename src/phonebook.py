@@ -815,21 +815,20 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                                             historical_events=\
                                             self.mainwindow.database.getchangescount('phonebook'))
         if dlg.ShowModal()==wx.ID_OK:
-            self.mainwindow.OnBusyStart()
-            current_choice, self.historical_date=dlg.GetValue()
-            r={}
-            if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
-                self.read_only=False
-                msg_str='Current Data'
-                self.getfromfs(r)
-            else:
-                self.read_only=True
-                msg_str='Historical Data as of %s'%\
-                         str(wx.DateTimeFromTimeT(self.historical_date))
-                self.getfromfs(r, self.historical_date)
-            self.populate(r, False)
-            self.historical_data_label.SetLabel(msg_str)
-            self.mainwindow.OnBusyEnd()
+            with guihelper.MWBusyWrapper(self.mainwindow):
+                current_choice, self.historical_date=dlg.GetValue()
+                r={}
+                if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                    self.read_only=False
+                    msg_str='Current Data'
+                    self.getfromfs(r)
+                else:
+                    self.read_only=True
+                    msg_str='Historical Data as of %s'%\
+                             str(wx.DateTimeFromTimeT(self.historical_date))
+                    self.getfromfs(r, self.historical_date)
+                self.populate(r, False)
+                self.historical_data_label.SetLabel(msg_str)
         dlg.Destroy()
 
     def OnIdle(self, _):
@@ -1663,6 +1662,7 @@ class ImportDataTable(wx.grid.PyGridTableBase):
                                           'result': _htmlfixup(result),
                                           'colour': colour}
 
+    @guihelper.BusyWrapper
     def OnDataUpdated(self):
         # update row keys
         newkeys=self.main.rowdata.keys()
@@ -1740,8 +1740,6 @@ class ImportDataTable(wx.grid.PyGridTableBase):
         self.GetView().ClearSelection()
         self.main.OnCellSelect()
         self.GetView().Refresh()
-
-    OnDataUpdated=guihelper.BusyWrapper(OnDataUpdated)
 
 def _htmlfixup(txt):
     if txt is None: return ""
@@ -1974,6 +1972,7 @@ class ImportDialog(wx.Dialog):
                 c.SetValue(True)
         self.table.OnDataUpdated()
 
+    @guihelper.BusyWrapper
     def DoMerge(self):
         if len(self.existingdata)*len(self.importdata)>200:
             progdlg=wx.ProgressDialog("Merging entries", "BitPim is merging the new information into the existing information",
@@ -1986,8 +1985,6 @@ class ImportDialog(wx.Dialog):
             if progdlg:
                 progdlg.Destroy()
             del progdlg
-
-    DoMerge=guihelper.BusyWrapper(DoMerge)
 
     def _DoMerge(self, progdlg):
         """Merges all the importdata with existing data
@@ -2979,6 +2976,7 @@ class PhonebookPrintDialog(wx.Dialog):
         self.html=self.GetCurrentHTML()
         self.preview.SetPage(self.html)
 
+    @guihelper.BusyWrapper
     def GetCurrentHTML(self):
         # Setup a nice environment pointing at this module
         vars={'phonebook': __import__(__name__) }
@@ -3018,8 +3016,6 @@ class PhonebookPrintDialog(wx.Dialog):
                     f.write(html)
             raise
         return html
-
-    GetCurrentHTML=guihelper.BusyWrapper(GetCurrentHTML)
 
     def OnPrintPreview(self, _):
         wx.GetApp().htmlprinter.PreviewText(self.html, scale=self.scale)
