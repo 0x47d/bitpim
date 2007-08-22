@@ -8,6 +8,7 @@
 ### $Id$
 
 # Standard modules
+from __future__ import with_statement
 import copy
 import webbrowser
 import re
@@ -316,28 +317,26 @@ class HtmlEasyPrinting:
         self.parent=parent
 
     def PrinterSetup(self):
-        printerDialog = wx.PrintDialog(self.parent)
-        if self.printData.Ok():
-            printerDialog.GetPrintDialogData().SetPrintData(self.printData.copy())
-        printerDialog.GetPrintDialogData().SetSetupDialog(True)
-        if printerDialog.ShowModal()==wx.ID_OK:
-            self.printData = PrintData(printerDialog.GetPrintDialogData().GetPrintData())
-            self._printdatatoconfig(self.printData)
-        printerDialog.Destroy()
+        with guihelper.WXDialogWrapper(wx.PrintDialog(self.parent)) as printerDialog:
+            if self.printData.Ok():
+                printerDialog.GetPrintDialogData().SetPrintData(self.printData.copy())
+            printerDialog.GetPrintDialogData().SetSetupDialog(True)
+            if printerDialog.ShowModal()==wx.ID_OK:
+                self.printData = PrintData(printerDialog.GetPrintDialogData().GetPrintData())
+                self._printdatatoconfig(self.printData)
 
     def PageSetup(self):
         psdd=wx.PageSetupDialogData()
         if self.printData.Ok():
             psdd.SetPrintData(self.printData.copy())
         self._configtopagesetupdata(psdd)
-        pageDialog=wx.PageSetupDialog(self.parent, psdd)
-        if pageDialog.ShowModal()==wx.ID_OK and \
-           pageDialog.GetPageSetupData().Ok() and \
-           pageDialog.GetPageSetupData().GetPrintData().Ok():
-            self.printData=PrintData(pageDialog.GetPageSetupData().GetPrintData())
-            self._printdatatoconfig(self.printData)
-            self._pagesetupdatatoconfig(pageDialog.GetPageSetupData())
-        pageDialog.Destroy()
+        with guihelper.WXDialogWrapper(wx.PageSetupDialog(self.parent, psdd)) as pageDialog:
+            if pageDialog.ShowModal()==wx.ID_OK and \
+               pageDialog.GetPageSetupData().Ok() and \
+               pageDialog.GetPageSetupData().GetPrintData().Ok():
+                self.printData=PrintData(pageDialog.GetPageSetupData().GetPrintData())
+                self._printdatatoconfig(self.printData)
+                self._pagesetupdatatoconfig(pageDialog.GetPageSetupData())
 
     def PreviewText(self, htmltext, basepath="", scale=1.0):
         printout1=self._getprintout(htmltext, basepath, scale)
