@@ -199,7 +199,7 @@ class Phone(com_samsung_packet.Phone):
                 contents=self.getfilecontents(filename)
 
                 name_len=ord(contents[5])
-                new_basefilename=contents[6:6+name_len]+".jpg"
+                new_basefilename=filename[p+1:]+"_"+contents[6:6+name_len]+".jpg"
                 duplicate=False
                 # Fix up duplicate filenames
                 for k in results[index_key].keys():
