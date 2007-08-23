@@ -13,7 +13,7 @@
 ###
 ### File viewer
 ###
-
+from __future__ import with_statement
 import os
 import copy
 import cStringIO
@@ -630,24 +630,24 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             ext=getext(items[0].name)
             if ext=="": ext="*"
             else: ext="*."+ext
-            dlg=wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0].name, style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-            if dlg.ShowModal()==wx.ID_OK:
-                file(dlg.GetPath(), "wb").write(self._data[items[0].datakey][items[0].key].mediadata)
-                if self._data[items[0].datakey][items[0].key].timestamp!=None:
-                    os.utime(dlg.GetPath(), (self._data[items[0].datakey][items[0].key].timestamp, 
-                                             self._data[items[0].datakey][items[0].key].timestamp))
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.FileDialog(self, "Save item", wildcard=ext, defaultFile=items[0].name, style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR),
+                                           True) as (dlg, retcode):
+                if retcode==wx.ID_OK:
+                    file(dlg.GetPath(), "wb").write(self._data[items[0].datakey][items[0].key].mediadata)
+                    if self._data[items[0].datakey][items[0].key].timestamp!=None:
+                        os.utime(dlg.GetPath(), (self._data[items[0].datakey][items[0].key].timestamp, 
+                                                 self._data[items[0].datakey][items[0].key].timestamp))
         else:
-            dlg=wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
-            if dlg.ShowModal()==wx.ID_OK:
-                for item in items:
-                    fname=item.name.encode(media_codec)
-                    fname=os.path.join(dlg.GetPath(), basename(fname))
-                    file(fname, 'wb').write(self._data[item.datakey][item.key].mediadata)
-                    if self._data[item.datakey][item.key].timestamp!=None:
-                        os.utime(fname, (self._data[item.datakey][item.key].timestamp, 
-                                         self._data[item.datakey][item.key].timestamp))
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.DirDialog(self, "Save items to", style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON),
+                                           True) as (dlg, retcode):
+                if retcode==wx.ID_OK:
+                    for item in items:
+                        fname=item.name.encode(media_codec)
+                        fname=os.path.join(dlg.GetPath(), basename(fname))
+                        file(fname, 'wb').write(self._data[item.datakey][item.key].mediadata)
+                        if self._data[item.datakey][item.key].timestamp!=None:
+                            os.utime(fname, (self._data[item.datakey][item.key].timestamp, 
+                                             self._data[item.datakey][item.key].timestamp))
 
     if guihelper.IsMSWindows():
         def OnCopy(self, _):
@@ -987,10 +987,10 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         return True
 
     def OnAdd(self, _=None):
-        dlg=wx.FileDialog(self, "Choose files", style=wx.OPEN|wx.MULTIPLE, wildcard=self.wildcard)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.OnAddFiles(dlg.GetPaths())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Choose files", style=wx.OPEN|wx.MULTIPLE, wildcard=self.wildcard),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.OnAddFiles(dlg.GetPaths())
 
     def CanRename(self):
         return len(self.GetSelectedItems())==1
@@ -1002,33 +1002,33 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                # either none or more than 1 items selected
                return
         old_name=items[0].name
-        dlg=wx.TextEntryDialog(self, "Enter a new name:", "Item Rename",
-                               old_name)
-        if dlg.ShowModal()==wx.ID_OK:
-            new_name=dlg.GetValue()
-            if len(new_name) and new_name!=old_name:
-                items[0].name=new_name
-                items[0].RenameInIndex(new_name)
-                pubsub.publish(pubsub.MEDIA_NAME_CHANGED,
-                               data={ pubsub.media_change_type: self.media_notification_type,
-                                      pubsub.media_old_name: old_name,
-                                      pubsub.media_new_name: new_name })
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, "Enter a new name:", "Item Rename",
+                                                          old_name),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                new_name=dlg.GetValue()
+                if len(new_name) and new_name!=old_name:
+                    items[0].name=new_name
+                    items[0].RenameInIndex(new_name)
+                    pubsub.publish(pubsub.MEDIA_NAME_CHANGED,
+                                   data={ pubsub.media_change_type: self.media_notification_type,
+                                          pubsub.media_old_name: old_name,
+                                          pubsub.media_new_name: new_name })
           
     def OnAddFiles(self,_):
-        raise Exception("not implemented")
+        raise NotImplementedError
 
     def OnReplace(self, _=None):
         items=self.GetSelectedItems()
         if len(items)!=1:
                # either none or more than 1 items selected
                return
-        dlg=wx.FileDialog(self, "Choose file",
-                          style=wx.OPEN, wildcard=self.wildcard)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.ReplaceContents(items[0].name, items[0].origin, dlg.GetPath())
-            items[0].Refresh()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Choose file",
+                                                     style=wx.OPEN, wildcard=self.wildcard),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.ReplaceContents(items[0].name, items[0].origin, dlg.GetPath())
+                items[0].Refresh()
 
     def get_media_name_from_filename(self, filename, newext=''):
         path,filename=os.path.split(filename)

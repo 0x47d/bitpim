@@ -9,12 +9,13 @@
 
 "Deals with Call History import/export stuff"
 # System Module
-
+from __future__ import with_statement
 # wxPython modules
 import wx
 
 # BitPim Modules
 import bptime
+import guihelper
 import phonenumber
 
 #------------------------------------------------------------------------------
@@ -65,9 +66,11 @@ class ExportCallHistoryDialog(wx.Dialog):
     def OnBrowse(self, _):
         dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
                           wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                                                     wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.filenamectrl.SetValue(dlg.GetPath())
 
     def OnOk(self, _):
         # do export
@@ -77,10 +80,10 @@ class ExportCallHistoryDialog(wx.Dialog):
         except:
             _fp=None
         if _fp is None:
-            dlg=wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                             'Export Error')
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                                            'Export Error'),
+                                           True):
+                pass
             self.EndModal(wx.ID_OK)
         if self.rows_all.GetValue():
             _data=self._data

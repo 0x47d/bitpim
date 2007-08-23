@@ -10,6 +10,7 @@
 """The main gui code for BitPim"""
 
 # System modules
+from __future__ import with_statement
 import ConfigParser
 import thread, threading
 import Queue
@@ -279,20 +280,18 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             pass
 
     def OnNewFile(self,_):
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(self.path):
-            path=self.path+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
-                     gui.Callback(self.parent.OnNewFileResults, self.path) )
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                infile=dlg.GetPath()
+                contents=open(infile, "rb").read()
+                if len(self.path):
+                    path=self.path+"/"+os.path.basename(dlg.GetPath())
+                else:
+                    path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
+                mw=self.mainwindow
+                mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
+                             gui.Callback(self.parent.OnNewFileResults, self.path) )
 
     def OnFileSave(self, _):
         path=self.itemtopath(self.GetFirstSelected())
@@ -309,11 +308,11 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
             ext="%s files (*.%s)|*.%s" % (ext.upper(), ext, ext)
         else:
             ext="All files|*"
-        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wb").write(contents)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), "wb").write(contents)
 
     def OnItemActivated(self,_):
         self.OnHexView(self)
@@ -346,16 +345,14 @@ class FileSystemFileView(wx.ListCtrl, listmix.ColumnSorterMixin):
 
     def OnFileOverwrite(self,_):
         path=self.itemtopath(self.GetFirstSelected())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
-                     gui.Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                infile=dlg.GetPath()
+                contents=open(infile, "rb").read()
+                mw=self.mainwindow
+                mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
+                             gui.Callback(self.OnFileOverwriteResults, guihelper.dirname(path)) )
         
     def OnFileOverwriteResults(self, parentdir, exception, _):
         mw=self.mainwindow
@@ -718,20 +715,18 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             self.SortChildren(item)
 
     def OnNewSubdir(self, _):
-        dlg=wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder")
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        item=self.GetSelection()
-        parent=self.itemtopath(item)
-        if len(parent):
-            path=parent+"/"+dlg.GetValue()
-        else:
-            path=dlg.GetValue()
-        mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.mkdir, path),
-                     gui.Callback(self.OnNewSubdirResults, path) )
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, "Subdirectory name?", "Create Subdirectory", "newfolder"),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                item=self.GetSelection()
+                parent=self.itemtopath(item)
+                if len(parent):
+                    path=parent+"/"+dlg.GetValue()
+                else:
+                    path=dlg.GetValue()
+                mw=self.mainwindow
+                mw.MakeCall( gui.Request(mw.wt.mkdir, path),
+                             gui.Callback(self.OnNewSubdirResults, path) )
             
     def OnNewSubdirResults(self, new_path, exception, _):
         mw=self.mainwindow
@@ -746,20 +741,18 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         
     def OnNewFile(self,_):
         parent=self.itemtopath(self.GetSelection())
-        dlg=wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
-        infile=dlg.GetPath()
-        contents=open(infile, "rb").read()
-        if len(parent):
-            path=parent+"/"+os.path.basename(dlg.GetPath())
-        else:
-            path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
-        mw=self.mainwindow
-        mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
-                     gui.Callback(self.OnNewFileResults, parent) )
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                infile=dlg.GetPath()
+                contents=open(infile, "rb").read()
+                if len(parent):
+                    path=parent+"/"+os.path.basename(dlg.GetPath())
+                else:
+                    path=os.path.basename(dlg.GetPath()) # you can't create files in root but I won't stop you
+                mw=self.mainwindow
+                mw.MakeCall( gui.Request(mw.wt.writefile, path, contents),
+                             gui.Callback(self.OnNewFileResults, parent) )
         
     def OnNewFileResults(self, parentdir, exception, _):
         mw=self.mainwindow
@@ -805,9 +798,11 @@ class FileSystemDirectoryView(wx.TreeCtrl):
         ext="Zip files|*.zip|All Files|*"
         dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
                              style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wb").write(backup)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), "wb").write(backup)
 
     def OnRestore(self, _):
         ext="Zip files|*.zip|All Files|*"
@@ -817,31 +812,28 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             bn="root"
         bn+=".zip"
         ext="Zip files|*.zip|All Files|*"
-        dlg=wx.FileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
-                             style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-        if dlg.ShowModal()!=wx.ID_OK:
-            return
-        name=dlg.GetPath()
-        if not zipfile.is_zipfile(name):
-            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" is not a valid zipfile.", "Zip file required",
-                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
-                                               style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
-        zipf=zipfile.ZipFile(name, "r")
-        xx=zipf.testzip()
-        if xx is not None:
-            dlg=guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" has corrupted contents.  Use a repair utility to fix it",
-                                               "Zip file corrupted",
-                                               lambda _: wx.GetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
-                                               style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Open backup file", defaultFile=bn, wildcard=ext,
+                                                     style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                name=dlg.GetPath()
+                if not zipfile.is_zipfile(name):
+                    with guihelper.WXDialogWrapper(guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" is not a valid zipfile.", "Zip file required",
+                                                                                  lambda _: wx.GetApp().displayhelpid(helpids.ID_NOT_A_ZIPFILE),
+                                                                                  style=wx.OK|wx.ICON_ERROR),
+                                                   True):
+                        return
+                zipf=zipfile.ZipFile(name, "r")
+                xx=zipf.testzip()
+                if xx is not None:
+                    with guihelper.WXDialogWrapper(guiwidgets.AlertDialogWithHelp(self.mainwindow, name+" has corrupted contents.  Use a repair utility to fix it",
+                                                                                  "Zip file corrupted",
+                                                                                  lambda _: wx.GetApp().displayhelpid(helpids.ID_ZIPFILE_CORRUPTED),
+                                                                                  style=wx.OK|wx.ICON_ERROR),
+                                                   True):
+                        return
 
-        dlg=RestoreDialog(self.mainwindow, "Restore files", zipf, path, self.OnRestoreOK)
-        dlg.Show(True)
+                RestoreDialog(self.mainwindow, "Restore files", zipf, path, self.OnRestoreOK).Show(True)
 
     def OnRestoreOK(self, zipf, names, parentdir):
         if len(names)==0:

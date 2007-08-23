@@ -10,6 +10,7 @@
 "Common stuff for the Calendar Import functions"
 
 # system modules
+from __future__ import with_statement
 import calendar
 import copy
 import datetime
@@ -22,6 +23,7 @@ import wx.lib.mixins.listctrl as listmix
 
 # local modules
 import database
+import guihelper
 import guiwidgets
 import pubsub
 
@@ -96,10 +98,10 @@ class ImportDataSource(object):
 
     def browse(self, parent=None):
         # how to select a source, default to select a file
-        dlg=wx.FileDialog(parent, self.message_str, wildcard=self.wildcard)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._source=dlg.GetPath()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(parent, self.message_str, wildcard=self.wildcard),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._source=dlg.GetPath()
 
     def get(self):
         # return a source suitable for importing data
@@ -766,9 +768,11 @@ class ExportCalendarDialog(wx.Dialog):
     def OnBrowse(self, _):
         dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
                           wildcard=self._wildcards, style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                                                     wildcard=self._wildcards, style=wx.SAVE|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.filenamectrl.SetValue(dlg.GetPath())
 
     def _export(self):
         # perform the actual caledar data import, subclass MUST override

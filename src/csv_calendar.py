@@ -10,6 +10,7 @@
 "Deals with CSV calendar import/export stuff"
 
 # System modules
+from __future__ import with_statement
 import csv
 import datetime
 
@@ -22,6 +23,7 @@ import wx
 import bpcalendar
 import common_calendar
 import helpids
+import guihelper
 
 module_debug=False
 
@@ -75,11 +77,10 @@ class ExportCSVDialog(ExportCSVDialogParent):
         except:
             f=None
         if f is None:
-            dlg=wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                             'Export Error')
-            dlg.ShowModal()
-            dlg.Destroy()
-            return
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                                            'Export Error'),
+                                           True):
+                return
         s=['"'+x[0]+'"' for x in csv_event_template]+\
            ['"'+x[0]+'"' for x in csv_repeat_template]
         f.write(','.join(s)+'\n')
@@ -467,20 +468,18 @@ class CSVImportDialog(common_calendar.PreviewDialog):
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a CSV Calendar File", wildcard='*.csv')
-        id=dlg.ShowModal()
-        if id==wx.ID_CANCEL:
-            dlg.Destroy()
-            return
-        self.folderctrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a CSV Calendar File", wildcard='*.csv'),
+                                       True) as (dlg, id):
+            if id==wx.ID_OK:
+                self.folderctrl.SetValue(dlg.GetPath())
 
     def OnFilter(self, evt):
         cat_list=self.__oc.get_category_list()
-        dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.__oc.set_filter(dlg.get())
-            self.populate(self.__oc.get_display_data())
+        with guihelper.WXDialogWrapper(common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.__oc.set_filter(dlg.get())
+                self.populate(self.__oc.get_display_data())
 
     def OnEndModal(self, evt):
         self.EndModal(evt.GetId())
@@ -536,14 +535,11 @@ class CSVAutoConfCalDialog(wx.Dialog):
         main_bs.Fit(self)
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a CSV Calendar File", wildcard='*.csv')
-        id=dlg.ShowModal()
-        if id==wx.ID_CANCEL:
-            dlg.Destroy()
-            return
-        self.folderctrl.SetValue(dlg.GetPath())
-        self.__read=False
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a CSV Calendar File", wildcard='*.csv'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.folderctrl.SetValue(dlg.GetPath())
+                self.__read=False
 
     def OnFilter(self, evt):
         # read the calender to get the category list
@@ -551,10 +547,10 @@ class CSVAutoConfCalDialog(wx.Dialog):
             self._oc.read(self.folderctrl.GetValue())
             self.__read=True
         cat_list=self._oc.get_category_list()
-        dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self._oc.get_filter())
-        if dlg.ShowModal()==wx.ID_OK:
-            self._oc.set_filter(dlg.get())
+        with guihelper.WXDialogWrapper(common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)) as dlg:
+            dlg.set(self._oc.get_filter())
+            if dlg.ShowModal()==wx.ID_OK:
+                self._oc.set_filter(dlg.get())
 
     def GetFolder(self):
         return self.folderctrl.GetValue()

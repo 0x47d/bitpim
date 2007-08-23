@@ -7,6 +7,7 @@
 ###
 ### $Id$
 
+from __future__ import with_statement
 import calendar
 import copy
 import datetime
@@ -359,10 +360,10 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         end=datetime.datetime(*self._w['end'].GetValue())
         if start>end:
             # scold the user
-            dlg=wx.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
-                                wx.OK|wx.ICON_EXCLAMATION)
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
+                                                            wx.OK|wx.ICON_EXCLAMATION),
+                                           True):
+                pass
             # move focus
             self._w['end'].SetFocus()
             return False
@@ -462,8 +463,9 @@ class CategoryEditor(pb_editor.DirtyUIBase):
         hs.Fit(self)
 
     def OnManageCategories(self, _):
-        dlg=pb_editor.CategoryManager(self)
-        dlg.ShowModal()
+        with guihelper.WXDialogWrapper(pb_editor.CategoryManager(self),
+                                       True):
+            pass
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
@@ -966,16 +968,15 @@ class Editor(wx.Dialog):
         return self._AskAboutRecurringEvent("Change recurring event?", "Do you want to change all the recurring events, or just this one?", "Change")
 
     def _AskAboutRecurringEvent(self, caption, text, prefix):
-        dlg=RecurringDialog(self, caption, text, prefix)
-        res=dlg.ShowModal()
-        dlg.Destroy()
-        if res==dlg.ID_THIS:
-            return self.ANSWER_THIS
-        if res==dlg.ID_ALL:
-            return self.ANSWER_ORIGINAL
-        if res==dlg.ID_CANCEL:
-            return self.ANSWER_CANCEL
-        assert False
+        with guihelper.WXDialogWrapper(RecurringDialog(self, caption, text, prefix),
+                                       True) as (dlg, res):
+            if res==dlg.ID_THIS:
+                return self.ANSWER_THIS
+            if res==dlg.ID_ALL:
+                return self.ANSWER_ORIGINAL
+            if res==dlg.ID_CANCEL:
+                return self.ANSWER_CANCEL
+            assert False
 #------------------------------------------------------------------------------    
 # We derive from wxPanel not the control directly.  If we derive from
 # wx.MaskedTextCtrl then all hell breaks loose as our {Get|Set}Value
