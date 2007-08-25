@@ -10,6 +10,7 @@
 "Deals with Google Calendar (gCalendar) import stuff"
 
 # system modules
+from __future__ import with_statement
 import urllib2
 
 # site modules
@@ -18,6 +19,7 @@ import wx
 # local modules
 import common_calendar
 import database
+import guihelper
 import ical_calendar as ical
 import vcal_calendar as vcal
 
@@ -33,11 +35,11 @@ class ImportDataSource(common_calendar.ImportDataSource):
         if parent is None or not hasattr(parent, 'GetActiveDatabase'):
             # need the database
             return
-        dlg=SelectURLDialog(parent, self.message_str,
-                            parent.GetActiveDatabase())
-        if dlg.ShowModal()==wx.ID_OK:
-            self._source=dlg.GetPath()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(SelectURLDialog(parent, self.message_str,
+                                                       parent.GetActiveDatabase()),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._source=dlg.GetPath()
 
 #-------------------------------------------------------------------------------
 URLDictKey='URLs'
@@ -77,10 +79,10 @@ class gCalImportDialog(ical.iCalImportCalDialog):
         super(gCalImportDialog, self).__init__(parent, id, title)
 
     def OnBrowseFolder(self, _):
-        dlg=SelectURLDialog(self, 'Select a Google Calendar iCal URL', self._db)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.folderctrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(SelectURLDialog(self, 'Select a Google Calendar iCal URL', self._db),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.folderctrl.SetValue(dlg.GetPath())
 
 #-------------------------------------------------------------------------------
 class SelectURLDialog(wx.Dialog):
@@ -130,14 +132,14 @@ class SelectURLDialog(wx.Dialog):
         del self._data[_idx]
         self._save_to_fs(self._data)
     def OnNew(self, _):
-        _dlg=NewURLDialog(self)
-        if _dlg.ShowModal()==wx.ID_OK:
-            _name, _url=_dlg.get()
-            self._choices.Append(_name, _url)
-            self._data.append({ 'name': _name,
-                                'url': _url })
-            self._save_to_fs(self._data)
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(NewURLDialog(self),
+                                       True) as (_dlg, retcode):
+            if retcode==wx.ID_OK:
+                _name, _url=_dlg.get()
+                self._choices.Append(_name, _url)
+                self._data.append({ 'name': _name,
+                                    'url': _url })
+                self._save_to_fs(self._data)
     def OnOK(self, evt):
         self.EndModal(wx.ID_OK)
     def GetPath(self):

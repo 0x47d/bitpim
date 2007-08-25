@@ -378,11 +378,12 @@ class MainApp(wx.App):
         self.config=bp_config.Config(self._config_filename)
         # Check to see if we're the 2nd instance running on the same DB
         if self.usingsamedb():
-            wx.MessageDialog(None,
-                             'Another copy of BitPim is using the same data dir:\n%s'%self.config._path,
-                             'BitPim Error',
-                             style=wx.OK|wx.ICON_ERROR).ShowModal()
-            return False
+            with guihelper.WXDialogWrapper(wx.MessageDialog(None,
+                                                            'Another copy of BitPim is using the same data dir:\n%s'%self.config._path,
+                                                            'BitPim Error',
+                                                            style=wx.OK|wx.ICON_ERROR),
+                                           True):
+                return False
         # this is for wx native use, like the freaking help controller !
         self.wxconfig=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
 
@@ -1062,8 +1063,10 @@ class MainWindow(wx.Frame):
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
         if wx.IsBusy():
-            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+            with guihelper.WXDialogWrapper(wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                                                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION),
+                                           True):
+                pass
         else:
             # clear the ower's name for manual setting
             self.__owner_name=''
@@ -1136,8 +1139,8 @@ class MainWindow(wx.Frame):
                              "Phone Info Error", style=wx.OK)
         else:
             dlg=phoneinfo.PhoneInfoDialog(self, phone_info)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(dlg, True):
+            pass
 
     def OnDetectPhone(self, _=None):
         if wx.IsBusy():
@@ -1185,19 +1188,17 @@ class MainWindow(wx.Frame):
         s=None
         if phone_name=='<None/>':
             # not seen before
-            dlg=guiwidgets.AskPhoneNameDialog(
-                self, 'A new phone has been detected,\n'
-                "Would you like to enter the owner's name:", style=style)
-            r=dlg.ShowModal()
-            if r==wx.ID_OK:
-                # user gave a name
-                s=dlg.GetValue()
-            elif r==wx.ID_CANCEL:
-                s=''
-            if s is not None:
-                self.config.Write(phone_id, s)
-            dlg.Destroy()
-            return s
+            with guihelper.WXDialogWrapper(guiwidgets.AskPhoneNameDialog(self, 'A new phone has been detected,\n'
+                                                                         "Would you like to enter the owner's name:", style=style),
+                                           True) as (dlg, r):
+                if r==wx.ID_OK:
+                    # user gave a name
+                    s=dlg.GetValue()
+                elif r==wx.ID_CANCEL:
+                    s=''
+                if s is not None:
+                    self.config.Write(phone_id, s)
+                return s
         return phone_name
         
     def OnDetectPhoneReturn(self, check_auto_sync, silent_fail, exception, r):
@@ -1207,12 +1208,12 @@ class MainWindow(wx.Frame):
         if r is None:
             if not silent_fail:
                 self.__owner_name=''
-                _dlg=wx.MessageDialog(self, 'No phone detected/recognized.\nRun Settings?',
-                                      'Phone Detection Failed', wx.YES_NO)
-                if _dlg.ShowModal()==wx.ID_YES:
-                    wx.CallAfter(self.OnEditSettings)
-                _dlg.Destroy()
-                self.SetPhoneModelStatus(guiwidgets.SB_Phone_Set)
+                with guihelper.WXDialogWrapper(wx.MessageDialog(self, 'No phone detected/recognized.\nRun Settings?',
+                                                                'Phone Detection Failed', wx.YES_NO),
+                                               True) as (_dlg, retcode):
+                    if retcode==wx.ID_YES:
+                        wx.CallAfter(self.OnEditSettings)
+                    self.SetPhoneModelStatus(guiwidgets.SB_Phone_Set)
         else:
             if silent_fail:
                 self.__owner_name=None
@@ -1567,8 +1568,10 @@ class MainWindow(wx.Frame):
         
     def OnAutoSyncSettings(self, _=None):
         if wx.IsBusy():
-            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
+            with guihelper.WXDialogWrapper(wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                                                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION),
+                                           True):
+                pass
         else:
             # clear the ower's name for manual setting
             self.__owner_name=''
@@ -1627,9 +1630,9 @@ class MainWindow(wx.Frame):
             self.tree.lwdata.log(str)
         if str.startswith("<!= "):
             p=str.index("=!>")+3
-            dlg=wx.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION)
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION),
+                                           True):
+                pass
             self.OnLog("Alert dialog closed")
     log=OnLog
     def OnLogData(self, str, data, klass=None, data_type=None):
@@ -1708,9 +1711,9 @@ class MainWindow(wx.Frame):
             
         if text is not None:
             self.OnLog("Error: "+title+"\n"+text)
-            dlg=guiwidgets.AlertDialogWithHelp(self,text, title, help, style=style)
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(guiwidgets.AlertDialogWithHelp(self,text, title, help, style=style),
+                                           True):
+                pass
             return True
 
         if self.exceptiondialog is None:
@@ -1759,9 +1762,9 @@ class MainWindow(wx.Frame):
 
     # Data Recording stuff
     def OnDataRecording(self, _):
-        _dlg=guiwidgets.DRRecFileDialog(self)
-        _dlg.ShowModal()
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(guiwidgets.DRRecFileDialog(self),
+                                       True):
+            pass
 
     # plumbing for the multi-threading
 
