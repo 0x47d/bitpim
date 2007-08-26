@@ -796,8 +796,6 @@ class FileSystemDirectoryView(wx.TreeCtrl):
             bn="root"
         bn+=".zip"
         ext="Zip files|*.zip|All Files|*"
-        dlg=wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
-                             style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
         with guihelper.WXDialogWrapper(wx.FileDialog(self, "Save File As", defaultFile=bn, wildcard=ext,
                                                      style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR),
                                        True) as (dlg, retcode):

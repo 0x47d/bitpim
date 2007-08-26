@@ -64,8 +64,6 @@ class ExportCallHistoryDialog(wx.Dialog):
         return hbs
 
     def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
         with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
                                                      wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR),
                                        True) as (dlg, retcode):

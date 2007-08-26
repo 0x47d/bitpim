@@ -541,20 +541,11 @@ class ConfigDialog(wx.Dialog):
         # w=self.mw.config.ReadInt("combrowsewidth", 640)
         # h=self.mw.config.ReadInt("combrowseheight", 480)
         p=self.mw.config.ReadInt("combrowsesash", 200)
-        dlg=CommPortDialog(self, common.importas(phones.module(self.phonebox.GetValue())), defaultport=self.commbox.GetValue(), sashposition=p)
-        # dlg.SetSize(wx.Size(w,h))
-        # dlg.Centre()
-        res=dlg.ShowModal()
-        v=dlg.GetPort()
-        
-        # sz=dlg.GetSize()
-        # self.mw.config.WriteInt("combrowsewidth", sz.GetWidth())
-        # self.mw.config.WriteInt("combrowseheight", sz.GetHeight())
-
-        self.mw.config.WriteInt("combrowsesash", dlg.sashposition)
-        dlg.Destroy()
-        if res==wx.ID_OK:
-            self.commbox.SetValue(v)
+        with guihelper.WXDialogWrapper(CommPortDialog(self, common.importas(phones.module(self.phonebox.GetValue())), defaultport=self.commbox.GetValue(), sashposition=p),
+                                       True) as (dlg, res):
+            self.mw.config.WriteInt("combrowsesash", dlg.sashposition)
+            if res==wx.ID_OK:
+                self.commbox.SetValue(dlg.GetPort())
 
     def ApplyBitFlingSettings(self, _=None):
         if self.bitflingenabled is not None:
@@ -568,10 +559,10 @@ class ConfigDialog(wx.Dialog):
                 bitflingscan.flinger.unconfigure()
 
     def OnBitFlingSettings(self, _):
-        dlg=BitFlingSettingsDialog(None, self.mw.config)
-        if dlg.ShowModal()==wx.ID_OK:
-            dlg.SaveSettings()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(BitFlingSettingsDialog(None, self.mw.config),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                dlg.SaveSettings()
         self.ApplyBitFlingSettings()
         if self.mw.config.Read("bitfling/password","<unconfigured>") \
                != "<unconfigured>":
@@ -891,11 +882,11 @@ class CommPortDialog(wx.Dialog):
             print >>html, "<tr><td colspan=3>%s</td></tr>" % (desc,)
             print >>html, "<tr><td colspan=3><hr></td></tr>"
         print >>html, "</table></body></html>"
-        dlg=wx.FileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
-                         style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            open(dlg.GetPath(), "wt").write(html.getvalue())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Save port details as", defaultFile="bitpim-ports.html", wildcard="HTML files (*.html)|*.html",
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), "wt").write(html.getvalue())
 
     def OnCancel(self, _):
         self.saveSize()
@@ -1072,18 +1063,18 @@ class BitFlingSettingsDialog(wx.Dialog):
         try:
             bitflingscan.flinger.configure(*self.GetSettings())
             res=bitflingscan.flinger.getversion()
-            dlg=wx.MessageDialog(self, "Succeeded. Remote version is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, "Succeeded. Remote version is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION),
+                                           True):
+                pass
         except Exception,ex:
             res="Failed: %s: %s" % sys.exc_info()[:2]
             if hasattr(ex, "gui_exc_info"):
                 print common.formatexception( ex.gui_exc_info)
             else:
                 print common.formatexception()
-            dlg=wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR),
+                                           True):
+                pass
 
 
 ###
@@ -1175,21 +1166,21 @@ class ExceptionDialog(wx.Dialog):
         return self._text
 
     def OnCreateReport(self, _):
-        _dlg=CreateTroubleReportDialog(self.GetParent())
-        if _dlg.ShowModal()==wx.ID_OK:
-            try:
-                self._create_report(_dlg.GetValue())
-                _msg=wx.MessageDialog(self,
-                                      'Trouble Report created successfully!',
-                                      'BitPim Trouble Report', style=wx.OK)
-            except:
-                _msg=wx.MessageDialog(self,
-                                      'Failed to Create Trouble Report',
-                                      'Trouble Report Error',
-                                      style=wx.OK|wx.ICON_ERROR)
-            _msg.ShowModal()
-            _msg.Destroy()
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(CreateTroubleReportDialog(self.GetParent()),
+                                       True) as (_dlg, retcode):
+            if retcode==wx.ID_OK:
+                try:
+                    self._create_report(_dlg.GetValue())
+                    _msg=wx.MessageDialog(self,
+                                          'Trouble Report created successfully!',
+                                          'BitPim Trouble Report', style=wx.OK)
+                except:
+                    _msg=wx.MessageDialog(self,
+                                          'Failed to Create Trouble Report',
+                                          'Trouble Report Error',
+                                          style=wx.OK|wx.ICON_ERROR)
+                with guihelper.WXDialogWrapper(_msg, True):
+                    pass
     def _create_report(self, vals):
         with contextlib.closing(gzip.GzipFile(vals['filename'], 'wb')) as _s:
             _s.write('BitPim Trouble Report\n')
@@ -1281,13 +1272,13 @@ class CreateTroubleReportDialog(wx.Dialog):
         wx.GetApp().displayhelpid(helpids.ID_TROUBLEREPORT)
     def OnBrowse(self, _):
         # how to select a source, default to select a file
-        dlg=wx.FileDialog(self, self._filename.GetValue(),
-                          defaultFile=self._filename.GetValue(),
-                          style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
-                          wildcard='gzip files|*.gz')
-        if dlg.ShowModal()==wx.ID_OK:
-            self._filename.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, self._filename.GetValue(),
+                                                     defaultFile=self._filename.GetValue(),
+                                                     style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
+                                                     wildcard='gzip files|*.gz'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._filename.SetValue(dlg.GetPath())
     def GetValue(self):
         # return a dict of values of this dialog
         return { 'name': self._name.GetValue(),
@@ -2010,8 +2001,9 @@ class DRRecFileDialog(wx.Dialog):
     def OnBrowse(self, _):
         _dlg=wx.FileDialog(self)
         _dlg.SetPath(self._file_name.GetValue())
-        if _dlg.ShowModal()==wx.ID_OK:
-            self._file_name.SetValue(_dlg.GetPath())
+        with guihelper.WXDialogWrapper(_dlg, True) as (_dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._file_name.SetValue(_dlg.GetPath())
 
     def OnView(self, _):
         _dr_file=data_recording.DR_Read_File(self._file_name.GetValue())
@@ -2033,12 +2025,12 @@ class DRRecFileDialog(wx.Dialog):
         if not data_recording.DR_Play:
             # not playing back, start playing
             self.OnPlay()
-        _dlg=wx.SingleChoiceDialog(self, 'Select the Starting Point',
-                                   'Data Recording Set Start',
-                                   choices=data_recording.get_headers())
-        if _dlg.ShowModal()==wx.ID_OK:
-            data_recording.set_start(_dlg.GetSelection())
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.SingleChoiceDialog(self, 'Select the Starting Point',
+                                                             'Data Recording Set Start',
+                                                             choices=data_recording.get_headers()),
+                                       True) as (_dlg, retcode):
+            if retcode==wx.ID_OK:
+                data_recording.set_start(_dlg.GetSelection())
 
 # About Dialog-----------------------------------------------------------------
 _license="""The BitPim code is under the GNU General Public License as detailed
@@ -2217,12 +2209,12 @@ class PrintDialog(wx.Dialog):
         self._gen_print_data()
         wx.GetApp().htmlprinter.PreviewText(self._html)
     def OnSaveHTML(self, _):
-        _dlg=wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
-                           style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
-        if _dlg.ShowModal()==wx.ID_OK:
-            self._gen_print_data()
-            file(_dlg.GetPath(), 'wt').write(self._html)
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
+                                                     style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT),
+                                       True) as (_dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._gen_print_data()
+                file(_dlg.GetPath(), 'wt').write(self._html)
     def OnClose(self, _):
         try:
             # remove the temp file, ignore exception if file does not exist

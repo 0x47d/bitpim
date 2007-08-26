@@ -766,8 +766,6 @@ class ExportCalendarDialog(wx.Dialog):
         return hbs
 
     def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard=self._wildcards, style=wx.SAVE|wx.CHANGE_DIR)
         with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
                                                      wildcard=self._wildcards, style=wx.SAVE|wx.CHANGE_DIR),
                                        True) as (dlg, retcode):
