@@ -116,6 +116,7 @@ import phonebookentryeditor
 import pubsub
 import nameparser
 import bphtml
+import guihelper
 import guiwidgets
 import phonenumber
 import helpids
@@ -776,9 +777,9 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         return True
 
     def OnViewColumnSelector(self):
-        dlg=ColumnSelectorDialog(self.parent, self.config, self)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(ColumnSelectorDialog(self.parent, self.config, self),
+                                       True):
+            pass
 
     def HasPreviewPane(self):
         return True
@@ -809,27 +810,27 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
             current_choice=guiwidgets.HistoricalDataDialog.Historical_Data
         else:
             current_choice=guiwidgets.HistoricalDataDialog.Current_Data
-        dlg=guiwidgets.HistoricalDataDialog(self,
-                                            current_choice=current_choice,
-                                            historical_date=self.historical_date,
-                                            historical_events=\
-                                            self.mainwindow.database.getchangescount('phonebook'))
-        if dlg.ShowModal()==wx.ID_OK:
-            with guihelper.MWBusyWrapper(self.mainwindow):
-                current_choice, self.historical_date=dlg.GetValue()
-                r={}
-                if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
-                    self.read_only=False
-                    msg_str='Current Data'
-                    self.getfromfs(r)
-                else:
-                    self.read_only=True
-                    msg_str='Historical Data as of %s'%\
-                             str(wx.DateTimeFromTimeT(self.historical_date))
-                    self.getfromfs(r, self.historical_date)
-                self.populate(r, False)
-                self.historical_data_label.SetLabel(msg_str)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(guiwidgets.HistoricalDataDialog(self,
+                                                                       current_choice=current_choice,
+                                                                       historical_date=self.historical_date,
+                                                                       historical_events=\
+                                                                       self.mainwindow.database.getchangescount('phonebook')),
+                                           True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                with guihelper.MWBusyWrapper(self.mainwindow):
+                    current_choice, self.historical_date=dlg.GetValue()
+                    r={}
+                    if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                        self.read_only=False
+                        msg_str='Current Data'
+                        self.getfromfs(r)
+                    else:
+                        self.read_only=True
+                        msg_str='Historical Data as of %s'%\
+                                 str(wx.DateTimeFromTimeT(self.historical_date))
+                        self.getfromfs(r, self.historical_date)
+                    self.populate(r, False)
+                    self.historical_data_label.SetLabel(msg_str)
 
     def OnIdle(self, _):
         "We save out changed data"
@@ -925,29 +926,30 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         if datakey in ('categories', 'ringtones', 'wallpapers') and \
            len(_keys)>1 and not self.read_only:
             # Edit a single field for all seleced cells
-            dlg=phonebookentryeditor.SingleFieldEditor(self, datakey)
-            if dlg.ShowModal()==wx.ID_OK:
-                _data=dlg.GetData()
-                if _data:
-                    for r in _keys:
-                        self._data[r][datakey]=_data
-                else:
-                    for r in _keys:
-                        del self._data[r][datakey]
-                self.SetPreview(self._data[_keys[0]])
-                self.dt.OnDataUpdated()
-                self.modified=True
+            with guihelper.WXDialogWrapper(phonebookentryeditor.SingleFieldEditor(self, datakey),
+                                           True) as (dlg, retcode):
+                if retcode==wx.ID_OK:
+                    _data=dlg.GetData()
+                    if _data:
+                        for r in _keys:
+                            self._data[r][datakey]=_data
+                    else:
+                        for r in _keys:
+                            del self._data[r][datakey]
+                    self.SetPreview(self._data[_keys[0]])
+                    self.dt.OnDataUpdated()
+                    self.modified=True
         else:
-            dlg=phonebookentryeditor.Editor(self, data,
-                                            factory=phonebookobjectfactory,
-                                            keytoopenon=datakey,
-                                            dataindex=dataindex,
-                                            readonly=self.read_only,
-                                            datakey=key,
-                                            movement=True)
-            if dlg.ShowModal()==wx.ID_OK:
-                self.SaveData(dlg.GetData(), dlg.GetDataKey())
-        dlg.Destroy()
+            with guihelper.WXDialogWrapper(phonebookentryeditor.Editor(self, data,
+                                                                       factory=phonebookobjectfactory,
+                                                                       keytoopenon=datakey,
+                                                                       dataindex=dataindex,
+                                                                       readonly=self.read_only,
+                                                                       datakey=key,
+                                                                       movement=True),
+                                           True) as (dlg, retcode):
+                if retcode==wx.ID_OK:
+                    self.SaveData(dlg.GetData(), dlg.GetDataKey())
 
     def SaveData(self, data, key):
         self._data[key]=data
@@ -960,18 +962,18 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         data=self._data[key]
         # can we get it to open on the correct field?
         datakey,dataindex=getdatainfo(self.GetColumns()[column], data)
-        dlg=phonebookentryeditor.Editor(self, data,
-                                        factory=phonebookobjectfactory,
-                                        keytoopenon=datakey,
-                                        dataindex=dataindex,
-                                        readonly=self.read_only)
-        if dlg.ShowModal()==wx.ID_OK:
-            data=dlg.GetData()
-            self._data[key]=data
-            self.dt.OnDataUpdated()
-            self.SetPreview(data)
-            self.modified=True
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(phonebookentryeditor.Editor(self, data,
+                                                                   factory=phonebookobjectfactory,
+                                                                   keytoopenon=datakey,
+                                                                   dataindex=dataindex,
+                                                                   readonly=self.read_only),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                data=dlg.GetData()
+                self._data[key]=data
+                self.dt.OnDataUpdated()
+                self.SetPreview(data)
+                self.modified=True
 
     def GetNextEntry(self, next=True):
         # return the data for the next item on the list
@@ -1012,20 +1014,20 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def OnAdd(self, _):
         if self.read_only:
             return
-        dlg=phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]}, keytoopenon="names", dataindex=0)
-        if dlg.ShowModal()==wx.ID_OK:
-            data=phonebookobjectfactory.newdataobject(dlg.GetData())
-            data.EnsureBitPimSerial()
-            while True:
-                key=int(time.time())
-                if key in self._data:
-                    continue
-                break
-            self._data[key]=data
-            self.dt.OnDataUpdated()
-            self.SetPreview(data)
-            self.modified=True
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(phonebookentryeditor.Editor(self, {'names': [{'full': 'New Entry'}]}, keytoopenon="names", dataindex=0),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                data=phonebookobjectfactory.newdataobject(dlg.GetData())
+                data.EnsureBitPimSerial()
+                while True:
+                    key=int(time.time())
+                    if key in self._data:
+                        continue
+                    break
+                self._data[key]=data
+                self.dt.OnDataUpdated()
+                self.SetPreview(data)
+                self.modified=True
 
     def GetSelectedRows(self):
         rows=[]
@@ -1073,9 +1075,9 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         return True
 
     def OnPrintDialog(self, mainwindow, config):
-        dlg=PhonebookPrintDialog(self, mainwindow, config)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(PhonebookPrintDialog(self, mainwindow, config),
+                                       True):
+            pass
 
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
@@ -1204,8 +1206,8 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def importdata(self, importdata, categoriesinfo=[], merge=True):
         if self.read_only:
             wx.MessageBox('You are viewing historical data which cannot be changed or saved',
-                             'Cannot Save Phonebook Data',
-                             style=wx.OK|wx.ICON_ERROR)
+                          'Cannot Save Phonebook Data',
+                          style=wx.OK|wx.ICON_ERROR)
             return
         if merge:
             d=self._data
@@ -1213,20 +1215,19 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
             d={}
         normalise_data(importdata)
         self._ensure_unicode(importdata)
-        dlg=ImportDialog(self, d, importdata)
-        result=None
-        if dlg.ShowModal()==wx.ID_OK:
-            result=dlg.resultdata
-        guiwidgets.save_size("PhoneImportMergeDialog", dlg.GetRect())
-        dlg.Destroy()
-        if result is not None:
-            d={}
-            database.ensurerecordtype(result, phonebookobjectfactory)
-            database.ensurebitpimserials(result)
-            d['phonebook']=result
-            d['categories']=categoriesinfo
-            self.populatefs(d)
-            self.populate(d, False)
+        with guihelper.WXDialogWrapper(ImportDialog(self, d, importdata),
+                                       True) as (dlg, retcode):
+            guiwidgets.save_size("PhoneImportMergeDialog", dlg.GetRect())
+            if retcode==wx.ID_OK:
+                result=dlg.resultdata
+                if result is not None:
+                    d={}
+                    database.ensurerecordtype(result, phonebookobjectfactory)
+                    database.ensurebitpimserials(result)
+                    d['phonebook']=result
+                    d['categories']=categoriesinfo
+                    self.populatefs(d)
+                    self.populate(d, False)
     
     def converttophone(self, data):
         self.error_log.ClearMessages()
@@ -2238,9 +2239,9 @@ class ImportDialog(wx.Dialog):
                     match=len(choices)
                 choices.append( (getdata("Name", self.existingdata[existingkey], "<blank>"), existingkey) )
         
-        dlg=ImportedEntryMatchDialog(self, choices, match)
-        try:
-            if dlg.ShowModal()==wx.ID_OK:
+        with guihelper.WXDialogWrapper(ImportedEntryMatchDialog(self, choices, match),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
                 confidence,importkey,existingkey,resultkey=self.table.GetRowData(self.grid.GetGridCursorRow())
                 assert importkey is not None
                 match=dlg.GetMatch()
@@ -2285,8 +2286,6 @@ class ImportDialog(wx.Dialog):
                         self.table.OnDataUpdated()
                         return
                 assert False, "Can't get here"
-        finally:
-            dlg.Destroy()
 
     def OnCellDClick(self, event):
         self.EditEntry(event.GetRow(), event.GetCol())
@@ -2304,13 +2303,12 @@ class ImportDialog(wx.Dialog):
         else:
             columnname="Name"
         datakey, dataindex=getdatainfo(columnname, data)
-        dlg=phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex)
-        if dlg.ShowModal()==wx.ID_OK:
-            data=dlg.GetData()
-            self.resultdata[k]=data
-            self.table.OnDataUpdated()
-        dlg.Destroy()
-
+        with guihelper.WXDialogWrapper(phonebookentryeditor.Editor(self, data, keytoopenon=datakey, dataindex=dataindex),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                data=dlg.GetData()
+                self.resultdata[k]=data
+                self.table.OnDataUpdated()
 
 class ImportedEntryMatchDialog(wx.Dialog):
     "The dialog shown to select how an imported entry should match"
@@ -3030,11 +3028,11 @@ class PhonebookPrintDialog(wx.Dialog):
         wx.GetApp().htmlprinter.PageSetup()
 
     def OnSaveHTML(self, _):
-        _dlg=wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
-                           style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
-        if _dlg.ShowModal()==wx.ID_OK:
-            file(_dlg.GetPath(), 'wt').write(self.html)
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, wildcard="Web Page (*.htm;*.html)|*.htm;*html",
+                                                     style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT),
+                                       True) as (_dlg, _retcode):
+            if _retcode==wx.ID_OK:
+                file(_dlg.GetPath(), 'wt').write(self.html)
 
 def htmlify(string):
     return common.strorunicode(string).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")

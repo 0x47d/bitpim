@@ -10,6 +10,7 @@
 "Deals with Outlook calendar import stuff"
 
 # System modules
+from __future__ import with_statement
 import datetime
 import pywintypes
 import sys
@@ -26,6 +27,7 @@ import wx.lib.mixins.listctrl as listmix
 import bpcalendar
 import common
 import common_calendar
+import guihelper
 import guiwidgets
 import helpids
 import native.outlook
@@ -548,23 +550,21 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
         wx.EVT_BUTTON(self, self.ID_MERGE, self.OnEndModal)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
+    @guihelper.BusyWrapper
     def OnImport(self, evt):
-        wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog(self._progress_dlg_title,
-                              'Importing Outlook Data, please wait ...\n(Please also watch out for the Outlook Permission Request dialog)',
-                              parent=self)
-        self._oc.read(None, dlg)
-        self.populate(self._oc.get_display_data())
-        dlg.Destroy()
-        if self._oc.has_errors():
-            # display the list of failed items
-            error_dlg=wx.SingleChoiceDialog(self,
-                                            self._error_dlg_text,
-                                            self._error_dlg_title,
-                                            self._oc.get_error_list())
-            error_dlg.ShowModal()
-            error_dlg.Destroy()
-        wx.EndBusyCursor()
+        with guihelper.WXDialogWrapper(wx.ProgressDialog(self._progress_dlg_title,
+                                                         'Importing Outlook Data, please wait ...\n(Please also watch out for the Outlook Permission Request dialog)',
+                                                         parent=self)) as dlg:
+            self._oc.read(None, dlg)
+            self.populate(self._oc.get_display_data())
+            if self._oc.has_errors():
+                # display the list of failed items
+                with guihelper.WXDialogWrapper(wx.SingleChoiceDialog(self,
+                                                                    self._error_dlg_text,
+                                                                    self._error_dlg_title,
+                                                                    self._oc.get_error_list()),
+                                               True):
+                    pass
 
     def OnBrowseFolder(self, evt):
         f=self._oc.pick_folder()
@@ -575,10 +575,11 @@ class OutlookImportCalDialog(common_calendar.PreviewDialog):
 
     def OnFilter(self, evt):
         cat_list=self._oc.get_category_list()
-        dlg=self._filter_dlg_class(self, -1, 'Filtering Parameters', cat_list)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._oc.set_filter(dlg.get())
-            self.populate(self._oc.get_display_data())
+        with guihelper.WXDialogWrapper(self._filter_dlg_class(self, -1, 'Filtering Parameters', cat_list),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._oc.set_filter(dlg.get())
+                self.populate(self._oc.get_display_data())
 
     def OnEndModal(self, evt):
         self.EndModal(evt.GetId())
@@ -649,10 +650,10 @@ class OutlookAutoConfCalDialog(wx.Dialog):
             self._oc.read()
             self.__read=True
         cat_list=self._oc.get_category_list()
-        dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self._oc.get_filter())
-        if dlg.ShowModal()==wx.ID_OK:
-            self._oc.set_filter(dlg.get())
+        with guihelper.WXDialogWrapper(common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)) as dlg:
+            dlg.set(self._oc.get_filter())
+            if dlg.ShowModal()==wx.ID_OK:
+                self._oc.set_filter(dlg.get())
 
     def GetFolder(self):
         return self._oc.get_folder_id()

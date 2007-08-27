@@ -7,6 +7,7 @@
 ###
 ### $Id$
 
+from __future__ import with_statement
 import wx
 
 import fixedscrolledpanel
@@ -549,8 +550,8 @@ class CategoryEditor(DirtyUIBase):
         super(CategoryEditor, self).__del__()
 
     def OnManageCategories(self, _):
-        dlg=CategoryManager(self)
-        dlg.ShowModal()
+        with guihelper.WXDialogWrapper(CategoryManager(self), True):
+            pass
 
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
@@ -1827,5 +1828,5 @@ if __name__=='__main__':
            }
 
     app=wx.PySimpleApp()
-    dlg=Editor(None,data)
-    dlg.ShowModal()
+    with guihelper.WXDialogWrapper(Editor(None,data), True):
+        pass

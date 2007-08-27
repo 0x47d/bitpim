@@ -47,6 +47,7 @@ The result dict key is 'memo'.
 """
 
 # standard modules
+from __future__ import with_statement
 import copy
 import datetime
 import time
@@ -539,8 +540,8 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
         self.setdirty(False)
 
     def OnPrintDialog(self, mainwindow, config):
-        dlg=guiwidgets.MemoPrintDialog(self, mainwindow, config)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(guiwidgets.MemoPrintDialog(self, mainwindow, config),
+                                       True):
+            pass
     def CanPrint(self):
         return True

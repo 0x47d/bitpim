@@ -14,6 +14,7 @@ Wizard to create a new BitPim storage area.
 """
 
 # system module
+from __future__ import with_statement
 import os
 import os.path
 
@@ -86,11 +87,11 @@ class PathPage(parentpage):
         self.path.SetValue(path)
 
     def OnBrowse(self, _):
-        dlg=wx.DirDialog(self, defaultPath=self.path.GetLabel(),
-                         style=wx.DD_NEW_DIR_BUTTON)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.path.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.DirDialog(self, defaultPath=self.path.GetLabel(),
+                                                    style=wx.DD_NEW_DIR_BUTTON),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.path.SetValue(dlg.GetPath())
 
 #-------------------------------------------------------------------------------
 class OptionsPage(parentpage):
@@ -223,27 +224,26 @@ def create_startmenu_shortcut(name, filename):
 #-------------------------------------------------------------------------------
 def create_new_db(parent, config=None):
     # Create a new BitPim Storage area
-    wz=NewDBWizard(parent)
-    if wz.RunWizard():
-        data=wz.get()
-        name=data.get('name', '')
-        # Dir should aleady exist, but check anyway
-        path=data.get('path', '')
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        # create a config file
-        filename=os.path.join(path, '.bitpim')
-        if data.get('currentsettings', False) and config:
-            config.write(file(filename, 'wt'))
-        conf=bp_config.Config(filename)
-        conf.Write('name', name)
-        # and optionally create shortcuts (Windows only)
-        if guihelper.IsMSWindows():
-            if data.get('desktop', False):
-                create_desktop_shortcut(name, filename)
-            if data.get('startmenu', False):
-                create_startmenu_shortcut(name, filename)
-    wz.Destroy()
+    with guihelper.WXDialogWrapper(NewDBWizard(parent)) as wz:
+        if wz.RunWizard():
+            data=wz.get()
+            name=data.get('name', '')
+            # Dir should aleady exist, but check anyway
+            path=data.get('path', '')
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            # create a config file
+            filename=os.path.join(path, '.bitpim')
+            if data.get('currentsettings', False) and config:
+                config.write(file(filename, 'wt'))
+            conf=bp_config.Config(filename)
+            conf.Write('name', name)
+            # and optionally create shortcuts (Windows only)
+            if guihelper.IsMSWindows():
+                if data.get('desktop', False):
+                    create_desktop_shortcut(name, filename)
+                if data.get('startmenu', False):
+                    create_startmenu_shortcut(name, filename)
 
 #-------------------------------------------------------------------------------
 # Testing
