@@ -185,6 +185,12 @@ def WXDialogWrapper(dlg, showmodal=False):
     finally:
         dlg.Destroy()
 
+@BusyWrapper
+def MessageDialog(*args, **kwargs):
+    with WXDialogWrapper(wx.MessageDialog(*args, **kwargs),
+                         True):
+        pass
+
 # Filename functions.  These work on brew names which use forward slash /
 # as the directory delimiter.  The builtin Python functions can't be used
 # as they are platform specific (eg they use \ on Windows)

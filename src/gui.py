@@ -378,12 +378,10 @@ class MainApp(wx.App):
         self.config=bp_config.Config(self._config_filename)
         # Check to see if we're the 2nd instance running on the same DB
         if self.usingsamedb():
-            with guihelper.WXDialogWrapper(wx.MessageDialog(None,
-                                                            'Another copy of BitPim is using the same data dir:\n%s'%self.config._path,
-                                                            'BitPim Error',
-                                                            style=wx.OK|wx.ICON_ERROR),
-                                           True):
-                return False
+            guihelper.MessageDialog(None, 'Another copy of BitPim is using the same data dir:\n%s'%self.config._path,
+                                    'BitPim Error',
+                                    style=wx.OK|wx.ICON_ERROR)
+            return False
         # this is for wx native use, like the freaking help controller !
         self.wxconfig=wx.Config(cfgstr, style=wx.CONFIG_USE_LOCAL_FILE)
 
@@ -1630,9 +1628,7 @@ class MainWindow(wx.Frame):
             self.tree.lwdata.log(str)
         if str.startswith("<!= "):
             p=str.index("=!>")+3
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION),
-                                           True):
-                pass
+            guihelper.MessageDialog(self, str[p:], "Alert", style=wx.OK|wx.ICON_EXCLAMATION)
             self.OnLog("Alert dialog closed")
     log=OnLog
     def OnLogData(self, str, data, klass=None, data_type=None):

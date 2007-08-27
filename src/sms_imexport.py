@@ -18,6 +18,7 @@ import wx
 
 # BitPim Modules
 import bptime
+import guihelper
 import sms
 
 #------------------------------------------------------------------------------
@@ -93,10 +94,8 @@ class ExportSMSDialog(wx.Dialog):
         except:
             _fp=None
         if _fp is None:
-            dlg=wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                             'Export Error')
-            dlg.ShowModal()
-            dlg.Destroy()
+            guihelper.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                    'Export Error')
             self.EndModal(wx.ID_OK)
         if self.rows_all.GetValue():
             _sms=self._data

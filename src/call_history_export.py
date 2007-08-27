@@ -78,10 +78,8 @@ class ExportCallHistoryDialog(wx.Dialog):
         except:
             _fp=None
         if _fp is None:
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                                                            'Export Error'),
-                                           True):
-                pass
+            guihelper.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                    'Export Error')
             self.EndModal(wx.ID_OK)
         if self.rows_all.GetValue():
             _data=self._data

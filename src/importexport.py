@@ -144,10 +144,8 @@ def TestOutlookIsInstalled():
     try:
         native.outlook.getmapinamespace()
     except:
-        dlg=wx.MessageDialog(None, 'Unable to initialise Outlook, Check that it is installed correctly.',
-                              'Outlook Error', wx.OK|wx.ICON_ERROR)
-        dlg.ShowModal()
-        dlg.Destroy()
+        guihelper.MessageDialog(None, 'Unable to initialise Outlook, Check that it is installed correctly.',
+                                'Outlook Error', wx.OK|wx.ICON_ERROR)
         return False
     return True
 
@@ -676,15 +674,15 @@ class ImportDialog(wx.Dialog):
         if len(cats) and cats[0]=="":
             cats=cats[1:]
         self.columns,self.data=savedcolumns, saveddata
-        dlg=CategorySelectorDialog(self, self.categorieswanted, cats)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.categorieswanted=dlg.GetCategories()
-            if self.categorieswanted is None:
-                self.categorieslabel.SetLabel("*ALL*")
-            else:
-                self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
-            self.DataNeedsUpdate()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(CategorySelectorDialog(self, self.categorieswanted, cats),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.categorieswanted=dlg.GetCategories()
+                if self.categorieswanted is None:
+                    self.categorieslabel.SetLabel("*ALL*")
+                else:
+                    self.categorieslabel.SetLabel("; ".join(self.categorieswanted))
+                self.DataNeedsUpdate()
 
     @guihelper.BusyWrapper
     def UpdateData(self):
@@ -1867,122 +1865,105 @@ class ImporteGroupwareDialog(ImportDialog):
 
 
 def OnFileImportCSVContacts(parent):
-    dlg=wx.FileDialog(parent, "Import CSV file",
-                      wildcard="CSV files (*.csv)|*.csv|Tab Separated file (*.tsv)|*.tsv|All files|*",
-                      style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-    path=None
-    if dlg.ShowModal()==wx.ID_OK:
-        path=dlg.GetPath()
-    dlg.Destroy()
-    if path is None:
-        return
+    with guihelper.WXDialogWrapper(wx.FileDialog(parent, "Import CSV file",
+                                                 wildcard="CSV files (*.csv)|*.csv|Tab Separated file (*.tsv)|*.tsv|All files|*",
+                                                 style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            path=dlg.GetPath()
+        else:
+            return
 
-    dlg=ImportCSVDialog(path, parent, -1, "Import CSV file")
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
+    with guihelper.WXDialogWrapper(ImportCSVDialog(path, parent, -1, "Import CSV file"),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
 
 def OnFileImportVCards(parent):
-    dlg=wx.FileDialog(parent, "Import vCards file",
-                      wildcard="vCard files (*.vcf)|*.vcf|All files|*",
-                      style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-    path=None
-    if dlg.ShowModal()==wx.ID_OK:
-        path=dlg.GetPath()
-    dlg.Destroy()
-    if path is None:
-        return
+    with guihelper.WXDialogWrapper(wx.FileDialog(parent, "Import vCards file",
+                                                 wildcard="vCard files (*.vcf)|*.vcf|All files|*",
+                                                 style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            path=dlg.GetPath()
+        else:
+            return
 
-    dlg=ImportVCardDialog(path, parent, -1, "Import vCard file")
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
+    with guihelper.WXDialogWrapper(ImportVCardDialog(path, parent, -1, "Import vCard file"),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
 
 def OnFileImportQtopiaDesktopContacts(parent):
-    dlg=ImportQtopiaDesktopDialog(parent, -1, "Import Qtopia Desktop Contacts")
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
-
+    with guihelper.WXDialogWrapper(ImportQtopiaDesktopDialog(parent, -1, "Import Qtopia Desktop Contacts"),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
         
 def OnFileImportOutlookContacts(parent):
     import native.outlook
     if not TestOutlookIsInstalled():
         return
-    dlg=ImportOutlookDialog(parent, -1, "Import Outlook Contacts", native.outlook)
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(ImportOutlookDialog(parent, -1, "Import Outlook Contacts", native.outlook),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
     native.outlook.releaseoutlook()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
 
 def OnFileImportEvolutionContacts(parent):
     import native.evolution
-    dlg=ImportEvolutionDialog(parent, -1, "Import Evolution Contacts", native.evolution)
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
+    with guihelper.WXDialogWrapper(ImportEvolutionDialog(parent, -1, "Import Evolution Contacts", native.evolution),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
 
 def OnFileImporteGroupwareContacts(parent):
     import native.egroupware
-    dlg=ImporteGroupwareDialog(parent, -1, "Import eGroupware Contacts", native.egroupware)
-    data=None
-    if dlg.ShowModal()==wx.ID_OK:
-        data=dlg.GetFormattedData()
-    _merge=dlg.merge
-    dlg.Destroy()
-    if data is not None:
-        parent.GetActivePhonebookWidget().importdata(data, merge=_merge)
+    with guihelper.WXDialogWrapper(ImporteGroupwareDialog(parent, -1, "Import eGroupware Contacts", native.egroupware),
+                                   True) as (dlg, retcode):
+        if retcode==wx.ID_OK:
+            data=dlg.GetFormattedData()
+            if data is not None:
+                parent.GetActivePhonebookWidget().importdata(data, merge=dlg.merge)
 
 def OnFileImportCommon(parent, dlg_class, dlg_title, widget, dict_key):
-    dlg=dlg_class(parent, -1, dlg_title)
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and save the new data
-        data_dict={ dict_key: dlg.get() }
-        widget.populate(data_dict)
-        widget.populatefs(data_dict)
-    elif res==dlg_class.ID_ADD:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # get existing data
-        data_res=widget.getdata({}).get(dict_key, {})
-        # and add the new imported data
-        data_res.update(dlg.get())
-        data_dict={ dict_key: data_res }
-        # and save it
-        widget.populate(data_dict)
-        widget.populatefs(data_dict)
-    elif res==dlg_class.ID_MERGE:
-        # ask phonebook to merge our categories
-        pubsub.publish(pubsub.MERGE_CATEGORIES,
-                       dlg.get_categories()[:])
-        # and merge the data
-        widget.mergedata({ dict_key: dlg.get() })
-    # all done
-    dlg.Destroy
+    with guihelper.WXDialogWrapper(dlg_class(parent, -1, dlg_title),
+                                   True) as (dlg, res):
+        if res==wx.ID_OK:
+            pubsub.publish(pubsub.MERGE_CATEGORIES,
+                           dlg.get_categories()[:])
+            # and save the new data
+            data_dict={ dict_key: dlg.get() }
+            widget.populate(data_dict)
+            widget.populatefs(data_dict)
+        elif res==dlg_class.ID_ADD:
+            # ask phonebook to merge our categories
+            pubsub.publish(pubsub.MERGE_CATEGORIES,
+                           dlg.get_categories()[:])
+            # get existing data
+            data_res=widget.getdata({}).get(dict_key, {})
+            # and add the new imported data
+            data_res.update(dlg.get())
+            data_dict={ dict_key: data_res }
+            # and save it
+            widget.populate(data_dict)
+            widget.populatefs(data_dict)
+        elif res==dlg_class.ID_MERGE:
+            # ask phonebook to merge our categories
+            pubsub.publish(pubsub.MERGE_CATEGORIES,
+                           dlg.get_categories()[:])
+            # and merge the data
+            widget.mergedata({ dict_key: dlg.get() })
 
 def OnFileImportOutlookCalendar(parent):
     import native.outlook
@@ -2080,11 +2061,11 @@ def AutoConfVCal(parent, folder, filters):
     return AutoConfCommon(dlg)
 
 def AutoConfCommon(dlg):
-    config=()
-    res=dlg.ShowModal()
-    if res==wx.ID_OK:
-        config=(dlg.GetFolder(), dlg.GetFilter())
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(dlg, True) as (dlg, res):
+        if res==wx.ID_OK:
+            config=(dlg.GetFolder(), dlg.GetFilter())
+        else:
+            config=()
     return res, config
 
 def AutoImportOutlookCalendar(parent, folder, filters):
@@ -2120,27 +2101,25 @@ def OnAutoCalImportExecute(parent):
 # Play list
 def OnWPLImport(parent):
     # get the wpl file name
-    _dlg=wx.FileDialog(parent, "Import wpl file",
-                       wildcard="wpl files (*.wpl)|*.wpl|All files|*",
-                       style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR)
-    if _dlg.ShowModal()!=wx.ID_OK:
-        _dlg.Destroy()
-        return
-    # parse & retrieve the data
-    _wpl=wpl_file.WPL(filename=_dlg.GetPath())
-    _dlg.Destroy()
-    if not _wpl.title:
-        return
-    _pl_entry=playlist.PlaylistEntry()
-    _pl_entry.name=_wpl.title
-    _pl_entry.songs=[common.basename(x) for x in _wpl.songs]
-    # populate the new data
-    _widget=parent.GetActivePlaylistWidget()
-    _pl_data={}
-    _widget.getdata(_pl_data)
-    _pl_data[playlist.playlist_key].append(_pl_entry)
-    _widget.populate(_pl_data)
-    _widget.populatefs(_pl_data)
+    with guihelper.WXDialogWrapper(wx.FileDialog(parent, "Import wpl file",
+                                                 wildcard="wpl files (*.wpl)|*.wpl|All files|*",
+                                                 style=wx.OPEN|wx.HIDE_READONLY|wx.CHANGE_DIR),
+                                   True) as (_dlg, _retcode):
+        # parse & retrieve the data
+        if _retcode==wx.ID_OK:
+            _wpl=wpl_file.WPL(filename=_dlg.GetPath())
+            if not _wpl.title:
+                return
+            _pl_entry=playlist.PlaylistEntry()
+            _pl_entry.name=_wpl.title
+            _pl_entry.songs=[common.basename(x) for x in _wpl.songs]
+            # populate the new data
+            _widget=parent.GetActivePlaylistWidget()
+            _pl_data={}
+            _widget.getdata(_pl_data)
+            _pl_data[playlist.playlist_key].append(_pl_entry)
+            _widget.populate(_pl_data)
+            _widget.populatefs(_pl_data)
 
 ###
 ###   EXPORTS
@@ -2280,11 +2259,11 @@ class ExportVCardDialog(BaseExportDialog):
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
 
     def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="vCard files (*.vcf)|*.vcf", style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                                                     wildcard="vCard files (*.vcf)|*.vcf", style=wx.SAVE|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
 
     def OnOk(self, _):
         # do export
@@ -2349,11 +2328,11 @@ class ExportCSVDialog(BaseExportDialog):
         vbs.Fit(self)
 
     def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                                                     wildcard="CSV files (*.csv)|*.csv", style=wx.SAVE|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.filenamectrl.SetValue(os.path.join(dlg.GetDirectory(), dlg.GetFilename()))
     def OnOk(self, _):
         # do export
         filename=self.filenamectrl.GetValue()
@@ -2534,11 +2513,11 @@ class ExporteGroupwareDialog(BaseExportDialog):
                 # we check
                 if not self.sp.doescontactexist(rec['id']):
                     if doesntexistaction is None:
-                        dlg=eGroupwareEntryGoneDlg(self, rec['fn'])
-                        dlg.ShowModal()
-                        action=dlg.GetAction()
-                        if dlg.ForAll():
-                            doesntexistaction=action
+                        with guihelper.WXDialogWrapper(eGroupwareEntryGoneDlg(self, rec['fn']),
+                                                       True) as (dlg, _):
+                            action=dlg.GetAction()
+                            if dlg.ForAll():
+                                doesntexistaction=action
                     else: action=doesntexistaction
                     if action==self._ACTION_RECREATE:
                         rec['id']=0
@@ -2695,52 +2674,50 @@ class eGroupwareEntryGoneDlg(wx.Dialog):
             return self.always.GetValue()
 
 def OnFileExportVCards(parent):
-    dlg=ExportVCardDialog(parent, "Export phonebook to vCards")
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(ExportVCardDialog(parent, "Export phonebook to vCards"),
+                                   True):
+        pass
 
 def OnFileExporteGroupware(parent):
     import native.egroupware
-    dlg=ExporteGroupwareDialog(parent, "Export phonebook to eGroupware", native.egroupware)
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(ExporteGroupwareDialog(parent, "Export phonebook to eGroupware", native.egroupware),
+                                   True):
+        pass
 
 def OnFileExportCSV(parent):
-    dlg=ExportCSVDialog(parent, "Export phonebook to CSV")
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(ExportCSVDialog(parent, "Export phonebook to CSV"),
+                                   True):
+        pass
 
 def OnFileExportCSVCalendar(parent):
     import csv_calendar
-    dlg=csv_calendar.ExportCSVDialog(parent, 'Export Calendar to CSV')
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(csv_calendar.ExportCSVDialog(parent, 'Export Calendar to CSV'),
+                                   True):
+        pass
 
 def OnFileExportiCalendar(parent):
-    dlg=ical_calendar.ExportDialog(parent, 'Export Calendar to iCalendar')
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(ical_calendar.ExportDialog(parent, 'Export Calendar to iCalendar'),
+                                   True):
+        pass
 
 def OnFileExportSMS(parent):
     import sms_imexport
-    dlg=sms_imexport.ExportSMSDialog(parent, 'Export SMS')
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(sms_imexport.ExportSMSDialog(parent, 'Export SMS'),
+                                   True):
+        pass
 
 def OnFileExportCallHistory(parent):
     import call_history_export
-    dlg=call_history_export.ExportCallHistoryDialog(parent, 'Export Call History')
-    dlg.ShowModal()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(call_history_export.ExportCallHistoryDialog(parent, 'Export Call History'),
+                                   True):
+        pass
 
 def OnFileExportMediaZip(parent):
     import media_root
-    dlg=media_root.ExportMediaToZipDialog(parent, 'Export Media to Zip')
-    dlg.DoDialog()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(media_root.ExportMediaToZipDialog(parent, 'Export Media to Zip')) as dlg:
+        dlg.DoDialog()
 
 def OnFileExportMediaDir(parent):
     import media_root
-    dlg=media_root.ExportMediaToDirDialog(parent, 'Media will be copied to selected folder')
-    dlg.DoDialog()
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(media_root.ExportMediaToDirDialog(parent, 'Media will be copied to selected folder')) as dlg:
+        dlg.DoDialog()

@@ -13,6 +13,7 @@
 """
 
 # System
+from __future__ import with_statement
 import calendar
 import copy
 import datetime
@@ -155,11 +156,11 @@ class PresetFilterPage(setphone_wizard.MyPage):
         return gs
 
     def _OnFilter(self, _):
-        dlg=FilterDialog(self, -1, 'Filtering Parameters', self._data)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._data.update(dlg.get())
-            self._populate()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(FilterDialog(self, -1, 'Filtering Parameters', self._data),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._data.update(dlg.get())
+                self._populate()
 
     def _display(self, key, attr, fmt):
         # display the value field of this key
@@ -334,16 +335,15 @@ class ImportCalendarPresetDialog(wx.Dialog):
 
     def _preview_data(self):
         # Display a preview of data just imported
-        _dlg=CalendarPreviewDialog(self, self._import_data.get())
-        _ret_code=_dlg.ShowModal()
-        _dlg.Destroy()
-        if _ret_code==CalendarPreviewDialog.ID_REPLACE:
-            return wx.ID_OK
-        elif _ret_code==CalendarPreviewDialog.ID_ADD:
-            return self.ID_ADD
-        elif _ret_code==CalendarPreviewDialog.ID_MERGE:
-            return self.ID_MERGE
-        return wx.ID_CANCEL
+        with guihelper.WXDialogWrapper(CalendarPreviewDialog(self, self._import_data.get()),
+                                       True) as (_dlg, _ret_code):
+            if _ret_code==CalendarPreviewDialog.ID_REPLACE:
+                return wx.ID_OK
+            elif _ret_code==CalendarPreviewDialog.ID_ADD:
+                return self.ID_ADD
+            elif _ret_code==CalendarPreviewDialog.ID_MERGE:
+                return self.ID_MERGE
+            return wx.ID_CANCEL
 
     def _get_preset_thisweek(self):
         # return the dates of (today, Sat)

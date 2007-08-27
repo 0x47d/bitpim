@@ -11,6 +11,7 @@
 """A hex editor widget"""
 
 # system modules
+from __future__ import with_statement
 import string
 import struct
 
@@ -21,6 +22,7 @@ from wx.lib import scrolledpanel as scrolled
 
 # bitpim modules
 import common
+import guihelper
 
 #-------------------------------------------------------------------------------
 class DataStruct(object):
@@ -717,22 +719,20 @@ class HexEditor(wx.ScrolledWindow):
         for d in result:
             for k,e in d.items():
                 s+=k+':\t'+e+'\n'
-        dlg=wx.MessageDialog(self, s, 'Results', style=wx.OK)
-        dlg.ShowModal()
-        dlg.Destroy()
+        guihelper.MessageDialog(self, s, 'Results', style=wx.OK)
 
     def OnLoadFile(self, _):
-        dlg=wx.FileDialog(self, 'Select a file to load',
-                          style=wx.OPEN|wx.FILE_MUST_EXIST)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.SetData(file(dlg.GetPath(), 'rb').read())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to load',
+                                                     style=wx.OPEN|wx.FILE_MUST_EXIST),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.SetData(file(dlg.GetPath(), 'rb').read())
     def OnSaveAs(self, _):
-        dlg=wx.FileDialog(self, 'Select a file to save',
-                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal()==wx.ID_OK:
-            file(dlg.GetPath(), 'wb').write(self.data)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to save',
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), 'wb').write(self.data)
     def hexdumpdata(self):
         res=""
         l=len(self.data)
@@ -758,65 +758,61 @@ class HexEditor(wx.ScrolledWindow):
         return res
         
     def OnSaveHexdumpAs(self, _):
-        dlg=wx.FileDialog(self, 'Select a file to save',
-                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal()==wx.ID_OK:
-            file(dlg.GetPath(), 'wb').write(self.hexdumpdata())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to save',
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), 'wb').write(self.hexdumpdata())
     def OnSaveSelection(self, _):
         if self.highlightstart is None or self.highlightstart==-1 or \
            self.highlightend is None or self.highlightend==-1:
             # no selection
             return
-        dlg=wx.FileDialog(self, 'Select a file to save',
-                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal()==wx.ID_OK:
-            file(dlg.GetPath(), 'wb').write(
-                self.data[self.highlightstart:self.highlightend])
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to save',
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                file(dlg.GetPath(), 'wb').write(
+                    self.data[self.highlightstart:self.highlightend])
 
     def OnReloadModule(self, _):
         try:
             reload(self._module)
         except:
             self._module=None
-            w=wx.MessageDialog(self, 'Failed to reload module',
-                               'Reload Module Error',
-                               style=wx.OK|wx.ICON_ERROR)
-            w.ShowModal()
-            w.Destroy()
+            guihelper.MessageDialog(self, 'Failed to reload module',
+                                    'Reload Module Error',
+                                    style=wx.OK|wx.ICON_ERROR)
+
     def OnApplyFunc(self, _):
         choices=[x for x in dir(self._module) \
                  if callable(getattr(self._module, x))]
-        dlg=wx.SingleChoiceDialog(self, 'Select a function to apply:',
-                            'Apply Python Func',
-                            choices)
-        if dlg.ShowModal()==wx.ID_OK:
-            try:
-                res=getattr(self._module, dlg.GetStringSelection())(
-                    self, self.data, self.current_ofs)
-                self._display_result(res)
-            except:
-                w=wx.MessageDialog(self, 'Apply Func raised an exception',
-                                   'Apply Func Error',
-                                   style=wx.OK|wx.ICON_ERROR)
-                w.ShowModal()
-                w.Destroy()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.SingleChoiceDialog(self, 'Select a function to apply:',
+                                                             'Apply Python Func',
+                                                             choices),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                try:
+                    res=getattr(self._module, dlg.GetStringSelection())(
+                        self, self.data, self.current_ofs)
+                    self._display_result(res)
+                except:
+                    guihelper.MessageDialog(self, 'Apply Func raised an exception',
+                                            'Apply Func Error',
+                                            style=wx.OK|wx.ICON_ERROR)
+
     def OnImportModule(self, _):
-        dlg=wx.TextEntryDialog(self, 'Enter the name of a Python Module:',
-                               'Module Import')
-        if dlg.ShowModal()==wx.ID_OK:
-            try:
-                self._module=common.importas(dlg.GetValue())
-            except ImportError:
-                self._module=None
-                w=wx.MessageDialog(self, 'Failed to import module: '+dlg.GetValue(),
-                                 'Module Import Error',
-                                 style=wx.OK|wx.ICON_ERROR)
-                w.ShowModal()
-                w.Destroy()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, 'Enter the name of a Python Module:',
+                                                          'Module Import'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                try:
+                    self._module=common.importas(dlg.GetValue())
+                except ImportError:
+                    self._module=None
+                    guihelper.MessageDialog(self, 'Failed to import module: '+dlg.GetValue(),
+                                            'Module Import Error',
+                                             style=wx.OK|wx.ICON_ERROR)
 
     def OnStartSelMenu(self, evt):
         ofs=self.current_ofs
@@ -881,85 +877,87 @@ class HexEditor(wx.ScrolledWindow):
         self.PopupMenu(self._bgmenu, evt.GetPosition())
 
     def OnTemplateLoad(self, _):
-        dlg=wx.FileDialog(self, 'Select a file to load',
-                          wildcard='*.tmpl',
-                          style=wx.OPEN|wx.FILE_MUST_EXIST)
-        if dlg.ShowModal()==wx.ID_OK:
-            result={}
-            try:
-                execfile(dlg.GetPath())
-            except UnicodeError:
-                common.unicode_execfile(dlg.GetPath())
-            exist_keys={}
-            for i,e in enumerate(self._templates):
-                exist_keys[e.name]=i
-            for d in result['templates']:
-                data_struct=DataStruct('new struct')
-                data_struct.set(d)
-                if exist_keys.has_key(data_struct.name):
-                    self._templates[exist_keys[data_struct.name]]=data_struct
-                else:
-                    self._templates.append(data_struct)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to load',
+                                                     wildcard='*.tmpl',
+                                                     style=wx.OPEN|wx.FILE_MUST_EXIST),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                result={}
+                try:
+                    execfile(dlg.GetPath())
+                except UnicodeError:
+                    common.unicode_execfile(dlg.GetPath())
+                exist_keys={}
+                for i,e in enumerate(self._templates):
+                    exist_keys[e.name]=i
+                for d in result['templates']:
+                    data_struct=DataStruct('new struct')
+                    data_struct.set(d)
+                    if exist_keys.has_key(data_struct.name):
+                        self._templates[exist_keys[data_struct.name]]=data_struct
+                    else:
+                        self._templates.append(data_struct)
+
     def OnTemplateSaveAs(self, _):
-        dlg=wx.FileDialog(self, 'Select a file to save',
-                          wildcard='*.tmpl',
-                          style=wx.SAVE|wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal()==wx.ID_OK:
-            r=[x.get() for x in self._templates]
-            common.writeversionindexfile(dlg.GetPath(),
-                                         { 'templates': r }, 1)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, 'Select a file to save',
+                                                     wildcard='*.tmpl',
+                                                     style=wx.SAVE|wx.OVERWRITE_PROMPT),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                r=[x.get() for x in self._templates]
+                common.writeversionindexfile(dlg.GetPath(),
+                                             { 'templates': r }, 1)
+
     def OnTemplateApply(self, _):
         if not self._templates:
             # no templates to apply
             return
         choices=[x.name for x in self._templates]
-        dlg=wx.SingleChoiceDialog(self, 'Select a template to apply:',
-                            'Apply Data Template',
-                            choices)
-        if dlg.ShowModal()==wx.ID_OK:
-            try:
-                res=self._apply_template(dlg.GetStringSelection())
-                self._display_result(res)
-            except:
-                raise
-                w=wx.MessageDialog(self, 'Apply Template raised an exception',
-                                   'Apply Template Error',
-                                   style=wx.OK|wx.ICON_ERROR)
-                w.ShowModal()
-                w.Destroy()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.SingleChoiceDialog(self, 'Select a template to apply:',
+                                                             'Apply Data Template',
+                                                             choices),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                try:
+                    res=self._apply_template(dlg.GetStringSelection())
+                    self._display_result(res)
+                except:
+                    guihelper.MessageDialog(self, 'Apply Template raised an exception',
+                                            'Apply Template Error',
+                                            style=wx.OK|wx.ICON_ERROR),
+
     def OnTemplateEdit(self, _):
         dlg=TemplateDialog(self)
         dlg.set(self._templates)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._templates=dlg.get()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(dlg, True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._templates=dlg.get()
 
     def OnSearch(self, evt):
-        dlg=wx.TextEntryDialog(self, 'Enter data to search (1 0x23 045 ...):',
-                               'Search Data')
-        if dlg.ShowModal()==wx.ID_OK:
-            l=dlg.GetValue().split(' ')
-            s=''
-            for e in l:
-                if e[0:2]=='0x':
-                    s+=chr(int(e, 16))
-                elif e[0]=='0':
-                    s+=chr(int(e, 8))
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, 'Enter data to search (1 0x23 045 ...):',
+                                                          'Search Data'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                l=dlg.GetValue().split(' ')
+                s=''
+                for e in l:
+                    if e[0:2]=='0x':
+                        s+=chr(int(e, 16))
+                    elif e[0]=='0':
+                        s+=chr(int(e, 8))
+                    else:
+                        s+=chr(int(e))
+                i=self.data[self.current_ofs:].find(s)
+                if i!=-1:
+                    self._search_string=s
+                    self.highlightstart=i+self.current_ofs
+                    self.highlightend=self.highlightstart+len(s)
+                    self.needsupdate=True
+                    self.Refresh()
+                    self.set_sel(self.highlightstart, self.highlightend)
                 else:
-                    s+=chr(int(e))
-            i=self.data[self.current_ofs:].find(s)
-            if i!=-1:
-                self._search_string=s
-                self.highlightstart=i+self.current_ofs
-                self.highlightend=self.highlightstart+len(s)
-                self.needsupdate=True
-                self.Refresh()
-                self.set_sel(self.highlightstart, self.highlightend)
-            else:
-                self._search_string=None
+                    self._search_string=None
+
     def OnSearchAgain(self, evt):
         if self._search_string is not None:
             i=self.data[self.current_ofs:].find(self._search_string)
@@ -1197,21 +1195,8 @@ if __name__=='__main__':
         print 'Usage:',sys.argv[0],'<File Name>'
         sys.exit(1)
     app=wx.PySimpleApp()
-    dlg=HexEditorDialog(None, file(sys.argv[1], 'rb').read(),
-                        sys.argv[1])
-    if True:
-        dlg.ShowModal()
-    else:
-        import hotshot
-        f=hotshot.Profile("hexeprof",1)
-        f.runcall(dlg.ShowModal)
-        f.close()
-        import hotshot.stats
-        stats=hotshot.stats.load("hexeprof")
-        stats.strip_dirs()
-        # stats.sort_stats("cumulative")
-        stats.sort_stats("time", "calls")
-        stats.print_stats(30)
-
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(HexEditorDialog(None, file(sys.argv[1], 'rb').read(),
+                                                 sys.argv[1]),
+                                   True):
+        pass
     sys.exit(0)

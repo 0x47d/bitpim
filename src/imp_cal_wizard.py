@@ -13,7 +13,7 @@
 """
 
 # System
-
+from __future__ import with_statement
 # wx
 import wx
 import wx.wizard as wiz
@@ -22,6 +22,7 @@ from wx.lib.expando import ExpandoTextCtrl
 
 # BitPim
 import common_calendar
+import guihelper
 import importexport
 import setphone_wizard
 
@@ -102,6 +103,7 @@ class ImportSourcePage(setphone_wizard.MyPage):
     def setlabel(self):
         self._source_lbl.SetValue(self._source.name())
 
+    @guihelper.BusyWrapper
     def _OnBrowse(self, _=None):
         if not self._source:
             return
@@ -145,29 +147,26 @@ class ImportDataAll(setphone_wizard.MyPage):
         for _key, _entry in self._type.get_display_data().items():
             self._data_lb.Append('%s - %s'%(common_calendar.bp_date_str(_entry, _entry['start']),
                                             _entry['description']))
-        
+    @guihelper.BusyWrapper
     def _populate(self):
         self._data_lb.Clear()
         if not self._type or not self._source:
             # nothing to import
             return
-        wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog('Calendar Data Import',
-                              'Importing data, please wait ...',
-                              parent=self)
-        self._type.read(self._source.get(), dlg)
-        dlg.Destroy()
-        self._populate_lb()
-        wx.EndBusyCursor()
+        with guihelper.WXDialogWrapper(wx.ProgressDialog('Calendar Data Import',
+                                                         'Importing data, please wait ...',
+                                                         parent=self)) as dlg:
+            self._type.read(self._source.get(), dlg)
+            self._populate_lb()
 
     def _OnFilter(self, _):
         cat_list=self._type.get_category_list()
-        dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters',
-                                         cat_list)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._type.set_filter(dlg.get())
-            self._populate_lb()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(common_calendar.FilterDialog(self, -1, 'Filtering Parameters',
+                                                                    cat_list),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._type.set_filter(dlg.get())
+                self._populate_lb()
 
     def set(self, data):
         self._type=data.get('data_obj', None)

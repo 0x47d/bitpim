@@ -67,10 +67,8 @@ if __name__ == '__main__':
             sys.stderr.write(_msg)
             # try to display an error message box
             _app=wx.PySimpleApp()
-            with guihelper.WXDialogWrapper(wx.MessageDialog(None, _msg, 'BitPim Error',
-                                                         style=wx.OK|wx.ICON_ERROR),
-                                           True):
-                pass
+            guihelper.MessageDialog(None, _msg, 'BitPim Error',
+                                    style=wx.OK|wx.ICON_ERROR)
         finally:
             sys.exit(1)
     _kwargs={}

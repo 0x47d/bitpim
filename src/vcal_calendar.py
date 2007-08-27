@@ -22,6 +22,7 @@ import wx
 import bpcalendar
 import bptime
 import common_calendar
+import guihelper
 import helpids
 import vcard
 
@@ -567,11 +568,9 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
             self._oc.read(self.folderctrl.GetValue())
             self.populate(self._oc.get_display_data())
         except (ValueError, IOError):
-            _err_dlg=wx.MessageDialog(self, 'Failed to get import data',
-                                      'Import Error',
-                                      style=wx.OK|wx.ICON_ERROR)
-            _err_dlg.ShowModal()
-            _err_dlg.Destroy()
+            guihelper.MessageDialog(self, 'Failed to get import data',
+                                    'Import Error',
+                                    style=wx.OK|wx.ICON_ERROR)
         except:
             if __debug__:
                 raise

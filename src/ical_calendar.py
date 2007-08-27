@@ -10,6 +10,7 @@
 "Deals with iCalendar calendar import stuff"
 
 # system modules
+from __future__ import with_statement
 import datetime
 import time
 
@@ -19,6 +20,7 @@ import time
 import bpcalendar
 import bptime
 import common_calendar
+import guihelper
 import vcal_calendar as vcal
 import vcard
 
@@ -473,10 +475,8 @@ class ExportDialog(ExportDialogParent):
         except:
             f=None
         if f is None:
-            dlg=wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                                 'Export Error')
-            dlg.ShowModal()
-            dlg.Destroy()
+            guihelper.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                    'Export Error')
             return
         all_items=self._selection.GetSelection()==0
         dt=self._start_date.GetValue()

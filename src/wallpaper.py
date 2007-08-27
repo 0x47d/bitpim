@@ -287,9 +287,8 @@ class WallpaperView(fileview.FileView):
                 else:
                     img=wx.Image(file)
                 if not img.Ok():
-                    dlg=wx.MessageDialog(self, "Failed to understand the image in '"+file+"'",
-                                        "Image not understood", style=wx.OK|wx.ICON_ERROR)
-                    dlg.ShowModal()
+                    guihelper.MessageDialog(self, "Failed to understand the image in '"+file+"'",
+                                            "Image not understood", style=wx.OK|wx.ICON_ERROR)
                     continue
                 self.OnAddImage(img,file,refresh=False, timestamp=mtime)
         self.OnRefresh()
@@ -304,10 +303,8 @@ class WallpaperView(fileview.FileView):
         else:
             img=wx.Image(new_file_name)
         if not img.Ok():
-            dlg=wx.MessageDialog(self, "Failed to understand the image in '"+new_file_name+"'",
-                                "Image not understood", style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
+            guihelper.MessageDialog(self, "Failed to understand the image in '"+new_file_name+"'",
+                                    "Image not understood", style=wx.OK|wx.ICON_ERROR)
             return
         dlg=ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section)
         if dlg.ShowModal()!=wx.ID_OK:
@@ -322,10 +319,8 @@ class WallpaperView(fileview.FileView):
 
         res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
         if not res:
-            dlg=wx.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
-                                "Image not converted", style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
+            guihelper.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
+                                    "Image not converted", style=wx.OK|wx.ICON_ERROR)
         self.AddToIndex(name, origin, res, self._data)
 
     def OnAddImage(self, img, file, refresh=True, timestamp=None):
@@ -352,9 +347,8 @@ class WallpaperView(fileview.FileView):
 
         res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
         if not res:
-            dlg=wx.MessageDialog(self, "Failed to convert the image in '"+file+"'",
-                                "Image not converted", style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
+            guihelper.MessageDialog(self, "Failed to convert the image in '"+file+"'",
+                                    "Image not converted", style=wx.OK|wx.ICON_ERROR)
             return
 
         self.AddToIndex(targetfilename, origin, res, self._data, timestamp)

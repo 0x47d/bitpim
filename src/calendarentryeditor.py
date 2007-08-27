@@ -360,10 +360,8 @@ class GeneralEditor(pb_editor.DirtyUIBase):
         end=datetime.datetime(*self._w['end'].GetValue())
         if start>end:
             # scold the user
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
-                                                            wx.OK|wx.ICON_EXCLAMATION),
-                                           True):
-                pass
+            guihelper.MessageDialog(self, "End date and time is before start!", "Time Travel Attempt Detected",
+                                    wx.OK|wx.ICON_EXCLAMATION)
             # move focus
             self._w['end'].SetFocus()
             return False

@@ -1063,18 +1063,14 @@ class BitFlingSettingsDialog(wx.Dialog):
         try:
             bitflingscan.flinger.configure(*self.GetSettings())
             res=bitflingscan.flinger.getversion()
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, "Succeeded. Remote version is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION),
-                                           True):
-                pass
+            guihelper.MessageDialog(self, "Succeeded. Remote version is %s" % (res,) , "Success", wx.OK|wx.ICON_INFORMATION)
         except Exception,ex:
             res="Failed: %s: %s" % sys.exc_info()[:2]
             if hasattr(ex, "gui_exc_info"):
                 print common.formatexception( ex.gui_exc_info)
             else:
                 print common.formatexception()
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR),
-                                           True):
-                pass
+            guihelper.MessageDialog(self, res, "Failed", wx.OK|wx.ICON_ERROR)
 
 
 ###
@@ -1171,16 +1167,15 @@ class ExceptionDialog(wx.Dialog):
             if retcode==wx.ID_OK:
                 try:
                     self._create_report(_dlg.GetValue())
-                    _msg=wx.MessageDialog(self,
-                                          'Trouble Report created successfully!',
-                                          'BitPim Trouble Report', style=wx.OK)
+                    guihelper.MessageDialog(self,
+                                            'Trouble Report created successfully!',
+                                            'BitPim Trouble Report', style=wx.OK)
                 except:
-                    _msg=wx.MessageDialog(self,
-                                          'Failed to Create Trouble Report',
-                                          'Trouble Report Error',
-                                          style=wx.OK|wx.ICON_ERROR)
-                with guihelper.WXDialogWrapper(_msg, True):
-                    pass
+                    guihelper.MessageDialog(self,
+                                            'Failed to Create Trouble Report',
+                                            'Trouble Report Error',
+                                            style=wx.OK|wx.ICON_ERROR)
+
     def _create_report(self, vals):
         with contextlib.closing(gzip.GzipFile(vals['filename'], 'wb')) as _s:
             _s.write('BitPim Trouble Report\n')

@@ -77,10 +77,9 @@ class ExportCSVDialog(ExportCSVDialogParent):
         except:
             f=None
         if f is None:
-            with guihelper.WXDialogWrapper(wx.MessageDialog(self, 'Failed to open file ['+filename+']',
-                                                            'Export Error'),
-                                           True):
-                return
+            guihelper.MessageDialog(self, 'Failed to open file ['+filename+']',
+                                    'Export Error')
+            return
         s=['"'+x[0]+'"' for x in csv_event_template]+\
            ['"'+x[0]+'"' for x in csv_repeat_template]
         f.write(','.join(s)+'\n')
