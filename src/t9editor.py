@@ -34,11 +34,13 @@ To implement T9 Editor feature for your phone, do the following:
 """
 
 # wx Modules
+from __future__ import with_statement
 import wx
 import wx.gizmos as gizmos
 
 # BitPim modules
 import database
+import guihelper
 import helpids
 import widgets
 
@@ -274,14 +276,15 @@ class T9EditorWidget(wx.Panel, widgets.BitPimWidget):
     def CanAdd(self):
         return True
     def OnAdd(self, _):
-        _dlg=wx.TextEntryDialog(self, 'Enter a new word:',
-                                'T9 User Word')
-        if _dlg.ShowModal()==wx.ID_OK:
-            if _dlg.GetValue():
-                self.OnMakeDirty()
-                self._t9list.append_word(_dlg.GetValue())
-                self._populate()
-        _dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, 'Enter a new word:',
+                                                          'T9 User Word'),
+                                       True) as (_dlg, _retcode):
+            if _retcode==wx.ID_OK:
+                if _dlg.GetValue():
+                    self.OnMakeDirty()
+                    self._t9list.append_word(_dlg.GetValue())
+                    self._populate()
+
     def CanDelete(self):
         return self._words_lb.GetSelectedItemCount()
     def OnDelete(self, _):

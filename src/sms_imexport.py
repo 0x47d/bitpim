@@ -9,6 +9,7 @@
 
 "Deals with SMS import/export stuff"
 # System Module
+from __future__ import with_statement
 from email.Generator import Generator
 from email.MIMEText import MIMEText
 from email.Utils import formatdate
@@ -79,12 +80,12 @@ class ExportSMSDialog(wx.Dialog):
         return hbs
 
     def OnBrowse(self, _):
-        dlg=wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
-                          wildcard=self._wildcards[self._format.GetValue()],
-                          style=wx.SAVE|wx.CHANGE_DIR)
-        if dlg.ShowModal()==wx.ID_OK:
-            self.filenamectrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, defaultFile=self.filenamectrl.GetValue(),
+                                                     wildcard=self._wildcards[self._format.GetValue()],
+                                                     style=wx.SAVE|wx.CHANGE_DIR),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.filenamectrl.SetValue(dlg.GetPath())
 
     def OnOk(self, _):
         # do export

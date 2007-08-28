@@ -24,7 +24,7 @@ import common
 import fileinfo
 import conversions
 import helpids
-
+import guihelper
 import rangedslider
 
 ###
@@ -172,14 +172,13 @@ class RingerView(fileview.FileView):
         if max_size is not None and len(filedata)>max_size:
             # the data is too big
             self.log('ringtone %s is too big!'%common.basename(file))
-            dlg=wx.MessageDialog(self,
-                                 'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
-                                 'Warning',
-                                 style=wx.YES_NO|wx.ICON_ERROR)
-            dlg_resp=dlg.ShowModal()
-            dlg.Destroy()
-            if dlg_resp==wx.ID_NO:
-                return
+            with guihelper.WXDialogWrapper(wx.MessageDialog(self,
+                                                            'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
+                                                            'Warning',
+                                                            style=wx.YES_NO|wx.ICON_ERROR),
+                                           True) as (dlg, dlg_resp):
+                if dlg_resp==wx.ID_NO:
+                    return
         self.AddToIndex(name, origin, filedata, self._data, mtime)
 
     @guihelper.BusyWrapper
@@ -214,26 +213,21 @@ class RingerView(fileview.FileView):
                 if max_size is not None and len(filedata)>max_size:
                     # the data is too big
                     self.log('ringtone %s is too big!'%common.basename(file))
-                    dlg=wx.MessageDialog(self,
-                                         'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
-                                         'Warning',
-                                         style=wx.YES_NO|wx.ICON_ERROR)
-                    dlg_resp=dlg.ShowModal()
-                    dlg.Destroy()
-                    if dlg_resp==wx.ID_NO:
-                        continue
+                    with guihelper.WXDialogWrapper(wx.MessageDialog(self,
+                                                                    'Ringtone %s may be too big.  Do you want to proceed anway?'%common.basename(file),
+                                                                    'Warning',
+                                                                    style=wx.YES_NO|wx.ICON_ERROR),
+                                                   True) as (dlg, dlg_resp):
+                        if dlg_resp==wx.ID_NO:
+                            continue
                 target=self.get_media_name_from_filename(file, newext)
                 self.AddToIndex(target, self.active_section, filedata, self._data, mtime)
         self.OnRefresh()
 
     def ConvertFormat(self, file, convertinfo):
-        dlg=ConvertDialog(self, file, convertinfo)
-        if dlg.ShowModal()==wx.ID_OK:
-            res=dlg.newfiledata
-        else:
-            res=None
-        dlg.Destroy()
-        return res
+        with guihelper.WXDialogWrapper(ConvertDialog(self, file, convertinfo),
+                                       True) as (dlg, retcode):
+            return dlg.newfiledata if retcode==wx.ID_OK else None
 
     def versionupgrade(self, dict, version):
         """Upgrade old data format read from disk

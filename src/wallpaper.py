@@ -306,54 +306,49 @@ class WallpaperView(fileview.FileView):
             guihelper.MessageDialog(self, "Failed to understand the image in '"+new_file_name+"'",
                                     "Image not understood", style=wx.OK|wx.ICON_ERROR)
             return
-        dlg=ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
+        with guihelper.WXDialogWrapper(ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                img=dlg.GetResultImage()
+                imgparams=dlg.GetResultParams()
+                # ::TODO:: temporary hack - this should really be an imgparam
+                extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
-        img=dlg.GetResultImage()
-        imgparams=dlg.GetResultParams()
-        dlg.Destroy()
-        # ::TODO:: temporary hack - this should really be an imgparam
-        extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
-
-        res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
-        if not res:
-            guihelper.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
-                                    "Image not converted", style=wx.OK|wx.ICON_ERROR)
-        self.AddToIndex(name, origin, res, self._data)
+                res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
+                if not res:
+                    guihelper.MessageDialog(self, "Failed to convert the image in '"+new_file_name+"'",
+                                            "Image not converted", style=wx.OK|wx.ICON_ERROR)
+                self.AddToIndex(name, origin, res, self._data)
 
     def OnAddImage(self, img, file, refresh=True, timestamp=None):
         # ::TODO:: if file is None, find next basename in our directory for
         # clipboard99 where 99 is next unused number
         
-        dlg=ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section)
-        if dlg.ShowModal()!=wx.ID_OK:
-            dlg.Destroy()
-            return
+        with guihelper.WXDialogWrapper(ImagePreviewDialog(self, img, self.mainwindow.phoneprofile, self.active_section),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                img=dlg.GetResultImage()
+                imgparams=dlg.GetResultParams()
+                origin=self.active_section
+                # if we modified the image update the timestamp
+                if not dlg.skip:
+                    timestamp=int(time.time())
 
-        img=dlg.GetResultImage()
-        imgparams=dlg.GetResultParams()
-        origin=self.active_section
-        # if we modified the image update the timestamp
-        if not dlg.skip:
-            timestamp=int(time.time())
+                # ::TODO:: temporary hack - this should really be an imgparam
+                extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
 
-        # ::TODO:: temporary hack - this should really be an imgparam
-        extension={'BMP': 'bmp', 'JPEG': 'jpg', 'PNG': 'png'}[imgparams['format']]
+                # munge name
+                targetfilename=self.get_media_name_from_filename(file, extension)
 
-        # munge name
-        targetfilename=self.get_media_name_from_filename(file, extension)
+                res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
+                if not res:
+                    guihelper.MessageDialog(self, "Failed to convert the image in '"+file+"'",
+                                            "Image not converted", style=wx.OK|wx.ICON_ERROR)
+                    return
 
-        res=getattr(self, "saveimage_"+imgparams['format'])(img, imgparams)
-        if not res:
-            guihelper.MessageDialog(self, "Failed to convert the image in '"+file+"'",
-                                    "Image not converted", style=wx.OK|wx.ICON_ERROR)
-            return
-
-        self.AddToIndex(targetfilename, origin, res, self._data, timestamp)
-        if refresh:
-            self.OnRefresh()
+                self.AddToIndex(targetfilename, origin, res, self._data, timestamp)
+                if refresh:
+                    self.OnRefresh()
 
     def saveimage_BMP(self, img, imgparams):
         if img.ComputeHistogram(wx.ImageHistogram())<=236: # quantize only does 236 or less

@@ -578,18 +578,19 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         wx.EndBusyCursor()
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a %s File"%self._data_type,
-                          wildcard='*.vcs;*.ics')
-        if dlg.ShowModal()==wx.ID_OK:
-            self.folderctrl.SetValue(dlg.GetPath())
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a %s File"%self._data_type,
+                                                     wildcard='*.vcs;*.ics'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.folderctrl.SetValue(dlg.GetPath())
 
     def OnFilter(self, evt):
         cat_list=self._oc.get_category_list()
-        dlg=common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        if dlg.ShowModal()==wx.ID_OK:
-            self._oc.set_filter(dlg.get())
-            self.populate(self._oc.get_display_data())
+        with guihelper.WXDialogWrapper(common_calendar.FilterDialog(self, -1, 'Filtering Parameters', cat_list),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self._oc.set_filter(dlg.get())
+                self.populate(self._oc.get_display_data())
 
     def OnEndModal(self, evt):
         self.EndModal(evt.GetId())
@@ -645,14 +646,11 @@ class VCalAutoConfCalDialog(wx.Dialog):
         main_bs.Fit(self)
 
     def OnBrowseFolder(self, evt):
-        dlg=wx.FileDialog(self, "Pick a VCalendar File", wildcard='*.vcs')
-        id=dlg.ShowModal()
-        if id==wx.ID_CANCEL:
-            dlg.Destroy()
-            return
-        self.folderctrl.SetValue(dlg.GetPath())
-        self._read=False
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a VCalendar File", wildcard='*.vcs'),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                self.folderctrl.SetValue(dlg.GetPath())
+                self._read=False
 
     def OnFilter(self, evt):
         # read the calender to get the category list
@@ -660,10 +658,11 @@ class VCalAutoConfCalDialog(wx.Dialog):
             self._oc.read(self.folderctrl.GetValue())
             self._read=True
         cat_list=self._oc.get_category_list()
-        dlg=common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)
-        dlg.set(self._oc.get_filter())
-        if dlg.ShowModal()==wx.ID_OK:
-            self._oc.set_filter(dlg.get())
+        with guihelper.WXDialogWrapper(common_calendar.AutoSyncFilterDialog(self, -1, 'Filtering Parameters', cat_list)) \
+             as dlg:
+            dlg.set(self._oc.get_filter())
+            if dlg.ShowModal()==wx.ID_OK:
+                self._oc.set_filter(dlg.get())
 
     def GetFolder(self):
         return self.folderctrl.GetValue()

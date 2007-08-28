@@ -51,6 +51,7 @@ The result dict key is 'todo'.
 """
 
 # standard modules
+from __future__ import with_statement
 import copy
 import datetime
 import time
@@ -64,6 +65,7 @@ import wx.lib.scrolledpanel as scrolled
 # BitPim modules
 import calendarentryeditor as cal_editor
 import database
+import guihelper
 import helpids
 import field_color
 import phonebookentryeditor as pb_editor
@@ -347,16 +349,16 @@ class DateControl(wx.Panel, widgets.BitPimWidget):
             dt=datetime.date.today()
         else:
             dt=self._dt
-        dlg = wx.lib.calendar.CalenDlg(self,
-                                       month=dt.month,
-                                       day=dt.day,
-                                       year=dt.year)
-        dlg.Centre()
-        if dlg.ShowModal() == wx.ID_OK:
-            self._dt=datetime.date(dlg.calend.GetYear(),
-                                    dlg.calend.GetMonth(),
-                                    dlg.calend.GetDay())
-            self._refresh()
+        with guihelper.WXDailogWrapper(wx.lib.calendar.CalenDlg(self,
+                                                                month=dt.month,
+                                                                day=dt.day,
+                                                                year=dt.year)) as dlg:
+            dlg.Centre()
+            if dlg.ShowModal() == wx.ID_OK:
+                self._dt=datetime.date(dlg.calend.GetYear(),
+                                        dlg.calend.GetMonth(),
+                                        dlg.calend.GetDay())
+                self._refresh()
     def SetValue(self, v):
         # set a date string from the dict
         if v is None or not len(v):

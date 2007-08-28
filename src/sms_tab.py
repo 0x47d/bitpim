@@ -320,28 +320,28 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
             current_choice=guiwidgets.HistoricalDataDialog.Historical_Data
         else:
             current_choice=guiwidgets.HistoricalDataDialog.Current_Data
-        dlg=guiwidgets.HistoricalDataDialog(self,
-                                            current_choice=current_choice,
-                                            historical_date=self.historical_date,
-                                            historical_events=\
-                                            self._main_window.database.getchangescount(self._data_key))
-        if dlg.ShowModal()==wx.ID_OK:
-            with guihelper.MWBusyWrapper(self._main_window):
-                current_choice, self.historical_date=dlg.GetValue()
-                r={}
-                if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
-                    self.read_only=False
-                    msg_str='Current Data'
-                    self.getfromfs(r)
-                else:
-                    self.read_only=True
-                    msg_str='Historical Data as of %s'%\
-                             str(wx.DateTimeFromTimeT(self.historical_date))
-                    self.getfromfs(r, self.historical_date)
-                self.populate(r, True)
-                self.historical_data_label.SetLabel(msg_str)
-                self.list_widget.historical_data_label.SetLabel(msg_str)
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(guiwidgets.HistoricalDataDialog(self,
+                                                                       current_choice=current_choice,
+                                                                       historical_date=self.historical_date,
+                                                                       historical_events=\
+                                                                       self._main_window.database.getchangescount(self._data_key)),
+                                       True) as (dlg, retcode):
+            if retcode==wx.ID_OK:
+                with guihelper.MWBusyWrapper(self._main_window):
+                    current_choice, self.historical_date=dlg.GetValue()
+                    r={}
+                    if current_choice==guiwidgets.HistoricalDataDialog.Current_Data:
+                        self.read_only=False
+                        msg_str='Current Data'
+                        self.getfromfs(r)
+                    else:
+                        self.read_only=True
+                        msg_str='Historical Data as of %s'%\
+                                 str(wx.DateTimeFromTimeT(self.historical_date))
+                        self.getfromfs(r, self.historical_date)
+                    self.populate(r, True)
+                    self.historical_data_label.SetLabel(msg_str)
+                    self.list_widget.historical_data_label.SetLabel(msg_str)
 
     def OnPrintDialog(self, mainwindow, config):
         with guihelper.WXDialogWrapper(guiwidgets.SMSPrintDialog(self, mainwindow, config),

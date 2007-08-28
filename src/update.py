@@ -8,6 +8,7 @@
 ### $Id$
 
 # system modules
+from __future__ import with_statement
 import copy
 import urllib2
 import xml.dom.minidom
@@ -164,9 +165,9 @@ class BitPimUpdate(object):
             lines.append('\tWarning: '+alert)
         lines.append('updates.xml Version: '+self.xml_version)
         lines.append('Latest BitPim Version: '+self.latest_version)
-        dlg=UpdateDialog(None, dl.source, v.change_log, lines)
-        dlg.ShowModal()
-        dlg.Destroy()
+        with guihelper.WXDialogWrapper(UpdateDialog(None, dl.source, v.change_log, lines),
+                                       True):
+            pass
 
 #-------------------------------------------------------------------------------
 class UpdateDialog(wx.Dialog):
