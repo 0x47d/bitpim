@@ -15,7 +15,7 @@ BOOL=BOOLlsb
 
 BREW_FILE_SYSTEM = 2
 BREW_READ_SIZE = 0x400
-BREW_WRITE_SIZE = 0x1F00
+BREW_WRITE_SIZE = 0x1A00
 
 # Phonebook stuff
 RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
