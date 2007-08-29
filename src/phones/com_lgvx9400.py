@@ -46,7 +46,7 @@ class Phone(parentphone):
         self._timer = 15
 
     def getgroups(self, results):
-        return com_lgvx8100.getgroups (self, results)
+        return com_lgvx8100.Phone.getgroups (self, results)
 
     # Fundamentals:
     #  - get_esn             - same as LG VX-8300
