@@ -883,4 +883,8 @@ def usetempfile(ext):
     try:
         yield _name
     finally:
-        os.remove(_name)
+          try:
+              os.remove(_name)
+          except OSError:
+               # ignore if failed to del temp file
+               pass

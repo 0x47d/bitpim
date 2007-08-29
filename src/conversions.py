@@ -14,6 +14,7 @@ import contextlib
 import os
 import tempfile
 import struct
+import subprocess
 import sys
 import wx
 
@@ -106,18 +107,15 @@ def _expand(x):
 
 def run(*args):
     """Runs the specified command (args[0]) with supplied parameters.
-
-    Note that your path is not searched for the command, and the shell
-    is not involved so no I/O redirection etc is possible."""
+    Note that your path is not searched for the command."""
     print args
-    ret=os.spawnv(os.P_WAIT, args[0], args)
-    if ret!=0:
-        # a cumpsy attempt to capture the output when an error occurred:
-        _tmpfilename=common.gettempfilename('txt')
-        os.system(' '.join(args+('>', _tmpfilename, '2>&1')))
-        _logstr=file(_tmpfilename, 'rt').read()
-        print _logstr
-        raise common.CommandExecutionFailed(ret, args, _logstr)
+    p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       universal_newlines=True)
+    _res=p.communicate()
+    if p.returncode:
+        # an error occurred, log it
+        print _res[1]
+        raise common.CommandExecutionFailed(p.returncode, args, _res[1])
 
 def convertto8bitpng(pngdata, maxsize):
     "Convert a PNG file to 8bit color map"
