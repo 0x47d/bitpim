@@ -84,6 +84,14 @@ class Phone(com_lg.LGUncountedIndexedMedia, com_lgvx8100.Phone):
         # return the ESN of this phone
         return self.get_brew_esn()
 
+    def setDMversion(self):
+        _fw_version=self.get_firmware_version()[-1]
+        # T83VZV04 uses DMv5
+        self._DMv5=self.my_model=='VX8300' and _fw_version>'3'
+        if self._DMv5:
+            # assume that it takes about 30 seconds for T83VZV04 to kick out of DM
+            self._timeout = 30
+
     def get_detect_data(self, res):
         com_lgvx8100.Phone.get_detect_data(self, res)
         res[self.esn_file_key]=self.get_esn()

@@ -7,6 +7,7 @@
       <LI><P>Maintenance: Upgrade to paramiko 1.7.1 (Amy)
       <LI><P>Maintenance: Upgrade to wxPython 2.8.4.2
       <LI><P>Improvement: List software components used by BitPim in the <B>About Dialog</B>.
+      <LI><P>Improvement: <B>LG VX-8300</B> firmware V3 support.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>
