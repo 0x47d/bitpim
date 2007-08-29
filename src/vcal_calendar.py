@@ -559,23 +559,21 @@ class VcalImportCalDialog(common_calendar.PreviewDialog):
         wx.EVT_BUTTON(self, self.ID_MERGE, self.OnEndModal)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
+    @guihelper.BusyWrapper
     def OnImport(self, evt):
-        wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog('%s Import'%self._data_type,
-                              'Importing %s Data, please wait ...'%self._data_type,
-                              parent=self)
-        try:
-            self._oc.read(self.folderctrl.GetValue())
-            self.populate(self._oc.get_display_data())
-        except (ValueError, IOError):
-            guihelper.MessageDialog(self, 'Failed to get import data',
-                                    'Import Error',
-                                    style=wx.OK|wx.ICON_ERROR)
-        except:
-            if __debug__:
-                raise
-        dlg.Destroy()
-        wx.EndBusyCursor()
+        with guihelper.WXDialogWrapper(wx.ProgressDialog('%s Import'%self._data_type,
+                                                         'Importing %s Data, please wait ...'%self._data_type,
+                                                         parent=self)) as dlg:
+            try:
+                self._oc.read(self.folderctrl.GetValue())
+                self.populate(self._oc.get_display_data())
+            except (ValueError, IOError):
+                guihelper.MessageDialog(self, 'Failed to get import data',
+                                        'Import Error',
+                                        style=wx.OK|wx.ICON_ERROR)
+            except:
+                if __debug__:
+                    raise
 
     def OnBrowseFolder(self, evt):
         with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a %s File"%self._data_type,

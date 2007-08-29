@@ -367,9 +367,9 @@ class HtmlEasyPrinting:
         if not pdd.GetPrintData().Orientation:
             pdd.GetPrintData().SetOrientation(wx.PORTRAIT)
         printer=wx.Printer(pdd)
-        printout=self._getprintout(htmltext, basepath, scale)
-        printer.Print(self.parent, printout)
-        printout.Destroy()
+        with guihelper.WXDialogWrapper(self._getprintout(htmltext, basepath, scale)) \
+             as printout:
+            printer.Print(self.parent, printout)
 
     def _getprintout(self, htmltext, basepath, scale):
         printout=wx.html.HtmlPrintout()

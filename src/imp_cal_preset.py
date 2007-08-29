@@ -385,6 +385,7 @@ class ImportCalendarPresetDialog(wx.Dialog):
                                               '_get_preset_thismonth',
                                               '_get_preset_thisyear',
                                               '_get_preset_next7'][_preset_date])()
+    @guihelper.BusyWrapper
     def _OnRun(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -399,15 +400,12 @@ class ImportCalendarPresetDialog(wx.Dialog):
         self._import_data=_info['data']()
         _source=_info['source']()
         _source.id=_entry['source_id']
-        wx.BeginBusyCursor()
-        _dlg=wx.ProgressDialog('Calendar Data Import',
-                               'Importing data, please wait ...',
-                               parent=self)
-        self._import_data.read(_source.get(), _dlg)
-        self._adjust_filter_dates(_entry)
-        self._import_data.set_filter(_entry)
-        _dlg.Destroy()
-        wx.EndBusyCursor()
+        with guihelper.WXDialogWrapper(wx.ProgressDialog('Calendar Data Import',
+                                                         'Importing data, please wait ...',
+                                                         parent=self)) as _dlg:
+            self._import_data.read(_source.get(), _dlg)
+            self._adjust_filter_dates(_entry)
+            self._import_data.set_filter(_entry)
         global IMP_OPTION_PREVIEW, IMP_OPTION_REPLACEALL, IMP_OPTION_ADD, IMP_OPTION_MERGE
         _option=_entry.get('option', IMP_OPTION_PREVIEW)
         if _option==IMP_OPTION_PREVIEW:
@@ -422,27 +420,27 @@ class ImportCalendarPresetDialog(wx.Dialog):
 
     def _OnNew(self, _):
         _entry=ImportCalendarEntry()
-        _wiz=ImportCalendarPresetWizard(self, _entry)
-        if _wiz.RunWizard():
-            _entry=_wiz.get()
-            self._data[_entry.id]=_entry
-            self._save_to_fs()
-            self._populate()
-        _wiz.Destroy()
+        with guihelper.WXDialogWrapper(ImportCalendarPresetWizard(self, _entry)) \
+             as _wiz:
+            if _wiz.RunWizard():
+                _entry=_wiz.get()
+                self._data[_entry.id]=_entry
+                self._save_to_fs()
+                self._populate()
     def _OnEdit(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
             return
         _key=self._name_lb.GetClientData(_idx)
         _entry=self._data[_key].copy()
-        _wiz=ImportCalendarPresetWizard(self, _entry)
-        if _wiz.RunWizard():
-            _entry=ImportCalendarEntry(_wiz.get())
-            del self._data[_key]
-            self._data[_entry.id]=_entry
-            self._save_to_fs()
-            self._populate()
-        _wiz.Destroy()
+        with guihelper.WXDialogWrapper(ImportCalendarPresetWizard(self, _entry)) \
+             as _wiz:
+            if _wiz.RunWizard():
+                _entry=ImportCalendarEntry(_wiz.get())
+                del self._data[_key]
+                self._data[_entry.id]=_entry
+                self._save_to_fs()
+                self._populate()
     def _OnDel(self, _):
         _idx=self._name_lb.GetSelection()
         if _idx==wx.NOT_FOUND:
@@ -532,7 +530,7 @@ if __name__=="__main__":
     f=wx.Frame(None, title='imp_cal_preset')
     _data=ImportCalendarEntry()
     _data.id
-    w=ImportCalendarPresetWizard(f, _data)
-    print 'RunWizard:',w.RunWizard()
-    print 'Data:',w.get()
-    w.Destroy()
+    with guihelper.WXDialogWrapper(ImportCalendarPresetWizard(f, _data)) \
+         as w:
+        print 'RunWizard:',w.RunWizard()
+        print 'Data:',w.get()

@@ -456,15 +456,13 @@ class CSVImportDialog(common_calendar.PreviewDialog):
         wx.EVT_BUTTON(self, self.ID_MERGE, self.OnEndModal)
         wx.EVT_BUTTON(self, wx.ID_HELP, lambda *_: wx.GetApp().displayhelpid(helpids.ID_DLG_CALENDAR_IMPORT))
 
+    @guihelper.BusyWrapper
     def OnImport(self, evt):
-        wx.BeginBusyCursor()
-        dlg=wx.ProgressDialog('CSV Calendar Import',
-                              'Importing CSV Calendar Data, please wait ...',
-                              parent=self)
-        self.__oc.read(self.folderctrl.GetValue())
-        self.populate(self.__oc.get_display_data())
-        dlg.Destroy()
-        wx.EndBusyCursor()
+        with guihelper.WXDialogWrapper(wx.ProgressDialog('CSV Calendar Import',
+                                                         'Importing CSV Calendar Data, please wait ...',
+                                                         parent=self)) as dlg:
+            self.__oc.read(self.folderctrl.GetValue())
+            self.populate(self.__oc.get_display_data())
 
     def OnBrowseFolder(self, evt):
         with guihelper.WXDialogWrapper(wx.FileDialog(self, "Pick a CSV Calendar File", wildcard='*.csv'),

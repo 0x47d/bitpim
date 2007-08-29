@@ -222,20 +222,19 @@ def check_update(update_url=None, current_version=None,
     # retrieve and parse update info
     print 'Checking update for BitPim ', current_version, ' running on ', \
           platform, '-', flavor
-    dlg=wx.ProgressDialog('BitPim Update',
-                          'Retrieving BitPim Update Information...',
-                          style=wx.PD_AUTO_HIDE)
-    bp_update=BitPimUpdate()
-    s=None
-    try:
-        if update_url is None:
-            bp_update.get_update_info()
-        else:
-            bp_update.get_update_info(update_url)
-        dlg.Update(100)
-    except:
-        s='Failed to get BitPim update info.'
-    dlg.Destroy()
+    with guihelper.WXDialogWrapper(wx.ProgressDialog('BitPim Update',
+                                                     'Retrieving BitPim Update Information...',
+                                                     style=wx.PD_AUTO_HIDE)) as dlg:
+        bp_update=BitPimUpdate()
+        s=None
+        try:
+            if update_url is None:
+                bp_update.get_update_info()
+            else:
+                bp_update.get_update_info(update_url)
+            dlg.Update(100)
+        except:
+            s='Failed to get BitPim update info.'
     if s is None:
         s=bp_update.display_update_info(current_version, platform, flavor)
         latest_version=bp_update.latest_version
