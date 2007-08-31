@@ -16,12 +16,12 @@ EPYDOC=epydoc
 PYCHECKERARGS="--only --limit 10000"
 PYCHECKER="pychecker $PYCHECKERARGS"
 PYXRDIR=
-PYTHON=python # will probably want this to be python2.3 on rh9
+PYTHON=python # will probably want this to be python2.5 on rh9
 
 case $MACHTYPE in
     *-msys ) # windows machine
-        EPYDOC="python /c/python23/scripts/epydoc.py"
-        PYCHECKER="python /c/python23/lib/site-packages/pychecker/checker.py $PYCHECKERARGS pychecker"
+        EPYDOC="python /c/python25/scripts/epydoc.py"
+        PYCHECKER="python /c/python25/lib/site-packages/pychecker/checker.py $PYCHECKERARGS pychecker"
 	PYXRDIR="/c/bin/pyxr"
 	PATH="/usr/bin:$PATH"  # msys is usually not on path!
     ;;
@@ -30,9 +30,9 @@ esac
 
 if $cygwin
 then
-    EPYDOC="python $(cygpath -w /cygdrive/c/python23/scripts/epydoc.py)"
-    PYCHECKER="python $(cygpath -w /cygdrive/c/python23/lib/site-packages/pychecker/checker.py) $PYCHECKERARGS pychecker"
-    PYXRDIR="/cygdrive/c/python23/lib/site-packages/pyxr/"
+    EPYDOC="python $(cygpath -w /cygdrive/c/python25/scripts/epydoc.py)"
+    PYCHECKER="python $(cygpath -w /cygdrive/c/python25/lib/site-packages/pychecker/checker.py) $PYCHECKERARGS pychecker"
+    PYXRDIR="/cygdrive/c/python25/lib/site-packages/pyxr/"
 fi
 
 # clean everything up
