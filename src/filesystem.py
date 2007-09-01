@@ -25,7 +25,7 @@ import types
 import datetime
 import sha
 import codecs
-import locale
+##import locale
 import fileview
 import widgets
 

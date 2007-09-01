@@ -23,7 +23,7 @@ import types
 import datetime
 import sha
 import codecs
-import locale
+##import locale
 
 # wx modules
 import wx
