@@ -423,6 +423,14 @@ class ConfigDialog(wx.Dialog):
         gs.Add( self.commbox, pos=(_row,1), flag=wx.ALIGN_CENTER_VERTICAL)
         gs.Add( wx.Button(self, self.ID_COMBROWSE, "Browse ..."), pos=(_row,2), flag=wx.ALIGN_CENTER_VERTICAL)
         _row+=1
+        # com timeout
+        gs.Add(wx.StaticText(self, -1, 'Com Timeout (sec)'), pos=(_row, 0),
+               flag=wx.ALIGN_CENTER_VERTICAL)
+        self.commtimeout=NumCtrl(self, -1,
+                                 integerWidth=2, fractionWidth=1,
+                                 allowNegative=False)
+        gs.Add(self.commtimeout, pos=(_row, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        _row+=1
 
         # Automatic check for update
         gs.Add(wx.StaticText(self, -1, 'Check for Update'), pos=(_row,0), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -636,6 +644,7 @@ class ConfigDialog(wx.Dialog):
     def setfromconfig(self):
         if len(self.mw.config.Read("lgvx4400port")):
             self.commbox.SetValue(self.mw.config.Read("lgvx4400port", ""))
+        self.commtimeout.SetValue(self.mw.config.ReadFloat('commtimeout', 3.0))
         if self.mw.config.Read("phonetype", "") in self.phonemodels:
             self.phonebox.SetValue(self.mw.config.Read("phonetype"))
         if self.bitflingenabled is not None:
@@ -669,12 +678,14 @@ class ConfigDialog(wx.Dialog):
         self.mw.configpath=path
         self.mw.commportsetting=str(self.commbox.GetValue())
         self.mw.config.Write("lgvx4400port", self.mw.commportsetting)
+        self.mw.config.WriteFloat('commtimeout',
+                                  float(self.commtimeout.GetValue()))
         if self.mw.wt is not None:
             self.mw.wt.clearcomm()
         # comm parameters (retry, timeouts, flow control etc)
         commparm={}
         commparm['retryontimeout']=self.mw.config.ReadInt("commretryontimeout", False)
-        commparm['timeout']=self.mw.config.ReadInt('commtimeout', 3)
+        commparm['timeout']=self.mw.config.ReadFloat('commtimeout', 3.0)
         commparm['hardwareflow']=self.mw.config.ReadInt('commhardwareflow', False)
         commparm['softwareflow']=self.mw.config.ReadInt('commsoftwareflow', False)
         commparm['baud']=self.mw.config.ReadInt('commbaud', 115200)

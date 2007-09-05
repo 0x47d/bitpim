@@ -37,6 +37,9 @@ choose your phone and select how it is connected to your computer
 see the list of valid ports on your machine. The "Phone Wizard" will let you choose and test 
 the Com port.
 
+<H2>Com Timeout</H2>
+<P>This sets the timeout value for transferring data from/to the phone.  The default value is 3.0 seconds.  For some phone models, increasing this value may help to reduce/eliminate "Timeout" conditions.
+
 <h2>Check for Update</h2>
 
 <p>This sets the frequency with which BitPim automatically checks for any program updates.

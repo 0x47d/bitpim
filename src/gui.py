@@ -25,7 +25,6 @@ import types
 import datetime
 import sha
 import codecs
-##import locale
 
 # wx modules
 import wx
