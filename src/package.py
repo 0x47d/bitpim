@@ -343,7 +343,7 @@ def getvals():
         'RELEASE': version.release,
         'DQVERSION': version.dqverstr,
         'COMMENTS': "Provided under the GNU Public License (GPL)",
-        'DESCRIPTION': "View and manipulate data on many CDMA phones from LG, Samsung, Sanyo and other manufacturers. This includes the PhoneBook, Calendar, WallPapers, RingTones (functionality varies by phone) and the Filesystem for most Qualcomm CDMA chipset based phones.",
+        'DESCRIPTION': "Open Source Mobile Phone Tool",
         'COPYRIGHT': "Copyright (C) 2003-2006 The BitPim developers",
         'URL': version.url,
         'SUPPORTURL': "http://www.bitpim.org/help/support.htm",
