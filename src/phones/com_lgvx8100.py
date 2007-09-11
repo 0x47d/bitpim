@@ -344,6 +344,8 @@ class Phone(com_lg.LGNewIndexedMedia2, com_lg.LGDMPhone, com_lgvx7000.Phone):
         #sort into start order, makes it possible to see if the calendar has changed
         keys=[(x.start, k) for k,x in cal.items()]
         keys.sort()
+        # apply limiter
+        keys=keys[:self.protocolclass.NUMCALENDARENTRIES]
         # number of entries
         eventsf.numactiveitems=len(keys)
         pos=1

@@ -2,7 +2,7 @@
 
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>
     <ul>
-      <LI><P>Maintenance: upgrade to Python 2.5.1
+      <LI><P>Maintenance: Upgrade to Python 2.5.1
       <LI><P>Maintenance: Upgrade to SQLITE 3.4.1
       <LI><P>Maintenance: Upgrade to paramiko 1.7.1 (Amy)
       <LI><P>Maintenance: Upgrade to wxPython 2.8.4.2
@@ -12,6 +12,7 @@
       <LI><P>Bug fix: <B>LG VX-8700</B> decrease data packet size.
       <LI><P>Improvement: Added <B>Comm Timeout</B> setting to the <B>BitPim Settings</B> dialog.
       <LI><P>Maintenance: New shorter BitPim description string.
+      <LI><P>Bug fix: Set maximum number of calendar entries that can be sent to <B>LG</B> phones.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>

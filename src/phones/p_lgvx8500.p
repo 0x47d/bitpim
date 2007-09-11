@@ -33,6 +33,9 @@ MsgRTIndexFile='pim/pbMsgRingIdSetAsPath.dat'
 WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
 pb_file_name='pim/pbentry.dat'
 
+# Calendar stuff
+##NUMCALENDARENTRIES=??
+
 #Play List stuff
 PLIndexFileName='dload/aodplaylist.lgpl'
 PLFilePath='dload'

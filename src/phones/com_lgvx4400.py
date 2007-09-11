@@ -1195,11 +1195,11 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
         self._set_repeat_event(event, entry, exceptions)
             
     def set_cal(self, sch_file, cal_dict, ringtone_index, voice_files):
-        sch_file.numactiveitems=len(cal_dict)
         exceptions={}
         _pos=2
         _packet_size=None
 ##        _today=datetime.date.today().timetuple()[:5]
+        _entry_cnt=0
         for k, e in cal_dict.items():
 ##            # only send either repeat events or present&future single events
 ##            if e.repeat or (e.start>=_today):
@@ -1211,6 +1211,10 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
             if not _packet_size:
                 _packet_size=event.packetsize()
             _pos+=_packet_size
+            _entry_cnt+=1
+            if _entry_cnt>=self.protocolclass.NUMCALENDARENTRIES:
+                break
+        sch_file.numactiveitems=_entry_cnt
         return exceptions
 
     # Text Memo stuff-----------------------------------------------------------
