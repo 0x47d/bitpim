@@ -192,6 +192,7 @@ class VCalendarImportData(object):
         else:
             # not yet supported
             return
+        rp.weekstart=e.get('repeat_wkst', 'MO')
         # setting the repeat duration/end-date of this event
         if rp_end is not None:
             # end date specified

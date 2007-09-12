@@ -51,6 +51,7 @@ repeat_type - one of daily, weekly, monthly, or yearly.
 interval - for daily: repeat every nth day.  For weekly, for every nth week.
 interval2 - for monhtly: repeat every nth month.
 dow - bitmap of which day of week are being repeated.
+weekstart - the start of the work week ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
 suppressed - list of (y,m,d) being excluded from this series.
 
 --------------------------------------------------------------------------------
@@ -149,7 +150,7 @@ class CalendarDataObject(database.basedataobject):
     _knownlistproperties=database.basedataobject._knownlistproperties.copy()
     _knownlistproperties.update( {
                                   'repeat': ['type', 'interval',
-                                             'interval2', 'dow'],
+                                             'interval2', 'dow', 'weekstart'],
                                   'suppressed': ['date'],
                                   'categories': ['category'] })
     def __init__(self, data=None):
@@ -186,11 +187,14 @@ class RepeatEntry(object):
                 'Thu': 16, 'Fri': 32, 'Sat': 64 }
     dow_weekday=0x3E
     dow_weekend=0x41
+    dow_weekstart={
+        'SU': 7, 'MO': 1, 'TU': 2, 'WE': 3, 'TH': 4, 'FR': 5, 'SA': 6 }
 
     def __init__(self, repeat_type=daily):
         self._type=repeat_type
         self._data=[0,0,0]
         self._suppressed=[]
+        self._wkstart=7 # default to Sun
 
     def __eq__(self, rhs):
         # return T if equal
@@ -240,6 +244,7 @@ class RepeatEntry(object):
         db_r={}
         r={}
         r['type']=self._type
+        r['weekstart']=self.weekstart
         if self._type==self.daily:
             r['interval']=self._data[self._interval]
         elif self._type==self.weekly or self._type==self.monthly:
@@ -284,6 +289,7 @@ class RepeatEntry(object):
         self.repeat_type=r['type']
         _dow=r.get('dow', 0)
         _interval=r.get('interval', 0)
+        self.weekstart=r.get('weekstart', 'SU')
         if self.repeat_type==self.daily:
             self.interval=_interval
         elif self.repeat_type==self.weekly or self.repeat_type==self.monthly:
@@ -330,6 +336,13 @@ class RepeatEntry(object):
         _d1=_d0+datetime.timedelta(days=_delta)
         return (_d1.year, _d1.month, _d1.day)
 
+    def _weekof(self, d):
+        # return the date of the start of the week into which that d falls.
+        _workweek=self.weekstart
+        _dow=d.isoweekday()
+        return d-datetime.timedelta((_dow-_workweek) if _dow>=_workweek \
+                                    else (_dow+7-_workweek))
+
     def _check_weekly(self, s, d):
         # check if at least one day-of-week is specified, if not default to the
         # start date
@@ -337,9 +350,7 @@ class RepeatEntry(object):
             self.dow=1<<(s.isoweekday()%7)
         # check to see if this is the nth week
         day_of_week=d.isoweekday()%7  # Sun=0, ..., Sat=6
-        sun_0=s-datetime.timedelta(s.isoweekday()%7)
-        sun_1=d-datetime.timedelta(day_of_week)
-        if ((sun_1-sun_0).days/7)%self.interval:
+        if ((self._weekof(d)-self._weekof(s)).days/7)%self.interval:
             # wrong week
             return False
         # check for the right weekday
@@ -510,6 +521,20 @@ class RepeatEntry(object):
                     names.append(e)
         return ';'.join(names)
     dow_str=property(fget=_get_dow_str)
+
+    def _get_wkstart(self):
+        return self._wkstart
+    def _set_wkstart(self, wkstart):
+        if isinstance(wkstart, int):
+            if wkstart in range(1, 8):
+                self._wkstart=wkstart
+            else:
+                raise ValueError('Must be between 1-7')
+        elif isinstance(wkstart, (str, unicode)):
+            self._wkstart=self.dow_weekstart.get(str(wkstart.upper()), 7)
+        else:
+            raise TypeError("Must be either a string or int")
+    weekstart=property(fget=_get_wkstart, fset=_set_wkstart)
 
     def _get_suppressed(self):
         return self._suppressed

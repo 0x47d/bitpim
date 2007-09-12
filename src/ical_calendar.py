@@ -215,6 +215,7 @@ class iCalendarImportData(parentclass):
                 dd['repeat_num']=int(_value['COUNT'][0])
             elif _value.get('UNTIL', [None])[0]:
                 dd['repeat_end']=bptime.BPTime(_value['UNTIL'][0]).get()
+            dd['repeat_wkst']=_value.get('WKST', ['MO'])[0]
         return _rep
 
     def _conv_exceptions(self, v, _):
@@ -380,15 +381,18 @@ class ExportDialog(ExportDialogParent):
     _dow_list=(
         (1, 'SU'), (2, 'MO'), (4, 'TU'), (8, 'WE'), (16, 'TH'),
         (32, 'FR'), (64, 'SA'))
+    _dow_wkst={
+        1: 'MO', 2: 'TU', 3: 'WE', 4: 'TH', 5: 'FR', 6: 'SA', 7: 'SU' }
     def _write_repeat_weekly(self, event, rpt):
         _dow=rpt.dow
         _byday=','.join([x[1] for x in self._dow_list \
                          if _dow&x[0] ])
         _value=['FREQ=WEEKLY',
                 'INTERVAL=%d'%rpt.interval,
-                'BYDAY=%s'%_byday]
+                'BYDAY=%s'%_byday,
+                'WKST=%s'%self._dow_wkst.get(rpt.weekstart, 'MO')]
         if not event.open_ended():
-            _value.append('UNTIL=%04d%02d%02dT000000Z'%event.end[:3])
+            _value.append('UNTIL=%04d%02d%02d'%event.end[:3])
         return out_line('RRULE', None, ';'.join(_value), None)
     def _write_repeat_monthly(self, event, rpt):
         _value=['FREQ=MONTHLY',
