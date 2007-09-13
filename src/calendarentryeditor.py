@@ -41,6 +41,8 @@ class RepeatEditor(pb_editor.DirtyUIBase):
     _daily_option_index=0
     _weekly_option_index=1
     _monthly_option_index=2
+    _weekly_wkst_str=(None, 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+    _weekly_wkst_idx=(7, 1, 2, 3, 4, 5, 6)
     
     def __init__(self, parent, _):
         global widgets_list
@@ -94,6 +96,13 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             wx.EVT_CHECKBOX(self, self._wl_dow[i].GetId(), self.OnDirtyUI)
             hbs.Add(self._wl_dow[i], 0, wx.LEFT|wx.TOP, 5)
         vbs.Add(hbs, 0, wx.LEFT, 5)
+        hbs=wx.BoxSizer(wx.HORIZONTAL)
+        hbs.Add(wx.StaticText(self, -1, 'Week starts on:'), 0, wx.LEFT, 10)
+        self._wl_wkst=wx.ComboBox(self, -1, value=self._dow[0],
+                                  choices=self._dow, style=wx.CB_READONLY)
+        wx.EVT_COMBOBOX(self, self._wl_wkst.GetId(), self.OnDirtyUI)
+        hbs.Add(self._wl_wkst, 0, wx.LEFT, 5)
+        vbs.Add(hbs, 0, wx.TOP, 10)
         self._option_bs.Add(vbs, 0, wx.LEFT, 5)
         self._weekly_option_bs=vbs
         # monthly option widgets
@@ -170,6 +179,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             for i in range(len(self._wl_dow)):
                 b=((1<<i)&dow_mask)!=0
                 self._wl_dow[i].SetValue(b)
+            self._wl_wkst.SetValue(self._weekly_wkst_str[data.weekstart])
         elif rt==data.monthly:
             self._repeat_option_rb.SetSelection(3)
             self._ml_interval.SetValue(`data.interval2`)
@@ -222,6 +232,7 @@ class RepeatEditor(pb_editor.DirtyUIBase):
             if self._wl_dow[i].GetValue():
                 m=m|(1<<i)
         r.dow=m
+        r.weekstart=self._weekly_wkst_idx[self._wl_wkst.GetSelection()]
     def _get_monthly_options(self, r):
         r.repeat_type=r.monthly
         try:
