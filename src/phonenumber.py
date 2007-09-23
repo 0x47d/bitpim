@@ -30,6 +30,9 @@ _sevendigits=re.compile("^[0-9]{7}$")
 
 
 def normalise(n):
+    # this was meant to remove the long distance '1' prefix,
+    # temporary disable it, will be done on a phone-by-phone case.
+    return n
     nums="".join(re.split(_notdigits, n))
     if len(nums)==10:
         return nums

@@ -14,6 +14,7 @@
       <LI><P>Maintenance: New shorter BitPim description string.
       <LI><P>Bug fix: Set maximum number of calendar entries that can be sent to <B>LG</B> phones.
       <LI><P>Improvement: iCal support: WKST parameter.  
+      <LI><P>Improvement: Allow reading of prefix 1 and other non-digit phone numbers from the phone.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>
