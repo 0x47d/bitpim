@@ -232,11 +232,14 @@ class OutlookCalendarImportData:
         ce.allday=e.get('allday', False)
         if ce.allday:
             if not e.get('repeat', False):
-                # by definition, this is a 1-day deal!
                 ce.start=e['start'][:3]+(0,0)
-                ce.end=e['start'][:3]+(23,59)
+                # for non-recurrent allday events, Outlook always set the
+                # end date to 1-extra day.
+                _dt=datetime.datetime(*e['end'])-datetime.timedelta(1)
+                ce.end=(_dt.year, _dt.month, _dt.day, 23, 59)
             else:
                 # unless it is a repeating all day event!
+                # we can now handle allday events that span more than one day!
                 ce.start=e['start'][:3]+(0,0)
                 ce.end=e['end'][:3]+(23,59)
         else:
