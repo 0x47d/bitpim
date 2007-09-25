@@ -324,6 +324,23 @@ class _NotSafeObject:
 
 _NotSafeObject=_NotSafeObject()
 
+class Event(object):
+    """Simple Event class that supports Context Manager"""
+    def __init__(self):
+        self._event=threading.Event()
+    def __enter__(self):
+        self._event.set()
+    def __exit__(self, exc_type, exc_value, tb):
+        self._event.clear()
+    def set(self):
+        return self._event.set()
+    def clear(self):
+        return self._event.clear()
+    def isSet(self):
+        return self._event.isSet()
+    def wait(self, timeout=None):
+        return self._event.wait(timeout)
+
 EVT_CALLBACK=None
 class MainApp(wx.App):
     def __init__(self, argv, config_filename=None):
@@ -331,6 +348,8 @@ class MainApp(wx.App):
         self.SAFEMODE=False
         codecs.register(phone_media_codec.search_func)
         self._config_filename=config_filename
+        # simple Event object to flag when entering/leaving critical section
+        self.critical=Event()
         wx.App.__init__(self, redirect=False,
                         useBestVisual=not guihelper.IsGtk())
 
@@ -1348,94 +1367,96 @@ class MainWindow(wx.Frame):
             return
         self._autodetect_delay=self.phoneprofile.autodetect_delay
         todo.append((self.wt.rebootcheck, "Phone Reboot"))
+        wx.GetApp().critical.set()
         self.MakeCall(Request(self.wt.getdata, dlg, todo),
                       Callback(self.OnDataGetPhoneResults))
 
     def OnDataGetPhoneResults(self, exception, results):
-        if self.HandleException(exception): return
-        self.OnLog(`results.keys()`)
-        self.OnLog(`results['sync']`)
-        # phonebook
-        if results['sync'].has_key('phonebook'):
-            v=results['sync']['phonebook']
+        with wx.GetApp().critical:
+            if self.HandleException(exception): return
+            self.OnLog(`results.keys()`)
+            self.OnLog(`results['sync']`)
+            # phonebook
+            if results['sync'].has_key('phonebook'):
+                v=results['sync']['phonebook']
 
-            print "phonebookmergesetting is",v
-            if v=='MERGE': 
-                merge=True
-            else:
-                merge=False
-            self.GetActivePhonebookWidget().importdata(results['phonebook'], results.get('categories', []), merge)
+                print "phonebookmergesetting is",v
+                if v=='MERGE': 
+                    merge=True
+                else:
+                    merge=False
+                self.GetActivePhonebookWidget().importdata(results['phonebook'], results.get('categories', []), merge)
 
-        # wallpaper
-        updwp=False # did we update the wallpaper
-        if results['sync'].has_key('wallpaper'):
-            v=results['sync']['wallpaper']
-            if v=='MERGE': raise Exception("Not implemented")
-            updwp=True
-            self.GetActiveWallpaperWidget().populatefs(results)
-            self.GetActiveWallpaperWidget().populate(results)
-        # wallpaper-index
-        if not updwp and results.has_key('wallpaper-index'):
-            self.GetActiveWallpaperWidget().updateindex(results)
-        # ringtone
-        updrng=False # did we update ringtones
-        if results['sync'].has_key('ringtone'):
-            v=results['sync']['ringtone']
-            if v=='MERGE': raise Exception("Not implemented")
-            updrng=True
-            self.GetActiveRingerWidget().populatefs(results)
-            self.GetActiveRingerWidget().populate(results)
-        # ringtone-index
-        if not updrng and results.has_key('ringtone-index'):
-            self.GetActiveRingerWidget().updateindex(results)            
-        # calendar
-        if results['sync'].has_key('calendar'):
-            v=results['sync']['calendar']
-            if v=='MERGE': raise Exception("Not implemented")
-            results['calendar_version']=self.phoneprofile.BP_Calendar_Version
-            self.GetActiveCalendarWidget().mergedata(results)
-##            self.GetActiveCalendarWidget().populatefs(results)
-##            self.GetActiveCalendarWidget().populate(results)
-        # memo
-        if results['sync'].has_key('memo'):
-            v=results['sync']['memo']
-            if v=='MERGE': raise Exception("Not implemented")
-            self.GetActiveMemoWidget().populatefs(results)
-            self.GetActiveMemoWidget().populate(results)
-        # todo
-        if results['sync'].has_key('todo'):
-            v=results['sync']['todo']
-            if v=='MERGE': raise NotImplementedError
-            self.GetActiveTodoWidget().populatefs(results)
-            self.GetActiveTodoWidget().populate(results)
-        # SMS
-        if results['sync'].has_key('sms'):
-            v=results['sync']['sms']
-            if v=='MERGE':
-                self.GetActiveSMSWidget().merge(results)
-            else:
-                self.GetActiveSMSWidget().populatefs(results)
-                self.GetActiveSMSWidget().populate(results)
-        # call history
-        if results['sync'].has_key('call_history'):
-            v=results['sync']['call_history']
-            if v=='MERGE':
-                self.GetActiveCallHistoryWidget().merge(results)
-            else:
-                self.GetActiveCallHistoryWidget().populatefs(results)
-                self.GetActiveCallHistoryWidget().populate(results)
-        # Playlist
-        if results['sync'].has_key(playlist.playlist_key):
-            if results['sync'][playlist.playlist_key]=='MERGE':
-                raise NotImplementedError
-            self.GetActivePlaylistWidget().populatefs(results)
-            self.GetActivePlaylistWidget().populate(results)
-        # T9 User DB
-        if results['sync'].has_key(t9editor.dict_key):
-            if results['sync'][t9editor.dict_key]=='MERGE':
-                raise NotImplementedError
-            self.GetActiveT9EditorWidget().populatefs(results)
-            self.GetActiveT9EditorWidget().populate(results)
+            # wallpaper
+            updwp=False # did we update the wallpaper
+            if results['sync'].has_key('wallpaper'):
+                v=results['sync']['wallpaper']
+                if v=='MERGE': raise Exception("Not implemented")
+                updwp=True
+                self.GetActiveWallpaperWidget().populatefs(results)
+                self.GetActiveWallpaperWidget().populate(results)
+            # wallpaper-index
+            if not updwp and results.has_key('wallpaper-index'):
+                self.GetActiveWallpaperWidget().updateindex(results)
+            # ringtone
+            updrng=False # did we update ringtones
+            if results['sync'].has_key('ringtone'):
+                v=results['sync']['ringtone']
+                if v=='MERGE': raise Exception("Not implemented")
+                updrng=True
+                self.GetActiveRingerWidget().populatefs(results)
+                self.GetActiveRingerWidget().populate(results)
+            # ringtone-index
+            if not updrng and results.has_key('ringtone-index'):
+                self.GetActiveRingerWidget().updateindex(results)            
+            # calendar
+            if results['sync'].has_key('calendar'):
+                v=results['sync']['calendar']
+                if v=='MERGE': raise Exception("Not implemented")
+                results['calendar_version']=self.phoneprofile.BP_Calendar_Version
+                self.GetActiveCalendarWidget().mergedata(results)
+    ##            self.GetActiveCalendarWidget().populatefs(results)
+    ##            self.GetActiveCalendarWidget().populate(results)
+            # memo
+            if results['sync'].has_key('memo'):
+                v=results['sync']['memo']
+                if v=='MERGE': raise Exception("Not implemented")
+                self.GetActiveMemoWidget().populatefs(results)
+                self.GetActiveMemoWidget().populate(results)
+            # todo
+            if results['sync'].has_key('todo'):
+                v=results['sync']['todo']
+                if v=='MERGE': raise NotImplementedError
+                self.GetActiveTodoWidget().populatefs(results)
+                self.GetActiveTodoWidget().populate(results)
+            # SMS
+            if results['sync'].has_key('sms'):
+                v=results['sync']['sms']
+                if v=='MERGE':
+                    self.GetActiveSMSWidget().merge(results)
+                else:
+                    self.GetActiveSMSWidget().populatefs(results)
+                    self.GetActiveSMSWidget().populate(results)
+            # call history
+            if results['sync'].has_key('call_history'):
+                v=results['sync']['call_history']
+                if v=='MERGE':
+                    self.GetActiveCallHistoryWidget().merge(results)
+                else:
+                    self.GetActiveCallHistoryWidget().populatefs(results)
+                    self.GetActiveCallHistoryWidget().populate(results)
+            # Playlist
+            if results['sync'].has_key(playlist.playlist_key):
+                if results['sync'][playlist.playlist_key]=='MERGE':
+                    raise NotImplementedError
+                self.GetActivePlaylistWidget().populatefs(results)
+                self.GetActivePlaylistWidget().populate(results)
+            # T9 User DB
+            if results['sync'].has_key(t9editor.dict_key):
+                if results['sync'][t9editor.dict_key]=='MERGE':
+                    raise NotImplementedError
+                self.GetActiveT9EditorWidget().populatefs(results)
+                self.GetActiveT9EditorWidget().populate(results)
     ###
     ### Main bit for sending data to the phone
     ###

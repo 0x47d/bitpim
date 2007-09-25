@@ -16,6 +16,7 @@
       <LI><P>Improvement: iCal support: WKST parameter.  
       <LI><P>Improvement: Allow reading of prefix 1 and other non-digit phone numbers from the phone.
       <LI><P>Bug fix: Outlook calendar import: all-day events that span more than one day.
+      <LI><P>Bug fix: Calendar events summary window pop-up during Get Phone Data freezes BitPim.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>

@@ -289,6 +289,7 @@ BEGIN_TOC
         TOCITEM_1(I do not have the Send Phone Data memu item?,faq-donthavesendphonedata.htm)
         TOCITEM_1(What do those colors of the color-coded field names mean?,faq-colorcodedfields.htm)
         TOCITEM_1(What are the differences between the Replace All and Add option when saving ringtones/wallpapers to the phone?,faq-mediaoptions.htm)
+        TOCITEM_1(Why does BitPim show media files on SD Card as having 0-byte size?,faq-sdcard.htm)
         ENDTOC_1
     TOCITEM_0(About BitPim,about.htm)
         TOC_1

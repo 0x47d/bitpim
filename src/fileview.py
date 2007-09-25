@@ -561,8 +561,9 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         self.thetimer.Start(1750, wx.TIMER_ONE_SHOT)
 
     def OnTooltipTimer(self, _):
-        if self._in_context_menu or not self.show_thumbnail:
-            # we're putting up a context menu, forget this
+        if self._in_context_menu or not self.show_thumbnail or \
+           wx.GetApp().critical.isSet():
+            # we're putting up a context menu or main app is busy, forget this
             return
         # see if we have moved
         if self.abs_mouse_pos!=wx.GetMousePosition():

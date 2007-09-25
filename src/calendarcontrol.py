@@ -374,7 +374,7 @@ class CalendarCell(wx.PyWindow):
     def OnLeaveWindow(self, _):
         self._timer.Stop()
     def OnTimer(self, _):
-        if not self.entries:
+        if not self.entries or wx.GetApp().critical.isSet():
             return
         _rect=self.GetRect()
         _x,_y=self.GetParent().ClientToScreen(_rect[:2])
