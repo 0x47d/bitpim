@@ -358,6 +358,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         wx.EVT_KEY_DOWN(self.aggdisp, self.OnKeyDown)
         wx.EVT_KEY_UP(self.aggdisp, self.OnKeyUp)
         self.tb.Realize()
+        pubsub.subscribe(self.OnMediaInfo, pubsub.REQUEST_MEDIA_INFO)
 
     def OnIdle(self, _):
         "Save out changed data"
@@ -502,8 +503,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                 self.OnRefresh()
                 wx.EndBusyCursor()
 
+    @guihelper.BusyWrapper
     def OnLaunch(self, _):
-        wx.BeginBusyCursor()
         item=self.GetSelectedItems()[0]
         me=self._data[self.database_key][item.key]
         fname=self._gettempfile(me)
@@ -516,7 +517,6 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             wx.Bell()
         else:
             wx.Execute(cmd, wx.EXEC_ASYNC)
-        wx.EndBusyCursor()
 
     if True: # guihelper.IsMSWindows() or guihelper.IsGtk():
         # drag-and-drop files should work on all platforms
@@ -1108,6 +1108,17 @@ class FileView(wx.Panel, widgets.BitPimWidget):
 
     def GetHelpID(self):
         return self.helpid
+
+    def OnMediaInfo(self, msg):
+        # return the list of strings (lines) describing this item
+        client, name, origin=msg.data
+        _res=[]
+        for _item in self.GetAllItems():
+            if (origin is None or _item.origin==origin) and \
+               _item.name==name:
+                    pubsub.publish(pubsub.RESPONSE_MEDIA_INFO,
+                                   { 'client': client,
+                                     'data': _item.lines })
 
 class FileViewDisplayItem(object):
 

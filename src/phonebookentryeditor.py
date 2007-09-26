@@ -157,12 +157,14 @@ class RingtoneEditor(DirtyUIBase):
 
         pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
         wx.CallAfter(pubsub.publish, pubsub.REQUEST_RINGTONES) # make the call once we are onscreen
+        pubsub.subscribe(self.OnPreviewUpdate, pubsub.RESPONSE_MEDIA_INFO)
 
         wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
         wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)
 
     def __del__(self):
         pubsub.unsubscribe(self.OnRingtoneUpdates)
+        pubsub.unsubscribe(self.OnPreviewUpdate)
         super(RingtoneEditor, self).__del__()
 
     def OnRingtoneUpdates(self, msg):
@@ -186,11 +188,19 @@ class RingtoneEditor(DirtyUIBase):
         v=self._get().get('ringtone', None)
         self.SetPreview(v)
 
+    _preview_html='<img src="bpimage:ringer.png;width=24;height=24"><P>%s'
+    def OnPreviewUpdate(self, msg):
+        # Media tab replies with some description about the selected media item
+        if msg.data['client'] is self:
+            # this one's for moi!
+            self.preview.SetPage(self._preview_html%'<BR>'.join(msg.data['data']))
+
     def SetPreview(self, name):
-        if name is None:
+        if name is None or name==self.unnamed:
             self.preview.SetPage('')
         else:
-            self.preview.SetPage('<img src="bpimage:ringer.png;width=24;height=24"><br>At some point there will be info about the ringtone as well as the ability to play it here')
+            self.preview.SetPage(self._preview_html%name)
+            pubsub.publish(pubsub.REQUEST_MEDIA_INFO, (self, name, None))
 
     def _set(self, data):
         if data is None:

@@ -193,14 +193,10 @@ class WallpaperView(fileview.FileView):
         @return: (wxImage, filesize)
         """
         # find the image
-        data=None
-        for x in self._data[self.database_key]:
-            if origin==None or self._data[self.database_key][x].origin==origin:
-                if name==self._data[self.database_key][x].name:
-                    data=self._data[self.database_key][x].mediadata
-        if data!=None:
-            return self.GetImageFromString(data, None)
-        return None
+        for _, _item in self._data[self.database_key].items():
+            if (origin is None or _item.origin==origin) and \
+               _item.name==name:
+                    return self.GetImageFromString(_item.mediadata, None)
 
     # This function exists because of the constraints of the HTML
     # filesystem stuff.  The previous code was reading in the file to
