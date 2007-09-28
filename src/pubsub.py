@@ -54,8 +54,9 @@ MIDNIGHT=('notification', 'midnight')   # midnight had passed
 DR_RECORD=('notification', 'recorddata')    # DR On
 DR_PLAY=('notification', 'playdata')        # DR Playback
 DR_STOP=('notification', 'stop')            # DR stop
-REQUEST_MEDIA_INFO=('request', 'media')     # Request media item description
-RESPONSE_MEDIA_INFO=('response', 'media')   # Response: list of strings (lines)
+REQUEST_MEDIA_INFO=('request', 'mediainfo')     # Request media item description
+RESPONSE_MEDIA_INFO=('response', 'mediainfo')   # Response: list of strings (lines)
+REQUEST_MEDIA_OPEN=('request', 'mediaopen')  # Request to open/launch a media item
 
 # MEDIA_NAME_CHANGED keys & types
 media_change_type='type'

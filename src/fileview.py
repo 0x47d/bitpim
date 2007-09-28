@@ -359,6 +359,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
         wx.EVT_KEY_UP(self.aggdisp, self.OnKeyUp)
         self.tb.Realize()
         pubsub.subscribe(self.OnMediaInfo, pubsub.REQUEST_MEDIA_INFO)
+        pubsub.subscribe(self.OnMediaOpen, pubsub.REQUEST_MEDIA_OPEN)
 
     def OnIdle(self, _):
         "Save out changed data"
@@ -503,9 +504,8 @@ class FileView(wx.Panel, widgets.BitPimWidget):
                 self.OnRefresh()
                 wx.EndBusyCursor()
 
-    @guihelper.BusyWrapper
-    def OnLaunch(self, _):
-        item=self.GetSelectedItems()[0]
+    def _launch(self, item):
+        # Open/Launch the specified item
         me=self._data[self.database_key][item.key]
         fname=self._gettempfile(me)
         if guihelper.IsMac():
@@ -517,6 +517,10 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             wx.Bell()
         else:
             wx.Execute(cmd, wx.EXEC_ASYNC)
+
+    @guihelper.BusyWrapper
+    def OnLaunch(self, _):
+        self._launch(self.GetSelectedItems()[0])
 
     if True: # guihelper.IsMSWindows() or guihelper.IsGtk():
         # drag-and-drop files should work on all platforms
@@ -1112,13 +1116,20 @@ class FileView(wx.Panel, widgets.BitPimWidget):
     def OnMediaInfo(self, msg):
         # return the list of strings (lines) describing this item
         client, name, origin=msg.data
-        _res=[]
         for _item in self.GetAllItems():
             if (origin is None or _item.origin==origin) and \
                _item.name==name:
                     pubsub.publish(pubsub.RESPONSE_MEDIA_INFO,
                                    { 'client': client,
-                                     'data': _item.lines })
+                                     'canopen': bool(guihelper.GetOpenCommand(_item.mimetypes, _item.name)),
+                                     'desc': _item.lines })
+    def OnMediaOpen(self, msg):
+        # Launch the specified item name
+        name, origin=msg.data
+        for _item in self.GetAllItems():
+            if (origin is None or _item.origin==origin) and \
+               _item.name==name:
+                return self._launch(_item)
 
 class FileViewDisplayItem(object):
 

@@ -2115,8 +2115,7 @@ def show_about_dlg(parent):
     info.Copyright=_copyright
     info.Description = _description%_component_string()
     info.WebSite = ("http://www.bitpim.org", "www.bitpim.org")
-    info.Developers = [ "Roger Binns",
-                        "Joe Pham",
+    info.Developers = [ "Joe Pham",
                         "Stephen Wood",
                         "Sean Burke",
                         "Nathan Hjelm",

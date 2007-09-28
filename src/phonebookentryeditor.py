@@ -113,6 +113,12 @@ class ListBox(wx.ListBox):
             self._selstr=''
 
 # RingtoneEditor----------------------------------------------------------------
+class MediaPreviewWindow(bphtml.HTMLWindow):
+    """A subclass of BitPim HTMLWindow that launches a media item when clicked"""
+    def OnLinkClicked(self, evt):
+        pubsub.publish(pubsub.REQUEST_MEDIA_OPEN,
+                       (evt.GetHref(), None))
+
 class RingtoneEditor(DirtyUIBase):
     "Edit a ringtone"
 
@@ -136,7 +142,7 @@ class RingtoneEditor(DirtyUIBase):
         self.static_box=_box
         vs=wx.BoxSizer(wx.VERTICAL)
 
-        self.preview=bphtml.HTMLWindow(self, -1)
+        self.preview=MediaPreviewWindow(self, -1)
         self.preview.SetBorders(self._bordersize)
         vs.Add(self.preview, 1, wx.EXPAND|wx.ALL, 5)
         self.type=wx.ComboBox(self, -1, "call", choices=self.choices, style=wx.CB_READONLY)
@@ -193,7 +199,12 @@ class RingtoneEditor(DirtyUIBase):
         # Media tab replies with some description about the selected media item
         if msg.data['client'] is self:
             # this one's for moi!
-            self.preview.SetPage(self._preview_html%'<BR>'.join(msg.data['data']))
+            if msg.data['canopen']:
+                _s='<A HREF="%s">%s</A><BR>'%(msg.data['desc'][0], msg.data['desc'][0]) +\
+                    '<BR>'.join(msg.data['desc'][1:])
+            else:
+                _s='<BR>'.join(msg.data['desc'])
+            self.preview.SetPage(self._preview_html%_s)
 
     def SetPreview(self, name):
         if name is None or name==self.unnamed:
