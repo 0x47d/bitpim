@@ -1298,7 +1298,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                    break # really want break 2
             if not ok:
                 continue
-            return dict[key]
+            return dict.get(key, default)
         return default
 
     def getfullname(self, names, min, max, truncateat=None):

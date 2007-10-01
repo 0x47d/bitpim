@@ -299,7 +299,10 @@ class Phone(parentphone):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
-        res['serials']=[ {'sourcetype': self.serialsname, 'sourceuniqueid': fundamentals['uniqueserial']} ] 
+        res['serials']=[ {'sourcetype': self.serialsname,
+                          'sourceuniqueid': fundamentals['uniqueserial'],
+                          'serial1': entry.entry_number1,
+                          'serial2': entry.entry_number1 } ] 
 
         # only one name
         res['names']=[ {'full': entry.name} ]
