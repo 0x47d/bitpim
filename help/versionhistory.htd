@@ -20,6 +20,7 @@
       <LI><P>Improvement: display ringtone information in the Contact Editor dialog.
       <li><p>New phone support: <B>SCP-6650</b> (Katana-II)
       <LI><P>Bug fix: <B>LG VX-8550</B>: BitPim failed to write contacts to the phone.
+      <LI><P>Improvement: Display the number of contacts in the <B>Phonebook</B> view.
     </ul>
 
    <h2><a name="1.0.1">Changes in 1.0.1</a></h2>

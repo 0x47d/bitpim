@@ -564,7 +564,6 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self.update_sash=False
         # keep this around while we exist
         self.categorymanager=CategoryManager
-##        self.SetBackgroundColour("ORANGE")
         split=wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
         split.SetMinimumPaneSize(20)
         self.mainwindow=mainwindow
@@ -603,9 +602,18 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         static_bs=wx.StaticBoxSizer(wx.StaticBox(self.table_panel, -1,
                                                  'Historical Data Status:'),
                                     wx.VERTICAL)
-        self.historical_data_label=wx.StaticText(self, -1, 'Current Data')
+        self.historical_data_label=wx.StaticText(self.table_panel, -1,
+                                                 'Current Data')
         static_bs.Add(self.historical_data_label, 1, wx.EXPAND|wx.ALL, 5)
         hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        # show the number of contacts
+        static_bs=wx.StaticBoxSizer(wx.StaticBox(self.table_panel, -1,
+                                                 'Number of Contacts:'),
+                                    wx.VERTICAL)
+        self.contactcount_label=wx.StaticText(self.table_panel, -1, '0')
+        static_bs.Add(self.contactcount_label, 1, wx.EXPAND|wx.ALL, 5)
+        hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
+        # main sizer
         vbs=wx.BoxSizer(wx.VERTICAL)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         vbs.Add(self.table, 1, wx.EXPAND, 0)
@@ -1159,6 +1167,10 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         dict['categories']=self.mainwindow.database.loadlist("categories")
             
 
+    def _updatecount(self):
+        # Update the count of contatcs
+        self.contactcount_label.SetLabel('%(count)d'%{ 'count': len(self._data) })
+
     def populate(self, dict, savetodb=True):
         if self.read_only and savetodb:
             wx.MessageBox('You are viewing historical data which cannot be changed or saved',
@@ -1179,6 +1191,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self._data=pb.copy()
         self.dt.OnDataUpdated()
         self.modified=savetodb
+        self._updatecount()
 
     def _save_db(self, dict):
         self.mainwindow.database.savemajordict("phonebook", database.extractbitpimserials(dict["phonebook"]))
@@ -1191,6 +1204,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                              style=wx.OK|wx.ICON_ERROR)
         else:
             self._save_db(dict)
+            self._updatecount()
         return dict
 
     def _ensure_unicode(self, data):
