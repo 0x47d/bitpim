@@ -1607,6 +1607,11 @@ class CalendarPrintDialog(guiwidgets.PrintDialog):
             res.append(a_month)
         return res
 
+    def _init_print_data(self):
+        # Initialize the dns dict with empty data
+        super(CalendarPrintDialog, self)._init_print_data()
+        self._dns['events']=[]
+
     def _gen_print_data(self):
         if not self._date_changed and \
            not self._style_changed and \
@@ -1637,9 +1642,7 @@ class CalendarPrintDialog(guiwidgets.PrintDialog):
                       'rt').read()
             self._xcp.setupxcopy(tmpl)
         if self._dns is None:
-            self._dns={ 'common': __import__('common') }
-            self._dns['guihelper']=__import__('guihelper')
-            self._dns['events']=[]
+            self._init_print_data()
         self._dns['events']=print_dict
         self._dns['date_range']='%s - %s'%\
                                   (self._dt_start.FormatDate(),

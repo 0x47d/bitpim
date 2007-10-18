@@ -2170,7 +2170,10 @@ class PrintDialog(wx.Dialog):
 
     def _init_print_data(self):
         # Initialize the dns dict with empty data
-        pass
+        self._dns={ 'common': __import__('common') }
+        self._dns['guihelper']=__import__('guihelper')
+        self._dns['pagebreakstr']='<div style="page-break-before:always"/>'
+
     def _get_print_data(self):
         raise NotImplementedError
 
@@ -2183,8 +2186,6 @@ class PrintDialog(wx.Dialog):
                       'rt').read()
             self._xcp.setupxcopy(tmpl)
         if self._dns is None:
-            self._dns={ 'common': __import__('common') }
-            self._dns['guihelper']=__import__('guihelper')
             self._init_print_data()
         self._get_print_data()
         self._html=self._xcp.xcopywithdns(self._dns.copy())
@@ -2257,6 +2258,7 @@ class SMSPrintDialog(PrintDialog):
 
     def _init_print_data(self):
         # Initialize the dns dict with empty data
+        super(SMSPrintDialog, self)._init_print_data()
         self._dns['items']={}
         self._dns['keys']=[]
 
