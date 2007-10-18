@@ -17,7 +17,7 @@ It invokes BitPim in gui or commandline mode as appropriate
 """
 from __future__ import with_statement
 import sys
-import wx
+import bp_cli
 
 # only gui mode support at the moment
 
@@ -51,8 +51,9 @@ if __name__ == '__main__':
 	# get rid of the process serial number on mac
 	sys.argv=sys.argv[:1]+sys.argv[2:]
     try:
-        _options, _args=getopt.gnu_getopt(sys.argv[1:], 'c:d:')
-        _invalid_args=[x for x in _args if x not in ['debug', 'bitfling']]
+        _options, _args=getopt.gnu_getopt(sys.argv[1:], 'c:d:f:p:')
+        _invalid_args=[x for x in _args if x not in ['debug', 'bitfling'] and \
+                       not bp_cli.valid_command(x)]
         if _invalid_args:
             raise getopt.GetoptError('Invalid argument(s): '+','.join(_invalid_args))
     except getopt.GetoptError:
@@ -62,8 +63,9 @@ if __name__ == '__main__':
     if _invalid_args:
         # invalid/unknown arguments
         try:
+            import wx
             import guihelper
-            _msg='%s\nUsage: %s [-c config file]|[-d config dir] [debug] [bitfling]\n'%(_error_str, sys.argv[0])
+            _msg='%s\nUsage: %s [-c config file]|[-d config dir] [-p comm port] [-f phone model] [CLI Command] [debug] [bitfling]\n'%(_error_str, sys.argv[0])
             sys.stderr.write(_msg)
             # try to display an error message box
             _app=wx.PySimpleApp()
@@ -74,8 +76,9 @@ if __name__ == '__main__':
     _kwargs={}
     # check for debug flag
     _debug=__debug__ or bool(_args and 'debug' in _args)
-
-    if not _debug:
+    # CLI commands present?
+    _clicmd=len(_args)==1 and bp_cli.valid_command(_args[0])
+    if not _debug and not _clicmd:
         import warnings
         def ignorer(*args, **kwargs): pass
         warnings.showwarning=ignorer
@@ -98,7 +101,17 @@ if __name__ == '__main__':
             _kwargs['config_filename']=os.path.join(_v, '.bitpim')
         elif _k=='-c':
             _kwargs['config_filename']=_v
-    if _args and 'bitfling' in _args:
+        elif _k=='-p':
+            _kwargs['comm_port']=_v
+        elif _k=='-f':
+            _kwargs['phone_model']=_v
+    if _args and _clicmd:
+        # CLI detected
+        _cli=bp_cli.CLI(_args[0], sys.stdin, sys.stdout, sys.stderr,
+                        **_kwargs)
+        if _cli.OK:
+            _cli.run()
+    elif _args and 'bitfling' in _args:
         import bitfling.bitfling
         #if True:
         #    profile("bitfling.prof", "bitfling.bitfling.run(sys.argv)")

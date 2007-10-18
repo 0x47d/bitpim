@@ -506,6 +506,7 @@ class RealBrewProtocol:
                 return {}
         if _broken_date:
             for _key,_entry in results.items():
+                print '_key',_key
                 _stat=self.statfile(_key)
                 if _stat:
                     _entry['date']=_stat.get('date', (0, ''))
@@ -1057,58 +1058,79 @@ class RealBrewProtocol2:
             results['date']=(0, '')
         return results
 
-class BrewProtocol(RealBrewProtocol):
-    """This is just a wrapper class that allows the manipulation between
-    RealBrewProtocol and DebugBrewProtocol classes.
-    """
-    def __init__(self):
-        RealBrewProtocol.__init__(self)
-        # if the env var PHONE_FS is set, we're debugging!
-        phone_path=os.environ.get('PHONE_FS', None)
-        if __debug__ and phone_path:
-            print 'Debug Phone File System:',phone_path
-            # we probably need to do this only once for the whole class,
-            # but what the heck!
-            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
-            self._update_base_class(self.__class__)
-            # define BREW_FILE_SYSTEM=2 in protocol class to enable 
-            # new brew filesystem support. Debug mode only
-##        elif __debug__ and getattr(self, "protocolclass", 0) and \
-##                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
-##            print '_set_new_brew', self.protocolclass
-##            self._set_new_brew(self.__class__)
+phone_path=os.environ.get('PHONE_FS', None)
+if __debug__ and phone_path:
+    DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
+    BrewProtocol=DebugBrewProtocol
+else:
+    BrewProtocol=RealBrewProtocol
+del phone_path
 
-    def _update_base_class(self, klass):
-        # update the RealBrewProtocol class to DebugBrewProtocol one.
-        _bases=[]
-        found=False
-        for e in klass.__bases__:
-            if e==RealBrewProtocol:
-                _bases.append(DebugBrewProtocol)
-                found=True
-            else:
-                _bases.append(e)
-        if found:
-            klass.__bases__=tuple(_bases)
-        else:
-            for e in _bases:
-                self._update_base_class(e)
-
-    def _set_new_brew(self, klass):
-        # update the class hierachy to include RealBrewProtocol2 so that 
-        # it's functions override RealBrewProtocol's ones.
-        _bases=[]
-        found=False
-        for e in klass.__bases__:
-            if e==RealBrewProtocol:
-                _bases.append(RealBrewProtocol2)
-                found=True
-            _bases.append(e)
-        if found:
-            klass.__bases__=tuple(_bases)
-        else:
-            for e in _bases:
-                self._set_new_brew(e)
+##class BrewProtocol(RealBrewProtocol):
+##    """This is just a wrapper class that allows the manipulation between
+##    RealBrewProtocol and DebugBrewProtocol classes.
+##    """
+##    def __init__(self):
+##        RealBrewProtocol.__init__(self)
+##        # if the env var PHONE_FS is set, we're debugging!
+##        phone_path=os.environ.get('PHONE_FS', None)
+##        if __debug__ and phone_path:
+##            print 'Debug Phone File System:',phone_path
+##            # we probably need to do this only once for the whole class,
+##            # but what the heck!
+##            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
+##            for _attr in DebugBrewProtocol.exportedfuncs:
+##                setattr(self, _attr, getattr(DebugBrewProtocol, _attr))
+##            self._update_base_class(self.__class__)
+##            for _attr in DebugBrewProtocol.exportedfuncs:
+##                setattr(BrewProtocol, _attr, getattr(DebugBrewProtocol, _attr))
+##            # define BREW_FILE_SYSTEM=2 in protocol class to enable 
+##            # new brew filesystem support. Debug mode only
+####        elif __debug__ and getattr(self, "protocolclass", 0) and \
+####                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
+####            print '_set_new_brew', self.protocolclass
+####            self._set_new_brew(self.__class__)
+##
+##    def __call__(self, *args, **kwargs):
+##        return self._klass.__call__(self, *args, **kwargs)
+##    def _printclass(self, klass):
+##        if klass.__bases__:
+##            for _c in klass.__bases__:
+##                self._printclass(_c)
+##        else:
+##            print klass
+##            
+##    def _update_base_class(self, klass):
+##        # update the RealBrewProtocol class to DebugBrewProtocol one.
+##        _bases=[]
+##        found=False
+##        for e in klass.__bases__:
+##            if e==RealBrewProtocol or e==RealBrewProtocol2:
+##                _bases.append(DebugBrewProtocol)
+##                found=True
+##            else:
+##                _bases.append(e)
+##        if found:
+##            klass.__bases__=tuple(_bases)
+##        else:
+##            for e in _bases:
+##                self._update_base_class(e)
+##
+##    def _set_new_brew(self, klass):
+##        # update the class hierachy to include RealBrewProtocol2 so that 
+##        # it's functions override RealBrewProtocol's ones.
+##        _bases=[]
+##        found=False
+##        for e in klass.__bases__:
+##            if e==RealBrewProtocol:
+##                _bases.append(RealBrewProtocol2)
+##                found=True
+##            _bases.append(e)
+##        if found:
+##            klass.__bases__=tuple(_bases)
+##        else:
+##            for e in _bases:
+##                self._set_new_brew(e)
 
 def formatpacketerrorlog(str, origdata, data, klass):
     # copied from guiwidgets.LogWindow.logdata

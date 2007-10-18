@@ -79,6 +79,7 @@ BEGIN_TOC
             TOCITEM_2(Phone Protocols,internals-protocols.htm)
             TOCITEM_2(Working with the code,internals-code.htm)
             ENDTOC_2
+        TOCITEM_1(Command Line Interface (CLI),cli.htm)
         ENDTOC_1
     TOCITEM_0(Errors,errors.htm)
         TOC_1

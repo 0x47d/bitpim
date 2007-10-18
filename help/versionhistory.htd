@@ -1,5 +1,11 @@
 #include "pagestart.h"
 
+   <h2><a name="1.0.3">Changes in 1.0.3</a></h2>
+    <ul>
+      <LI><P>Improvement: Monthly Calendar Print: print one month per page.
+      <LI><P>New Feature: Command Line Interface: <B>ls, ll</B> commands.
+    </ul>
+
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>
     <ul>
       <LI><P>Maintenance: Upgrade to Python 2.5.1
