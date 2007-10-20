@@ -1,0 +1,3 @@
+#include "pagestart.h"
+<P>BitPim now provides a stand-alone, Command Line Interface (CLI) feature that allows users to access the phone file system without using BitPim full GUI.
+#include "pageend.h"
