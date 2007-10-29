@@ -420,6 +420,8 @@ class RealBrewProtocol:
         req.entrynumber=0
         try:
             res=self.sendbrewcommand(req,p_brew.listfileresponse)
+        except BrewNoMoreEntriesException:
+            pass
         except (BrewBadPathnameException, BrewNoSuchDirectoryException,
                 BrewAccessDeniedException):
             return False
@@ -428,6 +430,20 @@ class RealBrewProtocol:
                 raise
             return False
         return True
+
+    def basename(self, path):
+        # return the basename of the path, does not check on whether the path
+        # exists.
+        return [x for x in path.split('/') if x][-1]
+
+    def dirname(self, filename):
+        # return the dir name of the filename, does not check on whether
+        # the file exists.
+        return '/'.join([x for x in filename.split('/') if x][:-1])
+
+    def join(self, *args):
+        # join the dir/file components and return the full path name
+        return '/'.join(args)
 
     def listsubdirs(self, dir='', recurse=0):
         results={}
@@ -506,7 +522,6 @@ class RealBrewProtocol:
                 return {}
         if _broken_date:
             for _key,_entry in results.items():
-                print '_key',_key
                 _stat=self.statfile(_key)
                 if _stat:
                     _entry['date']=_stat.get('date', (0, ''))
