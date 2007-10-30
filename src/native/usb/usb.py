@@ -150,15 +150,17 @@ class USBInterface:
         assert epout is not None
 
         # set the configuration
-        print "getting configvalue"
+        if TRACE:
+            print "getting configvalue"
         v=self.device.dev.config.bConfigurationValue
-        print "value is",v,"now about to set config"
+        if TRACE:
+            print "value is",v,"now about to set config"
         res=usb.usb_set_configuration(self.device.handle, v)
-        if TRACE: print "usb_set_configurationds(%s, %d)=%d" % (self.device.handle,v,res)
-        print "config set"
-
-        # grab the interface
-        print "claiming",self.number()
+        if TRACE:
+            print "usb_set_configurationds(%s, %d)=%d" % (self.device.handle,v,res)
+            print "config set"
+            # grab the interface
+            print "claiming",self.number()
         res=usb.usb_claim_interface(self.device.handle, self.number())
         if TRACE: print "usb_claim_interface(%s, %d)=%d" % (self.device.handle, self.number(), res)
         if res<0:

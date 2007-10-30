@@ -663,6 +663,11 @@ class RealBrewProtocol:
     def _setmodebrew(self):
         req=p_brew.memoryconfigrequest()
         respc=p_brew.memoryconfigresponse
+        try:
+            self.sendbrewcommand(req, respc, callsetmode=False)
+            return True
+        except modeignoreerrortypes:
+            pass
         
         for baud in 0, 38400,115200:
             if baud:

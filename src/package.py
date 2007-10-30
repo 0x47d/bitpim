@@ -231,7 +231,8 @@ def getpy2appoptions(defaults):
 def getpy2exeoptions(defaults):
     defaults.update(
         {
-        'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
+        # make this a console app so we can manipulate stderr & stdout
+        'console': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
         }
         )
     defaults['options']['py2exe']['includes']=phones.getallmodulenames()

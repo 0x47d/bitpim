@@ -75,7 +75,7 @@ if __name__ == '__main__':
             sys.exit(1)
     _kwargs={}
     # check for debug flag
-    _debug=__debug__ or bool(_args and 'debug' in _args)
+    _debug=bool(_args and 'debug' in _args)
     # CLI commands present?
     _clicmd=len(_args)==1 and bp_cli.valid_command(_args[0])
     if not _debug and not _clicmd:

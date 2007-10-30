@@ -128,7 +128,7 @@ class CommConnection:
                         continue
                     return _usbdevicewrapper(iface.openbulk(), timeout)
         self.log("Failed to find "+name+".  You may need to rescan.")
-        raise Exception("Failed to find usb device "+name)
+        raise common.CommsOpenFailure("Failed to find usb device "+name)
         
 
     def reset(self):
