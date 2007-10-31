@@ -64,6 +64,9 @@ This command creates one or more directories on the phone FS.  The <B>[dir name]
 <P>Example:
 <P><CODE>
 bitpim "mkdir tmp phone:/tmp/tmp1"<BR>
-<CODE>creates 2 directories on the phone FS: <B>tmp</B> and <B>tmp/tmp1</B>.
+</CODE>creates 2 directories on the phone FS: <B>tmp</B> and <B>tmp/tmp1</B>.
+
+<H3>cli</H3>
+This command provides a primitive interactive BitPim shell that allows users to enter BitPim CLI commands and view the results.  Within the shell, enter <B>exit</B> to exit the shell.
 
 #include "pageend.h"
